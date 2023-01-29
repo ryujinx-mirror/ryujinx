@@ -22,6 +22,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Runtime.InteropServices;
 using TimeZone = Ryujinx.Ava.UI.Models.TimeZone;
 
 namespace Ryujinx.Ava.UI.ViewModels
@@ -59,6 +60,7 @@ namespace Ryujinx.Ava.UI.ViewModels
                 OnPropertyChanged(nameof(IsCustomResolutionScaleActive));
             }
         }
+
         public int GraphicsBackendMultithreadingIndex
         {
             get => _graphicsBackendMultithreadingIndex;
@@ -106,6 +108,8 @@ namespace Ryujinx.Ava.UI.ViewModels
 
         public bool IsOpenGLAvailable => !OperatingSystem.IsMacOS();
 
+        public bool IsHypervisorAvailable => OperatingSystem.IsMacOS() && RuntimeInformation.ProcessArchitecture == Architecture.Arm64;
+
         public bool DirectoryChanged
         {
             get => _directoryChanged;
@@ -117,10 +121,7 @@ namespace Ryujinx.Ava.UI.ViewModels
             }
         }
 
-        public bool IsMacOS
-        {
-            get => OperatingSystem.IsMacOS();
-        }
+        public bool IsMacOS => OperatingSystem.IsMacOS();
 
         public bool EnableDiscordIntegration { get; set; }
         public bool CheckUpdatesOnStart { get; set; }
@@ -153,6 +154,7 @@ namespace Ryujinx.Ava.UI.ViewModels
         public bool EnableCustomTheme { get; set; }
         public bool IsCustomResolutionScaleActive => _resolutionScale == 4;
         public bool IsVulkanSelected => GraphicsBackendIndex == 0;
+        public bool UseHypervisor { get; set; }
 
         public string TimeZone { get; set; }
         public string ShaderDumpPath { get; set; }
@@ -349,6 +351,7 @@ namespace Ryujinx.Ava.UI.ViewModels
             // CPU
             EnablePptc = config.System.EnablePtc;
             MemoryMode = (int)config.System.MemoryManagerMode.Value;
+            UseHypervisor = config.System.UseHypervisor;
 
             // Graphics
             GraphicsBackendIndex = (int)config.Graphics.GraphicsBackend.Value;
@@ -369,7 +372,7 @@ namespace Ryujinx.Ava.UI.ViewModels
 
             // Network
             EnableInternetAccess = config.System.EnableInternetAccess;
-            
+
             // Logging
             EnableFileLog = config.Logger.EnableFileLog;
             EnableStub = config.Logger.EnableStub;
@@ -432,6 +435,7 @@ namespace Ryujinx.Ava.UI.ViewModels
             // CPU
             config.System.EnablePtc.Value = EnablePptc;
             config.System.MemoryManagerMode.Value = (MemoryManagerMode)MemoryMode;
+            config.System.UseHypervisor.Value = UseHypervisor;
 
             // Graphics
             config.Graphics.GraphicsBackend.Value = (GraphicsBackend)GraphicsBackendIndex;

@@ -14,7 +14,7 @@ namespace Ryujinx.Ui.Common.Configuration
         /// <summary>
         /// The current version of the file format
         /// </summary>
-        public const int CurrentVersion = 42;
+        public const int CurrentVersion = 43;
 
         /// <summary>
         /// Version of the configuration file format
@@ -329,6 +329,11 @@ namespace Ryujinx.Ui.Common.Configuration
         /// Preferred GPU
         /// </summary>
         public string PreferredGpu { get; set; }
+
+        /// <summary>
+        /// Uses Hypervisor over JIT if available
+        /// </summary>
+        public bool UseHypervisor { get; set; }
 
         /// <summary>
         /// Loads a configuration file from disk

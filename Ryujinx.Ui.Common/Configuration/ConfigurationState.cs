@@ -301,6 +301,11 @@ namespace Ryujinx.Ui.Common.Configuration
             /// </summary>
             public ReactiveObject<bool> IgnoreMissingServices { get; private set; }
 
+            /// <summary>
+            /// Uses Hypervisor over JIT if available
+            /// </summary>
+            public ReactiveObject<bool> UseHypervisor { get; private set; }
+
             public SystemSection()
             {
                 Language                      = new ReactiveObject<Language>();
@@ -327,6 +332,8 @@ namespace Ryujinx.Ui.Common.Configuration
                 IgnoreMissingServices.Event   += static (sender, e) => LogValueChange(sender, e, nameof(IgnoreMissingServices));
                 AudioVolume                   = new ReactiveObject<float>();
                 AudioVolume.Event             += static (sender, e) => LogValueChange(sender, e, nameof(AudioVolume));
+                UseHypervisor                 = new ReactiveObject<bool>();
+                UseHypervisor.Event           += static (sender, e) => LogValueChange(sender, e, nameof(UseHypervisor));
             }
         }
 
@@ -566,6 +573,7 @@ namespace Ryujinx.Ui.Common.Configuration
                 MemoryManagerMode          = System.MemoryManagerMode,
                 ExpandRam                  = System.ExpandRam,
                 IgnoreMissingServices      = System.IgnoreMissingServices,
+                UseHypervisor              = System.UseHypervisor,
                 GuiColumns                 = new GuiColumns
                 {
                     FavColumn        = Ui.GuiColumns.FavColumn,
@@ -652,6 +660,7 @@ namespace Ryujinx.Ui.Common.Configuration
             System.MemoryManagerMode.Value            = MemoryManagerMode.HostMappedUnsafe;
             System.ExpandRam.Value                    = false;
             System.IgnoreMissingServices.Value        = false;
+            System.UseHypervisor.Value                = true;
             Ui.GuiColumns.FavColumn.Value             = true;
             Ui.GuiColumns.IconColumn.Value            = true;
             Ui.GuiColumns.AppColumn.Value             = true;
@@ -1192,6 +1201,13 @@ namespace Ryujinx.Ui.Common.Configuration
                 configurationFileFormat.EnableMacroHLE = true;
             }
 
+            if (configurationFileFormat.Version < 43)
+            {
+                Ryujinx.Common.Logging.Logger.Warning?.Print(LogClass.Application, $"Outdated configuration version {configurationFileFormat.Version}, migrating to version 43.");
+
+                configurationFileFormat.UseHypervisor = true;
+            }
+
             Logger.EnableFileLog.Value                = configurationFileFormat.EnableFileLog;
             Graphics.ResScale.Value                   = configurationFileFormat.ResScale;
             Graphics.ResScaleCustom.Value             = configurationFileFormat.ResScaleCustom;
@@ -1233,6 +1249,7 @@ namespace Ryujinx.Ui.Common.Configuration
             System.MemoryManagerMode.Value            = configurationFileFormat.MemoryManagerMode;
             System.ExpandRam.Value                    = configurationFileFormat.ExpandRam;
             System.IgnoreMissingServices.Value        = configurationFileFormat.IgnoreMissingServices;
+            System.UseHypervisor.Value                = configurationFileFormat.UseHypervisor;
             Ui.GuiColumns.FavColumn.Value             = configurationFileFormat.GuiColumns.FavColumn;
             Ui.GuiColumns.IconColumn.Value            = configurationFileFormat.GuiColumns.IconColumn;
             Ui.GuiColumns.AppColumn.Value             = configurationFileFormat.GuiColumns.AppColumn;

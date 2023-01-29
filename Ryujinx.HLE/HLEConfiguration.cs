@@ -149,6 +149,11 @@ namespace Ryujinx.HLE
         public float AudioVolume { get; set; }
 
         /// <summary>
+        /// Use Hypervisor over JIT if available.
+        /// </summary>
+        internal readonly bool UseHypervisor;
+
+        /// <summary>
         /// An action called when HLE force a refresh of output after docked mode changed.
         /// </summary>
         public Action RefreshInputConfig { internal get; set; }
@@ -175,7 +180,8 @@ namespace Ryujinx.HLE
                                 MemoryManagerMode      memoryManagerMode,
                                 bool                   ignoreMissingServices,
                                 AspectRatio            aspectRatio,
-                                float                  audioVolume)
+                                float                  audioVolume,
+                                bool                   useHypervisor)
         {
             VirtualFileSystem      = virtualFileSystem;
             LibHacHorizonManager   = libHacHorizonManager;
@@ -200,6 +206,7 @@ namespace Ryujinx.HLE
             IgnoreMissingServices  = ignoreMissingServices;
             AspectRatio            = aspectRatio;
             AudioVolume            = audioVolume;
+            UseHypervisor          = useHypervisor;
         }
     }
 }

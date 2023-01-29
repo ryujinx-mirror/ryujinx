@@ -241,7 +241,7 @@ namespace Ryujinx.Ava
                     {
                         DateTime currentTime = DateTime.Now;
                         string   filename    = $"ryujinx_capture_{currentTime.Year}-{currentTime.Month:D2}-{currentTime.Day:D2}_{currentTime.Hour:D2}-{currentTime.Minute:D2}-{currentTime.Second:D2}.png";
-                        
+
                         string directory = AppDataManager.Mode switch
                         {
                             AppDataManager.LaunchMode.Portable => Path.Combine(AppDataManager.BaseDirPath, "screenshots"),
@@ -678,7 +678,8 @@ namespace Ryujinx.Ava
                                                      ConfigurationState.Instance.System.MemoryManagerMode,
                                                      ConfigurationState.Instance.System.IgnoreMissingServices,
                                                      ConfigurationState.Instance.Graphics.AspectRatio,
-                                                     ConfigurationState.Instance.System.AudioVolume);
+                                                     ConfigurationState.Instance.System.AudioVolume,
+                                                     ConfigurationState.Instance.System.UseHypervisor);
 
             Device = new Switch(configuration);
         }
@@ -839,7 +840,7 @@ namespace Ryujinx.Ava
         {
             // Run a status update only when a frame is to be drawn. This prevents from updating the ui and wasting a render when no frame is queued.
             string dockedMode = ConfigurationState.Instance.System.EnableDockedMode ? LocaleManager.Instance[LocaleKeys.Docked] : LocaleManager.Instance[LocaleKeys.Handheld];
-            
+
             if (GraphicsConfig.ResScale != 1)
             {
                 dockedMode += $" ({GraphicsConfig.ResScale}x)";

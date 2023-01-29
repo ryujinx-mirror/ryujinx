@@ -1,4 +1,4 @@
-﻿<UserControl 
+﻿<UserControl
     x:Class="Ryujinx.Ava.UI.Views.Settings.SettingsCPUView"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -65,6 +65,12 @@
                             </ComboBoxItem>
                         </ComboBox>
                     </StackPanel>
+                    <CheckBox IsChecked="{Binding UseHypervisor}"
+                              IsVisible="{Binding IsHypervisorAvailable}"
+                              ToolTip.Tip="{locale:Locale UseHypervisorTooltip}">
+                        <TextBlock Text="{locale:Locale SettingsTabSystemUseHypervisor}"
+                                   ToolTip.Tip="{locale:Locale UseHypervisorTooltip}" />
+                    </CheckBox>
                 </StackPanel>
             </StackPanel>
         </Border>

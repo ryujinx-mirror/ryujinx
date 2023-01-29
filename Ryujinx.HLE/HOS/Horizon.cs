@@ -12,7 +12,6 @@ using Ryujinx.Audio.Renderer.Device;
 using Ryujinx.Audio.Renderer.Server;
 using Ryujinx.Common.Utilities;
 using Ryujinx.Cpu;
-using Ryujinx.Cpu.Jit;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.HOS.Kernel;
 using Ryujinx.HLE.HOS.Kernel.Memory;
@@ -61,7 +60,6 @@ namespace Ryujinx.HLE.HOS
         internal Switch Device { get; private set; }
 
         internal ITickSource TickSource { get; }
-        internal ICpuEngine CpuEngine { get; }
 
         internal SurfaceFlinger SurfaceFlinger { get; private set; }
         internal AudioManager AudioManager { get; private set; }
@@ -130,7 +128,6 @@ namespace Ryujinx.HLE.HOS
         public Horizon(Switch device)
         {
             TickSource = new TickSource(KernelConstants.CounterFrequency);
-            CpuEngine = new JitEngine(TickSource);
 
             KernelContext = new KernelContext(
                 TickSource,

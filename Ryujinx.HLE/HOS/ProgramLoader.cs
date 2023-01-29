@@ -129,7 +129,7 @@ namespace Ryujinx.HLE.HOS
             KProcess process = new KProcess(context);
 
             var processContextFactory = new ArmProcessContextFactory(
-                context.Device.System.CpuEngine,
+                context.Device.System.TickSource,
                 context.Device.Gpu,
                 string.Empty,
                 string.Empty,
@@ -308,7 +308,7 @@ namespace Ryujinx.HLE.HOS
             }
 
             var processContextFactory = new ArmProcessContextFactory(
-                context.Device.System.CpuEngine,
+                context.Device.System.TickSource,
                 context.Device.Gpu,
                 programInfo.TitleIdText,
                 programInfo.DisplayVersion,
