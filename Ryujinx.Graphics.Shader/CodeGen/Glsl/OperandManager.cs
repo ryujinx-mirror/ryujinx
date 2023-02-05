@@ -487,6 +487,16 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
                     return type.ToAggregateType();
                 }
+                else if (context.Config.Stage == ShaderStage.Fragment && isAsgDest &&
+                    operand.Value >= AttributeConsts.FragmentOutputColorBase &&
+                    operand.Value < AttributeConsts.FragmentOutputColorEnd)
+                {
+                    int location = (operand.Value - AttributeConsts.FragmentOutputColorBase) / 16;
+
+                    AttributeType type = context.Config.GpuAccessor.QueryFragmentOutputType(location);
+
+                    return type.ToAggregateType();
+                }
             }
 
             return OperandInfo.GetVarType(operand);
