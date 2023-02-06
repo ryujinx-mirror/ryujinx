@@ -263,6 +263,7 @@ namespace Ryujinx.Graphics.Vulkan
                 supportedExtensions.Contains("VK_NV_geometry_shader_passthrough"),
                 supportedExtensions.Contains("VK_EXT_subgroup_size_control"),
                 featuresShaderInt8.ShaderInt8,
+                supportedExtensions.Contains("VK_EXT_shader_stencil_export"),
                 supportedExtensions.Contains(ExtConditionalRendering.ExtensionName),
                 supportedExtensions.Contains(ExtExtendedDynamicState.ExtensionName),
                 features2.Features.MultiViewport,

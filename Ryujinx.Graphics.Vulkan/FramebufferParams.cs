@@ -38,7 +38,7 @@ namespace Ryujinx.Graphics.Vulkan
         {
             _device = device;
             _attachments = new[] { view };
-            _validColorAttachments = 1u;
+            _validColorAttachments = isDepthStencil ? 0u : 1u;
 
             Width = width;
             Height = height;
@@ -46,7 +46,7 @@ namespace Ryujinx.Graphics.Vulkan
 
             AttachmentSamples = new[] { samples };
             AttachmentFormats = new[] { format };
-            AttachmentIndices = new[] { 0 };
+            AttachmentIndices = isDepthStencil ? Array.Empty<int>() : new[] { 0 };
 
             AttachmentsCount = 1;
 

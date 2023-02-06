@@ -335,7 +335,7 @@ namespace Ryujinx.Graphics.Vulkan
             int dstY0 = crop.FlipY ? dstPaddingY : _height - dstPaddingY;
             int dstY1 = crop.FlipY ? _height - dstPaddingY : dstPaddingY;
 
-            _gd.HelperShader.Blit(
+            _gd.HelperShader.BlitColor(
                 _gd,
                 cbs,
                 view,

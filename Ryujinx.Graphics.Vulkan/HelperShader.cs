@@ -33,6 +33,8 @@ namespace Ryujinx.Graphics.Vulkan
         private readonly IProgram _programConvertIndirectData;
         private readonly IProgram _programColorCopyToNonMs;
         private readonly IProgram _programColorDrawToMs;
+        private readonly IProgram _programDepthBlit;
+        private readonly IProgram _programStencilBlit;
 
         public HelperShader(VulkanRenderer gd, Device device)
         {
@@ -42,13 +44,13 @@ namespace Ryujinx.Graphics.Vulkan
             _samplerLinear = gd.CreateSampler(GAL.SamplerCreateInfo.Create(MinFilter.Linear, MagFilter.Linear));
             _samplerNearest = gd.CreateSampler(GAL.SamplerCreateInfo.Create(MinFilter.Nearest, MagFilter.Nearest));
 
-            var colorBlitVertexBindings = new ShaderBindings(
+            var blitVertexBindings = new ShaderBindings(
                 new[] { 1 },
                 Array.Empty<int>(),
                 Array.Empty<int>(),
                 Array.Empty<int>());
 
-            var colorBlitFragmentBindings = new ShaderBindings(
+            var blitFragmentBindings = new ShaderBindings(
                 Array.Empty<int>(),
                 Array.Empty<int>(),
                 new[] { 0 },
@@ -56,14 +58,14 @@ namespace Ryujinx.Graphics.Vulkan
 
             _programColorBlit = gd.CreateProgramWithMinimalLayout(new[]
             {
-                new ShaderSource(ShaderBinaries.ColorBlitVertexShaderSource, colorBlitVertexBindings, ShaderStage.Vertex, TargetLanguage.Spirv),
-                new ShaderSource(ShaderBinaries.ColorBlitFragmentShaderSource, colorBlitFragmentBindings, ShaderStage.Fragment, TargetLanguage.Spirv),
+                new ShaderSource(ShaderBinaries.ColorBlitVertexShaderSource, blitVertexBindings, ShaderStage.Vertex, TargetLanguage.Spirv),
+                new ShaderSource(ShaderBinaries.ColorBlitFragmentShaderSource, blitFragmentBindings, ShaderStage.Fragment, TargetLanguage.Spirv),
             });
 
             _programColorBlitClearAlpha = gd.CreateProgramWithMinimalLayout(new[]
             {
-                new ShaderSource(ShaderBinaries.ColorBlitVertexShaderSource, colorBlitVertexBindings, ShaderStage.Vertex, TargetLanguage.Spirv),
-                new ShaderSource(ShaderBinaries.ColorBlitClearAlphaFragmentShaderSource, colorBlitFragmentBindings, ShaderStage.Fragment, TargetLanguage.Spirv),
+                new ShaderSource(ShaderBinaries.ColorBlitVertexShaderSource, blitVertexBindings, ShaderStage.Vertex, TargetLanguage.Spirv),
+                new ShaderSource(ShaderBinaries.ColorBlitClearAlphaFragmentShaderSource, blitFragmentBindings, ShaderStage.Fragment, TargetLanguage.Spirv),
             });
 
             var colorClearFragmentBindings = new ShaderBindings(
@@ -74,19 +76,19 @@ namespace Ryujinx.Graphics.Vulkan
 
             _programColorClearF = gd.CreateProgramWithMinimalLayout(new[]
             {
-                new ShaderSource(ShaderBinaries.ColorClearVertexShaderSource, colorBlitVertexBindings, ShaderStage.Vertex, TargetLanguage.Spirv),
+                new ShaderSource(ShaderBinaries.ColorClearVertexShaderSource, blitVertexBindings, ShaderStage.Vertex, TargetLanguage.Spirv),
                 new ShaderSource(ShaderBinaries.ColorClearFFragmentShaderSource, colorClearFragmentBindings, ShaderStage.Fragment, TargetLanguage.Spirv),
             });
 
             _programColorClearSI = gd.CreateProgramWithMinimalLayout(new[]
             {
-                new ShaderSource(ShaderBinaries.ColorClearVertexShaderSource, colorBlitVertexBindings, ShaderStage.Vertex, TargetLanguage.Spirv),
+                new ShaderSource(ShaderBinaries.ColorClearVertexShaderSource, blitVertexBindings, ShaderStage.Vertex, TargetLanguage.Spirv),
                 new ShaderSource(ShaderBinaries.ColorClearSIFragmentShaderSource, colorClearFragmentBindings, ShaderStage.Fragment, TargetLanguage.Spirv),
             });
 
             _programColorClearUI = gd.CreateProgramWithMinimalLayout(new[]
             {
-                new ShaderSource(ShaderBinaries.ColorClearVertexShaderSource, colorBlitVertexBindings, ShaderStage.Vertex, TargetLanguage.Spirv),
+                new ShaderSource(ShaderBinaries.ColorClearVertexShaderSource, blitVertexBindings, ShaderStage.Vertex, TargetLanguage.Spirv),
                 new ShaderSource(ShaderBinaries.ColorClearUIFragmentShaderSource, colorClearFragmentBindings, ShaderStage.Fragment, TargetLanguage.Spirv),
             });
 
@@ -151,6 +153,21 @@ namespace Ryujinx.Graphics.Vulkan
             {
                 new ShaderSource(ShaderBinaries.ConvertIndirectDataShaderSource, convertIndirectDataBindings, ShaderStage.Compute, TargetLanguage.Spirv),
             });
+
+            _programDepthBlit = gd.CreateProgramWithMinimalLayout(new[]
+            {
+                new ShaderSource(ShaderBinaries.ColorBlitVertexShaderSource, blitVertexBindings, ShaderStage.Vertex, TargetLanguage.Spirv),
+                new ShaderSource(ShaderBinaries.DepthBlitFragmentShaderSource, blitFragmentBindings, ShaderStage.Fragment, TargetLanguage.Spirv),
+            });
+
+            if (gd.Capabilities.SupportsShaderStencilExport)
+            {
+                _programStencilBlit = gd.CreateProgramWithMinimalLayout(new[]
+                {
+                    new ShaderSource(ShaderBinaries.ColorBlitVertexShaderSource, blitVertexBindings, ShaderStage.Vertex, TargetLanguage.Spirv),
+                    new ShaderSource(ShaderBinaries.StencilBlitFragmentShaderSource, blitFragmentBindings, ShaderStage.Fragment, TargetLanguage.Spirv),
+                });
+            }
         }
 
         public void Blit(
@@ -162,6 +179,7 @@ namespace Ryujinx.Graphics.Vulkan
             VkFormat dstFormat,
             Extents2D srcRegion,
             Extents2D dstRegion,
+            bool isDepthOrStencil,
             bool linearFilter,
             bool clearAlpha = false)
         {
@@ -169,10 +187,17 @@ namespace Ryujinx.Graphics.Vulkan
 
             using var cbs = gd.CommandBufferPool.Rent();
 
-            Blit(gd, cbs, src, dst, dstWidth, dstHeight, dstFormat, srcRegion, dstRegion, linearFilter, clearAlpha);
+            if (isDepthOrStencil)
+            {
+                BlitDepthStencil(gd, cbs, src, dst, dstWidth, dstHeight, dstFormat, srcRegion, dstRegion);
+            }
+            else
+            {
+                BlitColor(gd, cbs, src, dst, dstWidth, dstHeight, dstFormat, srcRegion, dstRegion, linearFilter, clearAlpha);
+            }
         }
 
-        public void Blit(
+        public void BlitColor(
             VulkanRenderer gd,
             CommandBufferScoped cbs,
             TextureView src,
@@ -253,6 +278,173 @@ namespace Ryujinx.Graphics.Vulkan
             _pipeline.Finish(gd, cbs);
 
             gd.BufferManager.Delete(bufferHandle);
+        }
+
+        private void BlitDepthStencil(
+            VulkanRenderer gd,
+            CommandBufferScoped cbs,
+            TextureView src,
+            Auto<DisposableImageView> dst,
+            int dstWidth,
+            int dstHeight,
+            VkFormat dstFormat,
+            Extents2D srcRegion,
+            Extents2D dstRegion)
+        {
+            _pipeline.SetCommandBuffer(cbs);
+
+            const int RegionBufferSize = 16;
+
+            Span<float> region = stackalloc float[RegionBufferSize / sizeof(float)];
+
+            region[0] = (float)srcRegion.X1 / src.Width;
+            region[1] = (float)srcRegion.X2 / src.Width;
+            region[2] = (float)srcRegion.Y1 / src.Height;
+            region[3] = (float)srcRegion.Y2 / src.Height;
+
+            if (dstRegion.X1 > dstRegion.X2)
+            {
+                (region[0], region[1]) = (region[1], region[0]);
+            }
+
+            if (dstRegion.Y1 > dstRegion.Y2)
+            {
+                (region[2], region[3]) = (region[3], region[2]);
+            }
+
+            var bufferHandle = gd.BufferManager.CreateWithHandle(gd, RegionBufferSize, false);
+
+            gd.BufferManager.SetData<float>(bufferHandle, 0, region);
+
+            _pipeline.SetUniformBuffers(stackalloc[] { new BufferAssignment(1, new BufferRange(bufferHandle, 0, RegionBufferSize)) });
+
+            Span<GAL.Viewport> viewports = stackalloc GAL.Viewport[1];
+
+            var rect = new Rectangle<float>(
+                MathF.Min(dstRegion.X1, dstRegion.X2),
+                MathF.Min(dstRegion.Y1, dstRegion.Y2),
+                MathF.Abs(dstRegion.X2 - dstRegion.X1),
+                MathF.Abs(dstRegion.Y2 - dstRegion.Y1));
+
+            viewports[0] = new GAL.Viewport(
+                rect,
+                ViewportSwizzle.PositiveX,
+                ViewportSwizzle.PositiveY,
+                ViewportSwizzle.PositiveZ,
+                ViewportSwizzle.PositiveW,
+                0f,
+                1f);
+
+            Span<Rectangle<int>> scissors = stackalloc Rectangle<int>[1];
+
+            scissors[0] = new Rectangle<int>(0, 0, dstWidth, dstHeight);
+
+            _pipeline.SetRenderTarget(dst, (uint)dstWidth, (uint)dstHeight, true, dstFormat);
+            _pipeline.SetScissors(scissors);
+            _pipeline.SetViewports(viewports, false);
+            _pipeline.SetPrimitiveTopology(GAL.PrimitiveTopology.TriangleStrip);
+
+            var aspectFlags = src.Info.Format.ConvertAspectFlags();
+
+            if (aspectFlags.HasFlag(ImageAspectFlags.DepthBit))
+            {
+                var depthTexture = CreateDepthOrStencilView(src, DepthStencilMode.Depth);
+
+                BlitDepthStencilDraw(depthTexture, isDepth: true);
+
+                if (depthTexture != src)
+                {
+                    depthTexture.Release();
+                }
+            }
+
+            if (aspectFlags.HasFlag(ImageAspectFlags.StencilBit) && _programStencilBlit != null)
+            {
+                var stencilTexture = CreateDepthOrStencilView(src, DepthStencilMode.Stencil);
+
+                BlitDepthStencilDraw(stencilTexture, isDepth: false);
+
+                if (stencilTexture != src)
+                {
+                    stencilTexture.Release();
+                }
+            }
+
+            _pipeline.Finish(gd, cbs);
+
+            gd.BufferManager.Delete(bufferHandle);
+        }
+
+        private static TextureView CreateDepthOrStencilView(TextureView depthStencilTexture, DepthStencilMode depthStencilMode)
+        {
+            if (depthStencilTexture.Info.DepthStencilMode == depthStencilMode)
+            {
+                return depthStencilTexture;
+            }
+
+            return (TextureView)depthStencilTexture.CreateView(new TextureCreateInfo(
+                depthStencilTexture.Info.Width,
+                depthStencilTexture.Info.Height,
+                depthStencilTexture.Info.Depth,
+                depthStencilTexture.Info.Levels,
+                depthStencilTexture.Info.Samples,
+                depthStencilTexture.Info.BlockWidth,
+                depthStencilTexture.Info.BlockHeight,
+                depthStencilTexture.Info.BytesPerPixel,
+                depthStencilTexture.Info.Format,
+                depthStencilMode,
+                depthStencilTexture.Info.Target,
+                SwizzleComponent.Red,
+                SwizzleComponent.Green,
+                SwizzleComponent.Blue,
+                SwizzleComponent.Alpha), 0, 0);
+        }
+
+        private void BlitDepthStencilDraw(TextureView src, bool isDepth)
+        {
+            _pipeline.SetTextureAndSampler(ShaderStage.Fragment, 0, src, _samplerNearest);
+
+            if (isDepth)
+            {
+                _pipeline.SetProgram(_programDepthBlit);
+                _pipeline.SetDepthTest(new DepthTestDescriptor(true, true, GAL.CompareOp.Always));
+            }
+            else
+            {
+                _pipeline.SetProgram(_programStencilBlit);
+                _pipeline.SetStencilTest(CreateStencilTestDescriptor(true));
+            }
+
+            _pipeline.Draw(4, 1, 0, 0);
+
+            if (isDepth)
+            {
+                _pipeline.SetDepthTest(new DepthTestDescriptor(false, false, GAL.CompareOp.Always));
+            }
+            else
+            {
+                _pipeline.SetStencilTest(CreateStencilTestDescriptor(false));
+            }
+        }
+
+        private static StencilTestDescriptor CreateStencilTestDescriptor(bool enabled)
+        {
+            return new StencilTestDescriptor(
+                enabled,
+                GAL.CompareOp.Always,
+                GAL.StencilOp.Replace,
+                GAL.StencilOp.Replace,
+                GAL.StencilOp.Replace,
+                0,
+                0xff,
+                0xff,
+                GAL.CompareOp.Always,
+                GAL.StencilOp.Replace,
+                GAL.StencilOp.Replace,
+                GAL.StencilOp.Replace,
+                0,
+                0xff,
+                0xff);
         }
 
         public void Clear(
@@ -993,6 +1185,8 @@ namespace Ryujinx.Graphics.Vulkan
                 _programConvertIndirectData.Dispose();
                 _programColorCopyToNonMs.Dispose();
                 _programColorDrawToMs.Dispose();
+                _programDepthBlit.Dispose();
+                _programStencilBlit?.Dispose();
                 _samplerNearest.Dispose();
                 _samplerLinear.Dispose();
                 _pipeline.Dispose();
