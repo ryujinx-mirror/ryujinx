@@ -3,6 +3,7 @@ using Ryujinx.Graphics.Texture;
 using Ryujinx.Graphics.Vic.Types;
 using System;
 using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.Arm;
 using System.Runtime.Intrinsics.X86;
 using static Ryujinx.Graphics.Vic.Image.SurfaceCommon;
 
@@ -72,6 +73,64 @@ namespace Ryujinx.Graphics.Vic.Image
 
                                 Sse2.Store(op + 0x00, pixel1234);
                                 Sse2.Store(op + 0x10, pixel5678);
+
+                                op += 0x20;
+                            }
+
+                            for (; x < width; x++)
+                            {
+                                Pixel* px = ip + (uint)x;
+
+                                *(op + 0) = Downsample(px->R);
+                                *(op + 1) = Downsample(px->G);
+                                *(op + 2) = Downsample(px->B);
+                                *(op + 3) = Downsample(px->A);
+
+                                op += 4;
+                            }
+
+                            op += strideGap;
+                        }
+                    }
+                }
+            }
+            else if (AdvSimd.IsSupported)
+            {
+                int widthTrunc = width & ~7;
+                int strideGap = stride - width * 4;
+
+                fixed (Pixel* srcPtr = input.Data)
+                {
+                    Pixel* ip = srcPtr;
+
+                    fixed (byte* dstPtr = dst)
+                    {
+                        byte* op = dstPtr;
+
+                        for (int y = 0; y < height; y++, ip += input.Width)
+                        {
+                            int x = 0;
+
+                            for (; x < widthTrunc; x += 8)
+                            {
+                                Vector128<ushort> pixel12 = AdvSimd.LoadVector128((ushort*)(ip + (uint)x));
+                                Vector128<ushort> pixel34 = AdvSimd.LoadVector128((ushort*)(ip + (uint)x + 2));
+                                Vector128<ushort> pixel56 = AdvSimd.LoadVector128((ushort*)(ip + (uint)x + 4));
+                                Vector128<ushort> pixel78 = AdvSimd.LoadVector128((ushort*)(ip + (uint)x + 6));
+
+                                pixel12 = AdvSimd.ShiftRightLogical(pixel12, 2);
+                                pixel34 = AdvSimd.ShiftRightLogical(pixel34, 2);
+                                pixel56 = AdvSimd.ShiftRightLogical(pixel56, 2);
+                                pixel78 = AdvSimd.ShiftRightLogical(pixel78, 2);
+
+                                Vector64<byte> lower12 = AdvSimd.ExtractNarrowingLower(pixel12.AsUInt16());
+                                Vector64<byte> lower56 = AdvSimd.ExtractNarrowingLower(pixel56.AsUInt16());
+
+                                Vector128<byte> pixel1234 = AdvSimd.ExtractNarrowingUpper(lower12, pixel34.AsUInt16());
+                                Vector128<byte> pixel5678 = AdvSimd.ExtractNarrowingUpper(lower56, pixel78.AsUInt16());
+
+                                AdvSimd.Store(op + 0x00, pixel1234);
+                                AdvSimd.Store(op + 0x10, pixel5678);
 
                                 op += 0x20;
                             }
@@ -302,6 +361,87 @@ namespace Ryujinx.Graphics.Vic.Image
                     }
                 }
             }
+            else if (AdvSimd.IsSupported)
+            {
+                Vector128<ushort> mask = Vector128.Create(0xffffUL).AsUInt16();
+
+                int widthTrunc = width & ~0xf;
+                int strideGap = yStride - width;
+
+                fixed (Pixel* srcPtr = input.Data)
+                {
+                    Pixel* ip = srcPtr;
+
+                    fixed (byte* dstPtr = dstY)
+                    {
+                        byte* op = dstPtr;
+
+                        for (int y = 0; y < height; y++, ip += input.Width)
+                        {
+                            int x = 0;
+
+                            for (; x < widthTrunc; x += 16)
+                            {
+                                byte* baseOffset = (byte*)(ip + (ulong)(uint)x);
+
+                                Vector128<ushort> pixelp1 = AdvSimd.LoadVector128((ushort*)baseOffset);
+                                Vector128<ushort> pixelp2 = AdvSimd.LoadVector128((ushort*)(baseOffset + 0x10));
+                                Vector128<ushort> pixelp3 = AdvSimd.LoadVector128((ushort*)(baseOffset + 0x20));
+                                Vector128<ushort> pixelp4 = AdvSimd.LoadVector128((ushort*)(baseOffset + 0x30));
+                                Vector128<ushort> pixelp5 = AdvSimd.LoadVector128((ushort*)(baseOffset + 0x40));
+                                Vector128<ushort> pixelp6 = AdvSimd.LoadVector128((ushort*)(baseOffset + 0x50));
+                                Vector128<ushort> pixelp7 = AdvSimd.LoadVector128((ushort*)(baseOffset + 0x60));
+                                Vector128<ushort> pixelp8 = AdvSimd.LoadVector128((ushort*)(baseOffset + 0x70));
+
+                                pixelp1 = AdvSimd.And(pixelp1, mask);
+                                pixelp2 = AdvSimd.And(pixelp2, mask);
+                                pixelp3 = AdvSimd.And(pixelp3, mask);
+                                pixelp4 = AdvSimd.And(pixelp4, mask);
+                                pixelp5 = AdvSimd.And(pixelp5, mask);
+                                pixelp6 = AdvSimd.And(pixelp6, mask);
+                                pixelp7 = AdvSimd.And(pixelp7, mask);
+                                pixelp8 = AdvSimd.And(pixelp8, mask);
+
+                                Vector64<ushort> lowerp1 = AdvSimd.ExtractNarrowingLower(pixelp1.AsUInt32());
+                                Vector64<ushort> lowerp3 = AdvSimd.ExtractNarrowingLower(pixelp3.AsUInt32());
+                                Vector64<ushort> lowerp5 = AdvSimd.ExtractNarrowingLower(pixelp5.AsUInt32());
+                                Vector64<ushort> lowerp7 = AdvSimd.ExtractNarrowingLower(pixelp7.AsUInt32());
+
+                                Vector128<ushort> pixelq1 = AdvSimd.ExtractNarrowingUpper(lowerp1, pixelp2.AsUInt32());
+                                Vector128<ushort> pixelq2 = AdvSimd.ExtractNarrowingUpper(lowerp3, pixelp4.AsUInt32());
+                                Vector128<ushort> pixelq3 = AdvSimd.ExtractNarrowingUpper(lowerp5, pixelp6.AsUInt32());
+                                Vector128<ushort> pixelq4 = AdvSimd.ExtractNarrowingUpper(lowerp7, pixelp8.AsUInt32());
+
+                                Vector64<ushort> lowerq1 = AdvSimd.ExtractNarrowingLower(pixelq1.AsUInt32());
+                                Vector64<ushort> lowerq3 = AdvSimd.ExtractNarrowingLower(pixelq3.AsUInt32());
+
+                                pixelq1 = AdvSimd.ExtractNarrowingUpper(lowerq1, pixelq2.AsUInt32());
+                                pixelq2 = AdvSimd.ExtractNarrowingUpper(lowerq3, pixelq4.AsUInt32());
+
+                                pixelq1 = AdvSimd.ShiftRightLogical(pixelq1, 2);
+                                pixelq2 = AdvSimd.ShiftRightLogical(pixelq2, 2);
+
+                                Vector64<byte> pixelLower = AdvSimd.ExtractNarrowingLower(pixelq1.AsUInt16());
+
+                                Vector128<byte> pixel = AdvSimd.ExtractNarrowingUpper(pixelLower, pixelq2.AsUInt16());
+
+                                AdvSimd.Store(op, pixel);
+
+                                op += 0x10;
+                            }
+
+                            for (; x < width; x++)
+                            {
+                                Pixel* px = ip + (uint)x;
+
+                                *op++ = Downsample(px->R);
+                            }
+
+                            op += strideGap;
+                        }
+                    }
+                }
+            }
             else
             {
                 for (int y = 0; y < height; y++)
@@ -375,6 +515,69 @@ namespace Ryujinx.Graphics.Vic.Image
                                 Vector128<byte> pixel = Sse2.PackUnsignedSaturate(pixel1234.AsInt16(), pixel5678.AsInt16());
 
                                 Sse2.Store(op, pixel);
+
+                                op += 0x10;
+                            }
+
+                            for (; x < uvWidth; x++)
+                            {
+                                Pixel* px = ip + (uint)(x << 1);
+
+                                *op++ = Downsample(px->G);
+                                *op++ = Downsample(px->B);
+                            }
+
+                            op += strideGap;
+                        }
+                    }
+                }
+            }
+            else if (AdvSimd.Arm64.IsSupported)
+            {
+                int widthTrunc = uvWidth & ~7;
+                int strideGap = uvStride - uvWidth * 2;
+
+                fixed (Pixel* srcPtr = input.Data)
+                {
+                    Pixel* ip = srcPtr;
+
+                    fixed (byte* dstPtr = dstUv)
+                    {
+                        byte* op = dstPtr;
+
+                        for (int y = 0; y < uvHeight; y++, ip += input.Width * 2)
+                        {
+                            int x = 0;
+
+                            for (; x < widthTrunc; x += 8)
+                            {
+                                byte* baseOffset = (byte*)ip + (ulong)(uint)x * 16;
+
+                                Vector128<uint> pixel1 = AdvSimd.LoadAndReplicateToVector128((uint*)(baseOffset + 0x02));
+                                Vector128<uint> pixel2 = AdvSimd.LoadAndReplicateToVector128((uint*)(baseOffset + 0x12));
+                                Vector128<uint> pixel3 = AdvSimd.LoadAndReplicateToVector128((uint*)(baseOffset + 0x22));
+                                Vector128<uint> pixel4 = AdvSimd.LoadAndReplicateToVector128((uint*)(baseOffset + 0x32));
+                                Vector128<uint> pixel5 = AdvSimd.LoadAndReplicateToVector128((uint*)(baseOffset + 0x42));
+                                Vector128<uint> pixel6 = AdvSimd.LoadAndReplicateToVector128((uint*)(baseOffset + 0x52));
+                                Vector128<uint> pixel7 = AdvSimd.LoadAndReplicateToVector128((uint*)(baseOffset + 0x62));
+                                Vector128<uint> pixel8 = AdvSimd.LoadAndReplicateToVector128((uint*)(baseOffset + 0x72));
+
+                                Vector128<uint> pixel12 = AdvSimd.Arm64.ZipLow(pixel1, pixel2);
+                                Vector128<uint> pixel34 = AdvSimd.Arm64.ZipLow(pixel3, pixel4);
+                                Vector128<uint> pixel56 = AdvSimd.Arm64.ZipLow(pixel5, pixel6);
+                                Vector128<uint> pixel78 = AdvSimd.Arm64.ZipLow(pixel7, pixel8);
+
+                                Vector128<ulong> pixel1234 = AdvSimd.Arm64.ZipLow(pixel12.AsUInt64(), pixel34.AsUInt64());
+                                Vector128<ulong> pixel5678 = AdvSimd.Arm64.ZipLow(pixel56.AsUInt64(), pixel78.AsUInt64());
+
+                                pixel1234 = AdvSimd.ShiftRightLogical(pixel1234, 2);
+                                pixel5678 = AdvSimd.ShiftRightLogical(pixel5678, 2);
+
+                                Vector64<byte> pixelLower = AdvSimd.ExtractNarrowingLower(pixel1234.AsUInt16());
+
+                                Vector128<byte> pixel = AdvSimd.ExtractNarrowingUpper(pixelLower, pixel5678.AsUInt16());
+
+                                AdvSimd.Store(op, pixel);
 
                                 op += 0x10;
                             }

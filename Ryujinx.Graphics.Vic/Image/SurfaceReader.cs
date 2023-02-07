@@ -5,6 +5,7 @@ using Ryujinx.Graphics.Vic.Types;
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.Arm;
 using System.Runtime.Intrinsics.X86;
 using static Ryujinx.Graphics.Vic.Image.SurfaceCommon;
 
@@ -54,7 +55,7 @@ namespace Ryujinx.Graphics.Vic.Image
                     (byte)4, (byte)6, (byte)7, (byte)5,
                     (byte)8, (byte)10, (byte)11, (byte)9,
                     (byte)12, (byte)14, (byte)15, (byte)13);
-                Vector128<short> alphaMask = Vector128.Create(0xffUL << 48).AsInt16();
+                Vector128<short> alphaMask = Vector128.Create(0xff << 24).AsInt16();
 
                 int yStrideGap = yStride - width;
                 int uvStrideGap = uvStride - input.UvWidth;
@@ -95,6 +96,11 @@ namespace Ryujinx.Graphics.Vic.Image
                                 rgba2 = Ssse3.Shuffle(rgba2.AsByte(), shufMask).AsInt16();
                                 rgba3 = Ssse3.Shuffle(rgba3.AsByte(), shufMask).AsInt16();
 
+                                rgba0 = Sse2.Or(rgba0, alphaMask);
+                                rgba1 = Sse2.Or(rgba1, alphaMask);
+                                rgba2 = Sse2.Or(rgba2, alphaMask);
+                                rgba3 = Sse2.Or(rgba3, alphaMask);
+
                                 Vector128<short> rgba16_0 = Sse41.ConvertToVector128Int16(rgba0.AsByte());
                                 Vector128<short> rgba16_1 = Sse41.ConvertToVector128Int16(HighToLow(rgba0.AsByte()));
                                 Vector128<short> rgba16_2 = Sse41.ConvertToVector128Int16(rgba1.AsByte());
@@ -103,15 +109,6 @@ namespace Ryujinx.Graphics.Vic.Image
                                 Vector128<short> rgba16_5 = Sse41.ConvertToVector128Int16(HighToLow(rgba2.AsByte()));
                                 Vector128<short> rgba16_6 = Sse41.ConvertToVector128Int16(rgba3.AsByte());
                                 Vector128<short> rgba16_7 = Sse41.ConvertToVector128Int16(HighToLow(rgba3.AsByte()));
-
-                                rgba16_0 = Sse2.Or(rgba16_0, alphaMask);
-                                rgba16_1 = Sse2.Or(rgba16_1, alphaMask);
-                                rgba16_2 = Sse2.Or(rgba16_2, alphaMask);
-                                rgba16_3 = Sse2.Or(rgba16_3, alphaMask);
-                                rgba16_4 = Sse2.Or(rgba16_4, alphaMask);
-                                rgba16_5 = Sse2.Or(rgba16_5, alphaMask);
-                                rgba16_6 = Sse2.Or(rgba16_6, alphaMask);
-                                rgba16_7 = Sse2.Or(rgba16_7, alphaMask);
 
                                 rgba16_0 = Sse2.ShiftLeftLogical(rgba16_0, 2);
                                 rgba16_1 = Sse2.ShiftLeftLogical(rgba16_1, 2);
@@ -130,6 +127,98 @@ namespace Ryujinx.Graphics.Vic.Image
                                 Sse2.Store((short*)(op + (uint)x + 10), rgba16_5);
                                 Sse2.Store((short*)(op + (uint)x + 12), rgba16_6);
                                 Sse2.Store((short*)(op + (uint)x + 14), rgba16_7);
+                            }
+
+                            for (; x < width; x++, i1p += (x & 1) * 2)
+                            {
+                                Pixel* px = op + (uint)x;
+
+                                px->R = Upsample(*i0p++);
+                                px->G = Upsample(*i1p);
+                                px->B = Upsample(*(i1p + 1));
+                                px->A = 0x3ff;
+                            }
+
+                            op += width;
+                            i0p += yStrideGap;
+                            i1p += uvStrideGap;
+                        }
+                    }
+                }
+            }
+            else if (AdvSimd.Arm64.IsSupported)
+            {
+                Vector128<int> alphaMask = Vector128.Create(0xffu << 24).AsInt32();
+
+                int yStrideGap = yStride - width;
+                int uvStrideGap = uvStride - input.UvWidth;
+
+                int widthTrunc = width & ~0xf;
+
+                fixed (Pixel* dstPtr = output.Data)
+                {
+                    Pixel* op = dstPtr;
+
+                    fixed (byte* src0Ptr = input.Buffer0, src1Ptr = input.Buffer1)
+                    {
+                        byte* i0p = src0Ptr;
+
+                        for (int y = 0; y < height; y++)
+                        {
+                            byte* i1p = src1Ptr + (y >> 1) * uvStride;
+
+                            int x = 0;
+
+                            for (; x < widthTrunc; x += 16, i0p += 16, i1p += 16)
+                            {
+                                Vector128<byte> ya = AdvSimd.LoadVector128(i0p);
+                                Vector128<byte> uv = AdvSimd.LoadVector128(i1p);
+
+                                Vector128<short> ya0 = AdvSimd.ZeroExtendWideningLower(ya.GetLower()).AsInt16();
+                                Vector128<short> ya1 = AdvSimd.ZeroExtendWideningUpper(ya).AsInt16();
+
+                                Vector128<short> uv0 = AdvSimd.Arm64.ZipLow(uv.AsInt16(), uv.AsInt16());
+                                Vector128<short> uv1 = AdvSimd.Arm64.ZipHigh(uv.AsInt16(), uv.AsInt16());
+
+                                ya0 = AdvSimd.ShiftLeftLogical(ya0, 8);
+                                ya1 = AdvSimd.ShiftLeftLogical(ya1, 8);
+
+                                Vector128<short> rgba0 = AdvSimd.Arm64.ZipLow(ya0, uv0);
+                                Vector128<short> rgba1 = AdvSimd.Arm64.ZipHigh(ya0, uv0);
+                                Vector128<short> rgba2 = AdvSimd.Arm64.ZipLow(ya1, uv1);
+                                Vector128<short> rgba3 = AdvSimd.Arm64.ZipHigh(ya1, uv1);
+
+                                rgba0 = AdvSimd.ShiftRightLogicalAdd(alphaMask, rgba0.AsInt32(), 8).AsInt16();
+                                rgba1 = AdvSimd.ShiftRightLogicalAdd(alphaMask, rgba1.AsInt32(), 8).AsInt16();
+                                rgba2 = AdvSimd.ShiftRightLogicalAdd(alphaMask, rgba2.AsInt32(), 8).AsInt16();
+                                rgba3 = AdvSimd.ShiftRightLogicalAdd(alphaMask, rgba3.AsInt32(), 8).AsInt16();
+
+                                Vector128<short> rgba16_0 = AdvSimd.ZeroExtendWideningLower(rgba0.AsByte().GetLower()).AsInt16();
+                                Vector128<short> rgba16_1 = AdvSimd.ZeroExtendWideningUpper(rgba0.AsByte()).AsInt16();
+                                Vector128<short> rgba16_2 = AdvSimd.ZeroExtendWideningLower(rgba1.AsByte().GetLower()).AsInt16();
+                                Vector128<short> rgba16_3 = AdvSimd.ZeroExtendWideningUpper(rgba1.AsByte()).AsInt16();
+                                Vector128<short> rgba16_4 = AdvSimd.ZeroExtendWideningLower(rgba2.AsByte().GetLower()).AsInt16();
+                                Vector128<short> rgba16_5 = AdvSimd.ZeroExtendWideningUpper(rgba2.AsByte()).AsInt16();
+                                Vector128<short> rgba16_6 = AdvSimd.ZeroExtendWideningLower(rgba3.AsByte().GetLower()).AsInt16();
+                                Vector128<short> rgba16_7 = AdvSimd.ZeroExtendWideningUpper(rgba3.AsByte()).AsInt16();
+
+                                rgba16_0 = AdvSimd.ShiftLeftLogical(rgba16_0, 2);
+                                rgba16_1 = AdvSimd.ShiftLeftLogical(rgba16_1, 2);
+                                rgba16_2 = AdvSimd.ShiftLeftLogical(rgba16_2, 2);
+                                rgba16_3 = AdvSimd.ShiftLeftLogical(rgba16_3, 2);
+                                rgba16_4 = AdvSimd.ShiftLeftLogical(rgba16_4, 2);
+                                rgba16_5 = AdvSimd.ShiftLeftLogical(rgba16_5, 2);
+                                rgba16_6 = AdvSimd.ShiftLeftLogical(rgba16_6, 2);
+                                rgba16_7 = AdvSimd.ShiftLeftLogical(rgba16_7, 2);
+
+                                AdvSimd.Store((short*)(op + (uint)x + 0), rgba16_0);
+                                AdvSimd.Store((short*)(op + (uint)x + 2), rgba16_1);
+                                AdvSimd.Store((short*)(op + (uint)x + 4), rgba16_2);
+                                AdvSimd.Store((short*)(op + (uint)x + 6), rgba16_3);
+                                AdvSimd.Store((short*)(op + (uint)x + 8), rgba16_4);
+                                AdvSimd.Store((short*)(op + (uint)x + 10), rgba16_5);
+                                AdvSimd.Store((short*)(op + (uint)x + 12), rgba16_6);
+                                AdvSimd.Store((short*)(op + (uint)x + 14), rgba16_7);
                             }
 
                             for (; x < width; x++, i1p += (x & 1) * 2)
