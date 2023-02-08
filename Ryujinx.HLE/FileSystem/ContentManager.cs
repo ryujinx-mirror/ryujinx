@@ -229,7 +229,7 @@ namespace Ryujinx.HLE.FileSystem
                     continue;
                 }
 
-                string ncaId = BitConverter.ToString(cnmt.ContentEntries[0].NcaId).Replace("-", "").ToLower();
+                string ncaId = Convert.ToHexString(cnmt.ContentEntries[0].NcaId).ToLower();
 
                 AddAocItem(cnmt.TitleId, containerPath, $"{ncaId}.nca", true);
             }

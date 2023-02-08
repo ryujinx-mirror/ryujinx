@@ -101,7 +101,7 @@ namespace Ryujinx.HLE.HOS.Services.Caps
                 };
 
                 // NOTE: The hex hash is a HMAC-SHA256 (first 32 bytes) using a hardcoded secret key over the titleId, we can simulate it by hashing the titleId instead.
-                string hash       = BitConverter.ToString(SHA256.HashData(BitConverter.GetBytes(titleId))).Replace("-", "").Remove(0x20);
+                string hash       = Convert.ToHexString(SHA256.HashData(BitConverter.GetBytes(titleId))).Remove(0x20);
                 string folderPath = Path.Combine(_sdCardPath, "Nintendo", "Album", currentDateTime.Year.ToString("00"), currentDateTime.Month.ToString("00"), currentDateTime.Day.ToString("00"));
                 string filePath   = GenerateFilePath(folderPath, applicationAlbumEntry, currentDateTime, hash);
 
