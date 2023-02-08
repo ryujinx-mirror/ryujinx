@@ -27,6 +27,7 @@ namespace Ryujinx.Graphics.Vulkan
 
             int attachmentCount = 0;
             int colorCount = 0;
+            int maxColorAttachmentIndex = -1;
 
             for (int i = 0; i < state.AttachmentEnable.Length; i++)
             {
@@ -36,6 +37,7 @@ namespace Ryujinx.Graphics.Vulkan
 
                     attachmentIndices[attachmentCount++] = i;
                     colorCount++;
+                    maxColorAttachmentIndex = i;
                 }
             }
 
@@ -73,12 +75,11 @@ namespace Ryujinx.Graphics.Vulkan
 
                 if (colorAttachmentsCount != 0)
                 {
-                    int maxAttachmentIndex = Constants.MaxRenderTargets - 1;
-                    subpass.ColorAttachmentCount = (uint)maxAttachmentIndex + 1;
+                    subpass.ColorAttachmentCount = (uint)maxColorAttachmentIndex + 1;
                     subpass.PColorAttachments = &attachmentReferences[0];
 
                     // Fill with VK_ATTACHMENT_UNUSED to cover any gaps.
-                    for (int i = 0; i <= maxAttachmentIndex; i++)
+                    for (int i = 0; i <= maxColorAttachmentIndex; i++)
                     {
                         subpass.PColorAttachments[i] = new AttachmentReference(Vk.AttachmentUnused, ImageLayout.Undefined);
                     }

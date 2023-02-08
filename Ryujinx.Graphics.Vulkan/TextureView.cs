@@ -90,7 +90,7 @@ namespace Ryujinx.Graphics.Vulkan
             var componentMapping = new ComponentMapping(swizzleR, swizzleG, swizzleB, swizzleA);
 
             var aspectFlags = info.Format.ConvertAspectFlags(info.DepthStencilMode);
-            var aspectFlagsDepth = info.Format.ConvertAspectFlags(DepthStencilMode.Depth);
+            var aspectFlagsDepth = info.Format.ConvertAspectFlags();
 
             var subresourceRange = new ImageSubresourceRange(aspectFlags, (uint)firstLevel, levels, (uint)firstLayer, layers);
             var subresourceRangeDepth = new ImageSubresourceRange(aspectFlagsDepth, (uint)firstLevel, levels, (uint)firstLayer, layers);

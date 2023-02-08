@@ -100,7 +100,8 @@ namespace Ryujinx.Graphics.Vulkan.Queries
             if (_isSupported)
             {
                 bool needsReset = resetSequence == null || _resetSequence == null || resetSequence.Value != _resetSequence.Value;
-                _pipeline.BeginQuery(this, _queryPool, needsReset, _type == CounterType.SamplesPassed && resetSequence != null);
+                bool isOcclusion = _type == CounterType.SamplesPassed;
+                _pipeline.BeginQuery(this, _queryPool, needsReset, isOcclusion, isOcclusion && resetSequence != null);
             }
             _resetSequence = null;
         }

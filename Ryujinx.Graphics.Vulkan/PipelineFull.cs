@@ -10,7 +10,7 @@ namespace Ryujinx.Graphics.Vulkan
     {
         private const ulong MinByteWeightForFlush = 256 * 1024 * 1024; // MiB
 
-        private readonly List<QueryPool> _activeQueries;
+        private readonly List<(QueryPool, bool)> _activeQueries;
         private CounterQueueEvent _activeConditionalRender;
 
         private readonly List<BufferedQuery> _pendingQueryCopies;
@@ -19,7 +19,7 @@ namespace Ryujinx.Graphics.Vulkan
 
         public PipelineFull(VulkanRenderer gd, Device device) : base(gd, device)
         {
-            _activeQueries = new List<QueryPool>();
+            _activeQueries = new List<(QueryPool, bool)>();
             _pendingQueryCopies = new();
 
             CommandBuffer = (Cbs = gd.CommandBufferPool.Rent()).CommandBuffer;
@@ -202,7 +202,7 @@ namespace Ryujinx.Graphics.Vulkan
             AutoFlush.RegisterFlush(DrawCount);
             EndRenderPass();
 
-            foreach (var queryPool in _activeQueries)
+            foreach ((var queryPool, _) in _activeQueries)
             {
                 Gd.Api.CmdEndQuery(CommandBuffer, queryPool, 0);
             }
@@ -220,10 +220,12 @@ namespace Ryujinx.Graphics.Vulkan
 
             // Restore per-command buffer state.
 
-            foreach (var queryPool in _activeQueries)
+            foreach ((var queryPool, var isOcclusion) in _activeQueries)
             {
+                bool isPrecise = Gd.Capabilities.SupportsPreciseOcclusionQueries && isOcclusion;
+
                 Gd.Api.CmdResetQueryPool(CommandBuffer, queryPool, 0, 1);
-                Gd.Api.CmdBeginQuery(CommandBuffer, queryPool, 0, Gd.Capabilities.SupportsPreciseOcclusionQueries ? QueryControlFlags.PreciseBit : 0);
+                Gd.Api.CmdBeginQuery(CommandBuffer, queryPool, 0, isPrecise ? QueryControlFlags.PreciseBit : 0);
             }
 
             Gd.ResetCounterPool();
@@ -231,7 +233,7 @@ namespace Ryujinx.Graphics.Vulkan
             Restore();
         }
 
-        public void BeginQuery(BufferedQuery query, QueryPool pool, bool needsReset, bool fromSamplePool)
+        public void BeginQuery(BufferedQuery query, QueryPool pool, bool needsReset, bool isOcclusion, bool fromSamplePool)
         {
             if (needsReset)
             {
@@ -247,16 +249,24 @@ namespace Ryujinx.Graphics.Vulkan
                 }
             }
 
-            Gd.Api.CmdBeginQuery(CommandBuffer, pool, 0, Gd.Capabilities.SupportsPreciseOcclusionQueries ? QueryControlFlags.PreciseBit : 0);
+            bool isPrecise = Gd.Capabilities.SupportsPreciseOcclusionQueries && isOcclusion;
+            Gd.Api.CmdBeginQuery(CommandBuffer, pool, 0, isPrecise ? QueryControlFlags.PreciseBit : 0);
 
-            _activeQueries.Add(pool);
+            _activeQueries.Add((pool, isOcclusion));
         }
 
         public void EndQuery(QueryPool pool)
         {
             Gd.Api.CmdEndQuery(CommandBuffer, pool, 0);
 
-            _activeQueries.Remove(pool);
+            for (int i = 0; i < _activeQueries.Count; i++)
+            {
+                if (_activeQueries[i].Item1.Handle == pool.Handle)
+                {
+                    _activeQueries.RemoveAt(i);
+                    break;
+                }
+            }
         }
 
         public void CopyQueryResults(BufferedQuery query)
