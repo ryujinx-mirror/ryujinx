@@ -53,7 +53,6 @@ using Key = Ryujinx.Input.Key;
 using MouseButton = Ryujinx.Input.MouseButton;
 using Size = Avalonia.Size;
 using Switch = Ryujinx.HLE.Switch;
-using WindowState = Avalonia.Controls.WindowState;
 
 namespace Ryujinx.Ava
 {
@@ -766,7 +765,7 @@ namespace Ryujinx.Ava
             }
         }
 
-        private unsafe void RenderLoop()
+        private void RenderLoop()
         {
             Dispatcher.UIThread.InvokeAsync(() =>
             {
@@ -801,6 +800,8 @@ namespace Ryujinx.Ava
                 Device.Gpu.SetGpuThread();
                 Device.Gpu.InitializeShaderCache(_gpuCancellationTokenSource.Token);
                 Translator.IsReadyForTranslation.Set();
+
+                _renderer.Window.ChangeVSyncMode(Device.EnableDeviceVsync);
 
                 while (_isActive)
                 {
