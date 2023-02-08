@@ -210,8 +210,8 @@ namespace Ryujinx.Graphics.Gpu.Image
             ulong offset,
             FormatInfo formatInfo,
             bool shouldCreate,
-            bool preferScaling = true,
-            Size? sizeHint = null)
+            bool preferScaling,
+            Size sizeHint)
         {
             int gobBlocksInY = copyTexture.MemoryLayout.UnpackGobBlocksInY();
             int gobBlocksInZ = copyTexture.MemoryLayout.UnpackGobBlocksInZ();
@@ -229,7 +229,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             TextureInfo info = new TextureInfo(
                 copyTexture.Address.Pack() + offset,
-                width,
+                GetMinimumWidthInGob(width, sizeHint.Width, formatInfo.BytesPerPixel, copyTexture.LinearLayout),
                 copyTexture.Height,
                 copyTexture.Depth,
                 1,
@@ -255,7 +255,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                 flags |= TextureSearchFlags.NoCreate;
             }
 
-            Texture texture = FindOrCreateTexture(memoryManager, flags, info, 0, sizeHint);
+            Texture texture = FindOrCreateTexture(memoryManager, flags, info, 0);
 
             texture?.SynchronizeMemory();
 
@@ -326,7 +326,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             TextureInfo info = new TextureInfo(
                 colorState.Address.Pack(),
-                width,
+                GetMinimumWidthInGob(width, sizeHint.Width, formatInfo.BytesPerPixel, isLinear),
                 colorState.Height,
                 colorState.Depth,
                 1,
@@ -342,7 +342,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             int layerSize = !isLinear ? colorState.LayerSize * 4 : 0;
 
-            Texture texture = FindOrCreateTexture(memoryManager, TextureSearchFlags.WithUpscale, info, layerSize, sizeHint);
+            Texture texture = FindOrCreateTexture(memoryManager, TextureSearchFlags.WithUpscale, info, layerSize);
 
             texture?.SynchronizeMemory();
 
@@ -395,7 +395,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             TextureInfo info = new TextureInfo(
                 dsState.Address.Pack(),
-                size.Width,
+                GetMinimumWidthInGob(size.Width, sizeHint.Width, formatInfo.BytesPerPixel, false),
                 size.Height,
                 size.Depth,
                 1,
@@ -409,11 +409,39 @@ namespace Ryujinx.Graphics.Gpu.Image
                 target,
                 formatInfo);
 
-            Texture texture = FindOrCreateTexture(memoryManager, TextureSearchFlags.WithUpscale, info, dsState.LayerSize * 4, sizeHint);
+            Texture texture = FindOrCreateTexture(memoryManager, TextureSearchFlags.WithUpscale, info, dsState.LayerSize * 4);
 
             texture?.SynchronizeMemory();
 
             return texture;
+        }
+
+        /// <summary>
+        /// For block linear textures, gets the minimum width of the texture
+        /// that would still have the same number of GOBs per row as the original width.
+        /// </summary>
+        /// <param name="width">The possibly aligned texture width</param>
+        /// <param name="minimumWidth">The minimum width that the texture may have without losing data</param>
+        /// <param name="bytesPerPixel">Bytes per pixel of the texture format</param>
+        /// <param name="isLinear">True if the texture is linear, false for block linear</param>
+        /// <returns>The minimum width of the texture with the same amount of GOBs per row</returns>
+        private static int GetMinimumWidthInGob(int width, int minimumWidth, int bytesPerPixel, bool isLinear)
+        {
+            if (isLinear || (uint)minimumWidth >= (uint)width)
+            {
+                return width;
+            }
+
+            // Calculate the minimum possible that would not cause data loss
+            // and would be still within the same GOB (aligned size would be the same).
+            // This is useful for render and copy operations, where we don't know the
+            // exact width of the texture, but it doesn't matter, as long the texture is
+            // at least as large as the region being rendered or copied.
+
+            int alignment = 64 / bytesPerPixel;
+            int widthAligned = BitUtils.AlignUp(width, alignment);
+
+            return Math.Clamp(widthAligned - alignment + 1, minimumWidth, widthAligned);
         }
 
         /// <summary>
@@ -423,7 +451,6 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <param name="flags">The texture search flags, defines texture comparison rules</param>
         /// <param name="info">Texture information of the texture to be found or created</param>
         /// <param name="layerSize">Size in bytes of a single texture layer</param>
-        /// <param name="sizeHint">A hint indicating the minimum used size for the texture</param>
         /// <param name="range">Optional ranges of physical memory where the texture data is located</param>
         /// <returns>The texture</returns>
         public Texture FindOrCreateTexture(
@@ -431,7 +458,6 @@ namespace Ryujinx.Graphics.Gpu.Image
             TextureSearchFlags flags,
             TextureInfo info,
             int layerSize = 0,
-            Size? sizeHint = null,
             MultiRange? range = null)
         {
             bool isSamplerTexture = (flags & TextureSearchFlags.ForSampler) != 0;
@@ -512,8 +538,6 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             if (texture != null)
             {
-                ChangeSizeIfNeeded(info, texture, isSamplerTexture, sizeHint);
-
                 texture.SynchronizeMemory();
 
                 return texture;
@@ -568,6 +592,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                 TextureViewCompatibility overlapCompatibility = overlap.IsViewCompatible(
                     info,
                     range.Value,
+                    isSamplerTexture,
                     sizeInfo.LayerSize,
                     _context.Capabilities,
                     out int firstLayer,
@@ -598,17 +623,15 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                 if (oInfo.Compatibility == TextureViewCompatibility.Full)
                 {
-                    TextureInfo adjInfo = AdjustSizes(overlap, info, oInfo.FirstLevel);
-
                     if (!isSamplerTexture)
                     {
-                        info = adjInfo;
+                        // If this is not a sampler texture, the size might be different from the requested size,
+                        // so we need to make sure the texture information has the correct size for this base texture,
+                        // before creating the view.
+                        info = info.CreateInfoForLevelView(overlap, oInfo.FirstLevel);
                     }
 
-                    texture = overlap.CreateView(adjInfo, sizeInfo, range.Value, oInfo.FirstLayer, oInfo.FirstLevel);
-
-                    ChangeSizeIfNeeded(info, texture, isSamplerTexture, sizeHint);
-
+                    texture = overlap.CreateView(info, sizeInfo, range.Value, oInfo.FirstLayer, oInfo.FirstLevel);
                     texture.SynchronizeMemory();
                     break;
                 }
@@ -682,6 +705,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                     TextureViewCompatibility compatibility = texture.IsViewCompatible(
                         overlap.Info,
                         overlap.Range,
+                        exactSize: true,
                         overlap.LayerSize,
                         _context.Capabilities,
                         out int firstLayer,
@@ -792,7 +816,11 @@ namespace Ryujinx.Graphics.Gpu.Image
                         continue;
                     }
 
-                    TextureInfo overlapInfo = AdjustSizes(texture, overlap.Info, oInfo.FirstLevel);
+                    // Note: If we allow different sizes for those overlaps,
+                    // we need to make sure that the "info" has the correct size for the parent texture here.
+                    // Since this is not allowed right now, we don't need to do it.
+
+                    TextureInfo overlapInfo = overlap.Info;
 
                     if (texture.ScaleFactor != overlap.ScaleFactor)
                     {
@@ -854,44 +882,6 @@ namespace Ryujinx.Graphics.Gpu.Image
             }
 
             return texture;
-        }
-
-        /// <summary>
-        /// Changes a texture's size to match the desired size for samplers,
-        /// or increases a texture's size to fit the region indicated by a size hint.
-        /// </summary>
-        /// <param name="info">The desired texture info</param>
-        /// <param name="texture">The texture to resize</param>
-        /// <param name="isSamplerTexture">True if the texture will be used for a sampler, false otherwise</param>
-        /// <param name="sizeHint">A hint indicating the minimum used size for the texture</param>
-        private void ChangeSizeIfNeeded(TextureInfo info, Texture texture, bool isSamplerTexture, Size? sizeHint)
-        {
-            if (isSamplerTexture)
-            {
-                // If this is used for sampling, the size must match,
-                // otherwise the shader would sample garbage data.
-                // To fix that, we create a new texture with the correct
-                // size, and copy the data from the old one to the new one.
-
-                if (!TextureCompatibility.SizeMatches(texture.Info, info))
-                {
-                    texture.ChangeSize(info.Width, info.Height, info.DepthOrLayers);
-                }
-            }
-            else if (sizeHint != null)
-            {
-                // A size hint indicates that data will be used within that range, at least.
-                // If the texture is smaller than the size hint, it must be enlarged to meet it.
-                // The maximum size is provided by the requested info, which generally has an aligned size.
-
-                int width = Math.Max(texture.Info.Width, Math.Min(sizeHint.Value.Width, info.Width));
-                int height = Math.Max(texture.Info.Height, Math.Min(sizeHint.Value.Height, info.Height));
-
-                if (texture.Info.Width != width || texture.Info.Height != height)
-                {
-                    texture.ChangeSize(width, height, info.DepthOrLayers);
-                }
-            }
         }
 
         /// <summary>
@@ -999,92 +989,6 @@ namespace Ryujinx.Graphics.Gpu.Image
                 Array.Resize(ref _textureOverlaps, OverlapsBufferMaxCapacity);
             }
         }
-
-        /// <summary>
-        /// Adjusts the size of the texture information for a given mipmap level,
-        /// based on the size of a parent texture.
-        /// </summary>
-        /// <param name="parent">The parent texture</param>
-        /// <param name="info">The texture information to be adjusted</param>
-        /// <param name="firstLevel">The first level of the texture view</param>
-        /// <returns>The adjusted texture information with the new size</returns>
-        private static TextureInfo AdjustSizes(Texture parent, TextureInfo info, int firstLevel)
-        {
-            // When the texture is used as view of another texture, we must
-            // ensure that the sizes are valid, otherwise data uploads would fail
-            // (and the size wouldn't match the real size used on the host API).
-            // Given a parent texture from where the view is created, we have the
-            // following rules:
-            // - The view size must be equal to the parent size, divided by (2 ^ l),
-            // where l is the first mipmap level of the view. The division result must
-            // be rounded down, and the result must be clamped to 1.
-            // - If the parent format is compressed, and the view format isn't, the
-            // view size is calculated as above, but the width and height of the
-            // view must be also divided by the compressed format block width and height.
-            // - If the parent format is not compressed, and the view is, the view
-            // size is calculated as described on the first point, but the width and height
-            // of the view must be also multiplied by the block width and height.
-            int width  = Math.Max(1, parent.Info.Width  >> firstLevel);
-            int height = Math.Max(1, parent.Info.Height >> firstLevel);
-
-            if (parent.Info.FormatInfo.IsCompressed && !info.FormatInfo.IsCompressed)
-            {
-                width  = BitUtils.DivRoundUp(width,  parent.Info.FormatInfo.BlockWidth);
-                height = BitUtils.DivRoundUp(height, parent.Info.FormatInfo.BlockHeight);
-            }
-            else if (!parent.Info.FormatInfo.IsCompressed && info.FormatInfo.IsCompressed)
-            {
-                width  *= info.FormatInfo.BlockWidth;
-                height *= info.FormatInfo.BlockHeight;
-            }
-
-            int depthOrLayers;
-
-            if (info.Target == Target.Texture3D)
-            {
-                depthOrLayers = Math.Max(1, parent.Info.DepthOrLayers >> firstLevel);
-            }
-            else
-            {
-                depthOrLayers = info.DepthOrLayers;
-            }
-
-            // 2D and 2D multisample textures are not considered compatible.
-            // This specific case is required for copies, where the source texture might be multisample.
-            // In this case, we inherit the parent texture multisample state.
-            Target target = info.Target;
-            int samplesInX = info.SamplesInX;
-            int samplesInY = info.SamplesInY;
-
-            if (target == Target.Texture2D && parent.Target == Target.Texture2DMultisample)
-            {
-                target = Target.Texture2DMultisample;
-                samplesInX = parent.Info.SamplesInX;
-                samplesInY = parent.Info.SamplesInY;
-            }
-
-            return new TextureInfo(
-                info.GpuAddress,
-                width,
-                height,
-                depthOrLayers,
-                info.Levels,
-                samplesInX,
-                samplesInY,
-                info.Stride,
-                info.IsLinear,
-                info.GobBlocksInY,
-                info.GobBlocksInZ,
-                info.GobBlocksInTileX,
-                target,
-                info.FormatInfo,
-                info.DepthStencilMode,
-                info.SwizzleR,
-                info.SwizzleG,
-                info.SwizzleB,
-                info.SwizzleA);
-        }
-
 
         /// <summary>
         /// Gets a texture creation information from texture information.

@@ -1,4 +1,3 @@
-using Ryujinx.Common;
 using Ryujinx.Common.Logging;
 using Ryujinx.Common.Memory;
 using Ryujinx.Graphics.GAL;
@@ -88,12 +87,6 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// Group that this texture belongs to. Manages read/write memory tracking.
         /// </summary>
         public TextureGroup Group { get; private set; }
-
-        /// <summary>
-        /// Set when a texture has been changed size. This indicates that it may need to be
-        /// changed again when obtained as a sampler.
-        /// </summary>
-        public bool ChangedSize { get; private set; }
 
         /// <summary>
         /// Set when a texture's GPU VA has ever been partially or fully unmapped.
@@ -408,122 +401,6 @@ namespace Ryujinx.Graphics.Gpu.Image
             }
 
             Group.CreateCopyDependency(contained, FirstLayer + layer, FirstLevel + level, copyTo);
-        }
-
-        /// <summary>
-        /// Changes the texture size.
-        /// </summary>
-        /// <remarks>
-        /// This operation may also change the size of all mipmap levels, including from the parent
-        /// and other possible child textures, to ensure that all sizes are consistent.
-        /// </remarks>
-        /// <param name="width">The new texture width</param>
-        /// <param name="height">The new texture height</param>
-        /// <param name="depthOrLayers">The new texture depth (for 3D textures) or layers (for layered textures)</param>
-        public void ChangeSize(int width, int height, int depthOrLayers)
-        {
-            int blockWidth = Info.FormatInfo.BlockWidth;
-            int blockHeight = Info.FormatInfo.BlockHeight;
-
-            width  <<= FirstLevel;
-            height <<= FirstLevel;
-
-            if (Target == Target.Texture3D)
-            {
-                depthOrLayers <<= FirstLevel;
-            }
-            else
-            {
-                depthOrLayers = _viewStorage.Info.DepthOrLayers;
-            }
-
-            _viewStorage.RecreateStorageOrView(width, height, blockWidth, blockHeight, depthOrLayers);
-
-            foreach (Texture view in _viewStorage._views)
-            {
-                int viewWidth  = Math.Max(1, width  >> view.FirstLevel);
-                int viewHeight = Math.Max(1, height >> view.FirstLevel);
-
-                int viewDepthOrLayers;
-
-                if (view.Info.Target == Target.Texture3D)
-                {
-                    viewDepthOrLayers = Math.Max(1, depthOrLayers >> view.FirstLevel);
-                }
-                else
-                {
-                    viewDepthOrLayers = view.Info.DepthOrLayers;
-                }
-
-                view.RecreateStorageOrView(viewWidth, viewHeight, blockWidth, blockHeight, viewDepthOrLayers);
-            }
-        }
-
-        /// <summary>
-        /// Recreates the texture storage (or view, in the case of child textures) of this texture.
-        /// This allows recreating the texture with a new size.
-        /// A copy is automatically performed from the old to the new texture.
-        /// </summary>
-        /// <param name="width">The new texture width</param>
-        /// <param name="height">The new texture height</param>
-        /// <param name="width">The block width related to the given width</param>
-        /// <param name="height">The block height related to the given height</param>
-        /// <param name="depthOrLayers">The new texture depth (for 3D textures) or layers (for layered textures)</param>
-        private void RecreateStorageOrView(int width, int height, int blockWidth, int blockHeight, int depthOrLayers)
-        {
-            RecreateStorageOrView(
-                BitUtils.DivRoundUp(width * Info.FormatInfo.BlockWidth, blockWidth),
-                BitUtils.DivRoundUp(height * Info.FormatInfo.BlockHeight, blockHeight),
-                depthOrLayers);
-        }
-
-        /// <summary>
-        /// Recreates the texture storage (or view, in the case of child textures) of this texture.
-        /// This allows recreating the texture with a new size.
-        /// A copy is automatically performed from the old to the new texture.
-        /// </summary>
-        /// <param name="width">The new texture width</param>
-        /// <param name="height">The new texture height</param>
-        /// <param name="depthOrLayers">The new texture depth (for 3D textures) or layers (for layered textures)</param>
-        private void RecreateStorageOrView(int width, int height, int depthOrLayers)
-        {
-            ChangedSize = true;
-
-            SetInfo(new TextureInfo(
-                Info.GpuAddress,
-                width,
-                height,
-                depthOrLayers,
-                Info.Levels,
-                Info.SamplesInX,
-                Info.SamplesInY,
-                Info.Stride,
-                Info.IsLinear,
-                Info.GobBlocksInY,
-                Info.GobBlocksInZ,
-                Info.GobBlocksInTileX,
-                Info.Target,
-                Info.FormatInfo,
-                Info.DepthStencilMode,
-                Info.SwizzleR,
-                Info.SwizzleG,
-                Info.SwizzleB,
-                Info.SwizzleA));
-
-            TextureCreateInfo createInfo = TextureCache.GetCreateInfo(Info, _context.Capabilities, ScaleFactor);
-
-            if (_viewStorage != this)
-            {
-                ReplaceStorage(_viewStorage.HostTexture.CreateView(createInfo, FirstLayer, FirstLevel));
-            }
-            else
-            {
-                ITexture newStorage = _context.Renderer.CreateTexture(createInfo, ScaleFactor);
-
-                HostTexture.CopyTo(newStorage, 0, 0);
-
-                ReplaceStorage(newStorage);
-            }
         }
 
         /// <summary>
@@ -1215,7 +1092,9 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <returns>A value indicating how well this texture matches the given info</returns>
         public TextureMatchQuality IsExactMatch(TextureInfo info, TextureSearchFlags flags)
         {
-            TextureMatchQuality matchQuality = TextureCompatibility.FormatMatches(Info, info, (flags & TextureSearchFlags.ForSampler) != 0, (flags & TextureSearchFlags.ForCopy) != 0);
+            bool forSampler = (flags & TextureSearchFlags.ForSampler) != 0;
+
+            TextureMatchQuality matchQuality = TextureCompatibility.FormatMatches(Info, info, forSampler, (flags & TextureSearchFlags.ForCopy) != 0);
 
             if (matchQuality == TextureMatchQuality.NoMatch)
             {
@@ -1227,12 +1106,12 @@ namespace Ryujinx.Graphics.Gpu.Image
                 return TextureMatchQuality.NoMatch;
             }
 
-            if (!TextureCompatibility.SizeMatches(Info, info, (flags & TextureSearchFlags.Strict) == 0, FirstLevel))
+            if (!TextureCompatibility.SizeMatches(Info, info, forSampler))
             {
                 return TextureMatchQuality.NoMatch;
             }
 
-            if ((flags & TextureSearchFlags.ForSampler) != 0 || (flags & TextureSearchFlags.Strict) != 0)
+            if ((flags & TextureSearchFlags.ForSampler) != 0)
             {
                 if (!TextureCompatibility.SamplerParamsMatches(Info, info))
                 {
@@ -1262,12 +1141,20 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// </summary>
         /// <param name="info">Texture view information</param>
         /// <param name="range">Texture view physical memory ranges</param>
+        /// <param name="exactSize">Indicates if the texture sizes must be exactly equal, or width is allowed to differ</param>
         /// <param name="layerSize">Layer size on the given texture</param>
         /// <param name="caps">Host GPU capabilities</param>
         /// <param name="firstLayer">Texture view initial layer on this texture</param>
         /// <param name="firstLevel">Texture view first mipmap level on this texture</param>
         /// <returns>The level of compatiblilty a view with the given parameters created from this texture has</returns>
-        public TextureViewCompatibility IsViewCompatible(TextureInfo info, MultiRange range, int layerSize, Capabilities caps, out int firstLayer, out int firstLevel)
+        public TextureViewCompatibility IsViewCompatible(
+            TextureInfo info,
+            MultiRange range,
+            bool exactSize,
+            int layerSize,
+            Capabilities caps,
+            out int firstLayer,
+            out int firstLevel)
         {
             TextureViewCompatibility result = TextureViewCompatibility.Full;
 
@@ -1317,7 +1204,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                 return TextureViewCompatibility.LayoutIncompatible;
             }
 
-            result = TextureCompatibility.PropagateViewCompatibility(result, TextureCompatibility.ViewSizeMatches(Info, info, firstLevel));
+            result = TextureCompatibility.PropagateViewCompatibility(result, TextureCompatibility.ViewSizeMatches(Info, info, exactSize, firstLevel));
             result = TextureCompatibility.PropagateViewCompatibility(result, TextureCompatibility.ViewSubImagesInBounds(Info, info, firstLayer, firstLevel));
 
             return result;

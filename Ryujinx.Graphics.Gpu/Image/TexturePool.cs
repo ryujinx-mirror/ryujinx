@@ -77,22 +77,7 @@ namespace Ryujinx.Graphics.Gpu.Image
             }
             else
             {
-                if (texture.ChangedSize)
-                {
-                    // Texture changed size at one point - it may be a different size than the sampler expects.
-                    // This can be triggered when the size is changed by a size hint on copy or draw, but the texture has been sampled before.
-
-                    int baseLevel = descriptor.UnpackBaseLevel();
-                    int width = Math.Max(1, descriptor.UnpackWidth() >> baseLevel);
-                    int height = Math.Max(1, descriptor.UnpackHeight() >> baseLevel);
-
-                    if (texture.Info.Width != width || texture.Info.Height != height)
-                    {
-                        texture.ChangeSize(width, height, texture.Info.DepthOrLayers);
-                    }
-                }
-
-                // Memory is automatically synchronized on texture creation.
+                // On the path above (texture not yet in the pool), memory is automatically synchronized on texture creation.
                 texture.SynchronizeMemory();
             }
 

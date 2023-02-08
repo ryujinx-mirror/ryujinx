@@ -402,19 +402,22 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         /// </summary>
         private void UpdateRenderTargetState()
         {
-            UpdateRenderTargetState(true);
+            UpdateRenderTargetState(RenderTargetUpdateFlags.UpdateAll);
         }
 
         /// <summary>
         /// Updates render targets (color and depth-stencil buffers) based on current render target state.
         /// </summary>
-        /// <param name="useControl">Use draw buffers information from render target control register</param>
-        /// <param name="layered">Indicates if the texture is layered</param>
+        /// <param name="updateFlags">Flags indicating which render targets should be updated and how</param>
         /// <param name="singleUse">If this is not -1, it indicates that only the given indexed target will be used.</param>
-        public void UpdateRenderTargetState(bool useControl, bool layered = false, int singleUse = -1)
+        public void UpdateRenderTargetState(RenderTargetUpdateFlags updateFlags, int singleUse = -1)
         {
             var memoryManager = _channel.MemoryManager;
             var rtControl = _state.State.RtControl;
+
+            bool useControl = updateFlags.HasFlag(RenderTargetUpdateFlags.UseControl);
+            bool layered = updateFlags.HasFlag(RenderTargetUpdateFlags.Layered);
+            bool singleColor = updateFlags.HasFlag(RenderTargetUpdateFlags.SingleColor);
 
             int count = useControl ? rtControl.UnpackCount() : Constants.TotalRenderTargets;
 
@@ -438,7 +441,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
 
                 var colorState = _state.State.RtColorState[rtIndex];
 
-                if (index >= count || !IsRtEnabled(colorState))
+                if (index >= count || !IsRtEnabled(colorState) || (singleColor && index != singleUse))
                 {
                     changedScale |= _channel.TextureManager.SetRenderTargetColor(index, null);
 
@@ -478,7 +481,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
 
             Image.Texture depthStencil = null;
 
-            if (dsEnable)
+            if (dsEnable && updateFlags.HasFlag(RenderTargetUpdateFlags.UpdateDepthStencil))
             {
                 var dsState = _state.State.RtDepthStencilState;
                 var dsSize = _state.State.RtDepthStencilSize;

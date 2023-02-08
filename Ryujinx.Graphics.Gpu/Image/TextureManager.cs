@@ -441,22 +441,6 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// Update host framebuffer attachments based on currently bound render target buffers.
         /// </summary>
         /// <remarks>
-        /// All attachments other than <paramref name="index"/> will be unbound.
-        /// </remarks>
-        /// <param name="index">Index of the render target color to be updated</param>
-        public void UpdateRenderTarget(int index)
-        {
-            new Span<ITexture>(_rtHostColors).Fill(null);
-            _rtHostColors[index] = _rtColors[index]?.HostTexture;
-            _rtHostDs = null;
-
-            _context.Renderer.Pipeline.SetRenderTargets(_rtHostColors, null);
-        }
-
-        /// <summary>
-        /// Update host framebuffer attachments based on currently bound render target buffers.
-        /// </summary>
-        /// <remarks>
         /// All color attachments will be unbound.
         /// </remarks>
         public void UpdateRenderTargetDepthStencil()

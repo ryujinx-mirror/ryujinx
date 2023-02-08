@@ -1,5 +1,7 @@
+using Ryujinx.Common;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.Texture;
+using System;
 
 namespace Ryujinx.Graphics.Gpu.Image
 {
@@ -291,6 +293,89 @@ namespace Ryujinx.Graphics.Gpu.Image
                     GobBlocksInTileX,
                     layerSize);
             }
+        }
+
+        /// <summary>
+        /// Creates texture information for a given mipmap level of the specified parent texture and this information.
+        /// </summary>
+        /// <param name="parent">The parent texture</param>
+        /// <param name="firstLevel">The first level of the texture view</param>
+        /// <returns>The adjusted texture information with the new size</returns>
+        public TextureInfo CreateInfoForLevelView(Texture parent, int firstLevel)
+        {
+            // When the texture is used as view of another texture, we must
+            // ensure that the sizes are valid, otherwise data uploads would fail
+            // (and the size wouldn't match the real size used on the host API).
+            // Given a parent texture from where the view is created, we have the
+            // following rules:
+            // - The view size must be equal to the parent size, divided by (2 ^ l),
+            // where l is the first mipmap level of the view. The division result must
+            // be rounded down, and the result must be clamped to 1.
+            // - If the parent format is compressed, and the view format isn't, the
+            // view size is calculated as above, but the width and height of the
+            // view must be also divided by the compressed format block width and height.
+            // - If the parent format is not compressed, and the view is, the view
+            // size is calculated as described on the first point, but the width and height
+            // of the view must be also multiplied by the block width and height.
+            int width  = Math.Max(1, parent.Info.Width  >> firstLevel);
+            int height = Math.Max(1, parent.Info.Height >> firstLevel);
+
+            if (parent.Info.FormatInfo.IsCompressed && !FormatInfo.IsCompressed)
+            {
+                width  = BitUtils.DivRoundUp(width,  parent.Info.FormatInfo.BlockWidth);
+                height = BitUtils.DivRoundUp(height, parent.Info.FormatInfo.BlockHeight);
+            }
+            else if (!parent.Info.FormatInfo.IsCompressed && FormatInfo.IsCompressed)
+            {
+                width  *= FormatInfo.BlockWidth;
+                height *= FormatInfo.BlockHeight;
+            }
+
+            int depthOrLayers;
+
+            if (Target == Target.Texture3D)
+            {
+                depthOrLayers = Math.Max(1, parent.Info.DepthOrLayers >> firstLevel);
+            }
+            else
+            {
+                depthOrLayers = DepthOrLayers;
+            }
+
+            // 2D and 2D multisample textures are not considered compatible.
+            // This specific case is required for copies, where the source texture might be multisample.
+            // In this case, we inherit the parent texture multisample state.
+            Target target = Target;
+            int samplesInX = SamplesInX;
+            int samplesInY = SamplesInY;
+
+            if (target == Target.Texture2D && parent.Target == Target.Texture2DMultisample)
+            {
+                target = Target.Texture2DMultisample;
+                samplesInX = parent.Info.SamplesInX;
+                samplesInY = parent.Info.SamplesInY;
+            }
+
+            return new TextureInfo(
+                GpuAddress,
+                width,
+                height,
+                depthOrLayers,
+                Levels,
+                samplesInX,
+                samplesInY,
+                Stride,
+                IsLinear,
+                GobBlocksInY,
+                GobBlocksInZ,
+                GobBlocksInTileX,
+                target,
+                FormatInfo,
+                DepthStencilMode,
+                SwizzleR,
+                SwizzleG,
+                SwizzleB,
+                SwizzleA);
         }
     }
 }
