@@ -1637,13 +1637,6 @@ namespace Ryujinx.Graphics.Gpu.Image
             }
 
             RemoveFromPools(true);
-
-            // We only want to remove if there's no mapped region of the texture that was modified by the GPU,
-            // otherwise we could lose data.
-            if (!Group.AnyModified(this))
-            {
-                _physicalMemory.TextureCache.QueueAutoDeleteCacheRemoval(this);
-            }
         }
 
         /// <summary>

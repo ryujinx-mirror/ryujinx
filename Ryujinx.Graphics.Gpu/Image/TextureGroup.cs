@@ -435,32 +435,6 @@ namespace Ryujinx.Graphics.Gpu.Image
         }
 
         /// <summary>
-        /// Checks if a texture was modified by the GPU.
-        /// </summary>
-        /// <param name="texture">The texture to be checked</param>
-        /// <returns>True if any region of the texture was modified by the GPU, false otherwise</returns>
-        public bool AnyModified(Texture texture)
-        {
-            bool anyModified = false;
-
-            EvaluateRelevantHandles(texture, (baseHandle, regionCount, split) =>
-            {
-                for (int i = 0; i < regionCount; i++)
-                {
-                    TextureGroupHandle group = _handles[baseHandle + i];
-
-                    if (group.Modified)
-                    {
-                        anyModified = true;
-                        break;
-                    }
-                }
-            });
-
-            return anyModified;
-        }
-
-        /// <summary>
         /// Flush modified ranges for a given texture.
         /// </summary>
         /// <param name="texture">The texture being used</param>

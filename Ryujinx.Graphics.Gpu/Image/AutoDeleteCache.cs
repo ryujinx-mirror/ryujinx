@@ -33,10 +33,12 @@ namespace Ryujinx.Graphics.Gpu.Image
     /// </summary>
     class AutoDeleteCache : IEnumerable<Texture>
     {
+        private const int MinCountForDeletion = 32;
         private const int MaxCapacity = 2048;
+        private const ulong MaxTextureSizeCapacity = 512 * 1024 * 1024; // MB;
 
         private readonly LinkedList<Texture> _textures;
-        private readonly ConcurrentQueue<Texture> _deferredRemovals;
+        private ulong _totalSize;
 
         private HashSet<ShortTextureCacheEntry> _shortCacheBuilder;
         private HashSet<ShortTextureCacheEntry> _shortCache;
@@ -49,7 +51,6 @@ namespace Ryujinx.Graphics.Gpu.Image
         public AutoDeleteCache()
         {
             _textures = new LinkedList<Texture>();
-            _deferredRemovals = new ConcurrentQueue<Texture>();
 
             _shortCacheBuilder = new HashSet<ShortTextureCacheEntry>();
             _shortCache = new HashSet<ShortTextureCacheEntry>();
@@ -67,37 +68,15 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <param name="texture">The texture to be added to the cache</param>
         public void Add(Texture texture)
         {
-            texture.IncrementReferenceCount();
+            _totalSize += texture.Size;
 
+            texture.IncrementReferenceCount();
             texture.CacheNode = _textures.AddLast(texture);
 
-            if (_textures.Count > MaxCapacity)
+            if (_textures.Count > MaxCapacity ||
+                (_totalSize > MaxTextureSizeCapacity && _textures.Count >= MinCountForDeletion))
             {
-                Texture oldestTexture = _textures.First.Value;
-
-                if (!oldestTexture.CheckModified(false))
-                {
-                    // The texture must be flushed if it falls out of the auto delete cache.
-                    // Flushes out of the auto delete cache do not trigger write tracking,
-                    // as it is expected that other overlapping textures exist that have more up-to-date contents.
-
-                    oldestTexture.Group.SynchronizeDependents(oldestTexture);
-                    oldestTexture.FlushModified(false);
-                }
-
-                _textures.RemoveFirst();
-
-                oldestTexture.DecrementReferenceCount();
-
-                oldestTexture.CacheNode = null;
-            }
-
-            if (_deferredRemovals.Count > 0)
-            {
-                while (_deferredRemovals.TryDequeue(out Texture textureToRemove))
-                {
-                    Remove(textureToRemove, false);
-                }
+                RemoveLeastUsedTexture();
             }
         }
 
@@ -120,11 +99,41 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                     texture.CacheNode = _textures.AddLast(texture);
                 }
+
+                if (_totalSize > MaxTextureSizeCapacity && _textures.Count >= MinCountForDeletion)
+                {
+                    RemoveLeastUsedTexture();
+                }
             }
             else
             {
                 Add(texture);
             }
+        }
+
+        /// <summary>
+        /// Removes the least used texture from the cache.
+        /// </summary>
+        private void RemoveLeastUsedTexture()
+        {
+            Texture oldestTexture = _textures.First.Value;
+
+            _totalSize -= oldestTexture.Size;
+
+            if (!oldestTexture.CheckModified(false))
+            {
+                // The texture must be flushed if it falls out of the auto delete cache.
+                // Flushes out of the auto delete cache do not trigger write tracking,
+                // as it is expected that other overlapping textures exist that have more up-to-date contents.
+
+                oldestTexture.Group.SynchronizeDependents(oldestTexture);
+                oldestTexture.FlushModified(false);
+            }
+
+            _textures.RemoveFirst();
+
+            oldestTexture.DecrementReferenceCount();
+            oldestTexture.CacheNode = null;
         }
 
         /// <summary>
@@ -148,18 +157,11 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             _textures.Remove(texture.CacheNode);
 
+            _totalSize -= texture.Size;
+
             texture.CacheNode = null;
 
             return texture.DecrementReferenceCount();
-        }
-
-        /// <summary>
-        /// Queues removal of a texture from the cache in a thread safe way.
-        /// </summary>
-        /// <param name="texture">The texture to be removed from the cache</param>
-        public void RemoveDeferred(Texture texture)
-        {
-            _deferredRemovals.Enqueue(texture);
         }
 
         /// <summary>
