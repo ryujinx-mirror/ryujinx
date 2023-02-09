@@ -1,13 +1,7 @@
 name: Missing Service Call
 description: Service call is missing in Ryujinx.
+labels: not-implemented
 body:
-  - type: checkboxes
-    attributes:
-      label: Is there an existing issue for this?
-      description: Please search for an [existing missing service call issue](https://github.com/Ryujinx/Ryujinx/issues) first.
-      options:
-      - label: I have searched the existing issues
-        required: true
   - type: textarea
     id: instruction
     attributes:

@@ -1,13 +1,8 @@
 name: Bug Report
 description: File a bug report
+title: "[Bug] <title>"
+labels: bug
 body:
-  - type: checkboxes
-    attributes:
-      label: Is there an existing issue for this?
-      description: Please search to see if an issue already exists for the bug you encountered.
-      options:
-      - label: I have searched the existing issues
-        required: true
   - type: textarea
     id: issue
     attributes:
@@ -53,17 +48,43 @@ body:
         - *(e.g. 1.1.1)*
     validations:
       required: false
-  - type: textarea
-    id: environment
+  - type: input
+    id: cpu
     attributes:
-      label: Environment?
-      value: |
-        - ##### CPU: *(e.g. i7-6700)*
-        - ##### GPU: *(e.g. NVIDIA RTX 2070)*
-        - ##### RAM: *(e.g. 16GB)*
-        - Applied Mods: [ Yes (Which ones) / No ]
+      label: CPU
+      placeholder: |
+        - *(e.g. i7-6700)*
     validations:
-      required: true
+      required: false
+  - type: input
+    id: gpu
+    attributes:
+      label: GPU
+      placeholder: |
+        - *(e.g. NVIDIA RTX 2070)*
+    validations:
+      required: false
+  - type: input
+    id: ram
+    attributes:
+      label: RAM
+      placeholder: |
+        - *(e.g. 16GB)*
+    validations:
+      required: false
+  - type: checkboxes
+    attributes:
+      label: Applied Mods?
+      options:
+      - label: Yes
+        required: false
+  - type: textarea
+    id: mods
+    attributes:
+      label: List of applied mods
+      placeholder: You can list applied mods here.
+    validations:
+      required: false
   - type: textarea
     id: additional-context
     attributes:

@@ -1,13 +1,8 @@
 name: Missing CPU Instruction
 description: CPU Instruction is missing in Ryujinx.
+title: "[CPU] <title>"
+labels: [cpu, not-implemented]
 body:
-  - type: checkboxes
-    attributes:
-      label: Is there an existing issue for this?
-      description: Please search for existing missing CPU instruction
-      options:
-      - label: I have searched the existing issues
-        required: true
   - type: textarea
     id: instruction
     attributes:
