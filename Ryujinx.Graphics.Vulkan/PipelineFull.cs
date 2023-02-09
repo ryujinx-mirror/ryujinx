@@ -281,7 +281,7 @@ namespace Ryujinx.Graphics.Vulkan
 
         protected override void SignalAttachmentChange()
         {
-            if (AutoFlush.ShouldFlush(DrawCount))
+            if (AutoFlush.ShouldFlushAttachmentChange(DrawCount))
             {
                 FlushCommandsImpl();
             }

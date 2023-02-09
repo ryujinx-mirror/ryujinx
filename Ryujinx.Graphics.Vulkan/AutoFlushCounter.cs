@@ -10,11 +10,13 @@ namespace Ryujinx.Graphics.Vulkan
         private readonly static long FramebufferFlushTimer = Stopwatch.Frequency / 1000;
 
         private const int MinDrawCountForFlush = 10;
+        private const int MinConsecutiveQueryForFlush = 10;
         private const int InitialQueryCountForFlush = 32;
 
         private long _lastFlush;
         private ulong _lastDrawCount;
         private bool _hasPendingQuery;
+        private int _consecutiveQueries;
         private int _queryCount;
 
         private int[] _queryCountHistory = new int[3];
@@ -27,11 +29,13 @@ namespace Ryujinx.Graphics.Vulkan
             _lastDrawCount = drawCount;
 
             _hasPendingQuery = false;
+            _consecutiveQueries = 0;
         }
 
         public bool RegisterPendingQuery()
         {
             _hasPendingQuery = true;
+            _consecutiveQueries++;
             _remainingQueries--;
 
             _queryCountHistory[_queryCountHistoryIndex]++;
@@ -65,14 +69,17 @@ namespace Ryujinx.Graphics.Vulkan
             return _hasPendingQuery;
         }
 
-        public bool ShouldFlush(ulong drawCount)
+        public bool ShouldFlushAttachmentChange(ulong drawCount)
         {
             _queryCount = 0;
 
-            if (_hasPendingQuery)
+            // Flush when there's an attachment change out of a large block of queries.
+            if (_consecutiveQueries > MinConsecutiveQueryForFlush)
             {
                 return true;
             }
+
+            _consecutiveQueries = 0;
 
             long draws = (long)(drawCount - _lastDrawCount);
 
