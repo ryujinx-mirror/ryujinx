@@ -397,6 +397,31 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
         private static void DeclareInputAttributes(CodeGenContext context, StructuredProgramInfo info, bool perPatch)
         {
             bool iaIndexing = context.Config.UsedFeatures.HasFlag(FeatureFlags.IaIndexing);
+
+            if (iaIndexing && !perPatch)
+            {
+                var attrType = context.TypeVector(context.TypeFP32(), (LiteralInteger)4);
+                attrType = context.TypeArray(attrType, context.Constant(context.TypeU32(), (LiteralInteger)MaxAttributes));
+
+                if (context.Config.Stage == ShaderStage.Geometry)
+                {
+                    attrType = context.TypeArray(attrType, context.Constant(context.TypeU32(), (LiteralInteger)context.InputVertices));
+                }
+
+                var spvType = context.TypePointer(StorageClass.Input, attrType);
+                var spvVar = context.Variable(spvType, StorageClass.Input);
+
+                if (context.Config.PassthroughAttributes != 0 && context.Config.GpuAccessor.QueryHostSupportsGeometryShaderPassthrough())
+                {
+                    context.Decorate(spvVar, Decoration.PassthroughNV);
+                }
+
+                context.Decorate(spvVar, Decoration.Location, (LiteralInteger)0);
+
+                context.AddGlobalVariable(spvVar);
+                context.InputsArray = spvVar;
+            }
+
             var inputs = perPatch ? info.InputsPerPatch : info.Inputs;
 
             foreach (int attr in inputs)
@@ -410,60 +435,56 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
 
                 if (iaIndexing && isUserAttr && !perPatch)
                 {
-                    if (context.InputsArray == null)
-                    {
-                        var attrType = context.TypeVector(context.TypeFP32(), (LiteralInteger)4);
-                        attrType = context.TypeArray(attrType, context.Constant(context.TypeU32(), (LiteralInteger)MaxAttributes));
-
-                        if (context.Config.Stage == ShaderStage.Geometry)
-                        {
-                            attrType = context.TypeArray(attrType, context.Constant(context.TypeU32(), (LiteralInteger)context.InputVertices));
-                        }
-
-                        var spvType = context.TypePointer(StorageClass.Input, attrType);
-                        var spvVar = context.Variable(spvType, StorageClass.Input);
-
-                        if (context.Config.PassthroughAttributes != 0 && context.Config.GpuAccessor.QueryHostSupportsGeometryShaderPassthrough())
-                        {
-                            context.Decorate(spvVar, Decoration.PassthroughNV);
-                        }
-
-                        context.Decorate(spvVar, Decoration.Location, (LiteralInteger)0);
-
-                        context.AddGlobalVariable(spvVar);
-                        context.InputsArray = spvVar;
-                    }
+                    continue;
                 }
-                else
+
+                PixelImap iq = PixelImap.Unused;
+
+                if (context.Config.Stage == ShaderStage.Fragment)
                 {
-                    PixelImap iq = PixelImap.Unused;
-
-                    if (context.Config.Stage == ShaderStage.Fragment)
+                    if (attr >= AttributeConsts.UserAttributeBase && attr < AttributeConsts.UserAttributeEnd)
                     {
-                        if (attr >= AttributeConsts.UserAttributeBase && attr < AttributeConsts.UserAttributeEnd)
-                        {
-                            iq = context.Config.ImapTypes[(attr - AttributeConsts.UserAttributeBase) / 16].GetFirstUsedType();
-                        }
-                        else
-                        {
-                            AttributeInfo attrInfo = AttributeInfo.From(context.Config, attr, isOutAttr: false);
-                            AggregateType elemType = attrInfo.Type & AggregateType.ElementTypeMask;
+                        iq = context.Config.ImapTypes[(attr - AttributeConsts.UserAttributeBase) / 16].GetFirstUsedType();
+                    }
+                    else
+                    {
+                        AttributeInfo attrInfo = AttributeInfo.From(context.Config, attr, isOutAttr: false);
+                        AggregateType elemType = attrInfo.Type & AggregateType.ElementTypeMask;
 
-                            if (attrInfo.IsBuiltin && (elemType == AggregateType.S32 || elemType == AggregateType.U32))
-                            {
-                                iq = PixelImap.Constant;
-                            }
+                        if (attrInfo.IsBuiltin && (elemType == AggregateType.S32 || elemType == AggregateType.U32))
+                        {
+                            iq = PixelImap.Constant;
                         }
                     }
-
-                    DeclareInputOrOutput(context, attr, perPatch, isOutAttr: false, iq);
                 }
+
+                DeclareInputOrOutput(context, attr, perPatch, isOutAttr: false, iq);
             }
         }
 
         private static void DeclareOutputAttributes(CodeGenContext context, StructuredProgramInfo info, bool perPatch)
         {
             bool oaIndexing = context.Config.UsedFeatures.HasFlag(FeatureFlags.OaIndexing);
+
+            if (oaIndexing && !perPatch)
+            {
+                var attrType = context.TypeVector(context.TypeFP32(), (LiteralInteger)4);
+                attrType = context.TypeArray(attrType, context.Constant(context.TypeU32(), (LiteralInteger)MaxAttributes));
+
+                if (context.Config.Stage == ShaderStage.TessellationControl)
+                {
+                    attrType = context.TypeArray(attrType, context.Constant(context.TypeU32(), context.Config.ThreadsPerInputPrimitive));
+                }
+
+                var spvType = context.TypePointer(StorageClass.Output, attrType);
+                var spvVar = context.Variable(spvType, StorageClass.Output);
+
+                context.Decorate(spvVar, Decoration.Location, (LiteralInteger)0);
+
+                context.AddGlobalVariable(spvVar);
+                context.OutputsArray = spvVar;
+            }
+
             var outputs = perPatch ? info.OutputsPerPatch : info.Outputs;
 
             foreach (int attr in outputs)
@@ -477,29 +498,10 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
 
                 if (oaIndexing && isUserAttr && !perPatch)
                 {
-                    if (context.OutputsArray == null)
-                    {
-                        var attrType = context.TypeVector(context.TypeFP32(), (LiteralInteger)4);
-                        attrType = context.TypeArray(attrType, context.Constant(context.TypeU32(), (LiteralInteger)MaxAttributes));
-
-                        if (context.Config.Stage == ShaderStage.TessellationControl)
-                        {
-                            attrType = context.TypeArray(attrType, context.Constant(context.TypeU32(), context.Config.ThreadsPerInputPrimitive));
-                        }
-
-                        var spvType = context.TypePointer(StorageClass.Output, attrType);
-                        var spvVar = context.Variable(spvType, StorageClass.Output);
-
-                        context.Decorate(spvVar, Decoration.Location, (LiteralInteger)0);
-
-                        context.AddGlobalVariable(spvVar);
-                        context.OutputsArray = spvVar;
-                    }
+                    continue;
                 }
-                else
-                {
-                    DeclareOutputAttribute(context, attr, perPatch);
-                }
+
+                DeclareOutputAttribute(context, attr, perPatch);
             }
 
             if (context.Config.Stage == ShaderStage.Vertex)
