@@ -10,6 +10,8 @@ namespace Ryujinx.Graphics.OpenGL
 {
     class Program : IProgram
     {
+        private const int MaxShaderLogLength = 2048;
+
         public int Handle { get; private set; }
 
         public bool IsLinked
@@ -115,9 +117,16 @@ namespace Ryujinx.Graphics.OpenGL
 
             if (status == 0)
             {
-                // Use GL.GetProgramInfoLog(Handle), it may be too long to print on the log.
                 _status = ProgramLinkStatus.Failure;
-                Logger.Debug?.Print(LogClass.Gpu, "Shader linking failed.");
+
+                string log = GL.GetProgramInfoLog(Handle);
+
+                if (log.Length > MaxShaderLogLength)
+                {
+                    log = log.Substring(0, MaxShaderLogLength) + "...";
+                }
+
+                Logger.Warning?.Print(LogClass.Gpu, $"Shader linking failed: \n{log}");
             }
             else
             {
