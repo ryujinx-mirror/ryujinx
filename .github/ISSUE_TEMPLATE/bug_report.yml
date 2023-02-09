@@ -76,7 +76,7 @@ body:
     attributes:
       label: Applied Mods?
       options:
-      - label: Yes
+      - label: "Yes"
         required: false
   - type: textarea
     id: mods
