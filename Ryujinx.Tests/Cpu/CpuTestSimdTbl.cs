@@ -1,9 +1,7 @@
 #define SimdTbl
 
 using ARMeilleure.State;
-
 using NUnit.Framework;
-
 using System.Collections.Generic;
 
 namespace Ryujinx.Tests.Cpu
@@ -16,17 +14,17 @@ namespace Ryujinx.Tests.Cpu
 #region "Helper methods"
         private static ulong GenIdxsForTbls(int regs)
         {
-            const byte idxInRngMin  = (byte)0;
-                  byte idxInRngMax  = (byte)((16 * regs) - 1);
-                  byte idxOutRngMin = (byte) (16 * regs);
-            const byte idxOutRngMax = (byte)255;
+            const byte idxInRngMin = 0;
+            byte idxInRngMax  = (byte)((16 * regs) - 1);
+            byte idxOutRngMin = (byte) (16 * regs);
+            const byte idxOutRngMax = 255;
 
             ulong idxs = 0ul;
 
             for (int cnt = 1; cnt <= 8; cnt++)
             {
-                ulong idxInRng  = (ulong)TestContext.CurrentContext.Random.NextByte(idxInRngMin,  idxInRngMax);
-                ulong idxOutRng = (ulong)TestContext.CurrentContext.Random.NextByte(idxOutRngMin, idxOutRngMax);
+                ulong idxInRng  = TestContext.CurrentContext.Random.NextByte(idxInRngMin,  idxInRngMax);
+                ulong idxOutRng = TestContext.CurrentContext.Random.NextByte(idxOutRngMin, idxOutRngMax);
 
                 ulong idx = TestContext.CurrentContext.Random.NextBool() ? idxInRng : idxOutRng;
 
@@ -40,8 +38,8 @@ namespace Ryujinx.Tests.Cpu
 #region "ValueSource (Types)"
         private static ulong[] _8B_()
         {
-            return new ulong[] { 0x0000000000000000ul, 0x7F7F7F7F7F7F7F7Ful,
-                                 0x8080808080808080ul, 0xFFFFFFFFFFFFFFFFul };
+            return new[] { 0x0000000000000000ul, 0x7F7F7F7F7F7F7F7Ful,
+                           0x8080808080808080ul, 0xFFFFFFFFFFFFFFFFul };
         }
 
         private static IEnumerable<ulong> _GenIdxsForTbl1_()
@@ -100,7 +98,7 @@ namespace Ryujinx.Tests.Cpu
 #region "ValueSource (Opcodes)"
         private static uint[] _SingleRegisterTable_V_8B_16B_()
         {
-            return new uint[]
+            return new[]
             {
                 0x0E000000u, // TBL V0.8B, { V0.16B }, V0.8B
                 0x0E001000u  // TBX V0.8B, { V0.16B }, V0.8B
@@ -109,7 +107,7 @@ namespace Ryujinx.Tests.Cpu
 
         private static uint[] _TwoRegisterTable_V_8B_16B_()
         {
-            return new uint[]
+            return new[]
             {
                 0x0E002000u, // TBL V0.8B, { V0.16B, V1.16B }, V0.8B
                 0x0E003000u  // TBX V0.8B, { V0.16B, V1.16B }, V0.8B
@@ -118,7 +116,7 @@ namespace Ryujinx.Tests.Cpu
 
         private static uint[] _ThreeRegisterTable_V_8B_16B_()
         {
-            return new uint[]
+            return new[]
             {
                 0x0E004000u, // TBL V0.8B, { V0.16B, V1.16B, V2.16B }, V0.8B
                 0x0E005000u  // TBX V0.8B, { V0.16B, V1.16B, V2.16B }, V0.8B
@@ -127,7 +125,7 @@ namespace Ryujinx.Tests.Cpu
 
         private static uint[] _FourRegisterTable_V_8B_16B_()
         {
-            return new uint[]
+            return new[]
             {
                 0x0E006000u, // TBL V0.8B, { V0.16B, V1.16B, V2.16B, V3.16B }, V0.8B
                 0x0E006000u  // TBX V0.8B, { V0.16B, V1.16B, V2.16B, V3.16B }, V0.8B
@@ -135,18 +133,16 @@ namespace Ryujinx.Tests.Cpu
         }
 #endregion
 
-        private const int RndCntDest = 2;
-        private const int RndCntTbls = 2;
         private const int RndCntIdxs = 2;
 
         [Test, Pairwise]
-        public void SingleRegisterTable_V_8B_16B([ValueSource("_SingleRegisterTable_V_8B_16B_")] uint opcodes,
+        public void SingleRegisterTable_V_8B_16B([ValueSource(nameof(_SingleRegisterTable_V_8B_16B_))] uint opcodes,
                                                  [Values(0u)] uint rd,
                                                  [Values(1u)] uint rn,
                                                  [Values(2u)] uint rm,
-                                                 [ValueSource("_8B_")] [Random(RndCntDest)] ulong z,
-                                                 [ValueSource("_8B_")] [Random(RndCntTbls)] ulong table0,
-                                                 [ValueSource("_GenIdxsForTbl1_")] ulong indexes,
+                                                 [ValueSource(nameof(_8B_))] ulong z,
+                                                 [ValueSource(nameof(_8B_))] ulong table0,
+                                                 [ValueSource(nameof(_GenIdxsForTbl1_))] ulong indexes,
                                                  [Values(0b0u, 0b1u)] uint q) // <8B, 16B>
         {
             opcodes |= ((rm & 31) << 16) | ((rn & 31) << 5) | ((rd & 31) << 0);
@@ -162,14 +158,14 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Pairwise]
-        public void TwoRegisterTable_V_8B_16B([ValueSource("_TwoRegisterTable_V_8B_16B_")] uint opcodes,
+        public void TwoRegisterTable_V_8B_16B([ValueSource(nameof(_TwoRegisterTable_V_8B_16B_))] uint opcodes,
                                               [Values(0u)] uint rd,
                                               [Values(1u)] uint rn,
                                               [Values(3u)] uint rm,
-                                              [ValueSource("_8B_")] [Random(RndCntDest)] ulong z,
-                                              [ValueSource("_8B_")] [Random(RndCntTbls)] ulong table0,
-                                              [ValueSource("_8B_")] [Random(RndCntTbls)] ulong table1,
-                                              [ValueSource("_GenIdxsForTbl2_")] ulong indexes,
+                                              [ValueSource(nameof(_8B_))] ulong z,
+                                              [ValueSource(nameof(_8B_))] ulong table0,
+                                              [ValueSource(nameof(_8B_))] ulong table1,
+                                              [ValueSource(nameof(_GenIdxsForTbl2_))] ulong indexes,
                                               [Values(0b0u, 0b1u)] uint q) // <8B, 16B>
         {
             opcodes |= ((rm & 31) << 16) | ((rn & 31) << 5) | ((rd & 31) << 0);
@@ -186,14 +182,14 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Pairwise]
-        public void Mod_TwoRegisterTable_V_8B_16B([ValueSource("_TwoRegisterTable_V_8B_16B_")] uint opcodes,
+        public void Mod_TwoRegisterTable_V_8B_16B([ValueSource(nameof(_TwoRegisterTable_V_8B_16B_))] uint opcodes,
                                                   [Values(30u, 1u)] uint rd,
                                                   [Values(31u)]     uint rn,
                                                   [Values(1u, 30u)] uint rm,
-                                                  [ValueSource("_8B_")] [Random(RndCntDest)] ulong z,
-                                                  [ValueSource("_8B_")] [Random(RndCntTbls)] ulong table0,
-                                                  [ValueSource("_8B_")] [Random(RndCntTbls)] ulong table1,
-                                                  [ValueSource("_GenIdxsForTbl2_")] ulong indexes,
+                                                  [ValueSource(nameof(_8B_))] ulong z,
+                                                  [ValueSource(nameof(_8B_))] ulong table0,
+                                                  [ValueSource(nameof(_8B_))] ulong table1,
+                                                  [ValueSource(nameof(_GenIdxsForTbl2_))] ulong indexes,
                                                   [Values(0b0u, 0b1u)] uint q) // <8B, 16B>
         {
             opcodes |= ((rm & 31) << 16) | ((rn & 31) << 5) | ((rd & 31) << 0);
@@ -210,15 +206,15 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Pairwise]
-        public void ThreeRegisterTable_V_8B_16B([ValueSource("_ThreeRegisterTable_V_8B_16B_")] uint opcodes,
+        public void ThreeRegisterTable_V_8B_16B([ValueSource(nameof(_ThreeRegisterTable_V_8B_16B_))] uint opcodes,
                                                 [Values(0u)] uint rd,
                                                 [Values(1u)] uint rn,
                                                 [Values(4u)] uint rm,
-                                                [ValueSource("_8B_")] [Random(RndCntDest)] ulong z,
-                                                [ValueSource("_8B_")] [Random(RndCntTbls)] ulong table0,
-                                                [ValueSource("_8B_")] [Random(RndCntTbls)] ulong table1,
-                                                [ValueSource("_8B_")] [Random(RndCntTbls)] ulong table2,
-                                                [ValueSource("_GenIdxsForTbl3_")] ulong indexes,
+                                                [ValueSource(nameof(_8B_))] ulong z,
+                                                [ValueSource(nameof(_8B_))] ulong table0,
+                                                [ValueSource(nameof(_8B_))] ulong table1,
+                                                [ValueSource(nameof(_8B_))] ulong table2,
+                                                [ValueSource(nameof(_GenIdxsForTbl3_))] ulong indexes,
                                                 [Values(0b0u, 0b1u)] uint q) // <8B, 16B>
         {
             opcodes |= ((rm & 31) << 16) | ((rn & 31) << 5) | ((rd & 31) << 0);
@@ -236,15 +232,15 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Pairwise]
-        public void Mod_ThreeRegisterTable_V_8B_16B([ValueSource("_ThreeRegisterTable_V_8B_16B_")] uint opcodes,
+        public void Mod_ThreeRegisterTable_V_8B_16B([ValueSource(nameof(_ThreeRegisterTable_V_8B_16B_))] uint opcodes,
                                                     [Values(30u, 2u)] uint rd,
                                                     [Values(31u)]     uint rn,
                                                     [Values(2u, 30u)] uint rm,
-                                                    [ValueSource("_8B_")] [Random(RndCntDest)] ulong z,
-                                                    [ValueSource("_8B_")] [Random(RndCntTbls)] ulong table0,
-                                                    [ValueSource("_8B_")] [Random(RndCntTbls)] ulong table1,
-                                                    [ValueSource("_8B_")] [Random(RndCntTbls)] ulong table2,
-                                                    [ValueSource("_GenIdxsForTbl3_")] ulong indexes,
+                                                    [ValueSource(nameof(_8B_))] ulong z,
+                                                    [ValueSource(nameof(_8B_))] ulong table0,
+                                                    [ValueSource(nameof(_8B_))] ulong table1,
+                                                    [ValueSource(nameof(_8B_))] ulong table2,
+                                                    [ValueSource(nameof(_GenIdxsForTbl3_))] ulong indexes,
                                                     [Values(0b0u, 0b1u)] uint q) // <8B, 16B>
         {
             opcodes |= ((rm & 31) << 16) | ((rn & 31) << 5) | ((rd & 31) << 0);
@@ -262,16 +258,16 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Pairwise]
-        public void FourRegisterTable_V_8B_16B([ValueSource("_FourRegisterTable_V_8B_16B_")] uint opcodes,
+        public void FourRegisterTable_V_8B_16B([ValueSource(nameof(_FourRegisterTable_V_8B_16B_))] uint opcodes,
                                                [Values(0u)] uint rd,
                                                [Values(1u)] uint rn,
                                                [Values(5u)] uint rm,
-                                               [ValueSource("_8B_")] [Random(RndCntDest)] ulong z,
-                                               [ValueSource("_8B_")] [Random(RndCntTbls)] ulong table0,
-                                               [ValueSource("_8B_")] [Random(RndCntTbls)] ulong table1,
-                                               [ValueSource("_8B_")] [Random(RndCntTbls)] ulong table2,
-                                               [ValueSource("_8B_")] [Random(RndCntTbls)] ulong table3,
-                                               [ValueSource("_GenIdxsForTbl4_")] ulong indexes,
+                                               [ValueSource(nameof(_8B_))] ulong z,
+                                               [ValueSource(nameof(_8B_))] ulong table0,
+                                               [ValueSource(nameof(_8B_))] ulong table1,
+                                               [ValueSource(nameof(_8B_))] ulong table2,
+                                               [ValueSource(nameof(_8B_))] ulong table3,
+                                               [ValueSource(nameof(_GenIdxsForTbl4_))] ulong indexes,
                                                [Values(0b0u, 0b1u)] uint q) // <8B, 16B>
         {
             opcodes |= ((rm & 31) << 16) | ((rn & 31) << 5) | ((rd & 31) << 0);
@@ -290,16 +286,16 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Pairwise]
-        public void Mod_FourRegisterTable_V_8B_16B([ValueSource("_FourRegisterTable_V_8B_16B_")] uint opcodes,
+        public void Mod_FourRegisterTable_V_8B_16B([ValueSource(nameof(_FourRegisterTable_V_8B_16B_))] uint opcodes,
                                                    [Values(30u, 3u)] uint rd,
                                                    [Values(31u)]     uint rn,
                                                    [Values(3u, 30u)] uint rm,
-                                                   [ValueSource("_8B_")] [Random(RndCntDest)] ulong z,
-                                                   [ValueSource("_8B_")] [Random(RndCntTbls)] ulong table0,
-                                                   [ValueSource("_8B_")] [Random(RndCntTbls)] ulong table1,
-                                                   [ValueSource("_8B_")] [Random(RndCntTbls)] ulong table2,
-                                                   [ValueSource("_8B_")] [Random(RndCntTbls)] ulong table3,
-                                                   [ValueSource("_GenIdxsForTbl4_")] ulong indexes,
+                                                   [ValueSource(nameof(_8B_))] ulong z,
+                                                   [ValueSource(nameof(_8B_))] ulong table0,
+                                                   [ValueSource(nameof(_8B_))] ulong table1,
+                                                   [ValueSource(nameof(_8B_))] ulong table2,
+                                                   [ValueSource(nameof(_8B_))] ulong table3,
+                                                   [ValueSource(nameof(_GenIdxsForTbl4_))] ulong indexes,
                                                    [Values(0b0u, 0b1u)] uint q) // <8B, 16B>
         {
             opcodes |= ((rm & 31) << 16) | ((rn & 31) << 5) | ((rd & 31) << 0);

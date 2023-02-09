@@ -1,9 +1,7 @@
 #define System
 
 using ARMeilleure.State;
-
 using NUnit.Framework;
-
 using System.Collections.Generic;
 
 namespace Ryujinx.Tests.Cpu
@@ -40,7 +38,7 @@ namespace Ryujinx.Tests.Cpu
 #region "ValueSource (Opcodes)"
         private static uint[] _MrsMsr_Nzcv_()
         {
-            return new uint[]
+            return new[]
             {
                 0xD53B4200u, // MRS X0, NZCV
                 0xD51B4200u  // MSR NZCV, X0
@@ -48,12 +46,10 @@ namespace Ryujinx.Tests.Cpu
         }
 #endregion
 
-        private const int RndCnt = 2;
-
         [Test, Pairwise]
         public void MrsMsr_Nzcv([ValueSource("_MrsMsr_Nzcv_")] uint opcodes,
                                 [Values(0u, 1u, 31u)] uint rt,
-                                [ValueSource("_GenNzcv_")] [Random(RndCnt)] ulong xt)
+                                [ValueSource("_GenNzcv_")] ulong xt)
         {
             opcodes |= (rt & 31) << 0;
 

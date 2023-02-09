@@ -1,9 +1,7 @@
 #define Misc32
 
 using ARMeilleure.State;
-
 using NUnit.Framework;
-
 using System.Collections.Generic;
 
 namespace Ryujinx.Tests.Cpu
@@ -64,8 +62,8 @@ namespace Ryujinx.Tests.Cpu
         private static readonly bool NoNaNs  = false;
 
         [Test, Pairwise]
-        public void Vmsr_Vcmp_Vmrs([ValueSource("_1S_F_")] ulong a,
-                                   [ValueSource("_1S_F_")] ulong b,
+        public void Vmsr_Vcmp_Vmrs([ValueSource(nameof(_1S_F_))] ulong a,
+                                   [ValueSource(nameof(_1S_F_))] ulong b,
                                    [Values] bool mode1,
                                    [Values] bool mode2,
                                    [Values] bool mode3)

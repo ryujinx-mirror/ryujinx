@@ -6,7 +6,6 @@ using Ryujinx.Cpu.Jit;
 using Ryujinx.Memory;
 using Ryujinx.Tests.Unicorn;
 using System;
-
 using MemoryPermission = Ryujinx.Tests.Unicorn.MemoryPermission;
 
 namespace Ryujinx.Tests.Cpu
@@ -27,18 +26,9 @@ namespace Ryujinx.Tests.Cpu
         private ExecutionContext _context;
 
         private CpuContext _cpuContext;
-
-        private static bool _unicornAvailable;
         private UnicornAArch32 _unicornEmu;
 
         private bool _usingMemory;
-
-        [OneTimeSetUp]
-        public void OneTimeSetup()
-        {
-            _unicornAvailable = UnicornAArch32.IsAvailable();
-            Assume.That(_unicornAvailable, "Unicorn is not available");
-        }
 
         [SetUp]
         public void Setup()
@@ -61,23 +51,17 @@ namespace Ryujinx.Tests.Cpu
             Optimizations.AllowLcqInFunctionTable = false;
             Optimizations.UseUnmanagedDispatchLoop = false;
 
-            if (_unicornAvailable)
-            {
-                _unicornEmu = new UnicornAArch32();
-                _unicornEmu.MemoryMap(CodeBaseAddress, Size, MemoryPermission.READ | MemoryPermission.EXEC);
-                _unicornEmu.MemoryMap(DataBaseAddress, Size, MemoryPermission.READ | MemoryPermission.WRITE);
-                _unicornEmu.PC = CodeBaseAddress;
-            }
+            _unicornEmu = new UnicornAArch32();
+            _unicornEmu.MemoryMap(CodeBaseAddress, Size, MemoryPermission.Read | MemoryPermission.Exec);
+            _unicornEmu.MemoryMap(DataBaseAddress, Size, MemoryPermission.Read | MemoryPermission.Write);
+            _unicornEmu.PC = CodeBaseAddress;
         }
 
         [TearDown]
         public void Teardown()
         {
-            if (_unicornAvailable)
-            {
-                _unicornEmu.Dispose();
-                _unicornEmu = null;
-            }
+            _unicornEmu.Dispose();
+            _unicornEmu = null;
 
             _memory.DecrementReferenceCount();
             _context.Dispose();
@@ -101,10 +85,7 @@ namespace Ryujinx.Tests.Cpu
         {
             _memory.Write(_currAddress, opcode);
 
-            if (_unicornAvailable)
-            {
-                _unicornEmu.MemoryWrite32(_currAddress, opcode);
-            }
+            _unicornEmu.MemoryWrite32(_currAddress, opcode);
 
             _currAddress += 4;
         }
@@ -113,10 +94,7 @@ namespace Ryujinx.Tests.Cpu
         {
             _memory.Write(_currAddress, opcode);
 
-            if (_unicornAvailable)
-            {
-                _unicornEmu.MemoryWrite16(_currAddress, opcode);
-            }
+            _unicornEmu.MemoryWrite16(_currAddress, opcode);
 
             _currAddress += 2;
         }
@@ -169,40 +147,37 @@ namespace Ryujinx.Tests.Cpu
 
             _context.SetPstateFlag(PState.TFlag, thumb);
 
-            if (_unicornAvailable)
-            {
-                _unicornEmu.R[0] = r0;
-                _unicornEmu.R[1] = r1;
-                _unicornEmu.R[2] = r2;
-                _unicornEmu.R[3] = r3;
-                _unicornEmu.SP = sp;
+            _unicornEmu.R[0] = r0;
+            _unicornEmu.R[1] = r1;
+            _unicornEmu.R[2] = r2;
+            _unicornEmu.R[3] = r3;
+            _unicornEmu.SP = sp;
 
-                _unicornEmu.Q[0] = V128ToSimdValue(v0);
-                _unicornEmu.Q[1] = V128ToSimdValue(v1);
-                _unicornEmu.Q[2] = V128ToSimdValue(v2);
-                _unicornEmu.Q[3] = V128ToSimdValue(v3);
-                _unicornEmu.Q[4] = V128ToSimdValue(v4);
-                _unicornEmu.Q[5] = V128ToSimdValue(v5);
-                _unicornEmu.Q[14] = V128ToSimdValue(v14);
-                _unicornEmu.Q[15] = V128ToSimdValue(v15);
+            _unicornEmu.Q[0] = V128ToSimdValue(v0);
+            _unicornEmu.Q[1] = V128ToSimdValue(v1);
+            _unicornEmu.Q[2] = V128ToSimdValue(v2);
+            _unicornEmu.Q[3] = V128ToSimdValue(v3);
+            _unicornEmu.Q[4] = V128ToSimdValue(v4);
+            _unicornEmu.Q[5] = V128ToSimdValue(v5);
+            _unicornEmu.Q[14] = V128ToSimdValue(v14);
+            _unicornEmu.Q[15] = V128ToSimdValue(v15);
 
-                _unicornEmu.QFlag = saturation;
-                _unicornEmu.OverflowFlag = overflow;
-                _unicornEmu.CarryFlag = carry;
-                _unicornEmu.ZeroFlag = zero;
-                _unicornEmu.NegativeFlag = negative;
+            _unicornEmu.QFlag = saturation;
+            _unicornEmu.OverflowFlag = overflow;
+            _unicornEmu.CarryFlag = carry;
+            _unicornEmu.ZeroFlag = zero;
+            _unicornEmu.NegativeFlag = negative;
 
-                _unicornEmu.Fpscr = fpscr;
+            _unicornEmu.Fpscr = fpscr;
 
-                _unicornEmu.ThumbFlag = thumb;
-            }
+            _unicornEmu.ThumbFlag = thumb;
         }
 
         protected void ExecuteOpcodes(bool runUnicorn = true)
         {
             _cpuContext.Execute(_context, CodeBaseAddress);
 
-            if (_unicornAvailable && runUnicorn)
+            if (runUnicorn)
             {
                 _unicornEmu.RunForCount((_currAddress - CodeBaseAddress - 4) / 4);
             }
@@ -322,10 +297,7 @@ namespace Ryujinx.Tests.Cpu
         {
             _memory.Write(DataBaseAddress + offset, data);
 
-            if (_unicornAvailable)
-            {
-                _unicornEmu.MemoryWrite(DataBaseAddress + offset, data);
-            }
+            _unicornEmu.MemoryWrite(DataBaseAddress + offset, data);
 
             _usingMemory = true; // When true, CompareAgainstUnicorn checks the working memory for equality too.
         }
@@ -407,11 +379,6 @@ namespace Ryujinx.Tests.Cpu
             FpSkips fpSkips = FpSkips.None,
             FpTolerances fpTolerances = FpTolerances.None)
         {
-            if (!_unicornAvailable)
-            {
-                return;
-            }
-
             if (fpSkips != FpSkips.None)
             {
                 ManageFpSkips(fpSkips);

@@ -10,7 +10,6 @@ namespace Ryujinx.Tests.Cpu
     public sealed class CpuTestSimdMemory32 : CpuTest32
     {
 #if SimdMemory32
-        private const int RndCntImm = 2;
 
         private uint[] _ldStModes =
         {
@@ -41,7 +40,7 @@ namespace Ryujinx.Tests.Cpu
                                 [Values(0u, 1u, 2u, 3u, 4u, 5u, 6u, 7u)] uint vd,
                                 [Range(0u, 7u)] uint index,
                                 [Range(0u, 3u)] uint n,
-                                [Values(0x0u)] [Random(0u, 0xffu, RndCntImm)] uint offset)
+                                [Values(0x0u)] uint offset)
         {
             var data = GenerateVectorSequence(0x1000);
             SetWorkingMemory(0, data);
@@ -71,7 +70,7 @@ namespace Ryujinx.Tests.Cpu
                              [Range(0u, 3u)] uint n,
                              [Range(0u, 2u)] uint size,
                              [Values] bool t,
-                             [Values(0x0u)] [Random(0u, 0xffu, RndCntImm)] uint offset)
+                             [Values(0x0u)] uint offset)
         {
             var data = GenerateVectorSequence(0x1000);
             SetWorkingMemory(0, data);
@@ -97,7 +96,7 @@ namespace Ryujinx.Tests.Cpu
                               [Values(1u, 13u, 15u)] uint rm,
                               [Values(0u, 1u, 2u, 3u, 4u, 5u, 6u, 7u)] uint vd,
                               [Range(0u, 10u)] uint mode,
-                              [Values(0x0u)] [Random(0u, 0xffu, RndCntImm)] uint offset)
+                              [Values(0x0u)] uint offset)
         {
             var data = GenerateVectorSequence(0x1000);
             SetWorkingMemory(0, data);
@@ -127,7 +126,7 @@ namespace Ryujinx.Tests.Cpu
                                 [Values(0u, 1u, 2u, 3u, 4u, 5u, 6u, 7u)] uint vd,
                                 [Range(0u, 7u)] uint index,
                                 [Range(0u, 3u)] uint n,
-                                [Values(0x0u)] [Random(0u, 0xffu, RndCntImm)] uint offset)
+                                [Values(0x0u)] uint offset)
         {
             var data = GenerateVectorSequence(0x1000);
             SetWorkingMemory(0, data);
@@ -158,7 +157,7 @@ namespace Ryujinx.Tests.Cpu
                               [Values(1u, 13u, 15u)] uint rm,
                               [Values(0u, 1u, 2u, 3u, 4u, 5u, 6u, 7u)] uint vd,
                               [Range(0u, 10u)] uint mode,
-                              [Values(0x0u)] [Random(0u, 0xffu, RndCntImm)] uint offset)
+                              [Values(0x0u)] uint offset)
         {
             var data = GenerateVectorSequence(0x1000);
             SetWorkingMemory(0, data);
@@ -187,7 +186,7 @@ namespace Ryujinx.Tests.Cpu
         public void Vldm([Values(0u, 13u)] uint rn,
                          [Values(0u, 1u, 2u, 3u, 4u, 5u, 6u, 7u)] uint vd,
                          [Range(0u, 2u)] uint mode,
-                         [Values(0x1u, 0x32u)] [Random(2u, 31u, RndCntImm)] uint regs,
+                         [Values(0x1u, 0x32u)] uint regs,
                          [Values] bool single)
         {
             var data = GenerateVectorSequence(0x1000);
@@ -235,7 +234,7 @@ namespace Ryujinx.Tests.Cpu
         public void Vldr([Values(2u, 3u)] uint size, // FP16 is not supported for now
                          [Values(0u)] uint rn,
                          [Values(0u, 1u, 2u, 3u, 4u, 5u, 6u, 7u)] uint sd,
-                         [Values(0x0u)] [Random(0u, 0xffu, RndCntImm)] uint imm,
+                         [Values(0x0u)] uint imm,
                          [Values] bool sub)
         {
             var data = GenerateVectorSequence(0x1000);
@@ -270,7 +269,7 @@ namespace Ryujinx.Tests.Cpu
         public void Vstr([Values(2u, 3u)] uint size, // FP16 is not supported for now
                 [Values(0u)] uint rn,
                 [Values(0u, 1u, 2u, 3u, 4u, 5u, 6u, 7u)] uint sd,
-                [Values(0x0u)] [Random(0u, 0xffu, RndCntImm)] uint imm,
+                [Values(0x0u)] uint imm,
                 [Values] bool sub)
         {
             var data = GenerateVectorSequence(0x1000);

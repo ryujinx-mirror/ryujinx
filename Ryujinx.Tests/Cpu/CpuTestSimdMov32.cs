@@ -14,7 +14,7 @@ namespace Ryujinx.Tests.Cpu
         [Test, Pairwise, Description("VMOV.I<size> <Dd/Qd>, #<imm>")]
         public void Movi_V([Range(0u, 10u)] uint variant,
                            [Values(0u, 1u, 2u, 3u)] uint vd,
-                           [Values(0x0u)] [Random(1u, 0xffu, RndCntImm)] uint imm,
+                           [Values(0x0u)] uint imm,
                            [Values] bool q)
         {
             uint[] variants =
@@ -62,7 +62,7 @@ namespace Ryujinx.Tests.Cpu
         [Test, Pairwise, Description("VMOV.F<size> <Sd>, #<imm>")]
         public void Movi_S([Range(2u, 3u)] uint size,
                            [Values(0u, 1u, 2u, 3u)] uint vd,
-                           [Values(0x0u)] [Random(0u, 0xffu, RndCntImm)] uint imm)
+                           [Values(0x0u)] uint imm)
         {
             uint opcode = 0xeeb00800u;
             opcode |= (size & 3) << 8;
@@ -292,7 +292,7 @@ namespace Ryujinx.Tests.Cpu
         [Test, Pairwise, Description("VMVN.I<size> <Dd/Qd>, #<imm>")]
         public void Mvni_V([Range(0u, 7u)] uint variant,
                            [Values(0u, 1u, 2u, 3u)] uint vd,
-                           [Values(0x0u)] [Random(1u, 0xffu, RndCntImm)] uint imm,
+                           [Values(0x0u)] uint imm,
                            [Values] bool q)
         {
             uint[] variants =

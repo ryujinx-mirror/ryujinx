@@ -142,10 +142,10 @@ namespace Ryujinx.Tests.Cpu
                     Assert.That(GetContext().GetX(1), Is.EqualTo(w1 ^ w2));
                     break;
                 case 2:
-                    Assert.That(GetContext().GetX(1), Is.EqualTo(shift >= 32 ? 0 : (uint)(w1 << (int)shift)));
+                    Assert.That(GetContext().GetX(1), Is.EqualTo(shift >= 32 ? 0 : w1 << (int)shift));
                     break;
                 case 3:
-                    Assert.That(GetContext().GetX(1), Is.EqualTo(shift >= 32 ? 0 : (uint)(w1 >> (int)shift)));
+                    Assert.That(GetContext().GetX(1), Is.EqualTo(shift >= 32 ? 0 : w1 >> (int)shift));
                     break;
                 case 4:
                     Assert.That(GetContext().GetX(1), Is.EqualTo(shift >= 32 ? (uint)((int)w1 >> 31) : (uint)((int)w1 >> (int)shift)));

@@ -49,6 +49,7 @@
     <PackageVersion Include="System.Management" Version="7.0.0" />
     <PackageVersion Include="System.Net.NameResolution" Version="4.3.0" />
     <PackageVersion Include="System.Threading.ThreadPool" Version="4.3.0" />
+    <PackageVersion Include="UnicornEngine.Unicorn" Version="2.0.2-rc1-9c9356d" />
     <PackageVersion Include="XamlNameReferenceGenerator" Version="1.5.1" />
   </ItemGroup>
 </Project>

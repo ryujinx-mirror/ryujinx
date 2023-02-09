@@ -15,7 +15,7 @@ namespace Ryujinx.Tests.Cpu
 #region "ValueSource (Opcodes)"
         private static uint[] _Vrint_AMNP_V_F32_()
         {
-            return new uint[]
+            return new[]
             {
                 0xf3ba0500u, // VRINTA.F32 Q0, Q0
                 0xf3ba0680u, // VRINTM.F32 Q0, Q0
@@ -28,8 +28,8 @@ namespace Ryujinx.Tests.Cpu
 #region "ValueSource (Types)"
         private static uint[] _1S_()
         {
-            return new uint[] { 0x00000000u, 0x7FFFFFFFu,
-                                0x80000000u, 0xFFFFFFFFu };
+            return new[] { 0x00000000u, 0x7FFFFFFFu,
+                           0x80000000u, 0xFFFFFFFFu };
         }
 
         private static IEnumerable<ulong> _1S_F_()
@@ -219,10 +219,10 @@ namespace Ryujinx.Tests.Cpu
         [Test, Pairwise, Description("VCVT.F32.<dt> <Sd>, <Sm>")]
         public void Vcvt_I32_F32([Values(0u, 1u, 2u, 3u)] uint rd,
                                  [Values(0u, 1u, 2u, 3u)] uint rm,
-                                 [ValueSource(nameof(_1S_))] [Random(RndCnt)] uint s0,
-                                 [ValueSource(nameof(_1S_))] [Random(RndCnt)] uint s1,
-                                 [ValueSource(nameof(_1S_))] [Random(RndCnt)] uint s2,
-                                 [ValueSource(nameof(_1S_))] [Random(RndCnt)] uint s3,
+                                 [ValueSource(nameof(_1S_))] uint s0,
+                                 [ValueSource(nameof(_1S_))] uint s1,
+                                 [ValueSource(nameof(_1S_))] uint s2,
+                                 [ValueSource(nameof(_1S_))] uint s3,
                                  [Values] bool unsigned, // <U32, S32>
                                  [Values(RMode.Rn)] RMode rMode)
         {
@@ -249,10 +249,10 @@ namespace Ryujinx.Tests.Cpu
         [Test, Pairwise, Description("VCVT.F64.<dt> <Dd>, <Sm>")]
         public void Vcvt_I32_F64([Values(0u, 1u)] uint rd,
                                  [Values(0u, 1u, 2u, 3u)] uint rm,
-                                 [ValueSource(nameof(_1S_))] [Random(RndCnt)] uint s0,
-                                 [ValueSource(nameof(_1S_))] [Random(RndCnt)] uint s1,
-                                 [ValueSource(nameof(_1S_))] [Random(RndCnt)] uint s2,
-                                 [ValueSource(nameof(_1S_))] [Random(RndCnt)] uint s3,
+                                 [ValueSource(nameof(_1S_))] uint s0,
+                                 [ValueSource(nameof(_1S_))] uint s1,
+                                 [ValueSource(nameof(_1S_))] uint s2,
+                                 [ValueSource(nameof(_1S_))] uint s3,
                                  [Values] bool unsigned, // <U32, S32>
                                  [Values(RMode.Rn)] RMode rMode)
         {
@@ -344,10 +344,10 @@ namespace Ryujinx.Tests.Cpu
         [Test, Pairwise, Description("VCVT<top>.F16.F32 <Sd>, <Dm>")]
         public void Vcvt_F32_F16([Values(0u, 1u, 2u, 3u)] uint rd,
                                  [Values(0u, 1u, 2u, 3u)] uint rm,
-                                 [ValueSource(nameof(_1S_))] [Random(RndCnt)] uint s0,
-                                 [ValueSource(nameof(_1S_))] [Random(RndCnt)] uint s1,
-                                 [ValueSource(nameof(_1S_))] [Random(RndCnt)] uint s2,
-                                 [ValueSource(nameof(_1S_))] [Random(RndCnt)] uint s3,
+                                 [ValueSource(nameof(_1S_))] uint s0,
+                                 [ValueSource(nameof(_1S_))] uint s1,
+                                 [ValueSource(nameof(_1S_))] uint s2,
+                                 [ValueSource(nameof(_1S_))] uint s3,
                                  [Values] bool top)
         {
             uint opcode = 0xeeb30a40; // VCVTB.F16.F32 S0, D0

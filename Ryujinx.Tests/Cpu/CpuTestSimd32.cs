@@ -14,7 +14,7 @@ namespace Ryujinx.Tests.Cpu
 #region "ValueSource (Opcodes)"
         private static uint[] _Vabs_Vneg_Vpaddl_I_()
         {
-            return new uint[]
+            return new[]
             {
                 0xf3b10300u, // VABS.S8   D0, D0
                 0xf3b10380u, // VNEG.S8   D0, D0
@@ -24,7 +24,7 @@ namespace Ryujinx.Tests.Cpu
 
         private static uint[] _Vabs_Vneg_F_()
         {
-            return new uint[]
+            return new[]
             {
                 0xf3b90700u, // VABS.F32 D0, D0
                 0xf3b90780u  // VNEG.F32 D0, D0
@@ -35,10 +35,10 @@ namespace Ryujinx.Tests.Cpu
 #region "ValueSource (Types)"
         private static ulong[] _8B4H2S_()
         {
-            return new ulong[] { 0x0000000000000000ul, 0x7F7F7F7F7F7F7F7Ful,
-                                 0x8080808080808080ul, 0x7FFF7FFF7FFF7FFFul,
-                                 0x8000800080008000ul, 0x7FFFFFFF7FFFFFFFul,
-                                 0x8000000080000000ul, 0xFFFFFFFFFFFFFFFFul };
+            return new[] { 0x0000000000000000ul, 0x7F7F7F7F7F7F7F7Ful,
+                           0x8080808080808080ul, 0x7FFF7FFF7FFF7FFFul,
+                           0x8000800080008000ul, 0x7FFFFFFF7FFFFFFFul,
+                           0x8000000080000000ul, 0xFFFFFFFFFFFFFFFFul };
         }
 
         private static IEnumerable<ulong> _1S_F_()
@@ -211,11 +211,11 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Pairwise]
-        public void Vabs_Vneg_Vpaddl_V_I([ValueSource("_Vabs_Vneg_Vpaddl_I_")] uint opcode,
+        public void Vabs_Vneg_Vpaddl_V_I([ValueSource(nameof(_Vabs_Vneg_Vpaddl_I_))] uint opcode,
                                          [Range(0u, 3u)] uint rd,
                                          [Range(0u, 3u)] uint rm,
-                                         [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong z,
-                                         [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong b,
+                                         [ValueSource(nameof(_8B4H2S_))] ulong z,
+                                         [ValueSource(nameof(_8B4H2S_))] ulong b,
                                          [Values(0u, 1u, 2u)] uint size, // <S8, S16, S32>
                                          [Values] bool q)
         {
@@ -241,11 +241,11 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Pairwise]
-        public void Vabs_Vneg_V_F32([ValueSource("_Vabs_Vneg_F_")] uint opcode,
+        public void Vabs_Vneg_V_F32([ValueSource(nameof(_Vabs_Vneg_F_))] uint opcode,
                                     [Range(0u, 3u)] uint rd,
                                     [Range(0u, 3u)] uint rm,
-                                    [ValueSource("_2S_F_")] ulong z,
-                                    [ValueSource("_2S_F_")] ulong b,
+                                    [ValueSource(nameof(_2S_F_))] ulong z,
+                                    [ValueSource(nameof(_2S_F_))] ulong b,
                                     [Values] bool q)
         {
             if (q)
@@ -270,7 +270,7 @@ namespace Ryujinx.Tests.Cpu
         [Test, Pairwise, Description("VCNT.8 D0, D0 | VCNT.8 Q0, Q0")]
         public void Vcnt([Values(0u, 1u)] uint rd,
                          [Values(0u, 1u)] uint rm,
-                         [ValueSource(nameof(_GenPopCnt8B_))] [Random(RndCnt)] ulong d0,
+                         [ValueSource(nameof(_GenPopCnt8B_))] ulong d0,
                          [Values] bool q)
         {
             ulong d1 = ~d0; // It's expensive to have a second generator.
@@ -298,8 +298,8 @@ namespace Ryujinx.Tests.Cpu
         [Test, Pairwise]
         public void Vmovn_V([Range(0u, 3u)] uint rd,
                             [Range(0u, 3u)] uint rm,
-                            [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong z,
-                            [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong b,
+                            [ValueSource(nameof(_8B4H2S_))] ulong z,
+                            [ValueSource(nameof(_8B4H2S_))] ulong b,
                             [Values(0u, 1u, 2u, 3u)] uint op,
                             [Values(0u, 1u, 2u)] uint size) // <S8, S16, S32>
         {

@@ -1,9 +1,7 @@
 #define SimdFcond
 
 using ARMeilleure.State;
-
 using NUnit.Framework;
-
 using System.Collections.Generic;
 
 namespace Ryujinx.Tests.Cpu
@@ -101,7 +99,7 @@ namespace Ryujinx.Tests.Cpu
 #region "ValueSource (Opcodes)"
         private static uint[] _F_Ccmp_Ccmpe_S_S_()
         {
-            return new uint[]
+            return new[]
             {
                 0x1E220420u, // FCCMP  S1, S2, #0, EQ
                 0x1E220430u  // FCCMPE S1, S2, #0, EQ
@@ -110,7 +108,7 @@ namespace Ryujinx.Tests.Cpu
 
         private static uint[] _F_Ccmp_Ccmpe_S_D_()
         {
-            return new uint[]
+            return new[]
             {
                 0x1E620420u, // FCCMP  D1, D2, #0, EQ
                 0x1E620430u  // FCCMPE D1, D2, #0, EQ
@@ -119,7 +117,7 @@ namespace Ryujinx.Tests.Cpu
 
         private static uint[] _F_Csel_S_S_()
         {
-            return new uint[]
+            return new[]
             {
                 0x1E220C20u // FCSEL S0, S1, S2, EQ
             };
@@ -127,7 +125,7 @@ namespace Ryujinx.Tests.Cpu
 
         private static uint[] _F_Csel_S_D_()
         {
-            return new uint[]
+            return new[]
             {
                 0x1E620C20u // FCSEL D0, D1, D2, EQ
             };
@@ -142,9 +140,9 @@ namespace Ryujinx.Tests.Cpu
         private static readonly bool NoNaNs  = false;
 
         [Test, Pairwise] [Explicit]
-        public void F_Ccmp_Ccmpe_S_S([ValueSource("_F_Ccmp_Ccmpe_S_S_")] uint opcodes,
-                                     [ValueSource("_1S_F_")] ulong a,
-                                     [ValueSource("_1S_F_")] ulong b,
+        public void F_Ccmp_Ccmpe_S_S([ValueSource(nameof(_F_Ccmp_Ccmpe_S_S_))] uint opcodes,
+                                     [ValueSource(nameof(_1S_F_))] ulong a,
+                                     [ValueSource(nameof(_1S_F_))] ulong b,
                                      [Random(0u, 15u, RndCntNzcv)] uint nzcv,
                                      [Values(0b0000u, 0b0001u, 0b0010u, 0b0011u,             // <EQ, NE, CS/HS, CC/LO,
                                              0b0100u, 0b0101u, 0b0110u, 0b0111u,             //  MI, PL, VS, VC,
@@ -167,9 +165,9 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Pairwise] [Explicit]
-        public void F_Ccmp_Ccmpe_S_D([ValueSource("_F_Ccmp_Ccmpe_S_D_")] uint opcodes,
-                                     [ValueSource("_1D_F_")] ulong a,
-                                     [ValueSource("_1D_F_")] ulong b,
+        public void F_Ccmp_Ccmpe_S_D([ValueSource(nameof(_F_Ccmp_Ccmpe_S_D_))] uint opcodes,
+                                     [ValueSource(nameof(_1D_F_))] ulong a,
+                                     [ValueSource(nameof(_1D_F_))] ulong b,
                                      [Random(0u, 15u, RndCntNzcv)] uint nzcv,
                                      [Values(0b0000u, 0b0001u, 0b0010u, 0b0011u,             // <EQ, NE, CS/HS, CC/LO,
                                              0b0100u, 0b0101u, 0b0110u, 0b0111u,             //  MI, PL, VS, VC,
@@ -192,9 +190,9 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Pairwise] [Explicit]
-        public void F_Csel_S_S([ValueSource("_F_Csel_S_S_")] uint opcodes,
-                               [ValueSource("_1S_F_")] ulong a,
-                               [ValueSource("_1S_F_")] ulong b,
+        public void F_Csel_S_S([ValueSource(nameof(_F_Csel_S_S_))] uint opcodes,
+                               [ValueSource(nameof(_1S_F_))] ulong a,
+                               [ValueSource(nameof(_1S_F_))] ulong b,
                                [Values(0b0000u, 0b0001u, 0b0010u, 0b0011u,             // <EQ, NE, CS/HS, CC/LO,
                                        0b0100u, 0b0101u, 0b0110u, 0b0111u,             //  MI, PL, VS, VC,
                                        0b1000u, 0b1001u, 0b1010u, 0b1011u,             //  HI, LS, GE, LT,
@@ -213,9 +211,9 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Pairwise] [Explicit]
-        public void F_Csel_S_D([ValueSource("_F_Csel_S_D_")] uint opcodes,
-                               [ValueSource("_1D_F_")] ulong a,
-                               [ValueSource("_1D_F_")] ulong b,
+        public void F_Csel_S_D([ValueSource(nameof(_F_Csel_S_D_))] uint opcodes,
+                               [ValueSource(nameof(_1D_F_))] ulong a,
+                               [ValueSource(nameof(_1D_F_))] ulong b,
                                [Values(0b0000u, 0b0001u, 0b0010u, 0b0011u,             // <EQ, NE, CS/HS, CC/LO,
                                        0b0100u, 0b0101u, 0b0110u, 0b0111u,             //  MI, PL, VS, VC,
                                        0b1000u, 0b1001u, 0b1010u, 0b1011u,             //  HI, LS, GE, LT,

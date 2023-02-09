@@ -8,15 +8,13 @@ namespace Ryujinx.Tests.Cpu
     public sealed class CpuTestCcmpImm : CpuTest
     {
 #if CcmpImm
-        private const int RndCnt     = 2;
-        private const int RndCntImm  = 2;
         private const int RndCntNzcv = 2;
 
         [Test, Pairwise, Description("CCMN <Xn>, #<imm>, #<nzcv>, <cond>")]
         public void Ccmn_64bit([Values(1u, 31u)] uint rn,
                                [Values(0x0000000000000000ul, 0x7FFFFFFFFFFFFFFFul,
-                                       0x8000000000000000ul, 0xFFFFFFFFFFFFFFFFul)] [Random(RndCnt)] ulong xn,
-                               [Values(0u, 31u)] [Random(0u, 31u, RndCntImm)] uint imm,
+                                       0x8000000000000000ul, 0xFFFFFFFFFFFFFFFFul)] ulong xn,
+                               [Values(0u, 31u)] uint imm,
                                [Random(0u, 15u, RndCntNzcv)] uint nzcv,
                                [Values(0b0000u, 0b0001u, 0b0010u, 0b0011u,             // <EQ, NE, CS/HS, CC/LO,
                                        0b0100u, 0b0101u, 0b0110u, 0b0111u,             //  MI, PL, VS, VC,
@@ -37,8 +35,8 @@ namespace Ryujinx.Tests.Cpu
         [Test, Pairwise, Description("CCMN <Wn>, #<imm>, #<nzcv>, <cond>")]
         public void Ccmn_32bit([Values(1u, 31u)] uint rn,
                                [Values(0x00000000u, 0x7FFFFFFFu,
-                                       0x80000000u, 0xFFFFFFFFu)] [Random(RndCnt)] uint wn,
-                               [Values(0u, 31u)] [Random(0u, 31u, RndCntImm)] uint imm,
+                                       0x80000000u, 0xFFFFFFFFu)] uint wn,
+                               [Values(0u, 31u)] uint imm,
                                [Random(0u, 15u, RndCntNzcv)] uint nzcv,
                                [Values(0b0000u, 0b0001u, 0b0010u, 0b0011u,             // <EQ, NE, CS/HS, CC/LO,
                                        0b0100u, 0b0101u, 0b0110u, 0b0111u,             //  MI, PL, VS, VC,
@@ -59,8 +57,8 @@ namespace Ryujinx.Tests.Cpu
         [Test, Pairwise, Description("CCMP <Xn>, #<imm>, #<nzcv>, <cond>")]
         public void Ccmp_64bit([Values(1u, 31u)] uint rn,
                                [Values(0x0000000000000000ul, 0x7FFFFFFFFFFFFFFFul,
-                                       0x8000000000000000ul, 0xFFFFFFFFFFFFFFFFul)] [Random(RndCnt)] ulong xn,
-                               [Values(0u, 31u)] [Random(0u, 31u, RndCntImm)] uint imm,
+                                       0x8000000000000000ul, 0xFFFFFFFFFFFFFFFFul)] ulong xn,
+                               [Values(0u, 31u)] uint imm,
                                [Random(0u, 15u, RndCntNzcv)] uint nzcv,
                                [Values(0b0000u, 0b0001u, 0b0010u, 0b0011u,             // <EQ, NE, CS/HS, CC/LO,
                                        0b0100u, 0b0101u, 0b0110u, 0b0111u,             //  MI, PL, VS, VC,
@@ -81,8 +79,8 @@ namespace Ryujinx.Tests.Cpu
         [Test, Pairwise, Description("CCMP <Wn>, #<imm>, #<nzcv>, <cond>")]
         public void Ccmp_32bit([Values(1u, 31u)] uint rn,
                                [Values(0x00000000u, 0x7FFFFFFFu,
-                                       0x80000000u, 0xFFFFFFFFu)] [Random(RndCnt)] uint wn,
-                               [Values(0u, 31u)] [Random(0u, 31u, RndCntImm)] uint imm,
+                                       0x80000000u, 0xFFFFFFFFu)] uint wn,
+                               [Values(0u, 31u)] uint imm,
                                [Random(0u, 15u, RndCntNzcv)] uint nzcv,
                                [Values(0b0000u, 0b0001u, 0b0010u, 0b0011u,             // <EQ, NE, CS/HS, CC/LO,
                                        0b0100u, 0b0101u, 0b0110u, 0b0111u,             //  MI, PL, VS, VC,

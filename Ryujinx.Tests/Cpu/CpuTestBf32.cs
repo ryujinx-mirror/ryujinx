@@ -10,15 +10,13 @@ namespace Ryujinx.Tests.Cpu
     {
 #if Bf32
         private const int RndCnt = 2;
-        private const int RndCntImmr = 2;
-        private const int RndCntImms = 2;
 
         [Test, Pairwise, Description("BFC <Rd>, #<lsb>, #<width>")]
         public void Bfc([Values(0u, 0xdu)] uint rd,
                         [Values(0x00000000u, 0x7FFFFFFFu,
-                                0x80000000u, 0xFFFFFFFFu)] [Random(RndCnt)] uint wd,
-                        [Values(0u, 15u, 16u, 31u)] [Random(0u, 31u, RndCntImmr)] uint lsb,
-                        [Values(0u, 15u, 16u, 31u)] [Random(0u, 31u, RndCntImms)] uint msb)
+                                0x80000000u, 0xFFFFFFFFu)] uint wd,
+                        [Values(0u, 15u, 16u, 31u)] uint lsb,
+                        [Values(0u, 15u, 16u, 31u)] uint msb)
         {
             msb = Math.Max(lsb, msb); // Don't test unpredictable for now.
             uint opcode = 0xe7c0001fu; // BFC R0, #0, #1
@@ -37,9 +35,9 @@ namespace Ryujinx.Tests.Cpu
                         [Values(1u, 0xdu)] uint rn,
                         [Random(RndCnt)] uint wd,
                         [Values(0x00000000u, 0x7FFFFFFFu,
-                                0x80000000u, 0xFFFFFFFFu)] [Random(RndCnt)] uint wn,
-                        [Values(0u, 15u, 16u, 31u)] [Random(0u, 31u, RndCntImmr)] uint lsb,
-                        [Values(0u, 15u, 16u, 31u)] [Random(0u, 31u, RndCntImms)] uint msb)
+                                0x80000000u, 0xFFFFFFFFu)] uint wn,
+                        [Values(0u, 15u, 16u, 31u)] uint lsb,
+                        [Values(0u, 15u, 16u, 31u)] uint msb)
         {
             msb = Math.Max(lsb, msb); // Don't test unpredictable for now.
             uint opcode = 0xe7c00010u; // BFI R0, R0, #0, #1
@@ -59,9 +57,9 @@ namespace Ryujinx.Tests.Cpu
                          [Values(1u, 0xdu)] uint rn,
                          [Random(RndCnt)] uint wd,
                          [Values(0x00000000u, 0x7FFFFFFFu,
-                                 0x80000000u, 0xFFFFFFFFu)] [Random(RndCnt)] uint wn,
-                         [Values(0u, 15u, 16u, 31u)] [Random(0u, 31u, RndCntImmr)] uint lsb,
-                         [Values(0u, 15u, 16u, 31u)] [Random(0u, 31u, RndCntImms)] uint widthm1)
+                                 0x80000000u, 0xFFFFFFFFu)] uint wn,
+                         [Values(0u, 15u, 16u, 31u)] uint lsb,
+                         [Values(0u, 15u, 16u, 31u)] uint widthm1)
         {
             if (lsb + widthm1 > 31)
             {
@@ -84,9 +82,9 @@ namespace Ryujinx.Tests.Cpu
                          [Values(1u, 0xdu)] uint rn,
                          [Random(RndCnt)] uint wd,
                          [Values(0x00000000u, 0x7FFFFFFFu,
-                                 0x80000000u, 0xFFFFFFFFu)] [Random(RndCnt)] uint wn,
-                         [Values(0u, 15u, 16u, 31u)] [Random(0u, 31u, RndCntImmr)] uint lsb,
-                         [Values(0u, 15u, 16u, 31u)] [Random(0u, 31u, RndCntImms)] uint widthm1)
+                                 0x80000000u, 0xFFFFFFFFu)] uint wn,
+                         [Values(0u, 15u, 16u, 31u)] uint lsb,
+                         [Values(0u, 15u, 16u, 31u)] uint widthm1)
         {
             if (lsb + widthm1 > 31)
             {

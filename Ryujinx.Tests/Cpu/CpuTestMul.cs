@@ -8,19 +8,17 @@ namespace Ryujinx.Tests.Cpu
     public sealed class CpuTestMul : CpuTest
     {
 #if Mul
-        private const int RndCnt = 2;
-
         [Test, Pairwise, Description("MADD <Xd>, <Xn>, <Xm>, <Xa>")]
         public void Madd_64bit([Values(0u, 31u)] uint rd,
                                [Values(1u, 31u)] uint rn,
                                [Values(2u, 31u)] uint rm,
                                [Values(3u, 31u)] uint ra,
                                [Values(0x0000000000000000ul, 0x7FFFFFFFFFFFFFFFul,
-                                       0x8000000000000000ul, 0xFFFFFFFFFFFFFFFFul)] [Random(RndCnt)] ulong xn,
+                                       0x8000000000000000ul, 0xFFFFFFFFFFFFFFFFul)] ulong xn,
                                [Values(0x0000000000000000ul, 0x7FFFFFFFFFFFFFFFul,
-                                       0x8000000000000000ul, 0xFFFFFFFFFFFFFFFFul)] [Random(RndCnt)] ulong xm,
+                                       0x8000000000000000ul, 0xFFFFFFFFFFFFFFFFul)] ulong xm,
                                [Values(0x0000000000000000ul, 0x7FFFFFFFFFFFFFFFul,
-                                       0x8000000000000000ul, 0xFFFFFFFFFFFFFFFFul)] [Random(RndCnt)] ulong xa)
+                                       0x8000000000000000ul, 0xFFFFFFFFFFFFFFFFul)] ulong xa)
         {
             uint opcode = 0x9B000000; // MADD X0, X0, X0, X0
             opcode |= ((rm & 31) << 16) | ((ra & 31) << 10) | ((rn & 31) << 5) | ((rd & 31) << 0);
@@ -38,11 +36,11 @@ namespace Ryujinx.Tests.Cpu
                                [Values(2u, 31u)] uint rm,
                                [Values(3u, 31u)] uint ra,
                                [Values(0x00000000u, 0x7FFFFFFFu,
-                                       0x80000000u, 0xFFFFFFFFu)] [Random(RndCnt)] uint wn,
+                                       0x80000000u, 0xFFFFFFFFu)] uint wn,
                                [Values(0x00000000u, 0x7FFFFFFFu,
-                                       0x80000000u, 0xFFFFFFFFu)] [Random(RndCnt)] uint wm,
+                                       0x80000000u, 0xFFFFFFFFu)] uint wm,
                                [Values(0x00000000u, 0x7FFFFFFFu,
-                                       0x80000000u, 0xFFFFFFFFu)] [Random(RndCnt)] uint wa)
+                                       0x80000000u, 0xFFFFFFFFu)] uint wa)
         {
             uint opcode = 0x1B000000; // MADD W0, W0, W0, W0
             opcode |= ((rm & 31) << 16) | ((ra & 31) << 10) | ((rn & 31) << 5) | ((rd & 31) << 0);
@@ -60,11 +58,11 @@ namespace Ryujinx.Tests.Cpu
                                [Values(2u, 31u)] uint rm,
                                [Values(3u, 31u)] uint ra,
                                [Values(0x0000000000000000ul, 0x7FFFFFFFFFFFFFFFul,
-                                       0x8000000000000000ul, 0xFFFFFFFFFFFFFFFFul)] [Random(RndCnt)] ulong xn,
+                                       0x8000000000000000ul, 0xFFFFFFFFFFFFFFFFul)] ulong xn,
                                [Values(0x0000000000000000ul, 0x7FFFFFFFFFFFFFFFul,
-                                       0x8000000000000000ul, 0xFFFFFFFFFFFFFFFFul)] [Random(RndCnt)] ulong xm,
+                                       0x8000000000000000ul, 0xFFFFFFFFFFFFFFFFul)] ulong xm,
                                [Values(0x0000000000000000ul, 0x7FFFFFFFFFFFFFFFul,
-                                       0x8000000000000000ul, 0xFFFFFFFFFFFFFFFFul)] [Random(RndCnt)] ulong xa)
+                                       0x8000000000000000ul, 0xFFFFFFFFFFFFFFFFul)] ulong xa)
         {
             uint opcode = 0x9B008000; // MSUB X0, X0, X0, X0
             opcode |= ((rm & 31) << 16) | ((ra & 31) << 10) | ((rn & 31) << 5) | ((rd & 31) << 0);
@@ -82,11 +80,11 @@ namespace Ryujinx.Tests.Cpu
                                [Values(2u, 31u)] uint rm,
                                [Values(3u, 31u)] uint ra,
                                [Values(0x00000000u, 0x7FFFFFFFu,
-                                       0x80000000u, 0xFFFFFFFFu)] [Random(RndCnt)] uint wn,
+                                       0x80000000u, 0xFFFFFFFFu)] uint wn,
                                [Values(0x00000000u, 0x7FFFFFFFu,
-                                       0x80000000u, 0xFFFFFFFFu)] [Random(RndCnt)] uint wm,
+                                       0x80000000u, 0xFFFFFFFFu)] uint wm,
                                [Values(0x00000000u, 0x7FFFFFFFu,
-                                       0x80000000u, 0xFFFFFFFFu)] [Random(RndCnt)] uint wa)
+                                       0x80000000u, 0xFFFFFFFFu)] uint wa)
         {
             uint opcode = 0x1B008000; // MSUB W0, W0, W0, W0
             opcode |= ((rm & 31) << 16) | ((ra & 31) << 10) | ((rn & 31) << 5) | ((rd & 31) << 0);
@@ -104,11 +102,11 @@ namespace Ryujinx.Tests.Cpu
                                  [Values(2u, 31u)] uint rm,
                                  [Values(3u, 31u)] uint ra,
                                  [Values(0x00000000u, 0x7FFFFFFFu,
-                                         0x80000000u, 0xFFFFFFFFu)] [Random(RndCnt)] uint wn,
+                                         0x80000000u, 0xFFFFFFFFu)] uint wn,
                                  [Values(0x00000000u, 0x7FFFFFFFu,
-                                         0x80000000u, 0xFFFFFFFFu)] [Random(RndCnt)] uint wm,
+                                         0x80000000u, 0xFFFFFFFFu)] uint wm,
                                  [Values(0x0000000000000000ul, 0x7FFFFFFFFFFFFFFFul,
-                                         0x8000000000000000ul, 0xFFFFFFFFFFFFFFFFul)] [Random(RndCnt)] ulong xa)
+                                         0x8000000000000000ul, 0xFFFFFFFFFFFFFFFFul)] ulong xa)
         {
             uint opcode = 0x9B200000; // SMADDL X0, W0, W0, X0
             opcode |= ((rm & 31) << 16) | ((ra & 31) << 10) | ((rn & 31) << 5) | ((rd & 31) << 0);
@@ -126,11 +124,11 @@ namespace Ryujinx.Tests.Cpu
                                  [Values(2u, 31u)] uint rm,
                                  [Values(3u, 31u)] uint ra,
                                  [Values(0x00000000u, 0x7FFFFFFFu,
-                                         0x80000000u, 0xFFFFFFFFu)] [Random(RndCnt)] uint wn,
+                                         0x80000000u, 0xFFFFFFFFu)] uint wn,
                                  [Values(0x00000000u, 0x7FFFFFFFu,
-                                         0x80000000u, 0xFFFFFFFFu)] [Random(RndCnt)] uint wm,
+                                         0x80000000u, 0xFFFFFFFFu)] uint wm,
                                  [Values(0x0000000000000000ul, 0x7FFFFFFFFFFFFFFFul,
-                                         0x8000000000000000ul, 0xFFFFFFFFFFFFFFFFul)] [Random(RndCnt)] ulong xa)
+                                         0x8000000000000000ul, 0xFFFFFFFFFFFFFFFFul)] ulong xa)
         {
             uint opcode = 0x9BA00000; // UMADDL X0, W0, W0, X0
             opcode |= ((rm & 31) << 16) | ((ra & 31) << 10) | ((rn & 31) << 5) | ((rd & 31) << 0);
@@ -148,11 +146,11 @@ namespace Ryujinx.Tests.Cpu
                                  [Values(2u, 31u)] uint rm,
                                  [Values(3u, 31u)] uint ra,
                                  [Values(0x00000000u, 0x7FFFFFFFu,
-                                         0x80000000u, 0xFFFFFFFFu)] [Random(RndCnt)] uint wn,
+                                         0x80000000u, 0xFFFFFFFFu)] uint wn,
                                  [Values(0x00000000u, 0x7FFFFFFFu,
-                                         0x80000000u, 0xFFFFFFFFu)] [Random(RndCnt)] uint wm,
+                                         0x80000000u, 0xFFFFFFFFu)] uint wm,
                                  [Values(0x0000000000000000ul, 0x7FFFFFFFFFFFFFFFul,
-                                         0x8000000000000000ul, 0xFFFFFFFFFFFFFFFFul)] [Random(RndCnt)] ulong xa)
+                                         0x8000000000000000ul, 0xFFFFFFFFFFFFFFFFul)] ulong xa)
         {
             uint opcode = 0x9B208000; // SMSUBL X0, W0, W0, X0
             opcode |= ((rm & 31) << 16) | ((ra & 31) << 10) | ((rn & 31) << 5) | ((rd & 31) << 0);
@@ -170,11 +168,11 @@ namespace Ryujinx.Tests.Cpu
                                  [Values(2u, 31u)] uint rm,
                                  [Values(3u, 31u)] uint ra,
                                  [Values(0x00000000u, 0x7FFFFFFFu,
-                                         0x80000000u, 0xFFFFFFFFu)] [Random(RndCnt)] uint wn,
+                                         0x80000000u, 0xFFFFFFFFu)] uint wn,
                                  [Values(0x00000000u, 0x7FFFFFFFu,
-                                         0x80000000u, 0xFFFFFFFFu)] [Random(RndCnt)] uint wm,
+                                         0x80000000u, 0xFFFFFFFFu)] uint wm,
                                  [Values(0x0000000000000000ul, 0x7FFFFFFFFFFFFFFFul,
-                                         0x8000000000000000ul, 0xFFFFFFFFFFFFFFFFul)] [Random(RndCnt)] ulong xa)
+                                         0x8000000000000000ul, 0xFFFFFFFFFFFFFFFFul)] ulong xa)
         {
             uint opcode = 0x9BA08000; // UMSUBL X0, W0, W0, X0
             opcode |= ((rm & 31) << 16) | ((ra & 31) << 10) | ((rn & 31) << 5) | ((rd & 31) << 0);
@@ -191,9 +189,9 @@ namespace Ryujinx.Tests.Cpu
                                 [Values(1u, 31u)] uint rn,
                                 [Values(2u, 31u)] uint rm,
                                 [Values(0x0000000000000000ul, 0x7FFFFFFFFFFFFFFFul,
-                                        0x8000000000000000ul, 0xFFFFFFFFFFFFFFFFul)] [Random(RndCnt)] ulong xn,
+                                        0x8000000000000000ul, 0xFFFFFFFFFFFFFFFFul)] ulong xn,
                                 [Values(0x0000000000000000ul, 0x7FFFFFFFFFFFFFFFul,
-                                        0x8000000000000000ul, 0xFFFFFFFFFFFFFFFFul)] [Random(RndCnt)] ulong xm)
+                                        0x8000000000000000ul, 0xFFFFFFFFFFFFFFFFul)] ulong xm)
         {
             uint opcode = 0x9B407C00; // SMULH X0, X0, X0
             opcode |= ((rm & 31) << 16) | ((rn & 31) << 5) | ((rd & 31) << 0);
@@ -210,9 +208,9 @@ namespace Ryujinx.Tests.Cpu
                                 [Values(1u, 31u)] uint rn,
                                 [Values(2u, 31u)] uint rm,
                                 [Values(0x0000000000000000ul, 0x7FFFFFFFFFFFFFFFul,
-                                        0x8000000000000000ul, 0xFFFFFFFFFFFFFFFFul)] [Random(RndCnt)] ulong xn,
+                                        0x8000000000000000ul, 0xFFFFFFFFFFFFFFFFul)] ulong xn,
                                 [Values(0x0000000000000000ul, 0x7FFFFFFFFFFFFFFFul,
-                                        0x8000000000000000ul, 0xFFFFFFFFFFFFFFFFul)] [Random(RndCnt)] ulong xm)
+                                        0x8000000000000000ul, 0xFFFFFFFFFFFFFFFFul)] ulong xm)
         {
             uint opcode = 0x9BC07C00; // UMULH X0, X0, X0
             opcode |= ((rm & 31) << 16) | ((rn & 31) << 5) | ((rd & 31) << 0);

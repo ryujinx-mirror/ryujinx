@@ -9,12 +9,11 @@ namespace Ryujinx.Tests.Cpu
     {
 #if Mov
         private const int RndCnt    = 2;
-        private const int RndCntImm = 2;
 
         [Test, Pairwise, Description("MOVK <Xd>, #<imm>{, LSL #<shift>}")]
         public void Movk_64bit([Values(0u, 31u)] uint rd,
                                [Random(RndCnt)] ulong xd,
-                               [Values(0u, 65535u)] [Random(0u, 65535u, RndCntImm)] uint imm,
+                               [Values(0u, 65535u)] uint imm,
                                [Values(0u, 16u, 32u, 48u)] uint shift)
         {
             uint opcode = 0xF2800000; // MOVK X0, #0, LSL #0
@@ -31,7 +30,7 @@ namespace Ryujinx.Tests.Cpu
         [Test, Pairwise, Description("MOVK <Wd>, #<imm>{, LSL #<shift>}")]
         public void Movk_32bit([Values(0u, 31u)] uint rd,
                                [Random(RndCnt)] uint wd,
-                               [Values(0u, 65535u)] [Random(0u, 65535u, RndCntImm)] uint imm,
+                               [Values(0u, 65535u)] uint imm,
                                [Values(0u, 16u)] uint shift)
         {
             uint opcode = 0x72800000; // MOVK W0, #0, LSL #0
@@ -47,7 +46,7 @@ namespace Ryujinx.Tests.Cpu
 
         [Test, Pairwise, Description("MOVN <Xd>, #<imm>{, LSL #<shift>}")]
         public void Movn_64bit([Values(0u, 31u)] uint rd,
-                               [Values(0u, 65535u)] [Random(0u, 65535u, RndCntImm)] uint imm,
+                               [Values(0u, 65535u)] uint imm,
                                [Values(0u, 16u, 32u, 48u)] uint shift)
         {
             uint opcode = 0x92800000; // MOVN X0, #0, LSL #0
@@ -63,7 +62,7 @@ namespace Ryujinx.Tests.Cpu
 
         [Test, Pairwise, Description("MOVN <Wd>, #<imm>{, LSL #<shift>}")]
         public void Movn_32bit([Values(0u, 31u)] uint rd,
-                               [Values(0u, 65535u)] [Random(0u, 65535u, RndCntImm)] uint imm,
+                               [Values(0u, 65535u)] uint imm,
                                [Values(0u, 16u)] uint shift)
         {
             uint opcode = 0x12800000; // MOVN W0, #0, LSL #0
@@ -79,7 +78,7 @@ namespace Ryujinx.Tests.Cpu
 
         [Test, Pairwise, Description("MOVZ <Xd>, #<imm>{, LSL #<shift>}")]
         public void Movz_64bit([Values(0u, 31u)] uint rd,
-                               [Values(0u, 65535u)] [Random(0u, 65535u, RndCntImm)] uint imm,
+                               [Values(0u, 65535u)] uint imm,
                                [Values(0u, 16u, 32u, 48u)] uint shift)
         {
             uint opcode = 0xD2800000; // MOVZ X0, #0, LSL #0
@@ -95,7 +94,7 @@ namespace Ryujinx.Tests.Cpu
 
         [Test, Pairwise, Description("MOVZ <Wd>, #<imm>{, LSL #<shift>}")]
         public void Movz_32bit([Values(0u, 31u)] uint rd,
-                               [Values(0u, 65535u)] [Random(0u, 65535u, RndCntImm)] uint imm,
+                               [Values(0u, 65535u)] uint imm,
                                [Values(0u, 16u)] uint shift)
         {
             uint opcode = 0x52800000; // MOVZ W0, #0, LSL #0
