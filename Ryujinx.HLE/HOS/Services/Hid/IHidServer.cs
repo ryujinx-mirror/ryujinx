@@ -722,7 +722,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
             for (int i = 0; i < supportedPlayerIds.Length; ++i)
             {
-                if (supportedPlayerIds[i] >= 0)
+                if (HidUtils.IsValidNpadIdType(supportedPlayerIds[i]))
                 {
                     context.Device.Hid.Npads.SetSupportedPlayer(HidUtils.GetIndexFromNpadIdType(supportedPlayerIds[i]));
                 }
@@ -1101,7 +1101,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
             if (deviceType < NpadStyleIndex.System || deviceType >= NpadStyleIndex.FullKey)
             {
-                if (npadIdType >= (NpadIdType.Player8 + 1) && npadIdType != NpadIdType.Handheld && npadIdType != NpadIdType.Unknown)
+                if (!HidUtils.IsValidNpadIdType(npadIdType))
                 {
                     return ResultCode.InvalidNpadIdType;
                 }
