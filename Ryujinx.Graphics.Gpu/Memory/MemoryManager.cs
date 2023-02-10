@@ -584,6 +584,38 @@ namespace Ryujinx.Graphics.Gpu.Memory
         }
 
         /// <summary>
+        /// Translates a GPU virtual address to a CPU virtual address on the first mapped page of memory
+        /// on the specified region.
+        /// If no page is mapped on the specified region, <see cref="PteUnmapped"/> is returned.
+        /// </summary>
+        /// <param name="va">GPU virtual address to be translated</param>
+        /// <param name="size">Size of the range to be translated</param>
+        /// <returns>CPU virtual address, or <see cref="PteUnmapped"/> if unmapped</returns>
+        public ulong TranslateFirstMapped(ulong va, ulong size)
+        {
+            if (!ValidateAddress(va))
+            {
+                return PteUnmapped;
+            }
+
+            ulong endVa = va + size;
+
+            ulong pte = GetPte(va);
+
+            for (; va < endVa && pte == PteUnmapped; va += PageSize - (va & PageMask))
+            {
+                pte = GetPte(va);
+            }
+
+            if (pte == PteUnmapped)
+            {
+                return PteUnmapped;
+            }
+
+            return UnpackPaFromPte(pte) + (va & PageMask);
+        }
+
+        /// <summary>
         /// Gets the kind of a given memory page.
         /// This might indicate the type of resource that can be allocated on the page, and also texture tiling.
         /// </summary>
