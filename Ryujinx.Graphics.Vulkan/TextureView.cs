@@ -712,7 +712,7 @@ namespace Ryujinx.Graphics.Vulkan
 
             for (int level = 0; level < levels; level++)
             {
-                int mipSize = GetBufferDataLength(Info.GetMipSize(dstLevel + level));
+                int mipSize = GetBufferDataLength(Info.GetMipSize2D(dstLevel + level) * dstLayers);
 
                 int endOffset = offset + mipSize;
 
