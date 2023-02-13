@@ -21,7 +21,7 @@ namespace Ryujinx.Graphics.Vulkan
 
         private Array4<float> _blendConstants;
 
-        public int ViewportsCount;
+        public uint ViewportsCount;
         public Array16<Viewport> Viewports;
 
         private enum DirtyFlags
@@ -88,9 +88,15 @@ namespace Ryujinx.Graphics.Vulkan
             _dirty |= DirtyFlags.Viewport;
         }
 
-        public void SetViewportsDirty()
+        public void SetViewports(ref Array16<Viewport> viewports, uint viewportsCount)
         {
-            _dirty |= DirtyFlags.Viewport;
+            Viewports = viewports;
+            ViewportsCount = viewportsCount;
+
+            if (ViewportsCount != 0)
+            {
+                _dirty |= DirtyFlags.Viewport;
+            }
         }
 
         public void ForceAllDirty()
@@ -155,7 +161,10 @@ namespace Ryujinx.Graphics.Vulkan
 
         private void RecordViewport(Vk api, CommandBuffer commandBuffer)
         {
-            api.CmdSetViewport(commandBuffer, 0, (uint)ViewportsCount, Viewports.AsSpan());
+            if (ViewportsCount != 0)
+            {
+                api.CmdSetViewport(commandBuffer, 0, ViewportsCount, Viewports.AsSpan());
+            }
         }
     }
 }

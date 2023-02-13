@@ -650,9 +650,7 @@ namespace Ryujinx.Graphics.Vulkan
                 _newState.DepthWriteEnable = oldDepthWriteEnable;
                 _newState.Topology = oldTopology;
 
-                DynamicState.Viewports = oldViewports;
-                DynamicState.ViewportsCount = (int)oldViewportsCount;
-                DynamicState.SetViewportsDirty();
+                DynamicState.SetViewports(ref oldViewports, oldViewportsCount);
 
                 _newState.ViewportsCount = oldViewportsCount;
                 SignalStateChange();
@@ -1183,6 +1181,8 @@ namespace Ryujinx.Graphics.Vulkan
                 return Math.Clamp(value, 0f, 1f);
             }
 
+            DynamicState.ViewportsCount = (uint)count;
+
             for (int i = 0; i < count; i++)
             {
                 var viewport = viewports[i];
@@ -1195,8 +1195,6 @@ namespace Ryujinx.Graphics.Vulkan
                     Clamp(viewport.DepthNear),
                     Clamp(viewport.DepthFar)));
             }
-
-            DynamicState.ViewportsCount = count;
 
             float disableTransformF = disableTransform ? 1.0f : 0.0f;
             if (SupportBufferUpdater.Data.ViewportInverse.W != disableTransformF || disableTransform)
