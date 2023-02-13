@@ -14,6 +14,9 @@ namespace Ryujinx.Graphics.Vulkan
     public unsafe static class VulkanInitialization
     {
         private const uint InvalidIndex = uint.MaxValue;
+        private static uint MinimalVulkanVersion = Vk.Version11.Value;
+        private static uint MinimalInstanceVulkanVersion = Vk.Version12.Value;
+        private static uint MaximumVulkanVersion = Vk.Version12.Value;
         private const string AppName = "Ryujinx.Graphics.Vulkan";
         private const int QueuesCount = 2;
 
@@ -99,7 +102,7 @@ namespace Ryujinx.Graphics.Vulkan
                 ApplicationVersion = 1,
                 PEngineName = (byte*)appName,
                 EngineVersion = 1,
-                ApiVersion = Vk.Version12.Value
+                ApiVersion = MaximumVulkanVersion
             };
 
             IntPtr* ppEnabledExtensions = stackalloc IntPtr[enabledExtensions.Length];
@@ -224,7 +227,7 @@ namespace Ryujinx.Graphics.Vulkan
                 ApplicationVersion = 1,
                 PEngineName = (byte*)appName,
                 EngineVersion = 1,
-                ApiVersion = Vk.Version12.Value
+                ApiVersion = MaximumVulkanVersion
             };
 
             var instanceCreateInfo = new InstanceCreateInfo
@@ -238,6 +241,27 @@ namespace Ryujinx.Graphics.Vulkan
             };
 
             api.CreateInstance(in instanceCreateInfo, null, out var instance).ThrowOnError();
+
+            // We ensure that vkEnumerateInstanceVersion is present (added in 1.1).
+            // If the instance doesn't support it, no device is going to be 1.1 compatible.
+            if (api.GetInstanceProcAddr(instance, "vkEnumerateInstanceVersion") == IntPtr.Zero)
+            {
+                api.DestroyInstance(instance, null);
+
+                return Array.Empty<DeviceInfo>();
+            }
+
+            // We currently assume that the instance is compatible with Vulkan 1.2
+            // TODO: Remove this once we relax our initialization codepaths.
+            uint instanceApiVerison = 0;
+            api.EnumerateInstanceVersion(ref instanceApiVerison).ThrowOnError();
+
+            if (instanceApiVerison < MinimalInstanceVulkanVersion)
+            {
+                api.DestroyInstance(instance, null);
+
+                return Array.Empty<DeviceInfo>();
+            }
 
             Marshal.FreeHGlobal(appName);
 
@@ -258,6 +282,11 @@ namespace Ryujinx.Graphics.Vulkan
             {
                 var physicalDevice = physicalDevices[i];
                 api.GetPhysicalDeviceProperties(physicalDevice, out var properties);
+
+                if (properties.ApiVersion < MinimalVulkanVersion)
+                {
+                    continue;
+                }
 
                 devices[i] = new DeviceInfo(
                     StringFromIdPair(properties.VendorID, properties.DeviceID),
