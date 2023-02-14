@@ -5,7 +5,7 @@ body:
   - type: textarea
     id: instruction
     attributes:
-      label: Service Call
+      label: Service call
       description: What service call is missing?
     validations:
       required: true

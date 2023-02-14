@@ -1,6 +1,6 @@
 name: Feature Request
 description: Suggest a new feature for Ryujinx.
-title: "[Feature Request] <title>"
+title: "[Feature Request]"
 body:
   - type: textarea
     id: overview
@@ -12,14 +12,14 @@ body:
   - type: textarea
     id: details
     attributes:
-      label: Smaller Details
+      label: Smaller details
       description: These may include specific methods of implementation etc.
     validations:
       required: true
   - type: textarea
     id: request
     attributes:
-      label: Nature of Request
+      label: Nature of request
     validations:
       required: true
   - type: textarea

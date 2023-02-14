@@ -1,6 +1,6 @@
 name: Missing CPU Instruction
 description: CPU Instruction is missing in Ryujinx.
-title: "[CPU] <title>"
+title: "[CPU]"
 labels: [cpu, not-implemented]
 body:
   - type: textarea
