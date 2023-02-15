@@ -9,6 +9,7 @@ using Ryujinx.Ui;
 using Ryujinx.Ui.Widgets;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -23,19 +24,19 @@ namespace Ryujinx.Modules
 {
     public static class Updater
     {
+        private const string GitHubApiURL = "https://api.github.com";
+        private const int ConnectionCount = 4;
+
         internal static bool Running;
 
         private static readonly string HomeDir          = AppDomain.CurrentDomain.BaseDirectory;
         private static readonly string UpdateDir        = Path.Combine(Path.GetTempPath(), "Ryujinx", "update");
         private static readonly string UpdatePublishDir = Path.Combine(UpdateDir, "publish");
-        private static readonly int    ConnectionCount  = 4;
 
         private static string _buildVer;
         private static string _platformExt;
         private static string _buildUrl;
         private static long   _buildSize;
-
-        private const string GitHubApiURL = "https://api.github.com";
 
         // On Windows, GtkSharp.Dependencies adds these extra dirs that must be cleaned during updates.
         private static readonly string[] WindowsDependencyDirs = new string[] { "bin", "etc", "lib", "share" };
@@ -44,7 +45,7 @@ namespace Ryujinx.Modules
         {
             HttpClient result = new HttpClient();
 
-            // Required by GitHub to interract with APIs.
+            // Required by GitHub to interact with APIs.
             result.DefaultRequestHeaders.Add("User-Agent", "Ryujinx-Updater/1.0.0");
 
             return result;
@@ -101,50 +102,48 @@ namespace Ryujinx.Modules
             // Get latest version number from GitHub API
             try
             {
-                using (HttpClient jsonClient = ConstructHttpClient())
+                using HttpClient jsonClient = ConstructHttpClient();
+                string buildInfoURL = $"{GitHubApiURL}/repos/{ReleaseInformation.ReleaseChannelOwner}/{ReleaseInformation.ReleaseChannelRepo}/releases/latest";
+
+                // Fetch latest build information
+                string  fetchedJson = await jsonClient.GetStringAsync(buildInfoURL);
+                JObject jsonRoot    = JObject.Parse(fetchedJson);
+                JToken  assets      = jsonRoot["assets"];
+
+                _buildVer = (string)jsonRoot["name"];
+
+                foreach (JToken asset in assets)
                 {
-                    string buildInfoURL = $"{GitHubApiURL}/repos/{ReleaseInformation.ReleaseChannelOwner}/{ReleaseInformation.ReleaseChannelRepo}/releases/latest";
+                    string assetName = (string)asset["name"];
+                    string assetState = (string)asset["state"];
+                    string downloadURL = (string)asset["browser_download_url"];
 
-                    // Fetch latest build information
-                    string  fetchedJson = await jsonClient.GetStringAsync(buildInfoURL);
-                    JObject jsonRoot    = JObject.Parse(fetchedJson);
-                    JToken  assets      = jsonRoot["assets"];
-
-                    _buildVer = (string)jsonRoot["name"];
-
-                    foreach (JToken asset in assets)
+                    if (assetName.StartsWith("ryujinx") && assetName.EndsWith(_platformExt))
                     {
-                        string assetName = (string)asset["name"];
-                        string assetState = (string)asset["state"];
-                        string downloadURL = (string)asset["browser_download_url"];
+                        _buildUrl = downloadURL;
 
-                        if (assetName.StartsWith("ryujinx") && assetName.EndsWith(_platformExt))
+                        if (assetState != "uploaded")
                         {
-                            _buildUrl = downloadURL;
-
-                            if (assetState != "uploaded")
+                            if (showVersionUpToDate)
                             {
-                                if (showVersionUpToDate)
-                                {
-                                    GtkDialog.CreateUpdaterInfoDialog("You are already using the latest version of Ryujinx!", "");
-                                }
-
-                                return;
+                                GtkDialog.CreateUpdaterInfoDialog("You are already using the latest version of Ryujinx!", "");
                             }
 
-                            break;
+                            return;
                         }
-                    }
 
-                    if (_buildUrl == null)
+                        break;
+                    }
+                }
+
+                if (_buildUrl == null)
+                {
+                    if (showVersionUpToDate)
                     {
-                        if (showVersionUpToDate)
-                        {
-                            GtkDialog.CreateUpdaterInfoDialog("You are already using the latest version of Ryujinx!", "");
-                        }
-
-                        return;
+                        GtkDialog.CreateUpdaterInfoDialog("You are already using the latest version of Ryujinx!", "");
                     }
+
+                    return;
                 }
             }
             catch (Exception exception)
@@ -247,160 +246,142 @@ namespace Ryujinx.Modules
 
             for (int i = 0; i < ConnectionCount; i++)
             {
-                list.Add(new byte[0]);
+                list.Add(Array.Empty<byte>());
             }
 
             for (int i = 0; i < ConnectionCount; i++)
             {
 #pragma warning disable SYSLIB0014
                 // TODO: WebClient is obsolete and need to be replaced with a more complex logic using HttpClient.
-                using (WebClient client = new WebClient())
+                using WebClient client = new WebClient();
 #pragma warning restore SYSLIB0014
+                webClients.Add(client);
+
+                if (i == ConnectionCount - 1)
                 {
-                    webClients.Add(client);
+                    client.Headers.Add("Range", $"bytes={chunkSize * i}-{(chunkSize * (i + 1) - 1) + remainderChunk}");
+                }
+                else
+                {
+                    client.Headers.Add("Range", $"bytes={chunkSize * i}-{chunkSize * (i + 1) - 1}");
+                }
 
-                    if (i == ConnectionCount - 1)
+                client.DownloadProgressChanged += (_, args) =>
+                {
+                    int index = (int)args.UserState;
+
+                    Interlocked.Add(ref totalProgressPercentage, -1 * progressPercentage[index]);
+                    Interlocked.Exchange(ref progressPercentage[index], args.ProgressPercentage);
+                    Interlocked.Add(ref totalProgressPercentage, args.ProgressPercentage);
+
+                    updateDialog.ProgressBar.Value = totalProgressPercentage / ConnectionCount;
+                };
+
+                client.DownloadDataCompleted += (_, args) =>
+                {
+                    int index = (int)args.UserState;
+
+                    if (args.Cancelled)
                     {
-                        client.Headers.Add("Range", $"bytes={chunkSize * i}-{(chunkSize * (i + 1) - 1) + remainderChunk}");
-                    }
-                    else
-                    {
-                        client.Headers.Add("Range", $"bytes={chunkSize * i}-{chunkSize * (i + 1) - 1}");
-                    }
-
-                    client.DownloadProgressChanged += (_, args) =>
-                    {
-                        int index = (int)args.UserState;
-
-                        Interlocked.Add(ref totalProgressPercentage, -1 * progressPercentage[index]);
-                        Interlocked.Exchange(ref progressPercentage[index], args.ProgressPercentage);
-                        Interlocked.Add(ref totalProgressPercentage, args.ProgressPercentage);
-
-                        updateDialog.ProgressBar.Value = totalProgressPercentage / ConnectionCount;
-                    };
-
-                    client.DownloadDataCompleted += (_, args) =>
-                    {
-                        int index = (int)args.UserState;
-
-                        if (args.Cancelled)
-                        {
-                            webClients[index].Dispose();
-
-                            return;
-                        }
-
-                        list[index] = args.Result;
-                        Interlocked.Increment(ref completedRequests);
-
-                        if (Equals(completedRequests, ConnectionCount))
-                        {
-                            byte[] mergedFileBytes = new byte[_buildSize];
-                            for (int connectionIndex = 0, destinationOffset = 0; connectionIndex < ConnectionCount; connectionIndex++)
-                            {
-                                Array.Copy(list[connectionIndex], 0, mergedFileBytes, destinationOffset, list[connectionIndex].Length);
-                                destinationOffset += list[connectionIndex].Length;
-                            }
-
-                            File.WriteAllBytes(updateFile, mergedFileBytes);
-
-                            try
-                            {
-                                InstallUpdate(updateDialog, updateFile);
-                            }
-                            catch (Exception e)
-                            {
-                                Logger.Warning?.Print(LogClass.Application, e.Message);
-                                Logger.Warning?.Print(LogClass.Application, "Multi-Threaded update failed, falling back to single-threaded updater.");
-
-                                DoUpdateWithSingleThread(updateDialog, downloadUrl, updateFile);
-
-                                return;
-                            }
-                        }
-                    };
-
-                    try
-                    {
-                        client.DownloadDataAsync(new Uri(downloadUrl), i);
-                    }
-                    catch (WebException ex)
-                    {
-                        Logger.Warning?.Print(LogClass.Application, ex.Message);
-                        Logger.Warning?.Print(LogClass.Application, "Multi-Threaded update failed, falling back to single-threaded updater.");
-
-                        for (int j = 0; j < webClients.Count; j++)
-                        {
-                            webClients[j].CancelAsync();
-                        }
-
-                        DoUpdateWithSingleThread(updateDialog, downloadUrl, updateFile);
+                        webClients[index].Dispose();
 
                         return;
                     }
+
+                    list[index] = args.Result;
+                    Interlocked.Increment(ref completedRequests);
+
+                    if (Equals(completedRequests, ConnectionCount))
+                    {
+                        byte[] mergedFileBytes = new byte[_buildSize];
+                        for (int connectionIndex = 0, destinationOffset = 0; connectionIndex < ConnectionCount; connectionIndex++)
+                        {
+                            Array.Copy(list[connectionIndex], 0, mergedFileBytes, destinationOffset, list[connectionIndex].Length);
+                            destinationOffset += list[connectionIndex].Length;
+                        }
+
+                        File.WriteAllBytes(updateFile, mergedFileBytes);
+
+                        try
+                        {
+                            InstallUpdate(updateDialog, updateFile);
+                        }
+                        catch (Exception e)
+                        {
+                            Logger.Warning?.Print(LogClass.Application, e.Message);
+                            Logger.Warning?.Print(LogClass.Application, "Multi-Threaded update failed, falling back to single-threaded updater.");
+
+                            DoUpdateWithSingleThread(updateDialog, downloadUrl, updateFile);
+
+                            return;
+                        }
+                    }
+                };
+
+                try
+                {
+                    client.DownloadDataAsync(new Uri(downloadUrl), i);
+                }
+                catch (WebException ex)
+                {
+                    Logger.Warning?.Print(LogClass.Application, ex.Message);
+                    Logger.Warning?.Print(LogClass.Application, "Multi-Threaded update failed, falling back to single-threaded updater.");
+
+                    foreach (WebClient webClient in webClients)
+                    {
+                        webClient.CancelAsync();
+                    }
+
+                    DoUpdateWithSingleThread(updateDialog, downloadUrl, updateFile);
+
+                    return;
                 }
             }
         }
 
         private static void DoUpdateWithSingleThreadWorker(UpdateDialog updateDialog, string downloadUrl, string updateFile)
         {
-            using (HttpClient client = new HttpClient())
+            using HttpClient client = new HttpClient();
+            // We do not want to timeout while downloading
+            client.Timeout = TimeSpan.FromDays(1);
+
+            using (HttpResponseMessage response = client.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead).Result)
+            using (Stream remoteFileStream = response.Content.ReadAsStreamAsync().Result)
             {
-                // We do not want to timeout while downloading
-                client.Timeout = TimeSpan.FromDays(1);
-
-                using (HttpResponseMessage response = client.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead).Result)
-                using (Stream remoteFileStream = response.Content.ReadAsStreamAsync().Result)
+                using (Stream updateFileStream = File.Open(updateFile, FileMode.Create))
                 {
-                    using (Stream updateFileStream = File.Open(updateFile, FileMode.Create))
+                    long totalBytes = response.Content.Headers.ContentLength.Value;
+                    long byteWritten = 0;
+
+                    byte[] buffer = new byte[32 * 1024];
+
+                    while (true)
                     {
-                        long totalBytes = response.Content.Headers.ContentLength.Value;
-                        long byteWritten = 0;
+                        int readSize = remoteFileStream.Read(buffer);
 
-                        byte[] buffer = new byte[32 * 1024];
-
-                        while (true)
+                        if (readSize == 0)
                         {
-                            int readSize = remoteFileStream.Read(buffer);
-
-                            if (readSize == 0)
-                            {
-                                break;
-                            }
-
-                            byteWritten += readSize;
-
-                            updateDialog.ProgressBar.Value = ((double)byteWritten / totalBytes) * 100;
-                            updateFileStream.Write(buffer, 0, readSize);
+                            break;
                         }
+
+                        byteWritten += readSize;
+
+                        updateDialog.ProgressBar.Value = ((double)byteWritten / totalBytes) * 100;
+                        updateFileStream.Write(buffer, 0, readSize);
                     }
                 }
-
-                InstallUpdate(updateDialog, updateFile);
             }
+
+            InstallUpdate(updateDialog, updateFile);
         }
 
         private static void DoUpdateWithSingleThread(UpdateDialog updateDialog, string downloadUrl, string updateFile)
         {
-            Thread worker = new Thread(() => DoUpdateWithSingleThreadWorker(updateDialog, downloadUrl, updateFile));
-            worker.Name = "Updater.SingleThreadWorker";
-            worker.Start();
-        }
-
-        private static void SetFileExecutable(string path)
-        {
-            const UnixFileMode ExecutableFileMode = UnixFileMode.UserExecute |
-                                                    UnixFileMode.UserWrite |
-                                                    UnixFileMode.UserRead |
-                                                    UnixFileMode.GroupRead |
-                                                    UnixFileMode.GroupWrite |
-                                                    UnixFileMode.OtherRead |
-                                                    UnixFileMode.OtherWrite;
-
-            if (!OperatingSystem.IsWindows() && File.Exists(path))
+            Thread worker = new Thread(() => DoUpdateWithSingleThreadWorker(updateDialog, downloadUrl, updateFile))
             {
-                File.SetUnixFileMode(path, ExecutableFileMode);
-            }
+                Name = "Updater.SingleThreadWorker"
+            };
+            worker.Start();
         }
 
         private static async void InstallUpdate(UpdateDialog updateDialog, string updateFile)
@@ -411,15 +392,17 @@ namespace Ryujinx.Modules
 
             if (OperatingSystem.IsLinux())
             {
-                using (Stream         inStream   = File.OpenRead(updateFile))
-                using (Stream         gzipStream = new GZipInputStream(inStream))
-                using (TarInputStream tarStream  = new TarInputStream(gzipStream, Encoding.ASCII))
-                {
-                    updateDialog.ProgressBar.MaxValue = inStream.Length;
+                using Stream         inStream   = File.OpenRead(updateFile);
+                using Stream         gzipStream = new GZipInputStream(inStream);
+                using TarInputStream tarStream  = new TarInputStream(gzipStream, Encoding.ASCII);
+                updateDialog.ProgressBar.MaxValue = inStream.Length;
 
-                    await Task.Run(() =>
+                await Task.Run(() =>
+                {
+                    TarEntry tarEntry;
+
+                    if (!OperatingSystem.IsWindows())
                     {
-                        TarEntry tarEntry;
                         while ((tarEntry = tarStream.GetNextEntry()) != null)
                         {
                             if (tarEntry.IsDirectory) continue;
@@ -433,6 +416,7 @@ namespace Ryujinx.Modules
                                 tarStream.CopyEntryContents(outStream);
                             }
 
+                            File.SetUnixFileMode(outPath, (UnixFileMode)tarEntry.TarHeader.Mode);
                             File.SetLastWriteTime(outPath, DateTime.SpecifyKind(tarEntry.ModTime, DateTimeKind.Utc));
 
                             TarEntry entry = tarEntry;
@@ -442,43 +426,41 @@ namespace Ryujinx.Modules
                                 updateDialog.ProgressBar.Value += entry.Size;
                             });
                         }
-                    });
+                    }
+                });
 
-                    updateDialog.ProgressBar.Value = inStream.Length;
-                }
+                updateDialog.ProgressBar.Value = inStream.Length;
             }
             else
             {
-                using (Stream  inStream = File.OpenRead(updateFile))
-                using (ZipFile zipFile  = new ZipFile(inStream))
+                using Stream  inStream = File.OpenRead(updateFile);
+                using ZipFile zipFile  = new ZipFile(inStream);
+                updateDialog.ProgressBar.MaxValue = zipFile.Count;
+
+                await Task.Run(() =>
                 {
-                    updateDialog.ProgressBar.MaxValue = zipFile.Count;
-
-                    await Task.Run(() =>
+                    foreach (ZipEntry zipEntry in zipFile)
                     {
-                        foreach (ZipEntry zipEntry in zipFile)
+                        if (zipEntry.IsDirectory) continue;
+
+                        string outPath = Path.Combine(UpdateDir, zipEntry.Name);
+
+                        Directory.CreateDirectory(Path.GetDirectoryName(outPath));
+
+                        using (Stream     zipStream = zipFile.GetInputStream(zipEntry))
+                        using (FileStream outStream = File.OpenWrite(outPath))
                         {
-                            if (zipEntry.IsDirectory) continue;
-
-                            string outPath = Path.Combine(UpdateDir, zipEntry.Name);
-
-                            Directory.CreateDirectory(Path.GetDirectoryName(outPath));
-
-                            using (Stream     zipStream = zipFile.GetInputStream(zipEntry))
-                            using (FileStream outStream = File.OpenWrite(outPath))
-                            {
-                                zipStream.CopyTo(outStream);
-                            }
-
-                            File.SetLastWriteTime(outPath, DateTime.SpecifyKind(zipEntry.DateTime, DateTimeKind.Utc));
-
-                            Application.Invoke(delegate
-                            {
-                                updateDialog.ProgressBar.Value++;
-                            });
+                            zipStream.CopyTo(outStream);
                         }
-                    });
-                }
+
+                        File.SetLastWriteTime(outPath, DateTime.SpecifyKind(zipEntry.DateTime, DateTimeKind.Utc));
+
+                        Application.Invoke(delegate
+                        {
+                            updateDialog.ProgressBar.Value++;
+                        });
+                    }
+                });
             }
 
             // Delete downloaded zip
@@ -521,8 +503,6 @@ namespace Ryujinx.Modules
             });
 
             Directory.Delete(UpdateDir, true);
-
-            SetFileExecutable(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Ryujinx"));
 
             updateDialog.MainText.Text      = "Update Complete!";
             updateDialog.SecondaryText.Text = "Do you want to restart Ryujinx now?";

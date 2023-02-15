@@ -132,8 +132,8 @@ namespace Ryujinx.Modules
                     }
                 }
 
-                // If build not done, assume no new update are availaible.
-                if (_buildUrl == null)
+                // If build not done, assume no new update are available.
+                if (_buildUrl is null)
                 {
                     if (showVersionUpToDate)
                     {
@@ -240,13 +240,13 @@ namespace Ryujinx.Modules
         {
             HttpClient result = new();
 
-            // Required by GitHub to interract with APIs.
+            // Required by GitHub to interact with APIs.
             result.DefaultRequestHeaders.Add("User-Agent", "Ryujinx-Updater/1.0.0");
 
             return result;
         }
 
-        public static async void UpdateRyujinx(Window parent, string downloadUrl)
+        private static async void UpdateRyujinx(Window parent, string downloadUrl)
         {
             _updateSuccessful = false;
 
@@ -299,8 +299,6 @@ namespace Ryujinx.Modules
                     {
                         ryuExe = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, OperatingSystem.IsWindows() ? "Ryujinx.exe" : "Ryujinx");
                     }
-
-                    SetFileExecutable(ryuExe);
 
                     Process.Start(ryuExe, CommandLineState.Arguments);
 
@@ -408,9 +406,9 @@ namespace Ryujinx.Modules
                     Logger.Warning?.Print(LogClass.Application, ex.Message);
                     Logger.Warning?.Print(LogClass.Application, "Multi-Threaded update failed, falling back to single-threaded updater.");
 
-                    for (int j = 0; j < webClients.Count; j++)
+                    foreach (WebClient webClient in webClients)
                     {
-                        webClients[j].CancelAsync();
+                        webClient.CancelAsync();
                     }
 
                     DoUpdateWithSingleThread(taskDialog, downloadUrl, updateFile);
@@ -472,22 +470,6 @@ namespace Ryujinx.Modules
             worker.Start();
         }
 
-        private static void SetFileExecutable(string path)
-        {
-            const UnixFileMode ExecutableFileMode = UnixFileMode.UserExecute |
-                                                    UnixFileMode.UserWrite |
-                                                    UnixFileMode.UserRead |
-                                                    UnixFileMode.GroupRead |
-                                                    UnixFileMode.GroupWrite |
-                                                    UnixFileMode.OtherRead |
-                                                    UnixFileMode.OtherWrite;
-
-            if (!OperatingSystem.IsWindows() && File.Exists(path))
-            {
-                File.SetUnixFileMode(path, ExecutableFileMode);
-            }
-        }
-
         private static async void InstallUpdate(TaskDialog taskDialog, string updateFile)
         {
             // Extract Update
@@ -503,27 +485,30 @@ namespace Ryujinx.Modules
                 await Task.Run(() =>
                 {
                     TarEntry tarEntry;
-                    while ((tarEntry = tarStream.GetNextEntry()) != null)
+
+                    if (!OperatingSystem.IsWindows())
                     {
-                        if (tarEntry.IsDirectory) continue;
-
-                        string outPath = Path.Combine(UpdateDir, tarEntry.Name);
-
-                        Directory.CreateDirectory(Path.GetDirectoryName(outPath));
-
-                        using (FileStream outStream = File.OpenWrite(outPath))
+                        while ((tarEntry = tarStream.GetNextEntry()) is not null)
                         {
-                            tarStream.CopyEntryContents(outStream);
+                            if (tarEntry.IsDirectory) continue;
+
+                            string outPath = Path.Combine(UpdateDir, tarEntry.Name);
+
+                            Directory.CreateDirectory(Path.GetDirectoryName(outPath));
+
+                            using (FileStream outStream = File.OpenWrite(outPath))
+                            {
+                                tarStream.CopyEntryContents(outStream);
+                            }
+
+                            File.SetUnixFileMode(outPath, (UnixFileMode)tarEntry.TarHeader.Mode);
+                            File.SetLastWriteTime(outPath, DateTime.SpecifyKind(tarEntry.ModTime, DateTimeKind.Utc));
+
+                            Dispatcher.UIThread.Post(() =>
+                            {
+                                taskDialog.SetProgressBarState(GetPercentage(tarEntry.Size, inStream.Length), TaskDialogProgressState.Normal);
+                            });
                         }
-
-                        File.SetLastWriteTime(outPath, DateTime.SpecifyKind(tarEntry.ModTime, DateTimeKind.Utc));
-
-                        TarEntry entry = tarEntry;
-
-                        Dispatcher.UIThread.Post(() =>
-                        {
-                            taskDialog.SetProgressBarState(GetPercentage(entry.Size, inStream.Length), TaskDialogProgressState.Normal);
-                        });
                     }
                 });
 
@@ -602,8 +587,6 @@ namespace Ryujinx.Modules
             });
 
             Directory.Delete(UpdateDir, true);
-
-            SetFileExecutable(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Ryujinx"));
 
             _updateSuccessful = true;
 
