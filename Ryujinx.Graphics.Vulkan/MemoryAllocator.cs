@@ -9,34 +9,36 @@ namespace Ryujinx.Graphics.Vulkan
         private ulong MaxDeviceMemoryUsageEstimate = 16UL * 1024 * 1024 * 1024;
 
         private readonly Vk _api;
+        private readonly PhysicalDevice _physicalDevice;
         private readonly Device _device;
         private readonly List<MemoryAllocatorBlockList> _blockLists;
+        private readonly int _blockAlignment;
+        private readonly PhysicalDeviceMemoryProperties _physicalDeviceMemoryProperties;
 
-        private int _blockAlignment;
-
-        public MemoryAllocator(Vk api, Device device, uint maxMemoryAllocationCount)
+        public MemoryAllocator(Vk api, PhysicalDevice physicalDevice, Device device, uint maxMemoryAllocationCount)
         {
             _api = api;
+            _physicalDevice = physicalDevice;
             _device = device;
             _blockLists = new List<MemoryAllocatorBlockList>();
             _blockAlignment = (int)Math.Min(int.MaxValue, MaxDeviceMemoryUsageEstimate / (ulong)maxMemoryAllocationCount);
+
+            _api.GetPhysicalDeviceMemoryProperties(_physicalDevice, out _physicalDeviceMemoryProperties);
         }
 
         public MemoryAllocation AllocateDeviceMemory(
-            PhysicalDevice physicalDevice,
             MemoryRequirements requirements,
             MemoryPropertyFlags flags = 0)
         {
-            return AllocateDeviceMemory(physicalDevice, requirements, flags, flags);
+            return AllocateDeviceMemory(requirements, flags, flags);
         }
 
         public MemoryAllocation AllocateDeviceMemory(
-            PhysicalDevice physicalDevice,
             MemoryRequirements requirements,
             MemoryPropertyFlags flags,
             MemoryPropertyFlags alternativeFlags)
         {
-            int memoryTypeIndex = FindSuitableMemoryTypeIndex(_api, physicalDevice, requirements.MemoryTypeBits, flags, alternativeFlags);
+            int memoryTypeIndex = FindSuitableMemoryTypeIndex(requirements.MemoryTypeBits, flags, alternativeFlags);
             if (memoryTypeIndex < 0)
             {
                 return default;
@@ -65,20 +67,16 @@ namespace Ryujinx.Graphics.Vulkan
             return newBl.Allocate(size, alignment, map);
         }
 
-        private static int FindSuitableMemoryTypeIndex(
-            Vk api,
-            PhysicalDevice physicalDevice,
+        private int FindSuitableMemoryTypeIndex(
             uint memoryTypeBits,
             MemoryPropertyFlags flags,
             MemoryPropertyFlags alternativeFlags)
         {
             int bestCandidateIndex = -1;
 
-            api.GetPhysicalDeviceMemoryProperties(physicalDevice, out var properties);
-
-            for (int i = 0; i < properties.MemoryTypeCount; i++)
+            for (int i = 0; i < _physicalDeviceMemoryProperties.MemoryTypeCount; i++)
             {
-                var type = properties.MemoryTypes[i];
+                var type = _physicalDeviceMemoryProperties.MemoryTypes[i];
 
                 if ((memoryTypeBits & (1 << i)) != 0)
                 {

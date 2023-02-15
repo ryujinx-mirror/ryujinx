@@ -39,7 +39,6 @@ namespace Ryujinx.Graphics.Vulkan
             BufferUsageFlags.VertexBufferBit |
             BufferUsageFlags.TransformFeedbackBufferBitExt;
 
-        private readonly PhysicalDevice _physicalDevice;
         private readonly Device _device;
 
         private readonly IdList<BufferHolder> _buffers;
@@ -48,9 +47,8 @@ namespace Ryujinx.Graphics.Vulkan
 
         public StagingBuffer StagingBuffer { get; }
 
-        public BufferManager(VulkanRenderer gd, PhysicalDevice physicalDevice, Device device)
+        public BufferManager(VulkanRenderer gd, Device device)
         {
-            _physicalDevice = physicalDevice;
             _device = device;
             _buffers = new IdList<BufferHolder>();
             StagingBuffer = new StagingBuffer(gd, this);
@@ -114,7 +112,7 @@ namespace Ryujinx.Graphics.Vulkan
                 allocateFlagsAlt = DefaultBufferMemoryAltFlags;
             }
 
-            var allocation = gd.MemoryAllocator.AllocateDeviceMemory(_physicalDevice, requirements, allocateFlags, allocateFlagsAlt);
+            var allocation = gd.MemoryAllocator.AllocateDeviceMemory(requirements, allocateFlags, allocateFlagsAlt);
 
             if (allocation.Memory.Handle == 0UL)
             {

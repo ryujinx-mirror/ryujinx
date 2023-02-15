@@ -55,7 +55,6 @@ namespace Ryujinx.Graphics.Vulkan
 
         public unsafe TextureStorage(
             VulkanRenderer gd,
-            PhysicalDevice physicalDevice,
             Device device,
             TextureCreateInfo info,
             float scaleFactor,
@@ -118,7 +117,7 @@ namespace Ryujinx.Graphics.Vulkan
             if (foreignAllocation == null)
             {
                 gd.Api.GetImageMemoryRequirements(device, _image, out var requirements);
-                var allocation = gd.MemoryAllocator.AllocateDeviceMemory(physicalDevice, requirements, DefaultImageMemoryFlags);
+                var allocation = gd.MemoryAllocator.AllocateDeviceMemory(requirements, DefaultImageMemoryFlags);
 
                 if (allocation.Memory.Handle == 0UL)
                 {
@@ -173,7 +172,7 @@ namespace Ryujinx.Graphics.Vulkan
 
                 var info = NewCreateInfoWith(ref _info, format, _info.BytesPerPixel);
 
-                storage = new TextureStorage(_gd, default, _device, info, ScaleFactor, _allocationAuto);
+                storage = new TextureStorage(_gd, _device, info, ScaleFactor, _allocationAuto);
 
                 _aliasedStorages.Add(format, storage);
             }

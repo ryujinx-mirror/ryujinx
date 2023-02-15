@@ -280,7 +280,7 @@ namespace Ryujinx.Graphics.Vulkan
                 supportedSampleCounts,
                 portabilityFlags);
 
-            MemoryAllocator = new MemoryAllocator(Api, _device, properties.Limits.MaxMemoryAllocationCount);
+            MemoryAllocator = new MemoryAllocator(Api, _physicalDevice, _device, properties.Limits.MaxMemoryAllocationCount);
 
             CommandBufferPool = VulkanInitialization.CreateCommandBufferPool(Api, _device, Queue, QueueLock, queueFamilyIndex);
 
@@ -290,7 +290,7 @@ namespace Ryujinx.Graphics.Vulkan
 
             BackgroundResources = new BackgroundResources(this, _device);
 
-            BufferManager = new BufferManager(this, _physicalDevice, _device);
+            BufferManager = new BufferManager(this, _device);
 
             _syncManager = new SyncManager(this, _device);
             _pipeline = new PipelineFull(this, _device);
@@ -388,7 +388,7 @@ namespace Ryujinx.Graphics.Vulkan
 
         internal TextureStorage CreateTextureStorage(TextureCreateInfo info, float scale)
         {
-            return new TextureStorage(this, _physicalDevice, _device, info, scale);
+            return new TextureStorage(this, _device, info, scale);
         }
 
         public void DeleteBuffer(BufferHandle buffer)
