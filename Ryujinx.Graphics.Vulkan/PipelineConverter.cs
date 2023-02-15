@@ -1,4 +1,5 @@
-﻿using Ryujinx.Graphics.GAL;
+﻿using Ryujinx.Common;
+using Ryujinx.Graphics.GAL;
 using Silk.NET.Vulkan;
 using System;
 
@@ -253,7 +254,7 @@ namespace Ryujinx.Graphics.Vulkan
 
                     if (gd.NeedsVertexBufferAlignment(vbScalarSizes[i], out int alignment))
                     {
-                        alignedStride = (vertexBuffer.Stride + (alignment - 1)) & -alignment;
+                        alignedStride = BitUtils.AlignUp(vertexBuffer.Stride, alignment);
                     }
 
                     // TODO: Support divisor > 1

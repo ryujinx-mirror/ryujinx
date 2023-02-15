@@ -8,11 +8,10 @@ namespace Ryujinx.Graphics.Vulkan
     {
         None = 0,
 
-        VertexBufferAlignment4B = 1,
-        NoTriangleFans = 1 << 1,
-        NoPointMode = 1 << 2,
-        No3DImageView = 1 << 3,
-        NoLodBias = 1 << 4
+        NoTriangleFans = 1,
+        NoPointMode = 1 << 1,
+        No3DImageView = 1 << 2,
+        NoLodBias = 1 << 3
     }
 
     readonly struct HardwareCapabilities
@@ -40,6 +39,7 @@ namespace Ryujinx.Graphics.Vulkan
         public readonly ShaderStageFlags RequiredSubgroupSizeStages;
         public readonly SampleCountFlags SupportedSampleCounts;
         public readonly PortabilitySubsetFlags PortabilitySubset;
+        public readonly uint VertexBufferAlignment;
 
         public HardwareCapabilities(
             bool supportsIndexTypeUint8,
@@ -64,7 +64,8 @@ namespace Ryujinx.Graphics.Vulkan
             uint maxSubgroupSize,
             ShaderStageFlags requiredSubgroupSizeStages,
             SampleCountFlags supportedSampleCounts,
-            PortabilitySubsetFlags portabilitySubset)
+            PortabilitySubsetFlags portabilitySubset,
+            uint vertexBufferAlignment)
         {
             SupportsIndexTypeUint8 = supportsIndexTypeUint8;
             SupportsCustomBorderColor = supportsCustomBorderColor;
@@ -89,6 +90,7 @@ namespace Ryujinx.Graphics.Vulkan
             RequiredSubgroupSizeStages = requiredSubgroupSizeStages;
             SupportedSampleCounts = supportedSampleCounts;
             PortabilitySubset = portabilitySubset;
+            VertexBufferAlignment = vertexBufferAlignment;
         }
     }
 }

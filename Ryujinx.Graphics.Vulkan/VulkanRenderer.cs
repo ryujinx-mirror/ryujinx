@@ -234,10 +234,12 @@ namespace Ryujinx.Graphics.Vulkan
             Api.GetPhysicalDeviceFeatures2(_physicalDevice, &features2);
 
             var portabilityFlags = PortabilitySubsetFlags.None;
+            uint vertexBufferAlignment = 1;
 
             if (usePortability)
             {
-                portabilityFlags |= propertiesPortabilitySubset.MinVertexInputBindingStrideAlignment > 1 ? PortabilitySubsetFlags.VertexBufferAlignment4B : 0;
+                vertexBufferAlignment = propertiesPortabilitySubset.MinVertexInputBindingStrideAlignment;
+
                 portabilityFlags |= featuresPortabilitySubset.TriangleFans ? 0 : PortabilitySubsetFlags.NoTriangleFans;
                 portabilityFlags |= featuresPortabilitySubset.PointPolygons ? 0 : PortabilitySubsetFlags.NoPointMode;
                 portabilityFlags |= featuresPortabilitySubset.ImageView2DOn3DImage ? 0 : PortabilitySubsetFlags.No3DImageView;
@@ -278,7 +280,8 @@ namespace Ryujinx.Graphics.Vulkan
                 propertiesSubgroupSizeControl.MaxSubgroupSize,
                 propertiesSubgroupSizeControl.RequiredSubgroupSizeStages,
                 supportedSampleCounts,
-                portabilityFlags);
+                portabilityFlags,
+                vertexBufferAlignment);
 
             MemoryAllocator = new MemoryAllocator(Api, _physicalDevice, _device, properties.Limits.MaxMemoryAllocationCount);
 
@@ -636,11 +639,11 @@ namespace Ryujinx.Graphics.Vulkan
             PrintGpuInformation();
         }
 
-        public bool NeedsVertexBufferAlignment(int attrScalarAlignment, out int alignment)
+        internal bool NeedsVertexBufferAlignment(int attrScalarAlignment, out int alignment)
         {
-            if (Capabilities.PortabilitySubset.HasFlag(PortabilitySubsetFlags.VertexBufferAlignment4B))
+            if (Capabilities.VertexBufferAlignment > 1)
             {
-                alignment = 4;
+                alignment = (int)Capabilities.VertexBufferAlignment;
 
                 return true;
             }
