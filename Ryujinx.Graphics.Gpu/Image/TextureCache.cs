@@ -477,7 +477,23 @@ namespace Ryujinx.Graphics.Gpu.Image
                 // If the start address is unmapped, let's try to find a page of memory that is mapped.
                 if (address == MemoryManager.PteUnmapped)
                 {
-                    address = memoryManager.TranslateFirstMapped(info.GpuAddress, (ulong)info.CalculateSizeInfo(layerSize).TotalSize);
+                    // Make sure that the dimensions are valid before calculating the texture size.
+                    if (info.Width < 1 || info.Height < 1 || info.Levels < 1)
+                    {
+                        return null;
+                    }
+
+                    if ((info.Target == Target.Texture3D ||
+                         info.Target == Target.Texture2DArray ||
+                         info.Target == Target.Texture2DMultisampleArray ||
+                         info.Target == Target.CubemapArray) && info.DepthOrLayers < 1)
+                    {
+                        return null;
+                    }
+
+                    ulong dataSize = (ulong)info.CalculateSizeInfo(layerSize).TotalSize;
+
+                    address = memoryManager.TranslateFirstMapped(info.GpuAddress, dataSize);
                 }
 
                 // If address is still invalid, the texture is fully unmapped, so it has no data, just return null.
