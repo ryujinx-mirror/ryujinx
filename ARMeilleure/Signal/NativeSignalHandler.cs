@@ -222,7 +222,7 @@ namespace ARMeilleure.Signal
 
                 // Tracking action should be non-null to call it, otherwise assume false return.
                 context.BranchIfFalse(skipActionLabel, trackingActionPtr);
-                Operand result = context.Call(trackingActionPtr, OperandType.I32, offset, Const(_pageSize), isWrite, Const(0));
+                Operand result = context.Call(trackingActionPtr, OperandType.I32, offset, Const(_pageSize), isWrite);
                 context.Copy(inRegionLocal, result);
 
                 context.MarkLabel(skipActionLabel);

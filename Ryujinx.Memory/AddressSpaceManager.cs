@@ -462,7 +462,7 @@ namespace Ryujinx.Memory
         }
 
         /// <inheritdoc/>
-        public void SignalMemoryTracking(ulong va, ulong size, bool write, bool precise = false)
+        public void SignalMemoryTracking(ulong va, ulong size, bool write, bool precise = false, int? exemptId = null)
         {
             // Only the ARM Memory Manager has tracking for now.
         }

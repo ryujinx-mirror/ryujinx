@@ -634,13 +634,13 @@ namespace Ryujinx.Cpu.AppleHv
         /// <remarks>
         /// This function also validates that the given range is both valid and mapped, and will throw if it is not.
         /// </remarks>
-        public void SignalMemoryTracking(ulong va, ulong size, bool write, bool precise = false)
+        public void SignalMemoryTracking(ulong va, ulong size, bool write, bool precise = false, int? exemptId = null)
         {
             AssertValidAddressAndSize(va, size);
 
             if (precise)
             {
-                Tracking.VirtualMemoryEvent(va, size, write, precise: true);
+                Tracking.VirtualMemoryEvent(va, size, write, precise: true, exemptId);
                 return;
             }
 
@@ -663,7 +663,7 @@ namespace Ryujinx.Cpu.AppleHv
 
                 if (state >= tag)
                 {
-                    Tracking.VirtualMemoryEvent(va, size, write);
+                    Tracking.VirtualMemoryEvent(va, size, write, precise: false, exemptId);
                     return;
                 }
                 else if (state == 0)
@@ -706,7 +706,7 @@ namespace Ryujinx.Cpu.AppleHv
                         // Only trigger tracking from reads if both bits are set on any page.
                         if (write || (pte & (pte >> 1) & BlockMappedMask) != 0)
                         {
-                            Tracking.VirtualMemoryEvent(va, size, write);
+                            Tracking.VirtualMemoryEvent(va, size, write, precise: false, exemptId);
                             break;
                         }
                     }
@@ -822,21 +822,21 @@ namespace Ryujinx.Cpu.AppleHv
         }
 
         /// <inheritdoc/>
-        public CpuRegionHandle BeginTracking(ulong address, ulong size)
+        public CpuRegionHandle BeginTracking(ulong address, ulong size, int id)
         {
-            return new CpuRegionHandle(Tracking.BeginTracking(address, size));
+            return new CpuRegionHandle(Tracking.BeginTracking(address, size, id));
         }
 
         /// <inheritdoc/>
-        public CpuMultiRegionHandle BeginGranularTracking(ulong address, ulong size, IEnumerable<IRegionHandle> handles, ulong granularity)
+        public CpuMultiRegionHandle BeginGranularTracking(ulong address, ulong size, IEnumerable<IRegionHandle> handles, ulong granularity, int id)
         {
-            return new CpuMultiRegionHandle(Tracking.BeginGranularTracking(address, size, handles, granularity));
+            return new CpuMultiRegionHandle(Tracking.BeginGranularTracking(address, size, handles, granularity, id));
         }
 
         /// <inheritdoc/>
-        public CpuSmartMultiRegionHandle BeginSmartGranularTracking(ulong address, ulong size, ulong granularity)
+        public CpuSmartMultiRegionHandle BeginSmartGranularTracking(ulong address, ulong size, ulong granularity, int id)
         {
-            return new CpuSmartMultiRegionHandle(Tracking.BeginSmartGranularTracking(address, size, granularity));
+            return new CpuSmartMultiRegionHandle(Tracking.BeginSmartGranularTracking(address, size, granularity, id));
         }
 
         /// <summary>

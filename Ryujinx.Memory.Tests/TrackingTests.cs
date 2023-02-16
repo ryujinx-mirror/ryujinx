@@ -44,7 +44,7 @@ namespace Ryujinx.Memory.Tests
         [Test]
         public void SingleRegion()
         {
-            RegionHandle handle = _tracking.BeginTracking(0, PageSize);
+            RegionHandle handle = _tracking.BeginTracking(0, PageSize, 0);
             (ulong address, ulong size)? readTrackingTriggered = null;
             handle.RegisterAction((address, size) =>
             {
@@ -97,7 +97,7 @@ namespace Ryujinx.Memory.Tests
         [Test]
         public void OverlappingRegions()
         {
-            RegionHandle allHandle = _tracking.BeginTracking(0, PageSize * 16);
+            RegionHandle allHandle = _tracking.BeginTracking(0, PageSize * 16, 0);
             allHandle.Reprotect();
 
             (ulong address, ulong size)? readTrackingTriggeredAll = null;
@@ -116,7 +116,7 @@ namespace Ryujinx.Memory.Tests
 
             for (int i = 0; i < 16; i++)
             {
-                containedHandles[i] = _tracking.BeginTracking((ulong)i * PageSize, PageSize);
+                containedHandles[i] = _tracking.BeginTracking((ulong)i * PageSize, PageSize, 0);
                 containedHandles[i].Reprotect();
             }
 
@@ -163,7 +163,7 @@ namespace Ryujinx.Memory.Tests
             ulong alignedEnd = ((address + size + PageSize - 1) / PageSize) * PageSize;
             ulong alignedSize = alignedEnd - alignedStart;
 
-            RegionHandle handle = _tracking.BeginTracking(address, size);
+            RegionHandle handle = _tracking.BeginTracking(address, size, 0);
 
             // Anywhere inside the pages the region is contained on should trigger.
 
@@ -207,7 +207,7 @@ namespace Ryujinx.Memory.Tests
 
             for (int i = 0; i < handles.Length; i++)
             {
-                handles[i] = _tracking.BeginTracking((ulong)i * PageSize, PageSize);
+                handles[i] = _tracking.BeginTracking((ulong)i * PageSize, PageSize, 0);
                 handles[i].Reprotect();
             }
 
@@ -263,7 +263,7 @@ namespace Ryujinx.Memory.Tests
                     Random random = new Random(randSeed + 512);
                     while (Stopwatch.GetTimestamp() < finishedTime)
                     {
-                        RegionHandle handle = _tracking.BeginTracking((ulong)random.Next(maxAddress), (ulong)random.Next(65536));
+                        RegionHandle handle = _tracking.BeginTracking((ulong)random.Next(maxAddress), (ulong)random.Next(65536), 0);
 
                         handle.Dispose();
 
@@ -295,7 +295,7 @@ namespace Ryujinx.Memory.Tests
             // Read actions should only be triggered once for each registration.
             // The implementation should use an interlocked exchange to make sure other threads can't get the action.
 
-            RegionHandle handle = _tracking.BeginTracking(0, PageSize);
+            RegionHandle handle = _tracking.BeginTracking(0, PageSize, 0);
 
             int triggeredCount = 0;
             int registeredCount = 0;
@@ -359,7 +359,7 @@ namespace Ryujinx.Memory.Tests
         {
             // Ensure that disposed handles correctly remove their virtual and physical regions.
 
-            RegionHandle handle = _tracking.BeginTracking(0, PageSize);
+            RegionHandle handle = _tracking.BeginTracking(0, PageSize, 0);
             handle.Reprotect();
 
             Assert.AreEqual(1, _tracking.GetRegionCount());
@@ -372,8 +372,8 @@ namespace Ryujinx.Memory.Tests
             // We expect there to be three regions after creating both, one for the small region and two covering the big one around it.
             // Regions are always split to avoid overlapping, which is why there are three instead of two.
 
-            RegionHandle handleSmall = _tracking.BeginTracking(PageSize, PageSize);
-            RegionHandle handleBig = _tracking.BeginTracking(0, PageSize * 4);
+            RegionHandle handleSmall = _tracking.BeginTracking(PageSize, PageSize, 0);
+            RegionHandle handleBig = _tracking.BeginTracking(0, PageSize * 4, 0);
 
             Assert.AreEqual(3, _tracking.GetRegionCount());
 
@@ -398,7 +398,7 @@ namespace Ryujinx.Memory.Tests
                 protection = newProtection;
             };
 
-            RegionHandle handle = _tracking.BeginTracking(0, PageSize);
+            RegionHandle handle = _tracking.BeginTracking(0, PageSize, 0);
 
             // After creating the handle, there is no protection yet.
             Assert.AreEqual(MemoryPermission.ReadAndWrite, protection);
@@ -453,7 +453,7 @@ namespace Ryujinx.Memory.Tests
         [Test]
         public void PreciseAction()
         {
-            RegionHandle handle = _tracking.BeginTracking(0, PageSize);
+            RegionHandle handle = _tracking.BeginTracking(0, PageSize, 0);
 
             (ulong address, ulong size, bool write)? preciseTriggered = null;
             handle.RegisterPreciseAction((address, size, write) =>

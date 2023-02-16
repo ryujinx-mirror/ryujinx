@@ -368,7 +368,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
             _context.Renderer.Pipeline.ClearBuffer(buffer.Handle, offset, (int)size, value);
 
-            buffer.SignalModified(address, size);
+            memoryManager.Physical.FillTrackedResource(address, size, value, ResourceKind.Buffer);
         }
 
         /// <summary>

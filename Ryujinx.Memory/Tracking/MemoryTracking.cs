@@ -136,10 +136,11 @@ namespace Ryujinx.Memory.Tracking
         /// <param name="size">Size of the region</param>
         /// <param name="handles">Handles to inherit state from or reuse. When none are present, provide null</param>
         /// <param name="granularity">Desired granularity of write tracking</param>
+        /// <param name="id">Handle ID</param>
         /// <returns>The memory tracking handle</returns>
-        public MultiRegionHandle BeginGranularTracking(ulong address, ulong size, IEnumerable<IRegionHandle> handles, ulong granularity)
+        public MultiRegionHandle BeginGranularTracking(ulong address, ulong size, IEnumerable<IRegionHandle> handles, ulong granularity, int id)
         {
-            return new MultiRegionHandle(this, address, size, handles, granularity);
+            return new MultiRegionHandle(this, address, size, handles, granularity, id);
         }
 
         /// <summary>
@@ -148,12 +149,13 @@ namespace Ryujinx.Memory.Tracking
         /// <param name="address">CPU virtual address of the region</param>
         /// <param name="size">Size of the region</param>
         /// <param name="granularity">Desired granularity of write tracking</param>
+        /// <param name="id">Handle ID</param>
         /// <returns>The memory tracking handle</returns>
-        public SmartMultiRegionHandle BeginSmartGranularTracking(ulong address, ulong size, ulong granularity)
+        public SmartMultiRegionHandle BeginSmartGranularTracking(ulong address, ulong size, ulong granularity, int id)
         {
             (address, size) = PageAlign(address, size);
 
-            return new SmartMultiRegionHandle(this, address, size, granularity);
+            return new SmartMultiRegionHandle(this, address, size, granularity, id);
         }
 
         /// <summary>
@@ -161,14 +163,16 @@ namespace Ryujinx.Memory.Tracking
         /// </summary>
         /// <param name="address">CPU virtual address of the region</param>
         /// <param name="size">Size of the region</param>
+        /// <param name="id">Handle ID</param>
         /// <returns>The memory tracking handle</returns>
-        public RegionHandle BeginTracking(ulong address, ulong size)
+        public RegionHandle BeginTracking(ulong address, ulong size, int id)
         {
             var (paAddress, paSize) = PageAlign(address, size);
 
             lock (TrackingLock)
             {
-                RegionHandle handle = new RegionHandle(this, paAddress, paSize, address, size, _memoryManager.IsRangeMapped(address, size));
+                bool mapped = _memoryManager.IsRangeMapped(address, size);
+                RegionHandle handle = new RegionHandle(this, paAddress, paSize, address, size, id, mapped);
 
                 return handle;
             }
@@ -181,28 +185,31 @@ namespace Ryujinx.Memory.Tracking
         /// <param name="size">Size of the region</param>
         /// <param name="bitmap">The bitmap owning the dirty flag for this handle</param>
         /// <param name="bit">The bit of this handle within the dirty flag</param>
+        /// <param name="id">Handle ID</param>
         /// <returns>The memory tracking handle</returns>
-        internal RegionHandle BeginTrackingBitmap(ulong address, ulong size, ConcurrentBitmap bitmap, int bit)
+        internal RegionHandle BeginTrackingBitmap(ulong address, ulong size, ConcurrentBitmap bitmap, int bit, int id)
         {
             var (paAddress, paSize) = PageAlign(address, size);
 
             lock (TrackingLock)
             {
-                RegionHandle handle = new RegionHandle(this, paAddress, paSize, address, size, bitmap, bit, _memoryManager.IsRangeMapped(address, size));
+                bool mapped = _memoryManager.IsRangeMapped(address, size);
+                RegionHandle handle = new RegionHandle(this, paAddress, paSize, address, size, bitmap, bit, id, mapped);
 
                 return handle;
             }
         }
 
         /// <summary>
-        /// Signal that a virtual memory event happened at the given location (one byte).
+        /// Signal that a virtual memory event happened at the given location.
         /// </summary>
         /// <param name="address">Virtual address accessed</param>
-        /// <param name="write">Whether the address was written to or read</param>
+        /// <param name="size">Size of the region affected in bytes</param>
+        /// <param name="write">Whether the region was written to or read</param>
         /// <returns>True if the event triggered any tracking regions, false otherwise</returns>
-        public bool VirtualMemoryEventTracking(ulong address, bool write)
+        public bool VirtualMemoryEvent(ulong address, ulong size, bool write)
         {
-            return VirtualMemoryEvent(address, 1, write);
+            return VirtualMemoryEvent(address, size, write, precise: false, null);
         }
 
         /// <summary>
@@ -214,8 +221,9 @@ namespace Ryujinx.Memory.Tracking
         /// <param name="size">Size of the region affected in bytes</param>
         /// <param name="write">Whether the region was written to or read</param>
         /// <param name="precise">True if the access is precise, false otherwise</param>
+        /// <param name="exemptId">Optional ID that of the handles that should not be signalled</param>
         /// <returns>True if the event triggered any tracking regions, false otherwise</returns>
-        public bool VirtualMemoryEvent(ulong address, ulong size, bool write, bool precise = false)
+        public bool VirtualMemoryEvent(ulong address, ulong size, bool write, bool precise, int? exemptId = null)
         {
             // Look up the virtual region using the region list.
             // Signal up the chain to relevant handles.
@@ -250,11 +258,11 @@ namespace Ryujinx.Memory.Tracking
 
                         if (precise)
                         {
-                            region.SignalPrecise(address, size, write);
+                            region.SignalPrecise(address, size, write, exemptId);
                         }
                         else
                         {
-                            region.Signal(address, size, write);
+                            region.Signal(address, size, write, exemptId);
                         }
                     }
                 }

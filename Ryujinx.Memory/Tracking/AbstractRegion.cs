@@ -50,7 +50,8 @@ namespace Ryujinx.Memory.Tracking
         /// <param name="address">Address accessed</param>
         /// <param name="size">Size of the region affected in bytes</param>
         /// <param name="write">Whether the region was written to or read</param>
-        public abstract void Signal(ulong address, ulong size, bool write);
+        /// <param name="exemptId">Optional ID of the handles that should not be signalled</param>
+        public abstract void Signal(ulong address, ulong size, bool write, int? exemptId);
 
         /// <summary>
         /// Signals to the handles that a precise memory event has occurred. Assumes that the tracking lock has been obtained.
@@ -58,10 +59,11 @@ namespace Ryujinx.Memory.Tracking
         /// <param name="address">Address accessed</param>
         /// <param name="size">Size of the region affected in bytes</param>
         /// <param name="write">Whether the region was written to or read</param>
-        public abstract void SignalPrecise(ulong address, ulong size, bool write);
+        /// <param name="exemptId">Optional ID of the handles that should not be signalled</param>
+        public abstract void SignalPrecise(ulong address, ulong size, bool write, int? exemptId);
 
         /// <summary>
-        /// Split this region into two, around the specified address. 
+        /// Split this region into two, around the specified address.
         /// This region is updated to end at the split address, and a new region is created to represent past that point.
         /// </summary>
         /// <param name="splitAddress">Address to split the region around</param>

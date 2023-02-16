@@ -19,19 +19,24 @@ namespace Ryujinx.Memory.Tracking
             _tracking = tracking;
         }
 
-        public override void Signal(ulong address, ulong size, bool write)
+        /// <inheritdoc/>
+        public override void Signal(ulong address, ulong size, bool write, int? exemptId)
         {
             IList<RegionHandle> handles = Handles;
 
             for (int i = 0; i < handles.Count; i++)
             {
-                handles[i].Signal(address, size, write, ref handles);
+                if (exemptId == null || handles[i].Id != exemptId.Value)
+                {
+                    handles[i].Signal(address, size, write, ref handles);
+                }
             }
 
             UpdateProtection();
         }
 
-        public override void SignalPrecise(ulong address, ulong size, bool write)
+        /// <inheritdoc/>
+        public override void SignalPrecise(ulong address, ulong size, bool write, int? exemptId)
         {
             IList<RegionHandle> handles = Handles;
 
@@ -39,7 +44,10 @@ namespace Ryujinx.Memory.Tracking
 
             for (int i = 0; i < handles.Count; i++)
             {
-                allPrecise &= handles[i].SignalPrecise(address, size, write, ref handles);
+                if (exemptId == null || handles[i].Id != exemptId.Value)
+                {
+                    allPrecise &= handles[i].SignalPrecise(address, size, write, ref handles);
+                }
             }
 
             // Only update protection if a regular signal handler was called.

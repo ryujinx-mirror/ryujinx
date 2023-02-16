@@ -629,31 +629,31 @@ namespace Ryujinx.Cpu.Jit
         }
 
         /// <inheritdoc/>
-        public CpuRegionHandle BeginTracking(ulong address, ulong size)
+        public CpuRegionHandle BeginTracking(ulong address, ulong size, int id)
         {
-            return new CpuRegionHandle(Tracking.BeginTracking(address, size));
+            return new CpuRegionHandle(Tracking.BeginTracking(address, size, id));
         }
 
         /// <inheritdoc/>
-        public CpuMultiRegionHandle BeginGranularTracking(ulong address, ulong size, IEnumerable<IRegionHandle> handles, ulong granularity)
+        public CpuMultiRegionHandle BeginGranularTracking(ulong address, ulong size, IEnumerable<IRegionHandle> handles, ulong granularity, int id)
         {
-            return new CpuMultiRegionHandle(Tracking.BeginGranularTracking(address, size, handles, granularity));
+            return new CpuMultiRegionHandle(Tracking.BeginGranularTracking(address, size, handles, granularity, id));
         }
 
         /// <inheritdoc/>
-        public CpuSmartMultiRegionHandle BeginSmartGranularTracking(ulong address, ulong size, ulong granularity)
+        public CpuSmartMultiRegionHandle BeginSmartGranularTracking(ulong address, ulong size, ulong granularity, int id)
         {
-            return new CpuSmartMultiRegionHandle(Tracking.BeginSmartGranularTracking(address, size, granularity));
+            return new CpuSmartMultiRegionHandle(Tracking.BeginSmartGranularTracking(address, size, granularity, id));
         }
 
         /// <inheritdoc/>
-        public void SignalMemoryTracking(ulong va, ulong size, bool write, bool precise = false)
+        public void SignalMemoryTracking(ulong va, ulong size, bool write, bool precise = false, int? exemptId = null)
         {
             AssertValidAddressAndSize(va, size);
 
             if (precise)
             {
-                Tracking.VirtualMemoryEvent(va, size, write, precise: true);
+                Tracking.VirtualMemoryEvent(va, size, write, precise: true, exemptId);
                 return;
             }
 
@@ -676,7 +676,7 @@ namespace Ryujinx.Cpu.Jit
 
                 if ((pte & tag) != 0)
                 {
-                    Tracking.VirtualMemoryEvent(va, size, write);
+                    Tracking.VirtualMemoryEvent(va, size, write, precise: false, exemptId);
                     break;
                 }
 

@@ -30,7 +30,13 @@ namespace Ryujinx.Memory.Tracking
 
         public bool Dirty { get; private set; } = true;
 
-        internal MultiRegionHandle(MemoryTracking tracking, ulong address, ulong size, IEnumerable<IRegionHandle> handles, ulong granularity)
+        internal MultiRegionHandle(
+            MemoryTracking tracking,
+            ulong address,
+            ulong size,
+            IEnumerable<IRegionHandle> handles,
+            ulong granularity,
+            int id)
         {
             _handles = new RegionHandle[(size + granularity - 1) / granularity];
             Granularity = granularity;
@@ -55,7 +61,7 @@ namespace Ryujinx.Memory.Tracking
                     // Fill any gap left before this handle.
                     while (i < startIndex)
                     {
-                        RegionHandle fillHandle = tracking.BeginTrackingBitmap(address + (ulong)i * granularity, granularity, _dirtyBitmap, i);
+                        RegionHandle fillHandle = tracking.BeginTrackingBitmap(address + (ulong)i * granularity, granularity, _dirtyBitmap, i, id);
                         fillHandle.Parent = this;
                         _handles[i++] = fillHandle;
                     }
@@ -76,7 +82,7 @@ namespace Ryujinx.Memory.Tracking
 
                             while (i < endIndex)
                             {
-                                RegionHandle splitHandle = tracking.BeginTrackingBitmap(address + (ulong)i * granularity, granularity, _dirtyBitmap, i);
+                                RegionHandle splitHandle = tracking.BeginTrackingBitmap(address + (ulong)i * granularity, granularity, _dirtyBitmap, i, id);
                                 splitHandle.Parent = this;
 
                                 splitHandle.Reprotect(handle.Dirty);
@@ -99,7 +105,7 @@ namespace Ryujinx.Memory.Tracking
             // Fill any remaining space with new handles.
             while (i < _handles.Length)
             {
-                RegionHandle handle = tracking.BeginTrackingBitmap(address + (ulong)i * granularity, granularity, _dirtyBitmap, i);
+                RegionHandle handle = tracking.BeginTrackingBitmap(address + (ulong)i * granularity, granularity, _dirtyBitmap, i, id);
                 handle.Parent = this;
                 _handles[i++] = handle;
             }

@@ -28,8 +28,9 @@ namespace Ryujinx.Cpu
         /// </summary>
         /// <param name="address">CPU virtual address of the region</param>
         /// <param name="size">Size of the region</param>
+        /// <param name="id">Handle ID</param>
         /// <returns>The memory tracking handle</returns>
-        CpuRegionHandle BeginTracking(ulong address, ulong size);
+        CpuRegionHandle BeginTracking(ulong address, ulong size, int id);
 
         /// <summary>
         /// Obtains a memory tracking handle for the given virtual region, with a specified granularity. This should be disposed when finished with.
@@ -38,8 +39,9 @@ namespace Ryujinx.Cpu
         /// <param name="size">Size of the region</param>
         /// <param name="handles">Handles to inherit state from or reuse. When none are present, provide null</param>
         /// <param name="granularity">Desired granularity of write tracking</param>
+        /// <param name="id">Handle ID</param>
         /// <returns>The memory tracking handle</returns>
-        CpuMultiRegionHandle BeginGranularTracking(ulong address, ulong size, IEnumerable<IRegionHandle> handles, ulong granularity);
+        CpuMultiRegionHandle BeginGranularTracking(ulong address, ulong size, IEnumerable<IRegionHandle> handles, ulong granularity, int id);
 
         /// <summary>
         /// Obtains a smart memory tracking handle for the given virtual region, with a specified granularity. This should be disposed when finished with.
@@ -47,7 +49,8 @@ namespace Ryujinx.Cpu
         /// <param name="address">CPU virtual address of the region</param>
         /// <param name="size">Size of the region</param>
         /// <param name="granularity">Desired granularity of write tracking</param>
+        /// <param name="id">Handle ID</param>
         /// <returns>The memory tracking handle</returns>
-        CpuSmartMultiRegionHandle BeginSmartGranularTracking(ulong address, ulong size, ulong granularity);
+        CpuSmartMultiRegionHandle BeginSmartGranularTracking(ulong address, ulong size, ulong granularity, int id);
     }
 }

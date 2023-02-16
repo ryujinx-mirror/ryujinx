@@ -34,8 +34,8 @@ namespace Ryujinx.Memory.Tests
         private IMultiRegionHandle GetGranular(bool smart, ulong address, ulong size, ulong granularity)
         {
             return smart ?
-                _tracking.BeginSmartGranularTracking(address, size, granularity) :
-                (IMultiRegionHandle)_tracking.BeginGranularTracking(address, size, null, granularity);
+                _tracking.BeginSmartGranularTracking(address, size, granularity, 0) :
+                (IMultiRegionHandle)_tracking.BeginGranularTracking(address, size, null, granularity, 0);
         }
 
         private void RandomOrder(Random random, List<int> indices, Action<int> action)
@@ -216,7 +216,7 @@ namespace Ryujinx.Memory.Tests
             {
                 int region = regionSizes[i];
                 handle.QueryModified(address, (ulong)(PageSize * region), (address, size) => { });
-                
+
                 // There should be a gap between regions,
                 // So that they don't combine and we can see the full effects.
                 address += (ulong)(PageSize * (region + 1));
@@ -294,7 +294,7 @@ namespace Ryujinx.Memory.Tests
 
             bool[] actionsTriggered = new bool[3];
 
-            MultiRegionHandle granular = _tracking.BeginGranularTracking(PageSize * 3, PageSize * 3, null, PageSize);
+            MultiRegionHandle granular = _tracking.BeginGranularTracking(PageSize * 3, PageSize * 3, null, PageSize, 0);
             PreparePages(granular, 3, PageSize * 3);
 
             // Write to the second handle in the multiregion.
@@ -307,7 +307,7 @@ namespace Ryujinx.Memory.Tests
 
             for (int i = 0; i < 3; i++)
             {
-                singlePages[i] = _tracking.BeginTracking(PageSize * (8 + (ulong)i), PageSize);
+                singlePages[i] = _tracking.BeginTracking(PageSize * (8 + (ulong)i), PageSize, 0);
                 singlePages[i].Reprotect();
             }
 
@@ -321,7 +321,7 @@ namespace Ryujinx.Memory.Tests
 
             for (int i = 0; i < 3; i++)
             {
-                doublePages[i] = _tracking.BeginTracking(PageSize * (11 + (ulong)i * 2), PageSize * 2);
+                doublePages[i] = _tracking.BeginTracking(PageSize * (11 + (ulong)i * 2), PageSize * 2, 0);
                 doublePages[i].Reprotect();
             }
 
@@ -340,7 +340,7 @@ namespace Ryujinx.Memory.Tests
                 doublePages
             };
 
-            MultiRegionHandle combined = _tracking.BeginGranularTracking(0, PageSize * 18, handleGroups.SelectMany((handles) => handles), PageSize);
+            MultiRegionHandle combined = _tracking.BeginGranularTracking(0, PageSize * 18, handleGroups.SelectMany((handles) => handles), PageSize, 0);
 
             bool[] expectedDirty = new bool[]
             {
@@ -405,7 +405,7 @@ namespace Ryujinx.Memory.Tests
         {
             bool actionTriggered = false;
 
-            MultiRegionHandle granular = _tracking.BeginGranularTracking(PageSize * 3, PageSize * 3, null, PageSize);
+            MultiRegionHandle granular = _tracking.BeginGranularTracking(PageSize * 3, PageSize * 3, null, PageSize, 0);
             PreparePages(granular, 3, PageSize * 3);
 
             // Add a precise action to the second and third handle in the multiregion.

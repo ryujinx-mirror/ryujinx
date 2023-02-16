@@ -8,7 +8,7 @@ namespace Ryujinx.Cpu
 {
     public class MemoryEhMeilleure : IDisposable
     {
-        private delegate bool TrackingEventDelegate(ulong address, ulong size, bool write, bool precise = false);
+        private delegate bool TrackingEventDelegate(ulong address, ulong size, bool write);
 
         private readonly MemoryTracking _tracking;
         private readonly TrackingEventDelegate _trackingEvent;

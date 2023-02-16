@@ -15,12 +15,12 @@ namespace Ryujinx.Memory.Tracking
         /// If more than this number of checks have been performed on a dirty flag since its last reprotect,
         /// then it is dirtied infrequently.
         /// </summary>
-        private static int CheckCountForInfrequent = 3;
+        private const int CheckCountForInfrequent = 3;
 
         /// <summary>
         /// Number of frequent dirty/consume in a row to make this handle volatile.
         /// </summary>
-        private static int VolatileThreshold = 5;
+        private const int VolatileThreshold = 5;
 
         public bool Dirty
         {
@@ -35,6 +35,7 @@ namespace Ryujinx.Memory.Tracking
         }
 
         internal int SequenceNumber { get; set; }
+        internal int Id { get; }
 
         public bool Unmapped { get; private set; }
 
@@ -97,13 +98,25 @@ namespace Ryujinx.Memory.Tracking
         /// <param name="realSize">The real, unaligned size of the handle</param>
         /// <param name="bitmap">The bitmap the dirty flag for this handle is stored in</param>
         /// <param name="bit">The bit index representing the dirty flag for this handle</param>
+        /// <param name="id">Handle ID</param>
         /// <param name="mapped">True if the region handle starts mapped</param>
-        internal RegionHandle(MemoryTracking tracking, ulong address, ulong size, ulong realAddress, ulong realSize, ConcurrentBitmap bitmap, int bit, bool mapped = true)
+        internal RegionHandle(
+            MemoryTracking tracking,
+            ulong address,
+            ulong size,
+            ulong realAddress,
+            ulong realSize,
+            ConcurrentBitmap bitmap,
+            int bit,
+            int id,
+            bool mapped = true)
         {
             Bitmap = bitmap;
             DirtyBit = bit;
 
             Dirty = mapped;
+
+            Id = id;
 
             Unmapped = !mapped;
             Address = address;
@@ -131,10 +144,13 @@ namespace Ryujinx.Memory.Tracking
         /// <param name="size">Size of the region to track</param>
         /// <param name="realAddress">The real, unaligned address of the handle</param>
         /// <param name="realSize">The real, unaligned size of the handle</param>
+        /// <param name="id">Handle ID</param>
         /// <param name="mapped">True if the region handle starts mapped</param>
-        internal RegionHandle(MemoryTracking tracking, ulong address, ulong size, ulong realAddress, ulong realSize, bool mapped = true)
+        internal RegionHandle(MemoryTracking tracking, ulong address, ulong size, ulong realAddress, ulong realSize, int id, bool mapped = true)
         {
             Bitmap = new ConcurrentBitmap(1, mapped);
+
+            Id = id;
 
             Unmapped = !mapped;
 

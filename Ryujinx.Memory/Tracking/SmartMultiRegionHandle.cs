@@ -18,10 +18,11 @@ namespace Ryujinx.Memory.Tracking
         private readonly ulong _granularity;
         private readonly ulong _size;
         private MemoryTracking _tracking;
+        private readonly int _id;
 
         public bool Dirty { get; private set; } = true;
 
-        internal SmartMultiRegionHandle(MemoryTracking tracking, ulong address, ulong size, ulong granularity)
+        internal SmartMultiRegionHandle(MemoryTracking tracking, ulong address, ulong size, ulong granularity, int id)
         {
             // For this multi-region handle, the handle list starts empty.
             // As regions are queried, they are added to the _handles array at their start index.
@@ -34,6 +35,7 @@ namespace Ryujinx.Memory.Tracking
 
             _address = address;
             _size = size;
+            _id = id;
         }
 
         public void SignalWrite()
@@ -102,7 +104,7 @@ namespace Ryujinx.Memory.Tracking
             RegionSignal signal = handle.PreAction;
             handle.Dispose();
 
-            RegionHandle splitLow = _tracking.BeginTracking(address, size);
+            RegionHandle splitLow = _tracking.BeginTracking(address, size, _id);
             splitLow.Parent = this;
             if (signal != null)
             {
@@ -110,7 +112,7 @@ namespace Ryujinx.Memory.Tracking
             }
             _handles[handleIndex] = splitLow;
 
-            RegionHandle splitHigh = _tracking.BeginTracking(address + size, handle.Size - size);
+            RegionHandle splitHigh = _tracking.BeginTracking(address + size, handle.Size - size, _id);
             splitHigh.Parent = this;
             if (signal != null)
             {
@@ -145,7 +147,7 @@ namespace Ryujinx.Memory.Tracking
                 if (handle != null)
                 {
                     // Fill up to the found handle.
-                    handle = _tracking.BeginTracking(startAddress, HandlesToBytes(i - startHandle));
+                    handle = _tracking.BeginTracking(startAddress, HandlesToBytes(i - startHandle), _id);
                     handle.Parent = this;
                     _handles[startHandle] = handle;
                     return;
@@ -153,7 +155,7 @@ namespace Ryujinx.Memory.Tracking
             }
 
             // Can fill the whole range.
-            _handles[startHandle] = _tracking.BeginTracking(startAddress, HandlesToBytes(1 + lastHandle - startHandle));
+            _handles[startHandle] = _tracking.BeginTracking(startAddress, HandlesToBytes(1 + lastHandle - startHandle), _id);
             _handles[startHandle].Parent = this;
         }
 

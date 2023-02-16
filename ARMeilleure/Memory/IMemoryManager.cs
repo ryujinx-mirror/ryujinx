@@ -71,6 +71,7 @@ namespace ARMeilleure.Memory
         /// <param name="size">Size of the region</param>
         /// <param name="write">True if the region was written, false if read</param>
         /// <param name="precise">True if the access is precise, false otherwise</param>
-        void SignalMemoryTracking(ulong va, ulong size, bool write, bool precise = false);
+        /// <param name="exemptId">Optional ID of the handles that should not be signalled</param>
+        void SignalMemoryTracking(ulong va, ulong size, bool write, bool precise = false, int? exemptId = null);
     }
 }
