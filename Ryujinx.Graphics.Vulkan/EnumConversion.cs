@@ -79,6 +79,60 @@ namespace Ryujinx.Graphics.Vulkan
             };
         }
 
+        public static Silk.NET.Vulkan.BlendOp Convert(this GAL.AdvancedBlendOp op)
+        {
+            return op switch
+            {
+                GAL.AdvancedBlendOp.Zero => Silk.NET.Vulkan.BlendOp.ZeroExt,
+                GAL.AdvancedBlendOp.Src => Silk.NET.Vulkan.BlendOp.SrcExt,
+                GAL.AdvancedBlendOp.Dst => Silk.NET.Vulkan.BlendOp.DstExt,
+                GAL.AdvancedBlendOp.SrcOver => Silk.NET.Vulkan.BlendOp.SrcOverExt,
+                GAL.AdvancedBlendOp.DstOver => Silk.NET.Vulkan.BlendOp.DstOverExt,
+                GAL.AdvancedBlendOp.SrcIn => Silk.NET.Vulkan.BlendOp.SrcInExt,
+                GAL.AdvancedBlendOp.DstIn => Silk.NET.Vulkan.BlendOp.DstInExt,
+                GAL.AdvancedBlendOp.SrcOut => Silk.NET.Vulkan.BlendOp.SrcOutExt,
+                GAL.AdvancedBlendOp.DstOut => Silk.NET.Vulkan.BlendOp.DstOutExt,
+                GAL.AdvancedBlendOp.SrcAtop => Silk.NET.Vulkan.BlendOp.SrcAtopExt,
+                GAL.AdvancedBlendOp.DstAtop => Silk.NET.Vulkan.BlendOp.DstAtopExt,
+                GAL.AdvancedBlendOp.Xor => Silk.NET.Vulkan.BlendOp.XorExt,
+                GAL.AdvancedBlendOp.Plus => Silk.NET.Vulkan.BlendOp.PlusExt,
+                GAL.AdvancedBlendOp.PlusClamped => Silk.NET.Vulkan.BlendOp.PlusClampedExt,
+                GAL.AdvancedBlendOp.PlusClampedAlpha => Silk.NET.Vulkan.BlendOp.PlusClampedAlphaExt,
+                GAL.AdvancedBlendOp.PlusDarker => Silk.NET.Vulkan.BlendOp.PlusDarkerExt,
+                GAL.AdvancedBlendOp.Multiply => Silk.NET.Vulkan.BlendOp.MultiplyExt,
+                GAL.AdvancedBlendOp.Screen => Silk.NET.Vulkan.BlendOp.ScreenExt,
+                GAL.AdvancedBlendOp.Overlay => Silk.NET.Vulkan.BlendOp.OverlayExt,
+                GAL.AdvancedBlendOp.Darken => Silk.NET.Vulkan.BlendOp.DarkenExt,
+                GAL.AdvancedBlendOp.Lighten => Silk.NET.Vulkan.BlendOp.LightenExt,
+                GAL.AdvancedBlendOp.ColorDodge => Silk.NET.Vulkan.BlendOp.ColordodgeExt,
+                GAL.AdvancedBlendOp.ColorBurn => Silk.NET.Vulkan.BlendOp.ColorburnExt,
+                GAL.AdvancedBlendOp.HardLight => Silk.NET.Vulkan.BlendOp.HardlightExt,
+                GAL.AdvancedBlendOp.SoftLight => Silk.NET.Vulkan.BlendOp.SoftlightExt,
+                GAL.AdvancedBlendOp.Difference => Silk.NET.Vulkan.BlendOp.DifferenceExt,
+                GAL.AdvancedBlendOp.Minus => Silk.NET.Vulkan.BlendOp.MinusExt,
+                GAL.AdvancedBlendOp.MinusClamped => Silk.NET.Vulkan.BlendOp.MinusClampedExt,
+                GAL.AdvancedBlendOp.Exclusion => Silk.NET.Vulkan.BlendOp.ExclusionExt,
+                GAL.AdvancedBlendOp.Contrast => Silk.NET.Vulkan.BlendOp.ContrastExt,
+                GAL.AdvancedBlendOp.Invert => Silk.NET.Vulkan.BlendOp.InvertExt,
+                GAL.AdvancedBlendOp.InvertRGB => Silk.NET.Vulkan.BlendOp.InvertRgbExt,
+                GAL.AdvancedBlendOp.InvertOvg => Silk.NET.Vulkan.BlendOp.InvertOvgExt,
+                GAL.AdvancedBlendOp.LinearDodge => Silk.NET.Vulkan.BlendOp.LineardodgeExt,
+                GAL.AdvancedBlendOp.LinearBurn => Silk.NET.Vulkan.BlendOp.LinearburnExt,
+                GAL.AdvancedBlendOp.VividLight => Silk.NET.Vulkan.BlendOp.VividlightExt,
+                GAL.AdvancedBlendOp.LinearLight => Silk.NET.Vulkan.BlendOp.LinearlightExt,
+                GAL.AdvancedBlendOp.PinLight => Silk.NET.Vulkan.BlendOp.PinlightExt,
+                GAL.AdvancedBlendOp.HardMix => Silk.NET.Vulkan.BlendOp.HardmixExt,
+                GAL.AdvancedBlendOp.Red => Silk.NET.Vulkan.BlendOp.RedExt,
+                GAL.AdvancedBlendOp.Green => Silk.NET.Vulkan.BlendOp.GreenExt,
+                GAL.AdvancedBlendOp.Blue => Silk.NET.Vulkan.BlendOp.BlueExt,
+                GAL.AdvancedBlendOp.HslHue => Silk.NET.Vulkan.BlendOp.HslHueExt,
+                GAL.AdvancedBlendOp.HslSaturation => Silk.NET.Vulkan.BlendOp.HslSaturationExt,
+                GAL.AdvancedBlendOp.HslColor => Silk.NET.Vulkan.BlendOp.HslColorExt,
+                GAL.AdvancedBlendOp.HslLuminosity => Silk.NET.Vulkan.BlendOp.HslLuminosityExt,
+                _ => LogInvalidAndReturn(op, nameof(GAL.AdvancedBlendOp), Silk.NET.Vulkan.BlendOp.Add)
+            };
+        }
+
         public static Silk.NET.Vulkan.BlendOp Convert(this GAL.BlendOp op)
         {
             return op switch
@@ -89,6 +143,17 @@ namespace Ryujinx.Graphics.Vulkan
                 GAL.BlendOp.Minimum or GAL.BlendOp.MinimumGl => Silk.NET.Vulkan.BlendOp.Min,
                 GAL.BlendOp.Maximum or GAL.BlendOp.MaximumGl => Silk.NET.Vulkan.BlendOp.Max,
                 _ => LogInvalidAndReturn(op, nameof(GAL.BlendOp), Silk.NET.Vulkan.BlendOp.Add)
+            };
+        }
+
+        public static Silk.NET.Vulkan.BlendOverlapEXT Convert(this GAL.AdvancedBlendOverlap overlap)
+        {
+            return overlap switch
+            {
+                GAL.AdvancedBlendOverlap.Uncorrelated => Silk.NET.Vulkan.BlendOverlapEXT.UncorrelatedExt,
+                GAL.AdvancedBlendOverlap.Disjoint => Silk.NET.Vulkan.BlendOverlapEXT.DisjointExt,
+                GAL.AdvancedBlendOverlap.Conjoint => Silk.NET.Vulkan.BlendOverlapEXT.ConjointExt,
+                _ => LogInvalidAndReturn(overlap, nameof(GAL.AdvancedBlendOverlap), Silk.NET.Vulkan.BlendOverlapEXT.UncorrelatedExt)
             };
         }
 

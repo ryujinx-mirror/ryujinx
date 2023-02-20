@@ -44,6 +44,7 @@ namespace Ryujinx.Graphics.GAL
 
         void SetAlphaTest(bool enable, float reference, CompareOp op);
 
+        void SetBlendState(AdvancedBlendDescriptor blend);
         void SetBlendState(int index, BlendDescriptor blend);
 
         void SetDepthBias(PolygonModeMask enables, float factor, float units, float clamp);

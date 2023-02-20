@@ -59,6 +59,7 @@ namespace Ryujinx.Graphics.OpenGL
         private uint _fragmentOutputMap;
         private uint _componentMasks;
         private uint _currentComponentMasks;
+        private bool _advancedBlendEnable;
 
         private uint _scissorEnables;
 
@@ -784,8 +785,26 @@ namespace Ryujinx.Graphics.OpenGL
             GL.Enable(EnableCap.AlphaTest);
         }
 
+        public void SetBlendState(AdvancedBlendDescriptor blend)
+        {
+            if (HwCapabilities.SupportsBlendEquationAdvanced)
+            {
+                GL.BlendEquation((BlendEquationMode)blend.Op.Convert());
+                GL.NV.BlendParameter(NvBlendEquationAdvanced.BlendOverlapNv, (int)blend.Overlap.Convert());
+                GL.NV.BlendParameter(NvBlendEquationAdvanced.BlendPremultipliedSrcNv, blend.SrcPreMultiplied ? 1 : 0);
+                GL.Enable(EnableCap.Blend);
+                _advancedBlendEnable = true;
+            }
+        }
+
         public void SetBlendState(int index, BlendDescriptor blend)
         {
+            if (_advancedBlendEnable)
+            {
+                GL.Disable(EnableCap.Blend);
+                _advancedBlendEnable = false;
+            }
+
             if (!blend.Enable)
             {
                 GL.Disable(IndexedEnableCap.Blend, index);

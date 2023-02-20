@@ -34,6 +34,126 @@ namespace Ryujinx.Graphics.OpenGL
             return TextureWrapMode.Clamp;
         }
 
+        public static NvBlendEquationAdvanced Convert(this AdvancedBlendOp op)
+        {
+            switch (op)
+            {
+                case AdvancedBlendOp.Zero:
+                    return NvBlendEquationAdvanced.Zero;
+                case AdvancedBlendOp.Src:
+                    return NvBlendEquationAdvanced.SrcNv;
+                case AdvancedBlendOp.Dst:
+                    return NvBlendEquationAdvanced.DstNv;
+                case AdvancedBlendOp.SrcOver:
+                    return NvBlendEquationAdvanced.SrcOverNv;
+                case AdvancedBlendOp.DstOver:
+                    return NvBlendEquationAdvanced.DstOverNv;
+                case AdvancedBlendOp.SrcIn:
+                    return NvBlendEquationAdvanced.SrcInNv;
+                case AdvancedBlendOp.DstIn:
+                    return NvBlendEquationAdvanced.DstInNv;
+                case AdvancedBlendOp.SrcOut:
+                    return NvBlendEquationAdvanced.SrcOutNv;
+                case AdvancedBlendOp.DstOut:
+                    return NvBlendEquationAdvanced.DstOutNv;
+                case AdvancedBlendOp.SrcAtop:
+                    return NvBlendEquationAdvanced.SrcAtopNv;
+                case AdvancedBlendOp.DstAtop:
+                    return NvBlendEquationAdvanced.DstAtopNv;
+                case AdvancedBlendOp.Xor:
+                    return NvBlendEquationAdvanced.XorNv;
+                case AdvancedBlendOp.Plus:
+                    return NvBlendEquationAdvanced.PlusNv;
+                case AdvancedBlendOp.PlusClamped:
+                    return NvBlendEquationAdvanced.PlusClampedNv;
+                case AdvancedBlendOp.PlusClampedAlpha:
+                    return NvBlendEquationAdvanced.PlusClampedAlphaNv;
+                case AdvancedBlendOp.PlusDarker:
+                    return NvBlendEquationAdvanced.PlusDarkerNv;
+                case AdvancedBlendOp.Multiply:
+                    return NvBlendEquationAdvanced.MultiplyNv;
+                case AdvancedBlendOp.Screen:
+                    return NvBlendEquationAdvanced.ScreenNv;
+                case AdvancedBlendOp.Overlay:
+                    return NvBlendEquationAdvanced.OverlayNv;
+                case AdvancedBlendOp.Darken:
+                    return NvBlendEquationAdvanced.DarkenNv;
+                case AdvancedBlendOp.Lighten:
+                    return NvBlendEquationAdvanced.LightenNv;
+                case AdvancedBlendOp.ColorDodge:
+                    return NvBlendEquationAdvanced.ColordodgeNv;
+                case AdvancedBlendOp.ColorBurn:
+                    return NvBlendEquationAdvanced.ColorburnNv;
+                case AdvancedBlendOp.HardLight:
+                    return NvBlendEquationAdvanced.HardlightNv;
+                case AdvancedBlendOp.SoftLight:
+                    return NvBlendEquationAdvanced.SoftlightNv;
+                case AdvancedBlendOp.Difference:
+                    return NvBlendEquationAdvanced.DifferenceNv;
+                case AdvancedBlendOp.Minus:
+                    return NvBlendEquationAdvanced.MinusNv;
+                case AdvancedBlendOp.MinusClamped:
+                    return NvBlendEquationAdvanced.MinusClampedNv;
+                case AdvancedBlendOp.Exclusion:
+                    return NvBlendEquationAdvanced.ExclusionNv;
+                case AdvancedBlendOp.Contrast:
+                    return NvBlendEquationAdvanced.ContrastNv;
+                case AdvancedBlendOp.Invert:
+                    return NvBlendEquationAdvanced.Invert;
+                case AdvancedBlendOp.InvertRGB:
+                    return NvBlendEquationAdvanced.InvertRgbNv;
+                case AdvancedBlendOp.InvertOvg:
+                    return NvBlendEquationAdvanced.InvertOvgNv;
+                case AdvancedBlendOp.LinearDodge:
+                    return NvBlendEquationAdvanced.LineardodgeNv;
+                case AdvancedBlendOp.LinearBurn:
+                    return NvBlendEquationAdvanced.LinearburnNv;
+                case AdvancedBlendOp.VividLight:
+                    return NvBlendEquationAdvanced.VividlightNv;
+                case AdvancedBlendOp.LinearLight:
+                    return NvBlendEquationAdvanced.LinearlightNv;
+                case AdvancedBlendOp.PinLight:
+                    return NvBlendEquationAdvanced.PinlightNv;
+                case AdvancedBlendOp.HardMix:
+                    return NvBlendEquationAdvanced.HardmixNv;
+                case AdvancedBlendOp.Red:
+                    return NvBlendEquationAdvanced.RedNv;
+                case AdvancedBlendOp.Green:
+                    return NvBlendEquationAdvanced.GreenNv;
+                case AdvancedBlendOp.Blue:
+                    return NvBlendEquationAdvanced.BlueNv;
+                case AdvancedBlendOp.HslHue:
+                    return NvBlendEquationAdvanced.HslHueNv;
+                case AdvancedBlendOp.HslSaturation:
+                    return NvBlendEquationAdvanced.HslSaturationNv;
+                case AdvancedBlendOp.HslColor:
+                    return NvBlendEquationAdvanced.HslColorNv;
+                case AdvancedBlendOp.HslLuminosity:
+                    return NvBlendEquationAdvanced.HslLuminosityNv;
+            }
+
+            Logger.Debug?.Print(LogClass.Gpu, $"Invalid {nameof(AdvancedBlendOp)} enum value: {op}.");
+
+            return NvBlendEquationAdvanced.Zero;
+        }
+
+        public static All Convert(this AdvancedBlendOverlap overlap)
+        {
+            switch (overlap)
+            {
+                case AdvancedBlendOverlap.Uncorrelated:
+                    return All.UncorrelatedNv;
+                case AdvancedBlendOverlap.Disjoint:
+                    return All.DisjointNv;
+                case AdvancedBlendOverlap.Conjoint:
+                    return All.ConjointNv;
+            }
+
+            Logger.Debug?.Print(LogClass.Gpu, $"Invalid {nameof(AdvancedBlendOverlap)} enum value: {overlap}.");
+
+            return All.UncorrelatedNv;
+        }
+
         public static All Convert(this BlendFactor factor)
         {
             switch (factor)

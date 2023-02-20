@@ -18,6 +18,10 @@ namespace Ryujinx.Graphics.Vulkan
     {
         public readonly bool SupportsIndexTypeUint8;
         public readonly bool SupportsCustomBorderColor;
+        public readonly bool SupportsBlendEquationAdvanced;
+        public readonly bool SupportsBlendEquationAdvancedCorrelatedOverlap;
+        public readonly bool SupportsBlendEquationAdvancedNonPreMultipliedSrcColor;
+        public readonly bool SupportsBlendEquationAdvancedNonPreMultipliedDstColor;
         public readonly bool SupportsIndirectParameters;
         public readonly bool SupportsFragmentShaderInterlock;
         public readonly bool SupportsGeometryShaderPassthrough;
@@ -44,6 +48,10 @@ namespace Ryujinx.Graphics.Vulkan
         public HardwareCapabilities(
             bool supportsIndexTypeUint8,
             bool supportsCustomBorderColor,
+            bool supportsBlendEquationAdvanced,
+            bool supportsBlendEquationAdvancedCorrelatedOverlap,
+            bool supportsBlendEquationAdvancedNonPreMultipliedSrcColor,
+            bool supportsBlendEquationAdvancedNonPreMultipliedDstColor,
             bool supportsIndirectParameters,
             bool supportsFragmentShaderInterlock,
             bool supportsGeometryShaderPassthrough,
@@ -69,6 +77,10 @@ namespace Ryujinx.Graphics.Vulkan
         {
             SupportsIndexTypeUint8 = supportsIndexTypeUint8;
             SupportsCustomBorderColor = supportsCustomBorderColor;
+            SupportsBlendEquationAdvanced = supportsBlendEquationAdvanced;
+            SupportsBlendEquationAdvancedCorrelatedOverlap = supportsBlendEquationAdvancedCorrelatedOverlap;
+            SupportsBlendEquationAdvancedNonPreMultipliedSrcColor = supportsBlendEquationAdvancedNonPreMultipliedSrcColor;
+            SupportsBlendEquationAdvancedNonPreMultipliedDstColor = supportsBlendEquationAdvancedNonPreMultipliedDstColor;
             SupportsIndirectParameters = supportsIndirectParameters;
             SupportsFragmentShaderInterlock = supportsFragmentShaderInterlock;
             SupportsGeometryShaderPassthrough = supportsGeometryShaderPassthrough;

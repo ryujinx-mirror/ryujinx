@@ -149,6 +149,19 @@ namespace Ryujinx.Graphics.Vulkan
                 SType = StructureType.PhysicalDeviceProperties2
             };
 
+            PhysicalDeviceBlendOperationAdvancedPropertiesEXT propertiesBlendOperationAdvanced = new PhysicalDeviceBlendOperationAdvancedPropertiesEXT()
+            {
+                SType = StructureType.PhysicalDeviceBlendOperationAdvancedPropertiesExt
+            };
+
+            bool supportsBlendOperationAdvanced = supportedExtensions.Contains("VK_EXT_blend_operation_advanced");
+
+            if (supportsBlendOperationAdvanced)
+            {
+                propertiesBlendOperationAdvanced.PNext = properties2.PNext;
+                properties2.PNext = &propertiesBlendOperationAdvanced;
+            }
+
             PhysicalDeviceSubgroupSizeControlPropertiesEXT propertiesSubgroupSizeControl = new PhysicalDeviceSubgroupSizeControlPropertiesEXT()
             {
                 SType = StructureType.PhysicalDeviceSubgroupSizeControlPropertiesExt
@@ -246,9 +259,9 @@ namespace Ryujinx.Graphics.Vulkan
                 portabilityFlags |= featuresPortabilitySubset.SamplerMipLodBias ? 0 : PortabilitySubsetFlags.NoLodBias;
             }
 
-            bool customBorderColorSupported = supportedExtensions.Contains("VK_EXT_custom_border_color") &&
-                                              featuresCustomBorderColor.CustomBorderColors &&
-                                              featuresCustomBorderColor.CustomBorderColorWithoutFormat;
+            bool supportsCustomBorderColor = supportedExtensions.Contains("VK_EXT_custom_border_color") &&
+                                             featuresCustomBorderColor.CustomBorderColors &&
+                                             featuresCustomBorderColor.CustomBorderColorWithoutFormat;
 
             ref var properties = ref properties2.Properties;
 
@@ -259,7 +272,11 @@ namespace Ryujinx.Graphics.Vulkan
 
             Capabilities = new HardwareCapabilities(
                 supportedExtensions.Contains("VK_EXT_index_type_uint8"),
-                customBorderColorSupported,
+                supportsCustomBorderColor,
+                supportsBlendOperationAdvanced,
+                propertiesBlendOperationAdvanced.AdvancedBlendCorrelatedOverlap,
+                propertiesBlendOperationAdvanced.AdvancedBlendNonPremultipliedSrcColor,
+                propertiesBlendOperationAdvanced.AdvancedBlendNonPremultipliedDstColor,
                 supportedExtensions.Contains(KhrDrawIndirectCount.ExtensionName),
                 supportedExtensions.Contains("VK_EXT_fragment_shader_interlock"),
                 supportedExtensions.Contains("VK_NV_geometry_shader_passthrough"),
@@ -526,6 +543,7 @@ namespace Ryujinx.Graphics.Vulkan
                 supportsR4G4B4A4Format: supportsR4G4B4A4Format,
                 supportsSnormBufferTextureFormat: true,
                 supports5BitComponentFormat: supports5BitComponentFormat,
+                supportsBlendEquationAdvanced: Capabilities.SupportsBlendEquationAdvanced,
                 supportsFragmentShaderInterlock: Capabilities.SupportsFragmentShaderInterlock,
                 supportsFragmentShaderOrderingIntel: false,
                 supportsGeometryShaderPassthrough: Capabilities.SupportsGeometryShaderPassthrough,

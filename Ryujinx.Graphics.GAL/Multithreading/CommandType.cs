@@ -60,6 +60,7 @@
         EndHostConditionalRendering,
         EndTransformFeedback,
         SetAlphaTest,
+        SetBlendStateAdvanced,
         SetBlendState,
         SetDepthBias,
         SetDepthClamp,

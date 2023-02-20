@@ -5,6 +5,7 @@ using Ryujinx.Graphics.Gpu.Engine.Types;
 using Ryujinx.Graphics.Gpu.Image;
 using Ryujinx.Graphics.Shader;
 using System;
+using System.Runtime.CompilerServices;
 
 namespace Ryujinx.Graphics.Gpu.Engine.Threed
 {
@@ -212,6 +213,17 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         public Boolean32 LineEnable;
         public Boolean32 FillEnable;
 #pragma warning restore CS0649
+    }
+
+    /// <summary>
+    /// Indicates whenever the blend microcode processes RGB and alpha components.
+    /// </summary>
+    enum BlendUcodeEnable
+    {
+        Disabled = 0,
+        EnableRGB = 1,
+        EnableAlpha = 2,
+        EnableRGBA = 3
     }
 
     /// <summary>
@@ -432,6 +444,49 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
     {
         NegateY = 1 << 0,
         TriangleRastFlip = 1 << 4
+    }
+
+    /// <summary>
+    /// RGB color components packed as 16-bit float values.
+    /// </summary>
+    struct RgbHalf
+    {
+#pragma warning disable CS0649
+        public uint R;
+        public uint G;
+        public uint B;
+        public uint Padding;
+#pragma warning restore CS0649
+
+        /// <summary>
+        /// Unpacks the red color component as a 16-bit float value.
+        /// </summary>
+        /// <returns>The component value</returns>
+        public Half UnpackR()
+        {
+            ushort value = (ushort)R;
+            return Unsafe.As<ushort, Half>(ref value);
+        }
+
+        /// <summary>
+        /// Unpacks the green color component as a 16-bit float value.
+        /// </summary>
+        /// <returns>The component value</returns>
+        public Half UnpackG()
+        {
+            ushort value = (ushort)G;
+            return Unsafe.As<ushort, Half>(ref value);
+        }
+
+        /// <summary>
+        /// Unpacks the blue color component as a 16-bit float value.
+        /// </summary>
+        /// <returns>The component value</returns>
+        public Half UnpackB()
+        {
+            ushort value = (ushort)B;
+            return Unsafe.As<ushort, Half>(ref value);
+        }
     }
 
     /// <summary>
@@ -752,7 +807,9 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         public Boolean32 EarlyZForce;
         public fixed uint Reserved214[45];
         public uint SyncpointAction;
-        public fixed uint Reserved2CC[21];
+        public fixed uint Reserved2CC[10];
+        public uint BlendUcodeNormalizedDst;
+        public fixed uint Reserved2F8[10];
         public TessMode TessMode;
         public Array4<float> TessOuterLevel;
         public Array2<float> TessInnerLevel;
@@ -781,11 +838,16 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         public fixed uint ReservedDB8[2];
         public DepthBiasState DepthBiasState;
         public int PatchVertices;
-        public fixed uint ReservedDD0[4];
+        public BlendUcodeEnable BlendUcodeEnable;
+        public uint BlendUcodeSize;
+        public fixed uint ReservedDD8[2];
         public uint TextureBarrier;
         public uint WatchdogTimer;
         public Boolean32 PrimitiveRestartDrawArrays;
-        public fixed uint ReservedDEC[5];
+        public uint ReservedDEC;
+        public uint LoadBlendUcodeStart;
+        public uint LoadBlendUcodeInstruction;
+        public fixed uint ReservedDF8[2];
         public Array16<ScissorState> ScissorState;
         public fixed uint ReservedF00[21];
         public StencilBackMasks StencilBackMasks;
@@ -850,7 +912,9 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         public fixed uint Reserved142C[2];
         public uint FirstVertex;
         public uint FirstInstance;
-        public fixed uint Reserved143C[53];
+        public fixed uint Reserved143C[17];
+        public Array8<RgbHalf> BlendUcodeConstants;
+        public fixed uint Reserved1500[4];
         public uint ClipDistanceEnable;
         public uint Reserved1514;
         public float PointSize;

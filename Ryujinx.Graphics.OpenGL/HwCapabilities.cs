@@ -7,6 +7,7 @@ namespace Ryujinx.Graphics.OpenGL
     {
         private static readonly Lazy<bool> _supportsAlphaToCoverageDitherControl = new Lazy<bool>(() => HasExtension("GL_NV_alpha_to_coverage_dither_control"));
         private static readonly Lazy<bool> _supportsAstcCompression              = new Lazy<bool>(() => HasExtension("GL_KHR_texture_compression_astc_ldr"));
+        private static readonly Lazy<bool> _supportsBlendEquationAdvanced        = new Lazy<bool>(() => HasExtension("GL_NV_blend_equation_advanced"));
         private static readonly Lazy<bool> _supportsDrawTexture                  = new Lazy<bool>(() => HasExtension("GL_NV_draw_texture"));
         private static readonly Lazy<bool> _supportsFragmentShaderInterlock      = new Lazy<bool>(() => HasExtension("GL_ARB_fragment_shader_interlock"));
         private static readonly Lazy<bool> _supportsFragmentShaderOrdering       = new Lazy<bool>(() => HasExtension("GL_INTEL_fragment_shader_ordering"));
@@ -51,6 +52,7 @@ namespace Ryujinx.Graphics.OpenGL
 
         public static bool SupportsAlphaToCoverageDitherControl => _supportsAlphaToCoverageDitherControl.Value;
         public static bool SupportsAstcCompression              => _supportsAstcCompression.Value;
+        public static bool SupportsBlendEquationAdvanced        => _supportsBlendEquationAdvanced.Value;
         public static bool SupportsDrawTexture                  => _supportsDrawTexture.Value;
         public static bool SupportsFragmentShaderInterlock      => _supportsFragmentShaderInterlock.Value;
         public static bool SupportsFragmentShaderOrdering       => _supportsFragmentShaderOrdering.Value;

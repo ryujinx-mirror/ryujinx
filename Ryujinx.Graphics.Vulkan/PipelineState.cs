@@ -285,6 +285,24 @@ namespace Ryujinx.Graphics.Vulkan
             set => Internal.Id9 = (Internal.Id9 & 0xFFFFFFFFFFFFFFFD) | ((value ? 1UL : 0UL) << 1);
         }
 
+        public bool AdvancedBlendSrcPreMultiplied
+        {
+            get => ((Internal.Id9 >> 2) & 0x1) != 0UL;
+            set => Internal.Id9 = (Internal.Id9 & 0xFFFFFFFFFFFFFFFB) | ((value ? 1UL : 0UL) << 2);
+        }
+
+        public bool AdvancedBlendDstPreMultiplied
+        {
+            get => ((Internal.Id9 >> 3) & 0x1) != 0UL;
+            set => Internal.Id9 = (Internal.Id9 & 0xFFFFFFFFFFFFFFF7) | ((value ? 1UL : 0UL) << 3);
+        }
+
+        public BlendOverlapEXT AdvancedBlendOverlap
+        {
+            get => (BlendOverlapEXT)((Internal.Id9 >> 4) & 0x3);
+            set => Internal.Id9 = (Internal.Id9 & 0xFFFFFFFFFFFFFFCF) | ((ulong)value << 4);
+        }
+
         public NativeArray<PipelineShaderStageCreateInfo> Stages;
         public NativeArray<PipelineShaderStageRequiredSubgroupSizeCreateInfoEXT> StageRequiredSubgroupSizes;
         public PipelineLayout PipelineLayout;
@@ -303,6 +321,13 @@ namespace Ryujinx.Graphics.Vulkan
                     RequiredSubgroupSize = RequiredSubgroupSize
                 };
             }
+
+            AdvancedBlendSrcPreMultiplied = true;
+            AdvancedBlendDstPreMultiplied = true;
+            AdvancedBlendOverlap = BlendOverlapEXT.UncorrelatedExt;
+
+            LineWidth = 1f;
+            SamplesCount = 1;
         }
 
         public unsafe Auto<DisposablePipeline> CreateComputePipeline(
@@ -485,6 +510,23 @@ namespace Ryujinx.Graphics.Vulkan
                     AttachmentCount = ColorBlendAttachmentStateCount,
                     PAttachments = pColorBlendAttachmentState
                 };
+
+                PipelineColorBlendAdvancedStateCreateInfoEXT colorBlendAdvancedState;
+
+                if (!AdvancedBlendSrcPreMultiplied ||
+                    !AdvancedBlendDstPreMultiplied ||
+                    AdvancedBlendOverlap != BlendOverlapEXT.UncorrelatedExt)
+                {
+                    colorBlendAdvancedState = new PipelineColorBlendAdvancedStateCreateInfoEXT()
+                    {
+                        SType = StructureType.PipelineColorBlendAdvancedStateCreateInfoExt,
+                        SrcPremultiplied = AdvancedBlendSrcPreMultiplied,
+                        DstPremultiplied = AdvancedBlendDstPreMultiplied,
+                        BlendOverlap = AdvancedBlendOverlap
+                    };
+
+                    colorBlendState.PNext = &colorBlendAdvancedState;
+                }
 
                 bool supportsExtDynamicState = gd.Capabilities.SupportsExtendedDynamicState;
                 int dynamicStatesCount = supportsExtDynamicState ? 9 : 8;
