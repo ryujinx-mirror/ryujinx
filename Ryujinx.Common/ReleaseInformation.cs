@@ -40,14 +40,21 @@ namespace Ryujinx.Common
             }
         }
 
+#if FORCE_EXTERNAL_BASE_DIR
         public static string GetBaseApplicationDirectory()
         {
-            if (IsFlatHubBuild())
+            return AppDataManager.BaseDirPath;
+        }
+#else
+        public static string GetBaseApplicationDirectory()
+        {
+            if (IsFlatHubBuild() || OperatingSystem.IsMacOS())
             {
                 return AppDataManager.BaseDirPath;
             }
 
             return AppDomain.CurrentDomain.BaseDirectory;
         }
+#endif
     }
 }
