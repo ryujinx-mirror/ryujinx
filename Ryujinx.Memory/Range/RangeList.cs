@@ -67,6 +67,43 @@ namespace Ryujinx.Memory.Range
             Insert(index, new RangeItem<T>(item));
         }
 
+        /// <summary>
+        /// Updates an item's end address on the list. Address must be the same.
+        /// </summary>
+        /// <param name="item">The item to be updated</param>
+        /// <returns>True if the item was located and updated, false otherwise</returns>
+        public bool Update(T item)
+        {
+            int index = BinarySearch(item.Address);
+
+            if (index >= 0)
+            {
+                while (index > 0 && _items[index - 1].Address == item.Address)
+                {
+                    index--;
+                }
+
+                while (index < Count)
+                {
+                    if (_items[index].Value.Equals(item))
+                    {
+                        _items[index] = new RangeItem<T>(item);
+
+                        return true;
+                    }
+
+                    if (_items[index].Address > item.Address)
+                    {
+                        break;
+                    }
+
+                    index++;
+                }
+            }
+
+            return false;
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void Insert(int index, RangeItem<T> item)
         {

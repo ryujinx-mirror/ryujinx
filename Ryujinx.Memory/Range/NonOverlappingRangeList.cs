@@ -97,10 +97,8 @@ namespace Ryujinx.Memory.Range
         /// <returns>The new region (high part)</returns>
         private T Split(T region, ulong splitAddress)
         {
-            Remove(region);
-
             T newRegion = (T)region.Split(splitAddress);
-            Add(region);
+            Update(region);
             Add(newRegion);
             return newRegion;
         }
