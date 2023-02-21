@@ -215,41 +215,6 @@ namespace Ryujinx.Graphics.Gpu.Image
         }
 
         /// <summary>
-        /// Checks if two formats are compatible, according to the host API copy format compatibility rules.
-        /// </summary>
-        /// <param name="lhsFormat">First comparand</param>
-        /// <param name="rhsFormat">Second comparand</param>
-        /// <param name="caps">Host GPU capabilities</param>
-        /// <returns>True if the formats are compatible, false otherwise</returns>
-        public static bool FormatCompatible(TextureInfo lhs, TextureInfo rhs, Capabilities caps)
-        {
-            FormatInfo lhsFormat = lhs.FormatInfo;
-            FormatInfo rhsFormat = rhs.FormatInfo;
-
-            if (lhsFormat.Format.IsDepthOrStencil() || rhsFormat.Format.IsDepthOrStencil())
-            {
-                return lhsFormat.Format == rhsFormat.Format;
-            }
-
-            if (IsFormatHostIncompatible(lhs, caps) || IsFormatHostIncompatible(rhs, caps))
-            {
-                return lhsFormat.Format == rhsFormat.Format;
-            }
-
-            if (lhsFormat.IsCompressed && rhsFormat.IsCompressed)
-            {
-                FormatClass lhsClass = GetFormatClass(lhsFormat.Format);
-                FormatClass rhsClass = GetFormatClass(rhsFormat.Format);
-
-                return lhsClass == rhsClass;
-            }
-            else
-            {
-                return lhsFormat.BytesPerPixel == rhsFormat.BytesPerPixel;
-            }
-        }
-
-        /// <summary>
         /// Checks if the texture format matches with the specified texture information.
         /// </summary>
         /// <param name="lhs">Texture information to compare</param>
@@ -391,6 +356,13 @@ namespace Ryujinx.Graphics.Gpu.Image
             Size lhsSize = GetSizeInBlocks(lhs, level);
             Size rhsSize = GetSizeInBlocks(rhs);
 
+            bool alignedWidthMatches = lhsAlignedSize.Width == rhsAlignedSize.Width;
+
+            if (lhs.FormatInfo.BytesPerPixel != rhs.FormatInfo.BytesPerPixel && IsIncompatibleFormatAliasingAllowed(lhs.FormatInfo, rhs.FormatInfo))
+            {
+                alignedWidthMatches = lhsSize.Width * lhs.FormatInfo.BytesPerPixel == rhsSize.Width * rhs.FormatInfo.BytesPerPixel;
+            }
+
             TextureViewCompatibility result = TextureViewCompatibility.Full;
 
             // For copies, we can copy a subset of the 3D texture slices,
@@ -404,7 +376,7 @@ namespace Ryujinx.Graphics.Gpu.Image
             // so the width may not match in this case for different uses of the same texture.
             // To account for this, we compare the aligned width here.
             // We expect height to always match exactly, if the texture is the same.
-            if (lhsAlignedSize.Width == rhsAlignedSize.Width && lhsSize.Height == rhsSize.Height)
+            if (alignedWidthMatches && lhsSize.Height == rhsSize.Height)
             {
                 return (exact && lhsSize.Width != rhsSize.Width) || lhsSize.Width < rhsSize.Width
                     ? TextureViewCompatibility.CopyOnly
@@ -659,19 +631,60 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <returns>The view compatibility level of the texture formats</returns>
         public static TextureViewCompatibility ViewFormatCompatible(TextureInfo lhs, TextureInfo rhs, Capabilities caps)
         {
-            if (FormatCompatible(lhs, rhs, caps))
+            FormatInfo lhsFormat = lhs.FormatInfo;
+            FormatInfo rhsFormat = rhs.FormatInfo;
+
+            if (lhsFormat.Format.IsDepthOrStencil() || rhsFormat.Format.IsDepthOrStencil())
             {
-                if (lhs.FormatInfo.IsCompressed != rhs.FormatInfo.IsCompressed)
-                {
-                    return TextureViewCompatibility.CopyOnly;
-                }
-                else
-                {
-                    return TextureViewCompatibility.Full;
-                }
+                return lhsFormat.Format == rhsFormat.Format ? TextureViewCompatibility.Full : TextureViewCompatibility.Incompatible;
+            }
+
+            if (IsFormatHostIncompatible(lhs, caps) || IsFormatHostIncompatible(rhs, caps))
+            {
+                return lhsFormat.Format == rhsFormat.Format ? TextureViewCompatibility.Full : TextureViewCompatibility.Incompatible;
+            }
+
+            if (lhsFormat.IsCompressed && rhsFormat.IsCompressed)
+            {
+                FormatClass lhsClass = GetFormatClass(lhsFormat.Format);
+                FormatClass rhsClass = GetFormatClass(rhsFormat.Format);
+
+                return lhsClass == rhsClass ? TextureViewCompatibility.Full : TextureViewCompatibility.Incompatible;
+            }
+            else if (lhsFormat.BytesPerPixel == rhsFormat.BytesPerPixel)
+            {
+                return lhs.FormatInfo.IsCompressed == rhs.FormatInfo.IsCompressed
+                    ? TextureViewCompatibility.Full
+                    : TextureViewCompatibility.CopyOnly;
+            }
+            else if (IsIncompatibleFormatAliasingAllowed(lhsFormat, rhsFormat))
+            {
+                return TextureViewCompatibility.CopyOnly;
             }
 
             return TextureViewCompatibility.Incompatible;
+        }
+
+        /// <summary>
+        /// Checks if aliasing of two formats that would normally be considered incompatible be allowed,
+        /// using copy dependencies.
+        /// </summary>
+        /// <param name="lhsFormat">Format information of the first texture</param
+        /// <param name="rhsFormat">Format information of the second texture</param>
+        /// <returns>True if aliasing should be allowed, false otherwise</returns>
+        private static bool IsIncompatibleFormatAliasingAllowed(FormatInfo lhsFormat, FormatInfo rhsFormat)
+        {
+            // Some games will try to alias textures with incompatible foramts, with different BPP (bytes per pixel).
+            // We allow that in some cases as long Width * BPP is equal on both textures.
+            // This is very conservative right now as we want to avoid copies as much as possible,
+            // so we only consider the formats we have seen being aliased.
+
+            if (rhsFormat.BytesPerPixel < lhsFormat.BytesPerPixel)
+            {
+                (lhsFormat, rhsFormat) = (rhsFormat, lhsFormat);
+            }
+
+            return lhsFormat.Format == Format.R8Unorm && rhsFormat.Format == Format.R8G8B8A8Unorm;
         }
 
         /// <summary>

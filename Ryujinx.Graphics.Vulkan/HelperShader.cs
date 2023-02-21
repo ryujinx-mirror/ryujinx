@@ -5,6 +5,7 @@ using Ryujinx.Graphics.Vulkan.Shaders;
 using Silk.NET.Vulkan;
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 using VkFormat = Silk.NET.Vulkan.Format;
 
 namespace Ryujinx.Graphics.Vulkan
@@ -32,7 +33,9 @@ namespace Ryujinx.Graphics.Vulkan
         private readonly IProgram _programStrideChange;
         private readonly IProgram _programConvertIndexBuffer;
         private readonly IProgram _programConvertIndirectData;
+        private readonly IProgram _programColorCopyShortening;
         private readonly IProgram _programColorCopyToNonMs;
+        private readonly IProgram _programColorCopyWidening;
         private readonly IProgram _programColorDrawToMs;
         private readonly IProgram _programDepthBlit;
         private readonly IProgram _programDepthBlitMs;
@@ -112,15 +115,25 @@ namespace Ryujinx.Graphics.Vulkan
                 new ShaderSource(ShaderBinaries.ChangeBufferStrideShaderSource, strideChangeBindings, ShaderStage.Compute, TargetLanguage.Spirv),
             });
 
-            var colorCopyToNonMsBindings = new ShaderBindings(
+            var colorCopyBindings = new ShaderBindings(
                 new[] { 0 },
                 Array.Empty<int>(),
                 new[] { 0 },
                 new[] { 0 });
 
+            _programColorCopyShortening = gd.CreateProgramWithMinimalLayout(new[]
+            {
+                new ShaderSource(ShaderBinaries.ColorCopyShorteningComputeShaderSource, colorCopyBindings, ShaderStage.Compute, TargetLanguage.Spirv),
+            });
+
             _programColorCopyToNonMs = gd.CreateProgramWithMinimalLayout(new[]
             {
-                new ShaderSource(ShaderBinaries.ColorCopyToNonMsComputeShaderSource, colorCopyToNonMsBindings, ShaderStage.Compute, TargetLanguage.Spirv),
+                new ShaderSource(ShaderBinaries.ColorCopyToNonMsComputeShaderSource, colorCopyBindings, ShaderStage.Compute, TargetLanguage.Spirv),
+            });
+
+            _programColorCopyWidening = gd.CreateProgramWithMinimalLayout(new[]
+            {
+                new ShaderSource(ShaderBinaries.ColorCopyWideningComputeShaderSource, colorCopyBindings, ShaderStage.Compute, TargetLanguage.Spirv),
             });
 
             var colorDrawToMsVertexBindings = new ShaderBindings(
@@ -922,6 +935,107 @@ namespace Ryujinx.Graphics.Vulkan
                 convertedCount * outputIndexSize);
         }
 
+        public void CopyIncompatibleFormats(
+            VulkanRenderer gd,
+            CommandBufferScoped cbs,
+            TextureView src,
+            TextureView dst,
+            int srcLayer,
+            int dstLayer,
+            int srcLevel,
+            int dstLevel,
+            int depth,
+            int levels)
+        {
+            const int ParamsBufferSize = 4;
+
+            Span<int> shaderParams = stackalloc int[sizeof(int)];
+
+            int srcBpp = src.Info.BytesPerPixel;
+            int dstBpp = dst.Info.BytesPerPixel;
+
+            int ratio = srcBpp < dstBpp ? dstBpp / srcBpp : srcBpp / dstBpp;
+
+            shaderParams[0] = BitOperations.Log2((uint)ratio);
+
+            var bufferHandle = gd.BufferManager.CreateWithHandle(gd, ParamsBufferSize, false);
+
+            gd.BufferManager.SetData<int>(bufferHandle, 0, shaderParams);
+
+            TextureView.InsertImageBarrier(
+                gd.Api,
+                cbs.CommandBuffer,
+                src.GetImage().Get(cbs).Value,
+                TextureStorage.DefaultAccessMask,
+                AccessFlags.ShaderReadBit,
+                PipelineStageFlags.AllCommandsBit,
+                PipelineStageFlags.ComputeShaderBit,
+                ImageAspectFlags.ColorBit,
+                src.FirstLayer + srcLayer,
+                src.FirstLevel + srcLevel,
+                depth,
+                levels);
+
+            _pipeline.SetCommandBuffer(cbs);
+
+            _pipeline.SetProgram(srcBpp < dstBpp ? _programColorCopyWidening : _programColorCopyShortening);
+
+            // Calculate ideal component size, given our constraints:
+            // - Component size must not exceed bytes per pixel of source and destination image formats.
+            // - Maximum component size is 4 (R32).
+            int componentSize = Math.Min(Math.Min(srcBpp, dstBpp), 4);
+
+            var srcFormat = GetFormat(componentSize, srcBpp / componentSize);
+            var dstFormat = GetFormat(componentSize, dstBpp / componentSize);
+
+            _pipeline.SetUniformBuffers(stackalloc[] { new BufferAssignment(0, new BufferRange(bufferHandle, 0, ParamsBufferSize)) });
+
+            for (int l = 0; l < levels; l++)
+            {
+                for (int z = 0; z < depth; z++)
+                {
+                    var srcView = Create2DLayerView(src, srcLayer + z, srcLevel + l, srcFormat);
+                    var dstView = Create2DLayerView(dst, dstLayer + z, dstLevel + l);
+
+                    _pipeline.SetTextureAndSampler(ShaderStage.Compute, 0, srcView, null);
+                    _pipeline.SetImage(0, dstView, dstFormat);
+
+                    int dispatchX = (Math.Min(srcView.Info.Width, dstView.Info.Width) + 31) / 32;
+                    int dispatchY = (Math.Min(srcView.Info.Height, dstView.Info.Height) + 31) / 32;
+
+                    _pipeline.DispatchCompute(dispatchX, dispatchY, 1);
+
+                    if (srcView != src)
+                    {
+                        srcView.Release();
+                    }
+
+                    if (dstView != dst)
+                    {
+                        dstView.Release();
+                    }
+                }
+            }
+
+            gd.BufferManager.Delete(bufferHandle);
+
+            _pipeline.Finish(gd, cbs);
+
+            TextureView.InsertImageBarrier(
+                gd.Api,
+                cbs.CommandBuffer,
+                dst.GetImage().Get(cbs).Value,
+                AccessFlags.ShaderWriteBit,
+                TextureStorage.DefaultAccessMask,
+                PipelineStageFlags.ComputeShaderBit,
+                PipelineStageFlags.AllCommandsBit,
+                ImageAspectFlags.ColorBit,
+                dst.FirstLayer + dstLayer,
+                dst.FirstLevel + dstLevel,
+                depth,
+                levels);
+        }
+
         public void CopyMSToNonMS(VulkanRenderer gd, CommandBufferScoped cbs, TextureView src, TextureView dst, int srcLayer, int dstLayer, int depth)
         {
             const int ParamsBufferSize = 16;
@@ -1196,6 +1310,44 @@ namespace Ryujinx.Graphics.Vulkan
             };
         }
 
+        private static GAL.Format GetFormat(int componentSize, int componentsCount)
+        {
+            if (componentSize == 1)
+            {
+                return componentsCount switch
+                {
+                    1 => GAL.Format.R8Uint,
+                    2 => GAL.Format.R8G8Uint,
+                    4 => GAL.Format.R8G8B8A8Uint,
+                    _ => throw new ArgumentException($"Invalid components count {componentsCount}.")
+                };
+            }
+            else if (componentSize == 2)
+            {
+                return componentsCount switch
+                {
+                    1 => GAL.Format.R16Uint,
+                    2 => GAL.Format.R16G16Uint,
+                    4 => GAL.Format.R16G16B16A16Uint,
+                    _ => throw new ArgumentException($"Invalid components count {componentsCount}.")
+                };
+            }
+            else if (componentSize == 4)
+            {
+                return componentsCount switch
+                {
+                    1 => GAL.Format.R32Uint,
+                    2 => GAL.Format.R32G32Uint,
+                    4 => GAL.Format.R32G32B32A32Uint,
+                    _ => throw new ArgumentException($"Invalid components count {componentsCount}.")
+                };
+            }
+            else
+            {
+                throw new ArgumentException($"Invalid component size {componentSize}.");
+            }
+        }
+
         public void ConvertIndexBufferIndirect(
             VulkanRenderer gd,
             CommandBufferScoped cbs,
@@ -1336,7 +1488,9 @@ namespace Ryujinx.Graphics.Vulkan
                 _programStrideChange.Dispose();
                 _programConvertIndexBuffer.Dispose();
                 _programConvertIndirectData.Dispose();
+                _programColorCopyShortening.Dispose();
                 _programColorCopyToNonMs.Dispose();
+                _programColorCopyWidening.Dispose();
                 _programColorDrawToMs.Dispose();
                 _programDepthBlit.Dispose();
                 _programDepthBlitMs.Dispose();

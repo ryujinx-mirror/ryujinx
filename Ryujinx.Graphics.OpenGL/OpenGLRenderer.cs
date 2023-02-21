@@ -24,6 +24,7 @@ namespace Ryujinx.Graphics.OpenGL
         private TextureCopy _textureCopy;
         private TextureCopy _backgroundTextureCopy;
         internal TextureCopy TextureCopy => BackgroundContextWorker.InBackground ? _backgroundTextureCopy : _textureCopy;
+        internal TextureCopyIncompatible TextureCopyIncompatible { get; }
         internal TextureCopyMS TextureCopyMS { get; }
 
         private Sync _sync;
@@ -49,6 +50,7 @@ namespace Ryujinx.Graphics.OpenGL
             _window = new Window(this);
             _textureCopy = new TextureCopy(this);
             _backgroundTextureCopy = new TextureCopy(this);
+            TextureCopyIncompatible = new TextureCopyIncompatible(this);
             TextureCopyMS = new TextureCopyMS(this);
             _sync = new Sync();
             PersistentBuffers = new PersistentBuffers();

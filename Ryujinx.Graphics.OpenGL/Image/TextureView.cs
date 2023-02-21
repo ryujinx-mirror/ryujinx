@@ -127,6 +127,12 @@ namespace Ryujinx.Graphics.OpenGL.Image
                 int layers = Math.Min(Info.GetLayers(), destinationView.Info.GetLayers() - firstLayer);
                 _renderer.TextureCopyMS.CopyNonMSToMS(this, destinationView, 0, firstLayer, layers);
             }
+            else if (destinationView.Info.BytesPerPixel != Info.BytesPerPixel)
+            {
+                int layers = Math.Min(Info.GetLayers(), destinationView.Info.GetLayers() - firstLayer);
+                int levels = Math.Min(Info.Levels, destinationView.Info.Levels - firstLevel);
+                _renderer.TextureCopyIncompatible.CopyIncompatibleFormats(this, destinationView, 0, firstLayer, 0, firstLevel, layers, levels);
+            }
             else
             {
                 _renderer.TextureCopy.CopyUnscaled(this, destinationView, 0, firstLayer, 0, firstLevel);
@@ -144,6 +150,10 @@ namespace Ryujinx.Graphics.OpenGL.Image
             else if (destinationView.Target.IsMultisample() && !Target.IsMultisample())
             {
                 _renderer.TextureCopyMS.CopyNonMSToMS(this, destinationView, srcLayer, dstLayer, 1);
+            }
+            else if (destinationView.Info.BytesPerPixel != Info.BytesPerPixel)
+            {
+                _renderer.TextureCopyIncompatible.CopyIncompatibleFormats(this, destinationView, srcLayer, dstLayer, srcLevel, dstLevel, 1, 1);
             }
             else
             {
