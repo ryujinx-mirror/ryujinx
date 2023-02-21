@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
@@ -380,7 +381,6 @@ namespace Ryujinx.Audio.Renderer.Dsp
             return _normalCurveLut2F;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private unsafe static void ResampleDefaultQuality(Span<float> outputBuffer, ReadOnlySpan<short> inputBuffer, float ratio, ref float fraction, int sampleCount, bool needPitch)
         {
             ReadOnlySpan<float> parameters = GetDefaultParameter(ratio);
@@ -394,35 +394,33 @@ namespace Ryujinx.Audio.Renderer.Dsp
                 if (ratio == 1f)
                 {
                     fixed (short* pInput = inputBuffer)
+                    fixed (float* pOutput = outputBuffer, pParameters = parameters)
                     {
-                        fixed (float* pOutput = outputBuffer, pParameters = parameters)
+                        Vector128<float> parameter = Sse.LoadVector128(pParameters);
+
+                        for (; i < (sampleCount & ~3); i += 4)
                         {
-                            Vector128<float> parameter = Sse.LoadVector128(pParameters);
+                            Vector128<int> intInput0 = Sse41.ConvertToVector128Int32(pInput + (uint)i);
+                            Vector128<int> intInput1 = Sse41.ConvertToVector128Int32(pInput + (uint)i + 1);
+                            Vector128<int> intInput2 = Sse41.ConvertToVector128Int32(pInput + (uint)i + 2);
+                            Vector128<int> intInput3 = Sse41.ConvertToVector128Int32(pInput + (uint)i + 3);
 
-                            for (; i < (sampleCount & ~3); i += 4)
-                            {
-                                Vector128<int> intInput0 = Sse41.ConvertToVector128Int32(pInput + (uint)i);
-                                Vector128<int> intInput1 = Sse41.ConvertToVector128Int32(pInput + (uint)i + 1);
-                                Vector128<int> intInput2 = Sse41.ConvertToVector128Int32(pInput + (uint)i + 2);
-                                Vector128<int> intInput3 = Sse41.ConvertToVector128Int32(pInput + (uint)i + 3);
+                            Vector128<float> input0 = Sse2.ConvertToVector128Single(intInput0);
+                            Vector128<float> input1 = Sse2.ConvertToVector128Single(intInput1);
+                            Vector128<float> input2 = Sse2.ConvertToVector128Single(intInput2);
+                            Vector128<float> input3 = Sse2.ConvertToVector128Single(intInput3);
 
-                                Vector128<float> input0 = Sse2.ConvertToVector128Single(intInput0);
-                                Vector128<float> input1 = Sse2.ConvertToVector128Single(intInput1);
-                                Vector128<float> input2 = Sse2.ConvertToVector128Single(intInput2);
-                                Vector128<float> input3 = Sse2.ConvertToVector128Single(intInput3);
+                            Vector128<float> mix0 = Sse.Multiply(input0, parameter);
+                            Vector128<float> mix1 = Sse.Multiply(input1, parameter);
+                            Vector128<float> mix2 = Sse.Multiply(input2, parameter);
+                            Vector128<float> mix3 = Sse.Multiply(input3, parameter);
 
-                                Vector128<float> mix0 = Sse.Multiply(input0, parameter);
-                                Vector128<float> mix1 = Sse.Multiply(input1, parameter);
-                                Vector128<float> mix2 = Sse.Multiply(input2, parameter);
-                                Vector128<float> mix3 = Sse.Multiply(input3, parameter);
+                            Vector128<float> mix01 = Sse3.HorizontalAdd(mix0, mix1);
+                            Vector128<float> mix23 = Sse3.HorizontalAdd(mix2, mix3);
 
-                                Vector128<float> mix01 = Sse3.HorizontalAdd(mix0, mix1);
-                                Vector128<float> mix23 = Sse3.HorizontalAdd(mix2, mix3);
+                            Vector128<float> mix0123 = Sse3.HorizontalAdd(mix01, mix23);
 
-                                Vector128<float> mix0123 = Sse3.HorizontalAdd(mix01, mix23);
-
-                                Sse.Store(pOutput + (uint)i, Sse41.RoundToNearestInteger(mix0123));
-                            }
+                            Sse.Store(pOutput + (uint)i, Sse41.RoundToNearestInteger(mix0123));
                         }
                     }
 
@@ -431,62 +429,60 @@ namespace Ryujinx.Audio.Renderer.Dsp
                 else
                 {
                     fixed (short* pInput = inputBuffer)
+                    fixed (float* pOutput = outputBuffer, pParameters = parameters)
                     {
-                        fixed (float* pOutput = outputBuffer, pParameters = parameters)
+                        for (; i < (sampleCount & ~3); i += 4)
                         {
-                            for (; i < (sampleCount & ~3); i += 4)
-                            {
-                                uint baseIndex0 = (uint)(fraction * 128) * 4;
-                                uint inputIndex0 = (uint)inputBufferIndex;
+                            uint baseIndex0 = (uint)(fraction * 128) * 4;
+                            uint inputIndex0 = (uint)inputBufferIndex;
 
-                                fraction += ratio;
+                            fraction += ratio;
 
-                                uint baseIndex1 = ((uint)(fraction * 128) & 127) * 4;
-                                uint inputIndex1 = (uint)inputBufferIndex + (uint)fraction;
+                            uint baseIndex1 = ((uint)(fraction * 128) & 127) * 4;
+                            uint inputIndex1 = (uint)inputBufferIndex + (uint)fraction;
 
-                                fraction += ratio;
+                            fraction += ratio;
 
-                                uint baseIndex2 = ((uint)(fraction * 128) & 127) * 4;
-                                uint inputIndex2 = (uint)inputBufferIndex + (uint)fraction;
+                            uint baseIndex2 = ((uint)(fraction * 128) & 127) * 4;
+                            uint inputIndex2 = (uint)inputBufferIndex + (uint)fraction;
 
-                                fraction += ratio;
+                            fraction += ratio;
 
-                                uint baseIndex3 = ((uint)(fraction * 128) & 127) * 4;
-                                uint inputIndex3 = (uint)inputBufferIndex + (uint)fraction;
+                            uint baseIndex3 = ((uint)(fraction * 128) & 127) * 4;
+                            uint inputIndex3 = (uint)inputBufferIndex + (uint)fraction;
 
-                                fraction += ratio;
-                                inputBufferIndex += (int)fraction;
+                            fraction += ratio;
+                            inputBufferIndex += (int)fraction;
 
-                                // Only keep lower part (safe as fraction isn't supposed to be negative)
-                                fraction -= (int)fraction;
+                            // Only keep lower part (safe as fraction isn't supposed to be negative)
+                            fraction -= (int)fraction;
 
-                                Vector128<float> parameter0 = Sse.LoadVector128(pParameters + baseIndex0);
-                                Vector128<float> parameter1 = Sse.LoadVector128(pParameters + baseIndex1);
-                                Vector128<float> parameter2 = Sse.LoadVector128(pParameters + baseIndex2);
-                                Vector128<float> parameter3 = Sse.LoadVector128(pParameters + baseIndex3);
+                            Vector128<float> parameter0 = Sse.LoadVector128(pParameters + baseIndex0);
+                            Vector128<float> parameter1 = Sse.LoadVector128(pParameters + baseIndex1);
+                            Vector128<float> parameter2 = Sse.LoadVector128(pParameters + baseIndex2);
+                            Vector128<float> parameter3 = Sse.LoadVector128(pParameters + baseIndex3);
 
-                                Vector128<int> intInput0 = Sse41.ConvertToVector128Int32(pInput + inputIndex0);
-                                Vector128<int> intInput1 = Sse41.ConvertToVector128Int32(pInput + inputIndex1);
-                                Vector128<int> intInput2 = Sse41.ConvertToVector128Int32(pInput + inputIndex2);
-                                Vector128<int> intInput3 = Sse41.ConvertToVector128Int32(pInput + inputIndex3);
+                            Vector128<int> intInput0 = Sse41.ConvertToVector128Int32(pInput + inputIndex0);
+                            Vector128<int> intInput1 = Sse41.ConvertToVector128Int32(pInput + inputIndex1);
+                            Vector128<int> intInput2 = Sse41.ConvertToVector128Int32(pInput + inputIndex2);
+                            Vector128<int> intInput3 = Sse41.ConvertToVector128Int32(pInput + inputIndex3);
 
-                                Vector128<float> input0 = Sse2.ConvertToVector128Single(intInput0);
-                                Vector128<float> input1 = Sse2.ConvertToVector128Single(intInput1);
-                                Vector128<float> input2 = Sse2.ConvertToVector128Single(intInput2);
-                                Vector128<float> input3 = Sse2.ConvertToVector128Single(intInput3);
+                            Vector128<float> input0 = Sse2.ConvertToVector128Single(intInput0);
+                            Vector128<float> input1 = Sse2.ConvertToVector128Single(intInput1);
+                            Vector128<float> input2 = Sse2.ConvertToVector128Single(intInput2);
+                            Vector128<float> input3 = Sse2.ConvertToVector128Single(intInput3);
 
-                                Vector128<float> mix0 = Sse.Multiply(input0, parameter0);
-                                Vector128<float> mix1 = Sse.Multiply(input1, parameter1);
-                                Vector128<float> mix2 = Sse.Multiply(input2, parameter2);
-                                Vector128<float> mix3 = Sse.Multiply(input3, parameter3);
+                            Vector128<float> mix0 = Sse.Multiply(input0, parameter0);
+                            Vector128<float> mix1 = Sse.Multiply(input1, parameter1);
+                            Vector128<float> mix2 = Sse.Multiply(input2, parameter2);
+                            Vector128<float> mix3 = Sse.Multiply(input3, parameter3);
 
-                                Vector128<float> mix01 = Sse3.HorizontalAdd(mix0, mix1);
-                                Vector128<float> mix23 = Sse3.HorizontalAdd(mix2, mix3);
+                            Vector128<float> mix01 = Sse3.HorizontalAdd(mix0, mix1);
+                            Vector128<float> mix23 = Sse3.HorizontalAdd(mix2, mix3);
 
-                                Vector128<float> mix0123 = Sse3.HorizontalAdd(mix01, mix23);
+                            Vector128<float> mix0123 = Sse3.HorizontalAdd(mix01, mix23);
 
-                                Sse.Store(pOutput + (uint)i, Sse41.RoundToNearestInteger(mix0123));
-                            }
+                            Sse.Store(pOutput + (uint)i, Sse41.RoundToNearestInteger(mix0123));
                         }
                     }
                 }
@@ -526,34 +522,59 @@ namespace Ryujinx.Audio.Renderer.Dsp
             return _highCurveLut2F;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void ResampleHighQuality(Span<float> outputBuffer, ReadOnlySpan<short> inputBuffer, float ratio, ref float fraction, int sampleCount)
+        private static unsafe void ResampleHighQuality(Span<float> outputBuffer, ReadOnlySpan<short> inputBuffer, float ratio, ref float fraction, int sampleCount)
         {
             ReadOnlySpan<float> parameters = GetHighParameter(ratio);
 
             int inputBufferIndex = 0;
 
-            // TODO: fast path
-
-            for (int i = 0; i < sampleCount; i++)
+            if (Avx2.IsSupported)
             {
-                int baseIndex = (int)(fraction * 128) * 8;
-                ReadOnlySpan<float> parameter = parameters.Slice(baseIndex, 8);
-                ReadOnlySpan<short> currentInput = inputBuffer.Slice(inputBufferIndex, 8);
+                // Fast path; assumes 256-bit vectors for simplicity because the filter is 8 taps
+                fixed (short* pInput = inputBuffer)
+                fixed (float* pParameters = parameters)
+                {
+                    for (int i = 0; i < sampleCount; i++)
+                    {
+                        int baseIndex = (int)(fraction * 128) * 8;
 
-                outputBuffer[i] = (float)Math.Round(currentInput[0] * parameter[0] +
-                                                    currentInput[1] * parameter[1] +
-                                                    currentInput[2] * parameter[2] +
-                                                    currentInput[3] * parameter[3] +
-                                                    currentInput[4] * parameter[4] +
-                                                    currentInput[5] * parameter[5] +
-                                                    currentInput[6] * parameter[6] +
-                                                    currentInput[7] * parameter[7]);
+                        Vector256<int> intInput = Avx2.ConvertToVector256Int32(pInput + inputBufferIndex);
+                        Vector256<float> floatInput = Avx.ConvertToVector256Single(intInput);
+                        Vector256<float> parameter = Avx.LoadVector256(pParameters + baseIndex);
+                        Vector256<float> dp = Avx.DotProduct(floatInput, parameter, control: 0xFF);
 
-                fraction += ratio;
-                inputBufferIndex += (int)MathF.Truncate(fraction);
+                        // avx2 does an 8-element dot product piecewise so we have to sum up 2 intermediate results
+                        outputBuffer[i] = (float)Math.Round(dp[0] + dp[4]);
 
-                fraction -= (int)fraction;
+                        fraction += ratio;
+                        inputBufferIndex += (int)MathF.Truncate(fraction);
+
+                        fraction -= (int)fraction;
+                    }
+                }
+            }
+            else
+            {
+                for (int i = 0; i < sampleCount; i++)
+                {
+                    int baseIndex = (int)(fraction * 128) * 8;
+                    ReadOnlySpan<float> parameter = parameters.Slice(baseIndex, 8);
+                    ReadOnlySpan<short> currentInput = inputBuffer.Slice(inputBufferIndex, 8);
+
+                    outputBuffer[i] = (float)Math.Round(currentInput[0] * parameter[0] +
+                                                        currentInput[1] * parameter[1] +
+                                                        currentInput[2] * parameter[2] +
+                                                        currentInput[3] * parameter[3] +
+                                                        currentInput[4] * parameter[4] +
+                                                        currentInput[5] * parameter[5] +
+                                                        currentInput[6] * parameter[6] +
+                                                        currentInput[7] * parameter[7]);
+
+                    fraction += ratio;
+                    inputBufferIndex += (int)MathF.Truncate(fraction);
+
+                    fraction -= (int)fraction;
+                }
             }
         }
 

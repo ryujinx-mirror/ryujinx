@@ -2,6 +2,7 @@ using Ryujinx.Audio.Renderer.Server.Upsampler;
 using Ryujinx.Common.Memory;
 using System;
 using System.Diagnostics;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 
 namespace Ryujinx.Audio.Renderer.Dsp
@@ -70,16 +71,32 @@ namespace Ryujinx.Audio.Renderer.Dsp
                 return;
             }
 
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             float DoFilterBank(ref UpsamplerBufferState state, in Array20<float> bank)
             {
                 float result = 0.0f;
 
                 Debug.Assert(state.History.Length == HistoryLength);
                 Debug.Assert(bank.Length == FilterBankLength);
-                for (int j = 0; j < FilterBankLength; j++)
+
+                int curIdx = 0;
+                if (Vector.IsHardwareAccelerated)
                 {
-                    result += bank[j] * state.History[j];
+                    // Do SIMD-accelerated block operations where possible.
+                    // Only about a 2x speedup since filter bank length is short
+                    int stopIdx = FilterBankLength - (FilterBankLength % Vector<float>.Count);
+                    while (curIdx < stopIdx)
+                    {
+                        result += Vector.Dot(
+                            new Vector<float>(bank.AsSpan().Slice(curIdx, Vector<float>.Count)),
+                            new Vector<float>(state.History.AsSpan().Slice(curIdx, Vector<float>.Count)));
+                        curIdx += Vector<float>.Count;
+                    }
+                }
+
+                while (curIdx < FilterBankLength)
+                {
+                    result += bank[curIdx] * state.History[curIdx];
+                    curIdx++;
                 }
 
                 return result;
