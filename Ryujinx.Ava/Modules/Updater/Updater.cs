@@ -506,6 +506,11 @@ namespace Ryujinx.Modules
 
                             Dispatcher.UIThread.Post(() =>
                             {
+                                if (tarEntry is null)
+                                {
+                                    return;
+                                }
+
                                 taskDialog.SetProgressBarState(GetPercentage(tarEntry.Size, inStream.Length), TaskDialogProgressState.Normal);
                             });
                         }
