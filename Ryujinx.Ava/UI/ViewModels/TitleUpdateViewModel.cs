@@ -105,12 +105,12 @@ public class TitleUpdateViewModel : BaseModel
             AddUpdate(path);
         }
 
-        // NOTE: Save the list again to remove leftovers.
-        Save();
-
         TitleUpdateModel selected = TitleUpdates.FirstOrDefault(x => x.Path == _titleUpdateWindowData.Selected, null);
 
         SelectedUpdate = selected;
+
+        // NOTE: Save the list again to remove leftovers.
+        Save();
 
         SortUpdates();
     }
