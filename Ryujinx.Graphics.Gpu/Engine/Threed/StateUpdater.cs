@@ -439,7 +439,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             int samplesInY = msaaMode.SamplesInY();
 
             var scissor = _state.State.ScreenScissorState;
-            Size sizeHint = new Size(scissor.X + scissor.Width, scissor.Y + scissor.Height, 1);
+            Size sizeHint = new Size((scissor.X + scissor.Width) * samplesInX, (scissor.Y + scissor.Height) * samplesInY, 1);
 
             int clipRegionWidth = int.MaxValue;
             int clipRegionHeight = int.MaxValue;
