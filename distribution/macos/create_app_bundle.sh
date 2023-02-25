@@ -24,6 +24,7 @@ cp $PUBLISH_DIRECTORY/*.dylib $APP_BUNDLE_DIRECTORY/Contents/Frameworks
 # Then resources
 cp Info.plist $APP_BUNDLE_DIRECTORY/Contents
 cp Ryujinx.icns $APP_BUNDLE_DIRECTORY/Contents/Resources/Ryujinx.icns
+cp updater.sh $APP_BUNDLE_DIRECTORY/Contents/Resources/updater.sh
 cp -r $PUBLISH_DIRECTORY/THIRDPARTY.md $APP_BUNDLE_DIRECTORY/Contents/Resources
 
 echo -n "APPL????" > $APP_BUNDLE_DIRECTORY/Contents/PkgInfo

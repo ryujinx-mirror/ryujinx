@@ -27,7 +27,7 @@ EXECUTABLE_SUB_PATH=Contents/MacOS/Ryujinx
 rm -rf $TEMP_DIRECTORY
 mkdir -p $TEMP_DIRECTORY
 
-DOTNET_COMMON_ARGS="-p:DebugType=embedded -p:Version=$VERSION -p:SourceRevisionId=$SOURCE_REVISION_ID -p:ExtraDefineConstants=DISABLE_UPDATER --self-contained true"
+DOTNET_COMMON_ARGS="-p:DebugType=embedded -p:Version=$VERSION -p:SourceRevisionId=$SOURCE_REVISION_ID --self-contained true"
 
 dotnet restore
 dotnet build -c Release Ryujinx.Ava
