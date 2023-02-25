@@ -241,6 +241,13 @@ namespace Ryujinx.Graphics.Shader.Translation
 
                 this.Copy(Attribute(AttributeConsts.PositionZ), this.FPFusedMultiplyAdd(z, ConstF(0.5f), halfW));
             }
+
+            if (Config.Stage != ShaderStage.Geometry && Config.HasLayerInputAttribute)
+            {
+                Config.SetUsedFeature(FeatureFlags.RtLayer);
+
+                this.Copy(Attribute(AttributeConsts.Layer), Attribute(Config.GpLayerInputAttribute | AttributeConsts.LoadOutputMask));
+            }
         }
 
         public void PrepareForVertexReturn(out Operand oldXLocal, out Operand oldYLocal, out Operand oldZLocal)

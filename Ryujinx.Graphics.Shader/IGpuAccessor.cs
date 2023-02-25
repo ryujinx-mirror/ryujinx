@@ -260,6 +260,15 @@ namespace Ryujinx.Graphics.Shader
         }
 
         /// <summary>
+        /// Queries host GPU geometry shader support.
+        /// </summary>
+        /// <returns>True if the GPU and driver supports geometry shaders, false otherwise</returns>
+        bool QueryHostSupportsGeometryShader()
+        {
+            return true;
+        }
+
+        /// <summary>
         /// Queries host GPU geometry shader passthrough support.
         /// </summary>
         /// <returns>True if the GPU and driver supports geometry shader passthrough, false otherwise</returns>

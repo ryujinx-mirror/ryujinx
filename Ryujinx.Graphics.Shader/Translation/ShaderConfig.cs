@@ -20,6 +20,8 @@ namespace Ryujinx.Graphics.Shader.Translation
         public bool LastInPipeline { get; private set; }
         public bool LastInVertexPipeline { get; private set; }
 
+        public bool HasLayerInputAttribute { get; private set; }
+        public int GpLayerInputAttribute { get; private set; }
         public int ThreadsPerInputPrimitive { get; }
 
         public OutputTopology OutputTopology { get; }
@@ -243,6 +245,22 @@ namespace Ryujinx.Graphics.Shader.Translation
         {
             LayerOutputWritten = true;
             LayerOutputAttribute = attr;
+        }
+
+        public void SetGeometryShaderLayerInputAttribute(int attr)
+        {
+            HasLayerInputAttribute = true;
+            GpLayerInputAttribute = attr;
+        }
+
+        public void SetLastInVertexPipeline(bool hasFragment)
+        {
+            if (!hasFragment)
+            {
+                LastInPipeline = true;
+            }
+
+            LastInVertexPipeline = true;
         }
 
         public void SetInputUserAttributeFixedFunc(int index)
@@ -706,13 +724,15 @@ namespace Ryujinx.Graphics.Shader.Translation
             return FindDescriptorIndex(GetImageDescriptors(), texOp);
         }
 
-        public ShaderProgramInfo CreateProgramInfo()
+        public ShaderProgramInfo CreateProgramInfo(ShaderIdentification identification = ShaderIdentification.None)
         {
             return new ShaderProgramInfo(
                 GetConstantBufferDescriptors(),
                 GetStorageBufferDescriptors(),
                 GetTextureDescriptors(),
                 GetImageDescriptors(),
+                identification,
+                GpLayerInputAttribute,
                 Stage,
                 UsedFeatures.HasFlag(FeatureFlags.InstanceId),
                 UsedFeatures.HasFlag(FeatureFlags.DrawParameters),

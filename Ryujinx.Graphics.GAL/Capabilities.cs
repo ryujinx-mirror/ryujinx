@@ -26,6 +26,7 @@ namespace Ryujinx.Graphics.GAL
         public readonly bool SupportsBlendEquationAdvanced;
         public readonly bool SupportsFragmentShaderInterlock;
         public readonly bool SupportsFragmentShaderOrderingIntel;
+        public readonly bool SupportsGeometryShader;
         public readonly bool SupportsGeometryShaderPassthrough;
         public readonly bool SupportsImageLoadFormatted;
         public readonly bool SupportsLayerVertexTessellation;
@@ -68,6 +69,7 @@ namespace Ryujinx.Graphics.GAL
             bool supportsBlendEquationAdvanced,
             bool supportsFragmentShaderInterlock,
             bool supportsFragmentShaderOrderingIntel,
+            bool supportsGeometryShader,
             bool supportsGeometryShaderPassthrough,
             bool supportsImageLoadFormatted,
             bool supportsLayerVertexTessellation,
@@ -107,6 +109,7 @@ namespace Ryujinx.Graphics.GAL
             SupportsBlendEquationAdvanced = supportsBlendEquationAdvanced;
             SupportsFragmentShaderInterlock = supportsFragmentShaderInterlock;
             SupportsFragmentShaderOrderingIntel = supportsFragmentShaderOrderingIntel;
+            SupportsGeometryShader = supportsGeometryShader;
             SupportsGeometryShaderPassthrough = supportsGeometryShaderPassthrough;
             SupportsImageLoadFormatted = supportsImageLoadFormatted;
             SupportsLayerVertexTessellation = supportsLayerVertexTessellation;

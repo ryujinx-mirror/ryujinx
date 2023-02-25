@@ -77,9 +77,11 @@ namespace Ryujinx.Graphics.Shader.Translation
                 funcs[i] = new Function(cfg.Blocks, $"fun{i}", false, inArgumentsCount, outArgumentsCount);
             }
 
+            var identification = ShaderIdentifier.Identify(funcs, config);
+
             var sInfo = StructuredProgram.MakeStructuredProgram(funcs, config);
 
-            var info = config.CreateProgramInfo();
+            var info = config.CreateProgramInfo(identification);
 
             return config.Options.TargetLanguage switch
             {

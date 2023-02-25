@@ -353,6 +353,11 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 }
             }
 
+            if (!_context.Capabilities.SupportsGeometryShader)
+            {
+                TryRemoveGeometryStage(translatorContexts);
+            }
+
             CachedShaderStage[] shaders = new CachedShaderStage[Constants.ShaderStages + 1];
             List<ShaderSource> shaderSources = new List<ShaderSource>();
 
@@ -419,6 +424,39 @@ namespace Ryujinx.Graphics.Gpu.Shader
             _gpPrograms[addresses] = gpShaders;
 
             return gpShaders;
+        }
+
+        /// <summary>
+        /// Tries to eliminate the geometry stage from the array of translator contexts.
+        /// </summary>
+        /// <param name="translatorContexts">Array of translator contexts</param>
+        public static void TryRemoveGeometryStage(TranslatorContext[] translatorContexts)
+        {
+            if (translatorContexts[4] != null)
+            {
+                // We have a geometry shader, but geometry shaders are not supported.
+                // Try to eliminate the geometry shader.
+
+                ShaderProgramInfo info = translatorContexts[4].Translate().Info;
+
+                if (info.Identification == ShaderIdentification.GeometryLayerPassthrough)
+                {
+                    // We managed to identify that this geometry shader is only used to set the output Layer value,
+                    // we can set the Layer on the previous stage instead (usually the vertex stage) and eliminate it.
+
+                    for (int i = 3; i >= 1; i--)
+                    {
+                        if (translatorContexts[i] != null)
+                        {
+                            translatorContexts[i].SetGeometryShaderLayerInputAttribute(info.GpLayerInputAttribute);
+                            translatorContexts[i].SetLastInVertexPipeline(translatorContexts[5] != null);
+                            break;
+                        }
+                    }
+
+                    translatorContexts[4] = null;
+                }
+            }
         }
 
         /// <summary>

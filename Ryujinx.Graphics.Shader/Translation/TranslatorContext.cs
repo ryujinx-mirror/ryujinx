@@ -138,6 +138,16 @@ namespace Ryujinx.Graphics.Shader.Translation
             _config.MergeFromtNextStage(nextStage._config);
         }
 
+        public void SetGeometryShaderLayerInputAttribute(int attr)
+        {
+            _config.SetGeometryShaderLayerInputAttribute(attr);
+        }
+
+        public void SetLastInVertexPipeline(bool hasFragment)
+        {
+            _config.SetLastInVertexPipeline(hasFragment);
+        }
+
         public ShaderProgram Translate(TranslatorContext other = null)
         {
             FunctionCode[] code = EmitShader(_program, _config, initializeOutputs: other == null, out _);

@@ -22,7 +22,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
         private const ushort FileFormatVersionMajor = 1;
         private const ushort FileFormatVersionMinor = 2;
         private const uint FileFormatVersionPacked = ((uint)FileFormatVersionMajor << 16) | FileFormatVersionMinor;
-        private const uint CodeGenVersion = 4369;
+        private const uint CodeGenVersion = 4368;
 
         private const string SharedTocFileName = "shared.toc";
         private const string SharedDataFileName = "shared.data";
@@ -774,6 +774,8 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
                 sBuffers,
                 textures,
                 images,
+                ShaderIdentification.None,
+                0,
                 dataInfo.Stage,
                 dataInfo.UsesInstanceId,
                 dataInfo.UsesDrawParameters,

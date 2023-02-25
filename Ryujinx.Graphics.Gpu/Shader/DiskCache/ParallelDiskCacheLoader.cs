@@ -633,6 +633,11 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
                 }
             }
 
+            if (!_context.Capabilities.SupportsGeometryShader)
+            {
+                ShaderCache.TryRemoveGeometryStage(translatorContexts);
+            }
+
             CachedShaderStage[] shaders = new CachedShaderStage[guestShaders.Length];
             List<ShaderProgram> translatedStages = new List<ShaderProgram>();
 
