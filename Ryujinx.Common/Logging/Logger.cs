@@ -1,3 +1,4 @@
+using Ryujinx.Common.SystemInterop;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -13,6 +14,8 @@ namespace Ryujinx.Common.Logging
         private static readonly bool[] m_EnabledClasses;
 
         private static readonly List<ILogTarget> m_LogTargets;
+
+        private static readonly StdErrAdapter _stdErrAdapter;
 
         public static event EventHandler<LogEventArgs> Updated;
 
@@ -77,7 +80,13 @@ namespace Ryujinx.Common.Logging
                 {
                     Updated?.Invoke(null, new LogEventArgs(Level, m_Time.Elapsed, Thread.CurrentThread.Name, FormatMessage(logClass, caller, "Stubbed. " + message), data));
                 }
-            }            
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public void PrintRawMsg(string message)
+            {
+                Updated?.Invoke(null, new LogEventArgs(Level, m_Time.Elapsed, Thread.CurrentThread.Name, message));
+            }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private static string FormatMessage(LogClass Class, string Caller, string Message) => $"{Class} {Caller}: {Message}";
@@ -119,6 +128,8 @@ namespace Ryujinx.Common.Logging
             Warning = new Log(LogLevel.Warning);
             Info = new Log(LogLevel.Info);
             Trace = new Log(LogLevel.Trace);
+
+            _stdErrAdapter = new StdErrAdapter();
         }
 
         public static void RestartTime()
@@ -163,6 +174,8 @@ namespace Ryujinx.Common.Logging
         public static void Shutdown()
         {
             Updated = null;
+
+            _stdErrAdapter.Dispose();
 
             foreach (var target in m_LogTargets)
             {
