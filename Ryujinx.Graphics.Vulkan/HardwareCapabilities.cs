@@ -33,6 +33,8 @@ namespace Ryujinx.Graphics.Vulkan
         public readonly bool SupportsMultiView;
         public readonly bool SupportsNullDescriptors;
         public readonly bool SupportsPushDescriptors;
+        public readonly bool SupportsPrimitiveTopologyListRestart;
+        public readonly bool SupportsPrimitiveTopologyPatchListRestart;
         public readonly bool SupportsTransformFeedback;
         public readonly bool SupportsTransformFeedbackQueries;
         public readonly bool SupportsPreciseOcclusionQueries;
@@ -63,6 +65,8 @@ namespace Ryujinx.Graphics.Vulkan
             bool supportsMultiView,
             bool supportsNullDescriptors,
             bool supportsPushDescriptors,
+            bool supportsPrimitiveTopologyListRestart,
+            bool supportsPrimitiveTopologyPatchListRestart,
             bool supportsTransformFeedback,
             bool supportsTransformFeedbackQueries,
             bool supportsPreciseOcclusionQueries,
@@ -92,6 +96,8 @@ namespace Ryujinx.Graphics.Vulkan
             SupportsMultiView = supportsMultiView;
             SupportsNullDescriptors = supportsNullDescriptors;
             SupportsPushDescriptors = supportsPushDescriptors;
+            SupportsPrimitiveTopologyListRestart = supportsPrimitiveTopologyListRestart;
+            SupportsPrimitiveTopologyPatchListRestart = supportsPrimitiveTopologyPatchListRestart;
             SupportsTransformFeedback = supportsTransformFeedback;
             SupportsTransformFeedbackQueries = supportsTransformFeedbackQueries;
             SupportsPreciseOcclusionQueries = supportsPreciseOcclusionQueries;

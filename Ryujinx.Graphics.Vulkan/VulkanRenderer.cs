@@ -195,6 +195,11 @@ namespace Ryujinx.Graphics.Vulkan
                 SType = StructureType.PhysicalDeviceFeatures2
             };
 
+            PhysicalDevicePrimitiveTopologyListRestartFeaturesEXT featuresPrimitiveTopologyListRestart = new PhysicalDevicePrimitiveTopologyListRestartFeaturesEXT()
+            {
+                SType = StructureType.PhysicalDevicePrimitiveTopologyListRestartFeaturesExt
+            };
+
             PhysicalDeviceRobustness2FeaturesEXT featuresRobustness2 = new PhysicalDeviceRobustness2FeaturesEXT()
             {
                 SType = StructureType.PhysicalDeviceRobustness2FeaturesExt
@@ -215,8 +220,14 @@ namespace Ryujinx.Graphics.Vulkan
                 SType = StructureType.PhysicalDevicePortabilitySubsetFeaturesKhr
             };
 
+            if (supportedExtensions.Contains("VK_EXT_primitive_topology_list_restart"))
+            {
+                features2.PNext = &featuresPrimitiveTopologyListRestart;
+            }
+
             if (supportedExtensions.Contains("VK_EXT_robustness2"))
             {
+                featuresRobustness2.PNext = features2.PNext;
                 features2.PNext = &featuresRobustness2;
             }
 
@@ -288,6 +299,8 @@ namespace Ryujinx.Graphics.Vulkan
                 features2.Features.MultiViewport,
                 featuresRobustness2.NullDescriptor || IsMoltenVk,
                 supportedExtensions.Contains(KhrPushDescriptor.ExtensionName),
+                featuresPrimitiveTopologyListRestart.PrimitiveTopologyListRestart,
+                featuresPrimitiveTopologyListRestart.PrimitiveTopologyPatchListRestart,
                 supportsTransformFeedback,
                 propertiesTransformFeedback.TransformFeedbackQueries,
                 features2.Features.OcclusionQueryPrecise,

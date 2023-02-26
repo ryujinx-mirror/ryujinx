@@ -32,6 +32,7 @@ namespace Ryujinx.Graphics.Vulkan
             "VK_EXT_descriptor_indexing", // Enabling this works around an issue with disposed buffer bindings on RADV.
             "VK_EXT_fragment_shader_interlock",
             "VK_EXT_index_type_uint8",
+            "VK_EXT_primitive_topology_list_restart",
             "VK_EXT_robustness2",
             "VK_EXT_shader_stencil_export",
             "VK_KHR_shader_float16_int8",
@@ -429,6 +430,17 @@ namespace Ryujinx.Graphics.Vulkan
                 features2.PNext = &supportedFeaturesCustomBorderColor;
             }
 
+            PhysicalDevicePrimitiveTopologyListRestartFeaturesEXT supportedFeaturesPrimitiveTopologyListRestart = new PhysicalDevicePrimitiveTopologyListRestartFeaturesEXT()
+            {
+                SType = StructureType.PhysicalDevicePrimitiveTopologyListRestartFeaturesExt,
+                PNext = features2.PNext
+            };
+
+            if (supportedExtensions.Contains("VK_EXT_primitive_topology_list_restart"))
+            {
+                features2.PNext = &supportedFeaturesPrimitiveTopologyListRestart;
+            }
+
             PhysicalDeviceTransformFeedbackFeaturesEXT supportedFeaturesTransformFeedback = new PhysicalDeviceTransformFeedbackFeaturesEXT()
             {
                 SType = StructureType.PhysicalDeviceTransformFeedbackFeaturesExt,
@@ -495,6 +507,21 @@ namespace Ryujinx.Graphics.Vulkan
                 };
 
                 pExtendedFeatures = &featuresTransformFeedback;
+            }
+
+            PhysicalDevicePrimitiveTopologyListRestartFeaturesEXT featuresPrimitiveTopologyListRestart;
+
+            if (supportedExtensions.Contains("VK_EXT_primitive_topology_list_restart"))
+            {
+                featuresPrimitiveTopologyListRestart = new PhysicalDevicePrimitiveTopologyListRestartFeaturesEXT()
+                {
+                    SType = StructureType.PhysicalDevicePrimitiveTopologyListRestartFeaturesExt,
+                    PNext = pExtendedFeatures,
+                    PrimitiveTopologyListRestart = supportedFeaturesPrimitiveTopologyListRestart.PrimitiveTopologyListRestart,
+                    PrimitiveTopologyPatchListRestart = supportedFeaturesPrimitiveTopologyListRestart.PrimitiveTopologyPatchListRestart
+                };
+
+                pExtendedFeatures = &featuresPrimitiveTopologyListRestart;
             }
 
             PhysicalDeviceRobustness2FeaturesEXT featuresRobustness2;

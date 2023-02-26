@@ -417,11 +417,22 @@ namespace Ryujinx.Graphics.Vulkan
 
                 bool primitiveRestartEnable = PrimitiveRestartEnable;
 
-                primitiveRestartEnable &= Topology == PrimitiveTopology.LineStrip ||
-                                          Topology == PrimitiveTopology.TriangleStrip ||
-                                          Topology == PrimitiveTopology.TriangleFan ||
-                                          Topology == PrimitiveTopology.LineStripWithAdjacency ||
-                                          Topology == PrimitiveTopology.TriangleStripWithAdjacency;
+                bool topologySupportsRestart;
+
+                if (gd.Capabilities.SupportsPrimitiveTopologyListRestart)
+                {
+                    topologySupportsRestart = gd.Capabilities.SupportsPrimitiveTopologyPatchListRestart || Topology != PrimitiveTopology.PatchList;
+                }
+                else
+                {
+                    topologySupportsRestart = Topology == PrimitiveTopology.LineStrip ||
+                                              Topology == PrimitiveTopology.TriangleStrip ||
+                                              Topology == PrimitiveTopology.TriangleFan ||
+                                              Topology == PrimitiveTopology.LineStripWithAdjacency ||
+                                              Topology == PrimitiveTopology.TriangleStripWithAdjacency;
+                }
+
+                primitiveRestartEnable &= topologySupportsRestart;
 
                 var inputAssemblyState = new PipelineInputAssemblyStateCreateInfo()
                 {
