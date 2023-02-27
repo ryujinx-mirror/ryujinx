@@ -95,10 +95,14 @@ namespace Ryujinx.Ui.Windows
         [GUI] Entry           _graphicsShadersDumpPath;
         [GUI] ComboBoxText    _anisotropy;
         [GUI] ComboBoxText    _aspectRatio;
+        [GUI] ComboBoxText    _antiAliasing;
+        [GUI] ComboBoxText    _scalingFilter;
         [GUI] ComboBoxText    _graphicsBackend;
         [GUI] ComboBoxText    _preferredGpu;
         [GUI] ComboBoxText    _resScaleCombo;
         [GUI] Entry           _resScaleText;
+        [GUI] Adjustment      _scalingFilterLevel;
+        [GUI] Scale           _scalingFilterSlider;
         [GUI] ToggleButton    _configureController1;
         [GUI] ToggleButton    _configureController2;
         [GUI] ToggleButton    _configureController3;
@@ -139,6 +143,7 @@ namespace Ryujinx.Ui.Windows
             _systemTimeZoneEntry.FocusOutEvent += TimeZoneEntry_FocusOut;
 
             _resScaleCombo.Changed += (sender, args) => _resScaleText.Visible = _resScaleCombo.ActiveId == "-1";
+            _scalingFilter.Changed += (sender, args) => _scalingFilterSlider.Visible = _scalingFilter.ActiveId == "2";
             _galThreading.Changed += (sender, args) =>
             {
                 if (_galThreading.ActiveId != ConfigurationState.Instance.Graphics.BackendThreading.Value.ToString())
@@ -338,6 +343,8 @@ namespace Ryujinx.Ui.Windows
             _anisotropy.SetActiveId(ConfigurationState.Instance.Graphics.MaxAnisotropy.Value.ToString());
             _aspectRatio.SetActiveId(((int)ConfigurationState.Instance.Graphics.AspectRatio.Value).ToString());
             _graphicsBackend.SetActiveId(((int)ConfigurationState.Instance.Graphics.GraphicsBackend.Value).ToString());
+            _antiAliasing.SetActiveId(((int)ConfigurationState.Instance.Graphics.AntiAliasing.Value).ToString());
+            _scalingFilter.SetActiveId(((int)ConfigurationState.Instance.Graphics.ScalingFilter.Value).ToString());
 
             UpdatePreferredGpuComboBox();
 
@@ -345,7 +352,9 @@ namespace Ryujinx.Ui.Windows
 
             _custThemePath.Buffer.Text           = ConfigurationState.Instance.Ui.CustomThemePath;
             _resScaleText.Buffer.Text            = ConfigurationState.Instance.Graphics.ResScaleCustom.Value.ToString();
+            _scalingFilterLevel.Value            = ConfigurationState.Instance.Graphics.ScalingFilterLevel.Value;
             _resScaleText.Visible                = _resScaleCombo.ActiveId == "-1";
+            _scalingFilterSlider.Visible         = _scalingFilter.ActiveId == "2";
             _graphicsShadersDumpPath.Buffer.Text = ConfigurationState.Instance.Graphics.ShadersDumpPath;
             _fsLogSpinAdjustment.Value           = ConfigurationState.Instance.System.FsGlobalAccessLogMode;
             _systemTimeOffset                    = ConfigurationState.Instance.System.SystemTimeOffset;
@@ -605,6 +614,9 @@ namespace Ryujinx.Ui.Windows
             ConfigurationState.Instance.Graphics.ResScale.Value                   = int.Parse(_resScaleCombo.ActiveId);
             ConfigurationState.Instance.Graphics.ResScaleCustom.Value             = resScaleCustom;
             ConfigurationState.Instance.System.AudioVolume.Value                  = (float)_audioVolumeSlider.Value / 100.0f;
+            ConfigurationState.Instance.Graphics.AntiAliasing.Value               = Enum.Parse<AntiAliasing>(_antiAliasing.ActiveId);
+            ConfigurationState.Instance.Graphics.ScalingFilter.Value              = Enum.Parse<ScalingFilter>(_scalingFilter.ActiveId);
+            ConfigurationState.Instance.Graphics.ScalingFilterLevel.Value         = (int)_scalingFilterLevel.Value;
 
             _previousVolumeLevel = ConfigurationState.Instance.System.AudioVolume.Value;
 

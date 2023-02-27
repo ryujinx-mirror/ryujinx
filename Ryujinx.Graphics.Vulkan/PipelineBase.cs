@@ -150,6 +150,28 @@ namespace Ryujinx.Graphics.Vulkan
                 null);
         }
 
+        public void ComputeBarrier()
+        {
+            MemoryBarrier memoryBarrier = new MemoryBarrier()
+            {
+                SType = StructureType.MemoryBarrier,
+                SrcAccessMask = AccessFlags.MemoryReadBit | AccessFlags.MemoryWriteBit,
+                DstAccessMask = AccessFlags.MemoryReadBit | AccessFlags.MemoryWriteBit
+            };
+
+            Gd.Api.CmdPipelineBarrier(
+                CommandBuffer,
+                PipelineStageFlags.ComputeShaderBit,
+                PipelineStageFlags.AllCommandsBit,
+                0,
+                1,
+                new ReadOnlySpan<MemoryBarrier>(memoryBarrier),
+                0,
+                ReadOnlySpan<BufferMemoryBarrier>.Empty,
+                0,
+                ReadOnlySpan<ImageMemoryBarrier>.Empty);
+        }
+
         public void BeginTransformFeedback(GAL.PrimitiveTopology topology)
         {
             _tfEnabled = true;
@@ -801,6 +823,11 @@ namespace Ryujinx.Graphics.Vulkan
         public void SetImage(int binding, ITexture image, GAL.Format imageFormat)
         {
             _descriptorSetUpdater.SetImage(binding, image, imageFormat);
+        }
+
+        public void SetImage(int binding, Auto<DisposableImageView> image)
+        {
+            _descriptorSetUpdater.SetImage(binding, image);
         }
 
         public void SetIndexBuffer(BufferRange buffer, GAL.IndexType type)

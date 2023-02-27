@@ -171,6 +171,11 @@ namespace Ryujinx.Ava
             ConfigurationState.Instance.Graphics.AspectRatio.Event         += UpdateAspectRatioState;
             ConfigurationState.Instance.System.EnableDockedMode.Event      += UpdateDockedModeState;
             ConfigurationState.Instance.System.AudioVolume.Event           += UpdateAudioVolumeState;
+            ConfigurationState.Instance.System.EnableDockedMode.Event      += UpdateDockedModeState;
+            ConfigurationState.Instance.System.AudioVolume.Event           += UpdateAudioVolumeState;
+            ConfigurationState.Instance.Graphics.AntiAliasing.Event        += UpdateAntiAliasing;
+            ConfigurationState.Instance.Graphics.ScalingFilter.Event       += UpdateScalingFilter;
+            ConfigurationState.Instance.Graphics.ScalingFilterLevel.Event  += UpdateScalingFilterLevel;
 
             _gpuCancellationTokenSource = new CancellationTokenSource();
         }
@@ -192,6 +197,17 @@ namespace Ryujinx.Ava
                                           point.Y <= bounds.Height + bounds.Y;
                 }
             }
+        }
+        private void UpdateScalingFilterLevel(object sender, ReactiveEventArgs<int> e)
+        {
+            _renderer.Window?.SetScalingFilter((Graphics.GAL.ScalingFilter)ConfigurationState.Instance.Graphics.ScalingFilter.Value);
+            _renderer.Window?.SetScalingFilterLevel(ConfigurationState.Instance.Graphics.ScalingFilterLevel.Value);
+        }
+
+        private void UpdateScalingFilter(object sender, ReactiveEventArgs<Ryujinx.Common.Configuration.ScalingFilter> e)
+        {
+            _renderer.Window?.SetScalingFilter((Graphics.GAL.ScalingFilter)ConfigurationState.Instance.Graphics.ScalingFilter.Value);
+            _renderer.Window?.SetScalingFilterLevel(ConfigurationState.Instance.Graphics.ScalingFilterLevel.Value);
         }
 
         private void ShowCursor()
@@ -345,6 +361,11 @@ namespace Ryujinx.Ava
             }
         }
 
+        private void UpdateAntiAliasing(object sender, ReactiveEventArgs<Ryujinx.Common.Configuration.AntiAliasing> e)
+        {
+            _renderer?.Window?.SetAntiAliasing((Graphics.GAL.AntiAliasing)e.NewValue);
+        }
+
         private void UpdateDockedModeState(object sender, ReactiveEventArgs<bool> e)
         {
             Device?.System.ChangeDockedModeState(e.NewValue);
@@ -411,6 +432,9 @@ namespace Ryujinx.Ava
             ConfigurationState.Instance.Graphics.AspectRatio.Event         -= UpdateAspectRatioState;
             ConfigurationState.Instance.System.EnableDockedMode.Event      -= UpdateDockedModeState;
             ConfigurationState.Instance.System.AudioVolume.Event           -= UpdateAudioVolumeState;
+            ConfigurationState.Instance.Graphics.ScalingFilter.Event       -= UpdateScalingFilter;
+            ConfigurationState.Instance.Graphics.ScalingFilterLevel.Event  -= UpdateScalingFilterLevel;
+            ConfigurationState.Instance.Graphics.AntiAliasing.Event        -= UpdateAntiAliasing;
 
             _topLevel.PointerMoved -= TopLevel_PointerMoved;
 
@@ -787,6 +811,10 @@ namespace Ryujinx.Ava
             (_rendererHost.EmbeddedWindow as EmbeddedWindowOpenGL)?.InitializeBackgroundContext(_renderer);
 
             Device.Gpu.Renderer.Initialize(_glLogLevel);
+
+            _renderer?.Window?.SetAntiAliasing((Graphics.GAL.AntiAliasing)ConfigurationState.Instance.Graphics.AntiAliasing.Value);
+            _renderer?.Window?.SetScalingFilter((Graphics.GAL.ScalingFilter)ConfigurationState.Instance.Graphics.ScalingFilter.Value);
+            _renderer?.Window?.SetScalingFilterLevel(ConfigurationState.Instance.Graphics.ScalingFilterLevel.Value);
 
             Width = (int)_rendererHost.Bounds.Width;
             Height = (int)_rendererHost.Bounds.Height;

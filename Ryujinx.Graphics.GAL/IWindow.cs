@@ -9,5 +9,9 @@ namespace Ryujinx.Graphics.GAL
         void SetSize(int width, int height);
 
         void ChangeVSyncMode(bool vsyncEnabled);
+
+        void SetAntiAliasing(AntiAliasing antialiasing);
+        void SetScalingFilter(ScalingFilter type);
+        void SetScalingFilterLevel(float level);
     }
 }

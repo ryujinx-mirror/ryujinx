@@ -27,6 +27,7 @@ namespace Ryujinx.Ui
     using Image = SixLabors.ImageSharp.Image;
     using Key = Input.Key;
     using Switch = HLE.Switch;
+    using ScalingFilter = Graphics.GAL.ScalingFilter;
 
     public abstract class RendererWidgetBase : DrawingArea
     {
@@ -116,6 +117,21 @@ namespace Ryujinx.Ui
             _lastCursorMoveTime = Stopwatch.GetTimestamp();
 
             ConfigurationState.Instance.HideCursorOnIdle.Event += HideCursorStateChanged;
+            ConfigurationState.Instance.Graphics.AntiAliasing.Event += UpdateAnriAliasing;
+            ConfigurationState.Instance.Graphics.ScalingFilter.Event += UpdateScalingFilter;
+            ConfigurationState.Instance.Graphics.ScalingFilterLevel.Event += UpdateScalingFilterLevel;
+        }
+
+        private void UpdateScalingFilterLevel(object sender, ReactiveEventArgs<int> e)
+        {
+            Renderer.Window.SetScalingFilter((ScalingFilter)ConfigurationState.Instance.Graphics.ScalingFilter.Value);
+            Renderer.Window.SetScalingFilterLevel(ConfigurationState.Instance.Graphics.ScalingFilterLevel.Value);
+        }
+
+        private void UpdateScalingFilter(object sender, ReactiveEventArgs<Ryujinx.Common.Configuration.ScalingFilter> e)
+        {
+            Renderer.Window.SetScalingFilter((ScalingFilter)ConfigurationState.Instance.Graphics.ScalingFilter.Value);
+            Renderer.Window.SetScalingFilterLevel(ConfigurationState.Instance.Graphics.ScalingFilterLevel.Value);
         }
 
         public abstract void InitializeRenderer();
@@ -149,9 +165,17 @@ namespace Ryujinx.Ui
         private void Renderer_Destroyed(object sender, EventArgs e)
         {
             ConfigurationState.Instance.HideCursorOnIdle.Event -= HideCursorStateChanged;
+            ConfigurationState.Instance.Graphics.AntiAliasing.Event -= UpdateAnriAliasing;
+            ConfigurationState.Instance.Graphics.ScalingFilter.Event -= UpdateScalingFilter;
+            ConfigurationState.Instance.Graphics.ScalingFilterLevel.Event -= UpdateScalingFilterLevel;
 
             NpadManager.Dispose();
             Dispose();
+        }
+
+        private void UpdateAnriAliasing(object sender, ReactiveEventArgs<Ryujinx.Common.Configuration.AntiAliasing> e)
+        {
+            Renderer?.Window.SetAntiAliasing((Graphics.GAL.AntiAliasing)e.NewValue);
         }
 
         protected override bool OnMotionNotifyEvent(EventMotion evnt)
@@ -393,6 +417,10 @@ namespace Ryujinx.Ui
             InitializeRenderer();
 
             Device.Gpu.Renderer.Initialize(_glLogLevel);
+
+            Renderer.Window.SetAntiAliasing((Graphics.GAL.AntiAliasing)ConfigurationState.Instance.Graphics.AntiAliasing.Value);
+            Renderer.Window.SetScalingFilter((Graphics.GAL.ScalingFilter)ConfigurationState.Instance.Graphics.ScalingFilter.Value);
+            Renderer.Window.SetScalingFilterLevel(ConfigurationState.Instance.Graphics.ScalingFilterLevel.Value);
 
             _gpuBackendName = GetGpuBackendName();
             _gpuVendorName = GetGpuVendorName();

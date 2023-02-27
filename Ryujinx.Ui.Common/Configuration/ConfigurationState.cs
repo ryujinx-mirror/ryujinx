@@ -434,6 +434,21 @@ namespace Ryujinx.Ui.Common.Configuration
             public ReactiveObject<GraphicsBackend> GraphicsBackend { get; private set; }
 
             /// <summary>
+            /// Applies anti-aliasing to the renderer.
+            /// </summary>
+            public ReactiveObject<AntiAliasing> AntiAliasing { get; private set; }
+
+            /// <summary>
+            /// Sets the framebuffer upscaling type.
+            /// </summary>
+            public ReactiveObject<ScalingFilter> ScalingFilter { get; private set; }
+
+            /// <summary>
+            /// Sets the framebuffer upscaling level.
+            /// </summary>
+            public ReactiveObject<int> ScalingFilterLevel { get; private set; }
+
+            /// <summary>
             /// Preferred GPU
             /// </summary>
             public ReactiveObject<string> PreferredGpu { get; private set; }
@@ -463,6 +478,12 @@ namespace Ryujinx.Ui.Common.Configuration
                 PreferredGpu.Event               += static (sender, e) => LogValueChange(sender, e, nameof(PreferredGpu));
                 EnableMacroHLE                   = new ReactiveObject<bool>();
                 EnableMacroHLE.Event             += static (sender, e) => LogValueChange(sender, e, nameof(EnableMacroHLE));
+                AntiAliasing                     = new ReactiveObject<AntiAliasing>();
+                AntiAliasing.Event               += static (sender, e) => LogValueChange(sender, e, nameof(AntiAliasing));
+                ScalingFilter                    = new ReactiveObject<ScalingFilter>();
+                ScalingFilter.Event              += static (sender, e) => LogValueChange(sender, e, nameof(ScalingFilter));
+                ScalingFilterLevel               = new ReactiveObject<int>();
+                ScalingFilterLevel.Event         += static (sender, e) => LogValueChange(sender, e, nameof(ScalingFilterLevel));
             }
         }
 
@@ -540,6 +561,9 @@ namespace Ryujinx.Ui.Common.Configuration
                 ResScaleCustom             = Graphics.ResScaleCustom,
                 MaxAnisotropy              = Graphics.MaxAnisotropy,
                 AspectRatio                = Graphics.AspectRatio,
+                AntiAliasing               = Graphics.AntiAliasing,
+                ScalingFilter              = Graphics.ScalingFilter,
+                ScalingFilterLevel         = Graphics.ScalingFilterLevel,
                 GraphicsShadersDumpPath    = Graphics.ShadersDumpPath,
                 LoggingEnableDebug         = Logger.EnableDebug,
                 LoggingEnableStub          = Logger.EnableStub,
@@ -651,6 +675,9 @@ namespace Ryujinx.Ui.Common.Configuration
             Graphics.EnableShaderCache.Value          = true;
             Graphics.EnableTextureRecompression.Value = false;
             Graphics.EnableMacroHLE.Value             = true;
+            Graphics.AntiAliasing.Value               = AntiAliasing.None;
+            Graphics.ScalingFilter.Value              = ScalingFilter.Bilinear;
+            Graphics.ScalingFilterLevel.Value         = 80;
             System.EnablePtc.Value                    = true;
             System.EnableInternetAccess.Value         = false;
             System.EnableFsIntegrityChecks.Value      = true;
@@ -1208,6 +1235,17 @@ namespace Ryujinx.Ui.Common.Configuration
                 configurationFileFormat.UseHypervisor = true;
             }
 
+            if (configurationFileFormat.Version < 44)
+            {
+                Ryujinx.Common.Logging.Logger.Warning?.Print(LogClass.Application, $"Outdated configuration version {configurationFileFormat.Version}, migrating to version 42.");
+
+                configurationFileFormat.AntiAliasing = AntiAliasing.None;
+                configurationFileFormat.ScalingFilter = ScalingFilter.Bilinear;
+                configurationFileFormat.ScalingFilterLevel = 80;
+
+                configurationFileUpdated = true;
+            }
+
             Logger.EnableFileLog.Value                = configurationFileFormat.EnableFileLog;
             Graphics.ResScale.Value                   = configurationFileFormat.ResScale;
             Graphics.ResScaleCustom.Value             = configurationFileFormat.ResScaleCustom;
@@ -1217,6 +1255,9 @@ namespace Ryujinx.Ui.Common.Configuration
             Graphics.BackendThreading.Value           = configurationFileFormat.BackendThreading;
             Graphics.GraphicsBackend.Value            = configurationFileFormat.GraphicsBackend;
             Graphics.PreferredGpu.Value               = configurationFileFormat.PreferredGpu;
+            Graphics.AntiAliasing.Value               = configurationFileFormat.AntiAliasing;
+            Graphics.ScalingFilter.Value              = configurationFileFormat.ScalingFilter;
+            Graphics.ScalingFilterLevel.Value         = configurationFileFormat.ScalingFilterLevel;
             Logger.EnableDebug.Value                  = configurationFileFormat.LoggingEnableDebug;
             Logger.EnableStub.Value                   = configurationFileFormat.LoggingEnableStub;
             Logger.EnableInfo.Value                   = configurationFileFormat.LoggingEnableInfo;
