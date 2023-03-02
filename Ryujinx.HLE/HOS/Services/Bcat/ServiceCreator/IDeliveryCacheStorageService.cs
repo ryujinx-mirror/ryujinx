@@ -20,11 +20,11 @@ namespace Ryujinx.HLE.HOS.Services.Bcat.ServiceCreator
         {
             using var service = new SharedRef<LibHac.Bcat.Impl.Ipc.IDeliveryCacheFileService>();
 
-            Result result = _base.Get.CreateFileService(ref service.Ref());
+            Result result = _base.Get.CreateFileService(ref service.Ref);
 
             if (result.IsSuccess())
             {
-                MakeObject(context, new IDeliveryCacheFileService(ref service.Ref()));
+                MakeObject(context, new IDeliveryCacheFileService(ref service.Ref));
             }
 
             return (ResultCode)result.Value;
@@ -36,11 +36,11 @@ namespace Ryujinx.HLE.HOS.Services.Bcat.ServiceCreator
         {
             using var service = new SharedRef<LibHac.Bcat.Impl.Ipc.IDeliveryCacheDirectoryService>();
 
-            Result result = _base.Get.CreateDirectoryService(ref service.Ref());
+            Result result = _base.Get.CreateDirectoryService(ref service.Ref);
 
             if (result.IsSuccess())
             {
-                MakeObject(context, new IDeliveryCacheDirectoryService(ref service.Ref()));
+                MakeObject(context, new IDeliveryCacheDirectoryService(ref service.Ref));
             }
 
             return (ResultCode)result.Value;

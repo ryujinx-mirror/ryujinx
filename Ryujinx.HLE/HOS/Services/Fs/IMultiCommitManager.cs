@@ -19,7 +19,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
         {
             using SharedRef<LibHac.FsSrv.Sf.IFileSystem> fileSystem = GetObject<IFileSystem>(context, 0).GetBaseFileSystem();
 
-            Result result = _baseCommitManager.Get.Add(ref fileSystem.Ref());
+            Result result = _baseCommitManager.Get.Add(ref fileSystem.Ref);
 
             return (ResultCode)result.Value;
         }

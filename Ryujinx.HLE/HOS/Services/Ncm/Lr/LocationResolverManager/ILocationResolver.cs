@@ -1,5 +1,5 @@
-﻿using LibHac.FsSystem;
-using LibHac.Ncm;
+﻿using LibHac.Ncm;
+using LibHac.Tools.FsSystem.NcaUtils;
 using Ryujinx.HLE.FileSystem;
 using System.Text;
 

@@ -475,7 +475,7 @@ namespace Ryujinx.HLE.HOS
             {
                 using var file = new UniqueRef<IFile>();
 
-                baseRom.OpenFile(ref file.Ref(), entry.FullPath.ToU8Span(), OpenMode.Read).ThrowIfFailure();
+                baseRom.OpenFile(ref file.Ref, entry.FullPath.ToU8Span(), OpenMode.Read).ThrowIfFailure();
                 builder.AddFile(entry.FullPath, file.Release());
             }
 
@@ -494,7 +494,7 @@ namespace Ryujinx.HLE.HOS
             {
                 using var file = new UniqueRef<IFile>();
 
-                fs.OpenFile(ref file.Ref(), entry.FullPath.ToU8Span(), OpenMode.Read).ThrowIfFailure();
+                fs.OpenFile(ref file.Ref, entry.FullPath.ToU8Span(), OpenMode.Read).ThrowIfFailure();
                 if (fileSet.Add(entry.FullPath))
                 {
                     builder.AddFile(entry.FullPath, file.Release());

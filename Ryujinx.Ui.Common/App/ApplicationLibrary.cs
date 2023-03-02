@@ -72,7 +72,7 @@ namespace Ryujinx.Ui.App.Common
         {
             using UniqueRef<IFile> controlFile = new();
 
-            controlFs.OpenFile(ref controlFile.Ref(), "/control.nacp".ToU8Span(), OpenMode.Read).ThrowIfFailure();
+            controlFs.OpenFile(ref controlFile.Ref, "/control.nacp".ToU8Span(), OpenMode.Read).ThrowIfFailure();
             controlFile.Get.Read(out _, 0, outProperty, ReadOption.None).ThrowIfFailure();
         }
 
@@ -178,7 +178,7 @@ namespace Ryujinx.Ui.App.Common
                                         {
                                             using UniqueRef<IFile> ncaFile = new();
 
-                                            pfs.OpenFile(ref ncaFile.Ref(), fileEntry.FullPath.ToU8Span(), OpenMode.Read).ThrowIfFailure();
+                                            pfs.OpenFile(ref ncaFile.Ref, fileEntry.FullPath.ToU8Span(), OpenMode.Read).ThrowIfFailure();
 
                                             Nca nca = new(_virtualFileSystem.KeySet, ncaFile.Get.AsStorage());
                                             int dataIndex = Nca.GetSectionIndexFromType(NcaSectionType.Data, NcaContentType.Program);
@@ -211,7 +211,7 @@ namespace Ryujinx.Ui.App.Common
 
                                     using UniqueRef<IFile> npdmFile = new();
 
-                                    Result result = pfs.OpenFile(ref npdmFile.Ref(), "/main.npdm".ToU8Span(), OpenMode.Read);
+                                    Result result = pfs.OpenFile(ref npdmFile.Ref, "/main.npdm".ToU8Span(), OpenMode.Read);
 
                                     if (ResultFs.PathNotFound.Includes(result))
                                     {
@@ -241,7 +241,7 @@ namespace Ryujinx.Ui.App.Common
                                     {
                                         using UniqueRef<IFile> icon = new();
 
-                                        controlFs.OpenFile(ref icon.Ref(), $"/icon_{_desiredTitleLanguage}.dat".ToU8Span(), OpenMode.Read).ThrowIfFailure();
+                                        controlFs.OpenFile(ref icon.Ref, $"/icon_{_desiredTitleLanguage}.dat".ToU8Span(), OpenMode.Read).ThrowIfFailure();
 
                                         using MemoryStream stream = new();
 
@@ -259,7 +259,7 @@ namespace Ryujinx.Ui.App.Common
 
                                             using var icon = new UniqueRef<IFile>();
 
-                                            controlFs.OpenFile(ref icon.Ref(), entry.FullPath.ToU8Span(), OpenMode.Read).ThrowIfFailure();
+                                            controlFs.OpenFile(ref icon.Ref, entry.FullPath.ToU8Span(), OpenMode.Read).ThrowIfFailure();
 
                                             using MemoryStream stream = new();
                                             
@@ -572,7 +572,7 @@ namespace Ryujinx.Ui.App.Common
                                 {
                                     using var icon = new UniqueRef<IFile>();
 
-                                    controlFs.OpenFile(ref icon.Ref(), $"/icon_{_desiredTitleLanguage}.dat".ToU8Span(), OpenMode.Read).ThrowIfFailure();
+                                    controlFs.OpenFile(ref icon.Ref, $"/icon_{_desiredTitleLanguage}.dat".ToU8Span(), OpenMode.Read).ThrowIfFailure();
 
                                     using MemoryStream stream = new();
 
@@ -590,7 +590,7 @@ namespace Ryujinx.Ui.App.Common
 
                                         using var icon = new UniqueRef<IFile>();
 
-                                        controlFs.OpenFile(ref icon.Ref(), entry.FullPath.ToU8Span(), OpenMode.Read).ThrowIfFailure();
+                                        controlFs.OpenFile(ref icon.Ref, entry.FullPath.ToU8Span(), OpenMode.Read).ThrowIfFailure();
 
                                         using (MemoryStream stream = new())
                                         {

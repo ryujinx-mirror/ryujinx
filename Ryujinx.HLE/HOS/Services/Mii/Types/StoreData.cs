@@ -1,7 +1,5 @@
-﻿using LibHac.Common;
-using Ryujinx.HLE.Utilities;
+﻿using Ryujinx.Common.Utilities;
 using System;
-using System.Diagnostics;
 using System.Runtime.InteropServices;
 
 namespace Ryujinx.HLE.HOS.Services.Mii.Types
@@ -78,7 +76,7 @@ namespace Ryujinx.HLE.HOS.Services.Mii.Types
 
         private ReadOnlySpan<byte> AsSpan()
         {
-            return MemoryMarshal.AsBytes(SpanHelpers.CreateReadOnlySpan(in this, 1));
+            return SpanHelpers.AsReadOnlyByteSpan(ref this);
         }
 
         private ReadOnlySpan<byte> AsSpanWithoutDeviceCrc()

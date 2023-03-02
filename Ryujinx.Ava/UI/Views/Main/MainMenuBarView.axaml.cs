@@ -1,8 +1,8 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
-using LibHac.FsSystem;
 using LibHac.Ncm;
+using LibHac.Tools.FsSystem.NcaUtils;
 using Ryujinx.Ava.Common.Locale;
 using Ryujinx.Ava.UI.Helpers;
 using Ryujinx.Ava.UI.ViewModels;

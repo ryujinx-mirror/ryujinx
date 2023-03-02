@@ -110,7 +110,7 @@ namespace Ryujinx.HLE.HOS
             {
                 using var ncaFile = new UniqueRef<IFile>();
 
-                pfs.OpenFile(ref ncaFile.Ref(), fileEntry.FullPath.ToU8Span(), OpenMode.Read).ThrowIfFailure();
+                pfs.OpenFile(ref ncaFile.Ref, fileEntry.FullPath.ToU8Span(), OpenMode.Read).ThrowIfFailure();
 
                 Nca nca = new Nca(fileSystem.KeySet, ncaFile.Release().AsStorage());
 
@@ -154,7 +154,7 @@ namespace Ryujinx.HLE.HOS
             {
                 using var ncaFile = new UniqueRef<IFile>();
 
-                pfs.OpenFile(ref ncaFile.Ref(), fileEntry.FullPath.ToU8Span(), OpenMode.Read).ThrowIfFailure();
+                pfs.OpenFile(ref ncaFile.Ref, fileEntry.FullPath.ToU8Span(), OpenMode.Read).ThrowIfFailure();
 
                 Nca nca = new Nca(fileSystem.KeySet, ncaFile.Release().AsStorage());
 
@@ -329,7 +329,7 @@ namespace Ryujinx.HLE.HOS
 
             using var npdmFile = new UniqueRef<IFile>();
 
-            Result result = codeFs.OpenFile(ref npdmFile.Ref(), "/main.npdm".ToU8Span(), OpenMode.Read);
+            Result result = codeFs.OpenFile(ref npdmFile.Ref, "/main.npdm".ToU8Span(), OpenMode.Read);
 
             MetaLoader metaData;
 
@@ -356,7 +356,7 @@ namespace Ryujinx.HLE.HOS
 
                 using var nsoFile = new UniqueRef<IFile>();
 
-                codeFs.OpenFile(ref nsoFile.Ref(), $"/{name}".ToU8Span(), OpenMode.Read).ThrowIfFailure();
+                codeFs.OpenFile(ref nsoFile.Ref, $"/{name}".ToU8Span(), OpenMode.Read).ThrowIfFailure();
 
                 nsos[i] = new NsoExecutable(nsoFile.Release().AsStorage(), name);
             }
@@ -371,10 +371,10 @@ namespace Ryujinx.HLE.HOS
             ProgramInfo programInfo = new ProgramInfo(in npdm, displayVersion, usePtc, allowCodeMemoryForJit: false);
             ProgramLoader.LoadNsos(_device.System.KernelContext, metaData, programInfo, executables: programs);
 
-            string titleIdText = npdm.Aci.Value.ProgramId.Value.ToString("x16");
-            bool titleIs64Bit = (npdm.Meta.Value.Flags & 1) != 0;
+            string titleIdText = npdm.Aci.ProgramId.Value.ToString("x16");
+            bool titleIs64Bit = (npdm.Meta.Flags & 1) != 0;
 
-            string programName = Encoding.ASCII.GetString(npdm.Meta.Value.ProgramName).TrimEnd('\0');
+            string programName = Encoding.ASCII.GetString(npdm.Meta.ProgramName).TrimEnd('\0');
 
             Logger.Info?.Print(LogClass.Loader, $"Service Loaded: {programName} [{titleIdText}] [{(titleIs64Bit ? "64-bit" : "32-bit")}]");
         }
@@ -520,7 +520,7 @@ namespace Ryujinx.HLE.HOS
         {
             using var npdmFile = new UniqueRef<IFile>();
 
-            Result result = fs.OpenFile(ref npdmFile.Ref(), "/main.npdm".ToU8Span(), OpenMode.Read);
+            Result result = fs.OpenFile(ref npdmFile.Ref, "/main.npdm".ToU8Span(), OpenMode.Read);
 
             MetaLoader metaData;
 
@@ -543,8 +543,8 @@ namespace Ryujinx.HLE.HOS
 
             metaData.GetNpdm(out var npdm).ThrowIfFailure();
 
-            TitleId = npdm.Aci.Value.ProgramId.Value;
-            TitleIs64Bit = (npdm.Meta.Value.Flags & 1) != 0;
+            TitleId = npdm.Aci.ProgramId.Value;
+            TitleIs64Bit = (npdm.Meta.Flags & 1) != 0;
             _device.System.LibHacHorizonManager.ArpIReader.ApplicationId = new LibHac.ApplicationId(TitleId);
 
             return metaData;
@@ -555,7 +555,7 @@ namespace Ryujinx.HLE.HOS
             using var controlFile = new UniqueRef<IFile>();
 
             IFileSystem controlFs = controlNca.OpenFileSystem(NcaSectionType.Data, device.System.FsIntegrityCheckLevel);
-            Result result = controlFs.OpenFile(ref controlFile.Ref(), "/control.nacp".ToU8Span(), OpenMode.Read);
+            Result result = controlFs.OpenFile(ref controlFile.Ref, "/control.nacp".ToU8Span(), OpenMode.Read);
 
             if (result.IsSuccess())
             {
@@ -603,7 +603,7 @@ namespace Ryujinx.HLE.HOS
 
                 using var nsoFile = new UniqueRef<IFile>();
 
-                codeFs.OpenFile(ref nsoFile.Ref(), $"/{name}".ToU8Span(), OpenMode.Read).ThrowIfFailure();
+                codeFs.OpenFile(ref nsoFile.Ref, $"/{name}".ToU8Span(), OpenMode.Read).ThrowIfFailure();
 
                 nsos[i] = new NsoExecutable(nsoFile.Release().AsStorage(), name);
             }
@@ -752,7 +752,7 @@ namespace Ryujinx.HLE.HOS
 
             _titleName = programInfo.Name;
             TitleId = programInfo.ProgramId;
-            TitleIs64Bit = (npdm.Meta.Value.Flags & 1) != 0;
+            TitleIs64Bit = (npdm.Meta.Flags & 1) != 0;
             _device.System.LibHacHorizonManager.ArpIReader.ApplicationId = new LibHac.ApplicationId(TitleId);
 
             // Explicitly null titleid to disable the shader cache.
@@ -798,7 +798,7 @@ namespace Ryujinx.HLE.HOS
             {
                 using var ncaFile = new UniqueRef<IFile>();
 
-                pfs.OpenFile(ref ncaFile.Ref(), fileEntry.FullPath.ToU8Span(), OpenMode.Read).ThrowIfFailure();
+                pfs.OpenFile(ref ncaFile.Ref, fileEntry.FullPath.ToU8Span(), OpenMode.Read).ThrowIfFailure();
 
                 Nca nca = new Nca(fileSystem.KeySet, ncaFile.Release().AsStorage());
 

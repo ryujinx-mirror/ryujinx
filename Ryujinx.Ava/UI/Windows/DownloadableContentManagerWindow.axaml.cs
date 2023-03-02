@@ -105,7 +105,7 @@ namespace Ryujinx.Ava.UI.Windows
                     {
                         using UniqueRef<IFile> ncaFile = new();
 
-                        partitionFileSystem.OpenFile(ref ncaFile.Ref(), downloadableContentNca.FullPath.ToU8Span(), OpenMode.Read).ThrowIfFailure();
+                        partitionFileSystem.OpenFile(ref ncaFile.Ref, downloadableContentNca.FullPath.ToU8Span(), OpenMode.Read).ThrowIfFailure();
 
                         Nca nca = TryOpenNca(ncaFile.Get.AsStorage(), downloadableContentContainer.ContainerPath);
                         if (nca != null)
@@ -158,7 +158,7 @@ namespace Ryujinx.Ava.UI.Windows
             {
                 using var ncaFile = new UniqueRef<IFile>();
 
-                partitionFileSystem.OpenFile(ref ncaFile.Ref(), fileEntry.FullPath.ToU8Span(), OpenMode.Read).ThrowIfFailure();
+                partitionFileSystem.OpenFile(ref ncaFile.Ref, fileEntry.FullPath.ToU8Span(), OpenMode.Read).ThrowIfFailure();
 
                 Nca nca = TryOpenNca(ncaFile.Get.AsStorage(), path);
                 if (nca == null)

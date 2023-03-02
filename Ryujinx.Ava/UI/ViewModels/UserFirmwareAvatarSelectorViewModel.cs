@@ -126,7 +126,7 @@ namespace Ryujinx.Ava.UI.ViewModels
                         {
                             using var file = new UniqueRef<IFile>();
 
-                            romfs.OpenFile(ref file.Ref(), ("/" + item.FullPath).ToU8Span(), OpenMode.Read).ThrowIfFailure();
+                            romfs.OpenFile(ref file.Ref, ("/" + item.FullPath).ToU8Span(), OpenMode.Read).ThrowIfFailure();
 
                             using (MemoryStream stream = new())
                             using (MemoryStream streamPng = new())

@@ -133,14 +133,14 @@ namespace Ryujinx.HLE.HOS.Services.Ssl
 
                     using var trustedCertsFileRef = new UniqueRef<IFile>();
 
-                    Result result = romfs.OpenFile(ref trustedCertsFileRef.Ref(), "/ssl_TrustedCerts.bdf".ToU8Span(), OpenMode.Read);
+                    Result result = romfs.OpenFile(ref trustedCertsFileRef.Ref, "/ssl_TrustedCerts.bdf".ToU8Span(), OpenMode.Read);
 
                     if (!result.IsSuccess())
                     {
                         // [1.0.0 - 2.3.0]
                         if (ResultFs.PathNotFound.Includes(result))
                         {
-                            result = romfs.OpenFile(ref trustedCertsFileRef.Ref(), "/ssl_TrustedCerts.tcf".ToU8Span(), OpenMode.Read);
+                            result = romfs.OpenFile(ref trustedCertsFileRef.Ref, "/ssl_TrustedCerts.tcf".ToU8Span(), OpenMode.Read);
                         }
 
                         if (result.IsFailure())

@@ -209,7 +209,7 @@ namespace Ryujinx.HLE.FileSystem
             {
                 using var ncaFile = new UniqueRef<IFile>();
 
-                fs.OpenFile(ref ncaFile.Ref(), ncaPath.FullPath.ToU8Span(), OpenMode.Read);
+                fs.OpenFile(ref ncaFile.Ref, ncaPath.FullPath.ToU8Span(), OpenMode.Read);
                 var nca = new Nca(_virtualFileSystem.KeySet, ncaFile.Get.AsStorage());
                 if (nca.Header.ContentType != NcaContentType.Meta)
                 {
@@ -221,7 +221,7 @@ namespace Ryujinx.HLE.FileSystem
                 using var pfs0 = nca.OpenFileSystem(0, integrityCheckLevel);
                 using var cnmtFile = new UniqueRef<IFile>();
 
-                pfs0.OpenFile(ref cnmtFile.Ref(), pfs0.EnumerateEntries().Single().FullPath.ToU8Span(), OpenMode.Read);
+                pfs0.OpenFile(ref cnmtFile.Ref, pfs0.EnumerateEntries().Single().FullPath.ToU8Span(), OpenMode.Read);
 
                 var cnmt = new Cnmt(cnmtFile.Get.AsStream());
                 if (cnmt.Type != ContentMetaType.AddOnContent || (cnmt.TitleId & 0xFFFFFFFFFFFFE000) != aocBaseId)
@@ -276,11 +276,11 @@ namespace Ryujinx.HLE.FileSystem
                 {
                     case ".xci":
                         pfs = new Xci(_virtualFileSystem.KeySet, file.AsStorage()).OpenPartition(XciPartitionType.Secure);
-                        pfs.OpenFile(ref ncaFile.Ref(), aoc.NcaPath.ToU8Span(), OpenMode.Read);
+                        pfs.OpenFile(ref ncaFile.Ref, aoc.NcaPath.ToU8Span(), OpenMode.Read);
                         break;
                     case ".nsp":
                         pfs = new PartitionFileSystem(file.AsStorage());
-                        pfs.OpenFile(ref ncaFile.Ref(), aoc.NcaPath.ToU8Span(), OpenMode.Read);
+                        pfs.OpenFile(ref ncaFile.Ref, aoc.NcaPath.ToU8Span(), OpenMode.Read);
                         break;
                     default:
                         return false; // Print error?
@@ -625,11 +625,11 @@ namespace Ryujinx.HLE.FileSystem
 
             if (filesystem.FileExists($"{path}/00"))
             {
-                filesystem.OpenFile(ref file.Ref(), $"{path}/00".ToU8Span(), mode);
+                filesystem.OpenFile(ref file.Ref, $"{path}/00".ToU8Span(), mode);
             }
             else
             {
-                filesystem.OpenFile(ref file.Ref(), path.ToU8Span(), mode);
+                filesystem.OpenFile(ref file.Ref, path.ToU8Span(), mode);
             }
 
             return file.Release();
@@ -751,7 +751,7 @@ namespace Ryujinx.HLE.FileSystem
 
                         using var metaFile = new UniqueRef<IFile>();
 
-                        if (fs.OpenFile(ref metaFile.Ref(), cnmtPath.ToU8Span(), OpenMode.Read).IsSuccess())
+                        if (fs.OpenFile(ref metaFile.Ref, cnmtPath.ToU8Span(), OpenMode.Read).IsSuccess())
                         {
                             var meta = new Cnmt(metaFile.Get.AsStream());
 
@@ -781,7 +781,7 @@ namespace Ryujinx.HLE.FileSystem
 
                             using var systemVersionFile = new UniqueRef<IFile>();
 
-                            if (romfs.OpenFile(ref systemVersionFile.Ref(), "/file".ToU8Span(), OpenMode.Read).IsSuccess())
+                            if (romfs.OpenFile(ref systemVersionFile.Ref, "/file".ToU8Span(), OpenMode.Read).IsSuccess())
                             {
                                 systemVersion = new SystemVersion(systemVersionFile.Get.AsStream());
                             }
@@ -820,7 +820,7 @@ namespace Ryujinx.HLE.FileSystem
 
                                     using var metaFile = new UniqueRef<IFile>();
 
-                                    if (fs.OpenFile(ref metaFile.Ref(), cnmtPath.ToU8Span(), OpenMode.Read).IsSuccess())
+                                    if (fs.OpenFile(ref metaFile.Ref, cnmtPath.ToU8Span(), OpenMode.Read).IsSuccess())
                                     {
                                         var meta = new Cnmt(metaFile.Get.AsStream());
 
@@ -891,7 +891,7 @@ namespace Ryujinx.HLE.FileSystem
 
                         using var metaFile = new UniqueRef<IFile>();
 
-                        if (fs.OpenFile(ref metaFile.Ref(), cnmtPath.ToU8Span(), OpenMode.Read).IsSuccess())
+                        if (fs.OpenFile(ref metaFile.Ref, cnmtPath.ToU8Span(), OpenMode.Read).IsSuccess())
                         {
                             var meta = new Cnmt(metaFile.Get.AsStream());
 
@@ -909,7 +909,7 @@ namespace Ryujinx.HLE.FileSystem
 
                         using var systemVersionFile = new UniqueRef<IFile>();
 
-                        if (romfs.OpenFile(ref systemVersionFile.Ref(), "/file".ToU8Span(), OpenMode.Read).IsSuccess())
+                        if (romfs.OpenFile(ref systemVersionFile.Ref, "/file".ToU8Span(), OpenMode.Read).IsSuccess())
                         {
                             systemVersion = new SystemVersion(systemVersionFile.Get.AsStream());
                         }
@@ -960,7 +960,7 @@ namespace Ryujinx.HLE.FileSystem
 
                         using var metaFile = new UniqueRef<IFile>();
 
-                        if (fs.OpenFile(ref metaFile.Ref(), cnmtPath.ToU8Span(), OpenMode.Read).IsSuccess())
+                        if (fs.OpenFile(ref metaFile.Ref, cnmtPath.ToU8Span(), OpenMode.Read).IsSuccess())
                         {
                             var meta = new Cnmt(metaFile.Get.AsStream());
 
@@ -1030,7 +1030,7 @@ namespace Ryujinx.HLE.FileSystem
 
                                 using var systemVersionFile = new UniqueRef<IFile>();
 
-                                if (romfs.OpenFile(ref systemVersionFile.Ref(), "/file".ToU8Span(), OpenMode.Read).IsSuccess())
+                                if (romfs.OpenFile(ref systemVersionFile.Ref, "/file".ToU8Span(), OpenMode.Read).IsSuccess())
                                 {
                                     return new SystemVersion(systemVersionFile.Get.AsStream());
                                 }

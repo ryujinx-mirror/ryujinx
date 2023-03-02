@@ -260,15 +260,16 @@ namespace Ryujinx.HLE.FileSystem
             {
                 using var ticketFile = new UniqueRef<IFile>();
 
-                Result result = fs.OpenFile(ref ticketFile.Ref(), ticketEntry.FullPath.ToU8Span(), OpenMode.Read);
+                Result result = fs.OpenFile(ref ticketFile.Ref, ticketEntry.FullPath.ToU8Span(), OpenMode.Read);
 
                 if (result.IsSuccess())
                 {
                     Ticket ticket = new Ticket(ticketFile.Get.AsStream());
+                    var titleKey = ticket.GetTitleKey(KeySet);
 
-                    if (ticket.TitleKeyType == TitleKeyType.Common)
+                    if (titleKey != null)
                     {
-                        KeySet.ExternalKeySet.Add(new RightsId(ticket.RightsId), new AccessKey(ticket.GetTitleKey(KeySet)));
+                        KeySet.ExternalKeySet.Add(new RightsId(ticket.RightsId), new AccessKey(titleKey));
                     }
                 }
             }
@@ -302,7 +303,7 @@ namespace Ryujinx.HLE.FileSystem
 
             using var iterator = new UniqueRef<SaveDataIterator>();
 
-            Result rc = hos.Fs.OpenSaveDataIterator(ref iterator.Ref(), spaceId);
+            Result rc = hos.Fs.OpenSaveDataIterator(ref iterator.Ref, spaceId);
             if (rc.IsFailure()) return rc;
 
             while (true)

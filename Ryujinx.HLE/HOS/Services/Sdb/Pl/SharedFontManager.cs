@@ -77,7 +77,7 @@ namespace Ryujinx.HLE.HOS.Services.Sdb.Pl
 
                                 using var fontFile = new UniqueRef<IFile>();
 
-                                romfs.OpenFile(ref fontFile.Ref(), ("/" + fontFilename).ToU8Span(), OpenMode.Read).ThrowIfFailure();
+                                romfs.OpenFile(ref fontFile.Ref, ("/" + fontFilename).ToU8Span(), OpenMode.Read).ThrowIfFailure();
 
                                 data = DecryptFont(fontFile.Get.AsStream());
                             }

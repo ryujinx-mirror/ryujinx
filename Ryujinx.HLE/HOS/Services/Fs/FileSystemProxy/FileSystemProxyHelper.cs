@@ -30,9 +30,9 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
 
                 ImportTitleKeysFromNsp(nsp.Get, context.Device.System.KeySet);
 
-                using SharedRef<LibHac.FsSrv.Sf.IFileSystem> adapter = FileSystemInterfaceAdapter.CreateShared(ref nsp.Ref(), true);
+                using SharedRef<LibHac.FsSrv.Sf.IFileSystem> adapter = FileSystemInterfaceAdapter.CreateShared(ref nsp.Ref, true);
 
-                openedFileSystem = new IFileSystem(ref adapter.Ref());
+                openedFileSystem = new IFileSystem(ref adapter.Ref);
             }
             catch (HorizonResultException ex)
             {
@@ -58,9 +58,9 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
                 LibHac.Fs.Fsa.IFileSystem fileSystem = nca.OpenFileSystem(NcaSectionType.Data, context.Device.System.FsIntegrityCheckLevel);
                 using var sharedFs = new SharedRef<LibHac.Fs.Fsa.IFileSystem>(fileSystem);
 
-                using SharedRef<LibHac.FsSrv.Sf.IFileSystem> adapter = FileSystemInterfaceAdapter.CreateShared(ref sharedFs.Ref(), true);
+                using SharedRef<LibHac.FsSrv.Sf.IFileSystem> adapter = FileSystemInterfaceAdapter.CreateShared(ref sharedFs.Ref, true);
 
-                openedFileSystem = new IFileSystem(ref adapter.Ref());
+                openedFileSystem = new IFileSystem(ref adapter.Ref);
             }
             catch (HorizonResultException ex)
             {
@@ -98,7 +98,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
 
                     using var ncaFile = new UniqueRef<LibHac.Fs.Fsa.IFile>();
 
-                    Result result = nsp.OpenFile(ref ncaFile.Ref(), filename.ToU8Span(), OpenMode.Read);
+                    Result result = nsp.OpenFile(ref ncaFile.Ref, filename.ToU8Span(), OpenMode.Read);
                     if (result.IsFailure())
                     {
                         return (ResultCode)result.Value;
@@ -121,13 +121,17 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
             {
                 using var ticketFile = new UniqueRef<LibHac.Fs.Fsa.IFile>();
 
-                Result result = nsp.OpenFile(ref ticketFile.Ref(), ticketEntry.FullPath.ToU8Span(), OpenMode.Read);
+                Result result = nsp.OpenFile(ref ticketFile.Ref, ticketEntry.FullPath.ToU8Span(), OpenMode.Read);
 
                 if (result.IsSuccess())
                 {
                     Ticket ticket = new Ticket(ticketFile.Get.AsStream());
+                    var titleKey = ticket.GetTitleKey(keySet);
 
-                    keySet.ExternalKeySet.Add(new RightsId(ticket.RightsId), new AccessKey(ticket.GetTitleKey(keySet)));
+                    if (titleKey != null)
+                    {
+                        keySet.ExternalKeySet.Add(new RightsId(ticket.RightsId), new AccessKey(titleKey));
+                    }
                 }
             }
         }

@@ -1,9 +1,9 @@
 using LibHac.Account;
 using LibHac.Common;
 using LibHac.Fs;
-using LibHac.FsSystem;
 using LibHac.Ncm;
 using LibHac.Ns;
+using LibHac.Tools.FsSystem.NcaUtils;
 using Ryujinx.Common;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.Exceptions;

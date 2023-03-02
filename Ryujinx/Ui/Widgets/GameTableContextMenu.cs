@@ -224,7 +224,7 @@ namespace Ryujinx.Ui.Widgets
                             {
                                 using var ncaFile = new UniqueRef<IFile>();
 
-                                pfs.OpenFile(ref ncaFile.Ref(), fileEntry.FullPath.ToU8Span(), OpenMode.Read).ThrowIfFailure();
+                                pfs.OpenFile(ref ncaFile.Ref, fileEntry.FullPath.ToU8Span(), OpenMode.Read).ThrowIfFailure();
 
                                 Nca nca = new Nca(_virtualFileSystem.KeySet, ncaFile.Release().AsStorage());
 
@@ -280,8 +280,8 @@ namespace Ryujinx.Ui.Widgets
                         using var uniqueSourceFs = new UniqueRef<IFileSystem>(ncaFileSystem);
                         using var uniqueOutputFs = new UniqueRef<IFileSystem>(new LocalFileSystem(destination));
 
-                        fsClient.Register(source.ToU8Span(), ref uniqueSourceFs.Ref());
-                        fsClient.Register(output.ToU8Span(), ref uniqueOutputFs.Ref());
+                        fsClient.Register(source.ToU8Span(), ref uniqueSourceFs.Ref);
+                        fsClient.Register(output.ToU8Span(), ref uniqueOutputFs.Ref);
 
                         (Result? resultCode, bool canceled) = CopyDirectory(fsClient, $"{source}:/", $"{output}:/");
 

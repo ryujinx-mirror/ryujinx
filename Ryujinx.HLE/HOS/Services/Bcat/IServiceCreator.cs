@@ -54,11 +54,11 @@ namespace Ryujinx.HLE.HOS.Services.Bcat
 
             using var serv = new SharedRef<LibHac.Bcat.Impl.Ipc.IDeliveryCacheStorageService>();
 
-            Result rc = _base.Get.CreateDeliveryCacheStorageService(ref serv.Ref(), pid);
+            Result rc = _base.Get.CreateDeliveryCacheStorageService(ref serv.Ref, pid);
 
             if (rc.IsSuccess())
             {
-                MakeObject(context, new IDeliveryCacheStorageService(context, ref serv.Ref()));
+                MakeObject(context, new IDeliveryCacheStorageService(context, ref serv.Ref));
             }
 
             return (ResultCode)rc.Value;
@@ -72,11 +72,11 @@ namespace Ryujinx.HLE.HOS.Services.Bcat
 
             using var service = new SharedRef<LibHac.Bcat.Impl.Ipc.IDeliveryCacheStorageService>();
 
-            Result rc = _base.Get.CreateDeliveryCacheStorageServiceWithApplicationId(ref service.Ref(), applicationId);
+            Result rc = _base.Get.CreateDeliveryCacheStorageServiceWithApplicationId(ref service.Ref, applicationId);
 
             if (rc.IsSuccess())
             {
-                MakeObject(context, new IDeliveryCacheStorageService(context, ref service.Ref()));
+                MakeObject(context, new IDeliveryCacheStorageService(context, ref service.Ref));
             }
 
             return (ResultCode)rc.Value;

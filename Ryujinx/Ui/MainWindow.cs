@@ -2,10 +2,10 @@
 using Gtk;
 using LibHac.Common;
 using LibHac.Common.Keys;
-using LibHac.FsSystem;
 using LibHac.Ncm;
 using LibHac.Ns;
 using LibHac.Tools.FsSystem;
+using LibHac.Tools.FsSystem.NcaUtils;
 using Ryujinx.Audio.Backends.Dummy;
 using Ryujinx.Audio.Backends.OpenAL;
 using Ryujinx.Audio.Backends.SDL2;

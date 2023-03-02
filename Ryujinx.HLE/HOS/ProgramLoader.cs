@@ -28,9 +28,9 @@ namespace Ryujinx.HLE.HOS
 
         public ProgramInfo(in Npdm npdm, string displayVersion, bool diskCacheEnabled, bool allowCodeMemoryForJit)
         {
-            ulong programId = npdm.Aci.Value.ProgramId.Value;
+            ulong programId = npdm.Aci.ProgramId.Value;
 
-            Name = StringUtils.Utf8ZToString(npdm.Meta.Value.ProgramName);
+            Name = StringUtils.Utf8ZToString(npdm.Meta.ProgramName);
             ProgramId = programId;
             TitleIdText = programId.ToString("x16");
             DisplayVersion = displayVersion;
@@ -193,7 +193,7 @@ namespace Ryujinx.HLE.HOS
                 return ProgramLoadResult.Failed;
             }
 
-            ref readonly var meta = ref npdm.Meta.Value;
+            ref readonly var meta = ref npdm.Meta;
 
             ulong argsStart = 0;
             uint  argsSize  = 0;
@@ -298,7 +298,7 @@ namespace Ryujinx.HLE.HOS
 
             KProcess process = new KProcess(context, programInfo.AllowCodeMemoryForJit);
 
-            MemoryRegion memoryRegion = (MemoryRegion)((npdm.Acid.Value.Flags >> 2) & 0xf);
+            MemoryRegion memoryRegion = (MemoryRegion)((npdm.Acid.Flags >> 2) & 0xf);
 
             if (memoryRegion > MemoryRegion.NvServices)
             {

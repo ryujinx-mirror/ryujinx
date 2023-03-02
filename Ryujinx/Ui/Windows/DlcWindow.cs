@@ -93,7 +93,7 @@ namespace Ryujinx.Ui.Windows
                     {
                         using var ncaFile = new UniqueRef<IFile>();
 
-                        pfs.OpenFile(ref ncaFile.Ref(), dlcNca.FullPath.ToU8Span(), OpenMode.Read).ThrowIfFailure();
+                        pfs.OpenFile(ref ncaFile.Ref, dlcNca.FullPath.ToU8Span(), OpenMode.Read).ThrowIfFailure();
                         Nca nca = TryCreateNca(ncaFile.Get.AsStorage(), dlcContainer.ContainerPath);
 
                         if (nca != null)
@@ -161,7 +161,7 @@ namespace Ryujinx.Ui.Windows
                         {
                             using var ncaFile = new UniqueRef<IFile>();
 
-                            pfs.OpenFile(ref ncaFile.Ref(), fileEntry.FullPath.ToU8Span(), OpenMode.Read).ThrowIfFailure();
+                            pfs.OpenFile(ref ncaFile.Ref, fileEntry.FullPath.ToU8Span(), OpenMode.Read).ThrowIfFailure();
 
                             Nca nca = TryCreateNca(ncaFile.Get.AsStorage(), containerPath);
 

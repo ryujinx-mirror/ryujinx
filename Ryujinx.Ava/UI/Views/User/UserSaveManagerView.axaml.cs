@@ -76,7 +76,7 @@ namespace Ryujinx.Ava.UI.Views.User
 
             using var saveDataIterator = new UniqueRef<SaveDataIterator>();
 
-            _horizonClient.Fs.OpenSaveDataIterator(ref saveDataIterator.Ref(), SaveDataSpaceId.User, in saveDataFilter).ThrowIfFailure();
+            _horizonClient.Fs.OpenSaveDataIterator(ref saveDataIterator.Ref, SaveDataSpaceId.User, in saveDataFilter).ThrowIfFailure();
 
             Span<SaveDataInfo> saveDataInfo = stackalloc SaveDataInfo[10];
 

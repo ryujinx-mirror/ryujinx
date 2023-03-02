@@ -321,7 +321,7 @@ namespace Ryujinx.HLE.HOS.Services.Settings
 
                 using var firmwareFile = new UniqueRef<IFile>();
 
-                Result result = firmwareRomFs.OpenFile(ref firmwareFile.Ref(), "/file".ToU8Span(), OpenMode.Read);
+                Result result = firmwareRomFs.OpenFile(ref firmwareFile.Ref, "/file".ToU8Span(), OpenMode.Read);
                 if (result.IsFailure())
                 {
                     return null;
