@@ -9,9 +9,8 @@ using static Spv.Specification;
 namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
 {
     using SpvInstruction = Spv.Generator.Instruction;
-    using SpvLiteralInteger = Spv.Generator.LiteralInteger;
-
     using SpvInstructionPool = Spv.Generator.GeneratorPool<Spv.Generator.Instruction>;
+    using SpvLiteralInteger = Spv.Generator.LiteralInteger;
     using SpvLiteralIntegerPool = Spv.Generator.GeneratorPool<Spv.Generator.LiteralInteger>;
 
     static class SpirvGenerator

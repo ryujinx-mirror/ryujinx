@@ -1,5 +1,5 @@
-﻿using Ryujinx.Horizon.Sdk.OsTypes.Impl;
-using Ryujinx.Horizon.Common;
+﻿using Ryujinx.Horizon.Common;
+using Ryujinx.Horizon.Sdk.OsTypes.Impl;
 using System;
 
 namespace Ryujinx.Horizon.Sdk.OsTypes

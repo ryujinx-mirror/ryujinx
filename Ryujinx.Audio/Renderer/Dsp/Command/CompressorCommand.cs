@@ -1,8 +1,8 @@
-﻿using System;
-using System.Diagnostics;
-using Ryujinx.Audio.Renderer.Dsp.Effect;
+﻿using Ryujinx.Audio.Renderer.Dsp.Effect;
 using Ryujinx.Audio.Renderer.Dsp.State;
 using Ryujinx.Audio.Renderer.Parameter.Effect;
+using System;
+using System.Diagnostics;
 
 namespace Ryujinx.Audio.Renderer.Dsp.Command
 {

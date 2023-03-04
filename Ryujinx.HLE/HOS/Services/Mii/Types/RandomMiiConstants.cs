@@ -1,6 +1,6 @@
-﻿using System;
+﻿using Ryujinx.Common.Utilities;
+using System;
 using System.Runtime.InteropServices;
-using Ryujinx.Common.Utilities;
 
 namespace Ryujinx.HLE.HOS.Services.Mii.Types
 {

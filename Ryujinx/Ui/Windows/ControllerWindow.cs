@@ -2,11 +2,14 @@ using Gtk;
 using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Configuration.Hid;
 using Ryujinx.Common.Configuration.Hid.Controller;
+using Ryujinx.Common.Configuration.Hid.Controller.Motion;
 using Ryujinx.Common.Configuration.Hid.Keyboard;
+using Ryujinx.Common.Logging;
 using Ryujinx.Common.Utilities;
-using Ryujinx.Ui.Common.Configuration;
 using Ryujinx.Input;
+using Ryujinx.Input.Assigner;
 using Ryujinx.Input.GTK3;
+using Ryujinx.Ui.Common.Configuration;
 using Ryujinx.Ui.Widgets;
 using System;
 using System.Collections.Generic;
@@ -14,15 +17,10 @@ using System.IO;
 using System.Reflection;
 using System.Text.Json;
 using System.Threading;
-
-using GUI = Gtk.Builder.ObjectAttribute;
-using Key = Ryujinx.Common.Configuration.Hid.Key;
-
 using ConfigGamepadInputId = Ryujinx.Common.Configuration.Hid.Controller.GamepadInputId;
 using ConfigStickInputId = Ryujinx.Common.Configuration.Hid.Controller.StickInputId;
-using Ryujinx.Common.Configuration.Hid.Controller.Motion;
-using Ryujinx.Common.Logging;
-using Ryujinx.Input.Assigner;
+using GUI = Gtk.Builder.ObjectAttribute;
+using Key = Ryujinx.Common.Configuration.Hid.Key;
 
 namespace Ryujinx.Ui.Windows
 {

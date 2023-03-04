@@ -1,7 +1,7 @@
 ﻿using Ryujinx.Common;
 using Ryujinx.Horizon.Common;
-using System.Collections.Generic;
 using System;
+using System.Collections.Generic;
 
 namespace Ryujinx.Horizon.Sdk.OsTypes.Impl
 {

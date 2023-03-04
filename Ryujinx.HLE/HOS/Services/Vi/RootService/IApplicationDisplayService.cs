@@ -6,15 +6,15 @@ using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Services.SurfaceFlinger;
 using Ryujinx.HLE.HOS.Services.Vi.RootService.ApplicationDisplayService;
-using Ryujinx.HLE.Ui;
 using Ryujinx.HLE.HOS.Services.Vi.RootService.ApplicationDisplayService.Types;
 using Ryujinx.HLE.HOS.Services.Vi.Types;
+using Ryujinx.HLE.Ui;
+using Ryujinx.Horizon.Common;
 using System;
-using System.Diagnostics;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Text;
-using Ryujinx.Horizon.Common;
 
 namespace Ryujinx.HLE.HOS.Services.Vi.RootService
 {

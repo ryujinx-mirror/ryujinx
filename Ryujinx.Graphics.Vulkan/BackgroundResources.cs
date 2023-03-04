@@ -1,7 +1,7 @@
-﻿using System.Threading;
-using System.Collections.Generic;
+﻿using Silk.NET.Vulkan;
 using System;
-using Silk.NET.Vulkan;
+using System.Collections.Generic;
+using System.Threading;
 
 namespace Ryujinx.Graphics.Vulkan
 {

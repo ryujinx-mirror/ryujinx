@@ -7,15 +7,15 @@ using LibHac.Tools.FsSystem;
 using LibHac.Tools.FsSystem.RomFs;
 using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Logging;
-using Ryujinx.HLE.Loaders.Mods;
+using Ryujinx.HLE.HOS.Kernel.Process;
 using Ryujinx.HLE.Loaders.Executables;
+using Ryujinx.HLE.Loaders.Mods;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Linq;
-using System.IO;
-using Ryujinx.HLE.HOS.Kernel.Process;
 using System.Globalization;
+using System.IO;
+using System.Linq;
 using Path = System.IO.Path;
 
 namespace Ryujinx.HLE.HOS

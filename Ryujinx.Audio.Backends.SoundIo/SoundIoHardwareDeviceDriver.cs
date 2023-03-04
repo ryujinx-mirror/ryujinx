@@ -5,9 +5,8 @@ using Ryujinx.Memory;
 using System;
 using System.Collections.Concurrent;
 using System.Threading;
-
-using static Ryujinx.Audio.Integration.IHardwareDeviceDriver;
 using static Ryujinx.Audio.Backends.SoundIo.Native.SoundIo;
+using static Ryujinx.Audio.Integration.IHardwareDeviceDriver;
 
 namespace Ryujinx.Audio.Backends.SoundIo
 {

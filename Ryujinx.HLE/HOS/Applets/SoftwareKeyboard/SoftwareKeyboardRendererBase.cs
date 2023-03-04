@@ -1,16 +1,16 @@
 ﻿using Ryujinx.HLE.Ui;
 using Ryujinx.Memory;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Processing;
-using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.Fonts;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Drawing.Processing;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
 using System;
 using System.Diagnostics;
 using System.IO;
 using System.Numerics;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using SixLabors.ImageSharp.PixelFormats;
 
 namespace Ryujinx.HLE.HOS.Applets.SoftwareKeyboard
 {

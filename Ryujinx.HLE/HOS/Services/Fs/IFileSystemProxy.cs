@@ -14,12 +14,11 @@ using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy;
 using System;
 using System.IO;
-
 using static Ryujinx.HLE.Utilities.StringUtils;
+using GameCardHandle = System.UInt32;
 using IFileSystem = LibHac.FsSrv.Sf.IFileSystem;
 using IStorage = LibHac.FsSrv.Sf.IStorage;
 using RightsId = LibHac.Fs.RightsId;
-using GameCardHandle = System.UInt32;
 
 namespace Ryujinx.HLE.HOS.Services.Fs
 {

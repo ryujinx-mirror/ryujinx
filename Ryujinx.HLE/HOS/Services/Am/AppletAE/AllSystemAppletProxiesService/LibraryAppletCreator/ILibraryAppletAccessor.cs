@@ -133,7 +133,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Lib
         // PopOutData() -> object<nn::am::service::IStorage>
         public ResultCode PopOutData(ServiceCtx context)
         {
-            if(_normalSession.TryPop(out byte[] data))
+            if (_normalSession.TryPop(out byte[] data))
             {
                 MakeObject(context, new IStorage(data));
 
@@ -160,7 +160,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Lib
         // PopInteractiveOutData() -> object<nn::am::service::IStorage>
         public ResultCode PopInteractiveOutData(ServiceCtx context)
         {
-            if(_interactiveSession.TryPop(out byte[] data))
+            if (_interactiveSession.TryPop(out byte[] data))
             {
                 MakeObject(context, new IStorage(data));
 

@@ -1,6 +1,6 @@
 ﻿using Ryujinx.Graphics.Texture.Utils;
-using System.Diagnostics;
 using System;
+using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.InteropServices;
 

@@ -2,8 +2,8 @@
 using Silk.NET.Vulkan;
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using System.Linq;
+using System.Threading;
 
 namespace Ryujinx.Graphics.Vulkan.Queries
 {

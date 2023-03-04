@@ -3,7 +3,6 @@ using Avalonia.Collections;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using Ryujinx.Ava.Common.Locale;
-using Ryujinx.Ava.UI.Controls;
 using Ryujinx.Ava.UI.Helpers;
 using Ryujinx.Ava.UI.Models;
 using Ryujinx.Ava.UI.Windows;
@@ -17,7 +16,6 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
-using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace Ryujinx.Ava.UI.ViewModels
@@ -31,7 +29,7 @@ namespace Ryujinx.Ava.UI.ViewModels
         private readonly byte[] _amiiboLogoBytes;
         private readonly HttpClient _httpClient;
         private readonly StyleableWindow _owner;
-        
+
         private Bitmap _amiiboImage;
         private List<Amiibo.AmiiboApi> _amiiboList;
         private AvaloniaList<Amiibo.AmiiboApi> _amiibos;

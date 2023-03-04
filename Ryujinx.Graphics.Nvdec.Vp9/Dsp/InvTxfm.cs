@@ -1,7 +1,7 @@
-﻿using System;
+﻿using Ryujinx.Graphics.Nvdec.Vp9.Common;
+using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using Ryujinx.Graphics.Nvdec.Vp9.Common;
 using static Ryujinx.Graphics.Nvdec.Vp9.Dsp.TxfmCommon;
 
 namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp

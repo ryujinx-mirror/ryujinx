@@ -55,7 +55,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
             void AppendTrace(ulong address)
             {
-                if(AnalyzePointer(out PointerInfo info, address, thread))
+                if (AnalyzePointer(out PointerInfo info, address, thread))
                 {
                     trace.AppendLine($"   0x{address:x16}\t{info.ImageDisplay}\t{info.SubDisplay}");
                 }

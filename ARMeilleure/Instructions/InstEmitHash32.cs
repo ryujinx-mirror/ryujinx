@@ -1,9 +1,8 @@
 ﻿using ARMeilleure.Decoders;
 using ARMeilleure.IntermediateRepresentation;
 using ARMeilleure.Translation;
-
-using static ARMeilleure.Instructions.InstEmitHelper;
 using static ARMeilleure.Instructions.InstEmitHashHelper;
+using static ARMeilleure.Instructions.InstEmitHelper;
 
 namespace ARMeilleure.Instructions
 {

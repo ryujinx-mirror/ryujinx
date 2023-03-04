@@ -4,13 +4,13 @@ using Gtk;
 using Ryujinx.Common;
 using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Logging;
-using Ryujinx.Ui.Common.Configuration;
-using Ryujinx.Graphics.Gpu;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.GAL.Multithreading;
+using Ryujinx.Graphics.Gpu;
 using Ryujinx.Input;
 using Ryujinx.Input.GTK3;
 using Ryujinx.Input.HLE;
+using Ryujinx.Ui.Common.Configuration;
 using Ryujinx.Ui.Widgets;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Png;
@@ -26,8 +26,8 @@ namespace Ryujinx.Ui
 {
     using Image = SixLabors.ImageSharp.Image;
     using Key = Input.Key;
-    using Switch = HLE.Switch;
     using ScalingFilter = Graphics.GAL.ScalingFilter;
+    using Switch = HLE.Switch;
 
     public abstract class RendererWidgetBase : DrawingArea
     {
@@ -321,7 +321,7 @@ namespace Ryujinx.Ui
                 Window.Cursor = (cursorMoveDelta >= CursorHideIdleTime * Stopwatch.Frequency) ? _invisibleCursor : null;
             }
 
-            if(ConfigurationState.Instance.Hid.EnableMouse && _isMouseInClient)
+            if (ConfigurationState.Instance.Hid.EnableMouse && _isMouseInClient)
             {
                 Window.Cursor = _invisibleCursor;
             }

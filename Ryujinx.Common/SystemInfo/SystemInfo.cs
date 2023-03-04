@@ -1,8 +1,8 @@
-﻿using System;
+﻿using Ryujinx.Common.Logging;
+using System;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics.X86;
 using System.Text;
-using Ryujinx.Common.Logging;
 
 namespace Ryujinx.Common.SystemInfo
 {

@@ -297,7 +297,7 @@ namespace Ryujinx.HLE.HOS.Applets
 
                 _foregroundState = SoftwareKeyboardState.Complete;
             }
-            else if(_foregroundState == SoftwareKeyboardState.Complete)
+            else if (_foregroundState == SoftwareKeyboardState.Complete)
             {
                 // If we have already completed, we push the result text
                 // back on the output buffer and poll the application.
@@ -780,7 +780,7 @@ namespace Ryujinx.HLE.HOS.Applets
             {
                 return null;
             }
-            
+
             if (input.Length == 0)
             {
                 return string.Empty;

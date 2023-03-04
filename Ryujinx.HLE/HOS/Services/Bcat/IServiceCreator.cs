@@ -1,8 +1,8 @@
 using LibHac;
 using LibHac.Common;
 using Ryujinx.Common;
-using Ryujinx.HLE.HOS.Services.Bcat.ServiceCreator;
 using Ryujinx.HLE.HOS.Services.Arp;
+using Ryujinx.HLE.HOS.Services.Bcat.ServiceCreator;
 
 namespace Ryujinx.HLE.HOS.Services.Bcat
 {

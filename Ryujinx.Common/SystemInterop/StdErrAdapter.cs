@@ -1,9 +1,9 @@
+using Ryujinx.Common.Logging;
 using System;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Threading;
-using Ryujinx.Common.Logging;
-using System.Runtime.InteropServices;
 
 namespace Ryujinx.Common.SystemInterop
 {

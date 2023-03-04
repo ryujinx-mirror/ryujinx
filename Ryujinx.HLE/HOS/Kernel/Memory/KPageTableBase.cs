@@ -1,9 +1,9 @@
 using Ryujinx.Common;
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Process;
+using Ryujinx.Horizon.Common;
 using Ryujinx.Memory;
 using Ryujinx.Memory.Range;
-using Ryujinx.Horizon.Common;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;

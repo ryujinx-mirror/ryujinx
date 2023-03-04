@@ -1,8 +1,8 @@
 ﻿using Ryujinx.Common.Collections;
-using System.Collections.Generic;
-using System;
-using Ryujinx.Graphics.Gpu.Memory;
 using Ryujinx.Common.Logging;
+using Ryujinx.Graphics.Gpu.Memory;
+using System;
+using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Services.Nv
 {

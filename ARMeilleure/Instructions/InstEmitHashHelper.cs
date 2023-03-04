@@ -4,9 +4,8 @@ using ARMeilleure.IntermediateRepresentation;
 using ARMeilleure.Translation;
 using System;
 using System.Diagnostics;
-
-using static ARMeilleure.IntermediateRepresentation.Operand.Factory;
 using static ARMeilleure.Instructions.InstEmitSimdHelper;
+using static ARMeilleure.IntermediateRepresentation.Operand.Factory;
 
 namespace ARMeilleure.Instructions
 {

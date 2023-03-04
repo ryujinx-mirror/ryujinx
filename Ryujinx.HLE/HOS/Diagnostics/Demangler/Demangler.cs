@@ -1,8 +1,8 @@
-﻿using System;
+﻿using Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast;
 
 namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
 {

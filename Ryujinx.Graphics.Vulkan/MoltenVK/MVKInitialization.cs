@@ -1,7 +1,7 @@
 using Silk.NET.Vulkan;
 using System;
-using System.Runtime.Versioning;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 
 namespace Ryujinx.Graphics.Vulkan.MoltenVK
 {

@@ -1,6 +1,6 @@
-﻿using System;
+﻿using Ryujinx.Common.Memory;
+using System;
 using System.Buffers.Binary;
-using Ryujinx.Common.Memory;
 
 namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
 {

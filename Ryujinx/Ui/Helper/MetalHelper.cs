@@ -1,7 +1,7 @@
 using Gdk;
 using System;
-using System.Runtime.Versioning;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 
 namespace Ryujinx.Ui.Helper
 {

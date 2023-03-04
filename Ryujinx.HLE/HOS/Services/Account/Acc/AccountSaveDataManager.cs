@@ -1,6 +1,6 @@
 ﻿using Ryujinx.Common.Configuration;
-using Ryujinx.Common.Utilities;
 using Ryujinx.Common.Logging;
+using Ryujinx.Common.Utilities;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;

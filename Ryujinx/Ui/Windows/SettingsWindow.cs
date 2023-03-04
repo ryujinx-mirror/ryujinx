@@ -7,9 +7,10 @@ using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Configuration.Hid;
 using Ryujinx.Common.GraphicsDriver;
 using Ryujinx.Graphics.Vulkan;
-using Ryujinx.Ui.Common.Configuration;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.HOS.Services.Time.TimeZone;
+using Ryujinx.Ui.Common.Configuration;
+using Ryujinx.Ui.Common.Configuration.System;
 using Ryujinx.Ui.Helper;
 using Ryujinx.Ui.Widgets;
 using System;
@@ -18,9 +19,7 @@ using System.Globalization;
 using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
-
 using GUI = Gtk.Builder.ObjectAttribute;
-using Ryujinx.Ui.Common.Configuration.System;
 
 namespace Ryujinx.Ui.Windows
 {
@@ -702,7 +701,7 @@ namespace Ryujinx.Ui.Windows
                                 {
                                     break;
                                 }
-                            } while(_gameDirsBoxStore.IterNext(ref treeIter));
+                            } while (_gameDirsBoxStore.IterNext(ref treeIter));
                         }
 
                         if (!_directoryChanged)

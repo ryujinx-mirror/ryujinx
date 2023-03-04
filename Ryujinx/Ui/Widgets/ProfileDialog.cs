@@ -1,8 +1,7 @@
 using Gtk;
+using Ryujinx.Ui.Common.Configuration;
 using System;
 using System.Reflection;
-using Ryujinx.Ui.Common.Configuration;
-
 using GUI = Gtk.Builder.ObjectAttribute;
 
 namespace Ryujinx.Ui.Widgets
