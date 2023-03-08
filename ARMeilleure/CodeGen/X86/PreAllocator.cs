@@ -2,18 +2,19 @@ using ARMeilleure.CodeGen.RegisterAllocators;
 using ARMeilleure.IntermediateRepresentation;
 using ARMeilleure.Translation;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using static ARMeilleure.IntermediateRepresentation.Operand.Factory;
 using static ARMeilleure.IntermediateRepresentation.Operation.Factory;
 
 namespace ARMeilleure.CodeGen.X86
 {
-    static class PreAllocator
+    class PreAllocator
     {
         public static void RunPass(CompilerContext cctx, StackAllocator stackAlloc, out int maxCallArgs)
         {
             maxCallArgs = -1;
+
+            Span<Operation> buffer = default;
 
             CallConvName callConv = CallingConvention.GetCurrentCallConv();
 
@@ -32,9 +33,9 @@ namespace ARMeilleure.CodeGen.X86
                         continue;
                     }
 
-                    HandleConstantRegCopy(block.Operations, node);
-                    HandleDestructiveRegCopy(block.Operations, node);
-                    HandleConstrainedRegCopy(block.Operations, node);
+                    InsertConstantRegCopies(block.Operations, node);
+                    InsertDestructiveRegCopies(block.Operations, node);
+                    InsertConstrainedRegCopies(block.Operations, node);
 
                     switch (node.Instruction)
                     {
@@ -59,62 +60,62 @@ namespace ARMeilleure.CodeGen.X86
                             // being called, as mandated by the ABI.
                             if (callConv == CallConvName.Windows)
                             {
-                                HandleCallWindowsAbi(block.Operations, stackAlloc, node);
+                                PreAllocatorWindows.InsertCallCopies(block.Operations, stackAlloc, node);
                             }
                             else /* if (callConv == CallConvName.SystemV) */
                             {
-                                HandleCallSystemVAbi(block.Operations, node);
+                                PreAllocatorSystemV.InsertCallCopies(block.Operations, node);
                             }
                             break;
 
                         case Instruction.ConvertToFPUI:
-                            HandleConvertToFPUI(block.Operations, node);
+                            GenerateConvertToFPUI(block.Operations, node);
                             break;
 
                         case Instruction.LoadArgument:
                             if (callConv == CallConvName.Windows)
                             {
-                                nextNode = HandleLoadArgumentWindowsAbi(cctx, block.Operations, preservedArgs, node);
+                                nextNode = PreAllocatorWindows.InsertLoadArgumentCopy(cctx, ref buffer, block.Operations, preservedArgs, node);
                             }
                             else /* if (callConv == CallConvName.SystemV) */
                             {
-                                nextNode = HandleLoadArgumentSystemVAbi(cctx, block.Operations, preservedArgs, node);
+                                nextNode = PreAllocatorSystemV.InsertLoadArgumentCopy(cctx, ref buffer, block.Operations, preservedArgs, node);
                             }
                             break;
 
                         case Instruction.Negate:
                             if (!node.GetSource(0).Type.IsInteger())
                             {
-                                HandleNegate(block.Operations, node);
+                                GenerateNegate(block.Operations, node);
                             }
                             break;
 
                         case Instruction.Return:
                             if (callConv == CallConvName.Windows)
                             {
-                                HandleReturnWindowsAbi(cctx, block.Operations, preservedArgs, node);
+                                PreAllocatorWindows.InsertReturnCopy(cctx, block.Operations, preservedArgs, node);
                             }
                             else /* if (callConv == CallConvName.SystemV) */
                             {
-                                HandleReturnSystemVAbi(block.Operations, node);
+                                PreAllocatorSystemV.InsertReturnCopy(block.Operations, node);
                             }
                             break;
 
                         case Instruction.Tailcall:
                             if (callConv == CallConvName.Windows)
                             {
-                                HandleTailcallWindowsAbi(block.Operations, stackAlloc, node);
+                                PreAllocatorWindows.InsertTailcallCopies(block.Operations, stackAlloc, node);
                             }
                             else
                             {
-                                HandleTailcallSystemVAbi(block.Operations, stackAlloc, node);
+                                PreAllocatorSystemV.InsertTailcallCopies(block.Operations, stackAlloc, node);
                             }
                             break;
 
                         case Instruction.VectorInsert8:
                             if (!HardwareCapabilities.SupportsSse41)
                             {
-                                HandleVectorInsert8(block.Operations, node);
+                                GenerateVectorInsert8(block.Operations, node);
                             }
                             break;
 
@@ -131,7 +132,7 @@ namespace ARMeilleure.CodeGen.X86
             }
         }
 
-        private static void HandleConstantRegCopy(IntrusiveList<Operation> nodes, Operation node)
+        protected static void InsertConstantRegCopies(IntrusiveList<Operation> nodes, Operation node)
         {
             if (node.SourcesCount == 0 || IsXmmIntrinsic(node))
             {
@@ -212,7 +213,7 @@ namespace ARMeilleure.CodeGen.X86
             }
         }
 
-        private static void HandleConstrainedRegCopy(IntrusiveList<Operation> nodes, Operation node)
+        protected static void InsertConstrainedRegCopies(IntrusiveList<Operation> nodes, Operation node)
         {
             Operand dest = node.Destination;
 
@@ -369,7 +370,7 @@ namespace ARMeilleure.CodeGen.X86
             }
         }
 
-        private static void HandleDestructiveRegCopy(IntrusiveList<Operation> nodes, Operation node)
+        protected static void InsertDestructiveRegCopies(IntrusiveList<Operation> nodes, Operation node)
         {
             if (node.Destination == default || node.SourcesCount == 0)
             {
@@ -447,7 +448,7 @@ namespace ARMeilleure.CodeGen.X86
             }
         }
 
-        private static void HandleConvertToFPUI(IntrusiveList<Operation> nodes, Operation node)
+        private static void GenerateConvertToFPUI(IntrusiveList<Operation> nodes, Operation node)
         {
             // Unsigned integer to FP conversions are not supported on X86.
             // We need to turn them into signed integer to FP conversions, and
@@ -501,7 +502,7 @@ namespace ARMeilleure.CodeGen.X86
             Delete(nodes, currentNode);
         }
 
-        private static void HandleNegate(IntrusiveList<Operation> nodes, Operation node)
+        private static void GenerateNegate(IntrusiveList<Operation> nodes, Operation node)
         {
             // There's no SSE FP negate instruction, so we need to transform that into
             // a XOR of the value to be negated with a mask with the highest bit set.
@@ -534,7 +535,7 @@ namespace ARMeilleure.CodeGen.X86
             Delete(nodes, currentNode);
         }
 
-        private static void HandleVectorInsert8(IntrusiveList<Operation> nodes, Operation node)
+        private static void GenerateVectorInsert8(IntrusiveList<Operation> nodes, Operation node)
         {
             // Handle vector insertion, when SSE 4.1 is not supported.
             Operand dest = node.Destination;
@@ -579,620 +580,7 @@ namespace ARMeilleure.CodeGen.X86
             Delete(nodes, currentNode);
         }
 
-        private static void HandleCallWindowsAbi(IntrusiveList<Operation> nodes, StackAllocator stackAlloc, Operation node)
-        {
-            Operand dest = node.Destination;
-
-            // Handle struct arguments.
-            int retArgs = 0;
-            int stackAllocOffset = 0;
-
-            int AllocateOnStack(int size)
-            {
-                // We assume that the stack allocator is initially empty (TotalSize = 0).
-                // Taking that into account, we can reuse the space allocated for other
-                // calls by keeping track of our own allocated size (stackAllocOffset).
-                // If the space allocated is not big enough, then we just expand it.
-                int offset = stackAllocOffset;
-
-                if (stackAllocOffset + size > stackAlloc.TotalSize)
-                {
-                    stackAlloc.Allocate((stackAllocOffset + size) - stackAlloc.TotalSize);
-                }
-
-                stackAllocOffset += size;
-
-                return offset;
-            }
-
-            Operand arg0Reg = default;
-
-            if (dest != default && dest.Type == OperandType.V128)
-            {
-                int stackOffset = AllocateOnStack(dest.Type.GetSizeInBytes());
-
-                arg0Reg = Gpr(CallingConvention.GetIntArgumentRegister(0), OperandType.I64);
-
-                Operation allocOp = Operation(Instruction.StackAlloc, arg0Reg, Const(stackOffset));
-
-                nodes.AddBefore(node, allocOp);
-
-                retArgs = 1;
-            }
-
-            int argsCount = node.SourcesCount - 1;
-            int maxArgs = CallingConvention.GetArgumentsOnRegsCount() - retArgs;
-
-            if (argsCount > maxArgs)
-            {
-                argsCount = maxArgs;
-            }
-
-            Operand[] sources = new Operand[1 + retArgs + argsCount];
-
-            sources[0] = node.GetSource(0);
-
-            if (arg0Reg != default)
-            {
-                sources[1] = arg0Reg;
-            }
-
-            for (int index = 1; index < node.SourcesCount; index++)
-            {
-                Operand source = node.GetSource(index);
-
-                if (source.Type == OperandType.V128)
-                {
-                    Operand stackAddr = Local(OperandType.I64);
-
-                    int stackOffset = AllocateOnStack(source.Type.GetSizeInBytes());
-
-                    nodes.AddBefore(node, Operation(Instruction.StackAlloc, stackAddr, Const(stackOffset)));
-
-                    Operation storeOp = Operation(Instruction.Store, default, stackAddr, source);
-
-                    HandleConstantRegCopy(nodes, nodes.AddBefore(node, storeOp));
-
-                    node.SetSource(index, stackAddr);
-                }
-            }
-
-            // Handle arguments passed on registers.
-            for (int index = 0; index < argsCount; index++)
-            {
-                Operand source = node.GetSource(index + 1);
-                Operand argReg;
-
-                int argIndex = index + retArgs;
-
-                if (source.Type.IsInteger())
-                {
-                    argReg = Gpr(CallingConvention.GetIntArgumentRegister(argIndex), source.Type);
-                }
-                else
-                {
-                    argReg = Xmm(CallingConvention.GetVecArgumentRegister(argIndex), source.Type);
-                }
-
-                Operation copyOp = Operation(Instruction.Copy, argReg, source);
-
-                HandleConstantRegCopy(nodes, nodes.AddBefore(node, copyOp));
-
-                sources[1 + retArgs + index] = argReg;
-            }
-
-            // The remaining arguments (those that are not passed on registers)
-            // should be passed on the stack, we write them to the stack with "SpillArg".
-            for (int index = argsCount; index < node.SourcesCount - 1; index++)
-            {
-                Operand source = node.GetSource(index + 1);
-                Operand offset = Const((index + retArgs) * 8);
-
-                Operation spillOp = Operation(Instruction.SpillArg, default, offset, source);
-
-                HandleConstantRegCopy(nodes, nodes.AddBefore(node, spillOp));
-            }
-
-            if (dest != default)
-            {
-                if (dest.Type == OperandType.V128)
-                {
-                    Operand retValueAddr = Local(OperandType.I64);
-
-                    nodes.AddBefore(node, Operation(Instruction.Copy, retValueAddr, arg0Reg));
-
-                    Operation loadOp = Operation(Instruction.Load, dest, retValueAddr);
-
-                    nodes.AddAfter(node, loadOp);
-
-                    node.Destination = default;
-                }
-                else
-                {
-                    Operand retReg = dest.Type.IsInteger()
-                        ? Gpr(CallingConvention.GetIntReturnRegister(), dest.Type)
-                        : Xmm(CallingConvention.GetVecReturnRegister(), dest.Type);
-
-                    Operation copyOp = Operation(Instruction.Copy, dest, retReg);
-
-                    nodes.AddAfter(node, copyOp);
-
-                    node.Destination = retReg;
-                }
-            }
-
-            node.SetSources(sources);
-        }
-
-        private static void HandleCallSystemVAbi(IntrusiveList<Operation> nodes, Operation node)
-        {
-            Operand dest = node.Destination;
-
-            List<Operand> sources = new List<Operand>
-            {
-                node.GetSource(0)
-            };
-
-            int argsCount = node.SourcesCount - 1;
-
-            int intMax = CallingConvention.GetIntArgumentsOnRegsCount();
-            int vecMax = CallingConvention.GetVecArgumentsOnRegsCount();
-
-            int intCount = 0;
-            int vecCount = 0;
-
-            int stackOffset = 0;
-
-            for (int index = 0; index < argsCount; index++)
-            {
-                Operand source = node.GetSource(index + 1);
-
-                bool passOnReg;
-
-                if (source.Type.IsInteger())
-                {
-                    passOnReg = intCount < intMax;
-                }
-                else if (source.Type == OperandType.V128)
-                {
-                    passOnReg = intCount + 1 < intMax;
-                }
-                else
-                {
-                    passOnReg = vecCount < vecMax;
-                }
-
-                if (source.Type == OperandType.V128 && passOnReg)
-                {
-                    // V128 is a struct, we pass each half on a GPR if possible.
-                    Operand argReg  = Gpr(CallingConvention.GetIntArgumentRegister(intCount++), OperandType.I64);
-                    Operand argReg2 = Gpr(CallingConvention.GetIntArgumentRegister(intCount++), OperandType.I64);
-
-                    nodes.AddBefore(node, Operation(Instruction.VectorExtract, argReg,  source, Const(0)));
-                    nodes.AddBefore(node, Operation(Instruction.VectorExtract, argReg2, source, Const(1)));
-
-                    continue;
-                }
-
-                if (passOnReg)
-                {
-                    Operand argReg = source.Type.IsInteger()
-                        ? Gpr(CallingConvention.GetIntArgumentRegister(intCount++), source.Type)
-                        : Xmm(CallingConvention.GetVecArgumentRegister(vecCount++), source.Type);
-
-                    Operation copyOp = Operation(Instruction.Copy, argReg, source);
-
-                    HandleConstantRegCopy(nodes, nodes.AddBefore(node, copyOp));
-
-                    sources.Add(argReg);
-                }
-                else
-                {
-                    Operand offset = Const(stackOffset);
-
-                    Operation spillOp = Operation(Instruction.SpillArg, default, offset, source);
-
-                    HandleConstantRegCopy(nodes, nodes.AddBefore(node, spillOp));
-
-                    stackOffset += source.Type.GetSizeInBytes();
-                }
-            }
-
-            node.SetSources(sources.ToArray());
-
-            if (dest != default)
-            {
-                if (dest.Type == OperandType.V128)
-                {
-                    Operand retLReg = Gpr(CallingConvention.GetIntReturnRegister(),     OperandType.I64);
-                    Operand retHReg = Gpr(CallingConvention.GetIntReturnRegisterHigh(), OperandType.I64);
-
-                    Operation operation = node;
-
-                    node = nodes.AddAfter(node, Operation(Instruction.VectorCreateScalar, dest, retLReg));
-                    nodes.AddAfter(node, Operation(Instruction.VectorInsert, dest, dest, retHReg, Const(1)));
-
-                    operation.Destination = default;
-                }
-                else
-                {
-                    Operand retReg = dest.Type.IsInteger()
-                        ? Gpr(CallingConvention.GetIntReturnRegister(), dest.Type)
-                        : Xmm(CallingConvention.GetVecReturnRegister(), dest.Type);
-
-                    Operation copyOp = Operation(Instruction.Copy, dest, retReg);
-
-                    nodes.AddAfter(node, copyOp);
-
-                    node.Destination = retReg;
-                }
-            }
-        }
-
-        private static void HandleTailcallSystemVAbi(IntrusiveList<Operation> nodes, StackAllocator stackAlloc, Operation node)
-        {
-            List<Operand> sources = new List<Operand>
-            {
-                node.GetSource(0)
-            };
-
-            int argsCount = node.SourcesCount - 1;
-
-            int intMax = CallingConvention.GetIntArgumentsOnRegsCount();
-            int vecMax = CallingConvention.GetVecArgumentsOnRegsCount();
-
-            int intCount = 0;
-            int vecCount = 0;
-
-            // Handle arguments passed on registers.
-            for (int index = 0; index < argsCount; index++)
-            {
-                Operand source = node.GetSource(1 + index);
-
-                bool passOnReg;
-
-                if (source.Type.IsInteger())
-                {
-                    passOnReg = intCount + 1 < intMax;
-                }
-                else
-                {
-                    passOnReg = vecCount < vecMax;
-                }
-
-                if (source.Type == OperandType.V128 && passOnReg)
-                {
-                    // V128 is a struct, we pass each half on a GPR if possible.
-                    Operand argReg = Gpr(CallingConvention.GetIntArgumentRegister(intCount++), OperandType.I64);
-                    Operand argReg2 = Gpr(CallingConvention.GetIntArgumentRegister(intCount++), OperandType.I64);
-
-                    nodes.AddBefore(node, Operation(Instruction.VectorExtract, argReg, source, Const(0)));
-                    nodes.AddBefore(node, Operation(Instruction.VectorExtract, argReg2, source, Const(1)));
-
-                    continue;
-                }
-
-                if (passOnReg)
-                {
-                    Operand argReg = source.Type.IsInteger()
-                        ? Gpr(CallingConvention.GetIntArgumentRegister(intCount++), source.Type)
-                        : Xmm(CallingConvention.GetVecArgumentRegister(vecCount++), source.Type);
-
-                    Operation copyOp = Operation(Instruction.Copy, argReg, source);
-
-                    HandleConstantRegCopy(nodes, nodes.AddBefore(node, copyOp));
-
-                    sources.Add(argReg);
-                }
-                else
-                {
-                    throw new NotImplementedException("Spilling is not currently supported for tail calls. (too many arguments)");
-                }
-            }
-
-            // The target address must be on the return registers, since we
-            // don't return anything and it is guaranteed to not be a
-            // callee saved register (which would be trashed on the epilogue).
-            Operand retReg = Gpr(CallingConvention.GetIntReturnRegister(), OperandType.I64);
-
-            Operation addrCopyOp = Operation(Instruction.Copy, retReg, node.GetSource(0));
-
-            nodes.AddBefore(node, addrCopyOp);
-
-            sources[0] = retReg;
-
-            node.SetSources(sources.ToArray());
-        }
-
-        private static void HandleTailcallWindowsAbi(IntrusiveList<Operation> nodes, StackAllocator stackAlloc, Operation node)
-        {
-            int argsCount = node.SourcesCount - 1;
-            int maxArgs = CallingConvention.GetArgumentsOnRegsCount();
-
-            if (argsCount > maxArgs)
-            {
-                throw new NotImplementedException("Spilling is not currently supported for tail calls. (too many arguments)");
-            }
-
-            Operand[] sources = new Operand[1 + argsCount];
-
-            // Handle arguments passed on registers.
-            for (int index = 0; index < argsCount; index++)
-            {
-                Operand source = node.GetSource(1 + index);
-                Operand argReg = source.Type.IsInteger()
-                    ? Gpr(CallingConvention.GetIntArgumentRegister(index), source.Type)
-                    : Xmm(CallingConvention.GetVecArgumentRegister(index), source.Type);
-
-                Operation copyOp = Operation(Instruction.Copy, argReg, source);
-
-                HandleConstantRegCopy(nodes, nodes.AddBefore(node, copyOp));
-
-                sources[1 + index] = argReg;
-            }
-
-            // The target address must be on the return registers, since we
-            // don't return anything and it is guaranteed to not be a
-            // callee saved register (which would be trashed on the epilogue).
-            Operand retReg = Gpr(CallingConvention.GetIntReturnRegister(), OperandType.I64);
-
-            Operation addrCopyOp = Operation(Instruction.Copy, retReg, node.GetSource(0));
-
-            nodes.AddBefore(node, addrCopyOp);
-
-            sources[0] = retReg;
-
-            node.SetSources(sources);
-        }
-
-        private static Operation HandleLoadArgumentWindowsAbi(
-            CompilerContext cctx,
-            IntrusiveList<Operation> nodes,
-            Operand[] preservedArgs,
-            Operation node)
-        {
-            Operand source = node.GetSource(0);
-
-            Debug.Assert(source.Kind == OperandKind.Constant, "Non-constant LoadArgument source kind.");
-
-            int retArgs = cctx.FuncReturnType == OperandType.V128 ? 1 : 0;
-
-            int index = source.AsInt32() + retArgs;
-
-            if (index < CallingConvention.GetArgumentsOnRegsCount())
-            {
-                Operand dest = node.Destination;
-
-                if (preservedArgs[index] == default)
-                {
-                    Operand argReg, pArg;
-
-                    if (dest.Type.IsInteger())
-                    {
-                        argReg = Gpr(CallingConvention.GetIntArgumentRegister(index), dest.Type);
-                        pArg = Local(dest.Type);
-                    }
-                    else if (dest.Type == OperandType.V128)
-                    {
-                        argReg = Gpr(CallingConvention.GetIntArgumentRegister(index), OperandType.I64);
-                        pArg = Local(OperandType.I64);
-                    }
-                    else
-                    {
-                        argReg = Xmm(CallingConvention.GetVecArgumentRegister(index), dest.Type);
-                        pArg = Local(dest.Type);
-                    }
-
-                    Operation copyOp = Operation(Instruction.Copy, pArg, argReg);
-
-                    cctx.Cfg.Entry.Operations.AddFirst(copyOp);
-
-                    preservedArgs[index] = pArg;
-                }
-
-                Operation argCopyOp = Operation(dest.Type == OperandType.V128
-                    ? Instruction.Load
-                    : Instruction.Copy, dest, preservedArgs[index]);
-
-                Operation newNode = nodes.AddBefore(node, argCopyOp);
-
-                Delete(nodes, node);
-
-                return newNode;
-            }
-            else
-            {
-                // TODO: Pass on stack.
-                return node;
-            }
-        }
-
-        private static Operation HandleLoadArgumentSystemVAbi(
-            CompilerContext cctx,
-            IntrusiveList<Operation> nodes,
-            Operand[] preservedArgs,
-            Operation node)
-        {
-            Operand source = node.GetSource(0);
-
-            Debug.Assert(source.Kind == OperandKind.Constant, "Non-constant LoadArgument source kind.");
-
-            int index = source.AsInt32();
-
-            int intCount = 0;
-            int vecCount = 0;
-
-            for (int cIndex = 0; cIndex < index; cIndex++)
-            {
-                OperandType argType = cctx.FuncArgTypes[cIndex];
-
-                if (argType.IsInteger())
-                {
-                    intCount++;
-                }
-                else if (argType == OperandType.V128)
-                {
-                    intCount += 2;
-                }
-                else
-                {
-                    vecCount++;
-                }
-            }
-
-            bool passOnReg;
-
-            if (source.Type.IsInteger())
-            {
-                passOnReg = intCount < CallingConvention.GetIntArgumentsOnRegsCount();
-            }
-            else if (source.Type == OperandType.V128)
-            {
-                passOnReg = intCount + 1 < CallingConvention.GetIntArgumentsOnRegsCount();
-            }
-            else
-            {
-                passOnReg = vecCount < CallingConvention.GetVecArgumentsOnRegsCount();
-            }
-
-            if (passOnReg)
-            {
-                Operand dest = node.Destination;
-
-                if (preservedArgs[index] == default)
-                {
-                    if (dest.Type == OperandType.V128)
-                    {
-                        // V128 is a struct, we pass each half on a GPR if possible.
-                        Operand pArg = Local(OperandType.V128);
-
-                        Operand argLReg = Gpr(CallingConvention.GetIntArgumentRegister(intCount),     OperandType.I64);
-                        Operand argHReg = Gpr(CallingConvention.GetIntArgumentRegister(intCount + 1), OperandType.I64);
-
-                        Operation copyL = Operation(Instruction.VectorCreateScalar, pArg, argLReg);
-                        Operation copyH = Operation(Instruction.VectorInsert,       pArg, pArg, argHReg, Const(1));
-
-                        cctx.Cfg.Entry.Operations.AddFirst(copyH);
-                        cctx.Cfg.Entry.Operations.AddFirst(copyL);
-
-                        preservedArgs[index] = pArg;
-                    }
-                    else
-                    {
-                        Operand pArg = Local(dest.Type);
-
-                        Operand argReg = dest.Type.IsInteger()
-                            ? Gpr(CallingConvention.GetIntArgumentRegister(intCount), dest.Type)
-                            : Xmm(CallingConvention.GetVecArgumentRegister(vecCount), dest.Type);
-
-                        Operation copyOp = Operation(Instruction.Copy, pArg, argReg);
-
-                        cctx.Cfg.Entry.Operations.AddFirst(copyOp);
-
-                        preservedArgs[index] = pArg;
-                    }
-                }
-
-                Operation argCopyOp = Operation(Instruction.Copy, dest, preservedArgs[index]);
-
-                Operation newNode = nodes.AddBefore(node, argCopyOp);
-
-                Delete(nodes, node);
-
-                return newNode;
-            }
-            else
-            {
-                // TODO: Pass on stack.
-                return node;
-            }
-        }
-
-        private static void HandleReturnWindowsAbi(
-            CompilerContext cctx,
-            IntrusiveList<Operation> nodes,
-            Operand[] preservedArgs,
-            Operation node)
-        {
-            if (node.SourcesCount == 0)
-            {
-                return;
-            }
-
-            Operand source = node.GetSource(0);
-            Operand retReg;
-
-            if (source.Type.IsInteger())
-            {
-                retReg = Gpr(CallingConvention.GetIntReturnRegister(), source.Type);
-            }
-            else if (source.Type == OperandType.V128)
-            {
-                if (preservedArgs[0] == default)
-                {
-                    Operand preservedArg = Local(OperandType.I64);
-                    Operand arg0 = Gpr(CallingConvention.GetIntArgumentRegister(0), OperandType.I64);
-
-                    Operation copyOp = Operation(Instruction.Copy, preservedArg, arg0);
-
-                    cctx.Cfg.Entry.Operations.AddFirst(copyOp);
-
-                    preservedArgs[0] = preservedArg;
-                }
-
-                retReg = preservedArgs[0];
-            }
-            else
-            {
-                retReg = Xmm(CallingConvention.GetVecReturnRegister(), source.Type);
-            }
-
-            if (source.Type == OperandType.V128)
-            {
-                Operation retStoreOp = Operation(Instruction.Store, default, retReg, source);
-
-                nodes.AddBefore(node, retStoreOp);
-            }
-            else
-            {
-                Operation retCopyOp = Operation(Instruction.Copy, retReg, source);
-
-                nodes.AddBefore(node, retCopyOp);
-            }
-
-            node.SetSources(Array.Empty<Operand>());
-        }
-
-        private static void HandleReturnSystemVAbi(IntrusiveList<Operation> nodes, Operation node)
-        {
-            if (node.SourcesCount == 0)
-            {
-                return;
-            }
-
-            Operand source = node.GetSource(0);
-
-            if (source.Type == OperandType.V128)
-            {
-                Operand retLReg = Gpr(CallingConvention.GetIntReturnRegister(),     OperandType.I64);
-                Operand retHReg = Gpr(CallingConvention.GetIntReturnRegisterHigh(), OperandType.I64);
-
-                nodes.AddBefore(node, Operation(Instruction.VectorExtract, retLReg, source, Const(0)));
-                nodes.AddBefore(node, Operation(Instruction.VectorExtract, retHReg, source, Const(1)));
-            }
-            else
-            {
-                Operand retReg = source.Type.IsInteger()
-                    ? Gpr(CallingConvention.GetIntReturnRegister(), source.Type)
-                    : Xmm(CallingConvention.GetVecReturnRegister(), source.Type);
-
-                Operation retCopyOp = Operation(Instruction.Copy, retReg, source);
-
-                nodes.AddBefore(node, retCopyOp);
-            }
-        }
-
-        private static Operand AddXmmCopy(IntrusiveList<Operation> nodes, Operation node, Operand source)
+        protected static Operand AddXmmCopy(IntrusiveList<Operation> nodes, Operation node, Operand source)
         {
             Operand temp = Local(source.Type);
             Operand intConst = AddCopy(nodes, node, GetIntConst(source));
@@ -1204,7 +592,7 @@ namespace ARMeilleure.CodeGen.X86
             return temp;
         }
 
-        private static Operand AddCopy(IntrusiveList<Operation> nodes, Operation node, Operand source)
+        protected static Operand AddCopy(IntrusiveList<Operation> nodes, Operation node, Operand source)
         {
             Operand temp = Local(source.Type);
 
@@ -1229,7 +617,7 @@ namespace ARMeilleure.CodeGen.X86
             return value;
         }
 
-        private static void Delete(IntrusiveList<Operation> nodes, Operation node)
+        protected static void Delete(IntrusiveList<Operation> nodes, Operation node)
         {
             node.Destination = default;
 
@@ -1241,12 +629,12 @@ namespace ARMeilleure.CodeGen.X86
             nodes.Remove(node);
         }
 
-        private static Operand Gpr(X86Register register, OperandType type)
+        protected static Operand Gpr(X86Register register, OperandType type)
         {
             return Register((int)register, RegisterType.Integer, type);
         }
 
-        private static Operand Xmm(X86Register register, OperandType type)
+        protected static Operand Xmm(X86Register register, OperandType type)
         {
             return Register((int)register, RegisterType.Vector, type);
         }
