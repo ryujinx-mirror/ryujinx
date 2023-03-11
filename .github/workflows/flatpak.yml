@@ -1,0 +1,161 @@
+name: Flatpak release job
+
+on:
+  workflow_call:
+    inputs:
+      ryujinx_version:
+        required: true
+        type: string
+
+
+concurrency: flatpak-release
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    env:
+      NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
+      GIT_COMMITTER_NAME: "RyujinxBot"
+      GIT_COMMITTER_EMAIL: "61127645+RyujinxBot@users.noreply.github.com"
+      RYUJINX_PROJECT_FILE: "Ryujinx/Ryujinx.csproj"
+      NUGET_SOURCES_DESTDIR: "nuget-sources"
+      RYUJINX_VERSION: ${{ inputs.ryujinx_version }}
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          path: Ryujinx
+
+      - uses: actions/setup-dotnet@v3
+        with:
+          global-json-file: Ryujinx/global.json
+
+      - name: Get version info
+        id: version_info
+        working-directory: Ryujinx
+        run: |
+          echo "git_short_hash=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - uses: actions/checkout@v3
+        with:
+          repository: flathub/org.ryujinx.Ryujinx
+          token: ${{ secrets.RYUJINX_BOT_PAT }}
+          submodules: recursive
+          path: flathub
+
+      - name: Install dependencies
+        run: python -m pip install PyYAML lxml
+
+      - name: Restore Nuget packages
+        run: dotnet restore Ryujinx/${{ env.RYUJINX_PROJECT_FILE }}
+
+      - name: Generate nuget_sources.json
+        shell: python
+        run: |
+          from pathlib import Path
+          import base64
+          import binascii
+          import json
+          import os
+          
+          sources = []
+          
+          for path in Path((os.environ['NUGET_PACKAGES']).glob('**/*.nupkg.sha512'):
+            name = path.parent.parent.name
+            version = path.parent.name
+            filename = '{}.{}.nupkg'.format(name, version)
+            url = 'https://api.nuget.org/v3-flatcontainer/{}/{}/{}'.format(name, version, filename)
+
+            with path.open() as fp:
+                sha512 = binascii.hexlify(base64.b64decode(fp.read())).decode('ascii')
+
+            sources.append({
+                'type': 'file',
+                'url': url,
+                'sha512': sha512,
+                'dest': os.environ['NUGET_SOURCES_DESTDIR'],
+                'dest-filename': filename,
+            })
+
+          with open('flathub/nuget_sources.json', 'w') as fp:
+            json.dump(sources, fp, indent=4)
+
+      - name: Update flatpak metadata
+        id: metadata
+        env:
+          RYUJINX_GIT_HASH: ${{ steps.version_info.outputs.git_short_hash }}
+        shell: python
+        run: |
+          import hashlib
+          import hmac
+          import json
+          import os
+          import yaml
+          from datetime import datetime
+          from lxml import etree
+          
+          yaml_file = "flathub/org.ryujinx.Ryujinx.yml"
+          xml_file = "flathub/org.ryujinx.Ryujinx.appdata.xml"
+  
+          with open(yaml_file, "r") as f:
+            data = yaml.safe_load(f)
+          
+          for source in data["modules"][0]["sources"]:
+            if type(source) is str:
+              continue
+            if (
+              source["type"] == "git"
+              and source["url"] == "https://github.com/Ryujinx/Ryujinx.git"
+            ):
+              source["commit"] = os.environ['RYUJINX_GIT_HASH']
+          
+          is_same_version = data["modules"][0]["build-options"]["env"]["RYUJINX_VERSION"] == os.environ['RYUJINX_VERSION']
+
+          with open(os.environ['GITHUB_OUTPUT'], "a") as gh_out:
+            if is_same_version:
+              gh_out.write(f"commit_message=Retry update to {os.environ['RYUJINX_VERSION']}")
+            else:
+              gh_out.write(f"commit_message=Update to {os.environ['RYUJINX_VERSION']}")
+          
+          if not is_same_version:
+            data["modules"][0]["build-options"]["env"]["RYUJINX_VERSION"] = os.environ['RYUJINX_VERSION']
+
+            with open(yaml_file, "w") as f:
+                yaml.safe_dump(data, f, sort_keys=False)
+          
+            parser = etree.XMLParser(remove_blank_text=True)
+            tree = etree.parse(xml_file, parser)
+        
+            root = tree.getroot()
+        
+            releases = root.find("releases")
+        
+            element = etree.Element("release")
+            element.set("version", os.environ['RYUJINX_VERSION'])
+            element.set("date", datetime.now().date().isoformat())
+            releases.insert(0, element)
+        
+            # Ensure 4 spaces
+            etree.indent(root, space="    ")
+          
+            with open(xml_file, "wb") as f:
+              f.write(
+                etree.tostring(
+                  tree,
+                  pretty_print=True,
+                  encoding="UTF-8",
+                  doctype='<?xml version="1.0" encoding="UTF-8"?>',
+                )
+              )
+
+      - name: Push flatpak update
+        working-directory: flathub
+        env:
+          COMMIT_MESSAGE: ${{ steps.metadata.outputs.commit_message }}
+        run: |
+          git config user.name "${{ env.GIT_COMMITTER_NAME }}"
+          git config user.email "${{ env.GIT_COMMITTER_EMAIL }}"
+          git add .
+          git commit -m "$COMMIT_MESSAGE"
+          git push origin master
