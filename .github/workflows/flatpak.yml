@@ -3,10 +3,7 @@ name: Flatpak release job
 on:
   workflow_call:
     inputs:
-      ryujinx_base_version:
-        required: true
-        type: string
-      ryujinx_version_minor:
+      ryujinx_version:
         required: true
         type: string
 
@@ -23,7 +20,7 @@ jobs:
       GIT_COMMITTER_EMAIL: "61127645+RyujinxBot@users.noreply.github.com"
       RYUJINX_PROJECT_FILE: "Ryujinx/Ryujinx.csproj"
       NUGET_SOURCES_DESTDIR: "nuget-sources"
-      RYUJINX_VERSION: "${{ inputs.ryujinx_base_version }}. ${{ inputs.ryujinx_version_minor }}"
+      RYUJINX_VERSION: "${{ inputs.ryujinx_version }}"
 
     steps:
       - uses: actions/checkout@v3
@@ -64,7 +61,7 @@ jobs:
 
           sources = []
 
-          for path in Path((os.environ['NUGET_PACKAGES']).glob('**/*.nupkg.sha512'):
+          for path in Path(os.environ['NUGET_PACKAGES']).glob('**/*.nupkg.sha512'):
             name = path.parent.parent.name
             version = path.parent.name
             filename = '{}.{}.nupkg'.format(name, version)
