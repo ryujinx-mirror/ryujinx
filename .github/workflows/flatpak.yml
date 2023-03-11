@@ -3,7 +3,10 @@ name: Flatpak release job
 on:
   workflow_call:
     inputs:
-      ryujinx_version:
+      ryujinx_base_version:
+        required: true
+        type: string
+      ryujinx_version_minor:
         required: true
         type: string
 
@@ -20,7 +23,7 @@ jobs:
       GIT_COMMITTER_EMAIL: "61127645+RyujinxBot@users.noreply.github.com"
       RYUJINX_PROJECT_FILE: "Ryujinx/Ryujinx.csproj"
       NUGET_SOURCES_DESTDIR: "nuget-sources"
-      RYUJINX_VERSION: ${{ inputs.ryujinx_version }}
+      RYUJINX_VERSION: "${{ inputs.ryujinx_base_version }}. ${{ inputs.ryujinx_version_minor }}"
 
     steps:
       - uses: actions/checkout@v3
@@ -58,9 +61,9 @@ jobs:
           import binascii
           import json
           import os
-          
+
           sources = []
-          
+
           for path in Path((os.environ['NUGET_PACKAGES']).glob('**/*.nupkg.sha512'):
             name = path.parent.parent.name
             version = path.parent.name
@@ -94,13 +97,13 @@ jobs:
           import yaml
           from datetime import datetime
           from lxml import etree
-          
+
           yaml_file = "flathub/org.ryujinx.Ryujinx.yml"
           xml_file = "flathub/org.ryujinx.Ryujinx.appdata.xml"
-  
+
           with open(yaml_file, "r") as f:
             data = yaml.safe_load(f)
-          
+
           for source in data["modules"][0]["sources"]:
             if type(source) is str:
               continue
@@ -109,7 +112,7 @@ jobs:
               and source["url"] == "https://github.com/Ryujinx/Ryujinx.git"
             ):
               source["commit"] = os.environ['RYUJINX_GIT_HASH']
-          
+
           is_same_version = data["modules"][0]["build-options"]["env"]["RYUJINX_VERSION"] == os.environ['RYUJINX_VERSION']
 
           with open(os.environ['GITHUB_OUTPUT'], "a") as gh_out:
@@ -117,28 +120,28 @@ jobs:
               gh_out.write(f"commit_message=Retry update to {os.environ['RYUJINX_VERSION']}")
             else:
               gh_out.write(f"commit_message=Update to {os.environ['RYUJINX_VERSION']}")
-          
+
           if not is_same_version:
             data["modules"][0]["build-options"]["env"]["RYUJINX_VERSION"] = os.environ['RYUJINX_VERSION']
 
             with open(yaml_file, "w") as f:
                 yaml.safe_dump(data, f, sort_keys=False)
-          
+
             parser = etree.XMLParser(remove_blank_text=True)
             tree = etree.parse(xml_file, parser)
-        
+
             root = tree.getroot()
-        
+
             releases = root.find("releases")
-        
+
             element = etree.Element("release")
             element.set("version", os.environ['RYUJINX_VERSION'])
             element.set("date", datetime.now().date().isoformat())
             releases.insert(0, element)
-        
+
             # Ensure 4 spaces
             etree.indent(root, space="    ")
-          
+
             with open(xml_file, "wb") as f:
               f.write(
                 etree.tostring(
