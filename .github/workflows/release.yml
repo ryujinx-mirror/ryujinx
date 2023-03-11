@@ -117,5 +117,5 @@ jobs:
   flatpak_release:
     uses: ./.github/workflows/flatpak.yml
     with:
-      ryujinx_version: ${{ env.RYUJINX_BASE_VERSION }}.${{ github.run_number }}
+      ryujinx_version: "${{ env.RYUJINX_BASE_VERSION }}.${{ github.run_number }}"
     secrets: inherit
