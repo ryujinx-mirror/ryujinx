@@ -265,7 +265,7 @@ namespace ARMeilleure.CodeGen.Arm64
             }
             else
             {
-                relocInfo = new RelocInfo(new RelocEntry[0]);
+                relocInfo = new RelocInfo(Array.Empty<RelocEntry>());
             }
 
             return (code, relocInfo);

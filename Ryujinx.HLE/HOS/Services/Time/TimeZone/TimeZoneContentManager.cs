@@ -233,7 +233,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
                 // If the location name is too long, error out.
                 if (locationName.Length > 0x24)
                 {
-                    outLocationNameArray = new string[0];
+                    outLocationNameArray = Array.Empty<string>();
 
                     return ResultCode.LocationNameTooLong;
                 }

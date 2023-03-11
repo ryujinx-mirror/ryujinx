@@ -433,16 +433,11 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
 
         private static int GetHighestValueIndex(Span<int> span)
         {
-            int highest = span[0];
-
-            if (highest == int.MaxValue)
-            {
-                return 0;
-            }
+            int highest = int.MinValue;
 
             int selected = 0;
 
-            for (int index = 1; index < span.Length; index++)
+            for (int index = 0; index < span.Length; index++)
             {
                 int current = span[index];
 

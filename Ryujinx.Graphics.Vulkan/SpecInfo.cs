@@ -29,7 +29,7 @@ namespace Ryujinx.Graphics.Vulkan
 
             uint structSize = 0;
 
-            for (int i = 0; i < count; ++i)
+            for (int i = 0; i < Map.Length; ++i)
             {
                 var typeSize = SizeOf(description[i].Type);
                 Map[i] = new SpecializationMapEntry(description[i].Id, structSize, typeSize);
@@ -46,11 +46,10 @@ namespace Ryujinx.Graphics.Vulkan
         // For advanced mapping with overlapping or staggered fields
         public SpecDescription(SpecializationMapEntry[] map)
         {
-            int count = map.Length;
             Map = map;
 
             uint structSize = 0;
-            for (int i = 0; i < count; ++i)
+            for (int i = 0; i < map.Length; ++i)
             {
                 structSize = Math.Max(structSize, map[i].Offset + (uint)map[i].Size);
             }

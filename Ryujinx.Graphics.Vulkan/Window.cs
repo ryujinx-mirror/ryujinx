@@ -60,10 +60,9 @@ namespace Ryujinx.Graphics.Vulkan
         private void RecreateSwapchain()
         {
             var oldSwapchain = _swapchain;
-            int imageCount = _swapchainImageViews.Length;
             _vsyncModeChanged = false;
 
-            for (int i = 0; i < imageCount; i++)
+            for (int i = 0; i < _swapchainImageViews.Length; i++)
             {
                 _swapchainImageViews[i].Dispose();
             }
@@ -147,7 +146,7 @@ namespace Ryujinx.Graphics.Vulkan
 
             _swapchainImageViews = new Auto<DisposableImageView>[imageCount];
 
-            for (int i = 0; i < imageCount; i++)
+            for (int i = 0; i < _swapchainImageViews.Length; i++)
             {
                 _swapchainImageViews[i] = CreateSwapchainImageView(_swapchainImages[i], surfaceFormat.Format);
             }

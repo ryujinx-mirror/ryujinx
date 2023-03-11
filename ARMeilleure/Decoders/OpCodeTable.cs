@@ -1301,7 +1301,7 @@ namespace ARMeilleure.Decoders
         {
             List<InstInfo>[] temp = new List<InstInfo>[FastLookupSize];
 
-            for (int index = 0; index < FastLookupSize; index++)
+            for (int index = 0; index < temp.Length; index++)
             {
                 temp[index] = new List<InstInfo>();
             }
@@ -1311,7 +1311,7 @@ namespace ARMeilleure.Decoders
                 int mask  = ToFastLookupIndex(inst.Mask);
                 int value = ToFastLookupIndex(inst.Value);
 
-                for (int index = 0; index < FastLookupSize; index++)
+                for (int index = 0; index < temp.Length; index++)
                 {
                     if ((index & mask) == value)
                     {
@@ -1320,7 +1320,7 @@ namespace ARMeilleure.Decoders
                 }
             }
 
-            for (int index = 0; index < FastLookupSize; index++)
+            for (int index = 0; index < temp.Length; index++)
             {
                 table[index] = temp[index].ToArray();
             }

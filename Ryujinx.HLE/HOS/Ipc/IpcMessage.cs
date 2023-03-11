@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -132,7 +133,7 @@ namespace Ryujinx.HLE.HOS.Ipc
                 word0 |= (ReceiveBuff.Count  & 0xf) << 24;
                 word0 |= (ExchangeBuff.Count & 0xf) << 28;
 
-                byte[] handleData = new byte[0];
+                byte[] handleData = Array.Empty<byte>();
 
                 if (HandleDesc != null)
                 {
@@ -202,7 +203,7 @@ namespace Ryujinx.HLE.HOS.Ipc
                 word0 |= (ReceiveBuff.Count & 0xf) << 24;
                 word0 |= (ExchangeBuff.Count & 0xf) << 28;
 
-                byte[] handleData = new byte[0];
+                byte[] handleData = Array.Empty<byte>();
 
                 if (HandleDesc != null)
                 {

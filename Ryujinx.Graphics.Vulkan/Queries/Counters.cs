@@ -17,7 +17,7 @@ namespace Ryujinx.Graphics.Vulkan.Queries
 
             _counterQueues = new CounterQueue[count];
 
-            for (int index = 0; index < count; index++)
+            for (int index = 0; index < _counterQueues.Length; index++)
             {
                 CounterType type = (CounterType)index;
                 _counterQueues[index] = new CounterQueue(gd, device, pipeline, type);

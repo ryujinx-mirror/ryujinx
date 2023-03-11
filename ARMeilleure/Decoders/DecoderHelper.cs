@@ -17,7 +17,7 @@ namespace ARMeilleure.Decoders
         {
             uint[] tbl = new uint[256];
 
-            for (int idx = 0; idx < 256; idx++)
+            for (int idx = 0; idx < tbl.Length; idx++)
             {
                 tbl[idx] = ExpandImm8ToFP32((uint)idx);
             }
@@ -29,7 +29,7 @@ namespace ARMeilleure.Decoders
         {
             ulong[] tbl = new ulong[256];
 
-            for (int idx = 0; idx < 256; idx++)
+            for (int idx = 0; idx < tbl.Length; idx++)
             {
                 tbl[idx] = ExpandImm8ToFP64((ulong)idx);
             }

@@ -49,12 +49,12 @@ namespace Ryujinx.HLE.HOS.Ipc
 
         public static IpcHandleDesc MakeCopy(params int[] handles)
         {
-            return new IpcHandleDesc(handles, new int[0]);
+            return new IpcHandleDesc(handles, Array.Empty<int>());
         }
 
         public static IpcHandleDesc MakeMove(params int[] handles)
         {
-            return new IpcHandleDesc(new int[0], handles);
+            return new IpcHandleDesc(Array.Empty<int>(), handles);
         }
 
         public byte[] GetBytes()

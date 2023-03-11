@@ -27,7 +27,9 @@ namespace Ryujinx.Input.SDL2
             SDL2Driver.Instance.OnJoystickDisconnected += HandleJoyStickDisconnected;
 
             // Add already connected gamepads
-            for (int joystickIndex = 0; joystickIndex < SDL_NumJoysticks(); joystickIndex++)
+            int numJoysticks = SDL_NumJoysticks();
+
+            for (int joystickIndex = 0; joystickIndex < numJoysticks; joystickIndex++)
             {
                 HandleJoyStickConnected(joystickIndex, SDL_JoystickGetDeviceInstanceID(joystickIndex));
             }

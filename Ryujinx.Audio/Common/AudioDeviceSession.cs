@@ -400,7 +400,9 @@ namespace Ryujinx.Audio.Common
         {
             uint bufferIndex = (_releasedBufferIndex - _bufferReleasedCount) % Constants.AudioDeviceBufferCountMax;
 
-            for (int i = 0; i < GetTotalBufferCount(); i++)
+            uint totalBufferCount = GetTotalBufferCount();
+
+            for (int i = 0; i < totalBufferCount; i++)
             {
                 if (_buffers[bufferIndex].BufferTag == bufferTag)
                 {
