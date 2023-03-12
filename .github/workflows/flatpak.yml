@@ -35,7 +35,7 @@ jobs:
         id: version_info
         working-directory: Ryujinx
         run: |
-          echo "git_short_hash=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          echo "git_hash=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
 
       - uses: actions/checkout@v3
         with:
@@ -84,7 +84,7 @@ jobs:
       - name: Update flatpak metadata
         id: metadata
         env:
-          RYUJINX_GIT_HASH: ${{ steps.version_info.outputs.git_short_hash }}
+          RYUJINX_GIT_HASH: ${{ steps.version_info.outputs.git_hash }}
         shell: python
         run: |
           import hashlib
@@ -94,7 +94,17 @@ jobs:
           import yaml
           from datetime import datetime
           from lxml import etree
-
+          
+          
+          # Ensure we don't destroy multiline strings
+          def str_presenter(dumper, data):
+            if len(data.splitlines()) > 1:
+              return dumper.represent_scalar("tag:yaml.org,2002:str", data, style="|")
+            return dumper.represent_scalar("tag:yaml.org,2002:str", data)
+            
+            
+          yaml.representer.SafeRepresenter.add_representer(str, str_presenter)
+  
           yaml_file = "flathub/org.ryujinx.Ryujinx.yml"
           xml_file = "flathub/org.ryujinx.Ryujinx.appdata.xml"
 
