@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Crc32.NET" />
+    <PackageReference Include="System.IO.Hashing" />
   </ItemGroup>
 
   <ItemGroup>
