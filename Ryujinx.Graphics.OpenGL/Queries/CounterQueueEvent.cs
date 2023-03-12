@@ -26,6 +26,7 @@ namespace Ryujinx.Graphics.OpenGL.Queries
 
         private object _lock = new object();
         private ulong _result = ulong.MaxValue;
+        private double _divisor = 1f;
 
         public CounterQueueEvent(CounterQueue queue, QueryTarget type, ulong drawIndex)
         {
@@ -45,9 +46,11 @@ namespace Ryujinx.Graphics.OpenGL.Queries
             ClearCounter = true;
         }
 
-        internal void Complete(bool withResult)
+        internal void Complete(bool withResult, double divisor)
         {
             _counter.End(withResult);
+
+            _divisor = divisor;
         }
 
         internal bool TryConsume(ref ulong result, bool block, AutoResetEvent wakeSignal = null)
@@ -78,7 +81,7 @@ namespace Ryujinx.Graphics.OpenGL.Queries
                     }
                 }
 
-                result += (ulong)queryResult;
+                result += _divisor == 1 ? (ulong)queryResult : (ulong)Math.Ceiling(queryResult / _divisor);
 
                 _result = result;
 

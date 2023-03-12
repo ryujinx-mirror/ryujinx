@@ -12,6 +12,7 @@ namespace Ryujinx.Graphics.Vulkan.Queries
         private const int MaxQueryRetries = 5000;
         private const long DefaultValue = -1;
         private const long DefaultValueInt = 0xFFFFFFFF;
+        private const ulong HighMask = 0xFFFFFFFF00000000;
 
         private readonly Vk _api;
         private readonly Device _device;
@@ -125,6 +126,12 @@ namespace Ryujinx.Graphics.Vulkan.Queries
             }
         }
 
+        private bool WaitingForValue(long data)
+        {
+            return data == _defaultValue ||
+                (!_result32Bit && ((ulong)data & HighMask) == ((ulong)_defaultValue & HighMask));
+        }
+
         public bool TryGetResult(out long result)
         {
             result = Marshal.ReadInt64(_bufferMap);
@@ -138,7 +145,7 @@ namespace Ryujinx.Graphics.Vulkan.Queries
 
             if (wakeSignal == null)
             {
-                while (data == _defaultValue)
+                while (WaitingForValue(data))
                 {
                     data = Marshal.ReadInt64(_bufferMap);
                 }
@@ -146,10 +153,10 @@ namespace Ryujinx.Graphics.Vulkan.Queries
             else
             {
                 int iterations = 0;
-                while (data == _defaultValue && iterations++ < MaxQueryRetries)
+                while (WaitingForValue(data) && iterations++ < MaxQueryRetries)
                 {
                     data = Marshal.ReadInt64(_bufferMap);
-                    if (data == _defaultValue)
+                    if (WaitingForValue(data))
                     {
                         wakeSignal.WaitOne(1);
                     }

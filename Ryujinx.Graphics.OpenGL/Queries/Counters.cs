@@ -14,12 +14,12 @@ namespace Ryujinx.Graphics.OpenGL.Queries
             _counterQueues = new CounterQueue[count];
         }
 
-        public void Initialize()
+        public void Initialize(Pipeline pipeline)
         {
             for (int index = 0; index < _counterQueues.Length; index++)
             {
                 CounterType type = (CounterType)index;
-                _counterQueues[index] = new CounterQueue(type);
+                _counterQueues[index] = new CounterQueue(pipeline, type);
             }
         }
 

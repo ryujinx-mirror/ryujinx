@@ -10,6 +10,7 @@ namespace Ryujinx.Graphics.OpenGL.Queries
     {
         private const int MaxQueryRetries = 5000;
         private const long DefaultValue = -1;
+        private const ulong HighMask = 0xFFFFFFFF00000000;
 
         public int Query { get; }
 
@@ -63,11 +64,17 @@ namespace Ryujinx.Graphics.OpenGL.Queries
             }
         }
 
+        private bool WaitingForValue(long data)
+        {
+            return data == DefaultValue ||
+                ((ulong)data & HighMask) == (unchecked((ulong)DefaultValue) & HighMask);
+        }
+
         public bool TryGetResult(out long result)
         {
             result = Marshal.ReadInt64(_bufferMap);
 
-            return result != DefaultValue;
+            return WaitingForValue(result);
         }
 
         public long AwaitResult(AutoResetEvent wakeSignal = null)
@@ -76,7 +83,7 @@ namespace Ryujinx.Graphics.OpenGL.Queries
 
             if (wakeSignal == null)
             {
-                while (data == DefaultValue)
+                while (WaitingForValue(data))
                 {
                     data = Marshal.ReadInt64(_bufferMap);
                 }
@@ -84,10 +91,10 @@ namespace Ryujinx.Graphics.OpenGL.Queries
             else
             {
                 int iterations = 0;
-                while (data == DefaultValue && iterations++ < MaxQueryRetries)
+                while (WaitingForValue(data) && iterations++ < MaxQueryRetries)
                 {
                     data = Marshal.ReadInt64(_bufferMap);
-                    if (data == DefaultValue)
+                    if (WaitingForValue(data))
                     {
                         wakeSignal.WaitOne(1);
                     }

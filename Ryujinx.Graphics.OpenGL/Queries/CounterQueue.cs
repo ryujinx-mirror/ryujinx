@@ -13,6 +13,8 @@ namespace Ryujinx.Graphics.OpenGL.Queries
         public CounterType Type { get; }
         public bool Disposed { get; private set; }
 
+        private readonly Pipeline _pipeline;
+
         private Queue<CounterQueueEvent> _events = new Queue<CounterQueueEvent>();
         private CounterQueueEvent _current;
 
@@ -28,9 +30,11 @@ namespace Ryujinx.Graphics.OpenGL.Queries
 
         private Thread _consumerThread;
 
-        internal CounterQueue(CounterType type)
+        internal CounterQueue(Pipeline pipeline, CounterType type)
         {
             Type = type;
+
+            _pipeline = pipeline;
 
             QueryTarget glType = GetTarget(Type);
 
@@ -119,7 +123,7 @@ namespace Ryujinx.Graphics.OpenGL.Queries
                     _current.ReserveForHostAccess();
                 }
 
-                _current.Complete(draws > 0);
+                _current.Complete(draws > 0, _pipeline.GetCounterDivisor(Type));
                 _events.Enqueue(_current);
 
                 _current.OnResult += resultHandler;
