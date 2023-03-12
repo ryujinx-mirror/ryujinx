@@ -236,7 +236,7 @@ namespace Ryujinx.Ava.UI.ViewModels
 
         public DateTimeOffset DateOffset { get; set; }
         public TimeSpan TimeOffset { get; set; }
-        private AvaloniaList<TimeZone> TimeZones { get; set; }
+        internal AvaloniaList<TimeZone> TimeZones { get; set; }
         public AvaloniaList<string> GameDirectories { get; set; }
         public ObservableCollection<ComboBoxItem> AvailableGpus { get; set; }
 
