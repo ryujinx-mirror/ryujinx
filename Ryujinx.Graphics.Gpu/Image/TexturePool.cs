@@ -1,9 +1,12 @@
 using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.GAL;
+using Ryujinx.Graphics.Gpu.Memory;
 using Ryujinx.Graphics.Texture;
+using Ryujinx.Memory.Range;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace Ryujinx.Graphics.Gpu.Image
 {
@@ -12,8 +15,63 @@ namespace Ryujinx.Graphics.Gpu.Image
     /// </summary>
     class TexturePool : Pool<Texture, TextureDescriptor>, IPool<TexturePool>
     {
+        /// <summary>
+        /// A request to dereference a texture from a pool.
+        /// </summary>
+        private struct DereferenceRequest
+        {
+            /// <summary>
+            /// Whether the dereference is due to a mapping change or not.
+            /// </summary>
+            public readonly bool IsRemapped;
+
+            /// <summary>
+            /// The texture being dereferenced.
+            /// </summary>
+            public readonly Texture Texture;
+
+            /// <summary>
+            /// The ID of the pool entry this reference belonged to.
+            /// </summary>
+            public readonly int ID;
+
+            /// <summary>
+            /// Create a dereference request for a texture with a specific pool ID, and remapped flag.
+            /// </summary>
+            /// <param name="isRemapped">Whether the dereference is due to a mapping change or not</param>
+            /// <param name="texture">The texture being dereferenced</param>
+            /// <param name="id">The ID of the pool entry, used to restore remapped textures</param>
+            private DereferenceRequest(bool isRemapped, Texture texture, int id)
+            {
+                IsRemapped = isRemapped;
+                Texture = texture;
+                ID = id;
+            }
+
+            /// <summary>
+            /// Create a dereference request for a texture removal.
+            /// </summary>
+            /// <param name="texture">The texture being removed</param>
+            /// <returns>A texture removal dereference request</returns>
+            public static DereferenceRequest Remove(Texture texture)
+            {
+                return new DereferenceRequest(false, texture, 0);
+            }
+
+            /// <summary>
+            /// Create a dereference request for a texture remapping with a specific pool ID.
+            /// </summary>
+            /// <param name="texture">The texture being remapped</param>
+            /// <param name="id">The ID of the pool entry, used to restore remapped textures</param>
+            /// <returns>A remap dereference request</returns>
+            public static DereferenceRequest Remap(Texture texture, int id)
+            {
+                return new DereferenceRequest(true, texture, id);
+            }
+        }
+
         private readonly GpuChannel _channel;
-        private readonly ConcurrentQueue<Texture> _dereferenceQueue = new ConcurrentQueue<Texture>();
+        private readonly ConcurrentQueue<DereferenceRequest> _dereferenceQueue = new ConcurrentQueue<DereferenceRequest>();
         private TextureDescriptor _defaultDescriptor;
 
         /// <summary>
@@ -58,7 +116,11 @@ namespace Ryujinx.Graphics.Gpu.Image
                 {
                     TextureInfo info = GetInfo(descriptor, out int layerSize);
 
-                    ProcessDereferenceQueue();
+                    // The dereference queue can put our texture back on the cache.
+                    if ((texture = ProcessDereferenceQueue(id)) != null)
+                    {
+                        return ref descriptor;
+                    }
 
                     texture = PhysicalMemory.TextureCache.FindOrCreateTexture(_channel.MemoryManager, TextureSearchFlags.ForSampler, info, layerSize);
 
@@ -69,9 +131,9 @@ namespace Ryujinx.Graphics.Gpu.Image
                     }
                 }
 
-                texture.IncrementReferenceCount(this, id);
-
                 Items[id] = texture;
+
+                texture.IncrementReferenceCount(this, id, descriptor.UnpackAddress());
 
                 DescriptorCache[id] = descriptor;
             }
@@ -155,11 +217,14 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <param name="deferred">If true, queue the dereference to happen on the render thread, otherwise dereference immediately</param>
         public void ForceRemove(Texture texture, int id, bool deferred)
         {
-            Items[id] = null;
+            var previous = Interlocked.Exchange(ref Items[id], null);
 
             if (deferred)
             {
-                _dereferenceQueue.Enqueue(texture);
+                if (previous != null)
+                {
+                    _dereferenceQueue.Enqueue(DereferenceRequest.Remove(texture));
+                }
             }
             else
             {
@@ -168,15 +233,90 @@ namespace Ryujinx.Graphics.Gpu.Image
         }
 
         /// <summary>
+        /// Queues a request to update a texture's mapping. 
+        /// Mapping is updated later to avoid deleting the texture if it is still sparsely mapped.
+        /// </summary>
+        /// <param name="texture">Texture with potential mapping change</param>
+        /// <param name="id">ID in cache of texture with potential mapping change</param>
+        public void QueueUpdateMapping(Texture texture, int id)
+        {
+            if (Interlocked.Exchange(ref Items[id], null) == texture)
+            {
+                _dereferenceQueue.Enqueue(DereferenceRequest.Remap(texture, id));
+            }
+        }
+
+        /// <summary>
         /// Process the dereference queue, decrementing the reference count for each texture in it.
         /// This is used to ensure that texture disposal happens on the render thread.
         /// </summary>
-        private void ProcessDereferenceQueue()
+        /// <param name="id">The ID of the entry that triggered this method</param>
+        /// <returns>Texture that matches the entry ID if it has been readded to the cache.</returns>
+        private Texture ProcessDereferenceQueue(int id = -1)
         {
-            while (_dereferenceQueue.TryDequeue(out Texture toRemove))
+            while (_dereferenceQueue.TryDequeue(out DereferenceRequest request))
             {
-                toRemove.DecrementReferenceCount();
+                Texture texture = request.Texture;
+
+                // Unmapped storage textures can swap their ranges. The texture must be storage with no views or dependencies.
+                // TODO: Would need to update ranges on views, or guarantee that ones where the range changes can be instantly deleted.
+
+                if (request.IsRemapped && texture.Group.Storage == texture && !texture.HasViews && !texture.Group.HasCopyDependencies)
+                {
+                    // Has the mapping for this texture changed?
+                    ref readonly TextureDescriptor descriptor = ref GetDescriptorRef(request.ID);
+
+                    ulong address = descriptor.UnpackAddress();
+
+                    MultiRange range = _channel.MemoryManager.GetPhysicalRegions(address, texture.Size);
+
+                    // If the texture is not mapped at all, delete its reference.
+
+                    if (range.Count == 1 && range.GetSubRange(0).Address == MemoryManager.PteUnmapped)
+                    {
+                        texture.DecrementReferenceCount();
+                        continue;
+                    }
+
+                    Items[request.ID] = texture;
+
+                    // Create a new pool reference, as the last one was removed on unmap.
+
+                    texture.IncrementReferenceCount(this, request.ID, address);
+                    texture.DecrementReferenceCount();
+
+                    // Refetch the range. Changes since the last check could have been lost
+                    // as the cache entry was not restored (required to queue mapping change).
+
+                    range = _channel.MemoryManager.GetPhysicalRegions(address, texture.Size);
+
+                    if (!range.Equals(texture.Range))
+                    {
+                        // Part of the texture was mapped or unmapped. Replace the range and regenerate tracking handles.
+                        if (!_channel.MemoryManager.Physical.TextureCache.UpdateMapping(texture, range))
+                        {
+                            // Texture could not be remapped due to a collision, just delete it.
+                            if (Interlocked.Exchange(ref Items[request.ID], null) != null)
+                            {
+                                // If this is null, a request was already queued to decrement reference.
+                                texture.DecrementReferenceCount(this, request.ID);
+                            }
+                            continue;
+                        }
+                    }
+
+                    if (request.ID == id)
+                    {
+                        return texture;
+                    }
+                }
+                else
+                {
+                    texture.DecrementReferenceCount();
+                }
             }
+
+            return null;
         }
 
         /// <summary>
@@ -213,9 +353,10 @@ namespace Ryujinx.Graphics.Gpu.Image
                         _channel.MemoryManager.Physical.TextureCache.AddShortCache(texture, ref cachedDescriptor);
                     }
 
-                    texture.DecrementReferenceCount(this, id);
-
-                    Items[id] = null;
+                    if (Interlocked.Exchange(ref Items[id], null) != null)
+                    {
+                        texture.DecrementReferenceCount(this, id);
+                    }
                 }
             }
         }

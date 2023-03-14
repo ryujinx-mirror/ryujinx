@@ -20,5 +20,15 @@ namespace Ryujinx.Graphics.GAL
         {
             return target == Target.Texture2DMultisample || target == Target.Texture2DMultisampleArray;
         }
+
+        public static bool HasDepthOrLayers(this Target target)
+        {
+            return target == Target.Texture3D ||
+                target == Target.Texture1DArray ||
+                target == Target.Texture2DArray ||
+                target == Target.Texture2DMultisampleArray ||
+                target == Target.Cubemap ||
+                target == Target.CubemapArray;
+        }
     }
 }

@@ -36,6 +36,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         {
             public TexturePool Pool;
             public int ID;
+            public ulong GpuAddress;
         }
 
         private GpuContext _context;
@@ -161,6 +162,11 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// Whether or not the texture belongs is a view.
         /// </summary>
         public bool IsView => _viewStorage != this;
+
+        /// <summary>
+        /// Whether or not this texture has views.
+        /// </summary>
+        public bool HasViews => _views.Count > 0;
 
         private int _referenceCount;
         private List<TexturePoolOwner> _poolOwners;
@@ -381,6 +387,17 @@ namespace Ryujinx.Graphics.Gpu.Image
             texture._viewStorage = texture;
 
             DecrementReferenceCount();
+        }
+
+        /// <summary>
+        /// Replaces the texture's physical memory range. This forces tracking to regenerate.
+        /// </summary>
+        /// <param name="range">New physical memory range backing the texture</param>
+        public void ReplaceRange(MultiRange range)
+        {
+            Range = range;
+
+            Group.RangeChanged();
         }
 
         /// <summary>
@@ -715,6 +732,8 @@ namespace Ryujinx.Graphics.Gpu.Image
             height = Math.Max(height >> level, 1);
             depth = Math.Max(depth >> level, 1);
 
+            int sliceDepth = single ? 1 : depth;
+
             SpanOrArray<byte> result;
 
             if (Info.IsLinear)
@@ -735,7 +754,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                     width,
                     height,
                     depth,
-                    single ? 1 : depth,
+                    sliceDepth,
                     levels,
                     layers,
                     Info.FormatInfo.BlockWidth,
@@ -759,7 +778,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                     Info.FormatInfo.BlockHeight,
                     width,
                     height,
-                    depth,
+                    sliceDepth,
                     levels,
                     layers,
                     out byte[] decoded))
@@ -771,7 +790,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                 if (GraphicsConfig.EnableTextureRecompression)
                 {
-                    decoded = BCnEncoder.EncodeBC7(decoded, width, height, depth, levels, layers);
+                    decoded = BCnEncoder.EncodeBC7(decoded, width, height, sliceDepth, levels, layers);
                 }
 
                 result = decoded;
@@ -782,15 +801,15 @@ namespace Ryujinx.Graphics.Gpu.Image
                 {
                     case Format.Etc2RgbaSrgb:
                     case Format.Etc2RgbaUnorm:
-                        result = ETC2Decoder.DecodeRgba(result, width, height, depth, levels, layers);
+                        result = ETC2Decoder.DecodeRgba(result, width, height, sliceDepth, levels, layers);
                         break;
                     case Format.Etc2RgbPtaSrgb:
                     case Format.Etc2RgbPtaUnorm:
-                        result = ETC2Decoder.DecodePta(result, width, height, depth, levels, layers);
+                        result = ETC2Decoder.DecodePta(result, width, height, sliceDepth, levels, layers);
                         break;
                     case Format.Etc2RgbSrgb:
                     case Format.Etc2RgbUnorm:
-                        result = ETC2Decoder.DecodeRgb(result, width, height, depth, levels, layers);
+                        result = ETC2Decoder.DecodeRgb(result, width, height, sliceDepth, levels, layers);
                         break;
                 }
             }
@@ -800,31 +819,31 @@ namespace Ryujinx.Graphics.Gpu.Image
                 {
                     case Format.Bc1RgbaSrgb:
                     case Format.Bc1RgbaUnorm:
-                        result = BCnDecoder.DecodeBC1(result, width, height, depth, levels, layers);
+                        result = BCnDecoder.DecodeBC1(result, width, height, sliceDepth, levels, layers);
                         break;
                     case Format.Bc2Srgb:
                     case Format.Bc2Unorm:
-                        result = BCnDecoder.DecodeBC2(result, width, height, depth, levels, layers);
+                        result = BCnDecoder.DecodeBC2(result, width, height, sliceDepth, levels, layers);
                         break;
                     case Format.Bc3Srgb:
                     case Format.Bc3Unorm:
-                        result = BCnDecoder.DecodeBC3(result, width, height, depth, levels, layers);
+                        result = BCnDecoder.DecodeBC3(result, width, height, sliceDepth, levels, layers);
                         break;
                     case Format.Bc4Snorm:
                     case Format.Bc4Unorm:
-                        result = BCnDecoder.DecodeBC4(result, width, height, depth, levels, layers, Format == Format.Bc4Snorm);
+                        result = BCnDecoder.DecodeBC4(result, width, height, sliceDepth, levels, layers, Format == Format.Bc4Snorm);
                         break;
                     case Format.Bc5Snorm:
                     case Format.Bc5Unorm:
-                        result = BCnDecoder.DecodeBC5(result, width, height, depth, levels, layers, Format == Format.Bc5Snorm);
+                        result = BCnDecoder.DecodeBC5(result, width, height, sliceDepth, levels, layers, Format == Format.Bc5Snorm);
                         break;
                     case Format.Bc6HSfloat:
                     case Format.Bc6HUfloat:
-                        result = BCnDecoder.DecodeBC6(result, width, height, depth, levels, layers, Format == Format.Bc6HSfloat);
+                        result = BCnDecoder.DecodeBC6(result, width, height, sliceDepth, levels, layers, Format == Format.Bc6HSfloat);
                         break;
                     case Format.Bc7Srgb:
                     case Format.Bc7Unorm:
-                        result = BCnDecoder.DecodeBC7(result, width, height, depth, levels, layers);
+                        result = BCnDecoder.DecodeBC7(result, width, height, sliceDepth, levels, layers);
                         break;
                 }
             }
@@ -1484,11 +1503,12 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// </summary>
         /// <param name="pool">The texture pool this texture has been added to</param>
         /// <param name="id">The ID of the reference to this texture in the pool</param>
-        public void IncrementReferenceCount(TexturePool pool, int id)
+        /// <param name="gpuVa">GPU VA of the pool reference</param>
+        public void IncrementReferenceCount(TexturePool pool, int id, ulong gpuVa)
         {
             lock (_poolOwners)
             {
-                _poolOwners.Add(new TexturePoolOwner { Pool = pool, ID = id });
+                _poolOwners.Add(new TexturePoolOwner { Pool = pool, ID = id, GpuAddress = gpuVa });
             }
             _referenceCount++;
 
@@ -1586,6 +1606,36 @@ namespace Ryujinx.Graphics.Gpu.Image
         }
 
         /// <summary>
+        /// Queue updating texture mappings on the pool. Happens from another thread.
+        /// </summary>
+        public void UpdatePoolMappings()
+        {
+            lock (_poolOwners)
+            {
+                ulong address = 0;
+
+                foreach (var owner in _poolOwners)
+                {
+                    if (address == 0 || address == owner.GpuAddress)
+                    {
+                        address = owner.GpuAddress;
+
+                        owner.Pool.QueueUpdateMapping(this, owner.ID);
+                    }
+                    else
+                    {
+                        // If there is a different GPU VA mapping, prefer the first and delete the others.
+                        owner.Pool.ForceRemove(this, owner.ID, true);
+                    }
+                }
+
+                _poolOwners.Clear();
+            }
+
+            InvalidatedSequence++;
+        }
+
+        /// <summary>
         /// Delete the texture if it is not used anymore.
         /// The texture is considered unused when the reference count is zero,
         /// and it has no child views.
@@ -1636,7 +1686,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                 Group.ClearModified(unmapRange);
             }
 
-            RemoveFromPools(true);
+            UpdatePoolMappings();
         }
 
         /// <summary>

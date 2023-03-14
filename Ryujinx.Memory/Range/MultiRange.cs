@@ -8,6 +8,8 @@ namespace Ryujinx.Memory.Range
     /// </summary>
     public readonly struct MultiRange : IEquatable<MultiRange>
     {
+        private const ulong InvalidAddress = ulong.MaxValue;
+
         private readonly MemoryRange _singleRange;
         private readonly MemoryRange[] _ranges;
 
@@ -107,7 +109,16 @@ namespace Ryujinx.Memory.Range
                     else if (offset < range.Size)
                     {
                         ulong sliceSize = Math.Min(size, range.Size - offset);
-                        ranges.Add(new MemoryRange(range.Address + offset, sliceSize));
+
+                        if (range.Address == InvalidAddress)
+                        {
+                            ranges.Add(new MemoryRange(range.Address, sliceSize));
+                        }
+                        else
+                        {
+                            ranges.Add(new MemoryRange(range.Address + offset, sliceSize));
+                        }
+
                         size -= sliceSize;
                     }
 

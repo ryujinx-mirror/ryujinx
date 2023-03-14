@@ -28,5 +28,10 @@ namespace Ryujinx.Cpu.Tracking
         public void Reprotect(bool asDirty = false) => _impl.Reprotect(asDirty);
 
         public bool OverlapsWith(ulong address, ulong size) => _impl.OverlapsWith(address, size);
+
+        public bool RangeEquals(CpuRegionHandle other)
+        {
+            return _impl.RealAddress == other._impl.RealAddress && _impl.RealSize == other._impl.RealSize;
+        }
     }
 }

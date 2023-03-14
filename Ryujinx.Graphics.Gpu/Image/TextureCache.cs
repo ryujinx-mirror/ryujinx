@@ -195,6 +195,39 @@ namespace Ryujinx.Graphics.Gpu.Image
         }
 
         /// <summary>
+        /// Attempts to update a texture's physical memory range.
+        /// Returns false if there is an existing texture that matches with the updated range.
+        /// </summary>
+        /// <param name="texture">Texture to update</param>
+        /// <param name="range">New physical memory range</param>
+        /// <returns>True if the mapping was updated, false otherwise</returns>
+        public bool UpdateMapping(Texture texture, MultiRange range)
+        {
+            // There cannot be an existing texture compatible with this mapping in the texture cache already.
+            int overlapCount = _textures.FindOverlaps(range, ref _textureOverlaps);
+
+            for (int i = 0; i < overlapCount; i++)
+            {
+                var other = _textureOverlaps[i];
+                
+                if (texture != other &&
+                    (texture.IsViewCompatible(other.Info, other.Range, true, other.LayerSize, _context.Capabilities, out _, out _) != TextureViewCompatibility.Incompatible ||
+                    other.IsViewCompatible(texture.Info, texture.Range, true, texture.LayerSize, _context.Capabilities, out _, out _) != TextureViewCompatibility.Incompatible))
+                {
+                    return false;
+                }
+            }
+
+            _textures.Remove(texture);
+
+            texture.ReplaceRange(range);
+
+            _textures.Add(texture);
+
+            return true;
+        }
+
+        /// <summary>
         /// Tries to find an existing texture, or create a new one if not found.
         /// </summary>
         /// <param name="memoryManager">GPU memory manager where the texture is mapped</param>

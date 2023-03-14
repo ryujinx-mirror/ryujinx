@@ -112,7 +112,7 @@ namespace Ryujinx.Graphics.Texture
             int outSize = GetTextureSize(
                 width,
                 height,
-                depth,
+                sliceDepth,
                 levels,
                 layers,
                 blockWidth,

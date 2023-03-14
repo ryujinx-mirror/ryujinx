@@ -39,6 +39,11 @@ namespace Ryujinx.Graphics.Gpu.Image
     /// </summary>
     class TextureGroup : IDisposable
     {
+        /// <summary>
+        /// Threshold of layers to force granular handles (and thus partial loading) on array/3D textures.
+        /// </summary>
+        private const int GranularLayerThreshold = 8;
+
         private delegate void HandlesCallbackDelegate(int baseHandle, int regionCount, bool split = false);
 
         /// <summary>
@@ -116,7 +121,29 @@ namespace Ryujinx.Graphics.Gpu.Image
             _allOffsets = size.AllOffsets;
             _sliceSizes = size.SliceSizes;
 
-            (_hasLayerViews, _hasMipViews) = PropagateGranularity(hasLayerViews, hasMipViews);
+            if (Storage.Target.HasDepthOrLayers() && Storage.Info.GetSlices() > GranularLayerThreshold)
+            {
+                _hasLayerViews = true;
+                _hasMipViews = true;
+            }
+            else
+            {
+                (_hasLayerViews, _hasMipViews) = PropagateGranularity(hasLayerViews, hasMipViews);
+
+                // If the texture is partially mapped, fully subdivide handles immediately.
+
+                MultiRange range = Storage.Range;
+                for (int i = 0; i < range.Count; i++)
+                {
+                    if (range.GetSubRange(i).Address == MemoryManager.PteUnmapped)
+                    {
+                        _hasLayerViews = true;
+                        _hasMipViews = true;
+
+                        break;
+                    }
+                }
+            }
 
             RecalculateHandleRegions();
         }
@@ -249,7 +276,7 @@ namespace Ryujinx.Graphics.Gpu.Image
             {
                 bool dirty = false;
                 bool anyModified = false;
-                bool anyUnmapped = false;
+                bool anyNotDirty = false;
 
                 for (int i = 0; i < regionCount; i++)
                 {
@@ -294,20 +321,21 @@ namespace Ryujinx.Graphics.Gpu.Image
                         dirty |= handleDirty;
                     }
 
-                    anyUnmapped |= handleUnmapped;
-
                     if (group.NeedsCopy)
                     {
                         // The texture we copied from is still being written to. Copy from it again the next time this texture is used.
                         texture.SignalGroupDirty();
                     }
 
-                    _loadNeeded[baseHandle + i] = handleDirty && !handleUnmapped;
+                    bool loadNeeded = handleDirty && !handleUnmapped;
+
+                    anyNotDirty |= !loadNeeded;
+                    _loadNeeded[baseHandle + i] = loadNeeded;
                 }
 
                 if (dirty)
                 {
-                    if (anyUnmapped || (_handles.Length > 1 && (anyModified || split)))
+                    if (anyNotDirty || (_handles.Length > 1 && (anyModified || split)))
                     {
                         // Partial texture invalidation. Only update the layers/levels with dirty flags of the storage.
 
@@ -331,11 +359,46 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <param name="regionCount">The number of handles to synchronize</param>
         private void SynchronizePartial(int baseHandle, int regionCount)
         {
+            int spanEndIndex = -1;
+            int spanBase = 0;
+            ReadOnlySpan<byte> dataSpan = ReadOnlySpan<byte>.Empty;
+
             for (int i = 0; i < regionCount; i++)
             {
                 if (_loadNeeded[baseHandle + i])
                 {
                     var info = GetHandleInformation(baseHandle + i);
+
+                    // Ensure the data for this handle is loaded in the span.
+                    if (spanEndIndex <= i - 1)
+                    {
+                        spanEndIndex = i;
+
+                        if (_is3D)
+                        {
+                            // Look ahead to see how many handles need to be loaded.
+                            for (int j = i + 1; j < regionCount; j++)
+                            {
+                                if (_loadNeeded[baseHandle + j])
+                                {
+                                    spanEndIndex = j;
+                                }
+                                else
+                                {
+                                    break;
+                                }
+                            }
+                        }
+
+                        var endInfo = spanEndIndex == i ? info : GetHandleInformation(baseHandle + spanEndIndex);
+
+                        spanBase = _allOffsets[info.Index];
+                        int spanLast = _allOffsets[endInfo.Index + endInfo.Layers * endInfo.Levels - 1];
+                        int endOffset = Math.Min(spanLast + _sliceSizes[endInfo.BaseLevel + endInfo.Levels - 1], (int)Storage.Size);
+                        int size = endOffset - spanBase;
+
+                        dataSpan = _physicalMemory.GetSpan(Storage.Range.GetSlice((ulong)spanBase, (ulong)size));
+                    }
 
                     // Only one of these will be greater than 1, as partial sync is only called when there are sub-image views.
                     for (int layer = 0; layer < info.Layers; layer++)
@@ -343,12 +406,9 @@ namespace Ryujinx.Graphics.Gpu.Image
                         for (int level = 0; level < info.Levels; level++)
                         {
                             int offsetIndex = GetOffsetIndex(info.BaseLayer + layer, info.BaseLevel + level);
-
                             int offset = _allOffsets[offsetIndex];
-                            int endOffset = Math.Min(offset + _sliceSizes[info.BaseLevel + level], (int)Storage.Size);
-                            int size = endOffset - offset;
 
-                            ReadOnlySpan<byte> data = _physicalMemory.GetSpan(Storage.Range.GetSlice((ulong)offset, (ulong)size));
+                            ReadOnlySpan<byte> data = dataSpan.Slice(offset - spanBase);
 
                             SpanOrArray<byte> result = Storage.ConvertToHostCompatibleFormat(data, info.BaseLevel + level, true);
 
@@ -865,8 +925,11 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <returns>A TextureGroupHandle covering the given views</returns>
         private TextureGroupHandle GenerateHandles(int viewStart, int views)
         {
+            int viewEnd = viewStart + views - 1;
+            (_, int lastLevel) = GetLayerLevelForView(viewEnd);
+
             int offset = _allOffsets[viewStart];
-            int endOffset = (viewStart + views == _allOffsets.Length) ? (int)Storage.Size : _allOffsets[viewStart + views];
+            int endOffset = _allOffsets[viewEnd] + _sliceSizes[lastLevel];
             int size = endOffset - offset;
 
             var result = new List<CpuRegionHandle>();
@@ -1057,7 +1120,8 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// The dirty flags from the previous handles will be kept.
         /// </summary>
         /// <param name="handles">The handles to replace the current handles with</param>
-        private void ReplaceHandles(TextureGroupHandle[] handles)
+        /// <param name="rangeChanged">True if the storage memory range changed since the last region handle generation</param>
+        private void ReplaceHandles(TextureGroupHandle[] handles, bool rangeChanged)
         {
             if (_handles != null)
             {
@@ -1065,9 +1129,50 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                 foreach (TextureGroupHandle groupHandle in handles)
                 {
-                    foreach (CpuRegionHandle handle in groupHandle.Handles)
+                    if (rangeChanged)
                     {
-                        handle.Reprotect();
+                        // When the storage range changes, this becomes a little different.
+                        // If a range does not match one in the original, treat it as modified.
+                        // It has been newly mapped and its data must be synchronized.
+
+                        if (groupHandle.Handles.Length == 0)
+                        {
+                            continue;
+                        }
+
+                        foreach (var oldGroup in _handles)
+                        {
+                            if (!groupHandle.OverlapsWith(oldGroup.Offset, oldGroup.Size))
+                            {
+                                continue;
+                            }
+
+                            foreach (CpuRegionHandle handle in groupHandle.Handles)
+                            {
+                                bool hasMatch = false;
+
+                                foreach (var oldHandle in oldGroup.Handles)
+                                {
+                                    if (oldHandle.RangeEquals(handle))
+                                    {
+                                        hasMatch = true;
+                                        break;
+                                    }
+                                }
+
+                                if (hasMatch)
+                                {
+                                    handle.Reprotect();
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        foreach (CpuRegionHandle handle in groupHandle.Handles)
+                        {
+                            handle.Reprotect();
+                        }
                     }
                 }
 
@@ -1089,7 +1194,8 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <summary>
         /// Recalculate handle regions for this texture group, and inherit existing state into the new handles.
         /// </summary>
-        private void RecalculateHandleRegions()
+        /// <param name="rangeChanged">True if the storage memory range changed since the last region handle generation</param>
+        private void RecalculateHandleRegions(bool rangeChanged = false)
         {
             TextureGroupHandle[] handles;
 
@@ -1171,7 +1277,21 @@ namespace Ryujinx.Graphics.Gpu.Image
                 }
             }
 
-            ReplaceHandles(handles);
+            ReplaceHandles(handles, rangeChanged);
+        }
+
+        /// <summary>
+        /// Regenerates handles when the storage range has been remapped.
+        /// This forces the regions to be fully subdivided.
+        /// </summary>
+        public void RangeChanged()
+        {
+            _hasLayerViews = true;
+            _hasMipViews = true;
+
+            RecalculateHandleRegions(true);
+
+            SignalAllDirty();
         }
 
         /// <summary>
