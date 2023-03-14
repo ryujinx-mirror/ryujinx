@@ -160,6 +160,42 @@ namespace Ryujinx.Graphics.Gpu.Image
         }
 
         /// <summary>
+        /// Adds a single texture view as an overlap if its range overlaps.
+        /// </summary>
+        /// <param name="offset">The offset of the view in the group</param>
+        /// <param name="view">The texture to add as an overlap</param>
+        public void AddOverlap(int offset, Texture view)
+        {
+            // Overlaps can be accessed from the memory tracking signal handler, so access must be atomic.
+
+            if (OverlapsWith(offset, (int)view.Size))
+            {
+                lock (Overlaps)
+                {
+                    Overlaps.Add(view);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Removes a single texture view as an overlap if its range overlaps.
+        /// </summary>
+        /// <param name="offset">The offset of the view in the group</param>
+        /// <param name="view">The texture to add as an overlap</param>
+        public void RemoveOverlap(int offset, Texture view)
+        {
+            // Overlaps can be accessed from the memory tracking signal handler, so access must be atomic.
+
+            if (OverlapsWith(offset, (int)view.Size))
+            {
+                lock (Overlaps)
+                {
+                    Overlaps.Remove(view);
+                }
+            }
+        }
+
+        /// <summary>
         /// Registers a sync action to happen for this handle, and an interim flush action on the tracking handle.
         /// </summary>
         /// <param name="context">The GPU context to register a sync action on</param>

@@ -360,7 +360,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             texture._viewStorage = this;
 
-            Group.UpdateViews(_views);
+            Group.UpdateViews(_views, texture);
 
             if (texture.Group != null && texture.Group != Group)
             {
@@ -383,6 +383,8 @@ namespace Ryujinx.Graphics.Gpu.Image
         private void RemoveView(Texture texture)
         {
             _views.Remove(texture);
+
+            Group.RemoveView(texture);
 
             texture._viewStorage = texture;
 

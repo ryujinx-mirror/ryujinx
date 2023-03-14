@@ -989,7 +989,8 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// Update the views in this texture group, rebuilding the memory tracking if required.
         /// </summary>
         /// <param name="views">The views list of the storage texture</param>
-        public void UpdateViews(List<Texture> views)
+        /// <param name="texture">The texture that has been added, if that is the only change, otherwise null</param>
+        public void UpdateViews(List<Texture> views, Texture texture)
         {
             // This is saved to calculate overlapping views for each handle.
             _views = views;
@@ -1027,15 +1028,42 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             if (!regionsRebuilt)
             {
-                // Must update the overlapping views on all handles, but only if they were not just recreated.
-
-                foreach (TextureGroupHandle handle in _handles)
+                if (texture != null)
                 {
-                    handle.RecalculateOverlaps(this, views);
+                    int offset = FindOffset(texture);
+
+                    foreach (TextureGroupHandle handle in _handles)
+                    {
+                        handle.AddOverlap(offset, texture);
+                    }
+                }
+                else
+                {
+                    // Must update the overlapping views on all handles, but only if they were not just recreated.
+
+                    foreach (TextureGroupHandle handle in _handles)
+                    {
+                        handle.RecalculateOverlaps(this, views);
+                    }
                 }
             }
 
             SignalAllDirty();
+        }
+
+
+        /// <summary>
+        /// Removes a view from the group, removing it from all overlap lists.
+        /// </summary>
+        /// <param name="view">View to remove from the group</param>
+        public void RemoveView(Texture view)
+        {
+            int offset = FindOffset(view);
+
+            foreach (TextureGroupHandle handle in _handles)
+            {
+                handle.RemoveOverlap(offset, view);
+            }
         }
 
         /// <summary>
