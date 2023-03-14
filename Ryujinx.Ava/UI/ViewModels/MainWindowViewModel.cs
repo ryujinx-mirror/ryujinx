@@ -1564,7 +1564,7 @@ namespace Ryujinx.Ava.UI.ViewModels
         {
             if (SelectedApplication != null)
             {
-                await new DownloadableContentManagerWindow(VirtualFileSystem, ulong.Parse(SelectedApplication.TitleId, NumberStyles.HexNumber), SelectedApplication.TitleName).ShowDialog(TopLevel as Window);
+                await DownloadableContentManagerWindow.Show(VirtualFileSystem, ulong.Parse(SelectedApplication.TitleId, NumberStyles.HexNumber), SelectedApplication.TitleName);
             }
         }
 

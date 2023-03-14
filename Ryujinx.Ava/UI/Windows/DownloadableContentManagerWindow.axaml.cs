@@ -1,314 +1,115 @@
-using Avalonia.Collections;
 using Avalonia.Controls;
-using Avalonia.Threading;
-using LibHac.Common;
-using LibHac.Fs;
-using LibHac.Fs.Fsa;
-using LibHac.FsSystem;
-using LibHac.Tools.Fs;
-using LibHac.Tools.FsSystem;
-using LibHac.Tools.FsSystem.NcaUtils;
+using Avalonia.Interactivity;
+using Avalonia.Styling;
+using FluentAvalonia.UI.Controls;
 using Ryujinx.Ava.Common.Locale;
-using Ryujinx.Ava.UI.Controls;
 using Ryujinx.Ava.UI.Helpers;
 using Ryujinx.Ava.UI.Models;
-using Ryujinx.Common.Configuration;
-using Ryujinx.Common.Utilities;
+using Ryujinx.Ava.UI.ViewModels;
 using Ryujinx.HLE.FileSystem;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reactive.Linq;
-using System.Text;
+using Ryujinx.Ui.Common.Helper;
 using System.Threading.Tasks;
-using Path = System.IO.Path;
+using Button = Avalonia.Controls.Button;
 
 namespace Ryujinx.Ava.UI.Windows
 {
-    public partial class DownloadableContentManagerWindow : StyleableWindow
+    public partial class DownloadableContentManagerWindow : UserControl
     {
-        private readonly List<DownloadableContentContainer> _downloadableContentContainerList;
-        private readonly string                             _downloadableContentJsonPath;
-
-        private VirtualFileSystem                      _virtualFileSystem    { get; }
-        private AvaloniaList<DownloadableContentModel> _downloadableContents { get; set; }
-
-        private ulong  _titleId   { get; }
-        private string _titleName { get; }
+        public DownloadableContentManagerViewModel ViewModel;
 
         public DownloadableContentManagerWindow()
         {
             DataContext = this;
 
             InitializeComponent();
-
-            Title = $"Ryujinx {Program.Version} - {LocaleManager.Instance[LocaleKeys.DlcWindowTitle]} - {_titleName} ({_titleId:X16})";
         }
 
         public DownloadableContentManagerWindow(VirtualFileSystem virtualFileSystem, ulong titleId, string titleName)
         {
-            _virtualFileSystem    = virtualFileSystem;
-            _downloadableContents = new AvaloniaList<DownloadableContentModel>();
-
-            _titleId   = titleId;
-            _titleName = titleName;
-
-            _downloadableContentJsonPath = Path.Combine(AppDataManager.GamesDirPath, titleId.ToString("x16"), "dlc.json");
-
-            try
-            {
-                _downloadableContentContainerList = JsonHelper.DeserializeFromFile<List<DownloadableContentContainer>>(_downloadableContentJsonPath);
-            }
-            catch
-            {
-                _downloadableContentContainerList = new List<DownloadableContentContainer>();
-            }
-
-            DataContext = this;
+            DataContext = ViewModel = new DownloadableContentManagerViewModel(virtualFileSystem, titleId, titleName);
 
             InitializeComponent();
-
-            RemoveButton.IsEnabled = false;
-
-            DlcDataGrid.SelectionChanged += DlcDataGrid_SelectionChanged;
-
-            Title = $"Ryujinx {Program.Version} - {LocaleManager.Instance[LocaleKeys.DlcWindowTitle]} - {_titleName} ({_titleId:X16})";
-
-            LoadDownloadableContents();
-            PrintHeading();
         }
 
-        private void DlcDataGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        public static async Task Show(VirtualFileSystem virtualFileSystem, ulong titleId, string titleName)
         {
-            RemoveButton.IsEnabled = (DlcDataGrid.SelectedItems.Count > 0);
-        }
-
-        private void PrintHeading()
-        {
-            Heading.Text = LocaleManager.Instance.UpdateAndGetDynamicValue(LocaleKeys.DlcWindowHeading, _downloadableContents.Count, _titleName, _titleId.ToString("X16"));
-        }
-
-        private void LoadDownloadableContents()
-        {
-            foreach (DownloadableContentContainer downloadableContentContainer in _downloadableContentContainerList)
+            ContentDialog contentDialog = new()
             {
-                if (File.Exists(downloadableContentContainer.ContainerPath))
-                {
-                    using FileStream containerFile = File.OpenRead(downloadableContentContainer.ContainerPath);
-
-                    PartitionFileSystem partitionFileSystem = new(containerFile.AsStorage());
-
-                    _virtualFileSystem.ImportTickets(partitionFileSystem);
-
-                    foreach (DownloadableContentNca downloadableContentNca in downloadableContentContainer.DownloadableContentNcaList)
-                    {
-                        using UniqueRef<IFile> ncaFile = new();
-
-                        partitionFileSystem.OpenFile(ref ncaFile.Ref, downloadableContentNca.FullPath.ToU8Span(), OpenMode.Read).ThrowIfFailure();
-
-                        Nca nca = TryOpenNca(ncaFile.Get.AsStorage(), downloadableContentContainer.ContainerPath);
-                        if (nca != null)
-                        {
-                            _downloadableContents.Add(new DownloadableContentModel(nca.Header.TitleId.ToString("X16"),
-                                                                                   downloadableContentContainer.ContainerPath,
-                                                                                   downloadableContentNca.FullPath,
-                                                                                   downloadableContentNca.Enabled));
-                        }
-                    }
-                }
-            }
-
-            // NOTE: Save the list again to remove leftovers.
-            Save();
-        }
-
-        private Nca TryOpenNca(IStorage ncaStorage, string containerPath)
-        {
-            try
-            {
-                return new Nca(_virtualFileSystem.KeySet, ncaStorage);
-            }
-            catch (Exception ex)
-            {
-                Dispatcher.UIThread.InvokeAsync(async () =>
-                {
-                    await ContentDialogHelper.CreateErrorDialog(LocaleManager.Instance.UpdateAndGetDynamicValue(LocaleKeys.DialogLoadNcaErrorMessage, ex.Message, containerPath));
-                });
-            }
-
-            return null;
-        }
-
-        private async Task AddDownloadableContent(string path)
-        {
-            if (!File.Exists(path) || _downloadableContents.FirstOrDefault(x => x.ContainerPath == path) != null)
-            {
-                return;
-            }
-
-            using FileStream containerFile = File.OpenRead(path);
-
-            PartitionFileSystem partitionFileSystem         = new(containerFile.AsStorage());
-            bool                containsDownloadableContent = false;
-
-            _virtualFileSystem.ImportTickets(partitionFileSystem);
-
-            foreach (DirectoryEntryEx fileEntry in partitionFileSystem.EnumerateEntries("/", "*.nca"))
-            {
-                using var ncaFile = new UniqueRef<IFile>();
-
-                partitionFileSystem.OpenFile(ref ncaFile.Ref, fileEntry.FullPath.ToU8Span(), OpenMode.Read).ThrowIfFailure();
-
-                Nca nca = TryOpenNca(ncaFile.Get.AsStorage(), path);
-                if (nca == null)
-                {
-                    continue;
-                }
-
-                if (nca.Header.ContentType == NcaContentType.PublicData)
-                {
-                    if ((nca.Header.TitleId & 0xFFFFFFFFFFFFE000) != _titleId)
-                    {
-                        break;
-                    }
-
-                    _downloadableContents.Add(new DownloadableContentModel(nca.Header.TitleId.ToString("X16"), path, fileEntry.FullPath, true));
-
-                    containsDownloadableContent = true;
-                }
-            }
-
-            if (!containsDownloadableContent)
-            {
-                await ContentDialogHelper.CreateErrorDialog(LocaleManager.Instance[LocaleKeys.DialogDlcNoDlcErrorMessage]);
-            }
-        }
-
-        private void RemoveDownloadableContents(bool removeSelectedOnly = false)
-        {
-            if (removeSelectedOnly)
-            {
-                AvaloniaList<DownloadableContentModel> removedItems = new();
-
-                foreach (var item in DlcDataGrid.SelectedItems)
-                {
-                    removedItems.Add(item as DownloadableContentModel);
-                }
-
-                DlcDataGrid.SelectedItems.Clear();
-
-                foreach (var item in removedItems)
-                {
-                    _downloadableContents.RemoveAll(_downloadableContents.Where(x => x.TitleId == item.TitleId).ToList());
-                }
-            }
-            else
-            {
-                _downloadableContents.Clear();
-            }
-
-            PrintHeading();
-        }
-
-        public void RemoveSelected()
-        {
-            RemoveDownloadableContents(true);
-        }
-
-        public void RemoveAll()
-        {
-            RemoveDownloadableContents();
-        }
-
-        public void EnableAll()
-        {
-            foreach(var item in _downloadableContents)
-            {
-                item.Enabled = true;
-            }
-        }
-
-        public void DisableAll()
-        {
-            foreach (var item in _downloadableContents)
-            {
-                item.Enabled = false;
-            }
-        }
-
-        public async void Add()
-        {
-            OpenFileDialog dialog = new OpenFileDialog()
-            { 
-                Title         = LocaleManager.Instance[LocaleKeys.SelectDlcDialogTitle],
-                AllowMultiple = true
+                PrimaryButtonText   = "",
+                SecondaryButtonText = "",
+                CloseButtonText     = "",
+                Content             = new DownloadableContentManagerWindow(virtualFileSystem, titleId, titleName),
+                Title               = string.Format(LocaleManager.Instance[LocaleKeys.DlcWindowTitle], titleName, titleId.ToString("X16"))
             };
 
-            dialog.Filters.Add(new FileDialogFilter
-            {
-                Name       = "NSP",
-                Extensions = { "nsp" }
-            });
+            Style bottomBorder = new(x => x.OfType<Grid>().Name("DialogSpace").Child().OfType<Border>());
+            bottomBorder.Setters.Add(new Setter(IsVisibleProperty, false));
 
-            string[] files = await dialog.ShowAsync(this);
+            contentDialog.Styles.Add(bottomBorder);
 
-            if (files != null)
-            {
-                foreach (string file in files)
-                {
-                   await AddDownloadableContent(file);
-                }
-            }
-
-            PrintHeading();
+            await ContentDialogHelper.ShowAsync(contentDialog);
         }
 
-        public void Save()
+        private void SaveAndClose(object sender, RoutedEventArgs routedEventArgs)
         {
-            _downloadableContentContainerList.Clear();
+            ViewModel.Save();
+            ((ContentDialog)Parent).Hide();
+        }
 
-            DownloadableContentContainer container = default;
+        private void Close(object sender, RoutedEventArgs e)
+        {
+            ((ContentDialog)Parent).Hide();
+        }
 
-            foreach (DownloadableContentModel downloadableContent in _downloadableContents)
+        private void RemoveDLC(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button button)
             {
-                if (container.ContainerPath != downloadableContent.ContainerPath)
+                if (button.DataContext is DownloadableContentModel model)
                 {
-                    if (!string.IsNullOrWhiteSpace(container.ContainerPath))
+                    ViewModel.Remove(model);
+                }
+            }
+        }
+
+        private void OpenLocation(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button button)
+            {
+                if (button.DataContext is DownloadableContentModel model)
+                {
+                    OpenHelper.LocateFile(model.ContainerPath);
+                }
+            }
+        }
+
+        private void OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            foreach (var content in e.AddedItems)
+            {
+                if (content is DownloadableContentModel model)
+                {
+                    var index = ViewModel.DownloadableContents.IndexOf(model);
+
+                    if (index != -1)
                     {
-                        _downloadableContentContainerList.Add(container);
+                        ViewModel.DownloadableContents[index].Enabled = true;
                     }
-
-                    container = new DownloadableContentContainer
-                    {
-                        ContainerPath              = downloadableContent.ContainerPath,
-                        DownloadableContentNcaList = new List<DownloadableContentNca>()
-                    };
                 }
+            }
 
-                container.DownloadableContentNcaList.Add(new DownloadableContentNca
+            foreach (var content in e.RemovedItems)
+            {
+                if (content is DownloadableContentModel model)
                 {
-                    Enabled  = downloadableContent.Enabled,
-                    TitleId  = Convert.ToUInt64(downloadableContent.TitleId, 16),
-                    FullPath = downloadableContent.FullPath
-                });
-            }
+                    var index = ViewModel.DownloadableContents.IndexOf(model);
 
-            if (!string.IsNullOrWhiteSpace(container.ContainerPath))
-            {
-                _downloadableContentContainerList.Add(container);
+                    if (index != -1)
+                    {
+                        ViewModel.DownloadableContents[index].Enabled = false;
+                    }
+                }
             }
-
-            using (FileStream downloadableContentJsonStream = File.Create(_downloadableContentJsonPath, 4096, FileOptions.WriteThrough))
-            {
-                downloadableContentJsonStream.Write(Encoding.UTF8.GetBytes(JsonHelper.Serialize(_downloadableContentContainerList, true)));
-            }
-        }
-
-        public void SaveAndClose()
-        {
-            Save();
-            Close();
         }
     }
 }
