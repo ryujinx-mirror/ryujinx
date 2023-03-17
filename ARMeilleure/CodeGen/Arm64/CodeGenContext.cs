@@ -1,6 +1,7 @@
 using ARMeilleure.CodeGen.Linking;
 using ARMeilleure.CodeGen.RegisterAllocators;
 using ARMeilleure.IntermediateRepresentation;
+using Ryujinx.Common.Memory;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -59,7 +60,7 @@ namespace ARMeilleure.CodeGen.Arm64
 
         public CodeGenContext(AllocationResult allocResult, int maxCallArgs, int blocksCount, bool relocatable)
         {
-            _stream = new MemoryStream();
+            _stream = MemoryStreamManager.Shared.GetStream();
 
             AllocResult = allocResult;
 

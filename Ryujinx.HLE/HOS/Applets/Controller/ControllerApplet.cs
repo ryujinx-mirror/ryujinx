@@ -1,4 +1,5 @@
 using Ryujinx.Common.Logging;
+using Ryujinx.Common.Memory;
 using Ryujinx.HLE.HOS.Services.Am.AppletAE;
 using Ryujinx.HLE.HOS.Services.Hid;
 using Ryujinx.HLE.HOS.Services.Hid.Types;
@@ -123,7 +124,7 @@ namespace Ryujinx.HLE.HOS.Applets
 
         private byte[] BuildResponse(ControllerSupportResultInfo result)
         {
-            using (MemoryStream stream = new MemoryStream())
+            using (MemoryStream stream = MemoryStreamManager.Shared.GetStream())
             using (BinaryWriter writer = new BinaryWriter(stream))
             {
                 writer.Write(MemoryMarshal.AsBytes(MemoryMarshal.CreateReadOnlySpan(ref result, Unsafe.SizeOf<ControllerSupportResultInfo>())));
@@ -134,7 +135,7 @@ namespace Ryujinx.HLE.HOS.Applets
 
         private byte[] BuildResponse()
         {
-            using (MemoryStream stream = new MemoryStream())
+            using (MemoryStream stream = MemoryStreamManager.Shared.GetStream())
             using (BinaryWriter writer = new BinaryWriter(stream))
             {
                 writer.Write((ulong)ResultCode.Success);

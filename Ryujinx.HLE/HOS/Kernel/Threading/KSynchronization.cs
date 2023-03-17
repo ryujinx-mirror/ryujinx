@@ -59,7 +59,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
             }
             else
             {
-                LinkedListNode<KThread>[] syncNodes = new LinkedListNode<KThread>[syncObjs.Length];
+                LinkedListNode<KThread>[] syncNodes = syncObjs.Length == 0 ? Array.Empty<LinkedListNode<KThread>>() : new LinkedListNode<KThread>[syncObjs.Length];
 
                 for (int index = 0; index < syncObjs.Length; index++)
                 {

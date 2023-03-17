@@ -3,6 +3,7 @@ using Ryujinx.Common.Configuration.Hid;
 using Ryujinx.Common.Configuration.Hid.Controller;
 using Ryujinx.Common.Configuration.Hid.Controller.Motion;
 using Ryujinx.Common.Logging;
+using Ryujinx.Common.Memory;
 using Ryujinx.Input.HLE;
 using Ryujinx.Input.Motion.CemuHook.Protocol;
 using System;
@@ -381,7 +382,7 @@ namespace Ryujinx.Input.Motion.CemuHook
 
             Header header = GenerateHeader(clientId);
 
-            using (MemoryStream stream = new MemoryStream())
+            using (MemoryStream stream = MemoryStreamManager.Shared.GetStream())
             using (BinaryWriter writer = new BinaryWriter(stream))
             {
                 writer.WriteStruct(header);
@@ -421,7 +422,7 @@ namespace Ryujinx.Input.Motion.CemuHook
 
             Header header = GenerateHeader(clientId);
 
-            using (MemoryStream stream = new MemoryStream())
+            using (MemoryStream stream = MemoryStreamManager.Shared.GetStream())
             using (BinaryWriter writer = new BinaryWriter(stream))
             {
                 writer.WriteStruct(header);

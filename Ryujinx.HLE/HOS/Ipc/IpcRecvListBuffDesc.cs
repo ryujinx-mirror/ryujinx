@@ -13,13 +13,11 @@ namespace Ryujinx.HLE.HOS.Ipc
             Size = size;
         }
 
-        public IpcRecvListBuffDesc(BinaryReader reader)
+        public IpcRecvListBuffDesc(ulong packedValue)
         {
-            ulong value = reader.ReadUInt64();
+            Position = packedValue & 0xffffffffffff;
 
-            Position = value & 0xffffffffffff;
-
-            Size = (ushort)(value >> 48);
+            Size = (ushort)(packedValue >> 48);
         }
     }
 }

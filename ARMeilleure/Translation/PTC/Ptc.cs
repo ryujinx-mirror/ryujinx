@@ -6,6 +6,7 @@ using ARMeilleure.Memory;
 using Ryujinx.Common;
 using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Logging;
+using Ryujinx.Common.Memory;
 using System;
 using System.Buffers.Binary;
 using System.Collections.Generic;
@@ -150,10 +151,10 @@ namespace ARMeilleure.Translation.PTC
 
         private void InitializeCarriers()
         {
-            _infosStream = new MemoryStream();
+            _infosStream = MemoryStreamManager.Shared.GetStream();
             _codesList = new List<byte[]>();
-            _relocsStream = new MemoryStream();
-            _unwindInfosStream = new MemoryStream();
+            _relocsStream = MemoryStreamManager.Shared.GetStream();
+            _unwindInfosStream = MemoryStreamManager.Shared.GetStream();
         }
 
         private void DisposeCarriers()

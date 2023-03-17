@@ -1,3 +1,5 @@
+using Ryujinx.Common;
+using Ryujinx.Common.Memory;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.Shader;
 using Ryujinx.Graphics.Shader.Translation;
@@ -11,16 +13,15 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
     {
         public static byte[] Pack(ShaderSource[] sources)
         {
-            using MemoryStream output = new MemoryStream();
-            using BinaryWriter writer = new BinaryWriter(output);
+            using MemoryStream output = MemoryStreamManager.Shared.GetStream();
 
-            writer.Write(sources.Length);
+            output.Write(sources.Length);
 
-            for (int i = 0; i < sources.Length; i++)
+            foreach (ShaderSource source in sources)
             {
-                writer.Write((int)sources[i].Stage);
-                writer.Write(sources[i].BinaryCode.Length);
-                writer.Write(sources[i].BinaryCode);
+                output.Write((int)source.Stage);
+                output.Write(source.BinaryCode.Length);
+                output.Write(source.BinaryCode);
             }
 
             return output.ToArray();

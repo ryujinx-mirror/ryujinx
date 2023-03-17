@@ -1,3 +1,5 @@
+using Ryujinx.Common.Memory;
+using Ryujinx.Common.Utilities;
 using System;
 using System.IO;
 using System.Linq;
@@ -38,12 +40,7 @@ namespace Ryujinx.Common
                     return null;
                 }
 
-                using (var mem = new MemoryStream())
-                {
-                    stream.CopyTo(mem);
-
-                    return mem.ToArray();
-                }
+                return StreamUtils.StreamToBytes(stream);
             }
         }
 
@@ -56,12 +53,7 @@ namespace Ryujinx.Common
                     return null;
                 }
 
-                using (var mem = new MemoryStream())
-                {
-                    await stream.CopyToAsync(mem);
-
-                    return mem.ToArray();
-                }
+                return await StreamUtils.StreamToBytesAsync(stream);
             }
         }
 

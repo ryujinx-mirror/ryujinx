@@ -16,7 +16,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
 
             public WaitingObject(IKFutureSchedulerObject schedulerObj, long timePoint)
             {
-                Object    = schedulerObj;
+                Object = schedulerObj;
                 TimePoint = timePoint;
             }
         }
@@ -26,6 +26,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
         private AutoResetEvent _waitEvent;
         private bool _keepRunning;
         private long _enforceWakeupFromSpinWait;
+
+        private const long NanosecondsPerSecond = 1000000000L;
+        private const long NanosecondsPerMillisecond = 1000000L;
 
         public KTimeManager(KernelContext context)
         {
@@ -55,7 +58,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
             {
                 _waitingObjects.Add(new WaitingObject(schedulerObj, timePoint));
 
-                if (timeout < 1000000)
+                if (timeout < NanosecondsPerMillisecond)
                 {
                     Interlocked.Exchange(ref _enforceWakeupFromSpinWait, 1);
                 }
@@ -142,7 +145,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
         private WaitingObject GetNextWaitingObject()
         {
             WaitingObject selected = null;
-            
+
             long lowestTimePoint = long.MaxValue;
 
             for (int index = _waitingObjects.Count - 1; index >= 0; index--)
@@ -161,7 +164,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
 
         public static long ConvertNanosecondsToMilliseconds(long time)
         {
-            time /= 1000000;
+            time /= NanosecondsPerMillisecond;
 
             if ((ulong)time > int.MaxValue)
             {
@@ -173,18 +176,18 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
 
         public static long ConvertMillisecondsToNanoseconds(long time)
         {
-            return time * 1000000;
+            return time * NanosecondsPerMillisecond;
         }
 
         public static long ConvertNanosecondsToHostTicks(long ns)
         {
-            long nsDiv = ns / 1000000000;
-            long nsMod = ns % 1000000000;
-            long tickDiv = PerformanceCounter.TicksPerSecond / 1000000000;
-            long tickMod = PerformanceCounter.TicksPerSecond % 1000000000;
+            long nsDiv = ns / NanosecondsPerSecond;
+            long nsMod = ns % NanosecondsPerSecond;
+            long tickDiv = PerformanceCounter.TicksPerSecond / NanosecondsPerSecond;
+            long tickMod = PerformanceCounter.TicksPerSecond % NanosecondsPerSecond;
 
-            long baseTicks = (nsMod * tickMod + PerformanceCounter.TicksPerSecond - 1) / 1000000000;
-            return (nsDiv * tickDiv) * 1000000000 + nsDiv * tickMod + nsMod * tickDiv + baseTicks;
+            long baseTicks = (nsMod * tickMod + PerformanceCounter.TicksPerSecond - 1) / NanosecondsPerSecond;
+            return (nsDiv * tickDiv) * NanosecondsPerSecond + nsDiv * tickMod + nsMod * tickDiv + baseTicks;
         }
 
         public static long ConvertGuestTicksToNanoseconds(long ticks)

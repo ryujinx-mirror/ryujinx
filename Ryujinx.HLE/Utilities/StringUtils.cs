@@ -1,4 +1,6 @@
 ﻿using LibHac.Common;
+using Microsoft.IO;
+using Ryujinx.Common.Memory;
 using Ryujinx.HLE.HOS;
 using System;
 using System.Globalization;
@@ -77,7 +79,7 @@ namespace Ryujinx.HLE.Utilities
             ulong position = context.Request.PtrBuff[index].Position;
             ulong size     = context.Request.PtrBuff[index].Size;
 
-            using (MemoryStream ms = new MemoryStream())
+            using (RecyclableMemoryStream ms = MemoryStreamManager.Shared.GetStream())
             {
                 while (size-- > 0)
                 {
@@ -91,7 +93,7 @@ namespace Ryujinx.HLE.Utilities
                     ms.WriteByte(value);
                 }
 
-                return Encoding.UTF8.GetString(ms.ToArray());
+                return Encoding.UTF8.GetString(ms.GetReadOnlySequence());
             }
         }
 
@@ -110,7 +112,7 @@ namespace Ryujinx.HLE.Utilities
             ulong position = context.Request.SendBuff[index].Position;
             ulong size     = context.Request.SendBuff[index].Size;
 
-            using (MemoryStream ms = new MemoryStream())
+            using (RecyclableMemoryStream ms = MemoryStreamManager.Shared.GetStream())
             {
                 while (size-- > 0)
                 {
@@ -124,7 +126,7 @@ namespace Ryujinx.HLE.Utilities
                     ms.WriteByte(value);
                 }
 
-                return Encoding.UTF8.GetString(ms.ToArray());
+                return Encoding.UTF8.GetString(ms.GetReadOnlySequence());
             }
         }
 

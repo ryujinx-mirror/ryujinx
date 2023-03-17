@@ -1,5 +1,6 @@
 using ARMeilleure.CodeGen.Linking;
 using ARMeilleure.IntermediateRepresentation;
+using Ryujinx.Common.Memory;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -1285,7 +1286,7 @@ namespace ARMeilleure.CodeGen.X86
             // Write the code, ignoring the dummy bytes after jumps, into a new stream.
             _stream.Seek(0, SeekOrigin.Begin);
 
-            using var codeStream = new MemoryStream();
+            using var codeStream = MemoryStreamManager.Shared.GetStream();
             var assembler = new Assembler(codeStream, HasRelocs);
 
             bool hasRelocs = HasRelocs;

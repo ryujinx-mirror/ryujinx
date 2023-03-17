@@ -1,3 +1,5 @@
+using Ryujinx.Common;
+using Ryujinx.Common.Memory;
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel;
 using Ryujinx.HLE.HOS.Kernel.Ipc;
@@ -5,6 +7,7 @@ using Ryujinx.HLE.HOS.Kernel.Process;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.Horizon.Common;
 using System;
+using System.Buffers;
 using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
@@ -37,14 +40,27 @@ namespace Ryujinx.HLE.HOS.Services
         private readonly Dictionary<int, IpcService> _sessions = new Dictionary<int, IpcService>();
         private readonly Dictionary<int, Func<IpcService>> _ports = new Dictionary<int, Func<IpcService>>();
 
+        private readonly MemoryStream _requestDataStream;
+        private readonly BinaryReader _requestDataReader;
+
+        private readonly MemoryStream _responseDataStream;
+        private readonly BinaryWriter _responseDataWriter;
+
         public ManualResetEvent InitDone { get; }
         public string Name { get; }
         public Func<IpcService> SmObjectFactory { get; }
 
         public ServerBase(KernelContext context, string name, Func<IpcService> smObjectFactory = null)
         {
-            InitDone = new ManualResetEvent(false);
             _context = context;
+
+            _requestDataStream = MemoryStreamManager.Shared.GetStream();
+            _requestDataReader = new BinaryReader(_requestDataStream);
+
+            _responseDataStream = MemoryStreamManager.Shared.GetStream();
+            _responseDataWriter = new BinaryWriter(_responseDataStream);
+
+            InitDone = new ManualResetEvent(false);
             Name = name;
             SmObjectFactory = smObjectFactory;
 
@@ -110,15 +126,15 @@ namespace Ryujinx.HLE.HOS.Services
 
             while (true)
             {
-                int[] portHandles = _portHandles.ToArray();
-                int[] sessionHandles = _sessionHandles.ToArray();
-                int[] handles = new int[portHandles.Length + sessionHandles.Length];
+                int handleCount = _portHandles.Count + _sessionHandles.Count;
 
-                portHandles.CopyTo(handles, 0);
-                sessionHandles.CopyTo(handles, portHandles.Length);
+                int[] handles = ArrayPool<int>.Shared.Rent(handleCount);
+                
+                _portHandles.CopyTo(handles, 0);
+                _sessionHandles.CopyTo(handles, _portHandles.Count);
 
                 // We still need a timeout here to allow the service to pick up and listen new sessions...
-                var rc = _context.Syscall.ReplyAndReceive(out int signaledIndex, handles, replyTargetHandle, 1000000L);
+                var rc = _context.Syscall.ReplyAndReceive(out int signaledIndex, handles.AsSpan(0, handleCount), replyTargetHandle, 1000000L);
 
                 thread.HandlePostSyscall();
 
@@ -129,7 +145,7 @@ namespace Ryujinx.HLE.HOS.Services
 
                 replyTargetHandle = 0;
 
-                if (rc == Result.Success && signaledIndex >= portHandles.Length)
+                if (rc == Result.Success && signaledIndex >= _portHandles.Count)
                 {
                     // We got a IPC request, process it, pass to the appropriate service if needed.
                     int signaledHandle = handles[signaledIndex];
@@ -156,6 +172,8 @@ namespace Ryujinx.HLE.HOS.Services
                     _selfProcess.CpuMemory.Write(messagePtr + 0x4, 2 << 10);
                     _selfProcess.CpuMemory.Write(messagePtr + 0x8, heapAddr | ((ulong)PointerBufferSize << 48));
                 }
+
+                ArrayPool<int>.Shared.Return(handles);
             }
 
             Dispose();
@@ -166,13 +184,9 @@ namespace Ryujinx.HLE.HOS.Services
             KProcess process = KernelStatic.GetCurrentProcess();
             KThread thread = KernelStatic.GetCurrentThread();
             ulong messagePtr = thread.TlsAddress;
-            ulong messageSize = 0x100;
 
-            byte[] reqData = new byte[messageSize];
+            IpcMessage request = ReadRequest(process, messagePtr);
 
-            process.CpuMemory.Read(messagePtr, reqData);
-
-            IpcMessage request = new IpcMessage(reqData, (long)messagePtr);
             IpcMessage response = new IpcMessage();
 
             ulong tempAddr = recvListAddr;
@@ -202,158 +216,157 @@ namespace Ryujinx.HLE.HOS.Services
             bool shouldReply = true;
             bool isTipcCommunication = false;
 
-            using (MemoryStream raw = new MemoryStream(request.RawData))
+            _requestDataStream.SetLength(0);
+            _requestDataStream.Write(request.RawData);
+            _requestDataStream.Position = 0;
+
+            if (request.Type == IpcMessageType.HipcRequest ||
+                request.Type == IpcMessageType.HipcRequestWithContext)
             {
-                BinaryReader reqReader = new BinaryReader(raw);
+                response.Type = IpcMessageType.HipcResponse;
 
-                if (request.Type == IpcMessageType.HipcRequest ||
-                    request.Type == IpcMessageType.HipcRequestWithContext)
-                {
-                    response.Type = IpcMessageType.HipcResponse;
+                _responseDataStream.SetLength(0);
 
-                    using (MemoryStream resMs = new MemoryStream())
-                    {
-                        BinaryWriter resWriter = new BinaryWriter(resMs);
+                ServiceCtx context = new ServiceCtx(
+                    _context.Device,
+                    process,
+                    process.CpuMemory,
+                    thread,
+                    request,
+                    response,
+                    _requestDataReader,
+                    _responseDataWriter);
 
-                        ServiceCtx context = new ServiceCtx(
-                            _context.Device,
-                            process,
-                            process.CpuMemory,
-                            thread,
-                            request,
-                            response,
-                            reqReader,
-                            resWriter);
+                _sessions[serverSessionHandle].CallHipcMethod(context);
 
-                        _sessions[serverSessionHandle].CallHipcMethod(context);
-
-                        response.RawData = resMs.ToArray();
-                    }
-                }
-                else if (request.Type == IpcMessageType.HipcControl ||
-                         request.Type == IpcMessageType.HipcControlWithContext)
-                {
-                    uint magic = (uint)reqReader.ReadUInt64();
-                    uint cmdId = (uint)reqReader.ReadUInt64();
-
-                    switch (cmdId)
-                    {
-                        case 0:
-                            request = FillResponse(response, 0, _sessions[serverSessionHandle].ConvertToDomain());
-                            break;
-
-                        case 3:
-                            request = FillResponse(response, 0, PointerBufferSize);
-                            break;
-
-                        // TODO: Whats the difference between IpcDuplicateSession/Ex?
-                        case 2:
-                        case 4:
-                            int unknown = reqReader.ReadInt32();
-
-                            _context.Syscall.CreateSession(out int dupServerSessionHandle, out int dupClientSessionHandle, false, 0);
-
-                            AddSessionObj(dupServerSessionHandle, _sessions[serverSessionHandle]);
-
-                            response.HandleDesc = IpcHandleDesc.MakeMove(dupClientSessionHandle);
-
-                            request = FillResponse(response, 0);
-
-                            break;
-
-                        default: throw new NotImplementedException(cmdId.ToString());
-                    }
-                }
-                else if (request.Type == IpcMessageType.HipcCloseSession || request.Type == IpcMessageType.TipcCloseSession)
-                {
-                    _context.Syscall.CloseHandle(serverSessionHandle);
-                    _sessionHandles.Remove(serverSessionHandle);
-                    IpcService service = _sessions[serverSessionHandle];
-                    if (service is IDisposable disposableObj)
-                    {
-                        disposableObj.Dispose();
-                    }
-                    _sessions.Remove(serverSessionHandle);
-                    shouldReply = false;
-                }
-                // If the type is past 0xF, we are using TIPC
-                else if (request.Type > IpcMessageType.TipcCloseSession)
-                {
-                    isTipcCommunication = true;
-
-                    // Response type is always the same as request on TIPC.
-                    response.Type = request.Type;
-
-                    using (MemoryStream resMs = new MemoryStream())
-                    {
-                        BinaryWriter resWriter = new BinaryWriter(resMs);
-
-                        ServiceCtx context = new ServiceCtx(
-                            _context.Device,
-                            process,
-                            process.CpuMemory,
-                            thread,
-                            request,
-                            response,
-                            reqReader,
-                            resWriter);
-
-                        _sessions[serverSessionHandle].CallTipcMethod(context);
-
-                        response.RawData = resMs.ToArray();
-                    }
-
-                    process.CpuMemory.Write(messagePtr, response.GetBytesTipc());
-                }
-                else
-                {
-                    throw new NotImplementedException(request.Type.ToString());
-                }
-
-                if (!isTipcCommunication)
-                {
-                    process.CpuMemory.Write(messagePtr, response.GetBytes((long)messagePtr, recvListAddr | ((ulong)PointerBufferSize << 48)));
-                }
-
-                return shouldReply;
+                response.RawData = _responseDataStream.ToArray();
             }
+            else if (request.Type == IpcMessageType.HipcControl ||
+                        request.Type == IpcMessageType.HipcControlWithContext)
+            {
+                uint magic = (uint)_requestDataReader.ReadUInt64();
+                uint cmdId = (uint)_requestDataReader.ReadUInt64();
+
+                switch (cmdId)
+                {
+                    case 0:
+                        FillHipcResponse(response, 0, _sessions[serverSessionHandle].ConvertToDomain());
+                        break;
+
+                    case 3:
+                        FillHipcResponse(response, 0, PointerBufferSize);
+                        break;
+
+                    // TODO: Whats the difference between IpcDuplicateSession/Ex?
+                    case 2:
+                    case 4:
+                        int unknown = _requestDataReader.ReadInt32();
+
+                        _context.Syscall.CreateSession(out int dupServerSessionHandle, out int dupClientSessionHandle, false, 0);
+
+                        AddSessionObj(dupServerSessionHandle, _sessions[serverSessionHandle]);
+
+                        response.HandleDesc = IpcHandleDesc.MakeMove(dupClientSessionHandle);
+
+                        FillHipcResponse(response, 0);
+
+                        break;
+
+                    default: throw new NotImplementedException(cmdId.ToString());
+                }
+            }
+            else if (request.Type == IpcMessageType.HipcCloseSession || request.Type == IpcMessageType.TipcCloseSession)
+            {
+                _context.Syscall.CloseHandle(serverSessionHandle);
+                _sessionHandles.Remove(serverSessionHandle);
+                IpcService service = _sessions[serverSessionHandle];
+                (service as IDisposable)?.Dispose();
+                _sessions.Remove(serverSessionHandle);
+                shouldReply = false;
+            }
+            // If the type is past 0xF, we are using TIPC
+            else if (request.Type > IpcMessageType.TipcCloseSession)
+            {
+                isTipcCommunication = true;
+
+                // Response type is always the same as request on TIPC.
+                response.Type = request.Type;
+
+                _responseDataStream.SetLength(0);
+
+                ServiceCtx context = new ServiceCtx(
+                    _context.Device,
+                    process,
+                    process.CpuMemory,
+                    thread,
+                    request,
+                    response,
+                    _requestDataReader,
+                    _responseDataWriter);
+
+                _sessions[serverSessionHandle].CallTipcMethod(context);
+
+                response.RawData = _responseDataStream.ToArray();
+
+                using var responseStream = response.GetStreamTipc();
+                process.CpuMemory.Write(messagePtr, responseStream.GetReadOnlySequence());
+            }
+            else
+            {
+                throw new NotImplementedException(request.Type.ToString());
+            }
+
+            if (!isTipcCommunication)
+            {
+                using var responseStream = response.GetStream((long)messagePtr, recvListAddr | ((ulong)PointerBufferSize << 48));
+                process.CpuMemory.Write(messagePtr, responseStream.GetReadOnlySequence());
+            }
+
+            return shouldReply;
         }
 
-        private static IpcMessage FillResponse(IpcMessage response, long result, params int[] values)
+        private static IpcMessage ReadRequest(KProcess process, ulong messagePtr)
         {
-            using (MemoryStream ms = new MemoryStream())
-            {
-                BinaryWriter writer = new BinaryWriter(ms);
+            const int messageSize = 0x100;
 
-                foreach (int value in values)
-                {
-                    writer.Write(value);
-                }
+            byte[] reqData = ArrayPool<byte>.Shared.Rent(messageSize);
 
-                return FillResponse(response, result, ms.ToArray());
-            }
+            Span<byte> reqDataSpan = reqData.AsSpan(0, messageSize);
+            reqDataSpan.Clear();
+
+            process.CpuMemory.Read(messagePtr, reqDataSpan);
+
+            IpcMessage request = new IpcMessage(reqDataSpan, (long)messagePtr);
+
+            ArrayPool<byte>.Shared.Return(reqData);
+
+            return request;
         }
 
-        private static IpcMessage FillResponse(IpcMessage response, long result, byte[] data = null)
+        private void FillHipcResponse(IpcMessage response, long result)
+        {
+            FillHipcResponse(response, result, ReadOnlySpan<byte>.Empty);
+        }
+
+        private void FillHipcResponse(IpcMessage response, long result, int value)
+        {
+            Span<byte> span = stackalloc byte[sizeof(int)];
+            BinaryPrimitives.WriteInt32LittleEndian(span, value);
+            FillHipcResponse(response, result, span);
+        }
+
+        private void FillHipcResponse(IpcMessage response, long result, ReadOnlySpan<byte> data)
         {
             response.Type = IpcMessageType.HipcResponse;
 
-            using (MemoryStream ms = new MemoryStream())
-            {
-                BinaryWriter writer = new BinaryWriter(ms);
+            _responseDataStream.SetLength(0);
 
-                writer.Write(IpcMagic.Sfco);
-                writer.Write(result);
+            _responseDataStream.Write(IpcMagic.Sfco);
+            _responseDataStream.Write(result);
 
-                if (data != null)
-                {
-                    writer.Write(data);
-                }
+            _responseDataStream.Write(data);
 
-                response.RawData = ms.ToArray();
-            }
-
-            return response;
+            response.RawData = _responseDataStream.ToArray();
         }
 
         protected virtual void Dispose(bool disposing)
@@ -371,6 +384,11 @@ namespace Ryujinx.HLE.HOS.Services
                 }
 
                 _sessions.Clear();
+
+                _requestDataReader.Dispose();
+                _requestDataStream.Dispose();
+                _responseDataWriter.Dispose();
+                _responseDataStream.Dispose();
 
                 InitDone.Dispose();
             }

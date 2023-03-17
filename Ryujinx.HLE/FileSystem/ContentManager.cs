@@ -9,6 +9,7 @@ using LibHac.Tools.FsSystem;
 using LibHac.Tools.FsSystem.NcaUtils;
 using LibHac.Tools.Ncm;
 using Ryujinx.Common.Logging;
+using Ryujinx.Common.Memory;
 using Ryujinx.Common.Utilities;
 using Ryujinx.HLE.Exceptions;
 using Ryujinx.HLE.HOS.Services.Ssl;
@@ -637,12 +638,12 @@ namespace Ryujinx.HLE.FileSystem
 
         private Stream GetZipStream(ZipArchiveEntry entry)
         {
-            MemoryStream dest = new MemoryStream();
+            MemoryStream dest = MemoryStreamManager.Shared.GetStream();
 
-            Stream src = entry.Open();
-
-            src.CopyTo(dest);
-            src.Dispose();
+            using (Stream src = entry.Open())
+            {
+                src.CopyTo(dest);
+            }
 
             return dest;
         }

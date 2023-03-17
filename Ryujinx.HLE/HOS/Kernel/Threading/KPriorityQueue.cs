@@ -5,11 +5,11 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 {
     class KPriorityQueue
     {
-        private LinkedList<KThread>[][] _scheduledThreadsPerPrioPerCore;
-        private LinkedList<KThread>[][] _suggestedThreadsPerPrioPerCore;
+        private readonly LinkedList<KThread>[][] _scheduledThreadsPerPrioPerCore;
+        private readonly LinkedList<KThread>[][] _suggestedThreadsPerPrioPerCore;
 
-        private long[] _scheduledPrioritiesPerCore;
-        private long[] _suggestedPrioritiesPerCore;
+        private readonly long[] _scheduledPrioritiesPerCore;
+        private readonly long[] _suggestedPrioritiesPerCore;
 
         public KPriorityQueue()
         {
@@ -32,41 +32,132 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
             _suggestedPrioritiesPerCore = new long[KScheduler.CpuCoresCount];
         }
 
-        public IEnumerable<KThread> SuggestedThreads(int core)
+        public readonly ref struct KThreadEnumerable
         {
-            return Iterate(_suggestedThreadsPerPrioPerCore, _suggestedPrioritiesPerCore, core);
-        }
+            readonly LinkedList<KThread>[][] _listPerPrioPerCore;
+            readonly long[] _prios;
+            readonly int _core;
 
-        public IEnumerable<KThread> ScheduledThreads(int core)
-        {
-            return Iterate(_scheduledThreadsPerPrioPerCore, _scheduledPrioritiesPerCore, core);
-        }
-
-        private IEnumerable<KThread> Iterate(LinkedList<KThread>[][] listPerPrioPerCore, long[] prios, int core)
-        {
-            long prioMask = prios[core];
-
-            int prio = BitOperations.TrailingZeroCount(prioMask);
-
-            prioMask &= ~(1L << prio);
-
-            while (prio < KScheduler.PrioritiesCount)
+            public KThreadEnumerable(LinkedList<KThread>[][] listPerPrioPerCore, long[] prios, int core)
             {
-                LinkedList<KThread> list = listPerPrioPerCore[prio][core];
+                _listPerPrioPerCore = listPerPrioPerCore;
+                _prios = prios;
+                _core = core;
+            }
 
-                LinkedListNode<KThread> node = list.First;
+            public Enumerator GetEnumerator()
+            {
+                return new Enumerator(_listPerPrioPerCore, _prios, _core);
+            }
 
-                while (node != null)
+            public ref struct Enumerator
+            {
+                private readonly LinkedList<KThread>[][] _listPerPrioPerCore;
+                private readonly int _core;
+                private long _prioMask;
+                private int _prio;
+                private LinkedList<KThread> _list;
+                private LinkedListNode<KThread> _node;
+
+                public Enumerator(LinkedList<KThread>[][] listPerPrioPerCore, long[] prios, int core)
                 {
-                    yield return node.Value;
-
-                    node = node.Next;
+                    _listPerPrioPerCore = listPerPrioPerCore;
+                    _core = core;
+                    _prioMask = prios[core];
+                    _prio = BitOperations.TrailingZeroCount(_prioMask);
+                    _prioMask &= ~(1L << _prio);
                 }
 
-                prio = BitOperations.TrailingZeroCount(prioMask);
+                public KThread Current => _node?.Value;
 
-                prioMask &= ~(1L << prio);
+                public bool MoveNext()
+                {
+                    _node = _node?.Next;
+
+                    if (_node == null)
+                    {
+                        if (!MoveNextListAndFirstNode())
+                        {
+                            return false;
+                        }
+                    }
+
+                    return _node != null;
+                }
+
+                private bool MoveNextListAndFirstNode()
+                {
+                    if (_prio < KScheduler.PrioritiesCount)
+                    {
+                        _list = _listPerPrioPerCore[_prio][_core];
+
+                        _node = _list.First;
+
+                        _prio = BitOperations.TrailingZeroCount(_prioMask);
+
+                        _prioMask &= ~(1L << _prio);
+
+                        return true;
+                    }
+                    else
+                    {
+                        _list = null;
+                        _node = null;
+                        return false;
+                    }
+                }
             }
+        }
+
+        public KThreadEnumerable ScheduledThreads(int core)
+        {
+            return new KThreadEnumerable(_scheduledThreadsPerPrioPerCore, _scheduledPrioritiesPerCore, core);
+        }
+
+        public KThreadEnumerable SuggestedThreads(int core)
+        {
+            return new KThreadEnumerable(_suggestedThreadsPerPrioPerCore, _suggestedPrioritiesPerCore, core);
+        }
+
+        public KThread ScheduledThreadsFirstOrDefault(int core)
+        {
+            return ScheduledThreadsElementAtOrDefault(core, 0);
+        }
+
+        public KThread ScheduledThreadsElementAtOrDefault(int core, int index)
+        {
+            int currentIndex = 0;
+            foreach (var scheduledThread in ScheduledThreads(core))
+            {
+                if (currentIndex == index)
+                {
+                    return scheduledThread;
+                }
+                else
+                {
+                    currentIndex++;
+                }
+            }
+
+            return null;
+        }
+
+        public KThread ScheduledThreadsWithDynamicPriorityFirstOrDefault(int core, int dynamicPriority)
+        {
+            foreach (var scheduledThread in ScheduledThreads(core))
+            {
+                if (scheduledThread.DynamicPriority == dynamicPriority)
+                {
+                    return scheduledThread;
+                }
+            }
+
+            return null;
+        }
+
+        public bool HasScheduledThreads(int core)
+        {
+            return ScheduledThreadsFirstOrDefault(core) != null;
         }
 
         public void TransferToCore(int prio, int dstCore, KThread thread)

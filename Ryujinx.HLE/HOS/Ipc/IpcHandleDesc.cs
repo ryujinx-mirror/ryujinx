@@ -1,3 +1,6 @@
+using Microsoft.IO;
+using Ryujinx.Common;
+using Ryujinx.Common.Memory;
 using System;
 using System.IO;
 
@@ -18,20 +21,27 @@ namespace Ryujinx.HLE.HOS.Ipc
 
             HasPId = (word & 1) != 0;
 
-            ToCopy = new int[(word >> 1) & 0xf];
-            ToMove = new int[(word >> 5) & 0xf];
-
             PId = HasPId ? reader.ReadUInt64() : 0;
 
-            for (int index = 0; index < ToCopy.Length; index++)
+            int toCopySize = (word >> 1) & 0xf;
+            int[] toCopy = toCopySize == 0 ? Array.Empty<int>() : new int[toCopySize];
+
+            for (int index = 0; index < toCopy.Length; index++)
             {
-                ToCopy[index] = reader.ReadInt32();
+                toCopy[index] = reader.ReadInt32();
             }
 
-            for (int index = 0; index < ToMove.Length; index++)
+            ToCopy = toCopy;
+
+            int toMoveSize = (word >> 5) & 0xf;
+            int[] toMove = toMoveSize == 0 ? Array.Empty<int>() : new int[toMoveSize];
+
+            for (int index = 0; index < toMove.Length; index++)
             {
-                ToMove[index] = reader.ReadInt32();
+                toMove[index] = reader.ReadInt32();
             }
+
+            ToMove = toMove;
         }
 
         public IpcHandleDesc(int[] copy, int[] move)
@@ -57,36 +67,27 @@ namespace Ryujinx.HLE.HOS.Ipc
             return new IpcHandleDesc(Array.Empty<int>(), handles);
         }
 
-        public byte[] GetBytes()
+        public RecyclableMemoryStream GetStream()
         {
-            using (MemoryStream ms = new MemoryStream())
+            RecyclableMemoryStream ms = MemoryStreamManager.Shared.GetStream();
+
+            int word = HasPId ? 1 : 0;
+
+            word |= (ToCopy.Length & 0xf) << 1;
+            word |= (ToMove.Length & 0xf) << 5;
+
+            ms.Write(word);
+
+            if (HasPId)
             {
-                BinaryWriter writer = new BinaryWriter(ms);
-
-                int word = HasPId ? 1 : 0;
-
-                word |= (ToCopy.Length & 0xf) << 1;
-                word |= (ToMove.Length & 0xf) << 5;
-
-                writer.Write(word);
-
-                if (HasPId)
-                {
-                    writer.Write(PId);
-                }
-
-                foreach (int handle in ToCopy)
-                {
-                    writer.Write(handle);
-                }
-
-                foreach (int handle in ToMove)
-                {
-                    writer.Write(handle);
-                }
-
-                return ms.ToArray();
+                ms.Write(PId);
             }
+
+            ms.Write(ToCopy);
+            ms.Write(ToMove);
+
+            ms.Position = 0;
+            return ms;
         }
     }
 }

@@ -1,6 +1,7 @@
 using ARMeilleure.State;
 using Ryujinx.Common;
 using Ryujinx.Common.Logging;
+using Ryujinx.Common.Memory;
 using System;
 using System.Buffers.Binary;
 using System.Collections.Concurrent;
@@ -182,7 +183,7 @@ namespace ARMeilleure.Translation.PTC
                     return false;
                 }
 
-                using (MemoryStream stream = new MemoryStream())
+                using (MemoryStream stream = MemoryStreamManager.Shared.GetStream())
                 {
                     Debug.Assert(stream.Seek(0L, SeekOrigin.Begin) == 0L && stream.Length == 0L);
 
@@ -274,7 +275,7 @@ namespace ARMeilleure.Translation.PTC
 
             outerHeader.SetHeaderHash();
 
-            using (MemoryStream stream = new MemoryStream())
+            using (MemoryStream stream = MemoryStreamManager.Shared.GetStream())
             {
                 Debug.Assert(stream.Seek(0L, SeekOrigin.Begin) == 0L && stream.Length == 0L);
 

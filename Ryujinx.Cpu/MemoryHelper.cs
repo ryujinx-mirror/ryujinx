@@ -1,4 +1,6 @@
-﻿using Ryujinx.Memory;
+﻿using Microsoft.IO;
+using Ryujinx.Common.Memory;
+using Ryujinx.Memory;
 using System;
 using System.IO;
 using System.Runtime.CompilerServices;
@@ -40,7 +42,7 @@ namespace Ryujinx.Cpu
 
         public static string ReadAsciiString(IVirtualMemoryManager memory, ulong position, long maxSize = -1)
         {
-            using (MemoryStream ms = new MemoryStream())
+            using (RecyclableMemoryStream ms = MemoryStreamManager.Shared.GetStream())
             {
                 for (long offs = 0; offs < maxSize || maxSize == -1; offs++)
                 {
@@ -54,7 +56,7 @@ namespace Ryujinx.Cpu
                     ms.WriteByte(value);
                 }
 
-                return Encoding.ASCII.GetString(ms.ToArray());
+                return Encoding.ASCII.GetString(ms.GetReadOnlySequence());
             }
         }
     }

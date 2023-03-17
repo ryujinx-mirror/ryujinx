@@ -1,5 +1,6 @@
 using ARMeilleure.CodeGen.RegisterAllocators;
 using ARMeilleure.IntermediateRepresentation;
+using Ryujinx.Common.Memory;
 using System.IO;
 using System.Numerics;
 
@@ -22,7 +23,7 @@ namespace ARMeilleure.CodeGen.X86
 
         public CodeGenContext(AllocationResult allocResult, int maxCallArgs, int blocksCount, bool relocatable)
         {
-            _stream = new MemoryStream();
+            _stream = MemoryStreamManager.Shared.GetStream();
             _blockLabels = new Operand[blocksCount];
 
             AllocResult = allocResult;

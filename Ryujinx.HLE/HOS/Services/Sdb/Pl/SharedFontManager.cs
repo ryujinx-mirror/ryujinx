@@ -5,6 +5,7 @@ using LibHac.FsSystem;
 using LibHac.Ncm;
 using LibHac.Tools.FsSystem;
 using LibHac.Tools.FsSystem.NcaUtils;
+using Ryujinx.Common.Memory;
 using Ryujinx.HLE.Exceptions;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.HOS.Kernel.Memory;
@@ -160,7 +161,7 @@ namespace Ryujinx.HLE.HOS.Services.Sdb.Pl
             static uint KXor(uint data) => data ^ FontKey;
 
             using (BinaryReader reader    = new BinaryReader(bfttfStream))
-            using (MemoryStream ttfStream = new MemoryStream())
+            using (MemoryStream ttfStream = MemoryStreamManager.Shared.GetStream())
             using (BinaryWriter output    = new BinaryWriter(ttfStream))
             {
                 if (KXor(reader.ReadUInt32()) != BFTTFMagic)
