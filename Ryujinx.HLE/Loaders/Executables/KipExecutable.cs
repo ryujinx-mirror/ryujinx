@@ -22,7 +22,7 @@ namespace Ryujinx.HLE.Loaders.Executables
         public uint DataSize { get; }
         public uint BssSize  { get; }
 
-        public int[] Capabilities       { get; }
+        public uint[] Capabilities      { get; }
         public bool UsesSecureMemory    { get; }
         public bool Is64BitAddressSpace { get; }
         public bool Is64Bit             { get; }
@@ -57,11 +57,11 @@ namespace Ryujinx.HLE.Loaders.Executables
             Version     = reader.Version;
             Name        = reader.Name.ToString();
 
-            Capabilities = new int[32];
+            Capabilities = new uint[32];
 
             for (int index = 0; index < Capabilities.Length; index++)
             {
-                Capabilities[index] = (int)reader.Capabilities[index];
+                Capabilities[index] = reader.Capabilities[index];
             }
 
             reader.GetSegmentSize(KipReader.SegmentType.Data, out int uncompressedSize).ThrowIfFailure();

@@ -19,7 +19,7 @@ namespace Ryujinx.HLE.HOS.Services
         // not large enough.
         private const int PointerBufferSize = 0x8000;
 
-        private readonly static int[] DefaultCapabilities = new int[]
+        private readonly static uint[] DefaultCapabilities = new uint[]
         {
             0x030363F7,
             0x1FFFFFCF,

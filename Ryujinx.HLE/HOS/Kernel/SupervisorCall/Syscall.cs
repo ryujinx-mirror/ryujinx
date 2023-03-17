@@ -54,7 +54,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
         public Result CreateProcess(
             out int handle,
             ProcessCreationInfo info,
-            ReadOnlySpan<int> capabilities,
+            ReadOnlySpan<uint> capabilities,
             IProcessContextFactory contextFactory,
             ThreadStart customThreadStart = null)
         {

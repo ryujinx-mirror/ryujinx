@@ -7,6 +7,8 @@ namespace Ryujinx.HLE.HOS.Kernel
         public const int InitialKipId = 1;
         public const int InitialProcessId = 0x51;
 
+        public const int SupervisorCallCount = 0xC0;
+
         public const int MemoryBlockAllocatorSize = 0x2710;
 
         public const ulong UserSlabHeapBase = DramMemoryMap.SlabHeapBase;

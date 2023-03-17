@@ -16,11 +16,11 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 {
     class KProcess : KSynchronizationObject
     {
-        public const int KernelVersionMajor = 10;
-        public const int KernelVersionMinor = 4;
-        public const int KernelVersionRevision = 0;
+        public const uint KernelVersionMajor = 10;
+        public const uint KernelVersionMinor = 4;
+        public const uint KernelVersionRevision = 0;
 
-        public const int KernelVersionPacked =
+        public const uint KernelVersionPacked =
             (KernelVersionMajor << 19) |
             (KernelVersionMinor << 15) |
             (KernelVersionRevision << 0);
@@ -119,7 +119,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
         public Result InitializeKip(
             ProcessCreationInfo creationInfo,
-            ReadOnlySpan<int> capabilities,
+            ReadOnlySpan<uint> capabilities,
             KPageList pageList,
             KResourceLimit resourceLimit,
             MemoryRegion memRegion,
@@ -190,7 +190,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
         public Result Initialize(
             ProcessCreationInfo creationInfo,
-            ReadOnlySpan<int> capabilities,
+            ReadOnlySpan<uint> capabilities,
             KResourceLimit resourceLimit,
             MemoryRegion memRegion,
             IProcessContextFactory contextFactory,

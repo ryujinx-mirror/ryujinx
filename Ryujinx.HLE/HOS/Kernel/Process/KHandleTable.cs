@@ -19,7 +19,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
         private int _activeSlotsCount;
 
-        private int _size;
+        private uint _size;
 
         private ushort _idCounter;
 
@@ -28,9 +28,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
             _context = context;
         }
 
-        public Result Initialize(int size)
+        public Result Initialize(uint size)
         {
-            if ((uint)size > 1024)
+            if (size > 1024)
             {
                 return KernelResult.OutOfMemory;
             }

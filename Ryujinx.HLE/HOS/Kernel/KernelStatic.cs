@@ -18,7 +18,7 @@ namespace Ryujinx.HLE.HOS.Kernel
         public static Result StartInitialProcess(
             KernelContext context,
             ProcessCreationInfo creationInfo,
-            ReadOnlySpan<int> capabilities,
+            ReadOnlySpan<uint> capabilities,
             int mainThreadPriority,
             ThreadStart customThreadStart)
         {

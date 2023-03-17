@@ -80,7 +80,7 @@ namespace Ryujinx.HLE.HOS
 
             ulong codeBaseAddress = kip.Is64BitAddressSpace ? 0x8000000UL : 0x200000UL;
 
-            ulong codeAddress = codeBaseAddress + (ulong)kip.TextOffset;
+            ulong codeAddress = codeBaseAddress + kip.TextOffset;
 
             ProcessCreationFlags flags = 0;
 
@@ -231,13 +231,13 @@ namespace Ryujinx.HLE.HOS
 
                 nsoSize = BitUtils.AlignUp<uint>(nsoSize, KPageTableBase.PageSize);
 
-                nsoBase[index] = codeStart + (ulong)codeSize;
+                nsoBase[index] = codeStart + codeSize;
 
                 codeSize += nsoSize;
 
                 if (arguments != null && argsSize == 0)
                 {
-                    argsStart = (ulong)codeSize;
+                    argsStart = codeSize;
 
                     argsSize = (uint)BitUtils.AlignDown(arguments.Length * 2 + ArgsTotalSize - 1, KPageTableBase.PageSize);
 
@@ -318,7 +318,7 @@ namespace Ryujinx.HLE.HOS
 
             result = process.Initialize(
                 creationInfo,
-                MemoryMarshal.Cast<byte, int>(npdm.KernelCapabilityData).ToArray(),
+                MemoryMarshal.Cast<byte, uint>(npdm.KernelCapabilityData),
                 resourceLimit,
                 memoryRegion,
                 processContextFactory);
