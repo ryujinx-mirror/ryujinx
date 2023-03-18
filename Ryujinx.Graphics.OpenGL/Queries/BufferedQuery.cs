@@ -74,7 +74,7 @@ namespace Ryujinx.Graphics.OpenGL.Queries
         {
             result = Marshal.ReadInt64(_bufferMap);
 
-            return WaitingForValue(result);
+            return !WaitingForValue(result);
         }
 
         public long AwaitResult(AutoResetEvent wakeSignal = null)
