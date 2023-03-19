@@ -397,7 +397,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                         int endOffset = Math.Min(spanLast + _sliceSizes[endInfo.BaseLevel + endInfo.Levels - 1], (int)Storage.Size);
                         int size = endOffset - spanBase;
 
-                        dataSpan = _physicalMemory.GetSpan(Storage.Range.GetSlice((ulong)spanBase, (ulong)size));
+                        dataSpan = _physicalMemory.GetSpan(Storage.Range.Slice((ulong)spanBase, (ulong)size));
                     }
 
                     // Only one of these will be greater than 1, as partial sync is only called when there are sub-image views.
@@ -473,7 +473,7 @@ namespace Ryujinx.Graphics.Gpu.Image
             int endOffset = Math.Min(offset + _sliceSizes[level], (int)Storage.Size);
             int size = endOffset - offset;
 
-            using WritableRegion region = _physicalMemory.GetWritableRegion(Storage.Range.GetSlice((ulong)offset, (ulong)size), tracked);
+            using WritableRegion region = _physicalMemory.GetWritableRegion(Storage.Range.Slice((ulong)offset, (ulong)size), tracked);
 
             Storage.GetTextureDataSliceFromGpu(region.Memory.Span, layer, level, tracked, texture);
         }
@@ -1419,13 +1419,13 @@ namespace Ryujinx.Graphics.Gpu.Image
             for (int i = 0; i < _allOffsets.Length; i++)
             {
                 (int layer, int level) = GetLayerLevelForView(i);
-                MultiRange handleRange = Storage.Range.GetSlice((ulong)_allOffsets[i], 1);
+                MultiRange handleRange = Storage.Range.Slice((ulong)_allOffsets[i], 1);
                 ulong handleBase = handleRange.GetSubRange(0).Address;
 
                 for (int j = 0; j < other._handles.Length; j++)
                 {
                     (int otherLayer, int otherLevel) = other.GetLayerLevelForView(j);
-                    MultiRange otherHandleRange = other.Storage.Range.GetSlice((ulong)other._allOffsets[j], 1);
+                    MultiRange otherHandleRange = other.Storage.Range.Slice((ulong)other._allOffsets[j], 1);
                     ulong otherHandleBase = otherHandleRange.GetSubRange(0).Address;
 
                     if (handleBase == otherHandleBase)
@@ -1502,7 +1502,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                 // Handles list is not modified by another thread, only replaced, so this is thread safe.
                 // Remove modified flags from all overlapping handles, so that the textures don't flush to unmapped/remapped GPU memory.
 
-                MultiRange subRange = Storage.Range.GetSlice((ulong)handle.Offset, (ulong)handle.Size);
+                MultiRange subRange = Storage.Range.Slice((ulong)handle.Offset, (ulong)handle.Size);
 
                 if (range.OverlapsWith(subRange))
                 {
