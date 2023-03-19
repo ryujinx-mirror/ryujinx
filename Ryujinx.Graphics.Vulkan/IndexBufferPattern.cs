@@ -82,7 +82,7 @@ namespace Ryujinx.Graphics.Vulkan
             }
 
             // Expand the repeating pattern to the number of requested primitives.
-            BufferHandle newBuffer = _gd.CreateBuffer(expectedSize * sizeof(int));
+            BufferHandle newBuffer = _gd.BufferManager.CreateWithHandle(_gd, expectedSize * sizeof(int));
 
             // Copy the old data to the new one.
             if (_repeatingBuffer != BufferHandle.Null)

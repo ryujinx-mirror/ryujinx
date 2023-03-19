@@ -57,12 +57,12 @@ namespace Ryujinx.Graphics.Vulkan
             throw new NotSupportedException();
         }
 
-        public ReadOnlySpan<byte> GetData()
+        public PinnedSpan<byte> GetData()
         {
             return _gd.GetBufferData(_bufferHandle, _offset, _size);
         }
 
-        public ReadOnlySpan<byte> GetData(int layer, int level)
+        public PinnedSpan<byte> GetData(int layer, int level)
         {
             return GetData();
         }
@@ -128,7 +128,7 @@ namespace Ryujinx.Graphics.Vulkan
         {
             if (_bufferView == null)
             {
-                _bufferView = _gd.BufferManager.CreateView(_bufferHandle, VkFormat, _offset, _size);
+                _bufferView = _gd.BufferManager.CreateView(_bufferHandle, VkFormat, _offset, _size, ReleaseImpl);
             }
 
             return _bufferView?.Get(cbs, _offset, _size).Value ?? default;
@@ -147,7 +147,7 @@ namespace Ryujinx.Graphics.Vulkan
                 return bufferView.Get(cbs, _offset, _size).Value;
             }
 
-            bufferView = _gd.BufferManager.CreateView(_bufferHandle, vkFormat, _offset, _size);
+            bufferView = _gd.BufferManager.CreateView(_bufferHandle, vkFormat, _offset, _size, ReleaseImpl);
 
             if (bufferView != null)
             {

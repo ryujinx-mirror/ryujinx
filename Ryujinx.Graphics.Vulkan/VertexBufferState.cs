@@ -129,6 +129,17 @@ namespace Ryujinx.Graphics.Vulkan
             return _buffer == buffer;
         }
 
+        public void Swap(Auto<DisposableBuffer> from, Auto<DisposableBuffer> to)
+        {
+            if (_buffer == from)
+            {
+                _buffer.DecrementReferenceCount();
+                to.IncrementReferenceCount();
+
+                _buffer = to;
+            }
+        }
+
         public void Dispose()
         {
             // Only dispose if this buffer is not refetched on each bind.

@@ -87,7 +87,7 @@ namespace Ryujinx.Graphics.Vulkan.Effects
 
             ReadOnlySpan<float> resolutionBuffer = stackalloc float[] { view.Width, view.Height };
             int rangeSize = resolutionBuffer.Length * sizeof(float);
-            var bufferHandle = _renderer.BufferManager.CreateWithHandle(_renderer, rangeSize, false);
+            var bufferHandle = _renderer.BufferManager.CreateWithHandle(_renderer, rangeSize);
 
             _renderer.BufferManager.SetData(bufferHandle, 0, resolutionBuffer);
 

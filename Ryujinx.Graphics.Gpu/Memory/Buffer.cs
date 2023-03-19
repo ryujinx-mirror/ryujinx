@@ -82,7 +82,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
             Address         = address;
             Size            = size;
 
-            Handle = context.Renderer.CreateBuffer((int)size);
+            Handle = context.Renderer.CreateBuffer((int)size, baseBuffers?.MaxBy(x => x.Size).Handle ?? BufferHandle.Null);
 
             _useGranular = size > GranularBufferThreshold;
 
@@ -415,10 +415,10 @@ namespace Ryujinx.Graphics.Gpu.Memory
         {
             int offset = (int)(address - Address);
 
-            ReadOnlySpan<byte> data = _context.Renderer.GetBufferData(Handle, offset, (int)size);
+            using PinnedSpan<byte> data = _context.Renderer.GetBufferData(Handle, offset, (int)size);
 
             // TODO: When write tracking shaders, they will need to be aware of changes in overlapping buffers.
-            _physicalMemory.WriteUntracked(address, data);
+            _physicalMemory.WriteUntracked(address, data.Get());
         }
 
         /// <summary>

@@ -156,11 +156,11 @@ namespace Ryujinx.Graphics.Vulkan.Effects
             };
 
             int rangeSize = dimensionsBuffer.Length * sizeof(float);
-            var bufferHandle = _renderer.BufferManager.CreateWithHandle(_renderer, rangeSize, false);
+            var bufferHandle = _renderer.BufferManager.CreateWithHandle(_renderer, rangeSize);
             _renderer.BufferManager.SetData(bufferHandle, 0, dimensionsBuffer);
 
             ReadOnlySpan<float> sharpeningBuffer = stackalloc float[] { 1.5f - (Level * 0.01f * 1.5f)};
-            var sharpeningBufferHandle = _renderer.BufferManager.CreateWithHandle(_renderer, sizeof(float), false);
+            var sharpeningBufferHandle = _renderer.BufferManager.CreateWithHandle(_renderer, sizeof(float));
             _renderer.BufferManager.SetData(sharpeningBufferHandle, 0, sharpeningBuffer);
 
             int threadGroupWorkRegionDim = 16;

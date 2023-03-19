@@ -265,10 +265,10 @@ namespace Ryujinx.Graphics.GAL.Multithreading
             }
         }
 
-        public BufferHandle CreateBuffer(int size)
+        public BufferHandle CreateBuffer(int size, BufferHandle storageHint)
         {
             BufferHandle handle = Buffers.CreateBufferHandle();
-            New<CreateBufferCommand>().Set(handle, size);
+            New<CreateBufferCommand>().Set(handle, size, storageHint);
             QueueCommand();
 
             return handle;
@@ -329,7 +329,7 @@ namespace Ryujinx.Graphics.GAL.Multithreading
             QueueCommand();
         }
 
-        public ReadOnlySpan<byte> GetBufferData(BufferHandle buffer, int offset, int size)
+        public PinnedSpan<byte> GetBufferData(BufferHandle buffer, int offset, int size)
         {
             if (IsGpuThread())
             {
@@ -337,7 +337,7 @@ namespace Ryujinx.Graphics.GAL.Multithreading
                 New<BufferGetDataCommand>().Set(buffer, offset, size, Ref(box));
                 InvokeCommand();
 
-                return box.Result.Get();
+                return box.Result;
             }
             else
             {

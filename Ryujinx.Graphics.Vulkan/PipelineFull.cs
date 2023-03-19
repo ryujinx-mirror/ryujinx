@@ -17,10 +17,13 @@ namespace Ryujinx.Graphics.Vulkan
 
         private ulong _byteWeight;
 
+        private List<BufferHolder> _backingSwaps;
+
         public PipelineFull(VulkanRenderer gd, Device device) : base(gd, device)
         {
             _activeQueries = new List<(QueryPool, bool)>();
             _pendingQueryCopies = new();
+            _backingSwaps = new();
 
             CommandBuffer = (Cbs = gd.CommandBufferPool.Rent()).CommandBuffer;
         }
@@ -185,6 +188,20 @@ namespace Ryujinx.Graphics.Vulkan
             }
         }
 
+        private void TryBackingSwaps()
+        {
+            CommandBufferScoped? cbs = null;
+
+            _backingSwaps.RemoveAll((holder) => holder.TryBackingSwap(ref cbs));
+
+            cbs?.Dispose();
+        }
+
+        public void AddBackingSwap(BufferHolder holder)
+        {
+            _backingSwaps.Add(holder);
+        }
+
         public void Restore()
         {
             if (Pipeline != null)
@@ -229,6 +246,8 @@ namespace Ryujinx.Graphics.Vulkan
             }
 
             Gd.ResetCounterPool();
+
+            TryBackingSwaps();
 
             Restore();
         }

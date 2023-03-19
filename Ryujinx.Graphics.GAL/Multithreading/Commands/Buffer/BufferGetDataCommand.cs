@@ -21,9 +21,9 @@ namespace Ryujinx.Graphics.GAL.Multithreading.Commands.Buffer
 
         public static void Run(ref BufferGetDataCommand command, ThreadedRenderer threaded, IRenderer renderer)
         {
-            ReadOnlySpan<byte> result = renderer.GetBufferData(threaded.Buffers.MapBuffer(command._buffer), command._offset, command._size);
+            PinnedSpan<byte> result = renderer.GetBufferData(threaded.Buffers.MapBuffer(command._buffer), command._offset, command._size);
 
-            command._result.Get(threaded).Result = new PinnedSpan<byte>(result);
+            command._result.Get(threaded).Result = result;
         }
     }
 }

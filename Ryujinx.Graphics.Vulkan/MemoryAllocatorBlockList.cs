@@ -162,15 +162,17 @@ namespace Ryujinx.Graphics.Vulkan
         private readonly Device _device;
 
         public int MemoryTypeIndex { get; }
+        public bool ForBuffer { get; }
 
         private readonly int _blockAlignment;
 
-        public MemoryAllocatorBlockList(Vk api, Device device, int memoryTypeIndex, int blockAlignment)
+        public MemoryAllocatorBlockList(Vk api, Device device, int memoryTypeIndex, int blockAlignment, bool forBuffer)
         {
             _blocks = new List<Block>();
             _api = api;
             _device = device;
             MemoryTypeIndex = memoryTypeIndex;
+            ForBuffer = forBuffer;
             _blockAlignment = blockAlignment;
         }
 

@@ -2,14 +2,14 @@
 
 namespace Ryujinx.Graphics.Vulkan
 {
-    readonly struct BufferState : IDisposable
+    struct BufferState : IDisposable
     {
         public static BufferState Null => new BufferState(null, 0, 0);
 
         private readonly int _offset;
         private readonly int _size;
 
-        private readonly Auto<DisposableBuffer> _buffer;
+        private Auto<DisposableBuffer> _buffer;
 
         public BufferState(Auto<DisposableBuffer> buffer, int offset, int size)
         {
@@ -26,6 +26,17 @@ namespace Ryujinx.Graphics.Vulkan
                 var buffer = _buffer.Get(cbs, _offset, _size).Value;
 
                 gd.TransformFeedbackApi.CmdBindTransformFeedbackBuffers(cbs.CommandBuffer, binding, 1, buffer, (ulong)_offset, (ulong)_size);
+            }
+        }
+
+        public void Swap(Auto<DisposableBuffer> from, Auto<DisposableBuffer> to)
+        {
+            if (_buffer == from)
+            {
+                _buffer.DecrementReferenceCount();
+                to.IncrementReferenceCount();
+
+                _buffer = to;
             }
         }
 

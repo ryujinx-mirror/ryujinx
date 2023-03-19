@@ -394,7 +394,7 @@ namespace Ryujinx.Graphics.Vulkan
                 (region[2], region[3]) = (region[3], region[2]);
             }
 
-            var bufferHandle = gd.BufferManager.CreateWithHandle(gd, RegionBufferSize, false);
+            var bufferHandle = gd.BufferManager.CreateWithHandle(gd, RegionBufferSize);
 
             gd.BufferManager.SetData<float>(bufferHandle, 0, region);
 
@@ -495,7 +495,7 @@ namespace Ryujinx.Graphics.Vulkan
                 (region[2], region[3]) = (region[3], region[2]);
             }
 
-            var bufferHandle = gd.BufferManager.CreateWithHandle(gd, RegionBufferSize, false);
+            var bufferHandle = gd.BufferManager.CreateWithHandle(gd, RegionBufferSize);
 
             gd.BufferManager.SetData<float>(bufferHandle, 0, region);
 
@@ -649,7 +649,7 @@ namespace Ryujinx.Graphics.Vulkan
 
             _pipeline.SetCommandBuffer(cbs);
 
-            var bufferHandle = gd.BufferManager.CreateWithHandle(gd, ClearColorBufferSize, false);
+            var bufferHandle = gd.BufferManager.CreateWithHandle(gd, ClearColorBufferSize);
 
             gd.BufferManager.SetData<float>(bufferHandle, 0, clearColor);
 
@@ -726,7 +726,7 @@ namespace Ryujinx.Graphics.Vulkan
                 (region[2], region[3]) = (region[3], region[2]);
             }
 
-            var bufferHandle = gd.BufferManager.CreateWithHandle(gd, RegionBufferSize, false);
+            var bufferHandle = gd.BufferManager.CreateWithHandle(gd, RegionBufferSize);
 
             gd.BufferManager.SetData<float>(bufferHandle, 0, region);
 
@@ -802,7 +802,7 @@ namespace Ryujinx.Graphics.Vulkan
                 shaderParams[2] = size;
                 shaderParams[3] = srcOffset;
 
-                var bufferHandle = gd.BufferManager.CreateWithHandle(gd, ParamsBufferSize, false);
+                var bufferHandle = gd.BufferManager.CreateWithHandle(gd, ParamsBufferSize);
 
                 gd.BufferManager.SetData<int>(bufferHandle, 0, shaderParams);
 
@@ -958,7 +958,7 @@ namespace Ryujinx.Graphics.Vulkan
 
             shaderParams[0] = BitOperations.Log2((uint)ratio);
 
-            var bufferHandle = gd.BufferManager.CreateWithHandle(gd, ParamsBufferSize, false);
+            var bufferHandle = gd.BufferManager.CreateWithHandle(gd, ParamsBufferSize);
 
             gd.BufferManager.SetData<int>(bufferHandle, 0, shaderParams);
 
@@ -1050,7 +1050,7 @@ namespace Ryujinx.Graphics.Vulkan
             (shaderParams[0], shaderParams[1]) = GetSampleCountXYLog2(samples);
             (shaderParams[2], shaderParams[3]) = GetSampleCountXYLog2((int)TextureStorage.ConvertToSampleCountFlags(gd.Capabilities.SupportedSampleCounts, (uint)samples));
 
-            var bufferHandle = gd.BufferManager.CreateWithHandle(gd, ParamsBufferSize, false);
+            var bufferHandle = gd.BufferManager.CreateWithHandle(gd, ParamsBufferSize);
 
             gd.BufferManager.SetData<int>(bufferHandle, 0, shaderParams);
 
@@ -1133,7 +1133,7 @@ namespace Ryujinx.Graphics.Vulkan
             (shaderParams[0], shaderParams[1]) = GetSampleCountXYLog2(samples);
             (shaderParams[2], shaderParams[3]) = GetSampleCountXYLog2((int)TextureStorage.ConvertToSampleCountFlags(gd.Capabilities.SupportedSampleCounts, (uint)samples));
 
-            var bufferHandle = gd.BufferManager.CreateWithHandle(gd, ParamsBufferSize, false);
+            var bufferHandle = gd.BufferManager.CreateWithHandle(gd, ParamsBufferSize);
 
             gd.BufferManager.SetData<int>(bufferHandle, 0, shaderParams);
 
@@ -1407,7 +1407,7 @@ namespace Ryujinx.Graphics.Vulkan
 
             pattern.OffsetIndex.CopyTo(shaderParams.Slice(0, pattern.OffsetIndex.Length));
 
-            var patternBufferHandle = gd.BufferManager.CreateWithHandle(gd, ParamsBufferSize, false, out var patternBuffer);
+            var patternBufferHandle = gd.BufferManager.CreateWithHandle(gd, ParamsBufferSize, out var patternBuffer);
             var patternBufferAuto = patternBuffer.GetBuffer();
 
             gd.BufferManager.SetData<int>(patternBufferHandle, 0, shaderParams);

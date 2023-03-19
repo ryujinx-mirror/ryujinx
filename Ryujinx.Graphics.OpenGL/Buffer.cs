@@ -55,11 +55,14 @@ namespace Ryujinx.Graphics.OpenGL
                 (IntPtr)size);
         }
 
-        public static unsafe ReadOnlySpan<byte> GetData(OpenGLRenderer renderer, BufferHandle buffer, int offset, int size)
+        public static unsafe PinnedSpan<byte> GetData(OpenGLRenderer renderer, BufferHandle buffer, int offset, int size)
         {
+            // Data in the persistent buffer and host array is guaranteed to be available
+            // until the next time the host thread requests data.
+
             if (HwCapabilities.UsePersistentBufferForFlush)
             {
-                return renderer.PersistentBuffers.Default.GetBufferData(buffer, offset, size);
+                return PinnedSpan<byte>.UnsafeFromSpan(renderer.PersistentBuffers.Default.GetBufferData(buffer, offset, size));
             }
             else
             {
@@ -69,7 +72,7 @@ namespace Ryujinx.Graphics.OpenGL
 
                 GL.GetBufferSubData(BufferTarget.CopyReadBuffer, (IntPtr)offset, size, target);
 
-                return new ReadOnlySpan<byte>(target.ToPointer(), size);
+                return new PinnedSpan<byte>(target.ToPointer(), size);
             }
         }
 
