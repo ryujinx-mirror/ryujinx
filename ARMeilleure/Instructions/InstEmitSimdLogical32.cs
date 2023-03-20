@@ -151,6 +151,13 @@ namespace ARMeilleure.Instructions
             {
                 InstEmitSimdHelper32Arm64.EmitVectorBinaryOpSimd32(context, (n, m) => context.AddIntrinsic(Intrinsic.Arm64OrnV | Intrinsic.Arm64V128, n, m));
             }
+            else if (Optimizations.UseAvx512Ortho)
+            {
+                EmitVectorBinaryOpSimd32(context, (n, m) =>
+                {
+                    return context.AddIntrinsic(Intrinsic.X86Vpternlogd, n, m, Const(0b11001100 | ~0b10101010));
+                });
+            }
             else if (Optimizations.UseSse2)
             {
                 Operand mask = context.VectorOne();

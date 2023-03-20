@@ -34,7 +34,14 @@ namespace ARMeilleure.Instructions
 
         public static void Vmvn_I(ArmEmitterContext context)
         {
-            if (Optimizations.UseSse2)
+            if (Optimizations.UseAvx512Ortho)
+            {
+                EmitVectorUnaryOpSimd32(context, (op1) =>
+                {
+                    return context.AddIntrinsic(Intrinsic.X86Vpternlogd, op1, op1, Const(0b01010101));
+                });
+            }
+            else if (Optimizations.UseSse2)
             {
                 EmitVectorUnaryOpSimd32(context, (op1) =>
                 {

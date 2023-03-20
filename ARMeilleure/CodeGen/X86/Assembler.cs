@@ -1034,7 +1034,13 @@ namespace ARMeilleure.CodeGen.X86
 
             Debug.Assert(opCode != BadOp, "Invalid opcode value.");
 
-            if ((flags & InstructionFlags.Vex) != 0 && HardwareCapabilities.SupportsVexEncoding)
+            if ((flags & InstructionFlags.Evex) != 0 && HardwareCapabilities.SupportsEvexEncoding)
+            {
+                WriteEvexInst(dest, src1, src2, type, flags, opCode);
+
+                opCode &= 0xff;
+            }
+            else if ((flags & InstructionFlags.Vex) != 0 && HardwareCapabilities.SupportsVexEncoding)
             {
                 // In a vex encoding, only one prefix can be active at a time. The active prefix is encoded in the second byte using two bits.
 
@@ -1151,6 +1157,103 @@ namespace ARMeilleure.CodeGen.X86
                     }
                 }
             }
+        }
+
+        private void WriteEvexInst(
+            Operand dest,
+            Operand src1,
+            Operand src2,
+            OperandType type,
+            InstructionFlags flags,
+            int opCode,
+            bool broadcast = false,
+            int registerWidth = 128,
+            int maskRegisterIdx = 0,
+            bool zeroElements = false)
+        {
+            int op1Idx = dest.GetRegister().Index;
+            int op2Idx = src1.GetRegister().Index;
+            int op3Idx = src2.GetRegister().Index;
+
+            WriteByte(0x62);
+
+            // P0
+            // Extend operand 1 register
+            bool r = (op1Idx & 8) == 0;
+            // Extend operand 3 register
+            bool x = (op3Idx & 16) == 0;
+            // Extend operand 3 register
+            bool b = (op3Idx & 8) == 0;
+            // Extend operand 1 register
+            bool rp = (op1Idx & 16) == 0;
+            // Escape code index
+            byte mm = 0b00;
+
+            switch ((ushort)(opCode >> 8))
+            {
+                case 0xf00: mm = 0b01; break;
+                case 0xf38: mm = 0b10; break;
+                case 0xf3a: mm = 0b11; break;
+
+                default: Debug.Fail($"Failed to EVEX encode opcode 0x{opCode:X}."); break;
+            }
+
+            WriteByte(
+                (byte)(
+                    (r ? 0x80 : 0) |
+                    (x ? 0x40 : 0) |
+                    (b ? 0x20 : 0) |
+                    (rp ? 0x10 : 0) |
+                    mm));
+
+            // P1
+            // Specify 64-bit lane mode
+            bool w = Is64Bits(type);
+            // Operand 2 register index
+            byte vvvv = (byte)(~op2Idx & 0b1111);
+            // Opcode prefix
+            byte pp = (flags & InstructionFlags.PrefixMask) switch
+            {
+                InstructionFlags.Prefix66 => 0b01,
+                InstructionFlags.PrefixF3 => 0b10,
+                InstructionFlags.PrefixF2 => 0b11,
+                _ => 0
+            };
+            WriteByte(
+                (byte)(
+                    (w ? 0x80 : 0) |
+                    (vvvv << 3) |
+                    0b100 |
+                    pp));
+
+            // P2
+            // Mask register determines what elements to zero, rather than what elements to merge
+            bool z = zeroElements;
+            // Specifies register-width
+            byte ll = 0b00;
+            switch (registerWidth)
+            {
+                case 128: ll = 0b00; break;
+                case 256: ll = 0b01; break;
+                case 512: ll = 0b10; break;
+
+                default: Debug.Fail($"Invalid EVEX vector register width {registerWidth}."); break;
+            }
+            // Embedded broadcast in the case of a memory operand
+            bool bcast = broadcast;
+            // Extend operand 2 register
+            bool vp = (op2Idx & 16) == 0;
+            // Mask register index
+            Debug.Assert(maskRegisterIdx < 8, $"Invalid mask register index {maskRegisterIdx}.");
+            byte aaa = (byte)(maskRegisterIdx & 0b111);
+
+            WriteByte(
+                (byte)(
+                    (z ? 0x80 : 0) |
+                    (ll << 5) |
+                    (bcast ? 0x10 : 0) |
+                    (vp ? 8 : 0) |
+                    aaa));
         }
 
         private void WriteCompactInst(Operand operand, int opCode)

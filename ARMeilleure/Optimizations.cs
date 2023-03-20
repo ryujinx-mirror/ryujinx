@@ -23,6 +23,10 @@ namespace ARMeilleure
         public static bool UseSse42IfAvailable     { get; set; } = true;
         public static bool UsePopCntIfAvailable    { get; set; } = true;
         public static bool UseAvxIfAvailable       { get; set; } = true;
+        public static bool UseAvx512FIfAvailable   { get; set; } = true;
+        public static bool UseAvx512VlIfAvailable  { get; set; } = true;
+        public static bool UseAvx512BwIfAvailable  { get; set; } = true;
+        public static bool UseAvx512DqIfAvailable  { get; set; } = true;
         public static bool UseF16cIfAvailable      { get; set; } = true;
         public static bool UseFmaIfAvailable       { get; set; } = true;
         public static bool UseAesniIfAvailable     { get; set; } = true;
@@ -47,11 +51,18 @@ namespace ARMeilleure
         internal static bool UseSse42     => UseSse42IfAvailable     && X86HardwareCapabilities.SupportsSse42;
         internal static bool UsePopCnt    => UsePopCntIfAvailable    && X86HardwareCapabilities.SupportsPopcnt;
         internal static bool UseAvx       => UseAvxIfAvailable       && X86HardwareCapabilities.SupportsAvx && !ForceLegacySse;
+        internal static bool UseAvx512F   => UseAvx512FIfAvailable   && X86HardwareCapabilities.SupportsAvx512F && !ForceLegacySse;
+        internal static bool UseAvx512Vl  => UseAvx512VlIfAvailable  && X86HardwareCapabilities.SupportsAvx512Vl && !ForceLegacySse;
+        internal static bool UseAvx512Bw  => UseAvx512BwIfAvailable  && X86HardwareCapabilities.SupportsAvx512Bw && !ForceLegacySse;
+        internal static bool UseAvx512Dq  => UseAvx512DqIfAvailable  && X86HardwareCapabilities.SupportsAvx512Dq && !ForceLegacySse;
         internal static bool UseF16c      => UseF16cIfAvailable      && X86HardwareCapabilities.SupportsF16c;
         internal static bool UseFma       => UseFmaIfAvailable       && X86HardwareCapabilities.SupportsFma;
         internal static bool UseAesni     => UseAesniIfAvailable     && X86HardwareCapabilities.SupportsAesni;
         internal static bool UsePclmulqdq => UsePclmulqdqIfAvailable && X86HardwareCapabilities.SupportsPclmulqdq;
         internal static bool UseSha       => UseShaIfAvailable       && X86HardwareCapabilities.SupportsSha;
         internal static bool UseGfni      => UseGfniIfAvailable      && X86HardwareCapabilities.SupportsGfni;
+
+        internal static bool UseAvx512Ortho => UseAvx512F && UseAvx512Vl;
+        internal static bool UseAvx512OrthoFloat => UseAvx512Ortho && UseAvx512Dq;
     }
 }

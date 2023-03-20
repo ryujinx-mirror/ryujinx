@@ -1,10 +1,14 @@
+using Ryujinx.Memory;
 using System;
+using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics.X86;
 
 namespace ARMeilleure.CodeGen.X86
 {
     static class HardwareCapabilities
     {
+        private delegate uint GetXcr0();
+
         static HardwareCapabilities()
         {
             if (!X86Base.IsSupported)
@@ -24,6 +28,28 @@ namespace ARMeilleure.CodeGen.X86
                 FeatureInfo7Ebx = (FeatureFlags7Ebx)ebx7;
                 FeatureInfo7Ecx = (FeatureFlags7Ecx)ecx7;
             }
+
+            Xcr0InfoEax = (Xcr0FlagsEax)GetXcr0Eax();
+        }
+
+        private static uint GetXcr0Eax()
+        {
+            ReadOnlySpan<byte> asmGetXcr0 = new byte[]
+            {
+                0x31, 0xc9, // xor ecx, ecx
+                0xf, 0x01, 0xd0, // xgetbv
+                0xc3, // ret
+            };
+
+            using MemoryBlock memGetXcr0 = new MemoryBlock((ulong)asmGetXcr0.Length);
+
+            memGetXcr0.Write(0, asmGetXcr0);
+
+            memGetXcr0.Reprotect(0, (ulong)asmGetXcr0.Length, MemoryPermission.ReadAndExecute);
+
+            var fGetXcr0 = Marshal.GetDelegateForFunctionPointer<GetXcr0>(memGetXcr0.Pointer);
+
+            return fGetXcr0();
         }
 
         [Flags]
@@ -44,6 +70,7 @@ namespace ARMeilleure.CodeGen.X86
             Sse42 = 1 << 20,
             Popcnt = 1 << 23,
             Aes = 1 << 25,
+            Osxsave = 1 << 27,
             Avx = 1 << 28,
             F16c = 1 << 29
         }
@@ -52,7 +79,11 @@ namespace ARMeilleure.CodeGen.X86
         public enum FeatureFlags7Ebx
         {
             Avx2 = 1 << 5,
-            Sha = 1 << 29
+            Avx512f = 1 << 16,
+            Avx512dq = 1 << 17,
+            Sha = 1 << 29,
+            Avx512bw = 1 << 30,
+            Avx512vl = 1 << 31
         }
 
         [Flags]
@@ -61,10 +92,21 @@ namespace ARMeilleure.CodeGen.X86
             Gfni = 1 << 8,
         }
 
+        [Flags]
+        public enum Xcr0FlagsEax
+        {
+            Sse = 1 << 1,
+            YmmHi128 = 1 << 2,
+            Opmask = 1 << 5,
+            ZmmHi256 = 1 << 6,
+            Hi16Zmm = 1 << 7
+        }
+
         public static FeatureFlags1Edx FeatureInfo1Edx { get; }
         public static FeatureFlags1Ecx FeatureInfo1Ecx { get; }
         public static FeatureFlags7Ebx FeatureInfo7Ebx { get; } = 0;
         public static FeatureFlags7Ecx FeatureInfo7Ecx { get; } = 0;
+        public static Xcr0FlagsEax Xcr0InfoEax { get; } = 0;
 
         public static bool SupportsSse => FeatureInfo1Edx.HasFlag(FeatureFlags1Edx.Sse);
         public static bool SupportsSse2 => FeatureInfo1Edx.HasFlag(FeatureFlags1Edx.Sse2);
@@ -76,8 +118,13 @@ namespace ARMeilleure.CodeGen.X86
         public static bool SupportsSse42 => FeatureInfo1Ecx.HasFlag(FeatureFlags1Ecx.Sse42);
         public static bool SupportsPopcnt => FeatureInfo1Ecx.HasFlag(FeatureFlags1Ecx.Popcnt);
         public static bool SupportsAesni => FeatureInfo1Ecx.HasFlag(FeatureFlags1Ecx.Aes);
-        public static bool SupportsAvx => FeatureInfo1Ecx.HasFlag(FeatureFlags1Ecx.Avx);
+        public static bool SupportsAvx => FeatureInfo1Ecx.HasFlag(FeatureFlags1Ecx.Avx | FeatureFlags1Ecx.Osxsave) && Xcr0InfoEax.HasFlag(Xcr0FlagsEax.Sse | Xcr0FlagsEax.YmmHi128);
         public static bool SupportsAvx2 => FeatureInfo7Ebx.HasFlag(FeatureFlags7Ebx.Avx2) && SupportsAvx;
+        public static bool SupportsAvx512F => FeatureInfo7Ebx.HasFlag(FeatureFlags7Ebx.Avx512f) && FeatureInfo1Ecx.HasFlag(FeatureFlags1Ecx.Osxsave)
+            && Xcr0InfoEax.HasFlag(Xcr0FlagsEax.Sse | Xcr0FlagsEax.YmmHi128 | Xcr0FlagsEax.Opmask | Xcr0FlagsEax.ZmmHi256 | Xcr0FlagsEax.Hi16Zmm);
+        public static bool SupportsAvx512Vl => FeatureInfo7Ebx.HasFlag(FeatureFlags7Ebx.Avx512vl) && SupportsAvx512F;
+        public static bool SupportsAvx512Bw => FeatureInfo7Ebx.HasFlag(FeatureFlags7Ebx.Avx512bw) && SupportsAvx512F;
+        public static bool SupportsAvx512Dq => FeatureInfo7Ebx.HasFlag(FeatureFlags7Ebx.Avx512dq) && SupportsAvx512F;
         public static bool SupportsF16c => FeatureInfo1Ecx.HasFlag(FeatureFlags1Ecx.F16c);
         public static bool SupportsSha => FeatureInfo7Ebx.HasFlag(FeatureFlags7Ebx.Sha);
         public static bool SupportsGfni => FeatureInfo7Ecx.HasFlag(FeatureFlags7Ecx.Gfni);
@@ -85,5 +132,6 @@ namespace ARMeilleure.CodeGen.X86
         public static bool ForceLegacySse { get; set; }
 
         public static bool SupportsVexEncoding => SupportsAvx && !ForceLegacySse;
+        public static bool SupportsEvexEncoding => SupportsAvx512F && !ForceLegacySse;
     }
 }
