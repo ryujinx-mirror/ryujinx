@@ -4,13 +4,14 @@ using FluentAvalonia.UI.Controls;
 using ICSharpCode.SharpZipLib.GZip;
 using ICSharpCode.SharpZipLib.Tar;
 using ICSharpCode.SharpZipLib.Zip;
-using Newtonsoft.Json.Linq;
 using Ryujinx.Ava;
 using Ryujinx.Ava.Common.Locale;
 using Ryujinx.Ava.UI.Helpers;
 using Ryujinx.Common;
 using Ryujinx.Common.Logging;
+using Ryujinx.Common.Utilities;
 using Ryujinx.Ui.Common.Helper;
+using Ryujinx.Ui.Common.Models.Github;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -31,6 +32,7 @@ namespace Ryujinx.Modules
     internal static class Updater
     {
         private const string GitHubApiURL = "https://api.github.com";
+        private static readonly GithubReleasesJsonSerializerContext SerializerContext = new(JsonHelper.GetDefaultSerializerOptions());
 
         private static readonly string HomeDir          = AppDomain.CurrentDomain.BaseDirectory;
         private static readonly string UpdateDir        = Path.Combine(Path.GetTempPath(), "Ryujinx", "update");
@@ -99,22 +101,16 @@ namespace Ryujinx.Modules
 
                 string  buildInfoURL = $"{GitHubApiURL}/repos/{ReleaseInformation.ReleaseChannelOwner}/{ReleaseInformation.ReleaseChannelRepo}/releases/latest";
                 string  fetchedJson  = await jsonClient.GetStringAsync(buildInfoURL);
-                JObject jsonRoot     = JObject.Parse(fetchedJson);
-                JToken  assets       = jsonRoot["assets"];
+                var fetched = JsonHelper.Deserialize(fetchedJson, SerializerContext.GithubReleasesJsonResponse);
+                _buildVer = fetched.Name;
 
-                _buildVer = (string)jsonRoot["name"];
-
-                foreach (JToken asset in assets)
+                foreach (var asset in fetched.Assets)
                 {
-                    string assetName   = (string)asset["name"];
-                    string assetState  = (string)asset["state"];
-                    string downloadURL = (string)asset["browser_download_url"];
-
-                    if (assetName.StartsWith("test-ava-ryujinx") && assetName.EndsWith(_platformExt))
+                    if (asset.Name.StartsWith("test-ava-ryujinx") && asset.Name.EndsWith(_platformExt))
                     {
-                        _buildUrl = downloadURL;
+                        _buildUrl = asset.BrowserDownloadUrl;
 
-                        if (assetState != "uploaded")
+                        if (asset.State != "uploaded")
                         {
                             if (showVersionUpToDate)
                             {

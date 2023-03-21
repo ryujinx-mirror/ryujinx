@@ -11,15 +11,7 @@ namespace Ryujinx.Common.Logging
         public readonly string Message;
         public readonly object Data;
 
-        public LogEventArgs(LogLevel level, TimeSpan time, string threadName, string message)
-        {
-            Level      = level;
-            Time       = time;
-            ThreadName = threadName;
-            Message    = message;
-        }
-
-        public LogEventArgs(LogLevel level, TimeSpan time, string threadName, string message, object data)
+        public LogEventArgs(LogLevel level, TimeSpan time, string threadName, string message, object data = null)
         {
             Level      = level;
             Time       = time;

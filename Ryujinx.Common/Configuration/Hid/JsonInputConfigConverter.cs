@@ -1,13 +1,16 @@
 ﻿using Ryujinx.Common.Configuration.Hid.Controller;
 using Ryujinx.Common.Configuration.Hid.Keyboard;
+using Ryujinx.Common.Utilities;
 using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace Ryujinx.Common.Configuration.Hid
 {
-    class JsonInputConfigConverter : JsonConverter<InputConfig>
+    public class JsonInputConfigConverter : JsonConverter<InputConfig>
     {
+        private static readonly InputConfigJsonSerializerContext SerializerContext = new(JsonHelper.GetDefaultSerializerOptions());
+
         private static InputBackendType GetInputBackendType(ref Utf8JsonReader reader)
         {
             // Temporary reader to get the backend type
@@ -54,8 +57,8 @@ namespace Ryujinx.Common.Configuration.Hid
 
             return backendType switch
             {
-                InputBackendType.WindowKeyboard => (InputConfig)JsonSerializer.Deserialize(ref reader, typeof(StandardKeyboardInputConfig), options),
-                InputBackendType.GamepadSDL2 => (InputConfig)JsonSerializer.Deserialize(ref reader, typeof(StandardControllerInputConfig), options),
+                InputBackendType.WindowKeyboard => JsonSerializer.Deserialize(ref reader, SerializerContext.StandardKeyboardInputConfig),
+                InputBackendType.GamepadSDL2 => JsonSerializer.Deserialize(ref reader, SerializerContext.StandardControllerInputConfig),
                 _ => throw new InvalidOperationException($"Unknown backend type {backendType}"),
             };
         }
@@ -65,10 +68,10 @@ namespace Ryujinx.Common.Configuration.Hid
             switch (value.Backend)
             {
                 case InputBackendType.WindowKeyboard:
-                    JsonSerializer.Serialize(writer, value as StandardKeyboardInputConfig, options);
+                    JsonSerializer.Serialize(writer, value as StandardKeyboardInputConfig, SerializerContext.StandardKeyboardInputConfig);
                     break;
                 case InputBackendType.GamepadSDL2:
-                    JsonSerializer.Serialize(writer, value as StandardControllerInputConfig, options);
+                    JsonSerializer.Serialize(writer, value as StandardControllerInputConfig, SerializerContext.StandardControllerInputConfig);
                     break;
                 default:
                     throw new ArgumentException($"Unknown backend type {value.Backend}");

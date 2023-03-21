@@ -1,5 +1,9 @@
-﻿namespace Ryujinx.Common.Configuration
+﻿using Ryujinx.Common.Utilities;
+using System.Text.Json.Serialization;
+
+namespace Ryujinx.Common.Configuration
 {
+    [JsonConverter(typeof(TypedStringEnumConverter<AspectRatio>))]
     public enum AspectRatio
     {
         Fixed4x3,

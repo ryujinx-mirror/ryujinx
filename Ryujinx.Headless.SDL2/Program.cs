@@ -56,6 +56,8 @@ namespace Ryujinx.Headless.SDL2
         private static bool _enableKeyboard;
         private static bool _enableMouse;
 
+        private static readonly InputConfigJsonSerializerContext SerializerContext = new(JsonHelper.GetDefaultSerializerOptions());
+
         static void Main(string[] args)
         {
             Version = ReleaseInformation.GetVersion();
@@ -285,10 +287,7 @@ namespace Ryujinx.Headless.SDL2
 
                 try
                 {
-                    using (Stream stream = File.OpenRead(path))
-                    {
-                        config = JsonHelper.Deserialize<InputConfig>(stream);
-                    }
+                    config = JsonHelper.DeserializeFromFile(path, SerializerContext.InputConfig);
                 }
                 catch (JsonException)
                 {

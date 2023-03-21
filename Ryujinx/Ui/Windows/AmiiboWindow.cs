@@ -3,6 +3,7 @@ using Ryujinx.Common;
 using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Utilities;
 using Ryujinx.Ui.Common.Configuration;
+using Ryujinx.Ui.Common.Models.Amiibo;
 using Ryujinx.Ui.Widgets;
 using System;
 using System.Collections.Generic;
@@ -11,65 +12,15 @@ using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using System.Text;
-using System.Text.Json.Serialization;
+using System.Text.Json;
 using System.Threading.Tasks;
+using AmiiboApi = Ryujinx.Ui.Common.Models.Amiibo.AmiiboApi;
+using AmiiboJsonSerializerContext = Ryujinx.Ui.Common.Models.Amiibo.AmiiboJsonSerializerContext;
 
 namespace Ryujinx.Ui.Windows
 {
     public partial class AmiiboWindow : Window
     {
-        private struct AmiiboJson
-        {
-            [JsonPropertyName("amiibo")]
-            public List<AmiiboApi> Amiibo { get; set; }
-            [JsonPropertyName("lastUpdated")]
-            public DateTime LastUpdated { get; set; }
-        }
-
-        private struct AmiiboApi
-        {
-            [JsonPropertyName("name")]
-            public string Name { get; set; }
-            [JsonPropertyName("head")]
-            public string Head { get; set; }
-            [JsonPropertyName("tail")]
-            public string Tail { get; set; }
-            [JsonPropertyName("image")]
-            public string Image { get; set; }
-            [JsonPropertyName("amiiboSeries")]
-            public string AmiiboSeries { get; set; }
-            [JsonPropertyName("character")]
-            public string Character { get; set; }
-            [JsonPropertyName("gameSeries")]
-            public string GameSeries { get; set; }
-            [JsonPropertyName("type")]
-            public string Type { get; set; }
-
-            [JsonPropertyName("release")]
-            public Dictionary<string, string> Release { get; set; }
-
-            [JsonPropertyName("gamesSwitch")]
-            public List<AmiiboApiGamesSwitch> GamesSwitch { get; set; }
-        }
-
-        private class AmiiboApiGamesSwitch
-        {
-            [JsonPropertyName("amiiboUsage")]
-            public List<AmiiboApiUsage> AmiiboUsage { get; set; }
-            [JsonPropertyName("gameID")]
-            public List<string> GameId { get; set; }
-            [JsonPropertyName("gameName")]
-            public string GameName { get; set; }
-        }
-
-        private class AmiiboApiUsage
-        {
-            [JsonPropertyName("Usage")]
-            public string Usage { get; set; }
-            [JsonPropertyName("write")]
-            public bool Write { get; set; }
-        }
-
         private const string DEFAULT_JSON = "{ \"amiibo\": [] }";
 
         public string AmiiboId { get; private set; }
@@ -95,6 +46,8 @@ namespace Ryujinx.Ui.Windows
         private readonly byte[] _amiiboLogoBytes;
 
         private List<AmiiboApi> _amiiboList;
+
+        private static readonly AmiiboJsonSerializerContext SerializerContext = new(JsonHelper.GetDefaultSerializerOptions());
 
         public AmiiboWindow() : base($"Ryujinx {Program.Version} - Amiibo")
         {
@@ -127,9 +80,9 @@ namespace Ryujinx.Ui.Windows
 
             if (File.Exists(_amiiboJsonPath))
             {
-                amiiboJsonString = File.ReadAllText(_amiiboJsonPath);
+                amiiboJsonString = await File.ReadAllTextAsync(_amiiboJsonPath);
 
-                if (await NeedsUpdate(JsonHelper.Deserialize<AmiiboJson>(amiiboJsonString).LastUpdated))
+                if (await NeedsUpdate(JsonHelper.Deserialize(amiiboJsonString, SerializerContext.AmiiboJson).LastUpdated))
                 {
                     amiiboJsonString = await DownloadAmiiboJson();
                 }
@@ -148,7 +101,7 @@ namespace Ryujinx.Ui.Windows
                 }
             }
 
-            _amiiboList = JsonHelper.Deserialize<AmiiboJson>(amiiboJsonString).Amiibo;
+            _amiiboList = JsonHelper.Deserialize(amiiboJsonString, SerializerContext.AmiiboJson).Amiibo;
             _amiiboList = _amiiboList.OrderBy(amiibo => amiibo.AmiiboSeries).ToList();
 
             if (LastScannedAmiiboShowAll)
