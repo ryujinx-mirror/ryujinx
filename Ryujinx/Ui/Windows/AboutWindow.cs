@@ -31,7 +31,7 @@ namespace Ryujinx.Ui.Windows
             {
                 string patreonJsonString = await httpClient.GetStringAsync("https://patreon.ryujinx.org/");
 
-                _patreonNamesText.Buffer.Text = string.Join(", ", JsonHelper.Deserialize(patreonJsonString, CommonJsonContext.Default.StringArray));
+                _patreonNamesText.Buffer.Text = string.Join(", ", JsonHelper.Deserialize<string[]>(patreonJsonString));
             }
             catch
             {

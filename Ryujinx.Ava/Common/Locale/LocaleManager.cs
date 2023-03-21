@@ -130,7 +130,7 @@ namespace Ryujinx.Ava.Common.Locale
         {
             var    localeStrings = new Dictionary<LocaleKeys, string>();
             string languageJson  = EmbeddedResources.ReadAllText($"Ryujinx.Ava/Assets/Locales/{languageCode}.json");
-            var    strings       = JsonHelper.Deserialize(languageJson, CommonJsonContext.Default.StringDictionary);
+            var    strings       = JsonHelper.Deserialize<Dictionary<string, string>>(languageJson);
 
             foreach (var item in strings)
             {

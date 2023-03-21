@@ -4,11 +4,11 @@ using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using Ryujinx.Ava.Common.Locale;
 using Ryujinx.Ava.UI.Helpers;
+using Ryujinx.Ava.UI.Models;
 using Ryujinx.Ava.UI.Windows;
 using Ryujinx.Common;
 using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Utilities;
-using Ryujinx.Ui.Common.Models.Amiibo;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -17,7 +17,6 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
-using AmiiboJsonSerializerContext = Ryujinx.Ui.Common.Models.Amiibo.AmiiboJsonSerializerContext;
 
 namespace Ryujinx.Ava.UI.ViewModels
 {
@@ -32,8 +31,8 @@ namespace Ryujinx.Ava.UI.ViewModels
         private readonly StyleableWindow _owner;
 
         private Bitmap _amiiboImage;
-        private List<AmiiboApi> _amiiboList;
-        private AvaloniaList<AmiiboApi> _amiibos;
+        private List<Amiibo.AmiiboApi> _amiiboList;
+        private AvaloniaList<Amiibo.AmiiboApi> _amiibos;
         private ObservableCollection<string> _amiiboSeries;
 
         private int _amiiboSelectedIndex;
@@ -42,8 +41,6 @@ namespace Ryujinx.Ava.UI.ViewModels
         private bool _showAllAmiibo;
         private bool _useRandomUuid;
         private string _usage;
-        
-        private static readonly AmiiboJsonSerializerContext SerializerContext = new(JsonHelper.GetDefaultSerializerOptions());
 
         public AmiiboWindowViewModel(StyleableWindow owner, string lastScannedAmiiboId, string titleId)
         {
@@ -55,9 +52,9 @@ namespace Ryujinx.Ava.UI.ViewModels
             Directory.CreateDirectory(Path.Join(AppDataManager.BaseDirPath, "system", "amiibo"));
 
             _amiiboJsonPath = Path.Join(AppDataManager.BaseDirPath, "system", "amiibo", "Amiibo.json");
-            _amiiboList = new List<AmiiboApi>();
+            _amiiboList = new List<Amiibo.AmiiboApi>();
             _amiiboSeries = new ObservableCollection<string>();
-            _amiibos = new AvaloniaList<AmiiboApi>();
+            _amiibos = new AvaloniaList<Amiibo.AmiiboApi>();
 
             _amiiboLogoBytes = EmbeddedResources.Read("Ryujinx.Ui.Common/Resources/Logo_Amiibo.png");
 
@@ -97,7 +94,7 @@ namespace Ryujinx.Ava.UI.ViewModels
             }
         }
 
-        public AvaloniaList<AmiiboApi> AmiiboList
+        public AvaloniaList<Amiibo.AmiiboApi> AmiiboList
         {
             get => _amiibos;
             set
@@ -190,9 +187,9 @@ namespace Ryujinx.Ava.UI.ViewModels
 
             if (File.Exists(_amiiboJsonPath))
             {
-                amiiboJsonString = await File.ReadAllTextAsync(_amiiboJsonPath);
+                amiiboJsonString = File.ReadAllText(_amiiboJsonPath);
 
-                if (await NeedsUpdate(JsonHelper.Deserialize(amiiboJsonString, SerializerContext.AmiiboJson).LastUpdated))
+                if (await NeedsUpdate(JsonHelper.Deserialize<Amiibo.AmiiboJson>(amiiboJsonString).LastUpdated))
                 {
                     amiiboJsonString = await DownloadAmiiboJson();
                 }
@@ -209,7 +206,7 @@ namespace Ryujinx.Ava.UI.ViewModels
                 }
             }
 
-            _amiiboList = JsonHelper.Deserialize(amiiboJsonString, SerializerContext.AmiiboJson).Amiibo;
+            _amiiboList = JsonHelper.Deserialize<Amiibo.AmiiboJson>(amiiboJsonString).Amiibo;
             _amiiboList = _amiiboList.OrderBy(amiibo => amiibo.AmiiboSeries).ToList();
 
             ParseAmiiboData();
@@ -226,7 +223,7 @@ namespace Ryujinx.Ava.UI.ViewModels
                 {
                     if (!ShowAllAmiibo)
                     {
-                        foreach (AmiiboApiGamesSwitch game in _amiiboList[i].GamesSwitch)
+                        foreach (Amiibo.AmiiboApiGamesSwitch game in _amiiboList[i].GamesSwitch)
                         {
                             if (game != null)
                             {
@@ -258,7 +255,7 @@ namespace Ryujinx.Ava.UI.ViewModels
 
         private void SelectLastScannedAmiibo()
         {
-            AmiiboApi scanned = _amiiboList.FirstOrDefault(amiibo => amiibo.GetId() == LastScannedAmiiboId);
+            Amiibo.AmiiboApi scanned = _amiiboList.FirstOrDefault(amiibo => amiibo.GetId() == LastScannedAmiiboId);
 
             SeriesSelectedIndex = AmiiboSeries.IndexOf(scanned.AmiiboSeries);
             AmiiboSelectedIndex = AmiiboList.IndexOf(scanned);
@@ -273,7 +270,7 @@ namespace Ryujinx.Ava.UI.ViewModels
                 return;
             }
 
-            List<AmiiboApi> amiiboSortedList = _amiiboList
+            List<Amiibo.AmiiboApi> amiiboSortedList = _amiiboList
                 .Where(amiibo => amiibo.AmiiboSeries == _amiiboSeries[SeriesSelectedIndex])
                 .OrderBy(amiibo => amiibo.Name).ToList();
 
@@ -283,7 +280,7 @@ namespace Ryujinx.Ava.UI.ViewModels
                 {
                     if (!_showAllAmiibo)
                     {
-                        foreach (AmiiboApiGamesSwitch game in amiiboSortedList[i].GamesSwitch)
+                        foreach (Amiibo.AmiiboApiGamesSwitch game in amiiboSortedList[i].GamesSwitch)
                         {
                             if (game != null)
                             {
@@ -317,7 +314,7 @@ namespace Ryujinx.Ava.UI.ViewModels
                 return;
             }
 
-            AmiiboApi selected = _amiibos[_amiiboSelectedIndex];
+            Amiibo.AmiiboApi selected = _amiibos[_amiiboSelectedIndex];
 
             string imageUrl = _amiiboList.FirstOrDefault(amiibo => amiibo.Equals(selected)).Image;
 
@@ -329,11 +326,11 @@ namespace Ryujinx.Ava.UI.ViewModels
                 {
                     bool writable = false;
 
-                    foreach (AmiiboApiGamesSwitch item in _amiiboList[i].GamesSwitch)
+                    foreach (Amiibo.AmiiboApiGamesSwitch item in _amiiboList[i].GamesSwitch)
                     {
                         if (item.GameId.Contains(TitleId))
                         {
-                            foreach (AmiiboApiUsage usageItem in item.AmiiboUsage)
+                            foreach (Amiibo.AmiiboApiUsage usageItem in item.AmiiboUsage)
                             {
                                 usageString += Environment.NewLine +
                                                $"- {usageItem.Usage.Replace("/", Environment.NewLine + "-")}";

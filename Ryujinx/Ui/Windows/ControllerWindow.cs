@@ -115,8 +115,6 @@ namespace Ryujinx.Ui.Windows
         private bool _mousePressed;
         private bool _middleMousePressed;
 
-        private static readonly InputConfigJsonSerializerContext SerializerContext = new(JsonHelper.GetDefaultSerializerOptions());
-
         public ControllerWindow(MainWindow mainWindow, PlayerIndex controllerId) : this(mainWindow, new Builder("Ryujinx.Ui.Windows.ControllerWindow.glade"), controllerId) { }
 
         private ControllerWindow(MainWindow mainWindow, Builder builder, PlayerIndex controllerId) : base(builder.GetRawOwnedObject("_controllerWin"))
@@ -1122,7 +1120,10 @@ namespace Ryujinx.Ui.Windows
 
                 try
                 {
-                    config = JsonHelper.DeserializeFromFile(path, SerializerContext.InputConfig);
+                    using (Stream stream = File.OpenRead(path))
+                    {
+                        config = JsonHelper.Deserialize<InputConfig>(stream);
+                    }
                 }
                 catch (JsonException) { }
             }
@@ -1144,7 +1145,9 @@ namespace Ryujinx.Ui.Windows
             if (profileDialog.Run() == (int)ResponseType.Ok)
             {
                 string path = System.IO.Path.Combine(GetProfileBasePath(), profileDialog.FileName);
-                string jsonString = JsonHelper.Serialize(inputConfig, SerializerContext.InputConfig);
+                string jsonString;
+
+                jsonString = JsonHelper.Serialize(inputConfig, true);
 
                 File.WriteAllText(path, jsonString);
             }

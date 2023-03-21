@@ -1,62 +1,15 @@
-﻿using System.IO;
+﻿using Ryujinx.Common.Configuration.Hid;
+using Ryujinx.Common.Configuration.Hid.Controller.Motion;
+using System.IO;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization.Metadata;
+using System.Text.Json.Serialization;
 
 namespace Ryujinx.Common.Utilities
 {
     public class JsonHelper
     {
-        private static readonly JsonNamingPolicy SnakeCasePolicy = new SnakeCaseNamingPolicy();
-        private const int DefaultFileWriteBufferSize = 4096;
-
-        /// <summary>
-        /// Creates new serializer options with default settings.
-        /// </summary>
-        /// <remarks>
-        /// It is REQUIRED for you to save returned options statically or as a part of static serializer context
-        /// in order to avoid performance issues. You can safely modify returned options for your case before storing.
-        /// </remarks>
-        public static JsonSerializerOptions GetDefaultSerializerOptions(bool indented = true)
-        {
-            JsonSerializerOptions options = new()
-            {
-                DictionaryKeyPolicy  = SnakeCasePolicy,
-                PropertyNamingPolicy = SnakeCasePolicy,
-                WriteIndented        = indented,
-                AllowTrailingCommas  = true,
-                ReadCommentHandling  = JsonCommentHandling.Skip
-            };
-
-            return options;
-        }
-
-        public static string Serialize<T>(T value, JsonTypeInfo<T> typeInfo)
-        {
-            return JsonSerializer.Serialize(value, typeInfo);
-        }
-
-        public static T Deserialize<T>(string value, JsonTypeInfo<T> typeInfo)
-        {
-            return JsonSerializer.Deserialize(value, typeInfo);
-        }
-
-        public static void SerializeToFile<T>(string filePath, T value, JsonTypeInfo<T> typeInfo)
-        {
-            using FileStream file = File.Create(filePath, DefaultFileWriteBufferSize, FileOptions.WriteThrough);
-            JsonSerializer.Serialize(file, value, typeInfo);
-        }
-
-        public static T DeserializeFromFile<T>(string filePath, JsonTypeInfo<T> typeInfo)
-        {
-            using FileStream file = File.OpenRead(filePath);
-            return JsonSerializer.Deserialize(file, typeInfo);
-        }
-
-        public static void SerializeToStream<T>(Stream stream, T value, JsonTypeInfo<T> typeInfo)
-        {
-            JsonSerializer.Serialize(stream, value, typeInfo);
-        }
+        public static JsonNamingPolicy SnakeCase { get; }
 
         private class SnakeCaseNamingPolicy : JsonNamingPolicy
         {
@@ -67,7 +20,7 @@ namespace Ryujinx.Common.Utilities
                     return name;
                 }
 
-                StringBuilder builder = new();
+                StringBuilder builder = new StringBuilder();
 
                 for (int i = 0; i < name.Length; i++)
                 {
@@ -81,7 +34,7 @@ namespace Ryujinx.Common.Utilities
                         }
                         else
                         {
-                            builder.Append('_');
+                            builder.Append("_");
                             builder.Append(char.ToLowerInvariant(c));
                         }
                     }
@@ -93,6 +46,65 @@ namespace Ryujinx.Common.Utilities
 
                 return builder.ToString();
             }
+        }
+
+        static JsonHelper()
+        {
+            SnakeCase = new SnakeCaseNamingPolicy();
+        }
+
+        public static JsonSerializerOptions GetDefaultSerializerOptions(bool prettyPrint = false)
+        {
+            JsonSerializerOptions options = new JsonSerializerOptions
+            {
+                DictionaryKeyPolicy  = SnakeCase,
+                PropertyNamingPolicy = SnakeCase,
+                WriteIndented        = prettyPrint,
+                AllowTrailingCommas  = true,
+                ReadCommentHandling  = JsonCommentHandling.Skip
+            };
+
+            options.Converters.Add(new JsonStringEnumConverter());
+            options.Converters.Add(new JsonInputConfigConverter());
+            options.Converters.Add(new JsonMotionConfigControllerConverter());
+
+            return options;
+        }
+
+        public static T Deserialize<T>(Stream stream)
+        {
+            using (BinaryReader reader = new BinaryReader(stream))
+            {
+                return JsonSerializer.Deserialize<T>(reader.ReadBytes((int)(stream.Length - stream.Position)), GetDefaultSerializerOptions());
+            }
+        }
+
+        public static T DeserializeFromFile<T>(string path)
+        {
+            return Deserialize<T>(File.ReadAllText(path));
+        }
+
+        public static T Deserialize<T>(string json)
+        {
+            return JsonSerializer.Deserialize<T>(json, GetDefaultSerializerOptions());
+        }
+
+        public static void Serialize<TValue>(Stream stream, TValue obj, bool prettyPrint = false)
+        {
+            using (BinaryWriter writer = new BinaryWriter(stream))
+            {
+                writer.Write(SerializeToUtf8Bytes(obj, prettyPrint));
+            }
+        }
+
+        public static string Serialize<TValue>(TValue obj, bool prettyPrint = false)
+        {
+            return JsonSerializer.Serialize(obj, GetDefaultSerializerOptions(prettyPrint));
+        }
+
+        public static byte[] SerializeToUtf8Bytes<T>(T obj, bool prettyPrint = false)
+        {
+            return JsonSerializer.SerializeToUtf8Bytes(obj, GetDefaultSerializerOptions(prettyPrint));
         }
     }
 }

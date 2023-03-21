@@ -9,7 +9,6 @@ using Ryujinx.Ui.Common.Configuration.Ui;
 using Ryujinx.Ui.Common.Helper;
 using System;
 using System.Collections.Generic;
-using System.Text.Json.Nodes;
 
 namespace Ryujinx.Ui.Common.Configuration
 {
@@ -632,8 +631,8 @@ namespace Ryujinx.Ui.Common.Configuration
                 EnableKeyboard             = Hid.EnableKeyboard,
                 EnableMouse                = Hid.EnableMouse,
                 Hotkeys                    = Hid.Hotkeys,
-                KeyboardConfig             = new List<JsonObject>(),
-                ControllerConfig           = new List<JsonObject>(),
+                KeyboardConfig             = new List<object>(),
+                ControllerConfig           = new List<object>(),
                 InputConfig                = Hid.InputConfig,
                 GraphicsBackend            = Graphics.GraphicsBackend,
                 PreferredGpu               = Graphics.PreferredGpu

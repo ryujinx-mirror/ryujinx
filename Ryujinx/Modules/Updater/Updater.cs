@@ -2,14 +2,14 @@ using Gtk;
 using ICSharpCode.SharpZipLib.GZip;
 using ICSharpCode.SharpZipLib.Tar;
 using ICSharpCode.SharpZipLib.Zip;
+using Newtonsoft.Json.Linq;
 using Ryujinx.Common;
 using Ryujinx.Common.Logging;
-using Ryujinx.Common.Utilities;
 using Ryujinx.Ui;
-using Ryujinx.Ui.Common.Models.Github;
 using Ryujinx.Ui.Widgets;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -37,8 +37,6 @@ namespace Ryujinx.Modules
         private static string _platformExt;
         private static string _buildUrl;
         private static long   _buildSize;
-
-        private static readonly GithubReleasesJsonSerializerContext SerializerContext = new(JsonHelper.GetDefaultSerializerOptions());
 
         // On Windows, GtkSharp.Dependencies adds these extra dirs that must be cleaned during updates.
         private static readonly string[] WindowsDependencyDirs = new string[] { "bin", "etc", "lib", "share" };
@@ -109,16 +107,22 @@ namespace Ryujinx.Modules
 
                 // Fetch latest build information
                 string  fetchedJson = await jsonClient.GetStringAsync(buildInfoURL);
-                var fetched = JsonHelper.Deserialize(fetchedJson, SerializerContext.GithubReleasesJsonResponse);
-                _buildVer = fetched.Name;
+                JObject jsonRoot    = JObject.Parse(fetchedJson);
+                JToken  assets      = jsonRoot["assets"];
 
-                foreach (var asset in fetched.Assets)
+                _buildVer = (string)jsonRoot["name"];
+
+                foreach (JToken asset in assets)
                 {
-                    if (asset.Name.StartsWith("ryujinx") && asset.Name.EndsWith(_platformExt))
-                    {
-                        _buildUrl = asset.BrowserDownloadUrl;
+                    string assetName = (string)asset["name"];
+                    string assetState = (string)asset["state"];
+                    string downloadURL = (string)asset["browser_download_url"];
 
-                        if (asset.State != "uploaded")
+                    if (assetName.StartsWith("ryujinx") && assetName.EndsWith(_platformExt))
+                    {
+                        _buildUrl = downloadURL;
+
+                        if (assetState != "uploaded")
                         {
                             if (showVersionUpToDate)
                             {

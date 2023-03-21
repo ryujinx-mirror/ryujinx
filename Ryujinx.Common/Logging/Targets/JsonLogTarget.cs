@@ -1,5 +1,5 @@
-﻿using Ryujinx.Common.Utilities;
-using System.IO;
+﻿using System.IO;
+using System.Text.Json;
 
 namespace Ryujinx.Common.Logging
 {
@@ -25,8 +25,12 @@ namespace Ryujinx.Common.Logging
 
         public void Log(object sender, LogEventArgs e)
         {
-            var logEventArgsJson = LogEventArgsJson.FromLogEventArgs(e);
-            JsonHelper.SerializeToStream(_stream, logEventArgsJson, LogEventJsonSerializerContext.Default.LogEventArgsJson);
+            string text = JsonSerializer.Serialize(e);
+
+            using (BinaryWriter writer = new BinaryWriter(_stream))
+            {
+                writer.Write(text);
+            }
         }
 
         public void Dispose()

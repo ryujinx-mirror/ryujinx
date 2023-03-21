@@ -42,7 +42,7 @@ namespace Ryujinx.Ava.UI.Views.Main
             {
                 string languageCode = Path.GetFileNameWithoutExtension(locale).Split('.').Last();
                 string languageJson = EmbeddedResources.ReadAllText($"{localePath}/{languageCode}{localeExt}");
-                var    strings      = JsonHelper.Deserialize(languageJson, CommonJsonContext.Default.StringDictionary);
+                var    strings      = JsonHelper.Deserialize<Dictionary<string, string>>(languageJson);
 
                 if (!strings.TryGetValue("Language", out string languageName))
                 {

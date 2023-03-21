@@ -13,7 +13,6 @@ using LibHac.Tools.FsSystem;
 using LibHac.Tools.FsSystem.NcaUtils;
 using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Logging;
-using Ryujinx.Common.Utilities;
 using Ryujinx.Cpu;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.Loaders.Executables;
@@ -25,13 +24,14 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using System.Text.Json;
 using static Ryujinx.HLE.HOS.ModLoader;
 using ApplicationId = LibHac.Ncm.ApplicationId;
 using Path = System.IO.Path;
 
 namespace Ryujinx.HLE.HOS
 {
+    using JsonHelper = Common.Utilities.JsonHelper;
+
     public class ApplicationLoader
     {
         // Binaries from exefs are loaded into mem in this order. Do not change.
@@ -56,10 +56,6 @@ namespace Ryujinx.HLE.HOS
         private string _titleName;
         private string _displayVersion;
         private BlitStruct<ApplicationControlProperty> _controlData;
-
-        private static readonly JsonSerializerOptions SerializerOptions = JsonHelper.GetDefaultSerializerOptions();
-        private static readonly DownloadableContentJsonSerializerContext ContentSerializerContext = new(SerializerOptions);
-        private static readonly TitleUpdateMetadataJsonSerializerContext TitleSerializerContext = new(SerializerOptions);
 
         public BlitStruct<ApplicationControlProperty> ControlData => _controlData;
         public string TitleName => _titleName;
@@ -201,7 +197,7 @@ namespace Ryujinx.HLE.HOS
 
                 if (File.Exists(titleUpdateMetadataPath))
                 {
-                    updatePath = JsonHelper.DeserializeFromFile(titleUpdateMetadataPath, TitleSerializerContext.TitleUpdateMetadata).Selected;
+                    updatePath = JsonHelper.DeserializeFromFile<TitleUpdateMetadata>(titleUpdateMetadataPath).Selected;
 
                     if (File.Exists(updatePath))
                     {
@@ -415,7 +411,7 @@ namespace Ryujinx.HLE.HOS
 
             if (File.Exists(titleAocMetadataPath))
             {
-                List<DownloadableContentContainer> dlcContainerList = JsonHelper.DeserializeFromFile(titleAocMetadataPath, ContentSerializerContext.ListDownloadableContentContainer);
+                List<DownloadableContentContainer> dlcContainerList = JsonHelper.DeserializeFromFile<List<DownloadableContentContainer>>(titleAocMetadataPath);
 
                 foreach (DownloadableContentContainer downloadableContentContainer in dlcContainerList)
                 {

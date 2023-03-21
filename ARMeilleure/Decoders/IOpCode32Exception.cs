@@ -1,7 +1,6 @@
-﻿namespace ARMeilleure.Decoders
+﻿namespace ARMeilleure.Decoders;
+
+interface IOpCode32Exception
 {
-    interface IOpCode32Exception
-    {
-        int Id { get; }
-    }
+    int Id { get; }
 }

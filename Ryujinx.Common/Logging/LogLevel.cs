@@ -1,9 +1,5 @@
-using Ryujinx.Common.Utilities;
-using System.Text.Json.Serialization;
-
 namespace Ryujinx.Common.Logging
 {
-    [JsonConverter(typeof(TypedStringEnumConverter<LogLevel>))]
     public enum LogLevel
     {
         Debug,

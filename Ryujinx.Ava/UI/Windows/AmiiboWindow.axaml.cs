@@ -1,7 +1,7 @@
 using Avalonia.Interactivity;
 using Ryujinx.Ava.Common.Locale;
+using Ryujinx.Ava.UI.Models;
 using Ryujinx.Ava.UI.ViewModels;
-using Ryujinx.Ui.Common.Models.Amiibo;
 
 namespace Ryujinx.Ava.UI.Windows
 {
@@ -35,14 +35,14 @@ namespace Ryujinx.Ava.UI.Windows
         }
 
         public bool IsScanned { get; set; }
-        public AmiiboApi ScannedAmiibo { get; set; }
+        public Amiibo.AmiiboApi ScannedAmiibo { get; set; }
         public AmiiboWindowViewModel ViewModel { get; set; }
 
         private void ScanButton_Click(object sender, RoutedEventArgs e)
         {
             if (ViewModel.AmiiboSelectedIndex > -1)
             {
-                AmiiboApi amiibo = ViewModel.AmiiboList[ViewModel.AmiiboSelectedIndex];
+                Amiibo.AmiiboApi amiibo = ViewModel.AmiiboList[ViewModel.AmiiboSelectedIndex];
                 ScannedAmiibo = amiibo;
                 IsScanned = true;
                 Close();
