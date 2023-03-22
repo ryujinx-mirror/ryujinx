@@ -112,6 +112,17 @@ jobs:
           repo: ${{ env.RYUJINX_TARGET_RELEASE_CHANNEL_REPO }}
           token: ${{ secrets.RELEASE_TOKEN }}
 
+      - name: Create tag
+        uses: actions/github-script@v5
+        with:
+          script: |
+            github.rest.git.createRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: 'refs/tags/${{ steps.version_info.outputs.build_version }}',
+              sha: context.sha
+            })
+
   flatpak_release:
     uses: ./.github/workflows/flatpak.yml
     needs: release
