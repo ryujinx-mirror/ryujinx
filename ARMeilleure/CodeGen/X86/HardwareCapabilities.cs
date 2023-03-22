@@ -34,6 +34,12 @@ namespace ARMeilleure.CodeGen.X86
 
         private static uint GetXcr0Eax()
         {
+            if (!FeatureInfo1Ecx.HasFlag(FeatureFlags1Ecx.Xsave))
+            {
+                // XSAVE feature required for xgetbv
+                return 0;
+            }
+
             ReadOnlySpan<byte> asmGetXcr0 = new byte[]
             {
                 0x31, 0xc9, // xor ecx, ecx
@@ -70,6 +76,7 @@ namespace ARMeilleure.CodeGen.X86
             Sse42 = 1 << 20,
             Popcnt = 1 << 23,
             Aes = 1 << 25,
+            Xsave = 1 << 26,
             Osxsave = 1 << 27,
             Avx = 1 << 28,
             F16c = 1 << 29
@@ -118,9 +125,9 @@ namespace ARMeilleure.CodeGen.X86
         public static bool SupportsSse42 => FeatureInfo1Ecx.HasFlag(FeatureFlags1Ecx.Sse42);
         public static bool SupportsPopcnt => FeatureInfo1Ecx.HasFlag(FeatureFlags1Ecx.Popcnt);
         public static bool SupportsAesni => FeatureInfo1Ecx.HasFlag(FeatureFlags1Ecx.Aes);
-        public static bool SupportsAvx => FeatureInfo1Ecx.HasFlag(FeatureFlags1Ecx.Avx | FeatureFlags1Ecx.Osxsave) && Xcr0InfoEax.HasFlag(Xcr0FlagsEax.Sse | Xcr0FlagsEax.YmmHi128);
+        public static bool SupportsAvx => FeatureInfo1Ecx.HasFlag(FeatureFlags1Ecx.Avx | FeatureFlags1Ecx.Xsave | FeatureFlags1Ecx.Osxsave) && Xcr0InfoEax.HasFlag(Xcr0FlagsEax.Sse | Xcr0FlagsEax.YmmHi128);
         public static bool SupportsAvx2 => FeatureInfo7Ebx.HasFlag(FeatureFlags7Ebx.Avx2) && SupportsAvx;
-        public static bool SupportsAvx512F => FeatureInfo7Ebx.HasFlag(FeatureFlags7Ebx.Avx512f) && FeatureInfo1Ecx.HasFlag(FeatureFlags1Ecx.Osxsave)
+        public static bool SupportsAvx512F => FeatureInfo7Ebx.HasFlag(FeatureFlags7Ebx.Avx512f) && FeatureInfo1Ecx.HasFlag(FeatureFlags1Ecx.Xsave | FeatureFlags1Ecx.Osxsave)
             && Xcr0InfoEax.HasFlag(Xcr0FlagsEax.Sse | Xcr0FlagsEax.YmmHi128 | Xcr0FlagsEax.Opmask | Xcr0FlagsEax.ZmmHi256 | Xcr0FlagsEax.Hi16Zmm);
         public static bool SupportsAvx512Vl => FeatureInfo7Ebx.HasFlag(FeatureFlags7Ebx.Avx512vl) && SupportsAvx512F;
         public static bool SupportsAvx512Bw => FeatureInfo7Ebx.HasFlag(FeatureFlags7Ebx.Avx512bw) && SupportsAvx512F;
