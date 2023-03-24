@@ -11,9 +11,13 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
     /// </summary>
     struct IbStreamer
     {
+        private const int BufferCapacity = 256; // Must be a power of 2.
+
         private BufferHandle _inlineIndexBuffer;
         private int _inlineIndexBufferSize;
         private int _inlineIndexCount;
+        private uint[] _buffer;
+        private int _bufferOffset;
 
         /// <summary>
         /// Indicates if any index buffer data has been pushed.
@@ -38,9 +42,11 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         /// Gets the number of elements on the current inline index buffer,
         /// while also reseting it to zero for the next draw.
         /// </summary>
+        /// <param name="renderer">Host renderer</param>
         /// <returns>Inline index bufffer count</returns>
-        public int GetAndResetInlineIndexCount()
+        public int GetAndResetInlineIndexCount(IRenderer renderer)
         {
+            UpdateRemaining(renderer);
             int temp = _inlineIndexCount;
             _inlineIndexCount = 0;
             return temp;
@@ -58,16 +64,12 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             byte i2 = (byte)(argument >> 16);
             byte i3 = (byte)(argument >> 24);
 
-            Span<uint> data = stackalloc uint[4];
+            int offset = _inlineIndexCount;
 
-            data[0] = i0;
-            data[1] = i1;
-            data[2] = i2;
-            data[3] = i3;
-
-            int offset = _inlineIndexCount * 4;
-
-            renderer.SetBufferData(GetInlineIndexBuffer(renderer, offset), offset, MemoryMarshal.Cast<uint, byte>(data));
+            PushData(renderer, offset, i0);
+            PushData(renderer, offset + 1, i1);
+            PushData(renderer, offset + 2, i2);
+            PushData(renderer, offset + 3, i3);
 
             _inlineIndexCount += 4;
         }
@@ -82,14 +84,10 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             ushort i0 = (ushort)argument;
             ushort i1 = (ushort)(argument >> 16);
 
-            Span<uint> data = stackalloc uint[2];
+            int offset = _inlineIndexCount;
 
-            data[0] = i0;
-            data[1] = i1;
-
-            int offset = _inlineIndexCount * 4;
-
-            renderer.SetBufferData(GetInlineIndexBuffer(renderer, offset), offset, MemoryMarshal.Cast<uint, byte>(data));
+            PushData(renderer, offset, i0);
+            PushData(renderer, offset + 1, i1);
 
             _inlineIndexCount += 2;
         }
@@ -103,13 +101,61 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         {
             uint i0 = (uint)argument;
 
-            Span<uint> data = stackalloc uint[1];
+            int offset = _inlineIndexCount++;
 
-            data[0] = i0;
+            PushData(renderer, offset, i0);
+        }
 
-            int offset = _inlineIndexCount++ * 4;
+        /// <summary>
+        /// Pushes a 32-bit value to the index buffer.
+        /// </summary>
+        /// <param name="renderer">Host renderer</param>
+        /// <param name="offset">Offset where the data should be written, in 32-bit words</param>
+        /// <param name="value">Index value to be written</param>
+        private void PushData(IRenderer renderer, int offset, uint value)
+        {
+            if (_buffer == null)
+            {
+                _buffer = new uint[BufferCapacity];
+            }
 
-            renderer.SetBufferData(GetInlineIndexBuffer(renderer, offset), offset, MemoryMarshal.Cast<uint, byte>(data));
+            // We upload data in chunks.
+            // If we are at the start of a chunk, then the buffer might be full,
+            // in that case we need to submit any existing data before overwriting the buffer.
+            int subOffset = offset & (BufferCapacity - 1);
+
+            if (subOffset == 0 && offset != 0)
+            {
+                int baseOffset = (offset - BufferCapacity) * sizeof(uint);
+                BufferHandle buffer = GetInlineIndexBuffer(renderer, baseOffset, BufferCapacity * sizeof(uint));
+                renderer.SetBufferData(buffer, baseOffset, MemoryMarshal.Cast<uint, byte>(_buffer));
+            }
+
+            _buffer[subOffset] = value;
+        }
+
+        /// <summary>
+        /// Makes sure that any pending data is submitted to the GPU before the index buffer is used.
+        /// </summary>
+        /// <param name="renderer">Host renderer</param>
+        private void UpdateRemaining(IRenderer renderer)
+        {
+            int offset = _inlineIndexCount;
+            if (offset == 0)
+            {
+                return;
+            }
+
+            int count = offset & (BufferCapacity - 1);
+            if (count == 0)
+            {
+                count = BufferCapacity;
+            }
+
+            int baseOffset = (offset - count) * sizeof(uint);
+            int length = count * sizeof(uint);
+            BufferHandle buffer = GetInlineIndexBuffer(renderer, baseOffset, length);
+            renderer.SetBufferData(buffer, baseOffset, MemoryMarshal.Cast<uint, byte>(_buffer).Slice(0, length));
         }
 
         /// <summary>
@@ -117,12 +163,13 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         /// </summary>
         /// <param name="renderer">Host renderer</param>
         /// <param name="offset">Offset where the data will be written</param>
+        /// <param name="length">Number of bytes that will be written</param>
         /// <returns>Buffer handle</returns>
-        private BufferHandle GetInlineIndexBuffer(IRenderer renderer, int offset)
+        private BufferHandle GetInlineIndexBuffer(IRenderer renderer, int offset, int length)
         {
             // Calculate a reasonable size for the buffer that can fit all the data,
             // and that also won't require frequent resizes if we need to push more data.
-            int size = BitUtils.AlignUp(offset + 0x10, 0x200);
+            int size = BitUtils.AlignUp(offset + length + 0x10, 0x200);
 
             if (_inlineIndexBuffer == BufferHandle.Null)
             {

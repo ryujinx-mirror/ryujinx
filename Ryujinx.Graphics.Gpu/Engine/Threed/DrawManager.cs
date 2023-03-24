@@ -180,7 +180,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
 
             int firstInstance = (int)_state.State.FirstInstance;
 
-            int inlineIndexCount = _drawState.IbStreamer.GetAndResetInlineIndexCount();
+            int inlineIndexCount = _drawState.IbStreamer.GetAndResetInlineIndexCount(_context.Renderer);
 
             if (inlineIndexCount != 0)
             {
@@ -670,7 +670,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                 {
                     if (indexedInline)
                     {
-                        int inlineIndexCount = _drawState.IbStreamer.GetAndResetInlineIndexCount();
+                        int inlineIndexCount = _drawState.IbStreamer.GetAndResetInlineIndexCount(_context.Renderer);
                         BufferRange br = new BufferRange(_drawState.IbStreamer.GetInlineIndexBuffer(), 0, inlineIndexCount * 4);
 
                         _channel.BufferManager.SetIndexBuffer(br, IndexType.UInt);
