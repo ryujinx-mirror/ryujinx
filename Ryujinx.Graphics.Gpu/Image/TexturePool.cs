@@ -130,6 +130,10 @@ namespace Ryujinx.Graphics.Gpu.Image
                         return ref descriptor;
                     }
                 }
+                else
+                {
+                    texture.SynchronizeMemory();
+                }
 
                 Items[id] = texture;
 
@@ -233,7 +237,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         }
 
         /// <summary>
-        /// Queues a request to update a texture's mapping. 
+        /// Queues a request to update a texture's mapping.
         /// Mapping is updated later to avoid deleting the texture if it is still sparsely mapped.
         /// </summary>
         /// <param name="texture">Texture with potential mapping change</param>
