@@ -14,6 +14,9 @@ namespace Ryujinx.HLE.HOS.Services.Nim
         // CreateServerInterface(pid, handle<unknown>, u64) -> object<nn::ec::IShopServiceAccessServer>
         public ResultCode CreateServerInterface(ServiceCtx context)
         {
+            // Close transfer memory immediately as we don't use it.
+            context.Device.System.KernelContext.Syscall.CloseHandle(context.Request.HandleDesc.ToCopy[0]);
+
             MakeObject(context, new IShopServiceAccessServer());
 
             Logger.Stub?.PrintStub(LogClass.ServiceNim);
