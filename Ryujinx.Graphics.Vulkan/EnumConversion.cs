@@ -322,7 +322,7 @@ namespace Ryujinx.Graphics.Vulkan
                 GAL.Format.S8Uint => ImageAspectFlags.StencilBit,
                 GAL.Format.D24UnormS8Uint or
                 GAL.Format.D32FloatS8Uint or
-                GAL.Format.S8UintD24Unorm    => ImageAspectFlags.DepthBit | ImageAspectFlags.StencilBit,
+                GAL.Format.S8UintD24Unorm => ImageAspectFlags.DepthBit | ImageAspectFlags.StencilBit,
                 _ => ImageAspectFlags.ColorBit
             };
         }

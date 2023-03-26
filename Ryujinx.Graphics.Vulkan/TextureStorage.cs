@@ -46,6 +46,8 @@ namespace Ryujinx.Graphics.Vulkan
 
         private AccessFlags _lastModificationAccess;
         private PipelineStageFlags _lastModificationStage;
+        private AccessFlags _lastReadAccess;
+        private PipelineStageFlags _lastReadStage;
 
         private int _viewsCount;
         private ulong _size;
@@ -440,31 +442,39 @@ namespace Ryujinx.Graphics.Vulkan
             _lastModificationStage = stage;
         }
 
-        public void InsertBarrier(CommandBufferScoped cbs, AccessFlags dstAccessFlags, PipelineStageFlags dstStageFlags)
+        public void InsertReadToWriteBarrier(CommandBufferScoped cbs, AccessFlags dstAccessFlags, PipelineStageFlags dstStageFlags)
         {
+            if (_lastReadAccess != AccessFlags.NoneKhr)
+            {
+                ImageAspectFlags aspectFlags = Info.Format.ConvertAspectFlags();
+
+                TextureView.InsertImageBarrier(
+                    _gd.Api,
+                    cbs.CommandBuffer,
+                    _imageAuto.Get(cbs).Value,
+                    _lastReadAccess,
+                    dstAccessFlags,
+                    _lastReadStage,
+                    dstStageFlags,
+                    aspectFlags,
+                    0,
+                    0,
+                    _info.GetLayers(),
+                    _info.Levels);
+
+                _lastReadAccess = AccessFlags.NoneKhr;
+                _lastReadStage = PipelineStageFlags.None;
+            }
+        }
+
+        public void InsertWriteToReadBarrier(CommandBufferScoped cbs, AccessFlags dstAccessFlags, PipelineStageFlags dstStageFlags)
+        {
+            _lastReadAccess |= dstAccessFlags;
+            _lastReadStage |= dstStageFlags;
+
             if (_lastModificationAccess != AccessFlags.NoneKhr)
             {
-                ImageAspectFlags aspectFlags;
-
-                if (_info.Format.IsDepthOrStencil())
-                {
-                    if (_info.Format == GAL.Format.S8Uint)
-                    {
-                        aspectFlags = ImageAspectFlags.StencilBit;
-                    }
-                    else if (_info.Format == GAL.Format.D16Unorm || _info.Format == GAL.Format.D32Float)
-                    {
-                        aspectFlags = ImageAspectFlags.DepthBit;
-                    }
-                    else
-                    {
-                        aspectFlags = ImageAspectFlags.DepthBit | ImageAspectFlags.StencilBit;
-                    }
-                }
-                else
-                {
-                    aspectFlags = ImageAspectFlags.ColorBit;
-                }
+                ImageAspectFlags aspectFlags = Info.Format.ConvertAspectFlags();
 
                 TextureView.InsertImageBarrier(
                     _gd.Api,

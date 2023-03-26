@@ -226,6 +226,8 @@ namespace Ryujinx.Graphics.Vulkan
             var attachment = new ClearAttachment(ImageAspectFlags.ColorBit, (uint)index, clearValue);
             var clearRect = FramebufferParams.GetClearRect(ClearScissor, layer, layerCount);
 
+            FramebufferParams.InsertClearBarrier(Cbs, index);
+
             Gd.Api.CmdClearAttachments(CommandBuffer, 1, &attachment, 1, &clearRect);
         }
 
@@ -255,6 +257,8 @@ namespace Ryujinx.Graphics.Vulkan
 
             var attachment = new ClearAttachment(flags, 0, clearValue);
             var clearRect = FramebufferParams.GetClearRect(ClearScissor, layer, layerCount);
+
+            FramebufferParams.InsertClearBarrierDS(Cbs);
 
             Gd.Api.CmdClearAttachments(CommandBuffer, 1, &attachment, 1, &clearRect);
         }

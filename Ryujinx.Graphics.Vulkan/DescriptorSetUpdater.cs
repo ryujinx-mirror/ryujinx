@@ -236,7 +236,7 @@ namespace Ryujinx.Graphics.Vulkan
             }
             else if (texture is TextureView view)
             {
-                view.Storage.InsertBarrier(cbs, AccessFlags.ShaderReadBit, stage.ConvertToPipelineStageFlags());
+                view.Storage.InsertWriteToReadBarrier(cbs, AccessFlags.ShaderReadBit, stage.ConvertToPipelineStageFlags());
 
                 _textureRefs[binding] = view.GetImageView();
                 _samplerRefs[binding] = ((SamplerHolder)sampler)?.GetSampler();
