@@ -168,7 +168,9 @@ namespace Ryujinx.Graphics.Vulkan
                 SType = StructureType.PhysicalDeviceSubgroupSizeControlPropertiesExt
             };
 
-            if (Capabilities.SupportsSubgroupSizeControl)
+            bool supportsSubgroupSizeControl = supportedExtensions.Contains("VK_EXT_subgroup_size_control");
+
+            if (supportsSubgroupSizeControl)
             {
                 properties2.PNext = &propertiesSubgroupSizeControl;
             }
@@ -292,7 +294,7 @@ namespace Ryujinx.Graphics.Vulkan
                 supportedExtensions.Contains(KhrDrawIndirectCount.ExtensionName),
                 supportedExtensions.Contains("VK_EXT_fragment_shader_interlock"),
                 supportedExtensions.Contains("VK_NV_geometry_shader_passthrough"),
-                supportedExtensions.Contains("VK_EXT_subgroup_size_control"),
+                supportsSubgroupSizeControl,
                 featuresShaderInt8.ShaderInt8,
                 supportedExtensions.Contains("VK_EXT_shader_stencil_export"),
                 supportedExtensions.Contains(ExtConditionalRendering.ExtensionName),
