@@ -320,7 +320,7 @@ namespace Ryujinx.Graphics.Vulkan
 
             MemoryAllocator = new MemoryAllocator(Api, _physicalDevice, _device, properties.Limits.MaxMemoryAllocationCount);
 
-            CommandBufferPool = VulkanInitialization.CreateCommandBufferPool(Api, _device, Queue, QueueLock, queueFamilyIndex);
+            CommandBufferPool = new CommandBufferPool(Api, _device, Queue, QueueLock, queueFamilyIndex);
 
             DescriptorSetManager = new DescriptorSetManager(_device);
 

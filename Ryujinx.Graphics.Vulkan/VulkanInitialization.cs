@@ -672,11 +672,6 @@ namespace Ryujinx.Graphics.Vulkan
             return extensionProperties.Select(x => Marshal.PtrToStringAnsi((IntPtr)x.ExtensionName)).ToArray();
         }
 
-        internal static CommandBufferPool CreateCommandBufferPool(Vk api, Device device, Queue queue, object queueLock, uint queueFamilyIndex)
-        {
-            return new CommandBufferPool(api, device, queue, queueLock, queueFamilyIndex);
-        }
-
         internal unsafe static void CreateDebugMessenger(
             Vk api,
             GraphicsDebugLevel logLevel,
