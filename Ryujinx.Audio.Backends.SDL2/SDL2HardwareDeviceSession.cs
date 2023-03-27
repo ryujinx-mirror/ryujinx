@@ -18,6 +18,7 @@ namespace Ryujinx.Audio.Backends.SDL2
         private ulong _playedSampleCount;
         private ManualResetEvent _updateRequiredEvent;
         private uint _outputStream;
+        private bool _hasSetupError;
         private SDL_AudioCallback _callbackDelegate;
         private int _bytesPerFrame;
         private uint _sampleCount;
@@ -42,7 +43,7 @@ namespace Ryujinx.Audio.Backends.SDL2
         private void EnsureAudioStreamSetup(AudioBuffer buffer)
         {
             uint bufferSampleCount = (uint)GetSampleCount(buffer);
-            bool needAudioSetup = _outputStream == 0 ||
+            bool needAudioSetup = (_outputStream == 0 && !_hasSetupError) ||
                 (bufferSampleCount >= Constants.TargetSampleCount && bufferSampleCount < _sampleCount);
 
             if (needAudioSetup)
@@ -51,12 +52,9 @@ namespace Ryujinx.Audio.Backends.SDL2
 
                 uint newOutputStream = SDL2HardwareDeviceDriver.OpenStream(RequestedSampleFormat, RequestedSampleRate, RequestedChannelCount, _sampleCount, _callbackDelegate);
 
-                if (newOutputStream == 0)
-                {
-                    // No stream in place, this is unexpected.
-                    throw new InvalidOperationException($"OpenStream failed with error: \"{SDL_GetError()}\"");
-                }
-                else
+                _hasSetupError = newOutputStream == 0;
+
+                if (!_hasSetupError)
                 {
                     if (_outputStream != 0)
                     {
@@ -151,11 +149,20 @@ namespace Ryujinx.Audio.Backends.SDL2
         {
             EnsureAudioStreamSetup(buffer);
 
-            SDL2AudioBuffer driverBuffer = new SDL2AudioBuffer(buffer.DataPointer, GetSampleCount(buffer));
+            if (_outputStream != 0)
+            {
+                SDL2AudioBuffer driverBuffer = new SDL2AudioBuffer(buffer.DataPointer, GetSampleCount(buffer));
 
-            _ringBuffer.Write(buffer.Data, 0, buffer.Data.Length);
+                _ringBuffer.Write(buffer.Data, 0, buffer.Data.Length);
 
-            _queuedBuffers.Enqueue(driverBuffer);
+                _queuedBuffers.Enqueue(driverBuffer);
+            }
+            else
+            {
+                Interlocked.Add(ref _playedSampleCount, GetSampleCount(buffer));
+
+                _updateRequiredEvent.Set();
+            }
         }
 
         public override void SetVolume(float volume)
