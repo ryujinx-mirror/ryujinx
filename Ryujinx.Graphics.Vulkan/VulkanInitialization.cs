@@ -20,7 +20,7 @@ namespace Ryujinx.Graphics.Vulkan
         private const string AppName = "Ryujinx.Graphics.Vulkan";
         private const int QueuesCount = 2;
 
-        public static string[] DesirableExtensions { get; } = new string[]
+        private static readonly string[] _desirableExtensions = new string[]
         {
             ExtConditionalRendering.ExtensionName,
             ExtExtendedDynamicState.ExtensionName,
@@ -42,7 +42,7 @@ namespace Ryujinx.Graphics.Vulkan
             "VK_KHR_portability_subset", // By spec, we should enable this if present.
         };
 
-        public static string[] RequiredExtensions { get; } = new string[]
+        private static readonly string[] _requiredExtensions = new string[]
         {
             KhrSwapchain.ExtensionName
         };
@@ -337,14 +337,14 @@ namespace Ryujinx.Graphics.Vulkan
                 {
                     string extensionName = Marshal.PtrToStringAnsi((IntPtr)pExtensionProperties[i].ExtensionName);
 
-                    if (RequiredExtensions.Contains(extensionName))
+                    if (_requiredExtensions.Contains(extensionName))
                     {
                         extensionMatches++;
                     }
                 }
             }
 
-            return extensionMatches == RequiredExtensions.Length && FindSuitableQueueFamily(api, physicalDevice, surface, out _) != InvalidIndex;
+            return extensionMatches == _requiredExtensions.Length && FindSuitableQueueFamily(api, physicalDevice, surface, out _) != InvalidIndex;
         }
 
         internal static uint FindSuitableQueueFamily(Vk api, PhysicalDevice physicalDevice, SurfaceKHR surface, out uint queueCount)
@@ -626,7 +626,7 @@ namespace Ryujinx.Graphics.Vulkan
                 pExtendedFeatures = &featuresCustomBorderColor;
             }
 
-            var enabledExtensions = RequiredExtensions.Union(DesirableExtensions.Intersect(supportedExtensions)).ToArray();
+            var enabledExtensions = _requiredExtensions.Union(_desirableExtensions.Intersect(supportedExtensions)).ToArray();
 
             IntPtr* ppEnabledExtensions = stackalloc IntPtr[enabledExtensions.Length];
 
