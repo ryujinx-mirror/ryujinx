@@ -53,7 +53,7 @@ namespace Ryujinx.Horizon.Sdk.Sf
 
         public static void SerializeArg<T>(Span<byte> outRawData, int offset, T value) where T : unmanaged
         {
-            MemoryMarshal.Cast<byte, T>(outRawData.Slice(offset, Unsafe.SizeOf<T>()))[0] = (T)value;
+            MemoryMarshal.Cast<byte, T>(outRawData.Slice(offset, Unsafe.SizeOf<T>()))[0] = value;
         }
 
         public static void SerializeCopyHandle(HipcMessageData response, int index, int value)

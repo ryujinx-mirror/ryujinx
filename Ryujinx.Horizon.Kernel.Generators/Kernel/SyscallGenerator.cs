@@ -4,6 +4,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 
 namespace Ryujinx.Horizon.Generators.Kernel
 {
@@ -151,24 +152,15 @@ namespace Ryujinx.Horizon.Generators.Kernel
                 GenerateMethod32(generator, context.Compilation, method);
                 GenerateMethod64(generator, context.Compilation, method);
 
-                foreach (var attributeList in method.AttributeLists)
+                foreach (AttributeSyntax attribute in method.AttributeLists.SelectMany(attributeList =>
+                             attributeList.Attributes.Where(attribute =>
+                                 GetCanonicalTypeName(context.Compilation, attribute) == TypeSvcAttribute)))
                 {
-                    foreach (var attribute in attributeList.Attributes)
-                    {
-                        if (GetCanonicalTypeName(context.Compilation, attribute) != TypeSvcAttribute)
-                        {
-                            continue;
-                        }
-
-                        foreach (var attributeArg in attribute.ArgumentList.Arguments)
-                        {
-                            if (attributeArg.Expression.Kind() == SyntaxKind.NumericLiteralExpression)
-                            {
-                                LiteralExpressionSyntax numericLiteral = (LiteralExpressionSyntax)attributeArg.Expression;
-                                syscalls.Add(new SyscallIdAndName((int)numericLiteral.Token.Value, method.Identifier.Text));
-                            }
-                        }
-                    }
+                    syscalls.AddRange(from attributeArg in attribute.ArgumentList.Arguments
+                        where attributeArg.Expression.Kind() == SyntaxKind.NumericLiteralExpression
+                        select (LiteralExpressionSyntax)attributeArg.Expression
+                        into numericLiteral
+                        select new SyscallIdAndName((int)numericLiteral.Token.Value, method.Identifier.Text));
                 }
             }
 
@@ -510,28 +502,14 @@ namespace Ryujinx.Horizon.Generators.Kernel
 
         private static string GenerateCastFromUInt64(string value, string canonicalTargetTypeName, string targetTypeName)
         {
-            if (canonicalTargetTypeName == TypeSystemBoolean)
-            {
-                return $"({value} & 1) != 0";
-            }
-
-            return $"({targetTypeName}){value}";
+            return canonicalTargetTypeName == TypeSystemBoolean ? $"({value} & 1) != 0" : $"({targetTypeName}){value}";
         }
 
         private static bool IsPointerSized(Compilation compilation, ParameterSyntax parameterSyntax)
         {
-            foreach (var attributeList in parameterSyntax.AttributeLists)
-            {
-                foreach (var attribute in attributeList.Attributes)
-                {
-                    if (GetCanonicalTypeName(compilation, attribute) == TypePointerSizedAttribute)
-                    {
-                        return true;
-                    }
-                }
-            }
-
-            return false;
+            return parameterSyntax.AttributeLists.Any(attributeList =>
+                attributeList.Attributes.Any(attribute =>
+                    GetCanonicalTypeName(compilation, attribute) == TypePointerSizedAttribute));
         }
 
         public void Initialize(GeneratorInitializationContext context)

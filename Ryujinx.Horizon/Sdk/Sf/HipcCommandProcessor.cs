@@ -41,10 +41,8 @@ namespace Ryujinx.Horizon.Sdk.Sf
         {
             _args = args;
 
-            for (int i = 0; i < args.Length; i++)
+            foreach (CommandArg argInfo in args)
             {
-                var argInfo = args[i];
-
                 switch (argInfo.Type)
                 {
                     case CommandArgType.Buffer:
@@ -239,14 +237,13 @@ namespace Ryujinx.Horizon.Sdk.Sf
             {
                 return mode == HipcBufferMode.NonSecure;
             }
-            else if (flags.HasFlag(HipcBufferFlags.MapTransferAllowsNonDevice))
+
+            if (flags.HasFlag(HipcBufferFlags.MapTransferAllowsNonDevice))
             {
                 return mode == HipcBufferMode.NonDevice;
             }
-            else
-            {
-                return mode == HipcBufferMode.Normal;
-            }
+
+            return mode == HipcBufferMode.Normal;
         }
 
         public void SetOutBuffers(HipcMessageData response, bool[] isBufferMapAlias)
@@ -261,28 +258,30 @@ namespace Ryujinx.Horizon.Sdk.Sf
                 }
 
                 var flags = _args[i].BufferFlags;
-                if (flags.HasFlag(HipcBufferFlags.Out))
+                if (!flags.HasFlag(HipcBufferFlags.Out))
                 {
-                    var buffer = _bufferRanges[i];
+                    continue;
+                }
 
-                    if (flags.HasFlag(HipcBufferFlags.Pointer))
+                var buffer = _bufferRanges[i];
+
+                if (flags.HasFlag(HipcBufferFlags.Pointer))
+                {
+                    response.SendStatics[recvPointerIndex] = new HipcStaticDescriptor(buffer.Address, (ushort)buffer.Size, recvPointerIndex);
+                }
+                else if (flags.HasFlag(HipcBufferFlags.AutoSelect))
+                {
+                    if (!isBufferMapAlias[i])
                     {
                         response.SendStatics[recvPointerIndex] = new HipcStaticDescriptor(buffer.Address, (ushort)buffer.Size, recvPointerIndex);
                     }
-                    else if (flags.HasFlag(HipcBufferFlags.AutoSelect))
+                    else
                     {
-                        if (!isBufferMapAlias[i])
-                        {
-                            response.SendStatics[recvPointerIndex] = new HipcStaticDescriptor(buffer.Address, (ushort)buffer.Size, recvPointerIndex);
-                        }
-                        else
-                        {
-                            response.SendStatics[recvPointerIndex] = new HipcStaticDescriptor(0UL, 0, recvPointerIndex);
-                        }
+                        response.SendStatics[recvPointerIndex] = new HipcStaticDescriptor(0UL, 0, recvPointerIndex);
                     }
-
-                    recvPointerIndex++;
                 }
+
+                recvPointerIndex++;
             }
         }
 
@@ -339,15 +338,17 @@ namespace Ryujinx.Horizon.Sdk.Sf
 
             int inObjectIndex = 0;
 
-            for (int i = 0; i < _args.Length; i++)
+            foreach (CommandArg t in _args)
             {
-                if (_args[i].Type == CommandArgType.InObject)
+                if (t.Type != CommandArgType.InObject)
                 {
-                    int index    = inObjectIndex++;
-                    var inObject = inObjects[index];
-
-                    objects[index] = inObject?.ServiceObject;
+                    continue;
                 }
+
+                int index    = inObjectIndex++;
+                var inObject = inObjects[index];
+
+                objects[index] = inObject?.ServiceObject;
             }
 
             return Result.Success;

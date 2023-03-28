@@ -37,12 +37,7 @@ namespace Ryujinx.Horizon.Sm.Impl
 
             result = GetServiceImpl(out handle, ref _services[serviceIndex]);
 
-            if (result == KernelResult.SessionCountExceeded)
-            {
-                return SmResult.OutOfSessions;
-            }
-
-            return result;
+            return result == KernelResult.SessionCountExceeded ? SmResult.OutOfSessions : result;
         }
 
         private Result GetServiceImpl(out int handle, ref ServiceInfo serviceInfo)
@@ -61,13 +56,7 @@ namespace Ryujinx.Horizon.Sm.Impl
             }
 
             // TODO: Validation with GetProcessInfo etc.
-
-            if (HasServiceInfo(name))
-            {
-                return SmResult.AlreadyRegistered;
-            }
-
-            return RegisterServiceImpl(out handle, processId, name, maxSessions, isLight);
+            return HasServiceInfo(name) ? SmResult.AlreadyRegistered : RegisterServiceImpl(out handle, processId, name, maxSessions, isLight);
         }
 
         public Result RegisterServiceForSelf(out int handle, ServiceName name, int maxSessions)

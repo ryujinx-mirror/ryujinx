@@ -40,12 +40,7 @@ namespace Ryujinx.Horizon.Sdk.Sf
             var    runtimeMetadata = context.Processor.GetRuntimeMetadata();
             Result result          = context.Processor.PrepareForProcess(ref context, runtimeMetadata);
 
-            if (result.IsFailure)
-            {
-                return result;
-            }
-
-            return _invoke(ref context, _processor, runtimeMetadata, inRawData, ref outHeader);
+            return result.IsFailure ? result : _invoke(ref context, _processor, runtimeMetadata, inRawData, ref outHeader);
         }
 
         public static void GetCmifOutHeaderPointer(ref Span<CmifOutHeader> outHeader, ref Span<byte> outRawData)
