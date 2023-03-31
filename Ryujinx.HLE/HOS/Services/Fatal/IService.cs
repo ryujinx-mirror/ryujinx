@@ -55,7 +55,7 @@ namespace Ryujinx.HLE.HOS.Services.Fatal
             errorReport.AppendLine();
             errorReport.AppendLine("ErrorReport log:");
 
-            errorReport.AppendLine($"\tTitleId: {context.Device.Application.TitleId:x16}");
+            errorReport.AppendLine($"\tTitleId: {context.Device.Processes.ActiveApplication.ProgramIdText}");
             errorReport.AppendLine($"\tPid: {pid}");
             errorReport.AppendLine($"\tResultCode: {((int)resultCode & 0x1FF) + 2000}-{((int)resultCode >> 9) & 0x3FFF:d4}");
             errorReport.AppendLine($"\tFatalPolicy: {fatalPolicy}");
@@ -64,7 +64,7 @@ namespace Ryujinx.HLE.HOS.Services.Fatal
             {
                 errorReport.AppendLine("CPU Context:");
 
-                if (context.Device.Application.TitleIs64Bit)
+                if (context.Device.Processes.ActiveApplication.Is64Bit)
                 {
                     CpuContext64 cpuContext64 = MemoryMarshal.Cast<byte, CpuContext64>(cpuContext)[0];
 

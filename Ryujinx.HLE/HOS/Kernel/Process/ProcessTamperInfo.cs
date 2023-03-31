@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Kernel.Process
 {
-    internal class ProcessTamperInfo
+    class ProcessTamperInfo
     {
         public KProcess Process { get; }
         public IEnumerable<string> BuildIds { get; }

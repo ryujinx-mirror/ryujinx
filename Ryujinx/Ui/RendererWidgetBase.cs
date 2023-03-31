@@ -495,16 +495,14 @@ namespace Ryujinx.Ui
             {
                 parent.Present();
 
-                string titleNameSection = string.IsNullOrWhiteSpace(Device.Application.TitleName) ? string.Empty
-                    : $" - {Device.Application.TitleName}";
+                var activeProcess   = Device.Processes.ActiveApplication;
+                var nacp            = activeProcess.ApplicationControlProperties;
+                int desiredLanguage = (int)Device.System.State.DesiredTitleLanguage;
 
-                string titleVersionSection = string.IsNullOrWhiteSpace(Device.Application.DisplayVersion) ? string.Empty
-                    : $" v{Device.Application.DisplayVersion}";
-
-                string titleIdSection = string.IsNullOrWhiteSpace(Device.Application.TitleIdText) ? string.Empty
-                    : $" ({Device.Application.TitleIdText.ToUpper()})";
-
-                string titleArchSection = Device.Application.TitleIs64Bit ? " (64-bit)" : " (32-bit)";
+                string titleNameSection    = string.IsNullOrWhiteSpace(nacp.Title[desiredLanguage].NameString.ToString()) ? string.Empty : $" - {nacp.Title[desiredLanguage].NameString.ToString()}";
+                string titleVersionSection = string.IsNullOrWhiteSpace(nacp.DisplayVersionString.ToString())              ? string.Empty : $" v{nacp.DisplayVersionString.ToString()}";
+                string titleIdSection      = string.IsNullOrWhiteSpace(activeProcess.ProgramIdText)                       ? string.Empty : $" ({activeProcess.ProgramIdText.ToUpper()})";
+                string titleArchSection    = activeProcess.Is64Bit                                                        ? " (64-bit)"  : " (32-bit)";
 
                 parent.Title = $"Ryujinx {Program.Version}{titleNameSection}{titleVersionSection}{titleIdSection}{titleArchSection}";
             });
@@ -612,7 +610,7 @@ namespace Ryujinx.Ui
                     {
                         if (!ParentWindow.State.HasFlag(WindowState.Fullscreen))
                         {
-                            Device.Application.DiskCacheLoadState?.Cancel();
+                            Device.Processes.ActiveApplication.DiskCacheLoadState?.Cancel();
                         }
                     }
                 });

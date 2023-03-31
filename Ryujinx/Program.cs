@@ -252,7 +252,7 @@ namespace Ryujinx
 
             if (CommandLineState.LaunchPathArg != null)
             {
-                mainWindow.LoadApplication(CommandLineState.LaunchPathArg, CommandLineState.StartFullscreenArg);
+                mainWindow.RunApplication(CommandLineState.LaunchPathArg, CommandLineState.StartFullscreenArg);
             }
 
             if (ConfigurationState.Instance.CheckUpdatesOnStart.Value && Updater.CanUpdate(false))

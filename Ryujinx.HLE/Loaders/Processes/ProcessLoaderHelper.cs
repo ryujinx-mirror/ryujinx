@@ -1,69 +1,132 @@
+﻿using LibHac.Account;
+using LibHac.Common;
+using LibHac.Fs;
+using LibHac.Fs.Shim;
+using LibHac.FsSystem;
 using LibHac.Loader;
 using LibHac.Ncm;
-using LibHac.Util;
+using LibHac.Ns;
+using LibHac.Tools.Fs;
+using LibHac.Tools.FsSystem;
+using LibHac.Tools.FsSystem.NcaUtils;
 using Ryujinx.Common;
 using Ryujinx.Common.Logging;
-using Ryujinx.Cpu;
+using Ryujinx.HLE.HOS;
 using Ryujinx.HLE.HOS.Kernel;
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Memory;
 using Ryujinx.HLE.HOS.Kernel.Process;
 using Ryujinx.HLE.Loaders.Executables;
+using Ryujinx.HLE.Loaders.Processes.Extensions;
 using Ryujinx.Horizon.Common;
 using System;
 using System.Linq;
 using System.Runtime.InteropServices;
-using Npdm = LibHac.Loader.Npdm;
+using ApplicationId = LibHac.Ncm.ApplicationId;
 
-namespace Ryujinx.HLE.HOS
+namespace Ryujinx.HLE.Loaders.Processes
 {
-    struct ProgramInfo
+    static class ProcessLoaderHelper
     {
-        public string Name;
-        public ulong ProgramId;
-        public readonly string TitleIdText;
-        public readonly string DisplayVersion;
-        public readonly bool DiskCacheEnabled;
-        public readonly bool AllowCodeMemoryForJit;
-
-        public ProgramInfo(in Npdm npdm, string displayVersion, bool diskCacheEnabled, bool allowCodeMemoryForJit)
+        public static LibHac.Result RegisterProgramMapInfo(Switch device, PartitionFileSystem partitionFileSystem)
         {
-            ulong programId = npdm.Aci.ProgramId.Value;
+            ulong applicationId = 0;
+            int   programCount  = 0;
 
-            Name = StringUtils.Utf8ZToString(npdm.Meta.ProgramName);
-            ProgramId = programId;
-            TitleIdText = programId.ToString("x16");
-            DisplayVersion = displayVersion;
-            DiskCacheEnabled = diskCacheEnabled;
-            AllowCodeMemoryForJit = allowCodeMemoryForJit;
+            Span<bool> hasIndex = stackalloc bool[0x10];
+
+            foreach (DirectoryEntryEx fileEntry in partitionFileSystem.EnumerateEntries("/", "*.nca"))
+            {
+                Nca nca = partitionFileSystem.GetNca(device, fileEntry.FullPath);
+
+                if (!nca.IsProgram() && nca.IsPatch())
+                {
+                    continue;
+                }
+
+                ulong currentProgramId     = nca.Header.TitleId;
+                ulong currentMainProgramId = currentProgramId & ~0xFFFul;
+
+                if (applicationId == 0 && currentMainProgramId != 0)
+                {
+                    applicationId = currentMainProgramId;
+                }
+
+                if (applicationId != currentMainProgramId)
+                {
+                    // Currently there aren't any known multi-application game cards containing multi-program applications,
+                    // so because multi-application game cards are the only way we could run into multiple applications
+                    // we'll just return that there's a single program.
+                    programCount = 1;
+
+                    break;
+                }
+
+                hasIndex[(int)(currentProgramId & 0xF)] = true;
+            }
+
+            if (programCount == 0)
+            {
+                for (int i = 0; i < hasIndex.Length && hasIndex[i]; i++)
+                {
+                    programCount++;
+                }
+            }
+
+            if (programCount <= 0)
+            {
+                return LibHac.Result.Success;
+            }
+
+            Span<ProgramIndexMapInfo> mapInfo = stackalloc ProgramIndexMapInfo[0x10];
+
+            for (int i = 0; i < programCount; i++)
+            {
+                mapInfo[i].ProgramId     = new ProgramId(applicationId + (uint)i);
+                mapInfo[i].MainProgramId = new ApplicationId(applicationId);
+                mapInfo[i].ProgramIndex  = (byte)i;
+            }
+
+            return device.System.LibHacHorizonManager.NsClient.Fs.RegisterProgramIndexMapInfo(mapInfo[..programCount]);
         }
-    }
 
-    struct ProgramLoadResult
-    {
-        public static ProgramLoadResult Failed => new ProgramLoadResult(false, null, null, 0);
-
-        public readonly bool Success;
-        public readonly ProcessTamperInfo TamperInfo;
-        public readonly IDiskCacheLoadState DiskCacheLoadState;
-        public readonly ulong ProcessId;
-
-        public ProgramLoadResult(bool success, ProcessTamperInfo tamperInfo, IDiskCacheLoadState diskCacheLoadState, ulong pid)
+        public static LibHac.Result EnsureSaveData(Switch device, ApplicationId applicationId, BlitStruct<ApplicationControlProperty> applicationControlProperty)
         {
-            Success = success;
-            TamperInfo = tamperInfo;
-            DiskCacheLoadState = diskCacheLoadState;
-            ProcessId = pid;
+            Logger.Info?.Print(LogClass.Application, "Ensuring required savedata exists.");
+
+            ref ApplicationControlProperty control = ref applicationControlProperty.Value;
+
+            if (LibHac.Common.Utilities.IsZeros(applicationControlProperty.ByteSpan))
+            {
+                // If the current application doesn't have a loaded control property, create a dummy one and set the savedata sizes so a user savedata will be created.
+                control = ref new BlitStruct<ApplicationControlProperty>(1).Value;
+
+                // The set sizes don't actually matter as long as they're non-zero because we use directory savedata.
+                control.UserAccountSaveDataSize        = 0x4000;
+                control.UserAccountSaveDataJournalSize = 0x4000;
+                control.SaveDataOwnerId                = applicationId.Value;
+
+                Logger.Warning?.Print(LogClass.Application, "No control file was found for this game. Using a dummy one instead. This may cause inaccuracies in some games.");
+            }
+
+            LibHac.Result resultCode = device.System.LibHacHorizonManager.RyujinxClient.Fs.EnsureApplicationCacheStorage(out _, out _, applicationId, in control);
+            if (resultCode.IsFailure())
+            {
+                Logger.Error?.Print(LogClass.Application, $"Error calling EnsureApplicationCacheStorage. Result code {resultCode.ToStringWithName()}");
+
+                return resultCode;
+            }
+
+            Uid userId = device.System.AccountManager.LastOpenedUser.UserId.ToLibHacUid();
+
+            resultCode = device.System.LibHacHorizonManager.RyujinxClient.Fs.EnsureApplicationSaveData(out _, applicationId, in control, in userId);
+            if (resultCode.IsFailure())
+            {
+                Logger.Error?.Print(LogClass.Application, $"Error calling EnsureApplicationSaveData. Result code {resultCode.ToStringWithName()}");
+            }
+
+            return resultCode;
         }
-    }
-
-    static class ProgramLoader
-    {
-        private const bool AslrEnabled = true;
-
-        private const int ArgsHeaderSize = 8;
-        private const int ArgsDataSize   = 0x9000;
-        private const int ArgsTotalSize  = ArgsHeaderSize + ArgsDataSize;
 
         public static bool LoadKip(KernelContext context, KipExecutable kip)
         {
@@ -74,17 +137,14 @@ namespace Ryujinx.HLE.HOS
                 endOffset = kip.BssOffset + kip.BssSize;
             }
 
-            uint codeSize = BitUtils.AlignUp<uint>(kip.TextOffset + endOffset, KPageTableBase.PageSize);
-
-            int codePagesCount = (int)(codeSize / KPageTableBase.PageSize);
-
+            uint  codeSize        = BitUtils.AlignUp<uint>(kip.TextOffset + endOffset, KPageTableBase.PageSize);
+            int   codePagesCount  = (int)(codeSize / KPageTableBase.PageSize);
             ulong codeBaseAddress = kip.Is64BitAddressSpace ? 0x8000000UL : 0x200000UL;
-
-            ulong codeAddress = codeBaseAddress + kip.TextOffset;
+            ulong codeAddress     = codeBaseAddress + kip.TextOffset;
 
             ProcessCreationFlags flags = 0;
 
-            if (AslrEnabled)
+            if (ProcessConst.AslrEnabled)
             {
                 // TODO: Randomization.
 
@@ -101,24 +161,11 @@ namespace Ryujinx.HLE.HOS
                 flags |= ProcessCreationFlags.Is64Bit;
             }
 
-            ProcessCreationInfo creationInfo = new ProcessCreationInfo(
-                kip.Name,
-                kip.Version,
-                kip.ProgramId,
-                codeAddress,
-                codePagesCount,
-                flags,
-                0,
-                0);
-
-            MemoryRegion memoryRegion = kip.UsesSecureMemory
-                ? MemoryRegion.Service
-                : MemoryRegion.Application;
-
-            KMemoryRegionManager region = context.MemoryManager.MemoryRegions[(int)memoryRegion];
+            ProcessCreationInfo  creationInfo = new(kip.Name, kip.Version, kip.ProgramId, codeAddress, codePagesCount, flags, 0, 0);
+            MemoryRegion         memoryRegion = kip.UsesSecureMemory ? MemoryRegion.Service : MemoryRegion.Application;
+            KMemoryRegionManager region       = context.MemoryManager.MemoryRegions[(int)memoryRegion];
 
             Result result = region.AllocatePages(out KPageList pageList, (ulong)codePagesCount);
-
             if (result != Result.Success)
             {
                 Logger.Error?.Print(LogClass.Loader, $"Process initialization returned error \"{result}\".");
@@ -126,7 +173,7 @@ namespace Ryujinx.HLE.HOS
                 return false;
             }
 
-            KProcess process = new KProcess(context);
+            KProcess process = new(context);
 
             var processContextFactory = new ArmProcessContextFactory(
                 context.Device.System.TickSource,
@@ -137,14 +184,7 @@ namespace Ryujinx.HLE.HOS
                 codeAddress,
                 codeSize);
 
-            result = process.InitializeKip(
-                creationInfo,
-                kip.Capabilities,
-                pageList,
-                context.ResourceLimit,
-                memoryRegion,
-                processContextFactory);
-
+            result = process.InitializeKip(creationInfo, kip.Capabilities, pageList, context.ResourceLimit, memoryRegion, processContextFactory);
             if (result != Result.Success)
             {
                 Logger.Error?.Print(LogClass.Loader, $"Process initialization returned error \"{result}\".");
@@ -153,7 +193,6 @@ namespace Ryujinx.HLE.HOS
             }
 
             result = LoadIntoMemory(process, kip, codeBaseAddress);
-
             if (result != Result.Success)
             {
                 Logger.Error?.Print(LogClass.Loader, $"Process initialization returned error \"{result}\".");
@@ -164,7 +203,6 @@ namespace Ryujinx.HLE.HOS
             process.DefaultCpuCore = kip.IdealCoreId;
 
             result = process.Start(kip.Priority, (ulong)kip.StackSize);
-
             if (result != Result.Success)
             {
                 Logger.Error?.Print(LogClass.Loader, $"Process start returned error \"{result}\".");
@@ -177,20 +215,27 @@ namespace Ryujinx.HLE.HOS
             return true;
         }
 
-        public static ProgramLoadResult LoadNsos(
+        public static ProcessResult LoadNsos(
+            Switch device,
             KernelContext context,
-            MetaLoader metaData,
-            ProgramInfo programInfo,
+            MetaLoader metaLoader,
+            ApplicationControlProperty applicationControlProperties,
+            bool diskCacheEnabled,
+            bool allowCodeMemoryForJit,
+            string name,
+            ulong programId,
             byte[] arguments = null,
             params IExecutable[] executables)
         {
             context.Device.System.ServiceTable.WaitServicesReady();
 
-            LibHac.Result rc = metaData.GetNpdm(out var npdm);
+            LibHac.Result resultCode = metaLoader.GetNpdm(out var npdm);
 
-            if (rc.IsFailure())
+            if (resultCode.IsFailure())
             {
-                return ProgramLoadResult.Failed;
+                Logger.Error?.Print(LogClass.Loader, $"Process initialization failed getting npdm. Result Code {resultCode.ToStringWithName()}");
+
+                return ProcessResult.Failed;
             }
 
             ref readonly var meta = ref npdm.Meta;
@@ -202,10 +247,10 @@ namespace Ryujinx.HLE.HOS
 
             var buildIds = executables.Select(e => (e switch
             {
-                NsoExecutable nso => BitConverter.ToString(nso.BuildId.ItemsRo.ToArray()),
-                NroExecutable nro => BitConverter.ToString(nro.Header.BuildId),
+                NsoExecutable nso => Convert.ToHexString(nso.BuildId.ItemsRo.ToArray()),
+                NroExecutable nro => Convert.ToHexString(nro.Header.BuildId),
                 _ => ""
-            }).Replace("-", "").ToUpper());
+            }).ToUpper());
 
             ulong[] nsoBase = new ulong[executables.Length];
 
@@ -214,7 +259,7 @@ namespace Ryujinx.HLE.HOS
                 IExecutable nso = executables[index];
 
                 uint textEnd = nso.TextOffset + (uint)nso.Text.Length;
-                uint roEnd   = nso.RoOffset   + (uint)nso.Ro.Length;
+                uint roEnd   = nso.RoOffset + (uint)nso.Ro.Length;
                 uint dataEnd = nso.DataOffset + (uint)nso.Data.Length + nso.BssSize;
 
                 uint nsoSize = textEnd;
@@ -239,31 +284,30 @@ namespace Ryujinx.HLE.HOS
                 {
                     argsStart = codeSize;
 
-                    argsSize = (uint)BitUtils.AlignDown(arguments.Length * 2 + ArgsTotalSize - 1, KPageTableBase.PageSize);
+                    argsSize = (uint)BitUtils.AlignDown(arguments.Length * 2 + ProcessConst.NsoArgsTotalSize - 1, KPageTableBase.PageSize);
 
                     codeSize += argsSize;
                 }
             }
 
-            int codePagesCount = (int)(codeSize / KPageTableBase.PageSize);
-
+            int codePagesCount           = (int)(codeSize / KPageTableBase.PageSize);
             int personalMmHeapPagesCount = (int)(meta.SystemResourceSize / KPageTableBase.PageSize);
 
-            ProcessCreationInfo creationInfo = new ProcessCreationInfo(
-                programInfo.Name,
+            ProcessCreationInfo creationInfo = new(
+                name,
                 (int)meta.Version,
-                programInfo.ProgramId,
+                programId,
                 codeStart,
                 codePagesCount,
                 (ProcessCreationFlags)meta.Flags | ProcessCreationFlags.IsApplication,
                 0,
                 personalMmHeapPagesCount);
 
-            context.Device.System.LibHacHorizonManager.InitializeApplicationClient(new ProgramId(programInfo.ProgramId), in npdm);
+            context.Device.System.LibHacHorizonManager.InitializeApplicationClient(new ProgramId(programId), in npdm);
 
             Result result;
 
-            KResourceLimit resourceLimit = new KResourceLimit(context);
+            KResourceLimit resourceLimit = new(context);
 
             long applicationRgSize = (long)context.MemoryManager.MemoryRegions[(int)MemoryRegion.Application].Size;
 
@@ -293,26 +337,26 @@ namespace Ryujinx.HLE.HOS
             {
                 Logger.Error?.Print(LogClass.Loader, $"Process initialization failed setting resource limit values.");
 
-                return ProgramLoadResult.Failed;
+                return ProcessResult.Failed;
             }
 
-            KProcess process = new KProcess(context, programInfo.AllowCodeMemoryForJit);
+            KProcess process = new(context, allowCodeMemoryForJit);
 
-            MemoryRegion memoryRegion = (MemoryRegion)((npdm.Acid.Flags >> 2) & 0xf);
-
+            // NOTE: This field doesn't exists one firmware pre-5.0.0, a workaround have to be found.
+            MemoryRegion memoryRegion = (MemoryRegion)(npdm.Acid.Flags >> 2 & 0xf);
             if (memoryRegion > MemoryRegion.NvServices)
             {
                 Logger.Error?.Print(LogClass.Loader, $"Process initialization failed due to invalid ACID flags.");
 
-                return ProgramLoadResult.Failed;
+                return ProcessResult.Failed;
             }
 
             var processContextFactory = new ArmProcessContextFactory(
                 context.Device.System.TickSource,
                 context.Device.Gpu,
-                programInfo.TitleIdText,
-                programInfo.DisplayVersion,
-                programInfo.DiskCacheEnabled,
+                $"{programId:x16}",
+                applicationControlProperties.DisplayVersionString.ToString(),
+                diskCacheEnabled,
                 codeStart,
                 codeSize);
 
@@ -327,7 +371,7 @@ namespace Ryujinx.HLE.HOS
             {
                 Logger.Error?.Print(LogClass.Loader, $"Process initialization returned error \"{result}\".");
 
-                return ProgramLoadResult.Failed;
+                return ProcessResult.Failed;
             }
 
             for (int index = 0; index < executables.Length; index++)
@@ -335,32 +379,22 @@ namespace Ryujinx.HLE.HOS
                 Logger.Info?.Print(LogClass.Loader, $"Loading image {index} at 0x{nsoBase[index]:x16}...");
 
                 result = LoadIntoMemory(process, executables[index], nsoBase[index]);
-
                 if (result != Result.Success)
                 {
                     Logger.Error?.Print(LogClass.Loader, $"Process initialization returned error \"{result}\".");
 
-                    return ProgramLoadResult.Failed;
+                    return ProcessResult.Failed;
                 }
             }
 
             process.DefaultCpuCore = meta.DefaultCpuId;
-
-            result = process.Start(meta.MainThreadPriority, meta.MainThreadStackSize);
-
-            if (result != Result.Success)
-            {
-                Logger.Error?.Print(LogClass.Loader, $"Process start returned error \"{result}\".");
-
-                return ProgramLoadResult.Failed;
-            }
 
             context.Processes.TryAdd(process.Pid, process);
 
             // Keep the build ids because the tamper machine uses them to know which process to associate a
             // tamper to and also keep the starting address of each executable inside a process because some
             // memory modifications are relative to this address.
-            ProcessTamperInfo tamperInfo = new ProcessTamperInfo(
+            ProcessTamperInfo tamperInfo = new(
                 process,
                 buildIds,
                 nsoBase,
@@ -368,10 +402,13 @@ namespace Ryujinx.HLE.HOS
                 process.MemoryManager.AliasRegionStart,
                 process.MemoryManager.CodeRegionStart);
 
-            return new ProgramLoadResult(true, tamperInfo, processContextFactory.DiskCacheLoadState, process.Pid);
+            // Once everything is loaded, we can load cheats.
+            device.Configuration.VirtualFileSystem.ModLoader.LoadCheats(programId, tamperInfo, device.TamperMachine);
+
+            return new ProcessResult(metaLoader, applicationControlProperties, diskCacheEnabled, allowCodeMemoryForJit, processContextFactory.DiskCacheLoadState, process.Pid, meta.MainThreadPriority, meta.MainThreadStackSize);
         }
 
-        private static Result LoadIntoMemory(KProcess process, IExecutable image, ulong baseAddress)
+        public static Result LoadIntoMemory(KProcess process, IExecutable image, ulong baseAddress)
         {
             ulong textStart = baseAddress + image.TextOffset;
             ulong roStart   = baseAddress + image.RoOffset;
@@ -404,14 +441,12 @@ namespace Ryujinx.HLE.HOS
             }
 
             Result result = SetProcessMemoryPermission(textStart, (ulong)image.Text.Length, KMemoryPermission.ReadAndExecute);
-
             if (result != Result.Success)
             {
                 return result;
             }
 
             result = SetProcessMemoryPermission(roStart, (ulong)image.Ro.Length, KMemoryPermission.Read);
-
             if (result != Result.Success)
             {
                 return result;

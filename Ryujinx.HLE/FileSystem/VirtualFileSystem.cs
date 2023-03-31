@@ -20,7 +20,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
-
 using Path = System.IO.Path;
 using RightsId = LibHac.Fs.RightsId;
 
@@ -146,6 +145,7 @@ namespace Ryujinx.HLE.FileSystem
 
                 return $"{basePath}:/{fileName}";
             }
+
             return null;
         }
 
@@ -191,7 +191,7 @@ namespace Ryujinx.HLE.FileSystem
             fsServerClient = horizon.CreatePrivilegedHorizonClient();
             var fsServer = new FileSystemServer(fsServerClient);
 
-            RandomDataGenerator randomGenerator = buffer => Random.Shared.NextBytes(buffer);
+            RandomDataGenerator randomGenerator = Random.Shared.NextBytes;
 
             DefaultFsServerObjects fsServerObjects = DefaultFsServerObjects.GetDefaultEmulatedCreators(serverBaseFs, KeySet, fsServer, randomGenerator);
 
@@ -264,7 +264,7 @@ namespace Ryujinx.HLE.FileSystem
 
                 if (result.IsSuccess())
                 {
-                    Ticket ticket = new Ticket(ticketFile.Get.AsStream());
+                    Ticket ticket = new(ticketFile.Get.AsStream());
                     var titleKey = ticket.GetTitleKey(KeySet);
 
                     if (titleKey != null)

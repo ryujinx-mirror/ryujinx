@@ -334,7 +334,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator
             }
 
             // TODO: Call nn::arp::GetApplicationControlProperty here when implemented.
-            ApplicationControlProperty controlProperty = context.Device.Application.ControlData.Value;
+            ApplicationControlProperty controlProperty = context.Device.Processes.ActiveApplication.ApplicationControlProperties;
 
             /*
 

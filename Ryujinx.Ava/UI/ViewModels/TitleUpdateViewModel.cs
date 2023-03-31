@@ -17,6 +17,7 @@ using Ryujinx.Common.Logging;
 using Ryujinx.Common.Utilities;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.HOS;
+using Ryujinx.Ui.App.Common;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -162,7 +163,7 @@ public class TitleUpdateViewModel : BaseModel
 
             try
             {
-                (Nca patchNca, Nca controlNca) = ApplicationLoader.GetGameUpdateDataFromPartition(_virtualFileSystem, new PartitionFileSystem(file.AsStorage()), _titleId.ToString("x16"), 0);
+                (Nca patchNca, Nca controlNca) = ApplicationLibrary.GetGameUpdateDataFromPartition(_virtualFileSystem, new PartitionFileSystem(file.AsStorage()), _titleId.ToString("x16"), 0);
 
                 if (controlNca != null && patchNca != null)
                 {

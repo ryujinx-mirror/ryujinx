@@ -33,7 +33,7 @@ namespace Ryujinx.HLE.HOS.Services.Arp
 
             return new ApplicationLaunchProperty
             {
-                TitleId             = context.Device.Application.TitleId,
+                TitleId             = context.Device.Processes.ActiveApplication.ProgramId,
                 Version             = 0x00,
                 BaseGameStorageId   = (byte)StorageId.BuiltInSystem,
                 UpdateGameStorageId = (byte)StorageId.None

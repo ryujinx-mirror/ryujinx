@@ -115,28 +115,12 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
             Uid userId = context.RequestData.ReadStruct<AccountUid>().ToLibHacUid();
 
             // Mask out the low nibble of the program ID to get the application ID
-            ApplicationId applicationId = new ApplicationId(context.Device.Application.TitleId & ~0xFul);
+            ApplicationId applicationId = new ApplicationId(context.Device.Processes.ActiveApplication.ProgramId & ~0xFul);
 
-            BlitStruct<ApplicationControlProperty> controlHolder = context.Device.Application.ControlData;
-
-            ref ApplicationControlProperty control = ref controlHolder.Value;
-
-            if (LibHac.Common.Utilities.IsZeros(controlHolder.ByteSpan))
-            {
-                // If the current application doesn't have a loaded control property, create a dummy one
-                // and set the savedata sizes so a user savedata will be created.
-                control = ref new BlitStruct<ApplicationControlProperty>(1).Value;
-
-                // The set sizes don't actually matter as long as they're non-zero because we use directory savedata.
-                control.UserAccountSaveDataSize        = 0x4000;
-                control.UserAccountSaveDataJournalSize = 0x4000;
-
-                Logger.Warning?.Print(LogClass.ServiceAm,
-                    "No control file was found for this game. Using a dummy one instead. This may cause inaccuracies in some games.");
-            }
+            ApplicationControlProperty nacp = context.Device.Processes.ActiveApplication.ApplicationControlProperties;
 
             LibHac.HorizonClient hos = context.Device.System.LibHacHorizonManager.AmClient;
-            LibHac.Result result = hos.Fs.EnsureApplicationSaveData(out long requiredSize, applicationId, in control, in userId);
+            LibHac.Result result = hos.Fs.EnsureApplicationSaveData(out long requiredSize, applicationId, in nacp, in userId);
 
             context.ResponseData.Write(requiredSize);
 
@@ -153,7 +137,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
             // TODO: When above calls are implemented, switch to using ns:am
 
             long desiredLanguageCode = context.Device.System.State.DesiredLanguageCode;
-            int  supportedLanguages  = (int)context.Device.Application.ControlData.Value.SupportedLanguageFlag;
+            int  supportedLanguages  = (int)context.Device.Processes.ActiveApplication.ApplicationControlProperties.SupportedLanguageFlag;
             int  firstSupported      = BitOperations.TrailingZeroCount(supportedLanguages);
 
             if (firstSupported > (int)TitleLanguage.BrazilianPortuguese)
@@ -196,7 +180,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
         public ResultCode GetDisplayVersion(ServiceCtx context)
         {
             // If an NACP isn't found, the buffer will be all '\0' which seems to be the correct implementation.
-            context.ResponseData.Write(context.Device.Application.ControlData.Value.DisplayVersion);
+            context.ResponseData.Write(context.Device.Processes.ActiveApplication.ApplicationControlProperties.DisplayVersion);
 
             return ResultCode.Success;
         }
@@ -251,13 +235,12 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
             long journalSize = context.RequestData.ReadInt64();
 
             // Mask out the low nibble of the program ID to get the application ID
-            ApplicationId applicationId = new ApplicationId(context.Device.Application.TitleId & ~0xFul);
+            ApplicationId applicationId = new ApplicationId(context.Device.Processes.ActiveApplication.ProgramId & ~0xFul);
 
-            BlitStruct<ApplicationControlProperty> controlHolder = context.Device.Application.ControlData;
+            ApplicationControlProperty nacp = context.Device.Processes.ActiveApplication.ApplicationControlProperties;
 
             LibHac.Result result = _horizon.Fs.CreateApplicationCacheStorage(out long requiredSize,
-                out CacheStorageTargetMedia storageTarget, applicationId, in controlHolder.Value, index, saveSize,
-                journalSize);
+                out CacheStorageTargetMedia storageTarget, applicationId, in nacp, index, saveSize, journalSize);
 
             if (result.IsFailure()) return (ResultCode)result.Value;
 
@@ -677,7 +660,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
                     throw new InvalidSystemResourceException($"JIT (010000000000003B) system title not found! The JIT will not work, provide the system archive to fix this error. (See https://github.com/Ryujinx/Ryujinx#requirements for more information)");
                 }
 
-                context.Device.Application.LoadServiceNca(filePath);
+                context.Device.LoadNca(filePath);
 
                 // FIXME: Most likely not how this should be done?
                 while (!context.Device.System.SmRegistry.IsServiceRegistered("jit:u"))

@@ -447,10 +447,10 @@ namespace Ryujinx.Headless.SDL2
 
         private static void SetupProgressHandler()
         {
-            if (_emulationContext.Application.DiskCacheLoadState != null)
+            if (_emulationContext.Processes.ActiveApplication.DiskCacheLoadState != null)
             {
-                _emulationContext.Application.DiskCacheLoadState.StateChanged -= ProgressHandler;
-                _emulationContext.Application.DiskCacheLoadState.StateChanged += ProgressHandler;
+                _emulationContext.Processes.ActiveApplication.DiskCacheLoadState.StateChanged -= ProgressHandler;
+                _emulationContext.Processes.ActiveApplication.DiskCacheLoadState.StateChanged += ProgressHandler;
             }
 
             _emulationContext.Gpu.ShaderCacheStateChanged -= ProgressHandler;
@@ -608,12 +608,24 @@ namespace Ryujinx.Headless.SDL2
                 if (romFsFiles.Length > 0)
                 {
                     Logger.Info?.Print(LogClass.Application, "Loading as cart with RomFS.");
-                    _emulationContext.LoadCart(path, romFsFiles[0]);
+
+                    if (!_emulationContext.LoadCart(path, romFsFiles[0]))
+                    {
+                        _emulationContext.Dispose();
+
+                        return false;
+                    }
                 }
                 else
                 {
                     Logger.Info?.Print(LogClass.Application, "Loading as cart WITHOUT RomFS.");
-                    _emulationContext.LoadCart(path);
+
+                    if (!_emulationContext.LoadCart(path))
+                    {
+                        _emulationContext.Dispose();
+
+                        return false;
+                    }
                 }
             }
             else if (File.Exists(path))
@@ -622,26 +634,51 @@ namespace Ryujinx.Headless.SDL2
                 {
                     case ".xci":
                         Logger.Info?.Print(LogClass.Application, "Loading as XCI.");
-                        _emulationContext.LoadXci(path);
+
+                        if (!_emulationContext.LoadXci(path))
+                        {
+                            _emulationContext.Dispose();
+
+                            return false;
+                        }
                         break;
                     case ".nca":
                         Logger.Info?.Print(LogClass.Application, "Loading as NCA.");
-                        _emulationContext.LoadNca(path);
+
+                        if (!_emulationContext.LoadNca(path))
+                        {
+                            _emulationContext.Dispose();
+
+                            return false;
+                        }
                         break;
                     case ".nsp":
                     case ".pfs0":
                         Logger.Info?.Print(LogClass.Application, "Loading as NSP.");
-                        _emulationContext.LoadNsp(path);
+
+                        if (!_emulationContext.LoadNsp(path))
+                        {
+                            _emulationContext.Dispose();
+
+                            return false;
+                        }
                         break;
                     default:
                         Logger.Info?.Print(LogClass.Application, "Loading as Homebrew.");
                         try
                         {
-                            _emulationContext.LoadProgram(path);
+                            if (!_emulationContext.LoadProgram(path))
+                            {
+                                _emulationContext.Dispose();
+
+                                return false;
+                            }
                         }
                         catch (ArgumentOutOfRangeException)
                         {
                             Logger.Error?.Print(LogClass.Application, "The specified file is not supported by Ryujinx.");
+
+                            _emulationContext.Dispose();
 
                             return false;
                         }

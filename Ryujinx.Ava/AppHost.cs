@@ -320,10 +320,14 @@ namespace Ryujinx.Ava
 
             _viewModel.IsGameRunning = true;
 
-            string titleNameSection    = string.IsNullOrWhiteSpace(Device.Application.TitleName)      ? string.Empty : $" - {Device.Application.TitleName}";
-            string titleVersionSection = string.IsNullOrWhiteSpace(Device.Application.DisplayVersion) ? string.Empty : $" v{Device.Application.DisplayVersion}";
-            string titleIdSection      = string.IsNullOrWhiteSpace(Device.Application.TitleIdText)    ? string.Empty : $" ({Device.Application.TitleIdText.ToUpper()})";
-            string titleArchSection    = Device.Application.TitleIs64Bit                              ? " (64-bit)"  : " (32-bit)";
+            var activeProcess   = Device.Processes.ActiveApplication;
+            var nacp            = activeProcess.ApplicationControlProperties;
+            int desiredLanguage = (int)Device.System.State.DesiredTitleLanguage;
+
+            string titleNameSection    = string.IsNullOrWhiteSpace(nacp.Title[desiredLanguage].NameString.ToString()) ? string.Empty : $" - {nacp.Title[desiredLanguage].NameString.ToString()}";
+            string titleVersionSection = string.IsNullOrWhiteSpace(nacp.DisplayVersionString.ToString())              ? string.Empty : $" v{nacp.DisplayVersionString.ToString()}";
+            string titleIdSection      = string.IsNullOrWhiteSpace(activeProcess.ProgramIdText)                       ? string.Empty : $" ({activeProcess.ProgramIdText.ToUpper()})";
+            string titleArchSection    = activeProcess.Is64Bit                                                        ? " (64-bit)"  : " (32-bit)";
 
             Dispatcher.UIThread.InvokeAsync(() =>
             {
@@ -423,9 +427,9 @@ namespace Ryujinx.Ava
 
         private void Dispose()
         {
-            if (Device.Application != null)
+            if (Device.Processes != null)
             {
-                _viewModel.UpdateGameMetadata(Device.Application.TitleIdText);
+                _viewModel.UpdateGameMetadata(Device.Processes.ActiveApplication.ProgramIdText);
             }
 
             ConfigurationState.Instance.System.IgnoreMissingServices.Event -= UpdateIgnoreMissingServicesState;
@@ -539,7 +543,12 @@ namespace Ryujinx.Ava
             {
                 Logger.Info?.Print(LogClass.Application, "Loading as Firmware Title (NCA).");
 
-                Device.LoadNca(ApplicationPath);
+                if (!Device.LoadNca(ApplicationPath))
+                {
+                    Device.Dispose();
+
+                    return false;
+                }
             }
             else if (Directory.Exists(ApplicationPath))
             {
@@ -554,13 +563,23 @@ namespace Ryujinx.Ava
                 {
                     Logger.Info?.Print(LogClass.Application, "Loading as cart with RomFS.");
 
-                    Device.LoadCart(ApplicationPath, romFsFiles[0]);
+                    if (!Device.LoadCart(ApplicationPath, romFsFiles[0]))
+                    {
+                        Device.Dispose();
+
+                        return false;
+                    }
                 }
                 else
                 {
                     Logger.Info?.Print(LogClass.Application, "Loading as cart WITHOUT RomFS.");
 
-                    Device.LoadCart(ApplicationPath);
+                    if (!Device.LoadCart(ApplicationPath))
+                    {
+                        Device.Dispose();
+
+                        return false;
+                    }
                 }
             }
             else if (File.Exists(ApplicationPath))
@@ -571,7 +590,12 @@ namespace Ryujinx.Ava
                         {
                             Logger.Info?.Print(LogClass.Application, "Loading as XCI.");
 
-                            Device.LoadXci(ApplicationPath);
+                            if (!Device.LoadXci(ApplicationPath))
+                            {
+                                Device.Dispose();
+
+                                return false;
+                            }
 
                             break;
                         }
@@ -579,7 +603,12 @@ namespace Ryujinx.Ava
                         {
                             Logger.Info?.Print(LogClass.Application, "Loading as NCA.");
 
-                            Device.LoadNca(ApplicationPath);
+                            if (!Device.LoadNca(ApplicationPath))
+                            {
+                                Device.Dispose();
+
+                                return false;
+                            }
 
                             break;
                         }
@@ -588,7 +617,12 @@ namespace Ryujinx.Ava
                         {
                             Logger.Info?.Print(LogClass.Application, "Loading as NSP.");
 
-                            Device.LoadNsp(ApplicationPath);
+                            if (!Device.LoadNsp(ApplicationPath))
+                            {
+                                Device.Dispose();
+
+                                return false;
+                            }
 
                             break;
                         }
@@ -598,13 +632,18 @@ namespace Ryujinx.Ava
 
                             try
                             {
-                                Device.LoadProgram(ApplicationPath);
+                                if (!Device.LoadProgram(ApplicationPath))
+                                {
+                                    Device.Dispose();
+
+                                    return false;
+                                }
                             }
                             catch (ArgumentOutOfRangeException)
                             {
                                 Logger.Error?.Print(LogClass.Application, "The specified file is not supported by Ryujinx.");
 
-                                Dispose();
+                                Device.Dispose();
 
                                 return false;
                             }
@@ -617,14 +656,14 @@ namespace Ryujinx.Ava
             {
                 Logger.Warning?.Print(LogClass.Application, "Please specify a valid XCI/NCA/NSP/PFS0/NRO file.");
 
-                Dispose();
+                Device.Dispose();
 
                 return false;
             }
 
-            DiscordIntegrationModule.SwitchToPlayingState(Device.Application.TitleIdText, Device.Application.TitleName);
+            DiscordIntegrationModule.SwitchToPlayingState(Device.Processes.ActiveApplication.ProgramIdText, Device.Processes.ActiveApplication.Name);
 
-            _viewModel.ApplicationLibrary.LoadAndSaveMetaData(Device.Application.TitleIdText, appMetadata =>
+            _viewModel.ApplicationLibrary.LoadAndSaveMetaData(Device.Processes.ActiveApplication.ProgramIdText, appMetadata =>
             {
                 appMetadata.LastPlayed = DateTime.UtcNow.ToString();
             });
@@ -950,7 +989,7 @@ namespace Ryujinx.Ava
                 {
                     if (_keyboardInterface.GetKeyboardStateSnapshot().IsPressed(Key.Delete) && _viewModel.WindowState != WindowState.FullScreen)
                     {
-                        Device.Application.DiskCacheLoadState?.Cancel();
+                        Device.Processes.ActiveApplication.DiskCacheLoadState?.Cancel();
                     }
                 });
 

@@ -590,10 +590,10 @@ namespace Ryujinx.Ui
 
         private void SetupProgressUiHandlers()
         {
-            if (_emulationContext.Application.DiskCacheLoadState != null)
+            if (_emulationContext.Processes.ActiveApplication.DiskCacheLoadState != null)
             {
-                _emulationContext.Application.DiskCacheLoadState.StateChanged -= ProgressHandler;
-                _emulationContext.Application.DiskCacheLoadState.StateChanged += ProgressHandler;
+                _emulationContext.Processes.ActiveApplication.DiskCacheLoadState.StateChanged -= ProgressHandler;
+                _emulationContext.Processes.ActiveApplication.DiskCacheLoadState.StateChanged += ProgressHandler;
             }
 
             _emulationContext.Gpu.ShaderCacheStateChanged -= ProgressHandler;
@@ -690,7 +690,111 @@ namespace Ryujinx.Ui
             }
         }
 
-        public void LoadApplication(string path, bool startFullscreen = false)
+        private bool LoadApplication(string path, bool isFirmwareTitle)
+        {
+            SystemVersion firmwareVersion = _contentManager.GetCurrentFirmwareVersion();
+
+            if (!SetupValidator.CanStartApplication(_contentManager, path, out UserError userError))
+            {
+                if (SetupValidator.CanFixStartApplication(_contentManager, path, userError, out firmwareVersion))
+                {
+                    string message = $"Would you like to install the firmware embedded in this game? (Firmware {firmwareVersion.VersionString})";
+
+                    ResponseType responseDialog = (ResponseType)GtkDialog.CreateConfirmationDialog("No Firmware Installed", message).Run();
+
+                    if (responseDialog != ResponseType.Yes || !SetupValidator.TryFixStartApplication(_contentManager, path, userError, out _))
+                    {
+                        UserErrorDialog.CreateUserErrorDialog(userError);
+
+                        return false;
+                    }
+
+                    // Tell the user that we installed a firmware for them.
+
+                    firmwareVersion = _contentManager.GetCurrentFirmwareVersion();
+
+                    RefreshFirmwareLabel();
+
+                    message = $"No installed firmware was found but Ryujinx was able to install firmware {firmwareVersion.VersionString} from the provided game.\nThe emulator will now start.";
+
+                    GtkDialog.CreateInfoDialog($"Firmware {firmwareVersion.VersionString} was installed", message);
+                }
+                else
+                {
+                    UserErrorDialog.CreateUserErrorDialog(userError);
+
+                    return false;
+                }
+            }
+
+            Logger.Notice.Print(LogClass.Application, $"Using Firmware Version: {firmwareVersion?.VersionString}");
+
+            if (isFirmwareTitle)
+            {
+                Logger.Info?.Print(LogClass.Application, "Loading as Firmware Title (NCA).");
+
+                return _emulationContext.LoadNca(path);
+            }
+
+            if (Directory.Exists(path))
+            {
+                string[] romFsFiles = Directory.GetFiles(path, "*.istorage");
+
+                if (romFsFiles.Length == 0)
+                {
+                    romFsFiles = Directory.GetFiles(path, "*.romfs");
+                }
+
+                if (romFsFiles.Length > 0)
+                {
+                    Logger.Info?.Print(LogClass.Application, "Loading as cart with RomFS.");
+
+                    return _emulationContext.LoadCart(path, romFsFiles[0]);
+                }
+
+                Logger.Info?.Print(LogClass.Application, "Loading as cart WITHOUT RomFS.");
+
+                return _emulationContext.LoadCart(path);
+            }
+
+            if (File.Exists(path))
+            {
+                switch (System.IO.Path.GetExtension(path).ToLowerInvariant())
+                {
+                    case ".xci":
+                        Logger.Info?.Print(LogClass.Application, "Loading as XCI.");
+
+                        return _emulationContext.LoadXci(path);
+                    case ".nca":
+                        Logger.Info?.Print(LogClass.Application, "Loading as NCA.");
+
+                        return _emulationContext.LoadNca(path);
+                    case ".nsp":
+                    case ".pfs0":
+                        Logger.Info?.Print(LogClass.Application, "Loading as NSP.");
+
+                        return _emulationContext.LoadNsp(path);
+                    default:
+                        Logger.Info?.Print(LogClass.Application, "Loading as Homebrew.");
+                        try
+                        {
+                            return _emulationContext.LoadProgram(path);
+                        }
+                        catch (ArgumentOutOfRangeException)
+                        {
+                            Logger.Error?.Print(LogClass.Application, "The specified file is not supported by Ryujinx.");
+
+                            return false;
+                        }
+                }
+            }
+
+            Logger.Warning?.Print(LogClass.Application, "Please specify a valid XCI/NCA/NSP/PFS0/NRO file.");
+
+            return false;
+        }
+
+        public void RunApplication(string path, bool startFullscreen = false)
         {
             if (_gameLoaded)
             {
@@ -710,9 +814,6 @@ namespace Ryujinx.Ui
 
                 UpdateGraphicsConfig();
 
-                SystemVersion firmwareVersion = _contentManager.GetCurrentFirmwareVersion();
-
-                bool isDirectory     = Directory.Exists(path);
                 bool isFirmwareTitle = false;
 
                 if (path.StartsWith("@SystemContent"))
@@ -722,124 +823,10 @@ namespace Ryujinx.Ui
                     isFirmwareTitle = true;
                 }
 
-                if (!SetupValidator.CanStartApplication(_contentManager, path, out UserError userError))
+                if (!LoadApplication(path, isFirmwareTitle))
                 {
-                    if (SetupValidator.CanFixStartApplication(_contentManager, path, userError, out firmwareVersion))
-                    {
-                        if (userError == UserError.NoFirmware)
-                        {
-                            string message = $"Would you like to install the firmware embedded in this game? (Firmware {firmwareVersion.VersionString})";
-
-                            ResponseType responseDialog = (ResponseType)GtkDialog.CreateConfirmationDialog("No Firmware Installed", message).Run();
-
-                            if (responseDialog != ResponseType.Yes)
-                            {
-                                UserErrorDialog.CreateUserErrorDialog(userError);
-
-                                _emulationContext.Dispose();
-                                SwitchToGameTable();
-
-                                return;
-                            }
-                        }
-
-                        if (!SetupValidator.TryFixStartApplication(_contentManager, path, userError, out _))
-                        {
-                            UserErrorDialog.CreateUserErrorDialog(userError);
-
-                            _emulationContext.Dispose();
-                            SwitchToGameTable();
-
-                            return;
-                        }
-
-                        // Tell the user that we installed a firmware for them.
-                        if (userError == UserError.NoFirmware)
-                        {
-                            firmwareVersion = _contentManager.GetCurrentFirmwareVersion();
-
-                            RefreshFirmwareLabel();
-
-                            string message = $"No installed firmware was found but Ryujinx was able to install firmware {firmwareVersion.VersionString} from the provided game.\nThe emulator will now start.";
-
-                            GtkDialog.CreateInfoDialog($"Firmware {firmwareVersion.VersionString} was installed", message);
-                        }
-                    }
-                    else
-                    {
-                        UserErrorDialog.CreateUserErrorDialog(userError);
-
-                        _emulationContext.Dispose();
-                        SwitchToGameTable();
-
-                        return;
-                    }
-                }
-
-                Logger.Notice.Print(LogClass.Application, $"Using Firmware Version: {firmwareVersion?.VersionString}");
-
-                if (isFirmwareTitle)
-                {
-                    Logger.Info?.Print(LogClass.Application, "Loading as Firmware Title (NCA).");
-
-                    _emulationContext.LoadNca(path);
-                }
-                else if (Directory.Exists(path))
-                {
-                    string[] romFsFiles = Directory.GetFiles(path, "*.istorage");
-
-                    if (romFsFiles.Length == 0)
-                    {
-                        romFsFiles = Directory.GetFiles(path, "*.romfs");
-                    }
-
-                    if (romFsFiles.Length > 0)
-                    {
-                        Logger.Info?.Print(LogClass.Application, "Loading as cart with RomFS.");
-                        _emulationContext.LoadCart(path, romFsFiles[0]);
-                    }
-                    else
-                    {
-                        Logger.Info?.Print(LogClass.Application, "Loading as cart WITHOUT RomFS.");
-                        _emulationContext.LoadCart(path);
-                    }
-                }
-                else if (File.Exists(path))
-                {
-                    switch (System.IO.Path.GetExtension(path).ToLowerInvariant())
-                    {
-                        case ".xci":
-                            Logger.Info?.Print(LogClass.Application, "Loading as XCI.");
-                            _emulationContext.LoadXci(path);
-                            break;
-                        case ".nca":
-                            Logger.Info?.Print(LogClass.Application, "Loading as NCA.");
-                            _emulationContext.LoadNca(path);
-                            break;
-                        case ".nsp":
-                        case ".pfs0":
-                            Logger.Info?.Print(LogClass.Application, "Loading as NSP.");
-                            _emulationContext.LoadNsp(path);
-                            break;
-                        default:
-                            Logger.Info?.Print(LogClass.Application, "Loading as Homebrew.");
-                            try
-                            {
-                                _emulationContext.LoadProgram(path);
-                            }
-                            catch (ArgumentOutOfRangeException)
-                            {
-                                Logger.Error?.Print(LogClass.Application, "The specified file is not supported by Ryujinx.");
-                            }
-                            break;
-                    }
-                }
-                else
-                {
-                    Logger.Warning?.Print(LogClass.Application, "Please specify a valid XCI/NCA/NSP/PFS0/NRO file.");
-
                     _emulationContext.Dispose();
-                    RendererWidget.Dispose();
+                    SwitchToGameTable();
 
                     return;
                 }
@@ -852,10 +839,7 @@ namespace Ryujinx.Ui
 
                 Translator.IsReadyForTranslation.Reset();
 
-                Thread windowThread = new Thread(() =>
-                {
-                    CreateGameWindow();
-                })
+                Thread windowThread = new(CreateGameWindow)
                 {
                     Name = "GUI.WindowThread"
                 };
@@ -871,9 +855,10 @@ namespace Ryujinx.Ui
                 _firmwareInstallFile.Sensitive      = false;
                 _firmwareInstallDirectory.Sensitive = false;
 
-                DiscordIntegrationModule.SwitchToPlayingState(_emulationContext.Application.TitleIdText, _emulationContext.Application.TitleName);
+                DiscordIntegrationModule.SwitchToPlayingState(_emulationContext.Processes.ActiveApplication.ProgramIdText,
+                                                              _emulationContext.Processes.ActiveApplication.ApplicationControlProperties.Title[(int)_emulationContext.System.State.DesiredTitleLanguage].NameString.ToString());
 
-                _applicationLibrary.LoadAndSaveMetaData(_emulationContext.Application.TitleIdText, appMetadata =>
+                _applicationLibrary.LoadAndSaveMetaData(_emulationContext.Processes.ActiveApplication.ProgramIdText, appMetadata =>
                 {
                     appMetadata.LastPlayed = DateTime.UtcNow.ToString();
                 });
@@ -1055,7 +1040,7 @@ namespace Ryujinx.Ui
 
             if (_emulationContext != null)
             {
-                UpdateGameMetadata(_emulationContext.Application.TitleIdText);
+                UpdateGameMetadata(_emulationContext.Processes.ActiveApplication.ProgramIdText);
 
                 if (RendererWidget != null)
                 {
@@ -1174,7 +1159,7 @@ namespace Ryujinx.Ui
 
             string path = (string)_tableStore.GetValue(treeIter, 9);
 
-            LoadApplication(path);
+            RunApplication(path);
         }
 
         private void VSyncStatus_Clicked(object sender, ButtonReleaseEventArgs args)
@@ -1260,7 +1245,7 @@ namespace Ryujinx.Ui
 
                 if (fileChooser.Run() == (int)ResponseType.Accept)
                 {
-                    LoadApplication(fileChooser.Filename);
+                    RunApplication(fileChooser.Filename);
                 }
             }
         }
@@ -1271,7 +1256,7 @@ namespace Ryujinx.Ui
             {
                 if (fileChooser.Run() == (int)ResponseType.Accept)
                 {
-                    LoadApplication(fileChooser.Filename);
+                    RunApplication(fileChooser.Filename);
                 }
             }
         }
@@ -1287,7 +1272,7 @@ namespace Ryujinx.Ui
         {
             string contentPath = _contentManager.GetInstalledContentPath(0x0100000000001009, StorageId.BuiltInSystem, NcaContentType.Program);
 
-            LoadApplication(contentPath);
+            RunApplication(contentPath);
         }
 
         private void Open_Ryu_Folder(object sender, EventArgs args)
@@ -1328,7 +1313,7 @@ namespace Ryujinx.Ui
         {
             if (_emulationContext != null)
             {
-                UpdateGameMetadata(_emulationContext.Application.TitleIdText);
+                UpdateGameMetadata(_emulationContext.Processes.ActiveApplication.ProgramIdText);
             }
 
             _pauseEmulation.Sensitive = false;
@@ -1533,7 +1518,7 @@ namespace Ryujinx.Ui
             {
                 _userChannelPersistence.ShouldRestart = false;
 
-                LoadApplication(_currentEmulatedGamePath);
+                RunApplication(_currentEmulatedGamePath);
             }
             else
             {
@@ -1596,7 +1581,9 @@ namespace Ryujinx.Ui
 
         private void ManageCheats_Pressed(object sender, EventArgs args)
         {
-           var window = new CheatWindow(_virtualFileSystem, _emulationContext.Application.TitleId, _emulationContext.Application.TitleName);
+           var window = new CheatWindow(_virtualFileSystem,
+                                        _emulationContext.Processes.ActiveApplication.ProgramId,
+                                        _emulationContext.Processes.ActiveApplication.ApplicationControlProperties.Title[(int)_emulationContext.System.State.DesiredTitleLanguage].NameString.ToString());
 
             window.Destroyed += CheatWindow_Destroyed;
             window.Show();
@@ -1639,7 +1626,7 @@ namespace Ryujinx.Ui
                     LastScannedAmiiboShowAll = _lastScannedAmiiboShowAll,
                     LastScannedAmiiboId      = _lastScannedAmiiboId,
                     DeviceId                 = deviceId,
-                    TitleId                  = _emulationContext.Application.TitleIdText.ToUpper()
+                    TitleId                  = _emulationContext.Processes.ActiveApplication.ProgramIdText.ToUpper()
                 };
 
                 amiiboWindow.DeleteEvent += AmiiboWindow_DeleteEvent;

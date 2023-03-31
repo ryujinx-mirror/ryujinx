@@ -1,4 +1,8 @@
-﻿namespace Ryujinx.HLE.HOS.Services.Ns
+﻿using LibHac.Ns;
+using Ryujinx.Common.Utilities;
+using System;
+
+namespace Ryujinx.HLE.HOS.Services.Ns
 {
     [Service("ns:am")]
     class IApplicationManagerInterface : IpcService
@@ -14,9 +18,9 @@
 
             ulong position = context.Request.ReceiveBuff[0].Position;
 
-            byte[] nacpData = context.Device.Application.ControlData.ByteSpan.ToArray();
+            ApplicationControlProperty nacp = context.Device.Processes.ActiveApplication.ApplicationControlProperties;
 
-            context.Memory.Write(position, nacpData);
+            context.Memory.Write(position, SpanHelpers.AsByteSpan(ref nacp).ToArray());
 
             return ResultCode.Success;
         }

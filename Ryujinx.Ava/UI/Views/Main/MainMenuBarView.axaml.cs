@@ -126,7 +126,7 @@ namespace Ryujinx.Ava.UI.Views.Main
 
             if (ViewModel.AppHost.Device.System.SearchingForAmiibo(out int deviceId))
             {
-                string titleId = ViewModel.AppHost.Device.Application.TitleIdText.ToUpper();
+                string titleId = ViewModel.AppHost.Device.Processes.ActiveApplication.ProgramIdText.ToUpper();
                 AmiiboWindow window = new(ViewModel.ShowAll, ViewModel.LastScannedAmiiboId, titleId);
 
                 await window.ShowDialog(Window);
@@ -148,13 +148,11 @@ namespace Ryujinx.Ava.UI.Views.Main
                 return;
             }
 
-            ApplicationLoader application = ViewModel.AppHost.Device.Application;
-            if (application != null)
-            {
-                await new CheatWindow(Window.VirtualFileSystem, application.TitleIdText, application.TitleName).ShowDialog(Window);
+            string name = ViewModel.AppHost.Device.Processes.ActiveApplication.ApplicationControlProperties.Title[(int)ViewModel.AppHost.Device.System.State.DesiredTitleLanguage].NameString.ToString();
 
-                ViewModel.AppHost.Device.EnableCheats();
-            }
+            await new CheatWindow(Window.VirtualFileSystem, ViewModel.AppHost.Device.Processes.ActiveApplication.ProgramIdText, name).ShowDialog(Window);
+
+            ViewModel.AppHost.Device.EnableCheats();
         }
 
         private void ScanAmiiboMenuItem_AttachedToVisualTree(object sender, VisualTreeAttachmentEventArgs e)
