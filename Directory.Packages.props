@@ -3,11 +3,11 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="Avalonia" Version="0.10.18" />
-    <PackageVersion Include="Avalonia.Controls.DataGrid" Version="0.10.18" />
-    <PackageVersion Include="Avalonia.Desktop" Version="0.10.18" />
-    <PackageVersion Include="Avalonia.Diagnostics" Version="0.10.18" />
-    <PackageVersion Include="Avalonia.Markup.Xaml.Loader" Version="0.10.18" />
+    <PackageVersion Include="Avalonia" Version="0.10.19" />
+    <PackageVersion Include="Avalonia.Controls.DataGrid" Version="0.10.19" />
+    <PackageVersion Include="Avalonia.Desktop" Version="0.10.19" />
+    <PackageVersion Include="Avalonia.Diagnostics" Version="0.10.19" />
+    <PackageVersion Include="Avalonia.Markup.Xaml.Loader" Version="0.10.19" />
     <PackageVersion Include="Avalonia.Svg" Version="0.10.18" />
     <PackageVersion Include="Avalonia.Svg.Skia" Version="0.10.18" />
     <PackageVersion Include="CommandLineParser" Version="2.9.1" />
@@ -48,6 +48,6 @@
     <PackageVersion Include="System.IO.Hashing" Version="7.0.0" />
     <PackageVersion Include="System.Management" Version="7.0.0" />
     <PackageVersion Include="UnicornEngine.Unicorn" Version="2.0.2-rc1-fb78016" />
-    <PackageVersion Include="XamlNameReferenceGenerator" Version="1.5.1" />
+    <PackageVersion Include="XamlNameReferenceGenerator" Version="1.6.1" />
   </ItemGroup>
 </Project>
