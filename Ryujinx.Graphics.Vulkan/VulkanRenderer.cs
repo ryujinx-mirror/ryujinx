@@ -36,7 +36,6 @@ namespace Ryujinx.Graphics.Vulkan
         internal KhrPushDescriptor PushDescriptorApi { get; private set; }
         internal ExtTransformFeedback TransformFeedbackApi { get; private set; }
         internal KhrDrawIndirectCount DrawIndirectCountApi { get; private set; }
-        internal ExtDebugUtils DebugUtilsApi { get; private set; }
 
         internal uint QueueFamilyIndex { get; private set; }
         internal Queue Queue { get; private set; }
@@ -57,11 +56,11 @@ namespace Ryujinx.Graphics.Vulkan
         internal HashSet<ITexture> Textures { get; }
         internal HashSet<SamplerHolder> Samplers { get; }
 
+        private VulkanDebugMessenger _debugMessenger;
         private Counters _counters;
         private SyncManager _syncManager;
 
         private PipelineFull _pipeline;
-        private DebugUtilsMessengerEXT _debugUtilsMessenger;
 
         internal HelperShader HelperShader { get; private set; }
         internal PipelineFull PipelineInternal => _pipeline;
@@ -345,9 +344,8 @@ namespace Ryujinx.Graphics.Vulkan
 
             Api = api;
 
-            _instance = VulkanInitialization.CreateInstance(api, logLevel, _getRequiredExtensions(), out ExtDebugUtils debugUtils, out _debugUtilsMessenger);
-
-            DebugUtilsApi = debugUtils;
+            _instance = VulkanInitialization.CreateInstance(api, logLevel, _getRequiredExtensions());
+            _debugMessenger = new VulkanDebugMessenger(api, _instance, logLevel);
 
             if (api.TryGetInstanceExtension(_instance, out KhrSurface surfaceApi))
             {
@@ -794,11 +792,6 @@ namespace Ryujinx.Graphics.Vulkan
 
             MemoryAllocator.Dispose();
 
-            if (_debugUtilsMessenger.Handle != 0)
-            {
-                DebugUtilsApi.DestroyDebugUtilsMessenger(_instance, _debugUtilsMessenger, null);
-            }
-
             foreach (var shader in Shaders)
             {
                 shader.Dispose();
@@ -817,6 +810,8 @@ namespace Ryujinx.Graphics.Vulkan
             SurfaceApi.DestroySurface(_instance, _surface, null);
 
             Api.DestroyDevice(_device, null);
+
+            _debugMessenger.Dispose();
 
             // Last step destroy the instance
             Api.DestroyInstance(_instance, null);
