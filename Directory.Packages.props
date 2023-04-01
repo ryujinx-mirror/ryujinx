@@ -13,7 +13,7 @@
     <PackageVersion Include="CommandLineParser" Version="2.9.1" />
     <PackageVersion Include="Concentus" Version="1.1.7" />
     <PackageVersion Include="DiscordRichPresence" Version="1.1.3.18" />
-    <PackageVersion Include="DynamicData" Version="7.12.11" />
+    <PackageVersion Include="DynamicData" Version="7.13.1" />
     <PackageVersion Include="FluentAvaloniaUI" Version="1.4.5" />
     <PackageVersion Include="GtkSharp.Dependencies" Version="1.1.1" />
     <PackageVersion Include="GtkSharp.Dependencies.osx" Version="0.0.5" />
