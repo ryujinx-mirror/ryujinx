@@ -1,11 +1,11 @@
 ﻿using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Logging;
 using Ryujinx.Common.Utilities;
+using Ryujinx.HLE.HOS.Services.Account.Acc.Types;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
-using System.Text.Json.Serialization;
 
 namespace Ryujinx.HLE.HOS.Services.Account.Acc
 {
@@ -13,29 +13,7 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
     {
         private readonly string _profilesJsonPath = Path.Join(AppDataManager.BaseDirPath, "system", "Profiles.json");
 
-        private struct ProfilesJson
-        {
-            [JsonPropertyName("profiles")]
-            public List<UserProfileJson> Profiles { get; set; }
-            [JsonPropertyName("last_opened")]
-            public string LastOpened { get; set; }
-        }
-
-        private struct UserProfileJson
-        {
-            [JsonPropertyName("user_id")]
-            public string UserId { get; set; }
-            [JsonPropertyName("name")]
-            public string Name { get; set; }
-            [JsonPropertyName("account_state")]
-            public AccountState AccountState { get; set; }
-            [JsonPropertyName("online_play_state")]
-            public AccountState OnlinePlayState { get; set; }
-            [JsonPropertyName("last_modified_timestamp")]
-            public long LastModifiedTimestamp { get; set; }
-            [JsonPropertyName("image")]
-            public byte[] Image { get; set; }
-        }
+        private static readonly ProfilesJsonSerializerContext SerializerContext = new(JsonHelper.GetDefaultSerializerOptions());
 
         public UserId LastOpened { get; set; }
 
@@ -47,7 +25,7 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
             {
                 try 
                 {
-                    ProfilesJson profilesJson = JsonHelper.DeserializeFromFile<ProfilesJson>(_profilesJsonPath);
+                    ProfilesJson profilesJson = JsonHelper.DeserializeFromFile(_profilesJsonPath, SerializerContext.ProfilesJson);
 
                     foreach (var profile in profilesJson.Profiles)
                     {
@@ -92,7 +70,7 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
                 });
             }
 
-            File.WriteAllText(_profilesJsonPath, JsonHelper.Serialize(profilesJson, true));
+            JsonHelper.SerializeToFile(_profilesJsonPath, profilesJson, SerializerContext.ProfilesJson);
         }
     }
 }

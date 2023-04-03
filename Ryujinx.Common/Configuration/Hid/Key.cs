@@ -1,5 +1,9 @@
-﻿namespace Ryujinx.Common.Configuration.Hid
+﻿using Ryujinx.Common.Utilities;
+using System.Text.Json.Serialization;
+
+namespace Ryujinx.Common.Configuration.Hid
 {
+    [JsonConverter(typeof(TypedStringEnumConverter<Key>))]
     public enum Key
     {
         Unknown,

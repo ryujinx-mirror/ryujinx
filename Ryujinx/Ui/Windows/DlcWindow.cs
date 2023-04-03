@@ -7,15 +7,13 @@ using LibHac.Tools.Fs;
 using LibHac.Tools.FsSystem;
 using LibHac.Tools.FsSystem.NcaUtils;
 using Ryujinx.Common.Configuration;
+using Ryujinx.Common.Utilities;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.Ui.Widgets;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
-
-using GUI        = Gtk.Builder.ObjectAttribute;
-using JsonHelper = Ryujinx.Common.Utilities.JsonHelper;
+using GUI = Gtk.Builder.ObjectAttribute;
 
 namespace Ryujinx.Ui.Windows
 {
@@ -25,6 +23,8 @@ namespace Ryujinx.Ui.Windows
         private readonly string                             _titleId;
         private readonly string                             _dlcJsonPath;
         private readonly List<DownloadableContentContainer> _dlcContainerList;
+
+        private static readonly DownloadableContentJsonSerializerContext SerializerContext = new(JsonHelper.GetDefaultSerializerOptions());
 
 #pragma warning disable CS0649, IDE0044
         [GUI] Label         _baseTitleInfoLabel;
@@ -45,7 +45,7 @@ namespace Ryujinx.Ui.Windows
 
             try
             {
-                _dlcContainerList = JsonHelper.DeserializeFromFile<List<DownloadableContentContainer>>(_dlcJsonPath);
+                _dlcContainerList = JsonHelper.DeserializeFromFile(_dlcJsonPath, SerializerContext.ListDownloadableContentContainer);
             }
             catch
             {
@@ -260,10 +260,7 @@ namespace Ryujinx.Ui.Windows
                 while (_dlcTreeView.Model.IterNext(ref parentIter));
             }
 
-            using (FileStream dlcJsonStream = File.Create(_dlcJsonPath, 4096, FileOptions.WriteThrough))
-            {
-                dlcJsonStream.Write(Encoding.UTF8.GetBytes(JsonHelper.Serialize(_dlcContainerList, true)));
-            }
+            JsonHelper.SerializeToFile(_dlcJsonPath, _dlcContainerList, SerializerContext.ListDownloadableContentContainer);
 
             Dispose();
         }

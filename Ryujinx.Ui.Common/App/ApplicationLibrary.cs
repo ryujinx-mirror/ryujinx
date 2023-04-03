@@ -10,6 +10,7 @@ using LibHac.Tools.FsSystem;
 using LibHac.Tools.FsSystem.NcaUtils;
 using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Logging;
+using Ryujinx.Common.Utilities;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.HOS.SystemState;
 using Ryujinx.HLE.Loaders.Npdm;
@@ -22,7 +23,6 @@ using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
-using JsonHelper = Ryujinx.Common.Utilities.JsonHelper;
 using Path = System.IO.Path;
 
 namespace Ryujinx.Ui.App.Common
@@ -41,6 +41,9 @@ namespace Ryujinx.Ui.App.Common
         private readonly VirtualFileSystem _virtualFileSystem;
         private Language                   _desiredTitleLanguage;
         private CancellationTokenSource    _cancellationToken;
+
+        private static readonly ApplicationJsonSerializerContext SerializerContext = new(JsonHelper.GetDefaultSerializerOptions());
+        private static readonly TitleUpdateMetadataJsonSerializerContext TitleSerializerContext = new(JsonHelper.GetDefaultSerializerOptions());
 
         public ApplicationLibrary(VirtualFileSystem virtualFileSystem)
         {
@@ -489,14 +492,12 @@ namespace Ryujinx.Ui.App.Common
 
                 appMetadata = new ApplicationMetadata();
 
-                using FileStream stream = File.Create(metadataFile, 4096, FileOptions.WriteThrough);
-
-                JsonHelper.Serialize(stream, appMetadata, true);
+                JsonHelper.SerializeToFile(metadataFile, appMetadata, SerializerContext.ApplicationMetadata);
             }
 
             try
             {
-                appMetadata = JsonHelper.DeserializeFromFile<ApplicationMetadata>(metadataFile);
+                appMetadata = JsonHelper.DeserializeFromFile(metadataFile, SerializerContext.ApplicationMetadata);
             }
             catch (JsonException)
             {
@@ -509,9 +510,7 @@ namespace Ryujinx.Ui.App.Common
             {
                 modifyFunction(appMetadata);
 
-                using FileStream stream = File.Create(metadataFile, 4096, FileOptions.WriteThrough);
-
-                JsonHelper.Serialize(stream, appMetadata, true);
+                JsonHelper.SerializeToFile(metadataFile, appMetadata, SerializerContext.ApplicationMetadata);
             }
 
             return appMetadata;
@@ -890,7 +889,7 @@ namespace Ryujinx.Ui.App.Common
 
                 if (File.Exists(titleUpdateMetadataPath))
                 {
-                    updatePath = JsonHelper.DeserializeFromFile<TitleUpdateMetadata>(titleUpdateMetadataPath).Selected;
+                    updatePath = JsonHelper.DeserializeFromFile(titleUpdateMetadataPath, TitleSerializerContext.TitleUpdateMetadata).Selected;
 
                     if (File.Exists(updatePath))
                     {

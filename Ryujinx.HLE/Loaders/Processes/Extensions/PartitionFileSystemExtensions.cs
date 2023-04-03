@@ -17,6 +17,9 @@ namespace Ryujinx.HLE.Loaders.Processes.Extensions
 {
     public static class PartitionFileSystemExtensions
     {
+        private static readonly DownloadableContentJsonSerializerContext ContentSerializerContext = new(JsonHelper.GetDefaultSerializerOptions());
+        private static readonly TitleUpdateMetadataJsonSerializerContext TitleSerializerContext = new(JsonHelper.GetDefaultSerializerOptions());
+
         internal static (bool, ProcessResult) TryLoad(this PartitionFileSystem partitionFileSystem, Switch device, string path, out string errorMessage)
         {
             errorMessage = null;
@@ -85,7 +88,7 @@ namespace Ryujinx.HLE.Loaders.Processes.Extensions
                     string titleUpdateMetadataPath = System.IO.Path.Combine(AppDataManager.GamesDirPath, titleIdBase.ToString("x16"), "updates.json");
                     if (File.Exists(titleUpdateMetadataPath))
                     {
-                        string updatePath = JsonHelper.DeserializeFromFile<TitleUpdateMetadata>(titleUpdateMetadataPath).Selected;
+                        string updatePath = JsonHelper.DeserializeFromFile(titleUpdateMetadataPath, TitleSerializerContext.TitleUpdateMetadata).Selected;
                         if (File.Exists(updatePath))
                         {
                             PartitionFileSystem updatePartitionFileSystem = new(new FileStream(updatePath, FileMode.Open, FileAccess.Read).AsStorage());
@@ -139,7 +142,7 @@ namespace Ryujinx.HLE.Loaders.Processes.Extensions
                 string addOnContentMetadataPath = System.IO.Path.Combine(AppDataManager.GamesDirPath, mainNca.Header.TitleId.ToString("x16"), "dlc.json");
                 if (File.Exists(addOnContentMetadataPath))
                 {
-                    List<DownloadableContentContainer> dlcContainerList = JsonHelper.DeserializeFromFile<List<DownloadableContentContainer>>(addOnContentMetadataPath);
+                    List<DownloadableContentContainer> dlcContainerList = JsonHelper.DeserializeFromFile(addOnContentMetadataPath, ContentSerializerContext.ListDownloadableContentContainer);
 
                     foreach (DownloadableContentContainer downloadableContentContainer in dlcContainerList)
                     {

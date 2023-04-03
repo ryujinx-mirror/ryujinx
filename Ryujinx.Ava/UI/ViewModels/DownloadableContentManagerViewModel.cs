@@ -21,7 +21,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Path = System.IO.Path;
 
@@ -40,6 +39,8 @@ namespace Ryujinx.Ava.UI.ViewModels
         private string _search;
         private ulong _titleId;
         private string _titleName;
+
+        private static readonly DownloadableContentJsonSerializerContext SerializerContext = new(JsonHelper.GetDefaultSerializerOptions());
 
         public AvaloniaList<DownloadableContentModel> DownloadableContents
         {
@@ -100,7 +101,7 @@ namespace Ryujinx.Ava.UI.ViewModels
 
             try
             {
-                _downloadableContentContainerList = JsonHelper.DeserializeFromFile<List<DownloadableContentContainer>>(_downloadableContentJsonPath);
+                _downloadableContentContainerList = JsonHelper.DeserializeFromFile(_downloadableContentJsonPath, SerializerContext.ListDownloadableContentContainer);
             }
             catch
             {
@@ -330,10 +331,7 @@ namespace Ryujinx.Ava.UI.ViewModels
                 _downloadableContentContainerList.Add(container);
             }
 
-            using (FileStream downloadableContentJsonStream = File.Create(_downloadableContentJsonPath, 4096, FileOptions.WriteThrough))
-            {
-                downloadableContentJsonStream.Write(Encoding.UTF8.GetBytes(JsonHelper.Serialize(_downloadableContentContainerList, true)));
-            }
+            JsonHelper.SerializeToFile(_downloadableContentJsonPath, _downloadableContentContainerList, SerializerContext.ListDownloadableContentContainer);
         }
 
     }
