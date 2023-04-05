@@ -1183,6 +1183,8 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             bool blendIndependent = _state.State.BlendIndependent;
             ColorF blendConstant = _state.State.BlendConstant;
 
+            bool dualSourceBlendEnabled = false;
+
             if (blendIndependent)
             {
                 for (int index = 0; index < Constants.TotalRenderTargets; index++)
@@ -1199,6 +1201,15 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                         blend.AlphaOp,
                         FilterBlendFactor(blend.AlphaSrcFactor, index),
                         FilterBlendFactor(blend.AlphaDstFactor, index));
+
+                    if (enable &&
+                        (blend.ColorSrcFactor.IsDualSource() ||
+                        blend.ColorDstFactor.IsDualSource() ||
+                        blend.AlphaSrcFactor.IsDualSource() ||
+                        blend.AlphaDstFactor.IsDualSource()))
+                    {
+                        dualSourceBlendEnabled = true;
+                    }
 
                     _pipeline.BlendDescriptors[index] = descriptor;
                     _context.Renderer.Pipeline.SetBlendState(index, descriptor);
@@ -1219,12 +1230,23 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                     FilterBlendFactor(blend.AlphaSrcFactor, 0),
                     FilterBlendFactor(blend.AlphaDstFactor, 0));
 
+                if (enable &&
+                    (blend.ColorSrcFactor.IsDualSource() ||
+                    blend.ColorDstFactor.IsDualSource() ||
+                    blend.AlphaSrcFactor.IsDualSource() ||
+                    blend.AlphaDstFactor.IsDualSource()))
+                {
+                    dualSourceBlendEnabled = true;
+                }
+
                 for (int index = 0; index < Constants.TotalRenderTargets; index++)
                 {
                     _pipeline.BlendDescriptors[index] = descriptor;
                     _context.Renderer.Pipeline.SetBlendState(index, descriptor);
                 }
             }
+
+            _currentSpecState.SetDualSourceBlendEnabled(dualSourceBlendEnabled);
         }
 
         /// <summary>

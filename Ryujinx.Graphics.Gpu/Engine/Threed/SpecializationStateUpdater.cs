@@ -328,5 +328,19 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                 Signal();
             }
         }
+
+        /// <summary>
+        /// Sets the dual-source blend enabled state.
+        /// </summary>
+        /// <param name="enabled">True if blending is enabled and using dual-source blend</param>
+        public void SetDualSourceBlendEnabled(bool enabled)
+        {
+            if (enabled != _graphics.DualSourceBlendEnable)
+            {
+                _graphics.DualSourceBlendEnable = enabled;
+
+                Signal();
+            }
+        }
     }
 }

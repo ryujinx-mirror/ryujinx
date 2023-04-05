@@ -158,6 +158,12 @@ namespace Ryujinx.Graphics.Gpu.Shader
         }
 
         /// <inheritdoc/>
+        public bool QueryDualSourceBlendEnable()
+        {
+            return _state.GraphicsState.DualSourceBlendEnable;
+        }
+
+        /// <inheritdoc/>
         public InputTopology QueryPrimitiveTopology()
         {
             _state.SpecializationState?.RecordPrimitiveTopology();

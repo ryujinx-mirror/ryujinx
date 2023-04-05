@@ -833,31 +833,13 @@ namespace Ryujinx.Graphics.OpenGL
                 (BlendingFactorSrc)blend.AlphaSrcFactor.Convert(),
                 (BlendingFactorDest)blend.AlphaDstFactor.Convert());
 
-            static bool IsDualSource(BlendFactor factor)
-            {
-                switch (factor)
-                {
-                    case BlendFactor.Src1Color:
-                    case BlendFactor.Src1ColorGl:
-                    case BlendFactor.Src1Alpha:
-                    case BlendFactor.Src1AlphaGl:
-                    case BlendFactor.OneMinusSrc1Color:
-                    case BlendFactor.OneMinusSrc1ColorGl:
-                    case BlendFactor.OneMinusSrc1Alpha:
-                    case BlendFactor.OneMinusSrc1AlphaGl:
-                        return true;
-                }
-
-                return false;
-            }
-
             EnsureFramebuffer();
 
             _framebuffer.SetDualSourceBlend(
-                IsDualSource(blend.ColorSrcFactor) ||
-                IsDualSource(blend.ColorDstFactor) ||
-                IsDualSource(blend.AlphaSrcFactor) ||
-                IsDualSource(blend.AlphaDstFactor));
+                blend.ColorSrcFactor.IsDualSource() ||
+                blend.ColorDstFactor.IsDualSource() ||
+                blend.AlphaSrcFactor.IsDualSource() ||
+                blend.AlphaDstFactor.IsDualSource());
 
             if (_blendConstant != blend.BlendConstant)
             {

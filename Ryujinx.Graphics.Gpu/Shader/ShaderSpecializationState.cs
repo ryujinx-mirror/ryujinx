@@ -535,6 +535,11 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 return false;
             }
 
+            if (graphicsState.DualSourceBlendEnable != GraphicsState.DualSourceBlendEnable)
+            {
+                return false;
+            }
+
             return Matches(channel, ref poolState, checkTextures, isCompute: false);
         }
 

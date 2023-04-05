@@ -612,6 +612,19 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             else
             {
                 int usedAttributes = context.Config.UsedOutputAttributes;
+
+                if (context.Config.Stage == ShaderStage.Fragment && context.Config.GpuAccessor.QueryDualSourceBlendEnable())
+                {
+                    int firstOutput = BitOperations.TrailingZeroCount(usedAttributes);
+                    int mask = 3 << firstOutput;
+
+                    if ((usedAttributes & mask) == mask)
+                    {
+                        usedAttributes &= ~mask;
+                        DeclareOutputDualSourceBlendAttribute(context, firstOutput);
+                    }
+                }
+
                 while (usedAttributes != 0)
                 {
                     int index = BitOperations.TrailingZeroCount(usedAttributes);
@@ -688,6 +701,15 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                     context.AppendLine($"layout (location = {attr}) out {type} {name};");
                 }
             }
+        }
+
+        private static void DeclareOutputDualSourceBlendAttribute(CodeGenContext context, int attr)
+        {
+            string name = $"{DefaultNames.OAttributePrefix}{attr}";
+            string name2 = $"{DefaultNames.OAttributePrefix}{(attr + 1)}";
+
+            context.AppendLine($"layout (location = {attr}, index = 0) out vec4 {name};");
+            context.AppendLine($"layout (location = {attr}, index = 1) out vec4 {name2};");
         }
 
         private static void DeclareUsedOutputAttributesPerPatch(CodeGenContext context, HashSet<int> attrs)

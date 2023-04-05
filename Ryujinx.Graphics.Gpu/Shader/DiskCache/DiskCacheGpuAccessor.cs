@@ -142,6 +142,12 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
         }
 
         /// <inheritdoc/>
+        public bool QueryDualSourceBlendEnable()
+        {
+            return _oldSpecState.GraphicsState.DualSourceBlendEnable;
+        }
+
+        /// <inheritdoc/>
         public InputTopology QueryPrimitiveTopology()
         {
             _newSpecState.RecordPrimitiveTopology();

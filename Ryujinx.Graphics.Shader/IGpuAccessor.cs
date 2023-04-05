@@ -206,6 +206,15 @@ namespace Ryujinx.Graphics.Shader
         }
 
         /// <summary>
+        /// Queries dual source blend state.
+        /// </summary>
+        /// <returns>True if blending is enabled with a dual source blend equation, false otherwise</returns>
+        bool QueryDualSourceBlendEnable()
+        {
+            return false;
+        }
+
+        /// <summary>
         /// Queries host about the presence of the FrontFacing built-in variable bug.
         /// </summary>
         /// <returns>True if the bug is present on the host device used, false otherwise</returns>

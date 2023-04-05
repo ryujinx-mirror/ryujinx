@@ -38,4 +38,25 @@ namespace Ryujinx.Graphics.GAL
         Src1AlphaGl             = 0xc902,
         OneMinusSrc1AlphaGl     = 0xc903
     }
+
+    public static class BlendFactorExtensions
+    {
+        public static bool IsDualSource(this BlendFactor factor)
+        {
+            switch (factor)
+            {
+                case BlendFactor.Src1Color:
+                case BlendFactor.Src1ColorGl:
+                case BlendFactor.Src1Alpha:
+                case BlendFactor.Src1AlphaGl:
+                case BlendFactor.OneMinusSrc1Color:
+                case BlendFactor.OneMinusSrc1ColorGl:
+                case BlendFactor.OneMinusSrc1Alpha:
+                case BlendFactor.OneMinusSrc1AlphaGl:
+                    return true;
+            }
+
+            return false;
+        }
+    }
 }

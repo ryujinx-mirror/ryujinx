@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Numerics;
 using static Spv.Specification;
 
 namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
@@ -622,7 +623,27 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             else if (attr >= AttributeConsts.FragmentOutputColorBase && attr < AttributeConsts.FragmentOutputColorEnd)
             {
                 int location = (attr - AttributeConsts.FragmentOutputColorBase) / 16;
-                context.Decorate(spvVar, Decoration.Location, (LiteralInteger)location);
+
+                if (context.Config.Stage == ShaderStage.Fragment && context.Config.GpuAccessor.QueryDualSourceBlendEnable())
+                {
+                    int firstLocation = BitOperations.TrailingZeroCount(context.Config.UsedOutputAttributes);
+                    int index = location - firstLocation;
+                    int mask = 3 << firstLocation;
+
+                    if ((uint)index < 2 && (context.Config.UsedOutputAttributes & mask) == mask)
+                    {
+                        context.Decorate(spvVar, Decoration.Location, (LiteralInteger)firstLocation);
+                        context.Decorate(spvVar, Decoration.Index, (LiteralInteger)index);
+                    }
+                    else
+                    {
+                        context.Decorate(spvVar, Decoration.Location, (LiteralInteger)location);
+                    }
+                }
+                else
+                {
+                    context.Decorate(spvVar, Decoration.Location, (LiteralInteger)location);
+                }
             }
 
             if (!isOutAttr)
