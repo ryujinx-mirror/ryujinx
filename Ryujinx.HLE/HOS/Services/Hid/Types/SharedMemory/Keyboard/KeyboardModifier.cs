@@ -2,9 +2,8 @@
 
 namespace Ryujinx.HLE.HOS.Services.Hid.Types.SharedMemory.Keyboard
 {
-    // TODO: This seems entirely wrong
     [Flags]
-    enum KeyboardModifier : uint
+    enum KeyboardModifier : ulong
     {
         None = 0,
         Control = 1 << 0,

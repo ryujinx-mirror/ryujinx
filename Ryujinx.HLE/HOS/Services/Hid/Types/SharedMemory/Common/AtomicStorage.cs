@@ -2,7 +2,7 @@
 
 namespace Ryujinx.HLE.HOS.Services.Hid.Types.SharedMemory.Common
 {
-    struct AtomicStorage<T> where T: unmanaged
+    struct AtomicStorage<T> where T: unmanaged, ISampledDataStruct
     {
         public ulong SamplingNumber;
         public T Object;
@@ -14,9 +14,9 @@ namespace Ryujinx.HLE.HOS.Services.Hid.Types.SharedMemory.Common
 
         public void SetObject(ref T obj)
         {
-            ISampledData samplingProvider = obj as ISampledData;
+            ulong samplingNumber = ISampledDataStruct.GetSamplingNumber(ref obj);
 
-            Interlocked.Exchange(ref SamplingNumber, samplingProvider.SamplingNumber);
+            Interlocked.Exchange(ref SamplingNumber, samplingNumber);
 
             Thread.MemoryBarrier();
 

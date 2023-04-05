@@ -1,15 +1,15 @@
 ﻿using Ryujinx.HLE.HOS.Services.Hid.Types.SharedMemory.Common;
+using System.Runtime.InteropServices;
 
 namespace Ryujinx.HLE.HOS.Services.Hid.Types.SharedMemory.Npad
 {
-    struct NpadGcTriggerState : ISampledData
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    struct NpadGcTriggerState : ISampledDataStruct
     {
 #pragma warning disable CS0649
         public ulong SamplingNumber;
         public uint TriggerL;
         public uint TriggerR;
 #pragma warning restore CS0649
-
-        ulong ISampledData.SamplingNumber => SamplingNumber;
     }
 }

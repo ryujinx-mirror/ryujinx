@@ -1,8 +1,10 @@
 ﻿using Ryujinx.HLE.HOS.Services.Hid.Types.SharedMemory.Common;
+using System.Runtime.InteropServices;
 
 namespace Ryujinx.HLE.HOS.Services.Hid.Types.SharedMemory.Mouse
 {
-    struct MouseState : ISampledData
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    struct MouseState : ISampledDataStruct
     {
         public ulong SamplingNumber;
         public int X;
@@ -13,7 +15,5 @@ namespace Ryujinx.HLE.HOS.Services.Hid.Types.SharedMemory.Mouse
         public int WheelDeltaY;
         public MouseButton Buttons;
         public MouseAttribute Attributes;
-
-        ulong ISampledData.SamplingNumber => SamplingNumber;
     }
 }

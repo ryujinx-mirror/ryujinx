@@ -5,7 +5,7 @@ using System.Threading;
 
 namespace Ryujinx.HLE.HOS.Services.Hid.Types.SharedMemory.Common
 {
-    struct RingLifo<T> where T: unmanaged
+    struct RingLifo<T> where T: unmanaged, ISampledDataStruct
     {
         private const ulong MaxEntries = 17;
 

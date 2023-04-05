@@ -1,8 +1,10 @@
 ﻿using Ryujinx.HLE.HOS.Services.Hid.Types.SharedMemory.Common;
+using System.Runtime.InteropServices;
 
 namespace Ryujinx.HLE.HOS.Services.Hid.Types.SharedMemory.Npad
 {
-    struct NpadCommonState : ISampledData
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    struct NpadCommonState : ISampledDataStruct
     {
         public ulong SamplingNumber;
         public NpadButton Buttons;
@@ -10,7 +12,5 @@ namespace Ryujinx.HLE.HOS.Services.Hid.Types.SharedMemory.Npad
         public AnalogStickState AnalogStickR;
         public NpadAttribute Attributes;
         private uint _reserved;
-
-        ulong ISampledData.SamplingNumber => SamplingNumber;
     }
 }
