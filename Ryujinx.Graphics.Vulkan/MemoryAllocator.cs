@@ -9,21 +9,18 @@ namespace Ryujinx.Graphics.Vulkan
         private ulong MaxDeviceMemoryUsageEstimate = 16UL * 1024 * 1024 * 1024;
 
         private readonly Vk _api;
-        private readonly PhysicalDevice _physicalDevice;
+        private readonly VulkanPhysicalDevice _physicalDevice;
         private readonly Device _device;
         private readonly List<MemoryAllocatorBlockList> _blockLists;
         private readonly int _blockAlignment;
-        private readonly PhysicalDeviceMemoryProperties _physicalDeviceMemoryProperties;
 
-        public MemoryAllocator(Vk api, PhysicalDevice physicalDevice, Device device, uint maxMemoryAllocationCount)
+        public MemoryAllocator(Vk api, VulkanPhysicalDevice physicalDevice, Device device)
         {
             _api = api;
             _physicalDevice = physicalDevice;
             _device = device;
             _blockLists = new List<MemoryAllocatorBlockList>();
-            _blockAlignment = (int)Math.Min(int.MaxValue, MaxDeviceMemoryUsageEstimate / (ulong)maxMemoryAllocationCount);
-
-            _api.GetPhysicalDeviceMemoryProperties(_physicalDevice, out _physicalDeviceMemoryProperties);
+            _blockAlignment = (int)Math.Min(int.MaxValue, MaxDeviceMemoryUsageEstimate / (ulong)_physicalDevice.PhysicalDeviceProperties.Limits.MaxMemoryAllocationCount);
         }
 
         public MemoryAllocation AllocateDeviceMemory(
@@ -64,9 +61,9 @@ namespace Ryujinx.Graphics.Vulkan
             uint memoryTypeBits,
             MemoryPropertyFlags flags)
         {
-            for (int i = 0; i < _physicalDeviceMemoryProperties.MemoryTypeCount; i++)
+            for (int i = 0; i < _physicalDevice.PhysicalDeviceMemoryProperties.MemoryTypeCount; i++)
             {
-                var type = _physicalDeviceMemoryProperties.MemoryTypes[i];
+                var type = _physicalDevice.PhysicalDeviceMemoryProperties.MemoryTypes[i];
 
                 if ((memoryTypeBits & (1 << i)) != 0)
                 {
@@ -80,15 +77,11 @@ namespace Ryujinx.Graphics.Vulkan
             return -1;
         }
 
-        public static bool IsDeviceMemoryShared(Vk api, PhysicalDevice physicalDevice)
+        public static bool IsDeviceMemoryShared(VulkanPhysicalDevice physicalDevice)
         {
-            // The device is regarded as having shared memory if all heaps have the device local bit.
-
-            api.GetPhysicalDeviceMemoryProperties(physicalDevice, out var properties);
-
-            for (int i = 0; i < properties.MemoryHeapCount; i++)
+            for (int i = 0; i < physicalDevice.PhysicalDeviceMemoryProperties.MemoryHeapCount; i++)
             {
-                if (!properties.MemoryHeaps[i].Flags.HasFlag(MemoryHeapFlags.DeviceLocalBit))
+                if (!physicalDevice.PhysicalDeviceMemoryProperties.MemoryHeaps[i].Flags.HasFlag(MemoryHeapFlags.DeviceLocalBit))
                 {
                     return false;
                 }

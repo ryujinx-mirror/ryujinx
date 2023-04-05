@@ -47,35 +47,23 @@ namespace Ryujinx.Graphics.Vulkan
             KhrSwapchain.ExtensionName
         };
 
-        internal static Instance CreateInstance(Vk api, GraphicsDebugLevel logLevel, string[] requiredExtensions)
+        internal static VulkanInstance CreateInstance(Vk api, GraphicsDebugLevel logLevel, string[] requiredExtensions)
         {
             var enabledLayers = new List<string>();
 
+            var instanceExtensions = VulkanInstance.GetInstanceExtensions(api);
+            var instanceLayers = VulkanInstance.GetInstanceLayers(api);
+
             void AddAvailableLayer(string layerName)
             {
-                uint layerPropertiesCount;
-
-                api.EnumerateInstanceLayerProperties(&layerPropertiesCount, null).ThrowOnError();
-
-                LayerProperties[] layerProperties = new LayerProperties[layerPropertiesCount];
-
-                fixed (LayerProperties* pLayerProperties = layerProperties)
+                if (instanceLayers.Contains(layerName))
                 {
-                    api.EnumerateInstanceLayerProperties(&layerPropertiesCount, layerProperties).ThrowOnError();
-
-                    for (int i = 0; i < layerPropertiesCount; i++)
-                    {
-                        string currentLayerName = Marshal.PtrToStringAnsi((IntPtr)pLayerProperties[i].LayerName);
-
-                        if (currentLayerName == layerName)
-                        {
-                            enabledLayers.Add(layerName);
-                            return;
-                        }
-                    }
+                    enabledLayers.Add(layerName);
                 }
-
-                Logger.Warning?.Print(LogClass.Gpu, $"Missing layer {layerName}");
+                else
+                {
+                    Logger.Warning?.Print(LogClass.Gpu, $"Missing layer {layerName}");
+                }
             }
 
             if (logLevel != GraphicsDebugLevel.None)
@@ -85,7 +73,7 @@ namespace Ryujinx.Graphics.Vulkan
 
             var enabledExtensions = requiredExtensions;
 
-            if (api.IsInstanceExtensionPresent("VK_EXT_debug_utils"))
+            if (instanceExtensions.Contains("VK_EXT_debug_utils"))
             {
                 enabledExtensions = enabledExtensions.Append(ExtDebugUtils.ExtensionName).ToArray();
             }
@@ -124,7 +112,7 @@ namespace Ryujinx.Graphics.Vulkan
                 EnabledLayerCount = (uint)enabledLayers.Count
             };
 
-            api.CreateInstance(in instanceCreateInfo, null, out var instance).ThrowOnError();
+            Result result = VulkanInstance.Create(api, ref instanceCreateInfo, out var instance);
 
             Marshal.FreeHGlobal(appName);
 
@@ -138,21 +126,14 @@ namespace Ryujinx.Graphics.Vulkan
                 Marshal.FreeHGlobal(ppEnabledLayers[i]);
             }
 
+            result.ThrowOnError();
+
             return instance;
         }
 
-        internal static PhysicalDevice FindSuitablePhysicalDevice(Vk api, Instance instance, SurfaceKHR surface, string preferredGpuId)
+        internal static VulkanPhysicalDevice FindSuitablePhysicalDevice(Vk api, VulkanInstance instance, SurfaceKHR surface, string preferredGpuId)
         {
-            uint physicalDeviceCount;
-
-            api.EnumeratePhysicalDevices(instance, &physicalDeviceCount, null).ThrowOnError();
-
-            PhysicalDevice[] physicalDevices = new PhysicalDevice[physicalDeviceCount];
-
-            fixed (PhysicalDevice* pPhysicalDevices = physicalDevices)
-            {
-                api.EnumeratePhysicalDevices(instance, &physicalDeviceCount, pPhysicalDevices).ThrowOnError();
-            }
+            instance.EnumeratePhysicalDevices(out var physicalDevices).ThrowOnError();
 
             // First we try to pick the the user preferred GPU.
             for (int i = 0; i < physicalDevices.Length; i++)
@@ -198,76 +179,41 @@ namespace Ryujinx.Graphics.Vulkan
                 EnabledLayerCount = 0
             };
 
-            api.CreateInstance(in instanceCreateInfo, null, out var instance).ThrowOnError();
-
-            // We ensure that vkEnumerateInstanceVersion is present (added in 1.1).
-            // If the instance doesn't support it, no device is going to be 1.1 compatible.
-            if (api.GetInstanceProcAddr(instance, "vkEnumerateInstanceVersion") == IntPtr.Zero)
-            {
-                api.DestroyInstance(instance, null);
-
-                return Array.Empty<DeviceInfo>();
-            }
-
-            // We currently assume that the instance is compatible with Vulkan 1.2
-            // TODO: Remove this once we relax our initialization codepaths.
-            uint instanceApiVerison = 0;
-            api.EnumerateInstanceVersion(ref instanceApiVerison).ThrowOnError();
-
-            if (instanceApiVerison < MinimalInstanceVulkanVersion)
-            {
-                api.DestroyInstance(instance, null);
-
-                return Array.Empty<DeviceInfo>();
-            }
+            Result result = VulkanInstance.Create(api, ref instanceCreateInfo, out var rawInstance);
 
             Marshal.FreeHGlobal(appName);
 
-            uint physicalDeviceCount;
+            result.ThrowOnError();
 
-            api.EnumeratePhysicalDevices(instance, &physicalDeviceCount, null).ThrowOnError();
+            using VulkanInstance instance = rawInstance;
 
-            PhysicalDevice[] physicalDevices = new PhysicalDevice[physicalDeviceCount];
-
-            fixed (PhysicalDevice* pPhysicalDevices = physicalDevices)
+            // We currently assume that the instance is compatible with Vulkan 1.2
+            // TODO: Remove this once we relax our initialization codepaths.
+            if (instance.InstanceVersion < MinimalInstanceVulkanVersion)
             {
-                api.EnumeratePhysicalDevices(instance, &physicalDeviceCount, pPhysicalDevices).ThrowOnError();
+                return Array.Empty<DeviceInfo>();
             }
 
-            DeviceInfo[] devices = new DeviceInfo[physicalDevices.Length];
+            instance.EnumeratePhysicalDevices(out VulkanPhysicalDevice[] physicalDevices).ThrowOnError();
 
-            for (int i = 0; i < physicalDevices.Length; i++)
+            List<DeviceInfo> deviceInfos = new List<DeviceInfo>();
+
+            foreach (VulkanPhysicalDevice physicalDevice in physicalDevices)
             {
-                var physicalDevice = physicalDevices[i];
-                api.GetPhysicalDeviceProperties(physicalDevice, out var properties);
-
-                if (properties.ApiVersion < MinimalVulkanVersion)
+                if (physicalDevice.PhysicalDeviceProperties.ApiVersion < MinimalVulkanVersion)
                 {
                     continue;
                 }
 
-                devices[i] = new DeviceInfo(
-                    StringFromIdPair(properties.VendorID, properties.DeviceID),
-                    VendorUtils.GetNameFromId(properties.VendorID),
-                    Marshal.PtrToStringAnsi((IntPtr)properties.DeviceName),
-                    properties.DeviceType == PhysicalDeviceType.DiscreteGpu);
+                deviceInfos.Add(physicalDevice.ToDeviceInfo());
             }
 
-            api.DestroyInstance(instance, null);
-
-            return devices;
+            return deviceInfos.ToArray();
         }
 
-        public static string StringFromIdPair(uint vendorId, uint deviceId)
+        private static bool IsPreferredAndSuitableDevice(Vk api, VulkanPhysicalDevice physicalDevice, SurfaceKHR surface, string preferredGpuId)
         {
-            return $"0x{vendorId:X}_0x{deviceId:X}";
-        }
-
-        private static bool IsPreferredAndSuitableDevice(Vk api, PhysicalDevice physicalDevice, SurfaceKHR surface, string preferredGpuId)
-        {
-            api.GetPhysicalDeviceProperties(physicalDevice, out var properties);
-
-            if (StringFromIdPair(properties.VendorID, properties.DeviceID) != preferredGpuId)
+            if (physicalDevice.Id != preferredGpuId)
             {
                 return false;
             }
@@ -275,68 +221,47 @@ namespace Ryujinx.Graphics.Vulkan
             return IsSuitableDevice(api, physicalDevice, surface);
         }
 
-        private static bool IsSuitableDevice(Vk api, PhysicalDevice physicalDevice, SurfaceKHR surface)
+        private static bool IsSuitableDevice(Vk api, VulkanPhysicalDevice physicalDevice, SurfaceKHR surface)
         {
             int extensionMatches = 0;
-            uint propertiesCount;
 
-            api.EnumerateDeviceExtensionProperties(physicalDevice, (byte*)null, &propertiesCount, null).ThrowOnError();
-
-            ExtensionProperties[] extensionProperties = new ExtensionProperties[propertiesCount];
-
-            fixed (ExtensionProperties* pExtensionProperties = extensionProperties)
+            foreach (string requiredExtension in _requiredExtensions)
             {
-                api.EnumerateDeviceExtensionProperties(physicalDevice, (byte*)null, &propertiesCount, pExtensionProperties).ThrowOnError();
-
-                for (int i = 0; i < propertiesCount; i++)
+                if (physicalDevice.IsDeviceExtensionPresent(requiredExtension))
                 {
-                    string extensionName = Marshal.PtrToStringAnsi((IntPtr)pExtensionProperties[i].ExtensionName);
-
-                    if (_requiredExtensions.Contains(extensionName))
-                    {
-                        extensionMatches++;
-                    }
+                    extensionMatches++;
                 }
             }
 
             return extensionMatches == _requiredExtensions.Length && FindSuitableQueueFamily(api, physicalDevice, surface, out _) != InvalidIndex;
         }
 
-        internal static uint FindSuitableQueueFamily(Vk api, PhysicalDevice physicalDevice, SurfaceKHR surface, out uint queueCount)
+        internal static uint FindSuitableQueueFamily(Vk api, VulkanPhysicalDevice physicalDevice, SurfaceKHR surface, out uint queueCount)
         {
             const QueueFlags RequiredFlags = QueueFlags.GraphicsBit | QueueFlags.ComputeBit;
 
             var khrSurface = new KhrSurface(api.Context);
 
-            uint propertiesCount;
-
-            api.GetPhysicalDeviceQueueFamilyProperties(physicalDevice, &propertiesCount, null);
-
-            QueueFamilyProperties[] properties = new QueueFamilyProperties[propertiesCount];
-
-            fixed (QueueFamilyProperties* pProperties = properties)
+            for (uint index = 0; index < physicalDevice.QueueFamilyProperties.Length; index++)
             {
-                api.GetPhysicalDeviceQueueFamilyProperties(physicalDevice, &propertiesCount, pProperties);
-            }
+                ref QueueFamilyProperties property = ref physicalDevice.QueueFamilyProperties[index];
 
-            for (uint index = 0; index < propertiesCount; index++)
-            {
-                var queueFlags = properties[index].QueueFlags;
+                khrSurface.GetPhysicalDeviceSurfaceSupport(physicalDevice.PhysicalDevice, index, surface, out var surfaceSupported).ThrowOnError();
 
-                khrSurface.GetPhysicalDeviceSurfaceSupport(physicalDevice, index, surface, out var surfaceSupported).ThrowOnError();
-
-                if (queueFlags.HasFlag(RequiredFlags) && surfaceSupported)
+                if (property.QueueFlags.HasFlag(RequiredFlags) && surfaceSupported)
                 {
-                    queueCount = properties[index].QueueCount;
+                    queueCount = property.QueueCount;
+
                     return index;
                 }
             }
 
             queueCount = 0;
+
             return InvalidIndex;
         }
 
-        public static Device CreateDevice(Vk api, PhysicalDevice physicalDevice, uint queueFamilyIndex, string[] supportedExtensions, uint queueCount)
+        internal static Device CreateDevice(Vk api, VulkanPhysicalDevice physicalDevice, uint queueFamilyIndex, uint queueCount)
         {
             if (queueCount > QueuesCount)
             {
@@ -358,8 +283,7 @@ namespace Ryujinx.Graphics.Vulkan
                 PQueuePriorities = queuePriorities
             };
 
-            api.GetPhysicalDeviceProperties(physicalDevice, out var properties);
-            bool useRobustBufferAccess = VendorUtils.FromId(properties.VendorID) == Vendor.Nvidia;
+            bool useRobustBufferAccess = VendorUtils.FromId(physicalDevice.PhysicalDeviceProperties.VendorID) == Vendor.Nvidia;
 
             PhysicalDeviceFeatures2 features2 = new PhysicalDeviceFeatures2()
             {
@@ -380,7 +304,7 @@ namespace Ryujinx.Graphics.Vulkan
                 PNext = features2.PNext
             };
 
-            if (supportedExtensions.Contains("VK_EXT_custom_border_color"))
+            if (physicalDevice.IsDeviceExtensionPresent("VK_EXT_custom_border_color"))
             {
                 features2.PNext = &supportedFeaturesCustomBorderColor;
             }
@@ -391,7 +315,7 @@ namespace Ryujinx.Graphics.Vulkan
                 PNext = features2.PNext
             };
 
-            if (supportedExtensions.Contains("VK_EXT_primitive_topology_list_restart"))
+            if (physicalDevice.IsDeviceExtensionPresent("VK_EXT_primitive_topology_list_restart"))
             {
                 features2.PNext = &supportedFeaturesPrimitiveTopologyListRestart;
             }
@@ -402,7 +326,7 @@ namespace Ryujinx.Graphics.Vulkan
                 PNext = features2.PNext
             };
 
-            if (supportedExtensions.Contains(ExtTransformFeedback.ExtensionName))
+            if (physicalDevice.IsDeviceExtensionPresent(ExtTransformFeedback.ExtensionName))
             {
                 features2.PNext = &supportedFeaturesTransformFeedback;
             }
@@ -412,14 +336,14 @@ namespace Ryujinx.Graphics.Vulkan
                 SType = StructureType.PhysicalDeviceRobustness2FeaturesExt
             };
 
-            if (supportedExtensions.Contains("VK_EXT_robustness2"))
+            if (physicalDevice.IsDeviceExtensionPresent("VK_EXT_robustness2"))
             {
                 supportedFeaturesRobustness2.PNext = features2.PNext;
 
                 features2.PNext = &supportedFeaturesRobustness2;
             }
 
-            api.GetPhysicalDeviceFeatures2(physicalDevice, &features2);
+            api.GetPhysicalDeviceFeatures2(physicalDevice.PhysicalDevice, &features2);
 
             var supportedFeatures = features2.Features;
 
@@ -452,7 +376,7 @@ namespace Ryujinx.Graphics.Vulkan
 
             PhysicalDeviceTransformFeedbackFeaturesEXT featuresTransformFeedback;
 
-            if (supportedExtensions.Contains(ExtTransformFeedback.ExtensionName))
+            if (physicalDevice.IsDeviceExtensionPresent(ExtTransformFeedback.ExtensionName))
             {
                 featuresTransformFeedback = new PhysicalDeviceTransformFeedbackFeaturesEXT()
                 {
@@ -466,7 +390,7 @@ namespace Ryujinx.Graphics.Vulkan
 
             PhysicalDevicePrimitiveTopologyListRestartFeaturesEXT featuresPrimitiveTopologyListRestart;
 
-            if (supportedExtensions.Contains("VK_EXT_primitive_topology_list_restart"))
+            if (physicalDevice.IsDeviceExtensionPresent("VK_EXT_primitive_topology_list_restart"))
             {
                 featuresPrimitiveTopologyListRestart = new PhysicalDevicePrimitiveTopologyListRestartFeaturesEXT()
                 {
@@ -481,7 +405,7 @@ namespace Ryujinx.Graphics.Vulkan
 
             PhysicalDeviceRobustness2FeaturesEXT featuresRobustness2;
 
-            if (supportedExtensions.Contains("VK_EXT_robustness2"))
+            if (physicalDevice.IsDeviceExtensionPresent("VK_EXT_robustness2"))
             {
                 featuresRobustness2 = new PhysicalDeviceRobustness2FeaturesEXT()
                 {
@@ -497,7 +421,7 @@ namespace Ryujinx.Graphics.Vulkan
             {
                 SType = StructureType.PhysicalDeviceExtendedDynamicStateFeaturesExt,
                 PNext = pExtendedFeatures,
-                ExtendedDynamicState = supportedExtensions.Contains(ExtExtendedDynamicState.ExtensionName)
+                ExtendedDynamicState = physicalDevice.IsDeviceExtensionPresent(ExtExtendedDynamicState.ExtensionName)
             };
 
             pExtendedFeatures = &featuresExtendedDynamicState;
@@ -515,16 +439,16 @@ namespace Ryujinx.Graphics.Vulkan
             {
                 SType = StructureType.PhysicalDeviceVulkan12Features,
                 PNext = pExtendedFeatures,
-                DescriptorIndexing = supportedExtensions.Contains("VK_EXT_descriptor_indexing"),
-                DrawIndirectCount = supportedExtensions.Contains(KhrDrawIndirectCount.ExtensionName),
-                UniformBufferStandardLayout = supportedExtensions.Contains("VK_KHR_uniform_buffer_standard_layout")
+                DescriptorIndexing = physicalDevice.IsDeviceExtensionPresent("VK_EXT_descriptor_indexing"),
+                DrawIndirectCount = physicalDevice.IsDeviceExtensionPresent(KhrDrawIndirectCount.ExtensionName),
+                UniformBufferStandardLayout = physicalDevice.IsDeviceExtensionPresent("VK_KHR_uniform_buffer_standard_layout")
             };
 
             pExtendedFeatures = &featuresVk12;
 
             PhysicalDeviceIndexTypeUint8FeaturesEXT featuresIndexU8;
 
-            if (supportedExtensions.Contains("VK_EXT_index_type_uint8"))
+            if (physicalDevice.IsDeviceExtensionPresent("VK_EXT_index_type_uint8"))
             {
                 featuresIndexU8 = new PhysicalDeviceIndexTypeUint8FeaturesEXT()
                 {
@@ -538,7 +462,7 @@ namespace Ryujinx.Graphics.Vulkan
 
             PhysicalDeviceFragmentShaderInterlockFeaturesEXT featuresFragmentShaderInterlock;
 
-            if (supportedExtensions.Contains("VK_EXT_fragment_shader_interlock"))
+            if (physicalDevice.IsDeviceExtensionPresent("VK_EXT_fragment_shader_interlock"))
             {
                 featuresFragmentShaderInterlock = new PhysicalDeviceFragmentShaderInterlockFeaturesEXT()
                 {
@@ -552,7 +476,7 @@ namespace Ryujinx.Graphics.Vulkan
 
             PhysicalDeviceSubgroupSizeControlFeaturesEXT featuresSubgroupSizeControl;
 
-            if (supportedExtensions.Contains("VK_EXT_subgroup_size_control"))
+            if (physicalDevice.IsDeviceExtensionPresent("VK_EXT_subgroup_size_control"))
             {
                 featuresSubgroupSizeControl = new PhysicalDeviceSubgroupSizeControlFeaturesEXT()
                 {
@@ -566,7 +490,7 @@ namespace Ryujinx.Graphics.Vulkan
 
             PhysicalDeviceCustomBorderColorFeaturesEXT featuresCustomBorderColor;
 
-            if (supportedExtensions.Contains("VK_EXT_custom_border_color") &&
+            if (physicalDevice.IsDeviceExtensionPresent("VK_EXT_custom_border_color") &&
                 supportedFeaturesCustomBorderColor.CustomBorderColors &&
                 supportedFeaturesCustomBorderColor.CustomBorderColorWithoutFormat)
             {
@@ -581,7 +505,7 @@ namespace Ryujinx.Graphics.Vulkan
                 pExtendedFeatures = &featuresCustomBorderColor;
             }
 
-            var enabledExtensions = _requiredExtensions.Union(_desirableExtensions.Intersect(supportedExtensions)).ToArray();
+            var enabledExtensions = _requiredExtensions.Union(_desirableExtensions.Intersect(physicalDevice.DeviceExtensions)).ToArray();
 
             IntPtr* ppEnabledExtensions = stackalloc IntPtr[enabledExtensions.Length];
 
@@ -601,7 +525,7 @@ namespace Ryujinx.Graphics.Vulkan
                 PEnabledFeatures = &features
             };
 
-            api.CreateDevice(physicalDevice, in deviceCreateInfo, null, out var device).ThrowOnError();
+            api.CreateDevice(physicalDevice.PhysicalDevice, in deviceCreateInfo, null, out var device).ThrowOnError();
 
             for (int i = 0; i < enabledExtensions.Length; i++)
             {
@@ -609,22 +533,6 @@ namespace Ryujinx.Graphics.Vulkan
             }
 
             return device;
-        }
-
-        public static string[] GetSupportedExtensions(Vk api, PhysicalDevice physicalDevice)
-        {
-            uint propertiesCount;
-
-            api.EnumerateDeviceExtensionProperties(physicalDevice, (byte*)null, &propertiesCount, null).ThrowOnError();
-
-            ExtensionProperties[] extensionProperties = new ExtensionProperties[propertiesCount];
-
-            fixed (ExtensionProperties* pExtensionProperties = extensionProperties)
-            {
-                api.EnumerateDeviceExtensionProperties(physicalDevice, (byte*)null, &propertiesCount, pExtensionProperties).ThrowOnError();
-            }
-
-            return extensionProperties.Select(x => Marshal.PtrToStringAnsi((IntPtr)x.ExtensionName)).ToArray();
         }
     }
 }
