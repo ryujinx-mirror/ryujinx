@@ -405,7 +405,16 @@ namespace Ryujinx.HLE.Loaders.Processes
             // Once everything is loaded, we can load cheats.
             device.Configuration.VirtualFileSystem.ModLoader.LoadCheats(programId, tamperInfo, device.TamperMachine);
 
-            return new ProcessResult(metaLoader, applicationControlProperties, diskCacheEnabled, allowCodeMemoryForJit, processContextFactory.DiskCacheLoadState, process.Pid, meta.MainThreadPriority, meta.MainThreadStackSize);
+            return new ProcessResult(
+                metaLoader,
+                applicationControlProperties,
+                diskCacheEnabled,
+                allowCodeMemoryForJit,
+                processContextFactory.DiskCacheLoadState,
+                process.Pid,
+                meta.MainThreadPriority,
+                meta.MainThreadStackSize,
+                device.System.State.DesiredTitleLanguage);
         }
 
         public static Result LoadIntoMemory(KProcess process, IExecutable image, ulong baseAddress)
