@@ -13,7 +13,7 @@
   </PropertyGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="$([MSBuild]::IsOSPlatform('OSX'))">
-    <Exec Command="codesign --entitlements '$(ProjectDir)..\distribution\macos\entitlements.xml' -f --deep -s $(SigningCertificate) '$(TargetDir)$(TargetName)'" />
+    <Exec Command="codesign --entitlements '$(ProjectDir)..\..\distribution\macos\entitlements.xml' -f --deep -s $(SigningCertificate) '$(TargetDir)$(TargetName)'" />
   </Target>
 
   <PropertyGroup Condition="'$(RuntimeIdentifier)' != ''">
@@ -67,25 +67,25 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="..\distribution\windows\alsoft.ini" Condition="'$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64'">
+    <Content Include="..\..\distribution\windows\alsoft.ini" Condition="'$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64'">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <TargetPath>alsoft.ini</TargetPath>
     </Content>
-    <Content Include="..\distribution\legal\THIRDPARTY.md">
+    <Content Include="..\..\distribution\legal\THIRDPARTY.md">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <TargetPath>THIRDPARTY.md</TargetPath>
     </Content>
-    <Content Include="..\LICENSE.txt">
+    <Content Include="..\..\LICENSE.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <TargetPath>LICENSE.txt</TargetPath>
     </Content>
   </ItemGroup>
 
   <ItemGroup Condition="'$(RuntimeIdentifier)' == 'linux-x64'">
-    <Content Include="..\distribution\linux\Ryujinx.sh">
+    <Content Include="..\..\distribution\linux\Ryujinx.sh">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\distribution\linux\mime\Ryujinx.xml">
+    <Content Include="..\..\distribution\linux\mime\Ryujinx.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <TargetPath>mime\Ryujinx.xml</TargetPath>
     </Content>
@@ -189,6 +189,6 @@
     <EmbeddedResource Include="Assets\Styles\Styles.xaml" />
   </ItemGroup>
   <ItemGroup>
-      <AdditionalFiles Include="Assets\Locales\en_US.json" />
+    <AdditionalFiles Include="Assets\Locales\en_US.json" />
   </ItemGroup>
 </Project>

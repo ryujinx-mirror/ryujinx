@@ -48,25 +48,25 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="..\distribution\windows\alsoft.ini" Condition="'$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64'">
+    <Content Include="..\..\distribution\windows\alsoft.ini" Condition="'$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64'">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <TargetPath>alsoft.ini</TargetPath>
     </Content>
-    <Content Include="..\distribution\legal\THIRDPARTY.md">
+    <Content Include="..\..\distribution\legal\THIRDPARTY.md">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <TargetPath>THIRDPARTY.md</TargetPath>
     </Content>
-    <Content Include="..\LICENSE.txt">
+    <Content Include="..\..\LICENSE.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <TargetPath>LICENSE.txt</TargetPath>
     </Content>
   </ItemGroup>
 
    <ItemGroup Condition="'$(RuntimeIdentifier)' == 'linux-x64'">
-     <Content Include="..\distribution\linux\Ryujinx.sh">
+     <Content Include="..\..\distribution\linux\Ryujinx.sh">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
      </Content>
-     <Content Include="..\distribution\linux\mime\Ryujinx.xml">
+     <Content Include="..\..\distribution\linux\mime\Ryujinx.xml">
        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
        <TargetPath>mime\Ryujinx.xml</TargetPath>
      </Content>

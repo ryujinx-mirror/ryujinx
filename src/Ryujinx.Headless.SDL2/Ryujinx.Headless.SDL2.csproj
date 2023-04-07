@@ -32,18 +32,18 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="..\distribution\legal\THIRDPARTY.md">
+    <Content Include="..\..\distribution\legal\THIRDPARTY.md">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <TargetPath>THIRDPARTY.md</TargetPath>
     </Content>
-    <Content Include="..\LICENSE.txt">
+    <Content Include="..\..\LICENSE.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <TargetPath>LICENSE.txt</TargetPath>
     </Content>
   </ItemGroup>
 
   <ItemGroup Condition="'$(RuntimeIdentifier)' == 'linux-x64'">
-    <Content Include="..\distribution\linux\Ryujinx.sh">
+    <Content Include="..\..\distribution\linux\Ryujinx.sh">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
