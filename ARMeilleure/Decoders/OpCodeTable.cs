@@ -108,6 +108,13 @@ namespace ARMeilleure.Decoders
             SetA64("11001010xx0xxxxxxxxxxxxxxxxxxxxx", InstName.Eor,             InstEmit.Eor,             OpCodeAluRs.Create);
             SetA64("00010011100xxxxx0xxxxxxxxxxxxxxx", InstName.Extr,            InstEmit.Extr,            OpCodeAluRs.Create);
             SetA64("10010011110xxxxxxxxxxxxxxxxxxxxx", InstName.Extr,            InstEmit.Extr,            OpCodeAluRs.Create);
+            SetA64("11010101000000110010000011011111", InstName.Hint,            InstEmit.Nop,             OpCodeSystem.Create); // Reserved Hint
+            SetA64("11010101000000110010000011111111", InstName.Hint,            InstEmit.Nop,             OpCodeSystem.Create); // Reserved Hint
+            SetA64("110101010000001100100001xxx11111", InstName.Hint,            InstEmit.Nop,             OpCodeSystem.Create); // Reserved Hint
+            SetA64("1101010100000011001000100xx11111", InstName.Hint,            InstEmit.Nop,             OpCodeSystem.Create); // Reserved Hint
+            SetA64("1101010100000011001000101>>11111", InstName.Hint,            InstEmit.Nop,             OpCodeSystem.Create); // Reserved Hint
+            SetA64("110101010000001100100011xxx11111", InstName.Hint,            InstEmit.Nop,             OpCodeSystem.Create); // Reserved Hint
+            SetA64("11010101000000110010>>xxxxx11111", InstName.Hint,            InstEmit.Nop,             OpCodeSystem.Create); // Reserved Hint
             SetA64("11010101000000110011xxxx11011111", InstName.Isb,             InstEmit.Isb,             OpCodeSystem.Create);
             SetA64("xx001000110xxxxx1xxxxxxxxxxxxxxx", InstName.Ldar,            InstEmit.Ldar,            OpCodeMemEx.Create);
             SetA64("1x001000011xxxxx1xxxxxxxxxxxxxxx", InstName.Ldaxp,           InstEmit.Ldaxp,           OpCodeMemEx.Create);
