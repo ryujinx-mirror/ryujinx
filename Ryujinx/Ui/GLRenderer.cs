@@ -119,7 +119,7 @@ namespace Ryujinx.Ui
             }
             catch (Exception) { }
 
-            Device.DisposeGpu();
+            Device?.DisposeGpu();
             NpadManager.Dispose();
 
             // Unbind context and destroy everything
@@ -129,7 +129,7 @@ namespace Ryujinx.Ui
             }
             catch (Exception) { }
 
-            _openGLContext.Dispose();
+            _openGLContext?.Dispose();
         }
     }
 }
