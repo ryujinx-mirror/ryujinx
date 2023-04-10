@@ -53,6 +53,8 @@ namespace Ryujinx.Ava.UI.Applet
 
                     bool opened = false;
 
+                    _parent.Activate();
+
                     UserResult response = await ContentDialogHelper.ShowDeferredContentDialog(_parent,
                        title,
                        message,
