@@ -188,6 +188,21 @@ namespace ARMeilleure.Translation
             }
         }
 
+        public void EnterArmFpMode()
+        {
+            InstEmitSimdHelper.EnterArmFpMode(this, InstEmitHelper.GetFpFlag);
+        }
+
+        public void UpdateArmFpMode()
+        {
+            EnterArmFpMode();
+        }
+
+        public void ExitArmFpMode()
+        {
+            InstEmitSimdHelper.ExitArmFpMode(this, (flag, value) => InstEmitHelper.SetFpFlag(this, flag, value));
+        }
+
         public Operand TryGetComparisonResult(Condition condition)
         {
             if (_optOpLastCompare == null || _optOpLastCompare != _optOpLastFlagSet)

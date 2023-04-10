@@ -1,3 +1,4 @@
+using ARMeilleure.CodeGen.X86;
 using ARMeilleure.Decoders;
 using ARMeilleure.IntermediateRepresentation;
 using ARMeilleure.State;
@@ -157,6 +158,75 @@ namespace ARMeilleure.Instructions
             Intrinsic.X86Punpcklqdq
         };
 #endregion
+
+        public static void EnterArmFpMode(EmitterContext context, Func<FPState, Operand> getFpFlag)
+        {
+            if (Optimizations.UseSse2)
+            {
+                Operand mxcsr = context.AddIntrinsicInt(Intrinsic.X86Stmxcsr);
+
+                Operand fzTrue = getFpFlag(FPState.FzFlag);
+                Operand r0True = getFpFlag(FPState.RMode0Flag);
+                Operand r1True = getFpFlag(FPState.RMode1Flag);
+
+                mxcsr = context.BitwiseAnd(mxcsr, Const(~(int)(Mxcsr.Ftz | Mxcsr.Daz | Mxcsr.Rhi | Mxcsr.Rlo)));
+
+                mxcsr = context.BitwiseOr(mxcsr, context.ConditionalSelect(fzTrue, Const((int)(Mxcsr.Ftz | Mxcsr.Daz | Mxcsr.Um | Mxcsr.Dm)), Const(0)));
+
+                // X86 round modes in order: nearest, negative, positive, zero
+                // ARM round modes in order: nearest, positive, negative, zero
+                // Read the bits backwards to correct this.
+
+                mxcsr = context.BitwiseOr(mxcsr, context.ConditionalSelect(r0True, Const((int)Mxcsr.Rhi), Const(0)));
+                mxcsr = context.BitwiseOr(mxcsr, context.ConditionalSelect(r1True, Const((int)Mxcsr.Rlo), Const(0)));
+
+                context.AddIntrinsicNoRet(Intrinsic.X86Ldmxcsr, mxcsr);
+            }
+            else if (Optimizations.UseAdvSimd)
+            {
+                Operand fpcr = context.AddIntrinsicInt(Intrinsic.Arm64MrsFpcr);
+
+                Operand fzTrue = getFpFlag(FPState.FzFlag);
+                Operand r0True = getFpFlag(FPState.RMode0Flag);
+                Operand r1True = getFpFlag(FPState.RMode1Flag);
+
+                fpcr = context.BitwiseAnd(fpcr, Const(~(int)(FPCR.Fz | FPCR.RMode0 | FPCR.RMode1)));
+
+                fpcr = context.BitwiseOr(fpcr, context.ConditionalSelect(fzTrue, Const((int)FPCR.Fz), Const(0)));
+                fpcr = context.BitwiseOr(fpcr, context.ConditionalSelect(r0True, Const((int)FPCR.RMode0), Const(0)));
+                fpcr = context.BitwiseOr(fpcr, context.ConditionalSelect(r1True, Const((int)FPCR.RMode1), Const(0)));
+
+                context.AddIntrinsicNoRet(Intrinsic.Arm64MsrFpcr, fpcr);
+
+                // TODO: Restore FPSR
+            }
+        }
+
+        public static void ExitArmFpMode(EmitterContext context, Action<FPState, Operand> setFpFlag)
+        {
+            if (Optimizations.UseSse2)
+            {
+                Operand mxcsr = context.AddIntrinsicInt(Intrinsic.X86Stmxcsr);
+
+                // Unset round mode (to nearest) and ftz.
+                mxcsr = context.BitwiseAnd(mxcsr, Const(~(int)(Mxcsr.Ftz | Mxcsr.Daz | Mxcsr.Rhi | Mxcsr.Rlo)));
+
+                context.AddIntrinsicNoRet(Intrinsic.X86Ldmxcsr, mxcsr);
+
+                // Status flags would be stored here if they were used.
+            }
+            else if (Optimizations.UseAdvSimd)
+            {
+                Operand fpcr = context.AddIntrinsicInt(Intrinsic.Arm64MrsFpcr);
+
+                // Unset round mode (to nearest) and fz.
+                fpcr = context.BitwiseAnd(fpcr, Const(~(int)(FPCR.Fz | FPCR.RMode0 | FPCR.RMode1)));
+
+                context.AddIntrinsicNoRet(Intrinsic.Arm64MsrFpcr, fpcr);
+
+                // TODO: Store FPSR
+            }
+        }
 
         public static int GetImmShl(OpCodeSimdShImm op)
         {
@@ -465,9 +535,11 @@ namespace ARMeilleure.Instructions
                 ? typeof(SoftFloat32).GetMethod(name)
                 : typeof(SoftFloat64).GetMethod(name);
 
+            context.ExitArmFpMode();
             context.StoreToContext();
             Operand res = context.Call(info, callArgs);
             context.LoadFromContext();
+            context.EnterArmFpMode();
 
             return res;
         }
@@ -1356,39 +1428,6 @@ namespace ARMeilleure.Instructions
 
                 context.Copy(GetVec(op.Rd), emit(part0, part1));
             }
-        }
-
-        [Flags]
-        public enum Mxcsr
-        {
-            Ftz = 1 << 15, // Flush To Zero.
-            Um  = 1 << 11, // Underflow Mask.
-            Dm  = 1 << 8,  // Denormal Mask.
-            Daz = 1 << 6   // Denormals Are Zero.
-        }
-
-        public static void EmitSseOrAvxEnterFtzAndDazModesOpF(ArmEmitterContext context, out Operand isTrue)
-        {
-            isTrue = GetFpFlag(FPState.FzFlag);
-
-            Operand lblTrue = Label();
-            context.BranchIfFalse(lblTrue, isTrue);
-
-            context.AddIntrinsicNoRet(Intrinsic.X86Mxcsrmb, Const((int)(Mxcsr.Ftz | Mxcsr.Um | Mxcsr.Dm | Mxcsr.Daz)));
-
-            context.MarkLabel(lblTrue);
-        }
-
-        public static void EmitSseOrAvxExitFtzAndDazModesOpF(ArmEmitterContext context, Operand isTrue = default)
-        {
-            isTrue = isTrue == default ? GetFpFlag(FPState.FzFlag) : isTrue;
-
-            Operand lblTrue = Label();
-            context.BranchIfFalse(lblTrue, isTrue);
-
-            context.AddIntrinsicNoRet(Intrinsic.X86Mxcsrub, Const((int)(Mxcsr.Ftz | Mxcsr.Daz)));
-
-            context.MarkLabel(lblTrue);
         }
 
         public enum CmpCondition

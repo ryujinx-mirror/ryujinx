@@ -249,10 +249,9 @@ namespace ARMeilleure.CodeGen.X86
                     case IntrinsicType.Mxcsr:
                     {
                         Operand offset = operation.GetSource(0);
-                        Operand bits   = operation.GetSource(1);
 
-                        Debug.Assert(offset.Kind == OperandKind.Constant && bits.Kind == OperandKind.Constant);
-                        Debug.Assert(offset.Type == OperandType.I32 && bits.Type == OperandType.I32);
+                        Debug.Assert(offset.Kind == OperandKind.Constant);
+                        Debug.Assert(offset.Type == OperandType.I32);
 
                         int offs = offset.AsInt32() + context.CallArgsRegionSize;
 
@@ -261,20 +260,22 @@ namespace ARMeilleure.CodeGen.X86
 
                         Debug.Assert(HardwareCapabilities.SupportsSse || HardwareCapabilities.SupportsVexEncoding);
 
-                        context.Assembler.Stmxcsr(memOp);
-
-                        if (operation.Intrinsic == Intrinsic.X86Mxcsrmb)
+                        if (operation.Intrinsic == Intrinsic.X86Ldmxcsr)
                         {
-                            context.Assembler.Or(memOp, bits, OperandType.I32);
+                            Operand bits = operation.GetSource(1);
+                            Debug.Assert(bits.Type == OperandType.I32);
+
+                            context.Assembler.Mov(memOp, bits, OperandType.I32);
+                            context.Assembler.Ldmxcsr(memOp);
                         }
-                        else /* if (intrinOp.Intrinsic == Intrinsic.X86Mxcsrub) */
+                        else if (operation.Intrinsic == Intrinsic.X86Stmxcsr)
                         {
-                            Operand notBits = Const(~bits.AsInt32());
+                            Operand dest = operation.Destination;
+                            Debug.Assert(dest.Type == OperandType.I32);
 
-                            context.Assembler.And(memOp, notBits, OperandType.I32);
+                            context.Assembler.Stmxcsr(memOp);
+                            context.Assembler.Mov(dest, memOp, OperandType.I32);
                         }
-
-                        context.Assembler.Ldmxcsr(memOp);
 
                         break;
                     }

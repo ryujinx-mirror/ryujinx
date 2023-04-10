@@ -192,6 +192,8 @@ namespace ARMeilleure.Instructions
                     SetFpFlag(context, (FPState)flag, context.BitwiseAnd(context.ShiftRightUI(fpcr, Const(flag)), Const(1)));
                 }
             }
+
+            context.UpdateArmFpMode();
         }
 
         private static void EmitSetFpsr(ArmEmitterContext context)
@@ -210,6 +212,8 @@ namespace ARMeilleure.Instructions
                     SetFpFlag(context, (FPState)flag, context.BitwiseAnd(context.ShiftRightUI(fpsr, Const(flag)), Const(1)));
                 }
             }
+
+            context.UpdateArmFpMode();
         }
     }
 }

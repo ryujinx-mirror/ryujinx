@@ -226,6 +226,8 @@ namespace ARMeilleure.CodeGen.Arm64
             Add(Intrinsic.Arm64MlsVe,         new IntrinsicInfo(0x2f004000u, IntrinsicType.VectorTernaryRdByElem));
             Add(Intrinsic.Arm64MlsV,          new IntrinsicInfo(0x2e209400u, IntrinsicType.VectorTernaryRd));
             Add(Intrinsic.Arm64MoviV,         new IntrinsicInfo(0x0f000400u, IntrinsicType.VectorMovi));
+            Add(Intrinsic.Arm64MrsFpcr,       new IntrinsicInfo(0xd53b4400u, IntrinsicType.GetRegister));
+            Add(Intrinsic.Arm64MsrFpcr,       new IntrinsicInfo(0xd51b4400u, IntrinsicType.SetRegister));
             Add(Intrinsic.Arm64MrsFpsr,       new IntrinsicInfo(0xd53b4420u, IntrinsicType.GetRegister));
             Add(Intrinsic.Arm64MsrFpsr,       new IntrinsicInfo(0xd51b4420u, IntrinsicType.SetRegister));
             Add(Intrinsic.Arm64MulVe,         new IntrinsicInfo(0x0f008000u, IntrinsicType.VectorBinaryByElem));

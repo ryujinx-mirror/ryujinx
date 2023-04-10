@@ -268,11 +268,13 @@ namespace ARMeilleure.CodeGen.X86
             Add(X86Instruction.Vblendvps,     new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x000f3a4a, InstructionFlags.Vex | InstructionFlags.Prefix66));
             Add(X86Instruction.Vcvtph2ps,     new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x000f3813, InstructionFlags.Vex | InstructionFlags.Prefix66));
             Add(X86Instruction.Vcvtps2ph,     new InstructionInfo(0x000f3a1d, BadOp,      BadOp,      BadOp,      BadOp,      InstructionFlags.Vex | InstructionFlags.Prefix66));
+            Add(X86Instruction.Vfmadd231pd,   new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x000f38b8, InstructionFlags.Vex | InstructionFlags.Prefix66 | InstructionFlags.RexW));
             Add(X86Instruction.Vfmadd231ps,   new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x000f38b8, InstructionFlags.Vex | InstructionFlags.Prefix66));
             Add(X86Instruction.Vfmadd231sd,   new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x000f38b9, InstructionFlags.Vex | InstructionFlags.Prefix66 | InstructionFlags.RexW));
             Add(X86Instruction.Vfmadd231ss,   new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x000f38b9, InstructionFlags.Vex | InstructionFlags.Prefix66));
             Add(X86Instruction.Vfmsub231sd,   new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x000f38bb, InstructionFlags.Vex | InstructionFlags.Prefix66 | InstructionFlags.RexW));
             Add(X86Instruction.Vfmsub231ss,   new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x000f38bb, InstructionFlags.Vex | InstructionFlags.Prefix66));
+            Add(X86Instruction.Vfnmadd231pd,  new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x000f38bc, InstructionFlags.Vex | InstructionFlags.Prefix66 | InstructionFlags.RexW));
             Add(X86Instruction.Vfnmadd231ps,  new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x000f38bc, InstructionFlags.Vex | InstructionFlags.Prefix66));
             Add(X86Instruction.Vfnmadd231sd,  new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x000f38bd, InstructionFlags.Vex | InstructionFlags.Prefix66 | InstructionFlags.RexW));
             Add(X86Instruction.Vfnmadd231ss,  new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x000f38bd, InstructionFlags.Vex | InstructionFlags.Prefix66));

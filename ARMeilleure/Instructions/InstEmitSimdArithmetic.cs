@@ -615,14 +615,11 @@ namespace ARMeilleure.Instructions
                 {
                     return EmitSse41ProcessNaNsOpF(context, (op1, op2) =>
                     {
-                        return EmitSseOrAvxHandleFzModeOpF(context, (op1, op2) =>
-                        {
-                            IOpCodeSimd op = (IOpCodeSimd)context.CurrOp;
+                        IOpCodeSimd op = (IOpCodeSimd)context.CurrOp;
 
-                            Intrinsic addInst = (op.Size & 1) == 0 ? Intrinsic.X86Addps : Intrinsic.X86Addpd;
+                        Intrinsic addInst = (op.Size & 1) == 0 ? Intrinsic.X86Addps : Intrinsic.X86Addpd;
 
-                            return context.AddIntrinsic(addInst, op1, op2);
-                        }, scalar: false, op1, op2);
+                        return context.AddIntrinsic(addInst, op1, op2);
                     }, scalar: false, op1, op2);
                 });
             }
@@ -696,17 +693,33 @@ namespace ARMeilleure.Instructions
                 Operand n = GetVec(op.Rn);
                 Operand m = GetVec(op.Rm);
 
+                Operand res;
+
                 if (op.Size == 0)
                 {
-                    Operand res = context.AddIntrinsic(Intrinsic.X86Mulss, n, m);
-                            res = context.AddIntrinsic(Intrinsic.X86Addss, a, res);
+                    if (Optimizations.UseFma)
+                    {
+                        res = context.AddIntrinsic(Intrinsic.X86Vfmadd231ss, a, n, m);
+                    }
+                    else
+                    {
+                        res = context.AddIntrinsic(Intrinsic.X86Mulss, n, m);
+                        res = context.AddIntrinsic(Intrinsic.X86Addss, a, res);
+                    }
 
                     context.Copy(d, context.VectorZeroUpper96(res));
                 }
                 else /* if (op.Size == 1) */
                 {
-                    Operand res = context.AddIntrinsic(Intrinsic.X86Mulsd, n, m);
-                            res = context.AddIntrinsic(Intrinsic.X86Addsd, a, res);
+                    if (Optimizations.UseFma)
+                    {
+                        res = context.AddIntrinsic(Intrinsic.X86Vfmadd231sd, a, n, m);
+                    }
+                    else
+                    {
+                        res = context.AddIntrinsic(Intrinsic.X86Mulsd, n, m);
+                        res = context.AddIntrinsic(Intrinsic.X86Addsd, a, res);
+                    }
 
                     context.Copy(d, context.VectorZeroUpper64(res));
                 }
@@ -730,10 +743,7 @@ namespace ARMeilleure.Instructions
             {
                 EmitSse41ProcessNaNsOpF(context, (op1, op2) =>
                 {
-                    return EmitSseOrAvxHandleFzModeOpF(context, (op1, op2) =>
-                    {
-                        return EmitSse2VectorMaxMinOpF(context, op1, op2, isMax: true);
-                    }, scalar: true, op1, op2);
+                    return EmitSse2VectorMaxMinOpF(context, op1, op2, isMax: true);
                 }, scalar: true);
             }
             else
@@ -755,10 +765,7 @@ namespace ARMeilleure.Instructions
             {
                 EmitSse41ProcessNaNsOpF(context, (op1, op2) =>
                 {
-                    return EmitSseOrAvxHandleFzModeOpF(context, (op1, op2) =>
-                    {
-                        return EmitSse2VectorMaxMinOpF(context, op1, op2, isMax: true);
-                    }, scalar: false, op1, op2);
+                    return EmitSse2VectorMaxMinOpF(context, op1, op2, isMax: true);
                 }, scalar: false);
             }
             else
@@ -886,10 +893,7 @@ namespace ARMeilleure.Instructions
                 {
                     return EmitSse41ProcessNaNsOpF(context, (op1, op2) =>
                     {
-                        return EmitSseOrAvxHandleFzModeOpF(context, (op1, op2) =>
-                        {
-                            return EmitSse2VectorMaxMinOpF(context, op1, op2, isMax: true);
-                        }, scalar: false, op1, op2);
+                        return EmitSse2VectorMaxMinOpF(context, op1, op2, isMax: true);
                     }, scalar: false, op1, op2);
                 });
             }
@@ -914,10 +918,7 @@ namespace ARMeilleure.Instructions
                 {
                     return EmitSse41ProcessNaNsOpF(context, (op1, op2) =>
                     {
-                        return EmitSseOrAvxHandleFzModeOpF(context, (op1, op2) =>
-                        {
-                            return EmitSse2VectorMaxMinOpF(context, op1, op2, isMax: true);
-                        }, scalar: false, op1, op2);
+                        return EmitSse2VectorMaxMinOpF(context, op1, op2, isMax: true);
                     }, scalar: false, op1, op2);
                 });
             }
@@ -940,10 +941,7 @@ namespace ARMeilleure.Instructions
             {
                 EmitSse41ProcessNaNsOpF(context, (op1, op2) =>
                 {
-                    return EmitSseOrAvxHandleFzModeOpF(context, (op1, op2) =>
-                    {
-                        return EmitSse2VectorMaxMinOpF(context, op1, op2, isMax: false);
-                    }, scalar: true, op1, op2);
+                    return EmitSse2VectorMaxMinOpF(context, op1, op2, isMax: false);
                 }, scalar: true);
             }
             else
@@ -965,10 +963,7 @@ namespace ARMeilleure.Instructions
             {
                 EmitSse41ProcessNaNsOpF(context, (op1, op2) =>
                 {
-                    return EmitSseOrAvxHandleFzModeOpF(context, (op1, op2) =>
-                    {
-                        return EmitSse2VectorMaxMinOpF(context, op1, op2, isMax: false);
-                    }, scalar: false, op1, op2);
+                    return EmitSse2VectorMaxMinOpF(context, op1, op2, isMax: false);
                 }, scalar: false);
             }
             else
@@ -1096,10 +1091,7 @@ namespace ARMeilleure.Instructions
                 {
                     return EmitSse41ProcessNaNsOpF(context, (op1, op2) =>
                     {
-                        return EmitSseOrAvxHandleFzModeOpF(context, (op1, op2) =>
-                        {
-                            return EmitSse2VectorMaxMinOpF(context, op1, op2, isMax: false);
-                        }, scalar: false, op1, op2);
+                        return EmitSse2VectorMaxMinOpF(context, op1, op2, isMax: false);
                     }, scalar: false, op1, op2);
                 });
             }
@@ -1124,10 +1116,7 @@ namespace ARMeilleure.Instructions
                 {
                     return EmitSse41ProcessNaNsOpF(context, (op1, op2) =>
                     {
-                        return EmitSseOrAvxHandleFzModeOpF(context, (op1, op2) =>
-                        {
-                            return EmitSse2VectorMaxMinOpF(context, op1, op2, isMax: false);
-                        }, scalar: false, op1, op2);
+                        return EmitSse2VectorMaxMinOpF(context, op1, op2, isMax: false);
                     }, scalar: false, op1, op2);
                 });
             }
@@ -1145,6 +1134,37 @@ namespace ARMeilleure.Instructions
             if (Optimizations.UseAdvSimd)
             {
                 InstEmitSimdHelperArm64.EmitScalarTernaryOpFRdByElem(context, Intrinsic.Arm64FmlaSe);
+            }
+            else if (Optimizations.UseFma)
+            {
+                OpCodeSimdRegElemF op = (OpCodeSimdRegElemF)context.CurrOp;
+
+                Operand d = GetVec(op.Rd);
+                Operand n = GetVec(op.Rn);
+                Operand m = GetVec(op.Rm);
+
+                int sizeF = op.Size & 1;
+
+                if (sizeF == 0)
+                {
+                    int shuffleMask = op.Index | op.Index << 2 | op.Index << 4 | op.Index << 6;
+
+                    Operand res = context.AddIntrinsic(Intrinsic.X86Shufps, m, m, Const(shuffleMask));
+
+                    res = context.AddIntrinsic(Intrinsic.X86Vfmadd231ss, d, n, res);
+
+                    context.Copy(d, context.VectorZeroUpper96(res));
+                }
+                else /* if (sizeF == 1) */
+                {
+                    int shuffleMask = op.Index | op.Index << 1;
+
+                    Operand res = context.AddIntrinsic(Intrinsic.X86Shufpd, m, m, Const(shuffleMask));
+
+                    res = context.AddIntrinsic(Intrinsic.X86Vfmadd231sd, d, n, res);
+
+                    context.Copy(d, context.VectorZeroUpper64(res));
+                }
             }
             else
             {
@@ -1171,11 +1191,19 @@ namespace ARMeilleure.Instructions
 
                 int sizeF = op.Size & 1;
 
+                Operand res;
+
                 if (sizeF == 0)
                 {
-                    Operand res = context.AddIntrinsic(Intrinsic.X86Mulps, n, m);
-
-                    res = context.AddIntrinsic(Intrinsic.X86Addps, d, res);
+                    if (Optimizations.UseFma)
+                    {
+                        res = context.AddIntrinsic(Intrinsic.X86Vfmadd231ps, d, n, m);
+                    }
+                    else
+                    {
+                        res = context.AddIntrinsic(Intrinsic.X86Mulps, n, m);
+                        res = context.AddIntrinsic(Intrinsic.X86Addps, d, res);
+                    }
 
                     if (op.RegisterSize == RegisterSize.Simd64)
                     {
@@ -1186,9 +1214,15 @@ namespace ARMeilleure.Instructions
                 }
                 else /* if (sizeF == 1) */
                 {
-                    Operand res = context.AddIntrinsic(Intrinsic.X86Mulpd, n, m);
-
-                    res = context.AddIntrinsic(Intrinsic.X86Addpd, d, res);
+                    if (Optimizations.UseFma)
+                    {
+                        res = context.AddIntrinsic(Intrinsic.X86Vfmadd231pd, d, n, m);
+                    }
+                    else
+                    {
+                        res = context.AddIntrinsic(Intrinsic.X86Mulpd, n, m);
+                        res = context.AddIntrinsic(Intrinsic.X86Addpd, d, res);
+                    }
 
                     context.Copy(d, res);
                 }
@@ -1224,8 +1258,15 @@ namespace ARMeilleure.Instructions
 
                     Operand res = context.AddIntrinsic(Intrinsic.X86Shufps, m, m, Const(shuffleMask));
 
-                    res = context.AddIntrinsic(Intrinsic.X86Mulps, n, res);
-                    res = context.AddIntrinsic(Intrinsic.X86Addps, d, res);
+                    if (Optimizations.UseFma)
+                    {
+                        res = context.AddIntrinsic(Intrinsic.X86Vfmadd231ps, d, n, res);
+                    }
+                    else
+                    {
+                        res = context.AddIntrinsic(Intrinsic.X86Mulps, n, res);
+                        res = context.AddIntrinsic(Intrinsic.X86Addps, d, res);
+                    }
 
                     if (op.RegisterSize == RegisterSize.Simd64)
                     {
@@ -1240,8 +1281,15 @@ namespace ARMeilleure.Instructions
 
                     Operand res = context.AddIntrinsic(Intrinsic.X86Shufpd, m, m, Const(shuffleMask));
 
-                    res = context.AddIntrinsic(Intrinsic.X86Mulpd, n, res);
-                    res = context.AddIntrinsic(Intrinsic.X86Addpd, d, res);
+                    if (Optimizations.UseFma)
+                    {
+                        res = context.AddIntrinsic(Intrinsic.X86Vfmadd231pd, d, n, res);
+                    }
+                    else
+                    {
+                        res = context.AddIntrinsic(Intrinsic.X86Mulpd, n, res);
+                        res = context.AddIntrinsic(Intrinsic.X86Addpd, d, res);
+                    }
 
                     context.Copy(d, res);
                 }
@@ -1260,6 +1308,37 @@ namespace ARMeilleure.Instructions
             if (Optimizations.UseAdvSimd)
             {
                 InstEmitSimdHelperArm64.EmitScalarTernaryOpFRdByElem(context, Intrinsic.Arm64FmlsSe);
+            }
+            else if (Optimizations.UseFma)
+            {
+                OpCodeSimdRegElemF op = (OpCodeSimdRegElemF)context.CurrOp;
+
+                Operand d = GetVec(op.Rd);
+                Operand n = GetVec(op.Rn);
+                Operand m = GetVec(op.Rm);
+
+                int sizeF = op.Size & 1;
+
+                if (sizeF == 0)
+                {
+                    int shuffleMask = op.Index | op.Index << 2 | op.Index << 4 | op.Index << 6;
+
+                    Operand res = context.AddIntrinsic(Intrinsic.X86Shufps, m, m, Const(shuffleMask));
+
+                    res = context.AddIntrinsic(Intrinsic.X86Vfnmadd231ss, d, n, res);
+
+                    context.Copy(d, context.VectorZeroUpper96(res));
+                }
+                else /* if (sizeF == 1) */
+                {
+                    int shuffleMask = op.Index | op.Index << 1;
+
+                    Operand res = context.AddIntrinsic(Intrinsic.X86Shufpd, m, m, Const(shuffleMask));
+
+                    res = context.AddIntrinsic(Intrinsic.X86Vfnmadd231sd, d, n, res);
+
+                    context.Copy(d, context.VectorZeroUpper64(res));
+                }
             }
             else
             {
@@ -1286,11 +1365,19 @@ namespace ARMeilleure.Instructions
 
                 int sizeF = op.Size & 1;
 
+                Operand res;
+
                 if (sizeF == 0)
                 {
-                    Operand res = context.AddIntrinsic(Intrinsic.X86Mulps, n, m);
-
-                    res = context.AddIntrinsic(Intrinsic.X86Subps, d, res);
+                    if (Optimizations.UseFma)
+                    {
+                        res = context.AddIntrinsic(Intrinsic.X86Vfnmadd231ps, d, n, m);
+                    }
+                    else
+                    {
+                        res = context.AddIntrinsic(Intrinsic.X86Mulps, n, m);
+                        res = context.AddIntrinsic(Intrinsic.X86Subps, d, res);
+                    }
 
                     if (op.RegisterSize == RegisterSize.Simd64)
                     {
@@ -1301,9 +1388,15 @@ namespace ARMeilleure.Instructions
                 }
                 else /* if (sizeF == 1) */
                 {
-                    Operand res = context.AddIntrinsic(Intrinsic.X86Mulpd, n, m);
-
-                    res = context.AddIntrinsic(Intrinsic.X86Subpd, d, res);
+                    if (Optimizations.UseFma)
+                    {
+                        res = context.AddIntrinsic(Intrinsic.X86Vfnmadd231pd, d, n, m);
+                    }
+                    else
+                    {
+                        res = context.AddIntrinsic(Intrinsic.X86Mulpd, n, m);
+                        res = context.AddIntrinsic(Intrinsic.X86Subpd, d, res);
+                    }
 
                     context.Copy(d, res);
                 }
@@ -1339,8 +1432,15 @@ namespace ARMeilleure.Instructions
 
                     Operand res = context.AddIntrinsic(Intrinsic.X86Shufps, m, m, Const(shuffleMask));
 
-                    res = context.AddIntrinsic(Intrinsic.X86Mulps, n, res);
-                    res = context.AddIntrinsic(Intrinsic.X86Subps, d, res);
+                    if (Optimizations.UseFma)
+                    {
+                        res = context.AddIntrinsic(Intrinsic.X86Vfnmadd231ps, d, n, res);
+                    }
+                    else
+                    {
+                        res = context.AddIntrinsic(Intrinsic.X86Mulps, n, res);
+                        res = context.AddIntrinsic(Intrinsic.X86Subps, d, res);
+                    }
 
                     if (op.RegisterSize == RegisterSize.Simd64)
                     {
@@ -1355,8 +1455,15 @@ namespace ARMeilleure.Instructions
 
                     Operand res = context.AddIntrinsic(Intrinsic.X86Shufpd, m, m, Const(shuffleMask));
 
-                    res = context.AddIntrinsic(Intrinsic.X86Mulpd, n, res);
-                    res = context.AddIntrinsic(Intrinsic.X86Subpd, d, res);
+                    if (Optimizations.UseFma)
+                    {
+                        res = context.AddIntrinsic(Intrinsic.X86Vfnmadd231pd, d, n, res);
+                    }
+                    else
+                    {
+                        res = context.AddIntrinsic(Intrinsic.X86Mulpd, n, res);
+                        res = context.AddIntrinsic(Intrinsic.X86Subpd, d, res);
+                    }
 
                     context.Copy(d, res);
                 }
@@ -1385,17 +1492,33 @@ namespace ARMeilleure.Instructions
                 Operand n = GetVec(op.Rn);
                 Operand m = GetVec(op.Rm);
 
+                Operand res;
+
                 if (op.Size == 0)
                 {
-                    Operand res = context.AddIntrinsic(Intrinsic.X86Mulss, n, m);
-                            res = context.AddIntrinsic(Intrinsic.X86Subss, a, res);
+                    if (Optimizations.UseFma)
+                    {
+                        res = context.AddIntrinsic(Intrinsic.X86Vfnmadd231ss, a, n, m);
+                    }
+                    else
+                    {
+                        res = context.AddIntrinsic(Intrinsic.X86Mulss, n, m);
+                        res = context.AddIntrinsic(Intrinsic.X86Subss, a, res);
+                    }
 
                     context.Copy(d, context.VectorZeroUpper96(res));
                 }
                 else /* if (op.Size == 1) */
                 {
-                    Operand res = context.AddIntrinsic(Intrinsic.X86Mulsd, n, m);
-                            res = context.AddIntrinsic(Intrinsic.X86Subsd, a, res);
+                    if (Optimizations.UseFma)
+                    {
+                        res = context.AddIntrinsic(Intrinsic.X86Vfnmadd231sd, a, n, m);
+                    }
+                    else
+                    {
+                        res = context.AddIntrinsic(Intrinsic.X86Mulsd, n, m);
+                        res = context.AddIntrinsic(Intrinsic.X86Subsd, a, res);
+                    }
 
                     context.Copy(d, context.VectorZeroUpper64(res));
                 }
@@ -1669,25 +1792,39 @@ namespace ARMeilleure.Instructions
                 Operand n = GetVec(op.Rn);
                 Operand m = GetVec(op.Rm);
 
+                Operand res;
+
                 if (op.Size == 0)
                 {
-                    Operand mask = X86GetScalar(context, -0f);
+                    if (Optimizations.UseFma)
+                    {
+                        res = context.AddIntrinsic(Intrinsic.X86Vfnmsub231ss, a, n, m);
+                    }
+                    else
+                    {
+                        Operand mask = X86GetScalar(context, -0f);
+                        Operand aNeg = context.AddIntrinsic(Intrinsic.X86Xorps, mask, a);
 
-                    Operand aNeg = context.AddIntrinsic(Intrinsic.X86Xorps, mask, a);
-
-                    Operand res = context.AddIntrinsic(Intrinsic.X86Mulss, n, m);
-                            res = context.AddIntrinsic(Intrinsic.X86Subss, aNeg, res);
+                        res = context.AddIntrinsic(Intrinsic.X86Mulss, n, m);
+                        res = context.AddIntrinsic(Intrinsic.X86Subss, aNeg, res);
+                    }
 
                     context.Copy(d, context.VectorZeroUpper96(res));
                 }
                 else /* if (op.Size == 1) */
                 {
-                    Operand mask = X86GetScalar(context, -0d);
+                    if (Optimizations.UseFma)
+                    {
+                        res = context.AddIntrinsic(Intrinsic.X86Vfnmsub231sd, a, n, m);
+                    }
+                    else
+                    {
+                        Operand mask = X86GetScalar(context, -0d);
+                        Operand aNeg = context.AddIntrinsic(Intrinsic.X86Xorpd, mask, a);
 
-                    Operand aNeg = context.AddIntrinsic(Intrinsic.X86Xorpd, mask, a);
-
-                    Operand res = context.AddIntrinsic(Intrinsic.X86Mulsd, n, m);
-                            res = context.AddIntrinsic(Intrinsic.X86Subsd, aNeg, res);
+                        res = context.AddIntrinsic(Intrinsic.X86Mulsd, n, m);
+                        res = context.AddIntrinsic(Intrinsic.X86Subsd, aNeg, res);
+                    }
 
                     context.Copy(d, context.VectorZeroUpper64(res));
                 }
@@ -1716,25 +1853,39 @@ namespace ARMeilleure.Instructions
                 Operand n = GetVec(op.Rn);
                 Operand m = GetVec(op.Rm);
 
+                Operand res;
+
                 if (op.Size == 0)
                 {
-                    Operand mask = X86GetScalar(context, -0f);
+                    if (Optimizations.UseFma)
+                    {
+                        res = context.AddIntrinsic(Intrinsic.X86Vfmsub231ss, a, n, m);
+                    }
+                    else
+                    {
+                        Operand mask = X86GetScalar(context, -0f);
+                        Operand aNeg = context.AddIntrinsic(Intrinsic.X86Xorps, mask, a);
 
-                    Operand aNeg = context.AddIntrinsic(Intrinsic.X86Xorps, mask, a);
-
-                    Operand res = context.AddIntrinsic(Intrinsic.X86Mulss, n, m);
-                            res = context.AddIntrinsic(Intrinsic.X86Addss, aNeg, res);
+                        res = context.AddIntrinsic(Intrinsic.X86Mulss, n, m);
+                        res = context.AddIntrinsic(Intrinsic.X86Addss, aNeg, res);
+                    }
 
                     context.Copy(d, context.VectorZeroUpper96(res));
                 }
                 else /* if (op.Size == 1) */
                 {
-                    Operand mask = X86GetScalar(context, -0d);
+                    if (Optimizations.UseFma)
+                    {
+                        res = context.AddIntrinsic(Intrinsic.X86Vfmsub231sd, a, n, m);
+                    }
+                    else
+                    {
+                        Operand mask = X86GetScalar(context, -0d);
+                        Operand aNeg = context.AddIntrinsic(Intrinsic.X86Xorpd, mask, a);
 
-                    Operand aNeg = context.AddIntrinsic(Intrinsic.X86Xorpd, mask, a);
-
-                    Operand res = context.AddIntrinsic(Intrinsic.X86Mulsd, n, m);
-                            res = context.AddIntrinsic(Intrinsic.X86Addsd, aNeg, res);
+                        res = context.AddIntrinsic(Intrinsic.X86Mulsd, n, m);
+                        res = context.AddIntrinsic(Intrinsic.X86Addsd, aNeg, res);
+                    }
 
                     context.Copy(d, context.VectorZeroUpper64(res));
                 }
@@ -1830,13 +1981,22 @@ namespace ARMeilleure.Instructions
 
                 int sizeF = op.Size & 1;
 
+                Operand res;
+
                 if (sizeF == 0)
                 {
                     Operand mask = X86GetScalar(context, 2f);
 
-                    Operand res = context.AddIntrinsic(Intrinsic.X86Mulss, n, m);
+                    if (Optimizations.UseFma)
+                    {
+                        res = context.AddIntrinsic(Intrinsic.X86Vfnmadd231ss, mask, n, m);
+                    }
+                    else
+                    {
+                        res = context.AddIntrinsic(Intrinsic.X86Mulss, n, m);
+                        res = context.AddIntrinsic(Intrinsic.X86Subss, mask, res);
+                    }
 
-                    res = context.AddIntrinsic(Intrinsic.X86Subss, mask, res);
                     res = EmitSse41RecipStepSelectOpF(context, n, m, res, mask, scalar: true, sizeF);
 
                     context.Copy(GetVec(op.Rd), context.VectorZeroUpper96(res));
@@ -1845,9 +2005,16 @@ namespace ARMeilleure.Instructions
                 {
                     Operand mask = X86GetScalar(context, 2d);
 
-                    Operand res = context.AddIntrinsic(Intrinsic.X86Mulsd, n, m);
+                    if (Optimizations.UseFma)
+                    {
+                        res = context.AddIntrinsic(Intrinsic.X86Vfnmadd231sd, mask, n, m);
+                    }
+                    else
+                    {
+                        res = context.AddIntrinsic(Intrinsic.X86Mulsd, n, m);
+                        res = context.AddIntrinsic(Intrinsic.X86Subsd, mask, res);
+                    }
 
-                    res = context.AddIntrinsic(Intrinsic.X86Subsd, mask, res);
                     res = EmitSse41RecipStepSelectOpF(context, n, m, res, mask, scalar: true, sizeF);
 
                     context.Copy(GetVec(op.Rd), context.VectorZeroUpper64(res));
@@ -1877,14 +2044,23 @@ namespace ARMeilleure.Instructions
 
                 int sizeF = op.Size & 1;
 
+                Operand res;
+
                 if (sizeF == 0)
                 {
                     Operand mask = X86GetAllElements(context, 2f);
 
-                    Operand res = context.AddIntrinsic(Intrinsic.X86Mulps, n, m);
-                    res = EmitSse41RecipStepSelectOpF(context, n, m, res, mask, scalar: false, sizeF);
+                    if (Optimizations.UseFma)
+                    {
+                        res = context.AddIntrinsic(Intrinsic.X86Vfnmadd231ps, mask, n, m);
+                    }
+                    else
+                    {
+                        res = context.AddIntrinsic(Intrinsic.X86Mulps, n, m);
+                        res = context.AddIntrinsic(Intrinsic.X86Subps, mask, res);
+                    }
 
-                    res = context.AddIntrinsic(Intrinsic.X86Subps, mask, res);
+                    res = EmitSse41RecipStepSelectOpF(context, n, m, res, mask, scalar: false, sizeF);
 
                     if (op.RegisterSize == RegisterSize.Simd64)
                     {
@@ -1897,10 +2073,17 @@ namespace ARMeilleure.Instructions
                 {
                     Operand mask = X86GetAllElements(context, 2d);
 
-                    Operand res = context.AddIntrinsic(Intrinsic.X86Mulpd, n, m);
-                    res = EmitSse41RecipStepSelectOpF(context, n, m, res, mask, scalar: false, sizeF);
+                    if (Optimizations.UseFma)
+                    {
+                        res = context.AddIntrinsic(Intrinsic.X86Vfnmadd231pd, mask, n, m);
+                    }
+                    else
+                    {
+                        res = context.AddIntrinsic(Intrinsic.X86Mulpd, n, m);
+                        res = context.AddIntrinsic(Intrinsic.X86Subpd, mask, res);
+                    }
 
-                    res = context.AddIntrinsic(Intrinsic.X86Subpd, mask, res);
+                    res = EmitSse41RecipStepSelectOpF(context, n, m, res, mask, scalar: false, sizeF);
 
                     context.Copy(GetVec(op.Rd), res);
                 }
@@ -2113,20 +2296,32 @@ namespace ARMeilleure.Instructions
 
         public static void Frintx_S(ArmEmitterContext context)
         {
-            // TODO Arm64: Fast path. Should we set host FPCR?
-            EmitScalarUnaryOpF(context, (op1) =>
+            if (Optimizations.UseAdvSimd)
             {
-                return EmitRoundByRMode(context, op1);
-            });
+                InstEmitSimdHelperArm64.EmitScalarUnaryOpF(context, Intrinsic.Arm64FrintxS);
+            }
+            else
+            {
+                EmitScalarUnaryOpF(context, (op1) =>
+                {
+                    return EmitRoundByRMode(context, op1);
+                });
+            }
         }
 
         public static void Frintx_V(ArmEmitterContext context)
         {
-            // TODO Arm64: Fast path. Should we set host FPCR?
-            EmitVectorUnaryOpF(context, (op1) =>
+            if (Optimizations.UseAdvSimd)
             {
-                return EmitRoundByRMode(context, op1);
-            });
+                InstEmitSimdHelperArm64.EmitVectorUnaryOpF(context, Intrinsic.Arm64FrintxV);
+            }
+            else
+            {
+                EmitVectorUnaryOpF(context, (op1) =>
+                {
+                    return EmitRoundByRMode(context, op1);
+                });
+            }
         }
 
         public static void Frintz_S(ArmEmitterContext context)
@@ -2237,16 +2432,25 @@ namespace ARMeilleure.Instructions
 
                 int sizeF = op.Size & 1;
 
+                Operand res;
+
                 if (sizeF == 0)
                 {
                     Operand maskHalf    = X86GetScalar(context, 0.5f);
                     Operand maskThree   = X86GetScalar(context, 3f);
                     Operand maskOneHalf = X86GetScalar(context, 1.5f);
 
-                    Operand res = context.AddIntrinsic(Intrinsic.X86Mulss, n, m);
+                    if (Optimizations.UseFma)
+                    {
+                        res = context.AddIntrinsic(Intrinsic.X86Vfnmadd231ss, maskThree, n, m);
+                    }
+                    else
+                    {
+                        res = context.AddIntrinsic(Intrinsic.X86Mulss, n, m);
+                        res = context.AddIntrinsic(Intrinsic.X86Subss, maskThree, res);
+                    }
 
-                    res = context.AddIntrinsic(Intrinsic.X86Subss, maskThree, res);
-                    res = context.AddIntrinsic(Intrinsic.X86Mulss, maskHalf,  res);
+                    res = context.AddIntrinsic(Intrinsic.X86Mulss, maskHalf, res);
                     res = EmitSse41RecipStepSelectOpF(context, n, m, res, maskOneHalf, scalar: true, sizeF);
 
                     context.Copy(GetVec(op.Rd), context.VectorZeroUpper96(res));
@@ -2257,10 +2461,17 @@ namespace ARMeilleure.Instructions
                     Operand maskThree   = X86GetScalar(context, 3d);
                     Operand maskOneHalf = X86GetScalar(context, 1.5d);
 
-                    Operand res = context.AddIntrinsic(Intrinsic.X86Mulsd, n, m);
+                    if (Optimizations.UseFma)
+                    {
+                        res = context.AddIntrinsic(Intrinsic.X86Vfnmadd231sd, maskThree, n, m);
+                    }
+                    else
+                    {
+                        res = context.AddIntrinsic(Intrinsic.X86Mulsd, n, m);
+                        res = context.AddIntrinsic(Intrinsic.X86Subsd, maskThree, res);
+                    }
 
-                    res = context.AddIntrinsic(Intrinsic.X86Subsd, maskThree, res);
-                    res = context.AddIntrinsic(Intrinsic.X86Mulsd, maskHalf,  res);
+                    res = context.AddIntrinsic(Intrinsic.X86Mulsd, maskHalf, res);
                     res = EmitSse41RecipStepSelectOpF(context, n, m, res, maskOneHalf, scalar: true, sizeF);
 
                     context.Copy(GetVec(op.Rd), context.VectorZeroUpper64(res));
@@ -2290,15 +2501,24 @@ namespace ARMeilleure.Instructions
 
                 int sizeF = op.Size & 1;
 
+                Operand res;
+
                 if (sizeF == 0)
                 {
                     Operand maskHalf    = X86GetAllElements(context, 0.5f);
                     Operand maskThree   = X86GetAllElements(context, 3f);
                     Operand maskOneHalf = X86GetAllElements(context, 1.5f);
 
-                    Operand res = context.AddIntrinsic(Intrinsic.X86Mulps, n, m);
+                    if (Optimizations.UseFma)
+                    {
+                        res = context.AddIntrinsic(Intrinsic.X86Vfnmadd231ps, maskThree, n, m);
+                    }
+                    else
+                    {
+                        res = context.AddIntrinsic(Intrinsic.X86Mulps, n, m);
+                        res = context.AddIntrinsic(Intrinsic.X86Subps, maskThree, res);
+                    }
 
-                    res = context.AddIntrinsic(Intrinsic.X86Subps, maskThree, res);
                     res = context.AddIntrinsic(Intrinsic.X86Mulps, maskHalf,  res);
                     res = EmitSse41RecipStepSelectOpF(context, n, m, res, maskOneHalf, scalar: false, sizeF);
 
@@ -2315,9 +2535,16 @@ namespace ARMeilleure.Instructions
                     Operand maskThree   = X86GetAllElements(context, 3d);
                     Operand maskOneHalf = X86GetAllElements(context, 1.5d);
 
-                    Operand res = context.AddIntrinsic(Intrinsic.X86Mulpd, n, m);
+                    if (Optimizations.UseFma)
+                    {
+                        res = context.AddIntrinsic(Intrinsic.X86Vfnmadd231pd, maskThree, n, m);
+                    }
+                    else
+                    {
+                        res = context.AddIntrinsic(Intrinsic.X86Mulpd, n, m);
+                        res = context.AddIntrinsic(Intrinsic.X86Subpd, maskThree, res);
+                    }
 
-                    res = context.AddIntrinsic(Intrinsic.X86Subpd, maskThree, res);
                     res = context.AddIntrinsic(Intrinsic.X86Mulpd, maskHalf,  res);
                     res = EmitSse41RecipStepSelectOpF(context, n, m, res, maskOneHalf, scalar: false, sizeF);
 
@@ -4728,53 +4955,6 @@ namespace ARMeilleure.Instructions
             }
         }
 
-        public static Operand EmitSseOrAvxHandleFzModeOpF(
-            ArmEmitterContext context,
-            Func2I emit,
-            bool scalar,
-            Operand n = default,
-            Operand m = default)
-        {
-            Operand nCopy = n == default ? context.Copy(GetVec(((OpCodeSimdReg)context.CurrOp).Rn)) : n;
-            Operand mCopy = m == default ? context.Copy(GetVec(((OpCodeSimdReg)context.CurrOp).Rm)) : m;
-
-            EmitSseOrAvxEnterFtzAndDazModesOpF(context, out Operand isTrue);
-
-            Operand res = emit(nCopy, mCopy);
-
-            EmitSseOrAvxExitFtzAndDazModesOpF(context, isTrue);
-
-            if (n != default || m != default)
-            {
-                return res;
-            }
-
-            int sizeF = ((IOpCodeSimd)context.CurrOp).Size & 1;
-
-            if (sizeF == 0)
-            {
-                if (scalar)
-                {
-                    res = context.VectorZeroUpper96(res);
-                }
-                else if (((OpCodeSimdReg)context.CurrOp).RegisterSize == RegisterSize.Simd64)
-                {
-                    res = context.VectorZeroUpper64(res);
-                }
-            }
-            else /* if (sizeF == 1) */
-            {
-                if (scalar)
-                {
-                    res = context.VectorZeroUpper64(res);
-                }
-            }
-
-            context.Copy(GetVec(((OpCodeSimdReg)context.CurrOp).Rd), res);
-
-            return default;
-        }
-
         private static Operand EmitSse2VectorMaxMinOpF(ArmEmitterContext context, Operand n, Operand m, bool isMax)
         {
             IOpCodeSimd op = (IOpCodeSimd)context.CurrOp;
@@ -4834,10 +5014,7 @@ namespace ARMeilleure.Instructions
 
                 Operand res = EmitSse41ProcessNaNsOpF(context, (op1, op2) =>
                 {
-                    return EmitSseOrAvxHandleFzModeOpF(context, (op1, op2) =>
-                    {
-                        return EmitSse2VectorMaxMinOpF(context, op1, op2, isMax: isMaxNum);
-                    }, scalar: scalar, op1, op2);
+                    return EmitSse2VectorMaxMinOpF(context, op1, op2, isMax: isMaxNum);
                 }, scalar: scalar, nCopy, mCopy);
 
                 if (n != default || m != default)
@@ -4872,10 +5049,7 @@ namespace ARMeilleure.Instructions
 
                 Operand res = EmitSse41ProcessNaNsOpF(context, (op1, op2) =>
                 {
-                    return EmitSseOrAvxHandleFzModeOpF(context, (op1, op2) =>
-                    {
-                        return EmitSse2VectorMaxMinOpF(context, op1, op2, isMax: isMaxNum);
-                    }, scalar: scalar, op1, op2);
+                    return EmitSse2VectorMaxMinOpF(context, op1, op2, isMax: isMaxNum);
                 }, scalar: scalar, nCopy, mCopy);
 
                 if (n != default || m != default)

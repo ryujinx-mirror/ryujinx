@@ -321,6 +321,8 @@ namespace ARMeilleure.Instructions
                     SetFpFlag(context, (FPState)flag, context.BitwiseAnd(context.ShiftRightUI(fpscr, Const(flag)), Const(1)));
                 }
             }
+
+            context.UpdateArmFpMode();
         }
     }
 }
