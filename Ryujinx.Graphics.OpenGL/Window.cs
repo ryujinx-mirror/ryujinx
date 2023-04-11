@@ -226,6 +226,7 @@ namespace Ryujinx.Graphics.OpenGL
             // Set clip control, viewport and the framebuffer to the output to placate overlays and OBS capture.
             GL.ClipControl(ClipOrigin.LowerLeft, ClipDepthMode.NegativeOneToOne);
             GL.Viewport(0, 0, _width, _height);
+            GL.BindFramebuffer(FramebufferTarget.Framebuffer, drawFramebuffer);
 
             swapBuffersCallback();
 
