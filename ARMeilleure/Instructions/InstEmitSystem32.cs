@@ -23,8 +23,6 @@ namespace ARMeilleure.Instructions
                 return;
             }
 
-            MethodInfo info;
-
             switch (op.CRn)
             {
                 case 13: // Process and Thread Info.
@@ -36,13 +34,11 @@ namespace ARMeilleure.Instructions
                     switch (op.Opc2)
                     {
                         case 2:
-                            info = typeof(NativeInterface).GetMethod(nameof(NativeInterface.SetTpidrEl032)); break;
+                            EmitSetTpidrEl0(context); return;
 
                         default:
                             throw new NotImplementedException($"Unknown MRC Opc2 0x{op.Opc2:X} at 0x{op.Address:X} (0x{op.RawOpCode:X}).");
                     }
-
-                    break;
 
                 case 7:
                     switch (op.CRm) // Cache and Memory barrier.
@@ -64,8 +60,6 @@ namespace ARMeilleure.Instructions
                 default:
                     throw new NotImplementedException($"Unknown MRC 0x{op.RawOpCode:X8} at 0x{op.Address:X16}.");
             }
-
-            context.Call(info, GetIntA32(context, op.Rt));
         }
 
         public static void Mrc(ArmEmitterContext context)
@@ -79,7 +73,7 @@ namespace ARMeilleure.Instructions
                 return;
             }
 
-            MethodInfo info;
+            Operand result;
 
             switch (op.CRn)
             {
@@ -92,10 +86,10 @@ namespace ARMeilleure.Instructions
                     switch (op.Opc2)
                     {
                         case 2:
-                            info = typeof(NativeInterface).GetMethod(nameof(NativeInterface.GetTpidrEl032)); break;
+                            result = EmitGetTpidrEl0(context); break;
 
                         case 3:
-                            info = typeof(NativeInterface).GetMethod(nameof(NativeInterface.GetTpidr32)); break;
+                            result = EmitGetTpidrroEl0(context); break;
 
                         default:
                             throw new NotImplementedException($"Unknown MRC Opc2 0x{op.Opc2:X} at 0x{op.Address:X} (0x{op.RawOpCode:X}).");
@@ -110,13 +104,13 @@ namespace ARMeilleure.Instructions
             if (op.Rt == RegisterAlias.Aarch32Pc)
             {
                 // Special behavior: copy NZCV flags into APSR.
-                EmitSetNzcv(context, context.Call(info));
+                EmitSetNzcv(context, result);
 
                 return;
             }
             else
             {
-                SetIntA32(context, op.Rt, context.Call(info));
+                SetIntA32(context, op.Rt, result);
             }
         }
 
@@ -323,6 +317,35 @@ namespace ARMeilleure.Instructions
             }
 
             context.UpdateArmFpMode();
+        }
+
+        private static Operand EmitGetTpidrEl0(ArmEmitterContext context)
+        {
+            OpCode32System op = (OpCode32System)context.CurrOp;
+
+            Operand nativeContext = context.LoadArgument(OperandType.I64, 0);
+
+            return context.Load(OperandType.I64, context.Add(nativeContext, Const((ulong)NativeContext.GetTpidrEl0Offset())));
+        }
+
+        private static Operand EmitGetTpidrroEl0(ArmEmitterContext context)
+        {
+            OpCode32System op = (OpCode32System)context.CurrOp;
+
+            Operand nativeContext = context.LoadArgument(OperandType.I64, 0);
+
+            return context.Load(OperandType.I64, context.Add(nativeContext, Const((ulong)NativeContext.GetTpidrroEl0Offset())));
+        }
+
+        private static void EmitSetTpidrEl0(ArmEmitterContext context)
+        {
+            OpCode32System op = (OpCode32System)context.CurrOp;
+
+            Operand value = GetIntA32(context, op.Rt);
+
+            Operand nativeContext = context.LoadArgument(OperandType.I64, 0);
+
+            context.Store(context.Add(nativeContext, Const((ulong)NativeContext.GetTpidrEl0Offset())), context.ZeroExtend32(OperandType.I64, value));
         }
     }
 }

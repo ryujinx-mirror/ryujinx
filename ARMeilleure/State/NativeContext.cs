@@ -13,6 +13,8 @@ namespace ARMeilleure.State
             public fixed ulong V[RegisterConsts.VecRegsCount * 2];
             public fixed uint Flags[RegisterConsts.FlagsCount];
             public fixed uint FpFlags[RegisterConsts.FpFlagsCount];
+            public long TpidrEl0;
+            public long TpidrroEl0;
             public int Counter;
             public ulong DispatchAddress;
             public ulong ExclusiveAddress;
@@ -168,6 +170,12 @@ namespace ARMeilleure.State
             }
         }
 
+        public long GetTpidrEl0() => GetStorage().TpidrEl0;
+        public void SetTpidrEl0(long value) => GetStorage().TpidrEl0 = value;
+
+        public long GetTpidrroEl0() => GetStorage().TpidrroEl0;
+        public void SetTpidrroEl0(long value) => GetStorage().TpidrroEl0 = value;
+
         public int GetCounter() => GetStorage().Counter;
         public void SetCounter(int value) => GetStorage().Counter = value;
 
@@ -212,6 +220,16 @@ namespace ARMeilleure.State
 
                 return StorageOffset(ref _dummyStorage, ref _dummyStorage.FpFlags[reg.Index]);
             }
+        }
+
+        public static int GetTpidrEl0Offset()
+        {
+            return StorageOffset(ref _dummyStorage, ref _dummyStorage.TpidrEl0);
+        }
+
+        public static int GetTpidrroEl0Offset()
+        {
+            return StorageOffset(ref _dummyStorage, ref _dummyStorage.TpidrroEl0);
         }
 
         public static int GetCounterOffset()

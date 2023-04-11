@@ -27,8 +27,17 @@ namespace ARMeilleure.State
         // Since EL2 isn't implemented, CNTVOFF_EL2 = 0
         public ulong CntvctEl0 => CntpctEl0;
 
-        public long TpidrEl0 { get; set; }
-        public long TpidrroEl0 { get; set; }
+        public long TpidrEl0
+        {
+            get => _nativeContext.GetTpidrEl0();
+            set => _nativeContext.SetTpidrEl0(value);
+        }
+
+        public long TpidrroEl0
+        {
+            get => _nativeContext.GetTpidrroEl0();
+            set => _nativeContext.SetTpidrroEl0(value);
+        }
 
         public uint Pstate
         {

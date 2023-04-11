@@ -72,26 +72,6 @@ namespace ARMeilleure.Instructions
             return (ulong)GetContext().DczidEl0;
         }
 
-        public static ulong GetTpidrEl0()
-        {
-            return (ulong)GetContext().TpidrEl0;
-        }
-
-        public static uint GetTpidrEl032()
-        {
-            return (uint)GetContext().TpidrEl0;
-        }
-
-        public static ulong GetTpidrroEl0()
-        {
-            return (ulong)GetContext().TpidrroEl0;
-        }
-
-        public static uint GetTpidr32()
-        {
-            return (uint)GetContext().TpidrroEl0;
-        }
-
         public static ulong GetCntfrqEl0()
         {
             return GetContext().CntfrqEl0;
@@ -105,16 +85,6 @@ namespace ARMeilleure.Instructions
         public static ulong GetCntvctEl0()
         {
             return GetContext().CntvctEl0;
-        }
-
-        public static void SetTpidrEl0(ulong value)
-        {
-            GetContext().TpidrEl0 = (long)value;
-        }
-
-        public static void SetTpidrEl032(uint value)
-        {
-            GetContext().TpidrEl0 = (long)value;
         }
         #endregion
 

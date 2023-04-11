@@ -33,8 +33,8 @@ namespace ARMeilleure.Instructions
                 case 0b11_011_0100_0010_000: EmitGetNzcv(context); return;
                 case 0b11_011_0100_0100_000: EmitGetFpcr(context); return;
                 case 0b11_011_0100_0100_001: EmitGetFpsr(context); return;
-                case 0b11_011_1101_0000_010: info = typeof(NativeInterface).GetMethod(nameof(NativeInterface.GetTpidrEl0)); break;
-                case 0b11_011_1101_0000_011: info = typeof(NativeInterface).GetMethod(nameof(NativeInterface.GetTpidrroEl0)); break;
+                case 0b11_011_1101_0000_010: EmitGetTpidrEl0(context); return;
+                case 0b11_011_1101_0000_011: EmitGetTpidrroEl0(context); return;
                 case 0b11_011_1110_0000_000: info = typeof(NativeInterface).GetMethod(nameof(NativeInterface.GetCntfrqEl0)); break;
                 case 0b11_011_1110_0000_001: info = typeof(NativeInterface).GetMethod(nameof(NativeInterface.GetCntpctEl0)); break;
                 case 0b11_011_1110_0000_010: info = typeof(NativeInterface).GetMethod(nameof(NativeInterface.GetCntvctEl0)); break;
@@ -49,19 +49,15 @@ namespace ARMeilleure.Instructions
         {
             OpCodeSystem op = (OpCodeSystem)context.CurrOp;
 
-            MethodInfo info;
-
             switch (GetPackedId(op))
             {
                 case 0b11_011_0100_0010_000: EmitSetNzcv(context); return;
                 case 0b11_011_0100_0100_000: EmitSetFpcr(context); return;
                 case 0b11_011_0100_0100_001: EmitSetFpsr(context); return;
-                case 0b11_011_1101_0000_010: info = typeof(NativeInterface).GetMethod(nameof(NativeInterface.SetTpidrEl0)); break;
+                case 0b11_011_1101_0000_010: EmitSetTpidrEl0(context); return;
 
                 default: throw new NotImplementedException($"Unknown MSR 0x{op.RawOpCode:X8} at 0x{op.Address:X16}.");
             }
-
-            context.Call(info, GetIntOrZR(context, op.Rt));
         }
 
         public static void Nop(ArmEmitterContext context)
@@ -165,6 +161,28 @@ namespace ARMeilleure.Instructions
             SetIntOrZR(context, op.Rt, fpsr);
         }
 
+        private static void EmitGetTpidrEl0(ArmEmitterContext context)
+        {
+            OpCodeSystem op = (OpCodeSystem)context.CurrOp;
+
+            Operand nativeContext = context.LoadArgument(OperandType.I64, 0);
+
+            Operand result = context.Load(OperandType.I64, context.Add(nativeContext, Const((ulong)NativeContext.GetTpidrEl0Offset())));
+
+            SetIntOrZR(context, op.Rt, result);
+        }
+
+        private static void EmitGetTpidrroEl0(ArmEmitterContext context)
+        {
+            OpCodeSystem op = (OpCodeSystem)context.CurrOp;
+
+            Operand nativeContext = context.LoadArgument(OperandType.I64, 0);
+
+            Operand result = context.Load(OperandType.I64, context.Add(nativeContext, Const((ulong)NativeContext.GetTpidrroEl0Offset())));
+
+            SetIntOrZR(context, op.Rt, result);
+        }
+
         private static void EmitSetNzcv(ArmEmitterContext context)
         {
             OpCodeSystem op = (OpCodeSystem)context.CurrOp;
@@ -214,6 +232,17 @@ namespace ARMeilleure.Instructions
             }
 
             context.UpdateArmFpMode();
+        }
+
+        private static void EmitSetTpidrEl0(ArmEmitterContext context)
+        {
+            OpCodeSystem op = (OpCodeSystem)context.CurrOp;
+
+            Operand value = GetIntOrZR(context, op.Rt);
+
+            Operand nativeContext = context.LoadArgument(OperandType.I64, 0);
+
+            context.Store(context.Add(nativeContext, Const((ulong)NativeContext.GetTpidrEl0Offset())), value);
         }
     }
 }
