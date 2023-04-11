@@ -86,7 +86,7 @@ namespace Ryujinx.Graphics.Vulkan
             Gd = gd;
             Device = device;
 
-            AutoFlush = new AutoFlushCounter();
+            AutoFlush = new AutoFlushCounter(gd);
 
             var pipelineCacheCreateInfo = new PipelineCacheCreateInfo()
             {
@@ -1562,6 +1562,11 @@ namespace Ryujinx.Graphics.Vulkan
 
         private void RecreatePipelineIfNeeded(PipelineBindPoint pbp)
         {
+            if (AutoFlush.ShouldFlushDraw(DrawCount))
+            {
+                Gd.FlushAllCommands();
+            }
+
             DynamicState.ReplayIfDirty(Gd.Api, CommandBuffer);
 
             // Commit changes to the support buffer before drawing.

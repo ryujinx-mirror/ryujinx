@@ -1,6 +1,7 @@
 using Ryujinx.Common.Logging;
 using Silk.NET.Vulkan;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace Ryujinx.Graphics.Vulkan
@@ -26,6 +27,7 @@ namespace Ryujinx.Graphics.Vulkan
         private readonly Device _device;
         private List<SyncHandle> _handles;
         private ulong FlushId;
+        private long WaitTicks;
 
         public SyncManager(VulkanRenderer gd, Device device)
         {
@@ -130,6 +132,8 @@ namespace Ryujinx.Graphics.Vulkan
                         return;
                     }
 
+                    long beforeTicks = Stopwatch.GetTimestamp();
+
                     if (result.NeedsFlush(FlushId))
                     {
                         _gd.InterruptAction(() =>
@@ -142,12 +146,14 @@ namespace Ryujinx.Graphics.Vulkan
                     }
 
                     bool signaled = result.Signalled || result.Waitable.WaitForFences(_gd.Api, _device, 1000000000);
+
                     if (!signaled)
                     {
                         Logger.Error?.PrintMsg(LogClass.Gpu, $"VK Sync Object {result.ID} failed to signal within 1000ms. Continuing...");
                     }
                     else
                     {
+                        WaitTicks += Stopwatch.GetTimestamp() - beforeTicks;
                         result.Signalled = true;
                     }
                 }
@@ -187,6 +193,14 @@ namespace Ryujinx.Graphics.Vulkan
                     break;
                 }
             }
+        }
+
+        public long GetAndResetWaitTicks()
+        {
+            long result = WaitTicks;
+            WaitTicks = 0;
+
+            return result;
         }
     }
 }

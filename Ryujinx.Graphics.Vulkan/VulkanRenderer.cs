@@ -49,6 +49,7 @@ namespace Ryujinx.Graphics.Vulkan
         internal PipelineLayoutCache PipelineLayoutCache { get; private set; }
         internal BackgroundResources BackgroundResources { get; private set; }
         internal Action<Action> InterruptAction { get; private set; }
+        internal SyncManager SyncManager { get; private set; }
 
         internal BufferManager BufferManager { get; private set; }
 
@@ -58,7 +59,6 @@ namespace Ryujinx.Graphics.Vulkan
 
         private VulkanDebugMessenger _debugMessenger;
         private Counters _counters;
-        private SyncManager _syncManager;
 
         private PipelineFull _pipeline;
 
@@ -327,7 +327,7 @@ namespace Ryujinx.Graphics.Vulkan
 
             BufferManager = new BufferManager(this, _device);
 
-            _syncManager = new SyncManager(this, _device);
+            SyncManager = new SyncManager(this, _device);
             _pipeline = new PipelineFull(this, _device);
             _pipeline.Initialize();
 
@@ -436,7 +436,7 @@ namespace Ryujinx.Graphics.Vulkan
 
         internal void RegisterFlush()
         {
-            _syncManager.RegisterFlush();
+            SyncManager.RegisterFlush();
         }
 
         public PinnedSpan<byte> GetBufferData(BufferHandle buffer, int offset, int size)
@@ -696,7 +696,7 @@ namespace Ryujinx.Graphics.Vulkan
 
         public void PreFrame()
         {
-            _syncManager.Cleanup();
+            SyncManager.Cleanup();
         }
 
         public ICounterEvent ReportCounter(CounterType type, EventHandler<ulong> resultHandler, bool hostReserved)
@@ -736,7 +736,7 @@ namespace Ryujinx.Graphics.Vulkan
 
         public void CreateSync(ulong id, bool strict)
         {
-            _syncManager.Create(id, strict);
+            SyncManager.Create(id, strict);
         }
 
         public IProgram LoadProgramBinary(byte[] programBinary, bool isFragment, ShaderInfo info)
@@ -746,12 +746,12 @@ namespace Ryujinx.Graphics.Vulkan
 
         public void WaitSync(ulong id)
         {
-            _syncManager.Wait(id);
+            SyncManager.Wait(id);
         }
 
         public ulong GetCurrentSync()
         {
-            return _syncManager.GetCurrent();
+            return SyncManager.GetCurrent();
         }
 
         public void SetInterruptAction(Action<Action> interruptAction)
