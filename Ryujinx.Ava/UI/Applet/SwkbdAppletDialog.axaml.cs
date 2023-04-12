@@ -23,10 +23,11 @@ namespace Ryujinx.Ava.UI.Controls
 
         private ContentDialog _host;
 
-        public SwkbdAppletDialog(string mainText, string secondaryText, string placeholder)
+        public SwkbdAppletDialog(string mainText, string secondaryText, string placeholder, string message)
         {
             MainText = mainText;
             SecondaryText = secondaryText;
+            Message = message ?? "";
             DataContext = this;
             _placeholder = placeholder;
             InitializeComponent();
@@ -54,10 +55,7 @@ namespace Ryujinx.Ava.UI.Controls
 
             UserResult result = UserResult.Cancel;
 
-            SwkbdAppletDialog content = new SwkbdAppletDialog(args.HeaderText, args.SubtitleText, args.GuideText)
-            {
-                Message = args.InitialText ?? ""
-            };
+            SwkbdAppletDialog content = new SwkbdAppletDialog(args.HeaderText, args.SubtitleText, args.GuideText, args.InitialText);
 
             string input = string.Empty;
 
