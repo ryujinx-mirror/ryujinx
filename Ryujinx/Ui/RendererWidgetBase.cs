@@ -496,15 +496,13 @@ namespace Ryujinx.Ui
                 parent.Present();
 
                 var activeProcess   = Device.Processes.ActiveApplication;
-                var nacp            = activeProcess.ApplicationControlProperties;
-                int desiredLanguage = (int)Device.System.State.DesiredTitleLanguage;
 
-                string titleNameSection    = string.IsNullOrWhiteSpace(nacp.Title[desiredLanguage].NameString.ToString()) ? string.Empty : $" - {nacp.Title[desiredLanguage].NameString.ToString()}";
-                string titleVersionSection = string.IsNullOrWhiteSpace(nacp.DisplayVersionString.ToString())              ? string.Empty : $" v{nacp.DisplayVersionString.ToString()}";
-                string titleIdSection      = string.IsNullOrWhiteSpace(activeProcess.ProgramIdText)                       ? string.Empty : $" ({activeProcess.ProgramIdText.ToUpper()})";
-                string titleArchSection    = activeProcess.Is64Bit                                                        ? " (64-bit)"  : " (32-bit)";
+                string titleNameSection    = string.IsNullOrWhiteSpace(activeProcess.Name) ? string.Empty : $" {activeProcess.Name}";
+                string titleVersionSection = string.IsNullOrWhiteSpace(activeProcess.DisplayVersion) ? string.Empty : $" v{activeProcess.DisplayVersion}";
+                string titleIdSection      = $" ({activeProcess.ProgramIdText.ToUpper()})";
+                string titleArchSection    = activeProcess.Is64Bit ? " (64-bit)" : " (32-bit)";
 
-                parent.Title = $"Ryujinx {Program.Version}{titleNameSection}{titleVersionSection}{titleIdSection}{titleArchSection}";
+                parent.Title = $"Ryujinx {Program.Version} -{titleNameSection}{titleVersionSection}{titleIdSection}{titleArchSection}";
             });
 
             Thread renderLoopThread = new Thread(Render)
