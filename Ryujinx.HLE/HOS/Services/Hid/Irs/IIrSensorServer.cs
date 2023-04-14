@@ -15,7 +15,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid.Irs
 
         public IIrSensorServer(ServiceCtx context) { }
 
-        [CommandHipc(302)]
+        [CommandCmif(302)]
         // ActivateIrsensor(nn::applet::AppletResourceUserId, pid)
         public ResultCode ActivateIrsensor(ServiceCtx context)
         {
@@ -28,7 +28,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid.Irs
             return ResultCode.Success;
         }
 
-        [CommandHipc(303)]
+        [CommandCmif(303)]
         // DeactivateIrsensor(nn::applet::AppletResourceUserId, pid)
         public ResultCode DeactivateIrsensor(ServiceCtx context)
         {
@@ -41,7 +41,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid.Irs
             return ResultCode.Success;
         }
 
-        [CommandHipc(304)]
+        [CommandCmif(304)]
         // GetIrsensorSharedMemoryHandle(nn::applet::AppletResourceUserId, pid) -> handle<copy>
         public ResultCode GetIrsensorSharedMemoryHandle(ServiceCtx context)
         {
@@ -61,7 +61,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid.Irs
             return ResultCode.Success;
         }
 
-        [CommandHipc(305)]
+        [CommandCmif(305)]
         // StopImageProcessor(pid, nn::irsensor::IrCameraHandle, nn::applet::AppletResourceUserId)
         public ResultCode StopImageProcessor(ServiceCtx context)
         {
@@ -75,7 +75,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid.Irs
             return ResultCode.Success;
         }
 
-        [CommandHipc(306)]
+        [CommandCmif(306)]
         // RunMomentProcessor(pid, nn::irsensor::IrCameraHandle, nn::applet::AppletResourceUserId, PackedMomentProcessorConfig)
         public ResultCode RunMomentProcessor(ServiceCtx context)
         {
@@ -90,7 +90,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid.Irs
             return ResultCode.Success;
         }
 
-        [CommandHipc(307)]
+        [CommandCmif(307)]
         // RunClusteringProcessor(pid, nn::irsensor::IrCameraHandle, nn::applet::AppletResourceUserId, PackedClusteringProcessorConfig)
         public ResultCode RunClusteringProcessor(ServiceCtx context)
         {
@@ -105,7 +105,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid.Irs
             return ResultCode.Success;
         }
 
-        [CommandHipc(308)]
+        [CommandCmif(308)]
         // RunImageTransferProcessor(pid, nn::irsensor::IrCameraHandle, nn::applet::AppletResourceUserId, PackedImageTransferProcessorConfig, u64 TransferMemorySize, TransferMemoryHandle)
         public ResultCode RunImageTransferProcessor(ServiceCtx context)
         {
@@ -122,7 +122,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid.Irs
             return ResultCode.Success;
         }
 
-        [CommandHipc(309)]
+        [CommandCmif(309)]
         // GetImageTransferProcessorState(pid, nn::irsensor::IrCameraHandle, nn::applet::AppletResourceUserId)
         public ResultCode GetImageTransferProcessorState(ServiceCtx context)
         {
@@ -151,7 +151,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid.Irs
             return ResultCode.Success;
         }
 
-        [CommandHipc(310)]
+        [CommandCmif(310)]
         // RunTeraPluginProcessor(pid, nn::irsensor::IrCameraHandle, nn::applet::AppletResourceUserId, PackedTeraPluginProcessorConfig)
         public ResultCode RunTeraPluginProcessor(ServiceCtx context)
         {
@@ -166,7 +166,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid.Irs
             return ResultCode.Success;
         }
 
-        [CommandHipc(311)]
+        [CommandCmif(311)]
         // GetNpadIrCameraHandle(u32) -> nn::irsensor::IrCameraHandle
         public ResultCode GetNpadIrCameraHandle(ServiceCtx context)
         {
@@ -189,7 +189,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid.Irs
             return ResultCode.Success;
         }
 
-        [CommandHipc(314)] // 3.0.0+
+        [CommandCmif(314)] // 3.0.0+
         // CheckFirmwareVersion(nn::irsensor::IrCameraHandle, nn::irsensor::PackedMcuVersion, nn::applet::AppletResourceUserId, pid)
         public ResultCode CheckFirmwareVersion(ServiceCtx context)
         {
@@ -203,7 +203,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid.Irs
             return ResultCode.Success;
         }
 
-        [CommandHipc(318)] // 4.0.0+
+        [CommandCmif(318)] // 4.0.0+
         // StopImageProcessorAsync(nn::irsensor::IrCameraHandle, nn::applet::AppletResourceUserId, pid)
         public ResultCode StopImageProcessorAsync(ServiceCtx context)
         {
@@ -215,7 +215,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid.Irs
             return ResultCode.Success;
         }
 
-        [CommandHipc(319)] // 4.0.0+
+        [CommandCmif(319)] // 4.0.0+
         // ActivateIrsensorWithFunctionLevel(nn::applet::AppletResourceUserId, nn::irsensor::PackedFunctionLevel, pid)
         public ResultCode ActivateIrsensorWithFunctionLevel(ServiceCtx context)
         {

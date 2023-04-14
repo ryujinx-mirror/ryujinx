@@ -1,5 +1,4 @@
-﻿using Ryujinx.HLE.HOS.Kernel;
-using Ryujinx.HLE.HOS.Kernel.Process;
+﻿using Ryujinx.HLE.HOS.Kernel.Process;
 
 namespace Ryujinx.HLE.HOS.Services.Pm
 {
@@ -8,7 +7,7 @@ namespace Ryujinx.HLE.HOS.Services.Pm
     {
         public IInformationInterface(ServiceCtx context) { }
 
-        [CommandHipc(0)]
+        [CommandCmif(0)]
         // GetProgramId(os::ProcessId process_id) -> sf::Out<ncm::ProgramId> out
         public ResultCode GetProgramId(ServiceCtx context)
         {

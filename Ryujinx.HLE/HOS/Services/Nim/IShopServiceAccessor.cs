@@ -18,7 +18,7 @@ namespace Ryujinx.HLE.HOS.Services.Nim.ShopServiceAccessServerInterface.ShopServ
             _event = new KEvent(system.KernelContext);
         }
 
-        [CommandHipc(0)]
+        [CommandCmif(0)]
         // CreateAsyncInterface(u64) -> (handle<copy>, object<nn::ec::IShopServiceAsync>)
         public ResultCode CreateAsyncInterface(ServiceCtx context)
         {

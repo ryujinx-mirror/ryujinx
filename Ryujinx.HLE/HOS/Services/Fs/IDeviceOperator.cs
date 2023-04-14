@@ -14,7 +14,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             _baseOperator = SharedRef<LibHac.FsSrv.Sf.IDeviceOperator>.CreateMove(ref baseOperator);
         }
 
-        [CommandHipc(0)]
+        [CommandCmif(0)]
         // IsSdCardInserted() -> b8 is_inserted
         public ResultCode IsSdCardInserted(ServiceCtx context)
         {
@@ -25,7 +25,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return (ResultCode)result.Value;
         }
 
-        [CommandHipc(200)]
+        [CommandCmif(200)]
         // IsGameCardInserted() -> b8 is_inserted
         public ResultCode IsGameCardInserted(ServiceCtx context)
         {
@@ -36,7 +36,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return (ResultCode)result.Value;
         }
 
-        [CommandHipc(202)]
+        [CommandCmif(202)]
         // GetGameCardHandle() -> u32 gamecard_handle
         public ResultCode GetGameCardHandle(ServiceCtx context)
         {

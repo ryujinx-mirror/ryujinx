@@ -22,7 +22,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             _automaticCorrectionEvent = 0;
         }
 
-        [CommandHipc(0)]
+        [CommandCmif(0)]
         // GetUserStaticService() -> object<nn::timesrv::detail::service::IStaticService>
         public ResultCode GetUserStaticService(ServiceCtx context)
         {
@@ -31,7 +31,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return ResultCode.Success;
         }
 
-        [CommandHipc(5)]
+        [CommandCmif(5)]
         // GetAdminStaticService() -> object<nn::timesrv::detail::service::IStaticService>
         public ResultCode GetAdminStaticService(ServiceCtx context)
         {
@@ -40,7 +40,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return ResultCode.Success;
         }
 
-        [CommandHipc(6)]
+        [CommandCmif(6)]
         // GetRepairStaticService() -> object<nn::timesrv::detail::service::IStaticService>
         public ResultCode GetRepairStaticService(ServiceCtx context)
         {
@@ -49,7 +49,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return ResultCode.Success;
         }
 
-        [CommandHipc(9)]
+        [CommandCmif(9)]
         // GetManufactureStaticService() -> object<nn::timesrv::detail::service::IStaticService>
         public ResultCode GetManufactureStaticService(ServiceCtx context)
         {
@@ -58,7 +58,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return ResultCode.Success;
         }
 
-        [CommandHipc(10)]
+        [CommandCmif(10)]
         // SetupStandardSteadyClock(nn::util::Uuid clock_source_id, nn::TimeSpanType setup_value,  nn::TimeSpanType internal_offset,  nn::TimeSpanType test_offset, bool is_rtc_reset_detected)
         public ResultCode SetupStandardSteadyClock(ServiceCtx context)
         {
@@ -75,7 +75,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return ResultCode.Success;
         }
 
-        [CommandHipc(11)]
+        [CommandCmif(11)]
         // SetupStandardLocalSystemClock(nn::time::SystemClockContext context, nn::time::PosixTime posix_time)
         public ResultCode SetupStandardLocalSystemClock(ServiceCtx context)
         {
@@ -89,7 +89,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return ResultCode.Success;
         }
 
-        [CommandHipc(12)]
+        [CommandCmif(12)]
         // SetupStandardNetworkSystemClock(nn::time::SystemClockContext context, nn::TimeSpanType sufficient_accuracy)
         public ResultCode SetupStandardNetworkSystemClock(ServiceCtx context)
         {
@@ -101,7 +101,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return ResultCode.Success;
         }
 
-        [CommandHipc(13)]
+        [CommandCmif(13)]
         // SetupStandardUserSystemClock(bool automatic_correction_enabled, nn::time::SteadyClockTimePoint steady_clock_timepoint)
         public ResultCode SetupStandardUserSystemClock(ServiceCtx context)
         {
@@ -118,7 +118,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return ResultCode.Success;
         }
 
-        [CommandHipc(14)]
+        [CommandCmif(14)]
         // SetupTimeZoneManager(nn::time::LocationName location_name, nn::time::SteadyClockTimePoint timezone_update_timepoint, u32 total_location_name_count, nn::time::TimeZoneRuleVersion timezone_rule_version, buffer<nn::time::TimeZoneBinary, 0x21> timezone_binary)
         public ResultCode SetupTimeZoneManager(ServiceCtx context)
         {
@@ -141,7 +141,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return ResultCode.Success;
         }
 
-        [CommandHipc(15)]
+        [CommandCmif(15)]
         // SetupEphemeralNetworkSystemClock()
         public ResultCode SetupEphemeralNetworkSystemClock(ServiceCtx context)
         {
@@ -150,7 +150,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return ResultCode.Success;
         }
 
-        [CommandHipc(50)]
+        [CommandCmif(50)]
         // Unknown50() -> handle<copy>
         public ResultCode Unknown50(ServiceCtx context)
         {
@@ -158,7 +158,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             throw new ServiceNotImplementedException(this, context);
         }
 
-        [CommandHipc(51)]
+        [CommandCmif(51)]
         // Unknown51() -> handle<copy>
         public ResultCode Unknown51(ServiceCtx context)
         {
@@ -166,7 +166,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             throw new ServiceNotImplementedException(this, context);
         }
 
-        [CommandHipc(52)]
+        [CommandCmif(52)]
         // Unknown52() -> handle<copy>
         public ResultCode Unknown52(ServiceCtx context)
         {
@@ -174,7 +174,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             throw new ServiceNotImplementedException(this, context);
         }
 
-        [CommandHipc(60)]
+        [CommandCmif(60)]
         // GetStandardUserSystemClockAutomaticCorrectionEvent() -> handle<copy>
         public ResultCode GetStandardUserSystemClockAutomaticCorrectionEvent(ServiceCtx context)
         {
@@ -191,7 +191,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return ResultCode.Success;
         }
 
-        [CommandHipc(100)]
+        [CommandCmif(100)]
         // SetStandardSteadyClockRtcOffset(nn::TimeSpanType rtc_offset)
         public ResultCode SetStandardSteadyClockRtcOffset(ServiceCtx context)
         {
@@ -204,7 +204,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return ResultCode.Success;
         }
 
-        [CommandHipc(200)]
+        [CommandCmif(200)]
         // GetAlarmRegistrationEvent() -> handle<copy>
         public ResultCode GetAlarmRegistrationEvent(ServiceCtx context)
         {
@@ -212,7 +212,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             throw new ServiceNotImplementedException(this, context);
         }
 
-        [CommandHipc(201)]
+        [CommandCmif(201)]
         // UpdateSteadyAlarms()
         public ResultCode UpdateSteadyAlarms(ServiceCtx context)
         {
@@ -220,7 +220,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             throw new ServiceNotImplementedException(this, context);
         }
 
-        [CommandHipc(202)]
+        [CommandCmif(202)]
         // TryGetNextSteadyClockAlarmSnapshot() -> (bool, nn::time::SteadyClockAlarmSnapshot)
         public ResultCode TryGetNextSteadyClockAlarmSnapshot(ServiceCtx context)
         {

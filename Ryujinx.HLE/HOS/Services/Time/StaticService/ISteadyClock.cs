@@ -17,7 +17,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.StaticService
             _bypassUninitializedClock = bypassUninitializedClock;
         }
 
-        [CommandHipc(0)]
+        [CommandCmif(0)]
         // GetCurrentTimePoint() -> nn::time::SteadyClockTimePoint
         public ResultCode GetCurrentTimePoint(ServiceCtx context)
         {
@@ -35,7 +35,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.StaticService
             return ResultCode.Success;
         }
 
-        [CommandHipc(2)]
+        [CommandCmif(2)]
         // GetTestOffset() -> nn::TimeSpanType
         public ResultCode GetTestOffset(ServiceCtx context)
         {
@@ -49,7 +49,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.StaticService
             return ResultCode.Success;
         }
 
-        [CommandHipc(3)]
+        [CommandCmif(3)]
         // SetTestOffset(nn::TimeSpanType)
         public ResultCode SetTestOffset(ServiceCtx context)
         {
@@ -70,7 +70,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.StaticService
             return ResultCode.Success;
         }
 
-        [CommandHipc(100)] // 2.0.0+
+        [CommandCmif(100)] // 2.0.0+
         // GetRtcValue() -> u64
         public ResultCode GetRtcValue(ServiceCtx context)
         {
@@ -89,7 +89,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.StaticService
             return result;
         }
 
-        [CommandHipc(101)] // 2.0.0+
+        [CommandCmif(101)] // 2.0.0+
         // IsRtcResetDetected() -> bool
         public ResultCode IsRtcResetDetected(ServiceCtx context)
         {
@@ -103,7 +103,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.StaticService
             return ResultCode.Success;
         }
 
-        [CommandHipc(102)] // 2.0.0+
+        [CommandCmif(102)] // 2.0.0+
         // GetSetupResultValue() -> u32
         public ResultCode GetSetupResultValue(ServiceCtx context)
         {
@@ -117,7 +117,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.StaticService
             return ResultCode.Success;
         }
 
-        [CommandHipc(200)] // 3.0.0+
+        [CommandCmif(200)] // 3.0.0+
         // GetInternalOffset() -> nn::TimeSpanType
         public ResultCode GetInternalOffset(ServiceCtx context)
         {
@@ -131,7 +131,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.StaticService
             return ResultCode.Success;
         }
 
-        [CommandHipc(201)] // 3.0.0-3.0.2
+        [CommandCmif(201)] // 3.0.0-3.0.2
         // SetInternalOffset(nn::TimeSpanType)
         public ResultCode SetInternalOffset(ServiceCtx context)
         {

@@ -14,7 +14,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
             _baseStorage = SharedRef<LibHac.FsSrv.Sf.IStorage>.CreateMove(ref baseStorage);
         }
 
-        [CommandHipc(0)]
+        [CommandCmif(0)]
         // Read(u64 offset, u64 length) -> buffer<u8, 0x46, 0> buffer
         public ResultCode Read(ServiceCtx context)
         {
@@ -43,7 +43,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
             return ResultCode.Success;
         }
 
-        [CommandHipc(4)]
+        [CommandCmif(4)]
         // GetSize() -> u64 size
         public ResultCode GetSize(ServiceCtx context)
         {

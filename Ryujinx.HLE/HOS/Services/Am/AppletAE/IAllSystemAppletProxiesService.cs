@@ -7,7 +7,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE
     {
         public IAllSystemAppletProxiesService(ServiceCtx context) { }
 
-        [CommandHipc(100)]
+        [CommandCmif(100)]
         // OpenSystemAppletProxy(u64, pid, handle<copy>) -> object<nn::am::service::ISystemAppletProxy>
         public ResultCode OpenSystemAppletProxy(ServiceCtx context)
         {
@@ -16,8 +16,8 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE
             return ResultCode.Success;
         }
 
-        [CommandHipc(200)]
-        [CommandHipc(201)] // 3.0.0+
+        [CommandCmif(200)]
+        [CommandCmif(201)] // 3.0.0+
         // OpenLibraryAppletProxy(u64, pid, handle<copy>) -> object<nn::am::service::ILibraryAppletProxy>
         public ResultCode OpenLibraryAppletProxy(ServiceCtx context)
         {

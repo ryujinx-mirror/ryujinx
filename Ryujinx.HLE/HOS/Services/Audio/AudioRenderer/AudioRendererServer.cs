@@ -16,7 +16,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRenderer
             _impl = impl;
         }
 
-        [CommandHipc(0)]
+        [CommandCmif(0)]
         // GetSampleRate() -> u32
         public ResultCode GetSampleRate(ServiceCtx context)
         {
@@ -25,7 +25,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRenderer
             return ResultCode.Success;
         }
 
-        [CommandHipc(1)]
+        [CommandCmif(1)]
         // GetSampleCount() -> u32
         public ResultCode GetSampleCount(ServiceCtx context)
         {
@@ -34,7 +34,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRenderer
             return ResultCode.Success;
         }
 
-        [CommandHipc(2)]
+        [CommandCmif(2)]
         // GetMixBufferCount() -> u32
         public ResultCode GetMixBufferCount(ServiceCtx context)
         {
@@ -43,7 +43,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRenderer
             return ResultCode.Success;
         }
 
-        [CommandHipc(3)]
+        [CommandCmif(3)]
         // GetState() -> u32
         public ResultCode GetState(ServiceCtx context)
         {
@@ -52,7 +52,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRenderer
             return ResultCode.Success;
         }
 
-        [CommandHipc(4)]
+        [CommandCmif(4)]
         // RequestUpdate(buffer<nn::audio::detail::AudioRendererUpdateDataHeader, 5> input)
         // -> (buffer<nn::audio::detail::AudioRendererUpdateDataHeader, 6> output, buffer<nn::audio::detail::AudioRendererUpdateDataHeader, 6> performanceOutput)
         public ResultCode RequestUpdate(ServiceCtx context)
@@ -89,21 +89,21 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRenderer
             return result;
         }
 
-        [CommandHipc(5)]
+        [CommandCmif(5)]
         // Start()
         public ResultCode Start(ServiceCtx context)
         {
             return _impl.Start();
         }
 
-        [CommandHipc(6)]
+        [CommandCmif(6)]
         // Stop()
         public ResultCode Stop(ServiceCtx context)
         {
             return _impl.Stop();
         }
 
-        [CommandHipc(7)]
+        [CommandCmif(7)]
         // QuerySystemEvent() -> handle<copy, event>
         public ResultCode QuerySystemEvent(ServiceCtx context)
         {
@@ -122,7 +122,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRenderer
             return result;
         }
 
-        [CommandHipc(8)]
+        [CommandCmif(8)]
         // SetAudioRendererRenderingTimeLimit(u32 limit)
         public ResultCode SetAudioRendererRenderingTimeLimit(ServiceCtx context)
         {
@@ -133,7 +133,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRenderer
             return ResultCode.Success;
         }
 
-        [CommandHipc(9)]
+        [CommandCmif(9)]
         // GetAudioRendererRenderingTimeLimit() -> u32 limit
         public ResultCode GetAudioRendererRenderingTimeLimit(ServiceCtx context)
         {
@@ -144,7 +144,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRenderer
             return ResultCode.Success;
         }
 
-        [CommandHipc(10)] // 3.0.0+
+        [CommandCmif(10)] // 3.0.0+
         //  RequestUpdateAuto(buffer<nn::audio::detail::AudioRendererUpdateDataHeader, 0x21> input)
         // -> (buffer<nn::audio::detail::AudioRendererUpdateDataHeader, 0x22> output, buffer<nn::audio::detail::AudioRendererUpdateDataHeader, 0x22> performanceOutput)
         public ResultCode RequestUpdateAuto(ServiceCtx context)
@@ -172,14 +172,14 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRenderer
             return result;
         }
 
-        [CommandHipc(11)] // 3.0.0+
+        [CommandCmif(11)] // 3.0.0+
         // ExecuteAudioRendererRendering()
         public ResultCode ExecuteAudioRendererRendering(ServiceCtx context)
         {
             return _impl.ExecuteAudioRendererRendering();
         }
 
-        [CommandHipc(12)] // 15.0.0+
+        [CommandCmif(12)] // 15.0.0+
         // SetVoiceDropParameter(f32 voiceDropParameter)
         public ResultCode SetVoiceDropParameter(ServiceCtx context)
         {
@@ -190,7 +190,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRenderer
             return ResultCode.Success;
         }
 
-        [CommandHipc(13)] // 15.0.0+
+        [CommandCmif(13)] // 15.0.0+
         // GetVoiceDropParameter() -> f32 voiceDropParameter
         public ResultCode GetVoiceDropParameter(ServiceCtx context)
         {

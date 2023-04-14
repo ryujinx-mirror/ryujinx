@@ -21,7 +21,7 @@ namespace Ryujinx.HLE.HOS.Services.BluetoothManager.BtmUser
 
         public IBtmUserCore() { }
 
-        [CommandHipc(0)] // 5.0.0+
+        [CommandCmif(0)] // 5.0.0+
         // AcquireBleScanEvent() -> (byte<1>, handle<copy>)
         public ResultCode AcquireBleScanEvent(ServiceCtx context)
         {
@@ -47,7 +47,7 @@ namespace Ryujinx.HLE.HOS.Services.BluetoothManager.BtmUser
             return ResultCode.Success;
         }
 
-        [CommandHipc(17)] // 5.0.0+
+        [CommandCmif(17)] // 5.0.0+
         // AcquireBleConnectionEvent() -> (byte<1>, handle<copy>)
         public ResultCode AcquireBleConnectionEvent(ServiceCtx context)
         {
@@ -73,7 +73,7 @@ namespace Ryujinx.HLE.HOS.Services.BluetoothManager.BtmUser
             return ResultCode.Success;
         }
 
-        [CommandHipc(26)] // 5.0.0+
+        [CommandCmif(26)] // 5.0.0+
         // AcquireBleServiceDiscoveryEvent() -> (byte<1>, handle<copy>)
         public ResultCode AcquireBleServiceDiscoveryEvent(ServiceCtx context)
         {
@@ -99,7 +99,7 @@ namespace Ryujinx.HLE.HOS.Services.BluetoothManager.BtmUser
             return ResultCode.Success;
         }
 
-        [CommandHipc(33)] // 5.0.0+
+        [CommandCmif(33)] // 5.0.0+
         // AcquireBleMtuConfigEvent() -> (byte<1>, handle<copy>)
         public ResultCode AcquireBleMtuConfigEvent(ServiceCtx context)
         {

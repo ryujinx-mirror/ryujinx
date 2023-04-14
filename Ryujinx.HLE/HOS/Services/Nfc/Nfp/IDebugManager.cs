@@ -7,7 +7,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
     {
         public IAmManager(ServiceCtx context) { }
 
-        [CommandHipc(0)]
+        [CommandCmif(0)]
         // CreateDebugInterface() -> object<nn::nfp::detail::IDebug>
         public ResultCode CreateDebugInterface(ServiceCtx context)
         {

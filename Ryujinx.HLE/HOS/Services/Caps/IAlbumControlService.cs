@@ -5,7 +5,7 @@ namespace Ryujinx.HLE.HOS.Services.Caps
     {
         public IAlbumControlService(ServiceCtx context) { }
 
-        [CommandHipc(33)] // 7.0.0+
+        [CommandCmif(33)] // 7.0.0+
         // SetShimLibraryVersion(pid, u64, nn::applet::AppletResourceUserId)
         public ResultCode SetShimLibraryVersion(ServiceCtx context)
         {

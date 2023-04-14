@@ -8,7 +8,7 @@ namespace Ryujinx.HLE.HOS.Services.Nim.Ntc
     {
         public IStaticService(ServiceCtx context) { }
 
-        [CommandHipc(0)]
+        [CommandCmif(0)]
         // OpenEnsureNetworkClockAvailabilityService(u64) -> object<nn::ntc::detail::service::IEnsureNetworkClockAvailabilityService>
         public ResultCode CreateAsyncInterface(ServiceCtx context)
         {

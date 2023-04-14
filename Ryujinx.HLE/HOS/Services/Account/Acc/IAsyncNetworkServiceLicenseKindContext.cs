@@ -11,7 +11,7 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
             _serviceLicenseKind = serviceLicenseKind;
         }
 
-        [CommandHipc(100)]
+        [CommandCmif(100)]
         // GetNetworkServiceLicenseKind() -> nn::account::NetworkServiceLicenseKind
         public ResultCode GetNetworkServiceLicenseKind(ServiceCtx context)
         {

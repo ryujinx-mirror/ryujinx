@@ -21,7 +21,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio
             _impl = impl;
         }
 
-        [CommandHipc(0)]
+        [CommandCmif(0)]
         // OpenAudioRenderer(nn::audio::detail::AudioRendererParameterInternal parameter, u64 workBufferSize, nn::applet::AppletResourceUserId appletResourceId, pid, handle<copy> workBuffer, handle<copy> processHandle)
         // -> object<nn::audio::detail::IAudioRenderer>
         public ResultCode OpenAudioRenderer(ServiceCtx context)
@@ -54,7 +54,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio
             return result;
         }
 
-        [CommandHipc(1)]
+        [CommandCmif(1)]
         // GetWorkBufferSize(nn::audio::detail::AudioRendererParameterInternal parameter) -> u64 workBufferSize
         public ResultCode GetAudioRendererWorkBufferSize(ServiceCtx context)
         {
@@ -80,7 +80,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio
             }
         }
 
-        [CommandHipc(2)]
+        [CommandCmif(2)]
         // GetAudioDeviceService(nn::applet::AppletResourceUserId) -> object<nn::audio::detail::IAudioDevice>
         public ResultCode GetAudioDeviceService(ServiceCtx context)
         {
@@ -96,7 +96,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio
             return result;
         }
 
-        [CommandHipc(4)] // 4.0.0+
+        [CommandCmif(4)] // 4.0.0+
         // GetAudioDeviceServiceWithRevisionInfo(s32 revision, nn::applet::AppletResourceUserId appletResourceId) -> object<nn::audio::detail::IAudioDevice>
         public ResultCode GetAudioDeviceServiceWithRevisionInfo(ServiceCtx context)
         {

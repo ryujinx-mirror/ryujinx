@@ -6,7 +6,7 @@ namespace Ryujinx.HLE.HOS.Services.Bcat.ServiceCreator
     {
         public IBcatService(ApplicationLaunchProperty applicationLaunchProperty) { }
 
-        [CommandHipc(10100)]
+        [CommandCmif(10100)]
         // RequestSyncDeliveryCache() -> object<nn::bcat::detail::ipc::IDeliveryCacheProgressService>
         public ResultCode RequestSyncDeliveryCache(ServiceCtx context)
         {

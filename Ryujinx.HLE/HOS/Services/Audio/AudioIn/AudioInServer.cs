@@ -18,7 +18,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioIn
             _impl = impl;
         }
 
-        [CommandHipc(0)]
+        [CommandCmif(0)]
         // GetAudioInState() -> u32 state
         public ResultCode GetAudioInState(ServiceCtx context)
         {
@@ -27,21 +27,21 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioIn
             return ResultCode.Success;
         }
 
-        [CommandHipc(1)]
+        [CommandCmif(1)]
         // Start()
         public ResultCode Start(ServiceCtx context)
         {
             return _impl.Start();
         }
 
-        [CommandHipc(2)]
+        [CommandCmif(2)]
         // Stop()
         public ResultCode StopAudioIn(ServiceCtx context)
         {
             return _impl.Stop();
         }
 
-        [CommandHipc(3)]
+        [CommandCmif(3)]
         // AppendAudioInBuffer(u64 tag, buffer<nn::audio::AudioInBuffer, 5>)
         public ResultCode AppendAudioInBuffer(ServiceCtx context)
         {
@@ -54,7 +54,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioIn
             return _impl.AppendBuffer(bufferTag, ref data);
         }
 
-        [CommandHipc(4)]
+        [CommandCmif(4)]
         // RegisterBufferEvent() -> handle<copy>
         public ResultCode RegisterBufferEvent(ServiceCtx context)
         {
@@ -70,7 +70,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioIn
             return ResultCode.Success;
         }
 
-        [CommandHipc(5)]
+        [CommandCmif(5)]
         // GetReleasedAudioInBuffers() -> (u32 count, buffer<u64, 6> tags)
         public ResultCode GetReleasedAudioInBuffers(ServiceCtx context)
         {
@@ -87,7 +87,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioIn
             }
         }
 
-        [CommandHipc(6)]
+        [CommandCmif(6)]
         // ContainsAudioInBuffer(u64 tag) -> b8
         public ResultCode ContainsAudioInBuffer(ServiceCtx context)
         {
@@ -98,7 +98,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioIn
             return ResultCode.Success;
         }
 
-        [CommandHipc(7)] // 3.0.0+
+        [CommandCmif(7)] // 3.0.0+
         // AppendUacInBuffer(u64 tag, handle<copy, unknown>, buffer<nn::audio::AudioInBuffer, 5>)
         public ResultCode AppendUacInBuffer(ServiceCtx context)
         {
@@ -112,7 +112,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioIn
             return _impl.AppendUacBuffer(bufferTag, ref data, handle);
         }
 
-        [CommandHipc(8)] // 3.0.0+
+        [CommandCmif(8)] // 3.0.0+
         // AppendAudioInBufferAuto(u64 tag, buffer<nn::audio::AudioInBuffer, 0x21>)
         public ResultCode AppendAudioInBufferAuto(ServiceCtx context)
         {
@@ -125,7 +125,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioIn
             return _impl.AppendBuffer(bufferTag, ref data);
         }
 
-        [CommandHipc(9)] // 3.0.0+
+        [CommandCmif(9)] // 3.0.0+
         // GetReleasedAudioInBuffersAuto() -> (u32 count, buffer<u64, 0x22> tags)
         public ResultCode GetReleasedAudioInBuffersAuto(ServiceCtx context)
         {
@@ -141,7 +141,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioIn
             }
         }
 
-        [CommandHipc(10)] // 3.0.0+
+        [CommandCmif(10)] // 3.0.0+
         // AppendUacInBufferAuto(u64 tag, handle<copy, event>, buffer<nn::audio::AudioInBuffer, 0x21>)
         public ResultCode AppendUacInBufferAuto(ServiceCtx context)
         {
@@ -155,7 +155,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioIn
             return _impl.AppendUacBuffer(bufferTag, ref data, handle);
         }
 
-        [CommandHipc(11)] // 4.0.0+
+        [CommandCmif(11)] // 4.0.0+
         // GetAudioInBufferCount() -> u32
         public ResultCode GetAudioInBufferCount(ServiceCtx context)
         {
@@ -164,7 +164,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioIn
             return ResultCode.Success;
         }
 
-        [CommandHipc(12)] // 4.0.0+
+        [CommandCmif(12)] // 4.0.0+
         // SetAudioInVolume(s32)
         public ResultCode SetAudioInVolume(ServiceCtx context)
         {
@@ -175,7 +175,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioIn
             return ResultCode.Success;
         }
 
-        [CommandHipc(13)] // 4.0.0+
+        [CommandCmif(13)] // 4.0.0+
         // GetAudioInVolume() -> s32
         public ResultCode GetAudioInVolume(ServiceCtx context)
         {
@@ -184,7 +184,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioIn
             return ResultCode.Success;
         }
 
-        [CommandHipc(14)] // 6.0.0+
+        [CommandCmif(14)] // 6.0.0+
         // FlushAudioInBuffers() -> b8
         public ResultCode FlushAudioInBuffers(ServiceCtx context)
         {

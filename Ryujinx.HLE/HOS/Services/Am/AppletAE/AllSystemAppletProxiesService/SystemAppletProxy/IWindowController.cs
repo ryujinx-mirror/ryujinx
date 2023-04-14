@@ -11,7 +11,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             _pid = pid;
         }
 
-        [CommandHipc(1)]
+        [CommandCmif(1)]
         // GetAppletResourceUserId() -> nn::applet::AppletResourceUserId
         public ResultCode GetAppletResourceUserId(ServiceCtx context)
         {
@@ -24,7 +24,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             return ResultCode.Success;
         }
 
-        [CommandHipc(10)]
+        [CommandCmif(10)]
         // AcquireForegroundRights()
         public ResultCode AcquireForegroundRights(ServiceCtx context)
         {

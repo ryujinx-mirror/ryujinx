@@ -34,7 +34,7 @@ namespace Ryujinx.HLE.HOS.Services.Pctl.ParentalControlServiceFactory
             }
         }
 
-        [CommandHipc(1)] // 4.0.0+
+        [CommandCmif(1)] // 4.0.0+
         // Initialize()
         public ResultCode Initialize(ServiceCtx context)
         {
@@ -79,7 +79,7 @@ namespace Ryujinx.HLE.HOS.Services.Pctl.ParentalControlServiceFactory
             return resultCode;
         }
 
-        [CommandHipc(1001)]
+        [CommandCmif(1001)]
         // CheckFreeCommunicationPermission()
         public ResultCode CheckFreeCommunicationPermission(ServiceCtx context)
         {
@@ -98,7 +98,7 @@ namespace Ryujinx.HLE.HOS.Services.Pctl.ParentalControlServiceFactory
             return ResultCode.Success;
         }
 
-        [CommandHipc(1017)] // 10.0.0+
+        [CommandCmif(1017)] // 10.0.0+
         // EndFreeCommunication()
         public ResultCode EndFreeCommunication(ServiceCtx context)
         {
@@ -107,14 +107,14 @@ namespace Ryujinx.HLE.HOS.Services.Pctl.ParentalControlServiceFactory
             return ResultCode.Success;
         }
 
-        [CommandHipc(1013)] // 4.0.0+
+        [CommandCmif(1013)] // 4.0.0+
         // ConfirmStereoVisionPermission()
         public ResultCode ConfirmStereoVisionPermission(ServiceCtx context)
         {
             return IsStereoVisionPermittedImpl();
         }
 
-        [CommandHipc(1018)]
+        [CommandCmif(1018)]
         // IsFreeCommunicationAvailable()
         public ResultCode IsFreeCommunicationAvailable(ServiceCtx context)
         {
@@ -131,7 +131,7 @@ namespace Ryujinx.HLE.HOS.Services.Pctl.ParentalControlServiceFactory
             return ResultCode.Success;
         }
 
-        [CommandHipc(1031)]
+        [CommandCmif(1031)]
         // IsRestrictionEnabled() -> b8
         public ResultCode IsRestrictionEnabled(ServiceCtx context)
         {
@@ -145,7 +145,7 @@ namespace Ryujinx.HLE.HOS.Services.Pctl.ParentalControlServiceFactory
             return ResultCode.Success;
         }
 
-        [CommandHipc(1061)] // 4.0.0+
+        [CommandCmif(1061)] // 4.0.0+
         // ConfirmStereoVisionRestrictionConfigurable()
         public ResultCode ConfirmStereoVisionRestrictionConfigurable(ServiceCtx context)
         {
@@ -164,7 +164,7 @@ namespace Ryujinx.HLE.HOS.Services.Pctl.ParentalControlServiceFactory
             }
         }
 
-        [CommandHipc(1062)] // 4.0.0+
+        [CommandCmif(1062)] // 4.0.0+
         // GetStereoVisionRestriction() -> bool
         public ResultCode GetStereoVisionRestriction(ServiceCtx context)
         {
@@ -185,7 +185,7 @@ namespace Ryujinx.HLE.HOS.Services.Pctl.ParentalControlServiceFactory
             return ResultCode.Success;
         }
 
-        [CommandHipc(1063)] // 4.0.0+
+        [CommandCmif(1063)] // 4.0.0+
         // SetStereoVisionRestriction(bool)
         public ResultCode SetStereoVisionRestriction(ServiceCtx context)
         {
@@ -209,14 +209,14 @@ namespace Ryujinx.HLE.HOS.Services.Pctl.ParentalControlServiceFactory
             return ResultCode.Success;
         }
 
-        [CommandHipc(1064)] // 5.0.0+
+        [CommandCmif(1064)] // 5.0.0+
         // ResetConfirmedStereoVisionPermission()
         public ResultCode ResetConfirmedStereoVisionPermission(ServiceCtx context)
         {
             return ResultCode.Success;
         }
 
-        [CommandHipc(1065)] // 5.0.0+
+        [CommandCmif(1065)] // 5.0.0+
         // IsStereoVisionPermitted() -> bool
         public ResultCode IsStereoVisionPermitted(ServiceCtx context)
         {

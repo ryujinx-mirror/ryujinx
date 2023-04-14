@@ -19,7 +19,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
             return SharedRef<LibHac.FsSrv.Sf.IFileSystem>.CreateCopy(in _fileSystem);
         }
 
-        [CommandHipc(0)]
+        [CommandCmif(0)]
         // CreateFile(u32 createOption, u64 size, buffer<bytes<0x301>, 0x19, 0x301> path)
         public ResultCode CreateFile(ServiceCtx context)
         {
@@ -33,7 +33,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
             return (ResultCode)_fileSystem.Get.CreateFile(in name, size, createOption).Value;
         }
 
-        [CommandHipc(1)]
+        [CommandCmif(1)]
         // DeleteFile(buffer<bytes<0x301>, 0x19, 0x301> path)
         public ResultCode DeleteFile(ServiceCtx context)
         {
@@ -42,7 +42,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
             return (ResultCode)_fileSystem.Get.DeleteFile(in name).Value;
         }
 
-        [CommandHipc(2)]
+        [CommandCmif(2)]
         // CreateDirectory(buffer<bytes<0x301>, 0x19, 0x301> path)
         public ResultCode CreateDirectory(ServiceCtx context)
         {
@@ -51,7 +51,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
             return (ResultCode)_fileSystem.Get.CreateDirectory(in name).Value;
         }
 
-        [CommandHipc(3)]
+        [CommandCmif(3)]
         // DeleteDirectory(buffer<bytes<0x301>, 0x19, 0x301> path)
         public ResultCode DeleteDirectory(ServiceCtx context)
         {
@@ -60,7 +60,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
             return (ResultCode)_fileSystem.Get.DeleteDirectory(in name).Value;
         }
 
-        [CommandHipc(4)]
+        [CommandCmif(4)]
         // DeleteDirectoryRecursively(buffer<bytes<0x301>, 0x19, 0x301> path)
         public ResultCode DeleteDirectoryRecursively(ServiceCtx context)
         {
@@ -69,7 +69,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
             return (ResultCode)_fileSystem.Get.DeleteDirectoryRecursively(in name).Value;
         }
 
-        [CommandHipc(5)]
+        [CommandCmif(5)]
         // RenameFile(buffer<bytes<0x301>, 0x19, 0x301> oldPath, buffer<bytes<0x301>, 0x19, 0x301> newPath)
         public ResultCode RenameFile(ServiceCtx context)
         {
@@ -79,7 +79,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
             return (ResultCode)_fileSystem.Get.RenameFile(in currentName, in newName).Value;
         }
 
-        [CommandHipc(6)]
+        [CommandCmif(6)]
         // RenameDirectory(buffer<bytes<0x301>, 0x19, 0x301> oldPath, buffer<bytes<0x301>, 0x19, 0x301> newPath)
         public ResultCode RenameDirectory(ServiceCtx context)
         {
@@ -89,7 +89,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
             return (ResultCode)_fileSystem.Get.RenameDirectory(in currentName, in newName).Value;
         }
 
-        [CommandHipc(7)]
+        [CommandCmif(7)]
         // GetEntryType(buffer<bytes<0x301>, 0x19, 0x301> path) -> nn::fssrv::sf::DirectoryEntryType
         public ResultCode GetEntryType(ServiceCtx context)
         {
@@ -102,7 +102,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
             return (ResultCode)result.Value;
         }
 
-        [CommandHipc(8)]
+        [CommandCmif(8)]
         // OpenFile(u32 mode, buffer<bytes<0x301>, 0x19, 0x301> path) -> object<nn::fssrv::sf::IFile> file
         public ResultCode OpenFile(ServiceCtx context)
         {
@@ -123,7 +123,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
             return (ResultCode)result.Value;
         }
 
-        [CommandHipc(9)]
+        [CommandCmif(9)]
         // OpenDirectory(u32 filter_flags, buffer<bytes<0x301>, 0x19, 0x301> path) -> object<nn::fssrv::sf::IDirectory> directory
         public ResultCode OpenDirectory(ServiceCtx context)
         {
@@ -144,14 +144,14 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
             return (ResultCode)result.Value;
         }
 
-        [CommandHipc(10)]
+        [CommandCmif(10)]
         // Commit()
         public ResultCode Commit(ServiceCtx context)
         {
             return (ResultCode)_fileSystem.Get.Commit().Value;
         }
 
-        [CommandHipc(11)]
+        [CommandCmif(11)]
         // GetFreeSpaceSize(buffer<bytes<0x301>, 0x19, 0x301> path) -> u64 totalFreeSpace
         public ResultCode GetFreeSpaceSize(ServiceCtx context)
         {
@@ -164,7 +164,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
             return (ResultCode)result.Value;
         }
 
-        [CommandHipc(12)]
+        [CommandCmif(12)]
         // GetTotalSpaceSize(buffer<bytes<0x301>, 0x19, 0x301> path) -> u64 totalSize
         public ResultCode GetTotalSpaceSize(ServiceCtx context)
         {
@@ -177,7 +177,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
             return (ResultCode)result.Value;
         }
 
-        [CommandHipc(13)]
+        [CommandCmif(13)]
         // CleanDirectoryRecursively(buffer<bytes<0x301>, 0x19, 0x301> path)
         public ResultCode CleanDirectoryRecursively(ServiceCtx context)
         {
@@ -186,7 +186,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
             return (ResultCode)_fileSystem.Get.CleanDirectoryRecursively(in name).Value;
         }
 
-        [CommandHipc(14)]
+        [CommandCmif(14)]
         // GetFileTimeStampRaw(buffer<bytes<0x301>, 0x19, 0x301> path) -> bytes<0x20> timestamp
         public ResultCode GetFileTimeStampRaw(ServiceCtx context)
         {

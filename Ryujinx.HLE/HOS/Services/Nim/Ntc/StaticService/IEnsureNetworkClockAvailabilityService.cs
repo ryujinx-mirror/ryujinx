@@ -22,7 +22,7 @@ namespace Ryujinx.HLE.HOS.Services.Nim.Ntc.StaticService
             //       autonomic_correction_immediate_try_count_max, autonomic_correction_immediate_try_interval_milliseconds
         }
 
-        [CommandHipc(0)]
+        [CommandCmif(0)]
         // StartTask()
         public ResultCode StartTask(ServiceCtx context)
         {
@@ -39,7 +39,7 @@ namespace Ryujinx.HLE.HOS.Services.Nim.Ntc.StaticService
             return ResultCode.Success;
         }
 
-        [CommandHipc(1)]
+        [CommandCmif(1)]
         // GetFinishNotificationEvent() -> handle<copy>
         public ResultCode GetFinishNotificationEvent(ServiceCtx context)
         {
@@ -53,14 +53,14 @@ namespace Ryujinx.HLE.HOS.Services.Nim.Ntc.StaticService
             return ResultCode.Success;
         }
 
-        [CommandHipc(2)]
+        [CommandCmif(2)]
         // GetResult()
         public ResultCode GetResult(ServiceCtx context)
         {
             return _taskResultCode;
         }
 
-        [CommandHipc(3)]
+        [CommandCmif(3)]
         // Cancel()
         public ResultCode Cancel(ServiceCtx context)
         {

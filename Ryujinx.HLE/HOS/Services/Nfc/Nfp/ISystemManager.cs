@@ -7,7 +7,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
     {
         public ISystemManager(ServiceCtx context) { }
 
-        [CommandHipc(0)]
+        [CommandCmif(0)]
         // CreateSystemInterface() -> object<nn::nfp::detail::ISystem>
         public ResultCode CreateSystemInterface(ServiceCtx context)
         {

@@ -14,7 +14,7 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
             AsyncExecution = asyncExecution;
         }
 
-        [CommandHipc(0)]
+        [CommandCmif(0)]
         // GetSystemEvent() -> handle<copy>
         public ResultCode GetSystemEvent(ServiceCtx context)
         {
@@ -28,7 +28,7 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
             return ResultCode.Success;
         }
 
-        [CommandHipc(1)]
+        [CommandCmif(1)]
         // Cancel()
         public ResultCode Cancel(ServiceCtx context)
         {
@@ -45,7 +45,7 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
             return ResultCode.Success;
         }
 
-        [CommandHipc(2)]
+        [CommandCmif(2)]
         // HasDone() -> b8
         public ResultCode HasDone(ServiceCtx context)
         {
@@ -59,7 +59,7 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
             return ResultCode.Success;
         }
 
-        [CommandHipc(3)]
+        [CommandCmif(3)]
         // GetResult()
         public ResultCode GetResult(ServiceCtx context)
         {

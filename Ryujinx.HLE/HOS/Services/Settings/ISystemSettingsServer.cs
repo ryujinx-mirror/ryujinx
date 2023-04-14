@@ -19,14 +19,14 @@ namespace Ryujinx.HLE.HOS.Services.Settings
     {
         public ISystemSettingsServer(ServiceCtx context) { }
 
-        [CommandHipc(3)]
+        [CommandCmif(3)]
         // GetFirmwareVersion() -> buffer<nn::settings::system::FirmwareVersion, 0x1a, 0x100>
         public ResultCode GetFirmwareVersion(ServiceCtx context)
         {
             return GetFirmwareVersion2(context);
         }
 
-        [CommandHipc(4)]
+        [CommandCmif(4)]
         // GetFirmwareVersion2() -> buffer<nn::settings::system::FirmwareVersion, 0x1a, 0x100>
         public ResultCode GetFirmwareVersion2(ServiceCtx context)
         {
@@ -87,7 +87,7 @@ namespace Ryujinx.HLE.HOS.Services.Settings
             return ResultCode.Success;
         }
 
-        [CommandHipc(23)]
+        [CommandCmif(23)]
         // GetColorSetId() -> i32
         public ResultCode GetColorSetId(ServiceCtx context)
         {
@@ -96,7 +96,7 @@ namespace Ryujinx.HLE.HOS.Services.Settings
             return ResultCode.Success;
         }
 
-        [CommandHipc(24)]
+        [CommandCmif(24)]
         // GetColorSetId() -> i32
         public ResultCode SetColorSetId(ServiceCtx context)
         {
@@ -107,7 +107,7 @@ namespace Ryujinx.HLE.HOS.Services.Settings
             return ResultCode.Success;
         }
 
-        [CommandHipc(37)]
+        [CommandCmif(37)]
         // GetSettingsItemValueSize(buffer<nn::settings::SettingsName, 0x19>, buffer<nn::settings::SettingsItemKey, 0x19>) -> u64
         public ResultCode GetSettingsItemValueSize(ServiceCtx context)
         {
@@ -156,7 +156,7 @@ namespace Ryujinx.HLE.HOS.Services.Settings
             return ResultCode.Success;
         }
 
-        [CommandHipc(38)]
+        [CommandCmif(38)]
         // GetSettingsItemValue(buffer<nn::settings::SettingsName, 0x19, 0x48>, buffer<nn::settings::SettingsItemKey, 0x19, 0x48>) -> (u64, buffer<unknown, 6, 0>)
         public ResultCode GetSettingsItemValue(ServiceCtx context)
         {
@@ -222,7 +222,7 @@ namespace Ryujinx.HLE.HOS.Services.Settings
             return ResultCode.Success;
         }
 
-        [CommandHipc(60)]
+        [CommandCmif(60)]
         // IsUserSystemClockAutomaticCorrectionEnabled() -> bool
         public ResultCode IsUserSystemClockAutomaticCorrectionEnabled(ServiceCtx context)
         {
@@ -234,7 +234,7 @@ namespace Ryujinx.HLE.HOS.Services.Settings
             return ResultCode.Success;
         }
 
-        [CommandHipc(62)]
+        [CommandCmif(62)]
         // GetDebugModeFlag() -> bool
         public ResultCode GetDebugModeFlag(ServiceCtx context)
         {
@@ -245,7 +245,7 @@ namespace Ryujinx.HLE.HOS.Services.Settings
             return ResultCode.Success;
         }
 
-        [CommandHipc(77)]
+        [CommandCmif(77)]
         // GetDeviceNickName() -> buffer<nn::settings::system::DeviceNickName, 0x16>
         public ResultCode GetDeviceNickName(ServiceCtx context)
         {
@@ -267,7 +267,7 @@ namespace Ryujinx.HLE.HOS.Services.Settings
             return ResultCode.Success;
         }
 
-        [CommandHipc(78)]
+        [CommandCmif(78)]
         // SetDeviceNickName(buffer<nn::settings::system::DeviceNickName, 0x15>)
         public ResultCode SetDeviceNickName(ServiceCtx context)
         {
@@ -283,7 +283,7 @@ namespace Ryujinx.HLE.HOS.Services.Settings
             return ResultCode.Success;
         }
 
-        [CommandHipc(90)]
+        [CommandCmif(90)]
         // GetMiiAuthorId() -> nn::util::Uuid
         public ResultCode GetMiiAuthorId(ServiceCtx context)
         {

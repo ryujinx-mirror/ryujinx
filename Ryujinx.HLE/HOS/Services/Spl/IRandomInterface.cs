@@ -14,7 +14,7 @@ namespace Ryujinx.HLE.HOS.Services.Spl
             _rng = RandomNumberGenerator.Create();
         }
 
-        [CommandHipc(0)]
+        [CommandCmif(0)]
         // GetRandomBytes() -> buffer<unknown, 6>
         public ResultCode GetRandomBytes(ServiceCtx context)
         {

@@ -19,7 +19,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRenderer
             _impl = impl;
         }
 
-        [CommandHipc(0)]
+        [CommandCmif(0)]
         // ListAudioDeviceName() -> (u32, buffer<bytes, 6>)
         public ResultCode ListAudioDeviceName(ServiceCtx context)
         {
@@ -53,7 +53,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRenderer
             return ResultCode.Success;
         }
 
-        [CommandHipc(1)]
+        [CommandCmif(1)]
         // SetAudioDeviceOutputVolume(f32 volume, buffer<bytes, 5> name)
         public ResultCode SetAudioDeviceOutputVolume(ServiceCtx context)
         {
@@ -67,7 +67,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRenderer
             return _impl.SetAudioDeviceOutputVolume(deviceName, volume);
         }
 
-        [CommandHipc(2)]
+        [CommandCmif(2)]
         // GetAudioDeviceOutputVolume(buffer<bytes, 5> name) -> f32 volume
         public ResultCode GetAudioDeviceOutputVolume(ServiceCtx context)
         {
@@ -86,7 +86,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRenderer
             return result;
         }
 
-        [CommandHipc(3)]
+        [CommandCmif(3)]
         // GetActiveAudioDeviceName() -> buffer<bytes, 6>
         public ResultCode GetActiveAudioDeviceName(ServiceCtx context)
         {
@@ -109,7 +109,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRenderer
             return ResultCode.Success;
         }
 
-        [CommandHipc(4)]
+        [CommandCmif(4)]
         // QueryAudioDeviceSystemEvent() -> handle<copy, event>
         public ResultCode QueryAudioDeviceSystemEvent(ServiceCtx context)
         {
@@ -127,7 +127,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRenderer
             return ResultCode.Success;
         }
 
-        [CommandHipc(5)]
+        [CommandCmif(5)]
         // GetActiveChannelCount() -> u32
         public ResultCode GetActiveChannelCount(ServiceCtx context)
         {
@@ -138,7 +138,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRenderer
             return ResultCode.Success;
         }
 
-        [CommandHipc(6)] // 3.0.0+
+        [CommandCmif(6)] // 3.0.0+
         // ListAudioDeviceNameAuto() -> (u32, buffer<bytes, 0x22>)
         public ResultCode ListAudioDeviceNameAuto(ServiceCtx context)
         {
@@ -171,7 +171,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRenderer
             return ResultCode.Success;
         }
 
-        [CommandHipc(7)] // 3.0.0+
+        [CommandCmif(7)] // 3.0.0+
         // SetAudioDeviceOutputVolumeAuto(f32 volume, buffer<bytes, 0x21> name)
         public ResultCode SetAudioDeviceOutputVolumeAuto(ServiceCtx context)
         {
@@ -184,7 +184,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRenderer
             return _impl.SetAudioDeviceOutputVolume(deviceName, volume);
         }
 
-        [CommandHipc(8)] // 3.0.0+
+        [CommandCmif(8)] // 3.0.0+
         // GetAudioDeviceOutputVolumeAuto(buffer<bytes, 0x21> name) -> f32
         public ResultCode GetAudioDeviceOutputVolumeAuto(ServiceCtx context)
         {
@@ -202,7 +202,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRenderer
             return ResultCode.Success;
         }
 
-        [CommandHipc(10)] // 3.0.0+
+        [CommandCmif(10)] // 3.0.0+
         // GetActiveAudioDeviceNameAuto() -> buffer<bytes, 0x22>
         public ResultCode GetActiveAudioDeviceNameAuto(ServiceCtx context)
         {
@@ -224,7 +224,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRenderer
             return ResultCode.Success;
         }
 
-        [CommandHipc(11)] // 3.0.0+
+        [CommandCmif(11)] // 3.0.0+
         // QueryAudioDeviceInputEvent() -> handle<copy, event>
         public ResultCode QueryAudioDeviceInputEvent(ServiceCtx context)
         {
@@ -242,7 +242,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRenderer
             return ResultCode.Success;
         }
 
-        [CommandHipc(12)] // 3.0.0+
+        [CommandCmif(12)] // 3.0.0+
         // QueryAudioDeviceOutputEvent() -> handle<copy, event>
         public ResultCode QueryAudioDeviceOutputEvent(ServiceCtx context)
         {
@@ -260,7 +260,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRenderer
             return ResultCode.Success;
         }
 
-        [CommandHipc(13)] // 13.0.0+
+        [CommandCmif(13)] // 13.0.0+
         // GetActiveAudioOutputDeviceName() -> buffer<bytes, 6>
         public ResultCode GetActiveAudioOutputDeviceName(ServiceCtx context)
         {
@@ -283,7 +283,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRenderer
             return ResultCode.Success;
         }
 
-        [CommandHipc(14)] // 13.0.0+
+        [CommandCmif(14)] // 13.0.0+
         // ListAudioOutputDeviceName() -> (u32, buffer<bytes, 6>)
         public ResultCode ListAudioOutputDeviceName(ServiceCtx context)
         {

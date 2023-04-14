@@ -28,7 +28,7 @@ namespace Ryujinx.HLE.HOS.Services.Bcat
             }
         }
 
-        [CommandHipc(0)]
+        [CommandCmif(0)]
         // CreateBcatService(pid) -> object<nn::bcat::detail::ipc::IBcatService>
         public ResultCode CreateBcatService(ServiceCtx context)
         {
@@ -46,7 +46,7 @@ namespace Ryujinx.HLE.HOS.Services.Bcat
             return ResultCode.Success;
         }
 
-        [CommandHipc(1)]
+        [CommandCmif(1)]
         // CreateDeliveryCacheStorageService(pid) -> object<nn::bcat::detail::ipc::IDeliveryCacheStorageService>
         public ResultCode CreateDeliveryCacheStorageService(ServiceCtx context)
         {
@@ -64,7 +64,7 @@ namespace Ryujinx.HLE.HOS.Services.Bcat
             return (ResultCode)rc.Value;
         }
 
-        [CommandHipc(2)]
+        [CommandCmif(2)]
         // CreateDeliveryCacheStorageServiceWithApplicationId(nn::ApplicationId) -> object<nn::bcat::detail::ipc::IDeliveryCacheStorageService>
         public ResultCode CreateDeliveryCacheStorageServiceWithApplicationId(ServiceCtx context)
         {

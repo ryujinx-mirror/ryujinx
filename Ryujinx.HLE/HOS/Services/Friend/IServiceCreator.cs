@@ -18,7 +18,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend
             _permissionLevel = permissionLevel;
         }
 
-        [CommandHipc(0)]
+        [CommandCmif(0)]
         // CreateFriendService() -> object<nn::friends::detail::ipc::IFriendService>
         public ResultCode CreateFriendService(ServiceCtx context)
         {
@@ -27,7 +27,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend
             return ResultCode.Success;
         }
 
-        [CommandHipc(1)] // 2.0.0+
+        [CommandCmif(1)] // 2.0.0+
         // CreateNotificationService(nn::account::Uid userId) -> object<nn::friends::detail::ipc::INotificationService>
         public ResultCode CreateNotificationService(ServiceCtx context)
         {
@@ -43,7 +43,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend
             return ResultCode.Success;
         }
 
-        [CommandHipc(2)] // 4.0.0+
+        [CommandCmif(2)] // 4.0.0+
         // CreateDaemonSuspendSessionService() -> object<nn::friends::detail::ipc::IDaemonSuspendSessionService>
         public ResultCode CreateDaemonSuspendSessionService(ServiceCtx context)
         {

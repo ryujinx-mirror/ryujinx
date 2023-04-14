@@ -14,7 +14,7 @@ namespace Ryujinx.HLE.HOS.Services.Spl
     {
         public IGeneralInterface(ServiceCtx context) { }
 
-        [CommandHipc(0)]
+        [CommandCmif(0)]
         // GetConfig(u32 config_item) -> u64 config_value
         public ResultCode GetConfig(ServiceCtx context)
         {

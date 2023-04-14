@@ -11,7 +11,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService
             _pid = pid;
         }
 
-        [CommandHipc(0)]
+        [CommandCmif(0)]
         // GetCommonStateGetter() -> object<nn::am::service::ICommonStateGetter>
         public ResultCode GetCommonStateGetter(ServiceCtx context)
         {
@@ -20,7 +20,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService
             return ResultCode.Success;
         }
 
-        [CommandHipc(1)]
+        [CommandCmif(1)]
         // GetSelfController() -> object<nn::am::service::ISelfController>
         public ResultCode GetSelfController(ServiceCtx context)
         {
@@ -29,7 +29,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService
             return ResultCode.Success;
         }
 
-        [CommandHipc(2)]
+        [CommandCmif(2)]
         // GetWindowController() -> object<nn::am::service::IWindowController>
         public ResultCode GetWindowController(ServiceCtx context)
         {
@@ -38,7 +38,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService
             return ResultCode.Success;
         }
 
-        [CommandHipc(3)]
+        [CommandCmif(3)]
         // GetAudioController() -> object<nn::am::service::IAudioController>
         public ResultCode GetAudioController(ServiceCtx context)
         {
@@ -47,7 +47,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService
             return ResultCode.Success;
         }
 
-        [CommandHipc(4)]
+        [CommandCmif(4)]
         // GetDisplayController() -> object<nn::am::service::IDisplayController>
         public ResultCode GetDisplayController(ServiceCtx context)
         {
@@ -56,7 +56,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService
             return ResultCode.Success;
         }
 
-        [CommandHipc(11)]
+        [CommandCmif(11)]
         // GetLibraryAppletCreator() -> object<nn::am::service::ILibraryAppletCreator>
         public ResultCode GetLibraryAppletCreator(ServiceCtx context)
         {
@@ -65,7 +65,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService
             return ResultCode.Success;
         }
 
-        [CommandHipc(20)]
+        [CommandCmif(20)]
         // GetHomeMenuFunctions() -> object<nn::am::service::IHomeMenuFunctions>
         public ResultCode GetHomeMenuFunctions(ServiceCtx context)
         {
@@ -74,7 +74,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService
             return ResultCode.Success;
         }
 
-        [CommandHipc(21)]
+        [CommandCmif(21)]
         // GetGlobalStateController() -> object<nn::am::service::IGlobalStateController>
         public ResultCode GetGlobalStateController(ServiceCtx context)
         {
@@ -83,7 +83,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService
             return ResultCode.Success;
         }
 
-        [CommandHipc(22)]
+        [CommandCmif(22)]
         // GetApplicationCreator() -> object<nn::am::service::IApplicationCreator>
         public ResultCode GetApplicationCreator(ServiceCtx context)
         {
@@ -92,7 +92,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService
             return ResultCode.Success;
         }
 
-        [CommandHipc(1000)]
+        [CommandCmif(1000)]
         // GetDebugFunctions() -> object<nn::am::service::IDebugFunctions>
         public ResultCode GetDebugFunctions(ServiceCtx context)
         {

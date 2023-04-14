@@ -10,7 +10,7 @@ namespace Ryujinx.HLE.HOS.Services.Settings
     {
         public ISettingsServer(ServiceCtx context) { }
 
-        [CommandHipc(0)]
+        [CommandCmif(0)]
         // GetLanguageCode() -> nn::settings::LanguageCode
         public ResultCode GetLanguageCode(ServiceCtx context)
         {
@@ -19,7 +19,7 @@ namespace Ryujinx.HLE.HOS.Services.Settings
             return ResultCode.Success;
         }
 
-        [CommandHipc(1)]
+        [CommandCmif(1)]
         // GetAvailableLanguageCodes() -> (u32, buffer<nn::settings::LanguageCode, 0xa>)
         public ResultCode GetAvailableLanguageCodes(ServiceCtx context)
         {
@@ -30,7 +30,7 @@ namespace Ryujinx.HLE.HOS.Services.Settings
                     0xF);
         }
 
-        [CommandHipc(2)] // 4.0.0+
+        [CommandCmif(2)] // 4.0.0+
         // MakeLanguageCode(nn::settings::Language language_index) -> nn::settings::LanguageCode
         public ResultCode MakeLanguageCode(ServiceCtx context)
         {
@@ -46,7 +46,7 @@ namespace Ryujinx.HLE.HOS.Services.Settings
             return ResultCode.Success;
         }
 
-        [CommandHipc(3)]
+        [CommandCmif(3)]
         // GetAvailableLanguageCodeCount() -> u32
         public ResultCode GetAvailableLanguageCodeCount(ServiceCtx context)
         {
@@ -55,7 +55,7 @@ namespace Ryujinx.HLE.HOS.Services.Settings
             return ResultCode.Success;
         }
 
-        [CommandHipc(4)]
+        [CommandCmif(4)]
         // GetRegionCode() -> u32 nn::settings::RegionCode
         public ResultCode GetRegionCode(ServiceCtx context)
         {
@@ -73,7 +73,7 @@ namespace Ryujinx.HLE.HOS.Services.Settings
             return ResultCode.Success;
         }
 
-        [CommandHipc(5)]
+        [CommandCmif(5)]
         // GetAvailableLanguageCodes2() -> (u32, buffer<nn::settings::LanguageCode, 6>)
         public ResultCode GetAvailableLanguageCodes2(ServiceCtx context)
         {
@@ -84,7 +84,7 @@ namespace Ryujinx.HLE.HOS.Services.Settings
                     SystemStateMgr.LanguageCodes.Length);
         }
 
-        [CommandHipc(6)]
+        [CommandCmif(6)]
         // GetAvailableLanguageCodeCount2() -> u32
         public ResultCode GetAvailableLanguageCodeCount2(ServiceCtx context)
         {
@@ -93,14 +93,14 @@ namespace Ryujinx.HLE.HOS.Services.Settings
             return ResultCode.Success;
         }
 
-        [CommandHipc(7)] // 4.0.0+
+        [CommandCmif(7)] // 4.0.0+
         // GetKeyCodeMap() -> buffer<nn::kpr::KeyCodeMap, 0x16>
         public ResultCode GetKeyCodeMap(ServiceCtx context)
         {
             return GetKeyCodeMapImpl(context, 1);
         }
 
-        [CommandHipc(8)] // 5.0.0+
+        [CommandCmif(8)] // 5.0.0+
         // GetQuestFlag() -> bool
         public ResultCode GetQuestFlag(ServiceCtx context)
         {
@@ -111,14 +111,14 @@ namespace Ryujinx.HLE.HOS.Services.Settings
             return ResultCode.Success;
         }
 
-        [CommandHipc(9)] // 6.0.0+
+        [CommandCmif(9)] // 6.0.0+
         // GetKeyCodeMap2() -> buffer<nn::kpr::KeyCodeMap, 0x16>
         public ResultCode GetKeyCodeMap2(ServiceCtx context)
         {
             return GetKeyCodeMapImpl(context, 2);
         }
 
-        [CommandHipc(11)] // 10.1.0+
+        [CommandCmif(11)] // 10.1.0+
         // GetDeviceNickName() -> buffer<nn::settings::system::DeviceNickName, 0x16>
         public ResultCode GetDeviceNickName(ServiceCtx context)
         {

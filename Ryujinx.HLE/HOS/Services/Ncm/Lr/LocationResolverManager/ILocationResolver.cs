@@ -16,7 +16,7 @@ namespace Ryujinx.HLE.HOS.Services.Ncm.Lr.LocationResolverManager
             _storageId = storageId;
         }
 
-        [CommandHipc(0)]
+        [CommandCmif(0)]
         // ResolveProgramPath(u64 titleId)
         public ResultCode ResolveProgramPath(ServiceCtx context)
         {
@@ -32,7 +32,7 @@ namespace Ryujinx.HLE.HOS.Services.Ncm.Lr.LocationResolverManager
             }
         }
 
-        [CommandHipc(1)]
+        [CommandCmif(1)]
         // RedirectProgramPath(u64 titleId)
         public ResultCode RedirectProgramPath(ServiceCtx context)
         {
@@ -43,7 +43,7 @@ namespace Ryujinx.HLE.HOS.Services.Ncm.Lr.LocationResolverManager
             return ResultCode.Success;
         }
 
-        [CommandHipc(2)]
+        [CommandCmif(2)]
         // ResolveApplicationControlPath(u64 titleId)
         public ResultCode ResolveApplicationControlPath(ServiceCtx context)
         {
@@ -59,7 +59,7 @@ namespace Ryujinx.HLE.HOS.Services.Ncm.Lr.LocationResolverManager
             }
         }
 
-        [CommandHipc(3)]
+        [CommandCmif(3)]
         // ResolveApplicationHtmlDocumentPath(u64 titleId)
         public ResultCode ResolveApplicationHtmlDocumentPath(ServiceCtx context)
         {
@@ -75,7 +75,7 @@ namespace Ryujinx.HLE.HOS.Services.Ncm.Lr.LocationResolverManager
             }
         }
 
-        [CommandHipc(4)]
+        [CommandCmif(4)]
         // ResolveDataPath(u64 titleId)
         public ResultCode ResolveDataPath(ServiceCtx context)
         {
@@ -91,7 +91,7 @@ namespace Ryujinx.HLE.HOS.Services.Ncm.Lr.LocationResolverManager
             }
         }
 
-        [CommandHipc(5)]
+        [CommandCmif(5)]
         // RedirectApplicationControlPath(u64 titleId)
         public ResultCode RedirectApplicationControlPath(ServiceCtx context)
         {
@@ -102,7 +102,7 @@ namespace Ryujinx.HLE.HOS.Services.Ncm.Lr.LocationResolverManager
             return ResultCode.Success;
         }
 
-        [CommandHipc(6)]
+        [CommandCmif(6)]
         // RedirectApplicationHtmlDocumentPath(u64 titleId)
         public ResultCode RedirectApplicationHtmlDocumentPath(ServiceCtx context)
         {
@@ -113,7 +113,7 @@ namespace Ryujinx.HLE.HOS.Services.Ncm.Lr.LocationResolverManager
             return ResultCode.Success;
         }
 
-        [CommandHipc(7)]
+        [CommandCmif(7)]
         // ResolveApplicationLegalInformationPath(u64 titleId)
         public ResultCode ResolveApplicationLegalInformationPath(ServiceCtx context)
         {
@@ -129,7 +129,7 @@ namespace Ryujinx.HLE.HOS.Services.Ncm.Lr.LocationResolverManager
             }
         }
 
-        [CommandHipc(8)]
+        [CommandCmif(8)]
         // RedirectApplicationLegalInformationPath(u64 titleId)
         public ResultCode RedirectApplicationLegalInformationPath(ServiceCtx context)
         {
@@ -140,7 +140,7 @@ namespace Ryujinx.HLE.HOS.Services.Ncm.Lr.LocationResolverManager
             return ResultCode.Success;
         }
 
-        [CommandHipc(9)]
+        [CommandCmif(9)]
         // Refresh()
         public ResultCode Refresh(ServiceCtx context)
         {
@@ -149,7 +149,7 @@ namespace Ryujinx.HLE.HOS.Services.Ncm.Lr.LocationResolverManager
             return ResultCode.Success;
         }
 
-        [CommandHipc(10)]
+        [CommandCmif(10)]
         // SetProgramNcaPath2(u64 titleId)
         public ResultCode SetProgramNcaPath2(ServiceCtx context)
         {
@@ -160,7 +160,7 @@ namespace Ryujinx.HLE.HOS.Services.Ncm.Lr.LocationResolverManager
             return ResultCode.Success;
         }
 
-        [CommandHipc(11)]
+        [CommandCmif(11)]
         // ClearLocationResolver2()
         public ResultCode ClearLocationResolver2(ServiceCtx context)
         {
@@ -169,7 +169,7 @@ namespace Ryujinx.HLE.HOS.Services.Ncm.Lr.LocationResolverManager
             return ResultCode.Success;
         }
 
-        [CommandHipc(12)]
+        [CommandCmif(12)]
         // DeleteProgramNcaPath(u64 titleId)
         public ResultCode DeleteProgramNcaPath(ServiceCtx context)
         {
@@ -180,7 +180,7 @@ namespace Ryujinx.HLE.HOS.Services.Ncm.Lr.LocationResolverManager
             return ResultCode.Success;
         }
 
-        [CommandHipc(13)]
+        [CommandCmif(13)]
         // DeleteControlNcaPath(u64 titleId)
         public ResultCode DeleteControlNcaPath(ServiceCtx context)
         {
@@ -191,7 +191,7 @@ namespace Ryujinx.HLE.HOS.Services.Ncm.Lr.LocationResolverManager
             return ResultCode.Success;
         }
 
-        [CommandHipc(14)]
+        [CommandCmif(14)]
         // DeleteDocHtmlNcaPath(u64 titleId)
         public ResultCode DeleteDocHtmlNcaPath(ServiceCtx context)
         {
@@ -202,7 +202,7 @@ namespace Ryujinx.HLE.HOS.Services.Ncm.Lr.LocationResolverManager
             return ResultCode.Success;
         }
 
-        [CommandHipc(15)]
+        [CommandCmif(15)]
         // DeleteInfoHtmlNcaPath(u64 titleId)
         public ResultCode DeleteInfoHtmlNcaPath(ServiceCtx context)
         {

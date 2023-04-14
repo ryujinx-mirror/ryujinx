@@ -7,7 +7,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
     {
         public IUserManager(ServiceCtx context) { }
 
-        [CommandHipc(0)]
+        [CommandCmif(0)]
         // CreateUserInterface() -> object<nn::nfp::detail::IUser>
         public ResultCode CreateUserInterface(ServiceCtx context)
         {

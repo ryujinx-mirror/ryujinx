@@ -88,7 +88,7 @@ namespace Ryujinx.HLE.HOS.Ipc
 
             long recvListPos = reader.BaseStream.Position + rawDataSize;
 
-            // only HIPC have the padding requirements.
+            // Only CMIF has the padding requirements.
             if (Type < IpcMessageType.TipcCloseSession)
             {
                 long pad0 = GetPadSize16(reader.BaseStream.Position + cmdPtr);

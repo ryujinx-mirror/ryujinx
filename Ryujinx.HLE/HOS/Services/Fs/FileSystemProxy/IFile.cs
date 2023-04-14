@@ -15,7 +15,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
             _baseFile = SharedRef<LibHac.FsSrv.Sf.IFile>.CreateMove(ref baseFile);
         }
 
-        [CommandHipc(0)]
+        [CommandCmif(0)]
         // Read(u32 readOption, u64 offset, u64 size) -> (u64 out_size, buffer<u8, 0x46, 0> out_buf)
         public ResultCode Read(ServiceCtx context)
         {
@@ -38,7 +38,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
             }
         }
 
-        [CommandHipc(1)]
+        [CommandCmif(1)]
         // Write(u32 writeOption, u64 offset, u64 size, buffer<u8, 0x45, 0>)
         public ResultCode Write(ServiceCtx context)
         {
@@ -57,14 +57,14 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
             return (ResultCode)_baseFile.Get.Write(offset, new InBuffer(data), size, writeOption).Value;
         }
 
-        [CommandHipc(2)]
+        [CommandCmif(2)]
         // Flush()
         public ResultCode Flush(ServiceCtx context)
         {
             return (ResultCode)_baseFile.Get.Flush().Value;
         }
 
-        [CommandHipc(3)]
+        [CommandCmif(3)]
         // SetSize(u64 size)
         public ResultCode SetSize(ServiceCtx context)
         {
@@ -73,7 +73,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
             return (ResultCode)_baseFile.Get.SetSize(size).Value;
         }
 
-        [CommandHipc(4)]
+        [CommandCmif(4)]
         // GetSize() -> u64 fileSize
         public ResultCode GetSize(ServiceCtx context)
         {

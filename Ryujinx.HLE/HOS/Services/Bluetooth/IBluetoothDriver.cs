@@ -16,7 +16,7 @@ namespace Ryujinx.HLE.HOS.Services.Bluetooth
 
         public IBluetoothDriver(ServiceCtx context) { }
 
-        [CommandHipc(46)]
+        [CommandCmif(46)]
         // InitializeBluetoothLe() -> handle<copy>
         public ResultCode InitializeBluetoothLe(ServiceCtx context)
         {

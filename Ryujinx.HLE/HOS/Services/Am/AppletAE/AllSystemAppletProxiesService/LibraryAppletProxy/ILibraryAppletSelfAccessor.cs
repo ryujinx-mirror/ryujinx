@@ -29,7 +29,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Lib
             }
         }
 
-        [CommandHipc(0)]
+        [CommandCmif(0)]
         // PopInData() -> object<nn::am::service::IStorage>
         public ResultCode PopInData(ServiceCtx context)
         {
@@ -45,7 +45,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Lib
             return ResultCode.Success;
         }
 
-        [CommandHipc(11)]
+        [CommandCmif(11)]
         // GetLibraryAppletInfo() -> nn::am::service::LibraryAppletInfo
         public ResultCode GetLibraryAppletInfo(ServiceCtx context)
         {
@@ -60,7 +60,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Lib
             return ResultCode.Success;
         }
 
-        [CommandHipc(14)]
+        [CommandCmif(14)]
         // GetCallerAppletIdentityInfo() -> nn::am::service::AppletIdentityInfo
         public ResultCode GetCallerAppletIdentityInfo(ServiceCtx context)
         {

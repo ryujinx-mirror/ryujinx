@@ -14,7 +14,7 @@ namespace Ryujinx.HLE.HOS.Services.Mm
 
         public IRequest(ServiceCtx context) { }
 
-        [CommandHipc(0)]
+        [CommandCmif(0)]
         // InitializeOld(u32, u32, u32)
         public ResultCode InitializeOld(ServiceCtx context)
         {
@@ -29,7 +29,7 @@ namespace Ryujinx.HLE.HOS.Services.Mm
             return ResultCode.Success;
         }
 
-        [CommandHipc(1)]
+        [CommandCmif(1)]
         // FinalizeOld(u32)
         public ResultCode FinalizeOld(ServiceCtx context)
         {
@@ -45,7 +45,7 @@ namespace Ryujinx.HLE.HOS.Services.Mm
             return ResultCode.Success;
         }
 
-        [CommandHipc(2)]
+        [CommandCmif(2)]
         // SetAndWaitOld(u32, u32, u32)
         public ResultCode SetAndWaitOld(ServiceCtx context)
         {
@@ -63,7 +63,7 @@ namespace Ryujinx.HLE.HOS.Services.Mm
             return ResultCode.Success;
         }
 
-        [CommandHipc(3)]
+        [CommandCmif(3)]
         // GetOld(u32) -> u32
         public ResultCode GetOld(ServiceCtx context)
         {
@@ -83,7 +83,7 @@ namespace Ryujinx.HLE.HOS.Services.Mm
             return ResultCode.Success;
         }
 
-        [CommandHipc(4)]
+        [CommandCmif(4)]
         // Initialize(u32, u32, u32) -> u32
         public ResultCode Initialize(ServiceCtx context)
         {
@@ -100,7 +100,7 @@ namespace Ryujinx.HLE.HOS.Services.Mm
             return ResultCode.Success;
         }
 
-        [CommandHipc(5)]
+        [CommandCmif(5)]
         // Finalize(u32)
         public ResultCode Finalize(ServiceCtx context)
         {
@@ -116,7 +116,7 @@ namespace Ryujinx.HLE.HOS.Services.Mm
             return ResultCode.Success;
         }
 
-        [CommandHipc(6)]
+        [CommandCmif(6)]
         // SetAndWait(u32, u32, u32)
         public ResultCode SetAndWait(ServiceCtx context)
         {
@@ -134,7 +134,7 @@ namespace Ryujinx.HLE.HOS.Services.Mm
             return ResultCode.Success;
         }
 
-        [CommandHipc(7)]
+        [CommandCmif(7)]
         // Get(u32) -> u32
         public ResultCode Get(ServiceCtx context)
         {

@@ -31,7 +31,7 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService
             _version = version;
         }
 
-        [CommandHipc(0)]
+        [CommandCmif(0)]
         // GetRequestState() -> u32
         public ResultCode GetRequestState(ServiceCtx context)
         {
@@ -46,7 +46,7 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService
             return ResultCode.Success;
         }
 
-        [CommandHipc(1)]
+        [CommandCmif(1)]
         // GetResult()
         public ResultCode GetResult(ServiceCtx context)
         {
@@ -60,7 +60,7 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService
             return ResultCode.Success;
         }
 
-        [CommandHipc(2)]
+        [CommandCmif(2)]
         // GetSystemEventReadableHandles() -> (handle<copy>, handle<copy>)
         public ResultCode GetSystemEventReadableHandles(ServiceCtx context)
         {
@@ -85,7 +85,7 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService
             return ResultCode.Success;
         }
 
-        [CommandHipc(3)]
+        [CommandCmif(3)]
         // Cancel()
         public ResultCode Cancel(ServiceCtx context)
         {
@@ -94,7 +94,7 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService
             return ResultCode.Success;
         }
 
-        [CommandHipc(4)]
+        [CommandCmif(4)]
         // Submit()
         public ResultCode Submit(ServiceCtx context)
         {
@@ -103,7 +103,7 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService
             return ResultCode.Success;
         }
 
-        [CommandHipc(11)]
+        [CommandCmif(11)]
         // SetConnectionConfirmationOption(i8)
         public ResultCode SetConnectionConfirmationOption(ServiceCtx context)
         {
@@ -112,7 +112,7 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService
             return ResultCode.Success;
         }
 
-        [CommandHipc(21)]
+        [CommandCmif(21)]
         // GetAppletInfo(u32) -> (u32, u32, u32, buffer<bytes, 6>)
         public ResultCode GetAppletInfo(ServiceCtx context)
         {

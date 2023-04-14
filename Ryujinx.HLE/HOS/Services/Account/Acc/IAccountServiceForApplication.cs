@@ -14,42 +14,42 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
             _applicationServiceServer = new ApplicationServiceServer(serviceFlag);
         }
 
-        [CommandHipc(0)]
+        [CommandCmif(0)]
         // GetUserCount() -> i32
         public ResultCode GetUserCount(ServiceCtx context)
         {
             return _applicationServiceServer.GetUserCountImpl(context);
         }
 
-        [CommandHipc(1)]
+        [CommandCmif(1)]
         // GetUserExistence(nn::account::Uid) -> bool
         public ResultCode GetUserExistence(ServiceCtx context)
         {
             return _applicationServiceServer.GetUserExistenceImpl(context);
         }
 
-        [CommandHipc(2)]
+        [CommandCmif(2)]
         // ListAllUsers() -> array<nn::account::Uid, 0xa>
         public ResultCode ListAllUsers(ServiceCtx context)
         {
             return _applicationServiceServer.ListAllUsers(context);
         }
 
-        [CommandHipc(3)]
+        [CommandCmif(3)]
         // ListOpenUsers() -> array<nn::account::Uid, 0xa>
         public ResultCode ListOpenUsers(ServiceCtx context)
         {
             return _applicationServiceServer.ListOpenUsers(context);
         }
 
-        [CommandHipc(4)]
+        [CommandCmif(4)]
         // GetLastOpenedUser() -> nn::account::Uid
         public ResultCode GetLastOpenedUser(ServiceCtx context)
         {
             return _applicationServiceServer.GetLastOpenedUser(context);
         }
 
-        [CommandHipc(5)]
+        [CommandCmif(5)]
         // GetProfile(nn::account::Uid) -> object<nn::account::profile::IProfile>
         public ResultCode GetProfile(ServiceCtx context)
         {
@@ -63,7 +63,7 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
             return resultCode;
         }
 
-        [CommandHipc(50)]
+        [CommandCmif(50)]
         // IsUserRegistrationRequestPermitted(pid) -> bool
         public ResultCode IsUserRegistrationRequestPermitted(ServiceCtx context)
         {
@@ -71,16 +71,16 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
             return _applicationServiceServer.IsUserRegistrationRequestPermitted(context);
         }
 
-        [CommandHipc(51)]
+        [CommandCmif(51)]
         // TrySelectUserWithoutInteraction(bool) -> nn::account::Uid
         public ResultCode TrySelectUserWithoutInteraction(ServiceCtx context)
         {
             return _applicationServiceServer.TrySelectUserWithoutInteraction(context);
         }
 
-        [CommandHipc(100)]
-        [CommandHipc(140)] // 6.0.0+
-        [CommandHipc(160)] // 13.0.0+
+        [CommandCmif(100)]
+        [CommandCmif(140)] // 6.0.0+
+        [CommandCmif(160)] // 13.0.0+
         // InitializeApplicationInfo(u64 pid_placeholder, pid)
         public ResultCode InitializeApplicationInfo(ServiceCtx context)
         {
@@ -105,7 +105,7 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
             return ResultCode.Success;
         }
 
-        [CommandHipc(101)]
+        [CommandCmif(101)]
         // GetBaasAccountManagerForApplication(nn::account::Uid) -> object<nn::account::baas::IManagerForApplication>
         public ResultCode GetBaasAccountManagerForApplication(ServiceCtx context)
         {
@@ -124,7 +124,7 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
             return ResultCode.Success;
         }
 
-        [CommandHipc(103)] // 4.0.0+
+        [CommandCmif(103)] // 4.0.0+
         // CheckNetworkServiceAvailabilityAsync() -> object<nn::account::detail::IAsyncContext>
         public ResultCode CheckNetworkServiceAvailabilityAsync(ServiceCtx context)
         {
@@ -138,21 +138,21 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
             return resultCode;
         }
 
-        [CommandHipc(110)]
+        [CommandCmif(110)]
         // StoreSaveDataThumbnail(nn::account::Uid, buffer<bytes, 5>)
         public ResultCode StoreSaveDataThumbnail(ServiceCtx context)
         {
             return _applicationServiceServer.StoreSaveDataThumbnail(context);
         }
 
-        [CommandHipc(111)]
+        [CommandCmif(111)]
         // ClearSaveDataThumbnail(nn::account::Uid)
         public ResultCode ClearSaveDataThumbnail(ServiceCtx context)
         {
             return _applicationServiceServer.ClearSaveDataThumbnail(context);
         }
 
-        [CommandHipc(130)] // 5.0.0+
+        [CommandCmif(130)] // 5.0.0+
         // LoadOpenContext(nn::account::Uid) -> object<nn::account::baas::IManagerForApplication>
         public ResultCode LoadOpenContext(ServiceCtx context)
         {
@@ -168,22 +168,22 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
             return ResultCode.Success;
         }
 
-        [CommandHipc(60)] // 5.0.0-5.1.0
-        [CommandHipc(131)] // 6.0.0+
+        [CommandCmif(60)] // 5.0.0-5.1.0
+        [CommandCmif(131)] // 6.0.0+
         // ListOpenContextStoredUsers() -> array<nn::account::Uid, 0xa>
         public ResultCode ListOpenContextStoredUsers(ServiceCtx context)
         {
             return _applicationServiceServer.ListOpenContextStoredUsers(context);
         }
 
-        [CommandHipc(141)] // 6.0.0+
+        [CommandCmif(141)] // 6.0.0+
         // ListQualifiedUsers() -> array<nn::account::Uid, 0xa>
         public ResultCode ListQualifiedUsers(ServiceCtx context)
         {
             return _applicationServiceServer.ListQualifiedUsers(context);
         }
 
-        [CommandHipc(150)] // 6.0.0+
+        [CommandCmif(150)] // 6.0.0+
         // IsUserAccountSwitchLocked() -> bool
         public ResultCode IsUserAccountSwitchLocked(ServiceCtx context)
         {

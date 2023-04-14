@@ -13,7 +13,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             _baseCommitManager = SharedRef<LibHac.FsSrv.Sf.IMultiCommitManager>.CreateMove(ref baseCommitManager);
         }
 
-        [CommandHipc(1)] // 6.0.0+
+        [CommandCmif(1)] // 6.0.0+
         // Add(object<nn::fssrv::sf::IFileSystem>)
         public ResultCode Add(ServiceCtx context)
         {
@@ -24,7 +24,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return (ResultCode)result.Value;
         }
 
-        [CommandHipc(2)] // 6.0.0+
+        [CommandCmif(2)] // 6.0.0+
         // Commit()
         public ResultCode Commit(ServiceCtx context)
         {

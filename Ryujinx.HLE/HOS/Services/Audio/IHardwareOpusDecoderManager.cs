@@ -10,7 +10,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio
     {
         public IHardwareOpusDecoderManager(ServiceCtx context) { }
 
-        [CommandHipc(0)]
+        [CommandCmif(0)]
         // Initialize(bytes<8, 4>, u32, handle<copy>) -> object<nn::codec::detail::IHardwareOpusDecoder>
         public ResultCode Initialize(ServiceCtx context)
         {
@@ -25,7 +25,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio
             return ResultCode.Success;
         }
 
-        [CommandHipc(1)]
+        [CommandCmif(1)]
         // GetWorkBufferSize(bytes<8, 4>) -> u32
         public ResultCode GetWorkBufferSize(ServiceCtx context)
         {
@@ -42,7 +42,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio
             return ResultCode.Success;
         }
 
-        [CommandHipc(2)] // 3.0.0+
+        [CommandCmif(2)] // 3.0.0+
         // InitializeForMultiStream(u32, handle<copy>, buffer<unknown<0x110>, 0x19>) -> object<nn::codec::detail::IHardwareOpusDecoder>
         public ResultCode InitializeForMultiStream(ServiceCtx context)
         {
@@ -58,7 +58,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio
             return ResultCode.Success;
         }
 
-        [CommandHipc(3)] // 3.0.0+
+        [CommandCmif(3)] // 3.0.0+
         // GetWorkBufferSizeForMultiStream(buffer<unknown<0x110>, 0x19>) -> u32
         public ResultCode GetWorkBufferSizeForMultiStream(ServiceCtx context)
         {
@@ -77,7 +77,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio
             return ResultCode.Success;
         }
 
-        [CommandHipc(4)] // 12.0.0+
+        [CommandCmif(4)] // 12.0.0+
         // InitializeEx(OpusParametersEx, u32, handle<copy>) -> object<nn::codec::detail::IHardwareOpusDecoder>
         public ResultCode InitializeEx(ServiceCtx context)
         {
@@ -92,7 +92,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio
             return ResultCode.Success;
         }
 
-        [CommandHipc(5)] // 12.0.0+
+        [CommandCmif(5)] // 12.0.0+
         // GetWorkBufferSizeEx(OpusParametersEx) -> u32
         public ResultCode GetWorkBufferSizeEx(ServiceCtx context)
         {
@@ -109,7 +109,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio
             return ResultCode.Success;
         }
 
-        [CommandHipc(6)] // 12.0.0+
+        [CommandCmif(6)] // 12.0.0+
         // InitializeForMultiStreamEx(u32, handle<copy>, buffer<unknown<0x118>, 0x19>) -> object<nn::codec::detail::IHardwareOpusDecoder>
         public ResultCode InitializeForMultiStreamEx(ServiceCtx context)
         {
@@ -134,7 +134,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio
             return ResultCode.Success;
         }
 
-        [CommandHipc(7)] // 12.0.0+
+        [CommandCmif(7)] // 12.0.0+
         // GetWorkBufferSizeForMultiStreamEx(buffer<unknown<0x118>, 0x19>) -> u32
         public ResultCode GetWorkBufferSizeForMultiStreamEx(ServiceCtx context)
         {

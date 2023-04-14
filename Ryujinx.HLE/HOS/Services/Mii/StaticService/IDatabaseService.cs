@@ -8,7 +8,7 @@ namespace Ryujinx.HLE.HOS.Services.Mii.StaticService
 {
     abstract class IDatabaseService : IpcService
     {
-        [CommandHipc(0)]
+        [CommandCmif(0)]
         // IsUpdated(SourceFlag flag) -> bool
         public ResultCode IsUpdated(ServiceCtx context)
         {
@@ -19,7 +19,7 @@ namespace Ryujinx.HLE.HOS.Services.Mii.StaticService
             return ResultCode.Success;
         }
 
-        [CommandHipc(1)]
+        [CommandCmif(1)]
         // IsFullDatabase() -> bool
         public ResultCode IsFullDatabase(ServiceCtx context)
         {
@@ -28,7 +28,7 @@ namespace Ryujinx.HLE.HOS.Services.Mii.StaticService
             return ResultCode.Success;
         }
 
-        [CommandHipc(2)]
+        [CommandCmif(2)]
         // GetCount(SourceFlag flag) -> u32
         public ResultCode GetCount(ServiceCtx context)
         {
@@ -39,7 +39,7 @@ namespace Ryujinx.HLE.HOS.Services.Mii.StaticService
             return ResultCode.Success;
         }
 
-        [CommandHipc(3)]
+        [CommandCmif(3)]
         // Get(SourceFlag flag) -> (s32 count, buffer<nn::mii::CharInfoRawElement, 6>)
         public ResultCode Get(ServiceCtx context)
         {
@@ -60,7 +60,7 @@ namespace Ryujinx.HLE.HOS.Services.Mii.StaticService
             return result;
         }
 
-        [CommandHipc(4)]
+        [CommandCmif(4)]
         // Get1(SourceFlag flag) -> (s32 count, buffer<nn::mii::CharInfo, 6>)
         public ResultCode Get1(ServiceCtx context)
         {
@@ -81,7 +81,7 @@ namespace Ryujinx.HLE.HOS.Services.Mii.StaticService
             return result;
         }
 
-        [CommandHipc(5)]
+        [CommandCmif(5)]
         // UpdateLatest(nn::mii::CharInfo old_char_info, SourceFlag flag) -> nn::mii::CharInfo
         public ResultCode UpdateLatest(ServiceCtx context)
         {
@@ -95,7 +95,7 @@ namespace Ryujinx.HLE.HOS.Services.Mii.StaticService
             return result;
         }
 
-        [CommandHipc(6)]
+        [CommandCmif(6)]
         // BuildRandom(Age age, Gender gender, Race race) -> nn::mii::CharInfo
         public ResultCode BuildRandom(ServiceCtx context)
         {
@@ -110,7 +110,7 @@ namespace Ryujinx.HLE.HOS.Services.Mii.StaticService
             return result;
         }
 
-        [CommandHipc(7)]
+        [CommandCmif(7)]
         // BuildDefault(u32 index) -> nn::mii::CharInfoRaw
         public ResultCode BuildDefault(ServiceCtx context)
         {
@@ -123,7 +123,7 @@ namespace Ryujinx.HLE.HOS.Services.Mii.StaticService
             return result;
         }
 
-        [CommandHipc(8)]
+        [CommandCmif(8)]
         // Get2(SourceFlag flag) -> (u32 count, buffer<nn::mii::StoreDataElement, 6>)
         public ResultCode Get2(ServiceCtx context)
         {
@@ -144,7 +144,7 @@ namespace Ryujinx.HLE.HOS.Services.Mii.StaticService
             return result;
         }
 
-        [CommandHipc(9)]
+        [CommandCmif(9)]
         // Get3(SourceFlag flag) -> (u32 count, buffer<nn::mii::StoreData, 6>)
         public ResultCode Get3(ServiceCtx context)
         {
@@ -165,7 +165,7 @@ namespace Ryujinx.HLE.HOS.Services.Mii.StaticService
             return result;
         }
 
-        [CommandHipc(10)]
+        [CommandCmif(10)]
         // UpdateLatest1(nn::mii::StoreData old_store_data, SourceFlag flag) -> nn::mii::StoreData
         public ResultCode UpdateLatest1(ServiceCtx context)
         {
@@ -179,7 +179,7 @@ namespace Ryujinx.HLE.HOS.Services.Mii.StaticService
             return result;
         }
 
-        [CommandHipc(11)]
+        [CommandCmif(11)]
         // FindIndex(nn::mii::CreateId create_id, bool is_special) -> s32
         public ResultCode FindIndex(ServiceCtx context)
         {
@@ -193,7 +193,7 @@ namespace Ryujinx.HLE.HOS.Services.Mii.StaticService
             return result;
         }
 
-        [CommandHipc(12)]
+        [CommandCmif(12)]
         // Move(nn::mii::CreateId create_id, s32 new_index)
         public ResultCode Move(ServiceCtx context)
         {
@@ -203,7 +203,7 @@ namespace Ryujinx.HLE.HOS.Services.Mii.StaticService
             return Move(createId, newIndex);
         }
 
-        [CommandHipc(13)]
+        [CommandCmif(13)]
         // AddOrReplace(nn::mii::StoreData store_data)
         public ResultCode AddOrReplace(ServiceCtx context)
         {
@@ -212,7 +212,7 @@ namespace Ryujinx.HLE.HOS.Services.Mii.StaticService
             return AddOrReplace(storeData);
         }
 
-        [CommandHipc(14)]
+        [CommandCmif(14)]
         // Delete(nn::mii::CreateId create_id)
         public ResultCode Delete(ServiceCtx context)
         {
@@ -221,28 +221,28 @@ namespace Ryujinx.HLE.HOS.Services.Mii.StaticService
             return Delete(createId);
         }
 
-        [CommandHipc(15)]
+        [CommandCmif(15)]
         // DestroyFile()
         public ResultCode DestroyFile(ServiceCtx context)
         {
             return DestroyFile();
         }
 
-        [CommandHipc(16)]
+        [CommandCmif(16)]
         // DeleteFile()
         public ResultCode DeleteFile(ServiceCtx context)
         {
             return DeleteFile();
         }
 
-        [CommandHipc(17)]
+        [CommandCmif(17)]
         // Format()
         public ResultCode Format(ServiceCtx context)
         {
             return Format();
         }
 
-        [CommandHipc(18)]
+        [CommandCmif(18)]
         // Import(buffer<bytes, 5>)
         public ResultCode Import(ServiceCtx context)
         {
@@ -251,7 +251,7 @@ namespace Ryujinx.HLE.HOS.Services.Mii.StaticService
             return Import(data);
         }
 
-        [CommandHipc(19)]
+        [CommandCmif(19)]
         // Export() -> buffer<bytes, 6>
         public ResultCode Export(ServiceCtx context)
         {
@@ -266,7 +266,7 @@ namespace Ryujinx.HLE.HOS.Services.Mii.StaticService
             return result;
         }
 
-        [CommandHipc(20)]
+        [CommandCmif(20)]
         // IsBrokenDatabaseWithClearFlag() -> bool
         public ResultCode IsBrokenDatabaseWithClearFlag(ServiceCtx context)
         {
@@ -277,7 +277,7 @@ namespace Ryujinx.HLE.HOS.Services.Mii.StaticService
             return result;
         }
 
-        [CommandHipc(21)]
+        [CommandCmif(21)]
         // GetIndex(nn::mii::CharInfo char_info) -> s32
         public ResultCode GetIndex(ServiceCtx context)
         {
@@ -290,7 +290,7 @@ namespace Ryujinx.HLE.HOS.Services.Mii.StaticService
             return result;
         }
 
-        [CommandHipc(22)] // 5.0.0+
+        [CommandCmif(22)] // 5.0.0+
         // SetInterfaceVersion(u32 version)
         public ResultCode SetInterfaceVersion(ServiceCtx context)
         {
@@ -301,7 +301,7 @@ namespace Ryujinx.HLE.HOS.Services.Mii.StaticService
             return ResultCode.Success;
         }
 
-        [CommandHipc(23)] // 5.0.0+
+        [CommandCmif(23)] // 5.0.0+
         // Convert(nn::mii::Ver3StoreData ver3_store_data) -> nn::mii::CharInfo
         public ResultCode Convert(ServiceCtx context)
         {
@@ -314,7 +314,7 @@ namespace Ryujinx.HLE.HOS.Services.Mii.StaticService
             return result;
         }
 
-        [CommandHipc(24)] // 7.0.0+
+        [CommandCmif(24)] // 7.0.0+
         // ConvertCoreDataToCharInfo(nn::mii::CoreData core_data) -> nn::mii::CharInfo
         public ResultCode ConvertCoreDataToCharInfo(ServiceCtx context)
         {
@@ -327,7 +327,7 @@ namespace Ryujinx.HLE.HOS.Services.Mii.StaticService
             return result;
         }
 
-        [CommandHipc(25)] // 7.0.0+
+        [CommandCmif(25)] // 7.0.0+
         // ConvertCharInfoToCoreData(nn::mii::CharInfo char_info) -> nn::mii::CoreData
         public ResultCode ConvertCharInfoToCoreData(ServiceCtx context)
         {

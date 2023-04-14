@@ -13,7 +13,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             _baseReader = SharedRef<LibHac.FsSrv.Sf.ISaveDataInfoReader>.CreateMove(ref baseReader);
         }
 
-        [CommandHipc(0)]
+        [CommandCmif(0)]
         // ReadSaveDataInfo() -> (u64, buffer<unknown, 6>)
         public ResultCode ReadSaveDataInfo(ServiceCtx context)
         {

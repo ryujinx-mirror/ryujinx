@@ -9,14 +9,14 @@ namespace Ryujinx.HLE.HOS.Services.Caps
     {
         public IAlbumApplicationService(ServiceCtx context) { }
 
-        [CommandHipc(32)] // 7.0.0+
+        [CommandCmif(32)] // 7.0.0+
         // SetShimLibraryVersion(pid, u64, nn::applet::AppletResourceUserId)
         public ResultCode SetShimLibraryVersion(ServiceCtx context)
         {
             return context.Device.System.CaptureManager.SetShimLibraryVersion(context);
         }
 
-        [CommandHipc(102)]
+        [CommandCmif(102)]
         // GetAlbumFileList0AafeAruidDeprecated(pid, u16 content_type, u64 start_time, u64 end_time, nn::applet::AppletResourceUserId) -> (u64 count, buffer<ApplicationAlbumFileEntry, 0x6>)
         public ResultCode GetAlbumFileList0AafeAruidDeprecated(ServiceCtx context) 
         {
@@ -24,7 +24,7 @@ namespace Ryujinx.HLE.HOS.Services.Caps
             return GetAlbumFileList(context);
         }
 
-        [CommandHipc(142)]
+        [CommandCmif(142)]
         // GetAlbumFileList3AaeAruid(pid, u16 content_type, u64 start_time, u64 end_time, nn::applet::AppletResourceUserId) -> (u64 count, buffer<ApplicationAlbumFileEntry, 0x6>)
         public ResultCode GetAlbumFileList3AaeAruid(ServiceCtx context)
         {

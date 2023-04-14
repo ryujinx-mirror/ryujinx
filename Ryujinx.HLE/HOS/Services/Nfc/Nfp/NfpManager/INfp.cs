@@ -35,7 +35,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
             _permissionLevel = permissionLevel;
         }
 
-        [CommandHipc(0)]
+        [CommandCmif(0)]
         // Initialize(u64, u64, pid, buffer<unknown, 5>)
         public ResultCode Initialize(ServiceCtx context)
         {
@@ -69,7 +69,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
             return ResultCode.Success;
         }
 
-        [CommandHipc(1)]
+        [CommandCmif(1)]
         // Finalize()
         public ResultCode Finalize(ServiceCtx context)
         {
@@ -89,7 +89,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
             return ResultCode.Success;
         }
 
-        [CommandHipc(2)]
+        [CommandCmif(2)]
         // ListDevices() -> (u32, buffer<unknown, 0xa>)
         public ResultCode ListDevices(ServiceCtx context)
         {
@@ -125,7 +125,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
             return ResultCode.Success;
         }
 
-        [CommandHipc(3)]
+        [CommandCmif(3)]
         // StartDetection(bytes<8, 4>)
         public ResultCode StartDetection(ServiceCtx context)
         {
@@ -176,7 +176,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
             return ResultCode.Success;
         }
 
-        [CommandHipc(4)]
+        [CommandCmif(4)]
         // StopDetection(bytes<8, 4>)
         public ResultCode StopDetection(ServiceCtx context)
         {
@@ -207,7 +207,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
             return ResultCode.Success;
         }
 
-        [CommandHipc(5)]
+        [CommandCmif(5)]
         // Mount(bytes<8, 4>, u32, u32)
         public ResultCode Mount(ServiceCtx context)
         {
@@ -265,7 +265,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
             return resultCode;
         }
 
-        [CommandHipc(6)]
+        [CommandCmif(6)]
         // Unmount(bytes<8, 4>)
         public ResultCode Unmount(ServiceCtx context)
         {
@@ -307,7 +307,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
             return resultCode;
         }
 
-        [CommandHipc(7)]
+        [CommandCmif(7)]
         // OpenApplicationArea(bytes<8, 4>, u32)
         public ResultCode OpenApplicationArea(ServiceCtx context)
         {
@@ -363,7 +363,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
             return resultCode;
         }
 
-        [CommandHipc(8)]
+        [CommandCmif(8)]
         // GetApplicationArea(bytes<8, 4>) -> (u32, buffer<unknown, 6>)
         public ResultCode GetApplicationArea(ServiceCtx context)
         {
@@ -431,7 +431,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
             return ResultCode.Success;
         }
 
-        [CommandHipc(9)]
+        [CommandCmif(9)]
         // SetApplicationArea(bytes<8, 4>, buffer<unknown, 5>)
         public ResultCode SetApplicationArea(ServiceCtx context)
         {
@@ -485,7 +485,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
             return resultCode;
         }
 
-        [CommandHipc(10)]
+        [CommandCmif(10)]
         // Flush(bytes<8, 4>)
         public ResultCode Flush(ServiceCtx context)
         {
@@ -501,14 +501,14 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
             return ResultCode.Success;
         }
 
-        [CommandHipc(11)]
+        [CommandCmif(11)]
         // Restore(bytes<8, 4>)
         public ResultCode Restore(ServiceCtx context)
         {
             throw new ServiceNotImplementedException(this, context);
         }
 
-        [CommandHipc(12)]
+        [CommandCmif(12)]
         // CreateApplicationArea(bytes<8, 4>, u32, buffer<unknown, 5>)
         public ResultCode CreateApplicationArea(ServiceCtx context)
         {
@@ -571,7 +571,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
             return resultCode;
         }
 
-        [CommandHipc(13)]
+        [CommandCmif(13)]
         // GetTagInfo(bytes<8, 4>) -> buffer<unknown<0x58>, 0x1a>
         public ResultCode GetTagInfo(ServiceCtx context)
         {
@@ -647,7 +647,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
             return resultCode;
         }
 
-        [CommandHipc(14)]
+        [CommandCmif(14)]
         // GetRegisterInfo(bytes<8, 4>) -> buffer<unknown<0x100>, 0x1a>
         public ResultCode GetRegisterInfo(ServiceCtx context)
         {
@@ -710,7 +710,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
             return resultCode;
         }
 
-        [CommandHipc(15)]
+        [CommandCmif(15)]
         // GetCommonInfo(bytes<8, 4>) -> buffer<unknown<0x40>, 0x1a>
         public ResultCode GetCommonInfo(ServiceCtx context)
         {
@@ -770,7 +770,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
             return resultCode;
         }
 
-        [CommandHipc(16)]
+        [CommandCmif(16)]
         // GetModelInfo(bytes<8, 4>) -> buffer<unknown<0x40>, 0x1a>
         public ResultCode GetModelInfo(ServiceCtx context)
         {
@@ -839,7 +839,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
             return resultCode;
         }
 
-        [CommandHipc(17)]
+        [CommandCmif(17)]
         // AttachActivateEvent(bytes<8, 4>) -> handle<copy>
         public ResultCode AttachActivateEvent(ServiceCtx context)
         {
@@ -865,7 +865,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
             return ResultCode.DeviceNotFound;
         }
 
-        [CommandHipc(18)]
+        [CommandCmif(18)]
         // AttachDeactivateEvent(bytes<8, 4>) -> handle<copy>
         public ResultCode AttachDeactivateEvent(ServiceCtx context)
         {
@@ -891,7 +891,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
             return ResultCode.DeviceNotFound;
         }
 
-        [CommandHipc(19)]
+        [CommandCmif(19)]
         // GetState() -> u32
         public ResultCode GetState(ServiceCtx context)
         {
@@ -900,7 +900,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
             return ResultCode.Success;
         }
 
-        [CommandHipc(20)]
+        [CommandCmif(20)]
         // GetDeviceState(bytes<8, 4>) -> u32
         public ResultCode GetDeviceState(ServiceCtx context)
         {
@@ -926,7 +926,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
             return ResultCode.DeviceNotFound;
         }
 
-        [CommandHipc(21)]
+        [CommandCmif(21)]
         // GetNpadId(bytes<8, 4>) -> u32
         public ResultCode GetNpadId(ServiceCtx context)
         {
@@ -945,7 +945,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
             return ResultCode.DeviceNotFound;
         }
 
-        [CommandHipc(22)]
+        [CommandCmif(22)]
         // GetApplicationAreaSize() -> u32
         public ResultCode GetApplicationAreaSize(ServiceCtx context)
         {
@@ -954,7 +954,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
             return ResultCode.Success;
         }
 
-        [CommandHipc(23)] // 3.0.0+
+        [CommandCmif(23)] // 3.0.0+
         // AttachAvailabilityChangeEvent() -> handle<copy>
         public ResultCode AttachAvailabilityChangeEvent(ServiceCtx context)
         {
@@ -970,14 +970,14 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
             return ResultCode.Success;
         }
 
-        [CommandHipc(24)] // 3.0.0+
+        [CommandCmif(24)] // 3.0.0+
         // RecreateApplicationArea(bytes<8, 4>, u32, buffer<unknown, 5>)
         public ResultCode RecreateApplicationArea(ServiceCtx context)
         {
             throw new ServiceNotImplementedException(this, context);
         }
 
-        [CommandHipc(102)]
+        [CommandCmif(102)]
         // GetRegisterInfo2(bytes<8, 4>) -> buffer<unknown<0x100>, 0x1a>
         public ResultCode GetRegisterInfo2(ServiceCtx context)
         {

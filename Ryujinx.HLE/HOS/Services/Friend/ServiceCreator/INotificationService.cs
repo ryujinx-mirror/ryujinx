@@ -37,7 +37,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator
             NotificationEventHandler.Instance.RegisterNotificationService(this);
         }
 
-        [CommandHipc(0)] //2.0.0+
+        [CommandCmif(0)] //2.0.0+
         // nn::friends::detail::ipc::INotificationService::GetEvent() -> handle<copy>
         public ResultCode GetEvent(ServiceCtx context)
         {
@@ -54,7 +54,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator
             return ResultCode.Success;
         }
 
-        [CommandHipc(1)] //2.0.0+
+        [CommandCmif(1)] //2.0.0+
         // nn::friends::detail::ipc::INotificationService::Clear()
         public ResultCode Clear(ServiceCtx context)
         {
@@ -69,7 +69,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator
             return ResultCode.Success;
         }
 
-        [CommandHipc(2)] // 2.0.0+
+        [CommandCmif(2)] // 2.0.0+
         // nn::friends::detail::ipc::INotificationService::Pop() -> nn::friends::detail::ipc::SizedNotificationInfo
         public ResultCode Pop(ServiceCtx context)
         {

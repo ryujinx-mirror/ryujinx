@@ -13,8 +13,8 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.NfcManager
             _state = State.NonInitialized;
         }
 
-        [CommandHipc(0)]
-        [CommandHipc(400)] // 4.0.0+
+        [CommandCmif(0)]
+        [CommandCmif(400)] // 4.0.0+
         // Initialize(u64, u64, pid, buffer<unknown, 5>)
         public ResultCode Initialize(ServiceCtx context)
         {
@@ -25,8 +25,8 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.NfcManager
             return ResultCode.Success;
         }
 
-        [CommandHipc(1)]
-        [CommandHipc(401)] // 4.0.0+
+        [CommandCmif(1)]
+        [CommandCmif(401)] // 4.0.0+
         // Finalize()
         public ResultCode Finalize(ServiceCtx context)
         {
@@ -37,8 +37,8 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.NfcManager
             return ResultCode.Success;
         }
 
-        [CommandHipc(2)]
-        [CommandHipc(402)] // 4.0.0+
+        [CommandCmif(2)]
+        [CommandCmif(402)] // 4.0.0+
         // GetState() -> u32
         public ResultCode GetState(ServiceCtx context) 
         {
@@ -47,8 +47,8 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.NfcManager
             return ResultCode.Success;
         }
 
-        [CommandHipc(3)]
-        [CommandHipc(403)] // 4.0.0+
+        [CommandCmif(3)]
+        [CommandCmif(403)] // 4.0.0+
         // IsNfcEnabled() -> b8
         public ResultCode IsNfcEnabled(ServiceCtx context)
         {

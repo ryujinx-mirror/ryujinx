@@ -10,7 +10,7 @@ namespace Ryujinx.HLE.HOS.Services.Mnpp
     {
         public IServiceForApplication(ServiceCtx context) { }
 
-        [CommandHipc(0)]
+        [CommandCmif(0)]
         // Initialize(pid)
         public ResultCode Initialize(ServiceCtx context)
         {
@@ -27,7 +27,7 @@ namespace Ryujinx.HLE.HOS.Services.Mnpp
             return ResultCode.Success;
         }
 
-        [CommandHipc(1)]
+        [CommandCmif(1)]
         // SendRawTelemetryData(nn::account::Uid user_id, buffer<bytes, 5> title_id)
         public ResultCode SendRawTelemetryData(ServiceCtx context)
         {

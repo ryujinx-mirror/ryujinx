@@ -18,7 +18,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioOut
             _impl = impl;
         }
 
-        [CommandHipc(0)]
+        [CommandCmif(0)]
         // GetAudioOutState() -> u32 state
         public ResultCode GetAudioOutState(ServiceCtx context)
         {
@@ -27,21 +27,21 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioOut
             return ResultCode.Success;
         }
 
-        [CommandHipc(1)]
+        [CommandCmif(1)]
         // Start()
         public ResultCode Start(ServiceCtx context)
         {
             return _impl.Start();
         }
 
-        [CommandHipc(2)]
+        [CommandCmif(2)]
         // Stop()
         public ResultCode Stop(ServiceCtx context)
         {
             return _impl.Stop();
         }
 
-        [CommandHipc(3)]
+        [CommandCmif(3)]
         // AppendAudioOutBuffer(u64 bufferTag, buffer<nn::audio::AudioOutBuffer, 5> buffer)
         public ResultCode AppendAudioOutBuffer(ServiceCtx context)
         {
@@ -54,7 +54,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioOut
             return _impl.AppendBuffer(bufferTag, ref data);
         }
 
-        [CommandHipc(4)]
+        [CommandCmif(4)]
         // RegisterBufferEvent() -> handle<copy>
         public ResultCode RegisterBufferEvent(ServiceCtx context)
         {
@@ -70,7 +70,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioOut
             return ResultCode.Success;
         }
 
-        [CommandHipc(5)]
+        [CommandCmif(5)]
         // GetReleasedAudioOutBuffers() -> (u32 count, buffer<u64, 6> tags)
         public ResultCode GetReleasedAudioOutBuffers(ServiceCtx context)
         {
@@ -87,7 +87,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioOut
             }
         }
 
-        [CommandHipc(6)]
+        [CommandCmif(6)]
         // ContainsAudioOutBuffer(u64 tag) -> b8
         public ResultCode ContainsAudioOutBuffer(ServiceCtx context)
         {
@@ -98,7 +98,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioOut
             return ResultCode.Success;
         }
 
-        [CommandHipc(7)] // 3.0.0+
+        [CommandCmif(7)] // 3.0.0+
         // AppendAudioOutBufferAuto(u64 tag, buffer<nn::audio::AudioOutBuffer, 0x21>)
         public ResultCode AppendAudioOutBufferAuto(ServiceCtx context)
         {
@@ -111,7 +111,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioOut
             return _impl.AppendBuffer(bufferTag, ref data);
         }
 
-        [CommandHipc(8)] // 3.0.0+
+        [CommandCmif(8)] // 3.0.0+
         // GetReleasedAudioOutBuffersAuto() -> (u32 count, buffer<u64, 0x22> tags)
         public ResultCode GetReleasedAudioOutBuffersAuto(ServiceCtx context)
         {
@@ -127,7 +127,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioOut
             }
         }
 
-        [CommandHipc(9)] // 4.0.0+
+        [CommandCmif(9)] // 4.0.0+
         // GetAudioOutBufferCount() -> u32
         public ResultCode GetAudioOutBufferCount(ServiceCtx context)
         {
@@ -136,7 +136,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioOut
             return ResultCode.Success;
         }
 
-        [CommandHipc(10)] // 4.0.0+
+        [CommandCmif(10)] // 4.0.0+
         // GetAudioOutPlayedSampleCount() -> u64
         public ResultCode GetAudioOutPlayedSampleCount(ServiceCtx context)
         {
@@ -145,7 +145,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioOut
             return ResultCode.Success;
         }
 
-        [CommandHipc(11)] // 4.0.0+
+        [CommandCmif(11)] // 4.0.0+
         // FlushAudioOutBuffers() -> b8
         public ResultCode FlushAudioOutBuffers(ServiceCtx context)
         {
@@ -154,7 +154,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioOut
             return ResultCode.Success;
         }
 
-        [CommandHipc(12)] // 6.0.0+
+        [CommandCmif(12)] // 6.0.0+
         // SetAudioOutVolume(s32)
         public ResultCode SetAudioOutVolume(ServiceCtx context)
         {
@@ -165,7 +165,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioOut
             return ResultCode.Success;
         }
 
-        [CommandHipc(13)] // 6.0.0+
+        [CommandCmif(13)] // 6.0.0+
         // GetAudioOutVolume() -> s32
         public ResultCode GetAudioOutVolume(ServiceCtx context)
         {

@@ -9,7 +9,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
     {
         public IHidSystemServer(ServiceCtx context) { }
 
-        [CommandHipc(303)]
+        [CommandCmif(303)]
         // ApplyNpadSystemCommonPolicy(u64)
         public ResultCode ApplyNpadSystemCommonPolicy(ServiceCtx context)
         {
@@ -20,7 +20,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return ResultCode.Success;
         }
 
-        [CommandHipc(306)]
+        [CommandCmif(306)]
         // GetLastActiveNpad(u32) -> u8, u8
         public ResultCode GetLastActiveNpad(ServiceCtx context)
         {
@@ -35,7 +35,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return resultCode;
         }
 
-        [CommandHipc(307)]
+        [CommandCmif(307)]
         // GetNpadSystemExtStyle() -> u64
         public ResultCode GetNpadSystemExtStyle(ServiceCtx context)
         {
@@ -52,7 +52,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return ResultCode.Success;
         }
 
-        [CommandHipc(314)] // 9.0.0+
+        [CommandCmif(314)] // 9.0.0+
         // GetAppletFooterUiType(u32) -> u8
         public ResultCode GetAppletFooterUiType(ServiceCtx context)
         {

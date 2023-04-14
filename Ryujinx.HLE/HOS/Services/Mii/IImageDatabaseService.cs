@@ -10,7 +10,7 @@ namespace Ryujinx.HLE.HOS.Services.Mii
 
         public IImageDatabaseService(ServiceCtx context) { }
 
-        [CommandHipc(0)]
+        [CommandCmif(0)]
         // Initialize(b8) -> b8
         public ResultCode Initialize(ServiceCtx context)
         {
@@ -27,7 +27,7 @@ namespace Ryujinx.HLE.HOS.Services.Mii
             return ResultCode.Success;
         }
 
-        [CommandHipc(11)]
+        [CommandCmif(11)]
         // GetCount() -> u32
         public ResultCode GetCount(ServiceCtx context)
         {

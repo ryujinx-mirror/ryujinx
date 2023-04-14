@@ -8,7 +8,7 @@ namespace Ryujinx.HLE.HOS.Services.Apm
         protected abstract ResultCode GetPerformanceConfiguration(PerformanceMode performanceMode, out PerformanceConfiguration performanceConfiguration);
         protected abstract void SetCpuOverclockEnabled(bool enabled);
 
-        [CommandHipc(0)]
+        [CommandCmif(0)]
         // SetPerformanceConfiguration(nn::apm::PerformanceMode, nn::apm::PerformanceConfiguration)
         public ResultCode SetPerformanceConfiguration(ServiceCtx context)
         {
@@ -18,7 +18,7 @@ namespace Ryujinx.HLE.HOS.Services.Apm
             return SetPerformanceConfiguration(performanceMode, performanceConfiguration);
         }
 
-        [CommandHipc(1)]
+        [CommandCmif(1)]
         // GetPerformanceConfiguration(nn::apm::PerformanceMode) -> nn::apm::PerformanceConfiguration
         public ResultCode GetPerformanceConfiguration(ServiceCtx context)
         {
@@ -31,7 +31,7 @@ namespace Ryujinx.HLE.HOS.Services.Apm
             return resultCode;
         }
 
-        [CommandHipc(2)] // 8.0.0+
+        [CommandCmif(2)] // 8.0.0+
         // SetCpuOverclockEnabled(bool)
         public ResultCode SetCpuOverclockEnabled(ServiceCtx context)
         {

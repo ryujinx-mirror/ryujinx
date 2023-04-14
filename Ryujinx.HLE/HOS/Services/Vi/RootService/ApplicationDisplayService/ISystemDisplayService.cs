@@ -11,7 +11,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService.ApplicationDisplayService
             _applicationDisplayService = applicationDisplayService;
         }
 
-        [CommandHipc(2205)]
+        [CommandCmif(2205)]
         // SetLayerZ(u64, u64)
         public ResultCode SetLayerZ(ServiceCtx context)
         {
@@ -20,7 +20,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService.ApplicationDisplayService
             return ResultCode.Success;
         }
 
-        [CommandHipc(2207)]
+        [CommandCmif(2207)]
         // SetLayerVisibility(b8, u64)
         public ResultCode SetLayerVisibility(ServiceCtx context)
         {
@@ -29,7 +29,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService.ApplicationDisplayService
             return ResultCode.Success;
         }
 
-        [CommandHipc(2312)] // 1.0.0-6.2.0
+        [CommandCmif(2312)] // 1.0.0-6.2.0
         // CreateStrayLayer(u32, u64) -> (u64, u64, buffer<bytes, 6>)
         public ResultCode CreateStrayLayer(ServiceCtx context)
         {
@@ -38,7 +38,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService.ApplicationDisplayService
             return _applicationDisplayService.CreateStrayLayer(context);
         }
 
-        [CommandHipc(3200)]
+        [CommandCmif(3200)]
         // GetDisplayMode(u64) -> nn::vi::DisplayModeInfo
         public ResultCode GetDisplayMode(ServiceCtx context)
         {

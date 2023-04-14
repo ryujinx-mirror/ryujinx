@@ -7,14 +7,14 @@ namespace Ryujinx.HLE.HOS.Services.Sdb.Pdm
     {
         public IQueryService(ServiceCtx context) { }
 
-        [CommandHipc(13)] // 5.0.0+
+        [CommandCmif(13)] // 5.0.0+
         // QueryApplicationPlayStatisticsForSystem(buffer<bytes, 5> title_id_list) -> (buffer<bytes, 6> entries, s32 entries_count)
         public ResultCode QueryApplicationPlayStatisticsForSystem(ServiceCtx context)
         {
             return QueryPlayStatisticsManager.GetPlayStatistics(context);
         }
 
-        [CommandHipc(16)] // 6.0.0+
+        [CommandCmif(16)] // 6.0.0+
         // QueryApplicationPlayStatisticsByUserAccountIdForSystem(nn::account::Uid, buffer<bytes, 5> title_id_list) -> (buffer<bytes, 6> entries, s32 entries_count)
         public ResultCode QueryApplicationPlayStatisticsByUserAccountIdForSystem(ServiceCtx context)
         {

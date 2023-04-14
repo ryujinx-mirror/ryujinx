@@ -11,7 +11,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService.ApplicationDisplayService
             _applicationDisplayService = applicationDisplayService;
         }
 
-        [CommandHipc(1102)]
+        [CommandCmif(1102)]
         // GetDisplayResolution(u64 display_id) -> (u64 width, u64 height)
         public ResultCode GetDisplayResolution(ServiceCtx context)
         {
@@ -25,7 +25,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService.ApplicationDisplayService
             return ResultCode.Success;
         }
 
-        [CommandHipc(2010)]
+        [CommandCmif(2010)]
         // CreateManagedLayer(u32, u64, nn::applet::AppletResourceUserId) -> u64
         public ResultCode CreateManagedLayer(ServiceCtx context)
         {
@@ -43,7 +43,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService.ApplicationDisplayService
             return ResultCode.Success;
         }
 
-        [CommandHipc(2011)]
+        [CommandCmif(2011)]
         // DestroyManagedLayer(u64)
         public ResultCode DestroyManagedLayer(ServiceCtx context)
         {
@@ -52,14 +52,14 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService.ApplicationDisplayService
             return context.Device.System.SurfaceFlinger.DestroyManagedLayer(layerId);
         }
 
-        [CommandHipc(2012)] // 7.0.0+
+        [CommandCmif(2012)] // 7.0.0+
         // CreateStrayLayer(u32, u64) -> (u64, u64, buffer<bytes, 6>)
         public ResultCode CreateStrayLayer(ServiceCtx context)
         {
             return _applicationDisplayService.CreateStrayLayer(context);
         }
 
-        [CommandHipc(6000)]
+        [CommandCmif(6000)]
         // AddToLayerStack(u32, u64)
         public ResultCode AddToLayerStack(ServiceCtx context)
         {
@@ -68,7 +68,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService.ApplicationDisplayService
             return ResultCode.Success;
         }
 
-        [CommandHipc(6002)]
+        [CommandCmif(6002)]
         // SetLayerVisibility(b8, u64)
         public ResultCode SetLayerVisibility(ServiceCtx context)
         {

@@ -21,7 +21,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio
             _impl = impl;
         }
 
-        [CommandHipc(0)]
+        [CommandCmif(0)]
         // ListAudioIns() -> (u32, buffer<bytes, 6>)
         public ResultCode ListAudioIns(ServiceCtx context)
         {
@@ -57,7 +57,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio
             return ResultCode.Success;
         }
 
-        [CommandHipc(1)]
+        [CommandCmif(1)]
         // OpenAudioIn(AudioInInputConfiguration input_config, nn::applet::AppletResourceUserId, pid, handle<copy, process>, buffer<bytes, 5> name)
         // -> (u32 sample_rate, u32 channel_count, u32 pcm_format, u32, object<nn::audio::detail::IAudioIn>, buffer<bytes, 6> name)
         public ResultCode OpenAudioIn(ServiceCtx context)
@@ -92,7 +92,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio
             return resultCode;
         }
 
-        [CommandHipc(2)] // 3.0.0+
+        [CommandCmif(2)] // 3.0.0+
         // ListAudioInsAuto() -> (u32, buffer<bytes, 0x22>)
         public ResultCode ListAudioInsAuto(ServiceCtx context)
         {
@@ -127,7 +127,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio
             return ResultCode.Success;
         }
 
-        [CommandHipc(3)] // 3.0.0+
+        [CommandCmif(3)] // 3.0.0+
         // OpenAudioInAuto(AudioInInputConfiguration input_config, nn::applet::AppletResourceUserId, pid, handle<copy, process>, buffer<bytes, 0x21>)
         // -> (u32 sample_rate, u32 channel_count, u32 pcm_format, u32, object<nn::audio::detail::IAudioIn>, buffer<bytes, 0x22> name)
         public ResultCode OpenAudioInAuto(ServiceCtx context)
@@ -159,7 +159,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio
             return resultCode;
         }
 
-        [CommandHipc(4)] // 3.0.0+
+        [CommandCmif(4)] // 3.0.0+
         // ListAudioInsAutoFiltered() -> (u32, buffer<bytes, 0x22>)
         public ResultCode ListAudioInsAutoFiltered(ServiceCtx context)
         {
@@ -194,7 +194,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio
             return ResultCode.Success;
         }
 
-        [CommandHipc(5)] // 5.0.0+
+        [CommandCmif(5)] // 5.0.0+
         // OpenAudioInProtocolSpecified(b64 protocol_specified_related, AudioInInputConfiguration input_config, nn::applet::AppletResourceUserId, pid, handle<copy, process>, buffer<bytes, 5> name)
         // -> (u32 sample_rate, u32 channel_count, u32 pcm_format, u32, object<nn::audio::detail::IAudioIn>, buffer<bytes, 6> name)
         public ResultCode OpenAudioInProtocolSpecified(ServiceCtx context)

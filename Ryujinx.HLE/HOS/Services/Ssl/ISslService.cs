@@ -15,7 +15,7 @@ namespace Ryujinx.HLE.HOS.Services.Ssl
         //       In this case it is acceptable to stub all calls of the service.
         public ISslService(ServiceCtx context) { }
 
-        [CommandHipc(0)]
+        [CommandCmif(0)]
         // CreateContext(nn::ssl::sf::SslVersion, u64, pid) -> object<nn::ssl::sf::ISslContext>
         public ResultCode CreateContext(ServiceCtx context)
         {
@@ -29,7 +29,7 @@ namespace Ryujinx.HLE.HOS.Services.Ssl
             return ResultCode.Success;
         }
 
-        [CommandHipc(2)]
+        [CommandCmif(2)]
         // GetCertificates(buffer<CaCertificateId, 5> ids) -> (u32 certificates_count, buffer<bytes, 6> certificates)
         public ResultCode GetCertificates(ServiceCtx context)
         {
@@ -94,7 +94,7 @@ namespace Ryujinx.HLE.HOS.Services.Ssl
             return ResultCode.Success;
         }
 
-        [CommandHipc(3)]
+        [CommandCmif(3)]
         // GetCertificateBufSize(buffer<CaCertificateId, 5> ids) -> u32 buffer_size;
         public ResultCode GetCertificateBufSize(ServiceCtx context)
         {
@@ -110,7 +110,7 @@ namespace Ryujinx.HLE.HOS.Services.Ssl
             return ResultCode.Success;
         }
 
-        [CommandHipc(5)]
+        [CommandCmif(5)]
         // SetInterfaceVersion(u32)
         public ResultCode SetInterfaceVersion(ServiceCtx context)
         {

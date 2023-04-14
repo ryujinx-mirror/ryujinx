@@ -7,7 +7,7 @@ namespace Ryujinx.HLE.HOS.Services.Am
     {
         public IApplicationProxyService(ServiceCtx context) { }
 
-        [CommandHipc(0)]
+        [CommandCmif(0)]
         // OpenApplicationProxy(u64, pid, handle<copy>) -> object<nn::am::service::IApplicationProxy>
         public ResultCode OpenApplicationProxy(ServiceCtx context)
         {

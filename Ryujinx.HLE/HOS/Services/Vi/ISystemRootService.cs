@@ -9,7 +9,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi
         // vi:u/m/s aren't on 3 separate threads but we can't put them together with the current ServerBase
         public ISystemRootService(ServiceCtx context) : base(context.Device.System.ViServerS) { }
 
-        [CommandHipc(1)]
+        [CommandCmif(1)]
         // GetDisplayService(u32) -> object<nn::visrv::sf::IApplicationDisplayService>
         public ResultCode GetDisplayService(ServiceCtx context)
         {

@@ -17,7 +17,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             _channelEvent = new KEvent(system.KernelContext);
         }
 
-        [CommandHipc(10)]
+        [CommandCmif(10)]
         // RequestToGetForeground()
         public ResultCode RequestToGetForeground(ServiceCtx context)
         {
@@ -26,7 +26,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             return ResultCode.Success;
         }
 
-        [CommandHipc(21)]
+        [CommandCmif(21)]
         // GetPopFromGeneralChannelEvent() -> handle<copy>
         public ResultCode GetPopFromGeneralChannelEvent(ServiceCtx context)
         {

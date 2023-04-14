@@ -7,7 +7,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
     {
         public ILibraryAppletCreator() { }
 
-        [CommandHipc(0)]
+        [CommandCmif(0)]
         // CreateLibraryApplet(u32, u32) -> object<nn::am::service::ILibraryAppletAccessor>
         public ResultCode CreateLibraryApplet(ServiceCtx context)
         {
@@ -19,7 +19,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             return ResultCode.Success;
         }
 
-        [CommandHipc(10)]
+        [CommandCmif(10)]
         // CreateStorage(u64) -> object<nn::am::service::IStorage>
         public ResultCode CreateStorage(ServiceCtx context)
         {
@@ -37,7 +37,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             return ResultCode.Success;
         }
 
-        [CommandHipc(11)]
+        [CommandCmif(11)]
         // CreateTransferMemoryStorage(b8, u64, handle<copy>) -> object<nn::am::service::IStorage>
         public ResultCode CreateTransferMemoryStorage(ServiceCtx context)
         {
@@ -63,7 +63,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             return ResultCode.Success;
         }
 
-        [CommandHipc(12)] // 2.0.0+
+        [CommandCmif(12)] // 2.0.0+
         // CreateHandleStorage(u64, handle<copy>) -> object<nn::am::service::IStorage>
         public ResultCode CreateHandleStorage(ServiceCtx context)
         {

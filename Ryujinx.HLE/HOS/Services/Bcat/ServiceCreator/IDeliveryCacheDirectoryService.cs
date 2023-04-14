@@ -23,7 +23,7 @@ namespace Ryujinx.HLE.HOS.Services.Bcat.ServiceCreator
             }
         }
 
-        [CommandHipc(0)]
+        [CommandCmif(0)]
         // Open(nn::bcat::DirectoryName)
         public ResultCode Open(ServiceCtx context)
         {
@@ -34,7 +34,7 @@ namespace Ryujinx.HLE.HOS.Services.Bcat.ServiceCreator
             return (ResultCode)result.Value;
         }
 
-        [CommandHipc(1)]
+        [CommandCmif(1)]
         // Read() -> (u32, buffer<nn::bcat::DeliveryCacheDirectoryEntry, 6>)
         public ResultCode Read(ServiceCtx context)
         {
@@ -51,7 +51,7 @@ namespace Ryujinx.HLE.HOS.Services.Bcat.ServiceCreator
             }
         }
 
-        [CommandHipc(2)]
+        [CommandCmif(2)]
         // GetCount() -> u32
         public ResultCode GetCount(ServiceCtx context)
         {

@@ -31,7 +31,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             _timeManager = manager;
         }
 
-        [CommandHipc(0)]
+        [CommandCmif(0)]
         // GetStandardUserSystemClock() -> object<nn::timesrv::detail::service::ISystemClock>
         public ResultCode GetStandardUserSystemClock(ServiceCtx context)
         {
@@ -42,7 +42,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return ResultCode.Success;
         }
 
-        [CommandHipc(1)]
+        [CommandCmif(1)]
         // GetStandardNetworkSystemClock() -> object<nn::timesrv::detail::service::ISystemClock>
         public ResultCode GetStandardNetworkSystemClock(ServiceCtx context)
         {
@@ -53,7 +53,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return ResultCode.Success;
         }
 
-        [CommandHipc(2)]
+        [CommandCmif(2)]
         // GetStandardSteadyClock() -> object<nn::timesrv::detail::service::ISteadyClock>
         public ResultCode GetStandardSteadyClock(ServiceCtx context)
         {
@@ -64,7 +64,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return ResultCode.Success;
         }
 
-        [CommandHipc(3)]
+        [CommandCmif(3)]
         // GetTimeZoneService() -> object<nn::timesrv::detail::service::ITimeZoneService>
         public ResultCode GetTimeZoneService(ServiceCtx context)
         {
@@ -74,7 +74,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return ResultCode.Success;
         }
 
-        [CommandHipc(4)]
+        [CommandCmif(4)]
         // GetStandardLocalSystemClock() -> object<nn::timesrv::detail::service::ISystemClock>
         public ResultCode GetStandardLocalSystemClock(ServiceCtx context)
         {
@@ -85,7 +85,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return ResultCode.Success;
         }
 
-        [CommandHipc(5)] // 4.0.0+
+        [CommandCmif(5)] // 4.0.0+
         // GetEphemeralNetworkSystemClock() -> object<nn::timesrv::detail::service::ISystemClock>
         public ResultCode GetEphemeralNetworkSystemClock(ServiceCtx context)
         {
@@ -96,7 +96,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return ResultCode.Success;
         }
 
-        [CommandHipc(20)] // 6.0.0+
+        [CommandCmif(20)] // 6.0.0+
         // GetSharedMemoryNativeHandle() -> handle<copy>
         public ResultCode GetSharedMemoryNativeHandle(ServiceCtx context)
         {
@@ -113,7 +113,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return ResultCode.Success;
         }
 
-        [CommandHipc(50)] // 4.0.0+
+        [CommandCmif(50)] // 4.0.0+
         // SetStandardSteadyClockInternalOffset(nn::TimeSpanType internal_offset)
         public ResultCode SetStandardSteadyClockInternalOffset(ServiceCtx context)
         {
@@ -121,7 +121,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return ResultCode.NotImplemented;
         }
 
-        [CommandHipc(51)] // 9.0.0+
+        [CommandCmif(51)] // 9.0.0+
         // GetStandardSteadyClockRtcValue() -> u64
         public ResultCode GetStandardSteadyClockRtcValue(ServiceCtx context)
         {
@@ -129,7 +129,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return ResultCode.NotImplemented;
         }
 
-        [CommandHipc(100)]
+        [CommandCmif(100)]
         // IsStandardUserSystemClockAutomaticCorrectionEnabled() -> bool
         public ResultCode IsStandardUserSystemClockAutomaticCorrectionEnabled(ServiceCtx context)
         {
@@ -145,7 +145,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return ResultCode.Success;
         }
 
-        [CommandHipc(101)]
+        [CommandCmif(101)]
         // SetStandardUserSystemClockAutomaticCorrectionEnabled(b8)
         public ResultCode SetStandardUserSystemClockAutomaticCorrectionEnabled(ServiceCtx context)
         {
@@ -181,7 +181,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return result;
         }
 
-        [CommandHipc(102)] // 5.0.0+
+        [CommandCmif(102)] // 5.0.0+
         // GetStandardUserSystemClockInitialYear() -> u32
         public ResultCode GetStandardUserSystemClockInitialYear(ServiceCtx context)
         {
@@ -189,7 +189,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return ResultCode.NotImplemented;
         }
 
-        [CommandHipc(200)] // 3.0.0+
+        [CommandCmif(200)] // 3.0.0+
         // IsStandardNetworkSystemClockAccuracySufficient() -> bool
         public ResultCode IsStandardNetworkSystemClockAccuracySufficient(ServiceCtx context)
         {
@@ -200,7 +200,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return ResultCode.Success;
         }
 
-        [CommandHipc(201)] // 6.0.0+
+        [CommandCmif(201)] // 6.0.0+
         // GetStandardUserSystemClockAutomaticCorrectionUpdatedTime() -> nn::time::SteadyClockTimePoint
         public ResultCode GetStandardUserSystemClockAutomaticCorrectionUpdatedTime(ServiceCtx context)
         {
@@ -216,7 +216,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return ResultCode.Success;
         }
 
-        [CommandHipc(300)] // 4.0.0+
+        [CommandCmif(300)] // 4.0.0+
         // CalculateMonotonicSystemClockBaseTimePoint(nn::time::SystemClockContext) -> s64
         public ResultCode CalculateMonotonicSystemClockBaseTimePoint(ServiceCtx context)
         {
@@ -247,7 +247,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return result;
         }
 
-        [CommandHipc(400)] // 4.0.0+
+        [CommandCmif(400)] // 4.0.0+
         // GetClockSnapshot(u8) -> buffer<nn::time::sf::ClockSnapshot, 0x1a>
         public ResultCode GetClockSnapshot(ServiceCtx context)
         {
@@ -277,7 +277,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return result;
         }
 
-        [CommandHipc(401)] // 4.0.0+
+        [CommandCmif(401)] // 4.0.0+
         // GetClockSnapshotFromSystemClockContext(u8, nn::time::SystemClockContext, nn::time::SystemClockContext) -> buffer<nn::time::sf::ClockSnapshot, 0x1a>
         public ResultCode GetClockSnapshotFromSystemClockContext(ServiceCtx context)
         {
@@ -302,7 +302,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return result;
         }
 
-        [CommandHipc(500)] // 4.0.0+
+        [CommandCmif(500)] // 4.0.0+
         // CalculateStandardUserSystemClockDifferenceByUser(buffer<nn::time::sf::ClockSnapshot, 0x19>, buffer<nn::time::sf::ClockSnapshot, 0x19>) -> nn::TimeSpanType
         public ResultCode CalculateStandardUserSystemClockDifferenceByUser(ServiceCtx context)
         {
@@ -320,7 +320,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return ResultCode.Success;
         }
 
-        [CommandHipc(501)] // 4.0.0+
+        [CommandCmif(501)] // 4.0.0+
         // CalculateSpanBetween(buffer<nn::time::sf::ClockSnapshot, 0x19>, buffer<nn::time::sf::ClockSnapshot, 0x19>) -> nn::TimeSpanType
         public ResultCode CalculateSpanBetween(ServiceCtx context)
         {

@@ -23,7 +23,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres
             DnsMitmResolver.Instance.ReloadEntries(context);
         }
 
-        [CommandHipc(0)]
+        [CommandCmif(0)]
         // SetDnsAddressesPrivateRequest(u32, buffer<unknown, 5, 0>)
         public ResultCode SetDnsAddressesPrivateRequest(ServiceCtx context)
         {
@@ -37,7 +37,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres
             return ResultCode.NotAllocated;
         }
 
-        [CommandHipc(1)]
+        [CommandCmif(1)]
         // GetDnsAddressPrivateRequest(u32) -> buffer<unknown, 6, 0>
         public ResultCode GetDnsAddressPrivateRequest(ServiceCtx context)
         {
@@ -51,7 +51,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres
             return ResultCode.NotAllocated;
         }
 
-        [CommandHipc(2)]
+        [CommandCmif(2)]
         // GetHostByNameRequest(u8, u32, u64, pid, buffer<unknown, 5, 0>) -> (u32, u32, u32, buffer<unknown, 6, 0>)
         public ResultCode GetHostByNameRequest(ServiceCtx context)
         {
@@ -64,7 +64,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres
             return GetHostByNameRequestImpl(context, inputBufferPosition, inputBufferSize, outputBufferPosition, outputBufferSize, false, 0, 0);
         }
 
-        [CommandHipc(3)]
+        [CommandCmif(3)]
         // GetHostByAddrRequest(u32, u32, u32, u64, pid, buffer<unknown, 5, 0>) -> (u32, u32, u32, buffer<unknown, 6, 0>)
         public ResultCode GetHostByAddrRequest(ServiceCtx context)
         {
@@ -77,7 +77,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres
             return GetHostByAddrRequestImpl(context, inputBufferPosition, inputBufferSize, outputBufferPosition, outputBufferSize, false, 0, 0);
         }
 
-        [CommandHipc(4)]
+        [CommandCmif(4)]
         // GetHostStringErrorRequest(u32) -> buffer<unknown, 6, 0>
         public ResultCode GetHostStringErrorRequest(ServiceCtx context)
         {
@@ -107,7 +107,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres
             return resultCode;
         }
 
-        [CommandHipc(5)]
+        [CommandCmif(5)]
         // GetGaiStringErrorRequest(u32) -> buffer<byte, 6, 0>
         public ResultCode GetGaiStringErrorRequest(ServiceCtx context)
         {
@@ -152,7 +152,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres
             return resultCode;
         }
 
-        [CommandHipc(6)]
+        [CommandCmif(6)]
         // GetAddrInfoRequest(bool enable_nsd_resolve, u32, u64 pid_placeholder, pid, buffer<i8, 5, 0> host, buffer<i8, 5, 0> service, buffer<packed_addrinfo, 5, 0> hints) -> (i32 ret, u32 bsd_errno, u32 packed_addrinfo_size, buffer<packed_addrinfo, 6, 0> response)
         public ResultCode GetAddrInfoRequest(ServiceCtx context)
         {
@@ -162,7 +162,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres
             return GetAddrInfoRequestImpl(context, responseBufferPosition, responseBufferSize, false, 0, 0);
         }
 
-        [CommandHipc(8)]
+        [CommandCmif(8)]
         // GetCancelHandleRequest(u64, pid) -> u32
         public ResultCode GetCancelHandleRequest(ServiceCtx context)
         {
@@ -176,7 +176,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres
             return ResultCode.Success;
         }
 
-        [CommandHipc(9)]
+        [CommandCmif(9)]
         // CancelRequest(u32, u64, pid)
         public ResultCode CancelRequest(ServiceCtx context)
         {
@@ -188,7 +188,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres
             return ResultCode.Success;
         }
 
-        [CommandHipc(10)] // 5.0.0+
+        [CommandCmif(10)] // 5.0.0+
         // GetHostByNameRequestWithOptions(u8, u32, u64, pid, buffer<unknown, 21, 0>, buffer<unknown, 21, 0>) -> (u32, u32, u32, buffer<unknown, 22, 0>)
         public ResultCode GetHostByNameRequestWithOptions(ServiceCtx context)
         {
@@ -207,7 +207,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres
                 optionsBufferSize);
         }
 
-        [CommandHipc(11)] // 5.0.0+
+        [CommandCmif(11)] // 5.0.0+
         // GetHostByAddrRequestWithOptions(u32, u32, u32, u64, pid, buffer<unknown, 21, 0>, buffer<unknown, 21, 0>) -> (u32, u32, u32, buffer<unknown, 22, 0>)
         public ResultCode GetHostByAddrRequestWithOptions(ServiceCtx context)
         {
@@ -226,7 +226,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres
                 optionsBufferSize);
         }
 
-        [CommandHipc(12)] // 5.0.0+
+        [CommandCmif(12)] // 5.0.0+
         // GetAddrInfoRequestWithOptions(bool enable_nsd_resolve, u32, u64 pid_placeholder, pid, buffer<i8, 5, 0> host, buffer<i8, 5, 0> service, buffer<packed_addrinfo, 5, 0> hints, buffer<unknown, 21, 0>) -> (i32 ret, u32 bsd_errno, u32 unknown, u32 packed_addrinfo_size, buffer<packed_addrinfo, 22, 0> response)
         public ResultCode GetAddrInfoRequestWithOptions(ServiceCtx context)
         {
@@ -236,7 +236,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres
             return GetAddrInfoRequestImpl(context, outputBufferPosition, outputBufferSize, true, optionsBufferPosition, optionsBufferSize);
         }
 
-        [CommandHipc(14)] // 5.0.0+
+        [CommandCmif(14)] // 5.0.0+
         // ResolverSetOptionRequest(buffer<unknown, 5, 0>, u64 unknown, u64 pid_placeholder, pid) -> (i32 ret, u32 bsd_errno)
         public ResultCode ResolverSetOptionRequest(ServiceCtx context)
         {
@@ -263,7 +263,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres
         }
 
         // Atmosphère extension for dns_mitm
-        [CommandHipc(65000)]
+        [CommandCmif(65000)]
         // AtmosphereReloadHostsFile()
         public ResultCode AtmosphereReloadHostsFile(ServiceCtx context)
         {

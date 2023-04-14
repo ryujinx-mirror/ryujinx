@@ -15,7 +15,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns.Aoc
             _purchasedEvent = new KEvent(system.KernelContext);
         }
 
-        [CommandHipc(0)]
+        [CommandCmif(0)]
         // SetDefaultDeliveryTarget(pid, buffer<bytes, 5> unknown)
         public ResultCode SetDefaultDeliveryTarget(ServiceCtx context)
         {
@@ -34,7 +34,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns.Aoc
             return ResultCode.Success;
         }
 
-        [CommandHipc(2)]
+        [CommandCmif(2)]
         // GetPurchasedEventReadableHandle() -> handle<copy, event>
         public ResultCode GetPurchasedEventReadableHandle(ServiceCtx context)
         {
@@ -48,7 +48,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns.Aoc
             return ResultCode.Success;
         }
 
-        [CommandHipc(3)]
+        [CommandCmif(3)]
         // PopPurchasedProductInfo(nn::ec::detail::PurchasedProductInfo)
         public ResultCode PopPurchasedProductInfo(ServiceCtx context)
         {

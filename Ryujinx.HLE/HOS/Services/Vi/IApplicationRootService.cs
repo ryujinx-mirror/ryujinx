@@ -8,7 +8,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi
     {
         public IApplicationRootService(ServiceCtx context) : base(context.Device.System.ViServer) { }
 
-        [CommandHipc(0)]
+        [CommandCmif(0)]
         // GetDisplayService(u32) -> object<nn::visrv::sf::IApplicationDisplayService>
         public ResultCode GetDisplayService(ServiceCtx context)
         {

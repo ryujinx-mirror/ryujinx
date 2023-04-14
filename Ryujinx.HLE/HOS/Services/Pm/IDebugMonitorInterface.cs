@@ -10,7 +10,7 @@ namespace Ryujinx.HLE.HOS.Services.Pm
     {
         public IDebugMonitorInterface(ServiceCtx context) { }
 
-        [CommandHipc(4)]
+        [CommandCmif(4)]
         // GetProgramId() -> sf::Out<ncm::ProgramId> out_process_id
         public ResultCode GetApplicationProcessId(ServiceCtx context)
         {
@@ -28,7 +28,7 @@ namespace Ryujinx.HLE.HOS.Services.Pm
             return ResultCode.ProcessNotFound;
         }
 
-        [CommandHipc(65000)]
+        [CommandCmif(65000)]
         // AtmosphereGetProcessInfo(os::ProcessId process_id) -> sf::OutCopyHandle out_process_handle, sf::Out<ncm::ProgramLocation> out_loc, sf::Out<cfg::OverrideStatus> out_status
         public ResultCode GetProcessInfo(ServiceCtx context)
         {

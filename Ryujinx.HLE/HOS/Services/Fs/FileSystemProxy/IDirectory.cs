@@ -13,7 +13,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
             _baseDirectory = SharedRef<LibHac.FsSrv.Sf.IDirectory>.CreateMove(ref directory);
         }
 
-        [CommandHipc(0)]
+        [CommandCmif(0)]
         // Read() -> (u64 count, buffer<nn::fssrv::sf::IDirectoryEntry, 6, 0> entries)
         public ResultCode Read(ServiceCtx context)
         {
@@ -30,7 +30,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
             }
         }
 
-        [CommandHipc(1)]
+        [CommandCmif(1)]
         // GetEntryCount() -> u64
         public ResultCode GetEntryCount(ServiceCtx context)
         {

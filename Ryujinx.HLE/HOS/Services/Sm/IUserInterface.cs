@@ -34,7 +34,7 @@ namespace Ryujinx.HLE.HOS.Services.Sm
                 .ToDictionary(service => service.Name, service => service.type);
         }
 
-        [CommandHipc(0)]
+        [CommandCmif(0)]
         [CommandTipc(0)] // 12.0.0+
         // Initialize(pid, u64 reserved)
         public ResultCode Initialize(ServiceCtx context)
@@ -53,7 +53,7 @@ namespace Ryujinx.HLE.HOS.Services.Sm
             return GetService(context);
         }
 
-        [CommandHipc(1)]
+        [CommandCmif(1)]
         public ResultCode GetService(ServiceCtx context)
         {
             if (!_isInitialized)
@@ -127,9 +127,9 @@ namespace Ryujinx.HLE.HOS.Services.Sm
             return ResultCode.Success;
         }
 
-        [CommandHipc(2)]
+        [CommandCmif(2)]
         // RegisterService(ServiceName name, u8 isLight, u32 maxHandles) -> handle<move, port>
-        public ResultCode RegisterServiceHipc(ServiceCtx context)
+        public ResultCode RegisterServiceCmif(ServiceCtx context)
         {
             if (!_isInitialized)
             {
@@ -199,7 +199,7 @@ namespace Ryujinx.HLE.HOS.Services.Sm
             return ResultCode.Success;
         }
 
-        [CommandHipc(3)]
+        [CommandCmif(3)]
         [CommandTipc(3)] // 12.0.0+
         // UnregisterService(ServiceName name)
         public ResultCode UnregisterService(ServiceCtx context)

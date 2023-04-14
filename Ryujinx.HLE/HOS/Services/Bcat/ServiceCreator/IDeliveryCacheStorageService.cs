@@ -14,7 +14,7 @@ namespace Ryujinx.HLE.HOS.Services.Bcat.ServiceCreator
             _base = SharedRef<LibHac.Bcat.Impl.Ipc.IDeliveryCacheStorageService>.CreateMove(ref baseService);
         }
 
-        [CommandHipc(0)]
+        [CommandCmif(0)]
         // CreateFileService() -> object<nn::bcat::detail::ipc::IDeliveryCacheFileService>
         public ResultCode CreateFileService(ServiceCtx context)
         {
@@ -30,7 +30,7 @@ namespace Ryujinx.HLE.HOS.Services.Bcat.ServiceCreator
             return (ResultCode)result.Value;
         }
 
-        [CommandHipc(1)]
+        [CommandCmif(1)]
         // CreateDirectoryService() -> object<nn::bcat::detail::ipc::IDeliveryCacheDirectoryService>
         public ResultCode CreateDirectoryService(ServiceCtx context)
         {
@@ -46,7 +46,7 @@ namespace Ryujinx.HLE.HOS.Services.Bcat.ServiceCreator
             return (ResultCode)result.Value;
         }
 
-        [CommandHipc(10)]
+        [CommandCmif(10)]
         // EnumerateDeliveryCacheDirectory() -> (u32, buffer<nn::bcat::DirectoryName, 6>)
         public ResultCode EnumerateDeliveryCacheDirectory(ServiceCtx context)
         {

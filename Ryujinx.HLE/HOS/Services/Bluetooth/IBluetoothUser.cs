@@ -9,7 +9,7 @@ namespace Ryujinx.HLE.HOS.Services.Bluetooth
     {
         public IBluetoothUser(ServiceCtx context) { }
 
-        [CommandHipc(9)]
+        [CommandCmif(9)]
         // RegisterBleEvent(pid) -> handle<copy>
         public ResultCode RegisterBleEvent(ServiceCtx context)
         {

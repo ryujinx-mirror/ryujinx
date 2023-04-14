@@ -47,21 +47,21 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Nsd
             };
         }
 
-        [CommandHipc(5)] // 11.0.0+
+        [CommandCmif(5)] // 11.0.0+
         // GetSettingUrl() -> buffer<unknown<0x100>, 0x16>
         public ResultCode GetSettingUrl(ServiceCtx context)
         {
             throw new ServiceNotImplementedException(this, context);
         }
 
-        [CommandHipc(10)]
+        [CommandCmif(10)]
         // GetSettingName() -> buffer<unknown<0x100>, 0x16>
         public ResultCode GetSettingName(ServiceCtx context)
         {
             throw new ServiceNotImplementedException(this, context);
         }
 
-        [CommandHipc(11)]
+        [CommandCmif(11)]
         // GetEnvironmentIdentifier() -> buffer<bytes<8> environment_identifier, 0x16>
         public ResultCode GetEnvironmentIdentifier(ServiceCtx context)
         {
@@ -81,7 +81,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Nsd
             return result;
         }
 
-        [CommandHipc(12)]
+        [CommandCmif(12)]
         // GetDeviceId() -> bytes<0x10, 1>
         public ResultCode GetDeviceId(ServiceCtx context)
         {
@@ -90,7 +90,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Nsd
             return ResultCode.Success;
         }
 
-        [CommandHipc(13)]
+        [CommandCmif(13)]
         // DeleteSettings(u32)
         public ResultCode DeleteSettings(ServiceCtx context)
         {
@@ -127,14 +127,14 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Nsd
             return ResultCode.Success;
         }
 
-        [CommandHipc(14)]
+        [CommandCmif(14)]
         // ImportSettings(u32, buffer<unknown, 5>) -> buffer<unknown, 6>
         public ResultCode ImportSettings(ServiceCtx context)
         {
             throw new ServiceNotImplementedException(this, context);
         }
 
-        [CommandHipc(15)] // 4.0.0+
+        [CommandCmif(15)] // 4.0.0+
         // SetChangeEnvironmentIdentifierDisabled(bytes<1>)
         public ResultCode SetChangeEnvironmentIdentifierDisabled(ServiceCtx context)
         {
@@ -153,7 +153,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Nsd
             return ResultCode.Success;
         }
 
-        [CommandHipc(20)]
+        [CommandCmif(20)]
         // Resolve(buffer<unknown<0x100>, 0x15>) -> buffer<unknown<0x100>, 0x16>
         public ResultCode Resolve(ServiceCtx context)
         {
@@ -176,7 +176,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Nsd
             return result;
         }
 
-        [CommandHipc(21)]
+        [CommandCmif(21)]
         // ResolveEx(buffer<unknown<0x100>, 0x15>) -> (u32, buffer<unknown<0x100>, 0x16>)
         public ResultCode ResolveEx(ServiceCtx context)
         {
@@ -201,56 +201,56 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Nsd
             return result;
         }
 
-        [CommandHipc(30)]
+        [CommandCmif(30)]
         // GetNasServiceSetting(buffer<unknown<0x10>, 0x15>) -> buffer<unknown<0x108>, 0x16>
         public ResultCode GetNasServiceSetting(ServiceCtx context)
         {
             throw new ServiceNotImplementedException(this, context);
         }
 
-        [CommandHipc(31)]
+        [CommandCmif(31)]
         // GetNasServiceSettingEx(buffer<unknown<0x10>, 0x15>) -> (u32, buffer<unknown<0x108>, 0x16>)
         public ResultCode GetNasServiceSettingEx(ServiceCtx context)
         {
             throw new ServiceNotImplementedException(this, context);
         }
 
-        [CommandHipc(40)]
+        [CommandCmif(40)]
         // GetNasRequestFqdn() -> buffer<unknown<0x100>, 0x16>
         public ResultCode GetNasRequestFqdn(ServiceCtx context)
         {
             throw new ServiceNotImplementedException(this, context);
         }
 
-        [CommandHipc(41)]
+        [CommandCmif(41)]
         // GetNasRequestFqdnEx() -> (u32, buffer<unknown<0x100>, 0x16>)
         public ResultCode GetNasRequestFqdnEx(ServiceCtx context)
         {
             throw new ServiceNotImplementedException(this, context);
         }
 
-        [CommandHipc(42)]
+        [CommandCmif(42)]
         // GetNasApiFqdn() -> buffer<unknown<0x100>, 0x16>
         public ResultCode GetNasApiFqdn(ServiceCtx context)
         {
             throw new ServiceNotImplementedException(this, context);
         }
 
-        [CommandHipc(43)]
+        [CommandCmif(43)]
         // GetNasApiFqdnEx() -> (u32, buffer<unknown<0x100>, 0x16>)
         public ResultCode GetNasApiFqdnEx(ServiceCtx context)
         {
             throw new ServiceNotImplementedException(this, context);
         }
 
-        [CommandHipc(50)]
+        [CommandCmif(50)]
         // GetCurrentSetting() -> buffer<unknown<0x12bf0>, 0x16>
         public ResultCode GetCurrentSetting(ServiceCtx context)
         {
             throw new ServiceNotImplementedException(this, context);
         }
 
-        [CommandHipc(51)] // 9.0.0+
+        [CommandCmif(51)] // 9.0.0+
         // WriteTestParameter(buffer<?>)
         public ResultCode WriteTestParameter(ServiceCtx context)
         {
@@ -259,7 +259,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Nsd
             throw new ServiceNotImplementedException(this, context);
         }
 
-        [CommandHipc(52)] // 9.0.0+
+        [CommandCmif(52)] // 9.0.0+
         // ReadTestParameter() -> buffer<?>
         public ResultCode ReadTestParameter(ServiceCtx context)
         {
@@ -268,7 +268,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Nsd
             throw new ServiceNotImplementedException(this, context);
         }
 
-        [CommandHipc(60)]
+        [CommandCmif(60)]
         // ReadSaveDataFromFsForTest() -> buffer<unknown<0x12bf0>, 0x16>
         public ResultCode ReadSaveDataFromFsForTest(ServiceCtx context)
         {
@@ -284,7 +284,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Nsd
             return ResultCode.Success;
         }
 
-        [CommandHipc(61)]
+        [CommandCmif(61)]
         // WriteSaveDataToFsForTest(buffer<unknown<0x12bf0>, 0x15>)
         public ResultCode WriteSaveDataToFsForTest(ServiceCtx context)
         {
@@ -313,7 +313,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Nsd
             return ResultCode.Success;
         }
 
-        [CommandHipc(62)]
+        [CommandCmif(62)]
         // DeleteSaveDataOfFsForTest()
         public ResultCode DeleteSaveDataOfFsForTest(ServiceCtx context)
         {
@@ -342,7 +342,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Nsd
             return ResultCode.Success;
         }
 
-        [CommandHipc(63)] // 4.0.0+
+        [CommandCmif(63)] // 4.0.0+
         // IsChangeEnvironmentIdentifierDisabled() -> bytes<1>
         public ResultCode IsChangeEnvironmentIdentifierDisabled(ServiceCtx context)
         {
@@ -357,7 +357,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Nsd
             return ResultCode.Success;
         }
 
-        [CommandHipc(100)] // 10.0.0+
+        [CommandCmif(100)] // 10.0.0+
         // GetApplicationServerEnvironmentType() -> bytes<1>
         public ResultCode GetApplicationServerEnvironmentType(ServiceCtx context)
         {
@@ -385,14 +385,14 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Nsd
             return ResultCode.Success;
         }
 
-        [CommandHipc(101)] // 10.0.0+
+        [CommandCmif(101)] // 10.0.0+
         // SetApplicationServerEnvironmentType(bytes<1>)
         public ResultCode SetApplicationServerEnvironmentType(ServiceCtx context)
         {
             throw new ServiceNotImplementedException(this, context);
         }
 
-        [CommandHipc(102)] // 10.0.0+
+        [CommandCmif(102)] // 10.0.0+
         // DeleteApplicationServerEnvironmentType()
         public ResultCode DeleteApplicationServerEnvironmentType(ServiceCtx context)
         {

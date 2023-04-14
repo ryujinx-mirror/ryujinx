@@ -27,7 +27,7 @@ namespace Ryujinx.HLE.HOS.Services.Pcv.Clkrst.ClkrstManager
             _unknown    = unknown;
         }
 
-        [CommandHipc(7)]
+        [CommandCmif(7)]
         // SetClockRate(u32 hz)
         public ResultCode SetClockRate(ServiceCtx context)
         {
@@ -43,7 +43,7 @@ namespace Ryujinx.HLE.HOS.Services.Pcv.Clkrst.ClkrstManager
             return ResultCode.Success;
         }
 
-        [CommandHipc(8)]
+        [CommandCmif(8)]
         // GetClockRate() -> u32 hz
         public ResultCode GetClockRate(ServiceCtx context)
         {

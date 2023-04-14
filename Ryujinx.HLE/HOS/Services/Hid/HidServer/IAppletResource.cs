@@ -15,7 +15,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid.HidServer
             _hidSharedMem = hidSharedMem;
         }
 
-        [CommandHipc(0)]
+        [CommandCmif(0)]
         // GetSharedMemoryHandle() -> handle<copy>
         public ResultCode GetSharedMemoryHandle(ServiceCtx context)
         {

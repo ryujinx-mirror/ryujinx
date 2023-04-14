@@ -36,7 +36,7 @@ namespace Ryujinx.HLE.HOS.Services.Ssl.SslService
             _verifyOption = VerifyOption.PeerCa | VerifyOption.HostName;
         }
 
-        [CommandHipc(0)]
+        [CommandCmif(0)]
         // SetSocketDescriptor(u32) -> u32
         public ResultCode SetSocketDescriptor(ServiceCtx context)
         {
@@ -82,7 +82,7 @@ namespace Ryujinx.HLE.HOS.Services.Ssl.SslService
             _connection = new SslManagedSocketConnection(_bsdContext, _sslVersion, socketFd, bsdSocket);
         }
 
-        [CommandHipc(1)]
+        [CommandCmif(1)]
         // SetHostName(buffer<bytes, 5>)
         public ResultCode SetHostName(ServiceCtx context)
         {
@@ -100,7 +100,7 @@ namespace Ryujinx.HLE.HOS.Services.Ssl.SslService
             return ResultCode.Success;
         }
 
-        [CommandHipc(2)]
+        [CommandCmif(2)]
         // SetVerifyOption(nn::ssl::sf::VerifyOption)
         public ResultCode SetVerifyOption(ServiceCtx context)
         {
@@ -111,7 +111,7 @@ namespace Ryujinx.HLE.HOS.Services.Ssl.SslService
             return ResultCode.Success;
         }
 
-        [CommandHipc(3)]
+        [CommandCmif(3)]
         // SetIoMode(nn::ssl::sf::IoMode)
         public ResultCode SetIoMode(ServiceCtx context)
         {
@@ -129,7 +129,7 @@ namespace Ryujinx.HLE.HOS.Services.Ssl.SslService
             return ResultCode.Success;
         }
 
-        [CommandHipc(4)]
+        [CommandCmif(4)]
         // GetSocketDescriptor() -> u32
         public ResultCode GetSocketDescriptor(ServiceCtx context)
         {
@@ -138,7 +138,7 @@ namespace Ryujinx.HLE.HOS.Services.Ssl.SslService
             return ResultCode.Success;
         }
 
-        [CommandHipc(5)]
+        [CommandCmif(5)]
         // GetHostName(buffer<bytes, 6>) -> u32
         public ResultCode GetHostName(ServiceCtx context)
         {
@@ -157,7 +157,7 @@ namespace Ryujinx.HLE.HOS.Services.Ssl.SslService
             return ResultCode.Success;
         }
 
-        [CommandHipc(6)]
+        [CommandCmif(6)]
         // GetVerifyOption() -> nn::ssl::sf::VerifyOption
         public ResultCode GetVerifyOption(ServiceCtx context)
         {
@@ -168,7 +168,7 @@ namespace Ryujinx.HLE.HOS.Services.Ssl.SslService
             return ResultCode.Success;
         }
 
-        [CommandHipc(7)]
+        [CommandCmif(7)]
         // GetIoMode() -> nn::ssl::sf::IoMode
         public ResultCode GetIoMode(ServiceCtx context)
         {
@@ -179,7 +179,7 @@ namespace Ryujinx.HLE.HOS.Services.Ssl.SslService
             return ResultCode.Success;
         }
 
-        [CommandHipc(8)]
+        [CommandCmif(8)]
         // DoHandshake()
         public ResultCode DoHandshake(ServiceCtx context)
         {
@@ -191,7 +191,7 @@ namespace Ryujinx.HLE.HOS.Services.Ssl.SslService
             return _connection.Handshake(_hostName);
         }
 
-        [CommandHipc(9)]
+        [CommandCmif(9)]
         // DoHandshakeGetServerCert() -> (u32, u32, buffer<bytes, 6>)
         public ResultCode DoHandshakeGetServerCert(ServiceCtx context)
         {
@@ -224,7 +224,7 @@ namespace Ryujinx.HLE.HOS.Services.Ssl.SslService
             return result;
         }
 
-        [CommandHipc(10)]
+        [CommandCmif(10)]
         // Read() -> (u32, buffer<bytes, 6>)
         public ResultCode Read(ServiceCtx context)
         {
@@ -249,7 +249,7 @@ namespace Ryujinx.HLE.HOS.Services.Ssl.SslService
             return result;
         }
 
-        [CommandHipc(11)]
+        [CommandCmif(11)]
         // Write(buffer<bytes, 5>) -> s32
         public ResultCode Write(ServiceCtx context)
         {
@@ -272,7 +272,7 @@ namespace Ryujinx.HLE.HOS.Services.Ssl.SslService
             return result;
         }
 
-        [CommandHipc(12)]
+        [CommandCmif(12)]
         // Pending() -> s32
         public ResultCode Pending(ServiceCtx context)
         {
@@ -286,7 +286,7 @@ namespace Ryujinx.HLE.HOS.Services.Ssl.SslService
             return ResultCode.Success;
         }
 
-        [CommandHipc(13)]
+        [CommandCmif(13)]
         // Peek() -> (s32, buffer<bytes, 6>)
         public ResultCode Peek(ServiceCtx context)
         {
@@ -311,28 +311,28 @@ namespace Ryujinx.HLE.HOS.Services.Ssl.SslService
             return result;
         }
 
-        [CommandHipc(14)]
+        [CommandCmif(14)]
         // Poll(nn::ssl::sf::PollEvent poll_event, u32 timeout) -> nn::ssl::sf::PollEvent
         public ResultCode Poll(ServiceCtx context)
         {
             throw new ServiceNotImplementedException(this, context);
         }
 
-        [CommandHipc(15)]
+        [CommandCmif(15)]
         // GetVerifyCertError()
         public ResultCode GetVerifyCertError(ServiceCtx context)
         {
             throw new ServiceNotImplementedException(this, context);
         }
 
-        [CommandHipc(16)]
+        [CommandCmif(16)]
         // GetNeededServerCertBufferSize() -> u32
         public ResultCode GetNeededServerCertBufferSize(ServiceCtx context)
         {
             throw new ServiceNotImplementedException(this, context);
         }
 
-        [CommandHipc(17)]
+        [CommandCmif(17)]
         // SetSessionCacheMode(nn::ssl::sf::SessionCacheMode)
         public ResultCode SetSessionCacheMode(ServiceCtx context)
         {
@@ -345,7 +345,7 @@ namespace Ryujinx.HLE.HOS.Services.Ssl.SslService
             return ResultCode.Success;
         }
 
-        [CommandHipc(18)]
+        [CommandCmif(18)]
         // GetSessionCacheMode() -> nn::ssl::sf::SessionCacheMode
         public ResultCode GetSessionCacheMode(ServiceCtx context)
         {
@@ -356,28 +356,28 @@ namespace Ryujinx.HLE.HOS.Services.Ssl.SslService
             return ResultCode.Success;
         }
 
-        [CommandHipc(19)]
+        [CommandCmif(19)]
         // FlushSessionCache()
         public ResultCode FlushSessionCache(ServiceCtx context)
         {
             throw new ServiceNotImplementedException(this, context);
         }
 
-        [CommandHipc(20)]
+        [CommandCmif(20)]
         // SetRenegotiationMode(nn::ssl::sf::RenegotiationMode)
         public ResultCode SetRenegotiationMode(ServiceCtx context)
         {
             throw new ServiceNotImplementedException(this, context);
         }
 
-        [CommandHipc(21)]
+        [CommandCmif(21)]
         // GetRenegotiationMode() -> nn::ssl::sf::RenegotiationMode
         public ResultCode GetRenegotiationMode(ServiceCtx context)
         {
             throw new ServiceNotImplementedException(this, context);
         }
 
-        [CommandHipc(22)]
+        [CommandCmif(22)]
         // SetOption(b8 value, nn::ssl::sf::OptionType option)
         public ResultCode SetOption(ServiceCtx context)
         {
@@ -389,7 +389,7 @@ namespace Ryujinx.HLE.HOS.Services.Ssl.SslService
             return SetOption(option, value);
         }
 
-        [CommandHipc(23)]
+        [CommandCmif(23)]
         // GetOption(nn::ssl::sf::OptionType) -> b8
         public ResultCode GetOption(ServiceCtx context)
         {
@@ -407,21 +407,21 @@ namespace Ryujinx.HLE.HOS.Services.Ssl.SslService
             return result;
         }
 
-        [CommandHipc(24)]
+        [CommandCmif(24)]
         // GetVerifyCertErrors() -> (u32, u32, buffer<bytes, 6>)
         public ResultCode GetVerifyCertErrors(ServiceCtx context)
         {
             throw new ServiceNotImplementedException(this, context);
         }
 
-        [CommandHipc(25)] // 4.0.0+
+        [CommandCmif(25)] // 4.0.0+
         // GetCipherInfo(u32) -> buffer<bytes, 6>
         public ResultCode GetCipherInfo(ServiceCtx context)
         {
             throw new ServiceNotImplementedException(this, context);
         }
 
-        [CommandHipc(26)]
+        [CommandCmif(26)]
         // SetNextAlpnProto(buffer<bytes, 5>) -> u32
         public ResultCode SetNextAlpnProto(ServiceCtx context)
         {
@@ -437,7 +437,7 @@ namespace Ryujinx.HLE.HOS.Services.Ssl.SslService
             return ResultCode.Success;
         }
 
-        [CommandHipc(27)]
+        [CommandCmif(27)]
         // GetNextAlpnProto(buffer<bytes, 6>) -> u32
         public ResultCode GetNextAlpnProto(ServiceCtx context)
         {

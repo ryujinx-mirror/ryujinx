@@ -7,7 +7,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns
     {
         public IReadOnlyApplicationControlDataInterface(ServiceCtx context) { }
 
-        [CommandHipc(0)]
+        [CommandCmif(0)]
         // GetApplicationControlData(u8, u64) -> (unknown<4>, buffer<unknown, 6>)
         public ResultCode GetApplicationControlData(ServiceCtx context)
         {

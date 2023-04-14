@@ -236,10 +236,10 @@ namespace Ryujinx.HLE.HOS.Services
             _requestDataStream.Write(request.RawData);
             _requestDataStream.Position = 0;
 
-            if (request.Type == IpcMessageType.HipcRequest ||
-                request.Type == IpcMessageType.HipcRequestWithContext)
+            if (request.Type == IpcMessageType.CmifRequest ||
+                request.Type == IpcMessageType.CmifRequestWithContext)
             {
-                response.Type = IpcMessageType.HipcResponse;
+                response.Type = IpcMessageType.CmifResponse;
 
                 _responseDataStream.SetLength(0);
 
@@ -253,12 +253,12 @@ namespace Ryujinx.HLE.HOS.Services
                     _requestDataReader,
                     _responseDataWriter);
 
-                _sessions[serverSessionHandle].CallHipcMethod(context);
+                _sessions[serverSessionHandle].CallCmifMethod(context);
 
                 response.RawData = _responseDataStream.ToArray();
             }
-            else if (request.Type == IpcMessageType.HipcControl ||
-                        request.Type == IpcMessageType.HipcControlWithContext)
+            else if (request.Type == IpcMessageType.CmifControl ||
+                        request.Type == IpcMessageType.CmifControlWithContext)
             {
                 uint magic = (uint)_requestDataReader.ReadUInt64();
                 uint cmdId = (uint)_requestDataReader.ReadUInt64();
@@ -291,7 +291,7 @@ namespace Ryujinx.HLE.HOS.Services
                     default: throw new NotImplementedException(cmdId.ToString());
                 }
             }
-            else if (request.Type == IpcMessageType.HipcCloseSession || request.Type == IpcMessageType.TipcCloseSession)
+            else if (request.Type == IpcMessageType.CmifCloseSession || request.Type == IpcMessageType.TipcCloseSession)
             {
                 _context.Syscall.CloseHandle(serverSessionHandle);
                 lock (_handleLock)
@@ -376,7 +376,7 @@ namespace Ryujinx.HLE.HOS.Services
 
         private void FillHipcResponse(IpcMessage response, long result, ReadOnlySpan<byte> data)
         {
-            response.Type = IpcMessageType.HipcResponse;
+            response.Type = IpcMessageType.CmifResponse;
 
             _responseDataStream.SetLength(0);
 

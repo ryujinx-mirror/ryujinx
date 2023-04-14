@@ -9,21 +9,21 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc.AccountService
             _managerServer = new ManagerServer(userId);
         }
 
-        [CommandHipc(0)]
+        [CommandCmif(0)]
         // CheckAvailability()
         public ResultCode CheckAvailability(ServiceCtx context)
         {
             return _managerServer.CheckAvailability(context);
         }
 
-        [CommandHipc(1)]
+        [CommandCmif(1)]
         // GetAccountId() -> nn::account::NetworkServiceAccountId
         public ResultCode GetAccountId(ServiceCtx context)
         {
             return _managerServer.GetAccountId(context);
         }
 
-        [CommandHipc(2)]
+        [CommandCmif(2)]
         // EnsureIdTokenCacheAsync() -> object<nn::account::detail::IAsyncContext>
         public ResultCode EnsureIdTokenCacheAsync(ServiceCtx context)
         {
@@ -37,28 +37,28 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc.AccountService
             return resultCode;
         }
 
-        [CommandHipc(3)]
+        [CommandCmif(3)]
         // LoadIdTokenCache() -> (u32 id_token_cache_size, buffer<bytes, 6>)
         public ResultCode LoadIdTokenCache(ServiceCtx context)
         {
             return _managerServer.LoadIdTokenCache(context);
         }
 
-        [CommandHipc(130)]
+        [CommandCmif(130)]
         // GetNintendoAccountUserResourceCacheForApplication() -> (nn::account::NintendoAccountId, nn::account::nas::NasUserBaseForApplication, buffer<bytes, 6>)
         public ResultCode GetNintendoAccountUserResourceCacheForApplication(ServiceCtx context)
         {
             return _managerServer.GetNintendoAccountUserResourceCacheForApplication(context);
         }
 
-        [CommandHipc(160)] // 5.0.0+
+        [CommandCmif(160)] // 5.0.0+
         // StoreOpenContext()
         public ResultCode StoreOpenContext(ServiceCtx context)
         {
             return _managerServer.StoreOpenContext(context);
         }
 
-        [CommandHipc(170)] // 6.0.0+
+        [CommandCmif(170)] // 6.0.0+
         // LoadNetworkServiceLicenseKindAsync() -> object<nn::account::detail::IAsyncNetworkServiceLicenseKindContext>
         public ResultCode LoadNetworkServiceLicenseKindAsync(ServiceCtx context)
         {

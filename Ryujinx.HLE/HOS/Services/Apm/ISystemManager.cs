@@ -8,7 +8,7 @@ namespace Ryujinx.HLE.HOS.Services.Apm
         internal abstract void SetCpuBoostMode(CpuBoostMode cpuBoostMode);
         protected abstract PerformanceConfiguration GetCurrentPerformanceConfiguration();
 
-        [CommandHipc(0)]
+        [CommandCmif(0)]
         // RequestPerformanceMode(nn::apm::PerformanceMode)
         public ResultCode RequestPerformanceMode(ServiceCtx context)
         {
@@ -19,7 +19,7 @@ namespace Ryujinx.HLE.HOS.Services.Apm
             return ResultCode.Success;
         }
 
-        [CommandHipc(6)] // 7.0.0+
+        [CommandCmif(6)] // 7.0.0+
         // SetCpuBoostMode(nn::apm::CpuBootMode)
         public ResultCode SetCpuBoostMode(ServiceCtx context)
         {
@@ -30,7 +30,7 @@ namespace Ryujinx.HLE.HOS.Services.Apm
             return ResultCode.Success;
         }
 
-        [CommandHipc(7)] // 7.0.0+
+        [CommandCmif(7)] // 7.0.0+
         // GetCurrentPerformanceConfiguration() -> nn::apm::PerformanceConfiguration
         public ResultCode GetCurrentPerformanceConfiguration(ServiceCtx context)
         {

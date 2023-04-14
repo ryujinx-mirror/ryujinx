@@ -21,35 +21,35 @@ namespace Ryujinx.HLE.HOS.Services.Audio.HardwareOpusDecoderManager
             _flags = flags;
         }
 
-        [CommandHipc(0)]
+        [CommandCmif(0)]
         // DecodeInterleavedOld(buffer<unknown, 5>) -> (u32, u32, buffer<unknown, 6>)
         public ResultCode DecodeInterleavedOld(ServiceCtx context)
         {
             return DecodeInterleavedInternal(context, OpusDecoderFlags.None, reset: false, withPerf: false);
         }
 
-        [CommandHipc(2)]
+        [CommandCmif(2)]
         // DecodeInterleavedForMultiStreamOld(buffer<unknown, 5>) -> (u32, u32, buffer<unknown, 6>)
         public ResultCode DecodeInterleavedForMultiStreamOld(ServiceCtx context)
         {
             return DecodeInterleavedInternal(context, OpusDecoderFlags.None, reset: false, withPerf: false);
         }
 
-        [CommandHipc(4)] // 6.0.0+
+        [CommandCmif(4)] // 6.0.0+
         // DecodeInterleavedWithPerfOld(buffer<unknown, 5>) -> (u32, u32, u64, buffer<unknown, 0x46>)
         public ResultCode DecodeInterleavedWithPerfOld(ServiceCtx context)
         {
             return DecodeInterleavedInternal(context, OpusDecoderFlags.None, reset: false, withPerf: true);
         }
 
-        [CommandHipc(5)] // 6.0.0+
+        [CommandCmif(5)] // 6.0.0+
         // DecodeInterleavedForMultiStreamWithPerfOld(buffer<unknown, 5>) -> (u32, u32, u64, buffer<unknown, 0x46>)
         public ResultCode DecodeInterleavedForMultiStreamWithPerfOld(ServiceCtx context)
         {
             return DecodeInterleavedInternal(context, OpusDecoderFlags.None, reset: false, withPerf: true);
         }
 
-        [CommandHipc(6)] // 6.0.0+
+        [CommandCmif(6)] // 6.0.0+
         // DecodeInterleavedWithPerfAndResetOld(bool reset, buffer<unknown, 5>) -> (u32, u32, u64, buffer<unknown, 0x46>)
         public ResultCode DecodeInterleavedWithPerfAndResetOld(ServiceCtx context)
         {
@@ -58,7 +58,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.HardwareOpusDecoderManager
             return DecodeInterleavedInternal(context, OpusDecoderFlags.None, reset, withPerf: true);
         }
 
-        [CommandHipc(7)] // 6.0.0+
+        [CommandCmif(7)] // 6.0.0+
         // DecodeInterleavedForMultiStreamWithPerfAndResetOld(bool reset, buffer<unknown, 5>) -> (u32, u32, u64, buffer<unknown, 0x46>)
         public ResultCode DecodeInterleavedForMultiStreamWithPerfAndResetOld(ServiceCtx context)
         {
@@ -67,7 +67,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.HardwareOpusDecoderManager
             return DecodeInterleavedInternal(context, OpusDecoderFlags.None, reset, withPerf: true);
         }
 
-        [CommandHipc(8)] // 7.0.0+
+        [CommandCmif(8)] // 7.0.0+
         // DecodeInterleaved(bool reset, buffer<unknown, 0x45>) -> (u32, u32, u64, buffer<unknown, 0x46>)
         public ResultCode DecodeInterleaved(ServiceCtx context)
         {
@@ -76,7 +76,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.HardwareOpusDecoderManager
             return DecodeInterleavedInternal(context, _flags, reset, withPerf: true);
         }
 
-        [CommandHipc(9)] // 7.0.0+
+        [CommandCmif(9)] // 7.0.0+
         // DecodeInterleavedForMultiStream(bool reset, buffer<unknown, 0x45>) -> (u32, u32, u64, buffer<unknown, 0x46>)
         public ResultCode DecodeInterleavedForMultiStream(ServiceCtx context)
         {

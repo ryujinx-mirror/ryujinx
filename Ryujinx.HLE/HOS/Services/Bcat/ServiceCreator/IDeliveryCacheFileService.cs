@@ -22,7 +22,7 @@ namespace Ryujinx.HLE.HOS.Services.Bcat.ServiceCreator
             }
         }
 
-        [CommandHipc(0)]
+        [CommandCmif(0)]
         // Open(nn::bcat::DirectoryName, nn::bcat::FileName)
         public ResultCode Open(ServiceCtx context)
         {
@@ -34,7 +34,7 @@ namespace Ryujinx.HLE.HOS.Services.Bcat.ServiceCreator
             return (ResultCode)result.Value;
         }
 
-        [CommandHipc(1)]
+        [CommandCmif(1)]
         // Read(u64) -> (u64, buffer<bytes, 6>)
         public ResultCode Read(ServiceCtx context)
         {
@@ -53,7 +53,7 @@ namespace Ryujinx.HLE.HOS.Services.Bcat.ServiceCreator
             }
         }
 
-        [CommandHipc(2)]
+        [CommandCmif(2)]
         // GetSize() -> u64
         public ResultCode GetSize(ServiceCtx context)
         {
@@ -64,7 +64,7 @@ namespace Ryujinx.HLE.HOS.Services.Bcat.ServiceCreator
             return (ResultCode)result.Value;
         }
 
-        [CommandHipc(3)]
+        [CommandCmif(3)]
         // GetDigest() -> nn::bcat::Digest
         public ResultCode GetDigest(ServiceCtx context)
         {

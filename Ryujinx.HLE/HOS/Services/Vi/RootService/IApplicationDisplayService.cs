@@ -62,7 +62,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
             AddDisplayInfo("Null",     false, 0, 1920, 1080);
         }
 
-        [CommandHipc(100)]
+        [CommandCmif(100)]
         // GetRelayService() -> object<nns::hosbinder::IHOSBinderDriver>
         public ResultCode GetRelayService(ServiceCtx context)
         {
@@ -77,7 +77,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
             return ResultCode.Success;
         }
 
-        [CommandHipc(101)]
+        [CommandCmif(101)]
         // GetSystemDisplayService() -> object<nn::visrv::sf::ISystemDisplayService>
         public ResultCode GetSystemDisplayService(ServiceCtx context)
         {
@@ -92,7 +92,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
             return ResultCode.Success;
         }
 
-        [CommandHipc(102)]
+        [CommandCmif(102)]
         // GetManagerDisplayService() -> object<nn::visrv::sf::IManagerDisplayService>
         public ResultCode GetManagerDisplayService(ServiceCtx context)
         {
@@ -106,7 +106,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
             return ResultCode.Success;
         }
 
-        [CommandHipc(103)] // 2.0.0+
+        [CommandCmif(103)] // 2.0.0+
         // GetIndirectDisplayTransactionService() -> object<nns::hosbinder::IHOSBinderDriver>
         public ResultCode GetIndirectDisplayTransactionService(ServiceCtx context)
         {
@@ -120,7 +120,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
             return ResultCode.Success;
         }
 
-        [CommandHipc(1000)]
+        [CommandCmif(1000)]
         // ListDisplays() -> (u64 count, buffer<nn::vi::DisplayInfo, 6>)
         public ResultCode ListDisplays(ServiceCtx context)
         {
@@ -139,7 +139,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
             return ResultCode.Success;
         }
 
-        [CommandHipc(1010)]
+        [CommandCmif(1010)]
         // OpenDisplay(nn::vi::DisplayName) -> u64 display_id
         public ResultCode OpenDisplay(ServiceCtx context)
         {
@@ -158,7 +158,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
             return OpenDisplayImpl(context, name);
         }
 
-        [CommandHipc(1011)]
+        [CommandCmif(1011)]
         // OpenDefaultDisplay() -> u64 display_id
         public ResultCode OpenDefaultDisplay(ServiceCtx context)
         {
@@ -189,7 +189,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
             return ResultCode.Success;
         }
 
-        [CommandHipc(1020)]
+        [CommandCmif(1020)]
         // CloseDisplay(u64 display_id)
         public ResultCode CloseDisplay(ServiceCtx context)
         {
@@ -203,7 +203,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
             return ResultCode.Success;
         }
 
-        [CommandHipc(1101)]
+        [CommandCmif(1101)]
         // SetDisplayEnabled(u32 enabled_bool, u64 display_id)
         public ResultCode SetDisplayEnabled(ServiceCtx context)
         {
@@ -211,7 +211,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
             return ResultCode.Success;
         }
 
-        [CommandHipc(1102)]
+        [CommandCmif(1102)]
         // GetDisplayResolution(u64 display_id) -> (u64 width, u64 height)
         public ResultCode GetDisplayResolution(ServiceCtx context)
         {
@@ -227,7 +227,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
             return ResultCode.Success;
         }
 
-        [CommandHipc(2020)]
+        [CommandCmif(2020)]
         // OpenLayer(nn::vi::DisplayName, u64, nn::applet::AppletResourceUserId, pid) -> (u64, buffer<bytes, 6>)
         public ResultCode OpenLayer(ServiceCtx context)
         {
@@ -260,7 +260,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
             return ResultCode.Success;
         }
 
-        [CommandHipc(2021)]
+        [CommandCmif(2021)]
         // CloseLayer(u64)
         public ResultCode CloseLayer(ServiceCtx context)
         {
@@ -269,7 +269,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
             return context.Device.System.SurfaceFlinger.CloseLayer(layerId);
         }
 
-        [CommandHipc(2030)]
+        [CommandCmif(2030)]
         // CreateStrayLayer(u32, u64) -> (u64, u64, buffer<bytes, 6>)
         public ResultCode CreateStrayLayer(ServiceCtx context)
         {
@@ -297,7 +297,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
             return ResultCode.Success;
         }
 
-        [CommandHipc(2031)]
+        [CommandCmif(2031)]
         // DestroyStrayLayer(u64)
         public ResultCode DestroyStrayLayer(ServiceCtx context)
         {
@@ -306,7 +306,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
             return context.Device.System.SurfaceFlinger.DestroyStrayLayer(layerId);
         }
 
-        [CommandHipc(2101)]
+        [CommandCmif(2101)]
         // SetLayerScalingMode(u32, u64)
         public ResultCode SetLayerScalingMode(ServiceCtx context)
         {
@@ -319,7 +319,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
             return ResultCode.Success;
         }
 
-        [CommandHipc(2102)] // 5.0.0+
+        [CommandCmif(2102)] // 5.0.0+
         // ConvertScalingMode(u32 source_scaling_mode) -> u64 destination_scaling_mode
         public ResultCode ConvertScalingMode(ServiceCtx context)
         {
@@ -366,7 +366,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
             return (requiredMemorySize + defaultSize - 1) / defaultSize * defaultSize;
         }
 
-        [CommandHipc(2450)]
+        [CommandCmif(2450)]
         // GetIndirectLayerImageMap(s64 width, s64 height, u64 handle, nn::applet::AppletResourceUserId, pid) -> (s64, s64, buffer<bytes, 0x46>)
         public ResultCode GetIndirectLayerImageMap(ServiceCtx context)
         {
@@ -413,7 +413,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
             return ResultCode.Success;
         }
 
-        [CommandHipc(2460)]
+        [CommandCmif(2460)]
         // GetIndirectLayerImageRequiredMemoryInfo(u64 width, u64 height) -> (u64 size, u64 alignment)
         public ResultCode GetIndirectLayerImageRequiredMemoryInfo(ServiceCtx context)
         {
@@ -454,7 +454,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
             return ResultCode.Success;
         }
 
-        [CommandHipc(5202)]
+        [CommandCmif(5202)]
         // GetDisplayVsyncEvent(u64) -> handle<copy>
         public ResultCode GetDisplayVSyncEvent(ServiceCtx context)
         {

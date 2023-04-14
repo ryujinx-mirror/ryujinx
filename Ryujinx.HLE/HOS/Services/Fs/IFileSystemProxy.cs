@@ -34,7 +34,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             _baseFileSystemProxy = applicationClient.Fs.Impl.GetFileSystemProxyServiceObject();
         }
 
-        [CommandHipc(1)]
+        [CommandCmif(1)]
         // SetCurrentProcess(u64, pid)
         public ResultCode SetCurrentProcess(ServiceCtx context)
         {
@@ -43,7 +43,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return ResultCode.Success;
         }
 
-        [CommandHipc(8)]
+        [CommandCmif(8)]
         // OpenFileSystemWithId(nn::fssrv::sf::FileSystemType filesystem_type, nn::ApplicationId tid, buffer<bytes<0x301>, 0x19, 0x301> path)
         // -> object<nn::fssrv::sf::IFileSystem> contentFs
         public ResultCode OpenFileSystemWithId(ServiceCtx context)
@@ -99,7 +99,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return ResultCode.InvalidInput;
         }
 
-        [CommandHipc(11)]
+        [CommandCmif(11)]
         // OpenBisFileSystem(nn::fssrv::sf::Partition partitionID, buffer<bytes<0x301>, 0x19, 0x301>) -> object<nn::fssrv::sf::IFileSystem> Bis
         public ResultCode OpenBisFileSystem(ServiceCtx context)
         {
@@ -116,7 +116,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return ResultCode.Success;
         }
 
-        [CommandHipc(12)]
+        [CommandCmif(12)]
         // OpenBisStorage(u32 partitionId) -> object<nn::fssrv::sf::IStorage> bisStorage
         public ResultCode OpenBisStorage(ServiceCtx context)
         {
@@ -131,14 +131,14 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return ResultCode.Success;
         }
 
-        [CommandHipc(13)]
+        [CommandCmif(13)]
         // InvalidateBisCache() -> ()
         public ResultCode InvalidateBisCache(ServiceCtx context)
         {
             return (ResultCode)_baseFileSystemProxy.Get.InvalidateBisCache().Value;
         }
 
-        [CommandHipc(18)]
+        [CommandCmif(18)]
         // OpenSdCardFileSystem() -> object<nn::fssrv::sf::IFileSystem>
         public ResultCode OpenSdCardFileSystem(ServiceCtx context)
         {
@@ -152,14 +152,14 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return ResultCode.Success;
         }
 
-        [CommandHipc(19)]
+        [CommandCmif(19)]
         // FormatSdCardFileSystem() -> ()
         public ResultCode FormatSdCardFileSystem(ServiceCtx context)
         {
             return (ResultCode)_baseFileSystemProxy.Get.FormatSdCardFileSystem().Value;
         }
 
-        [CommandHipc(21)]
+        [CommandCmif(21)]
         // DeleteSaveDataFileSystem(u64 saveDataId) -> ()
         public ResultCode DeleteSaveDataFileSystem(ServiceCtx context)
         {
@@ -168,7 +168,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return (ResultCode)_baseFileSystemProxy.Get.DeleteSaveDataFileSystem(saveDataId).Value;
         }
 
-        [CommandHipc(22)]
+        [CommandCmif(22)]
         // CreateSaveDataFileSystem(nn::fs::SaveDataAttribute attribute, nn::fs::SaveDataCreationInfo creationInfo, nn::fs::SaveDataMetaInfo metaInfo) -> ()
         public ResultCode CreateSaveDataFileSystem(ServiceCtx context)
         {
@@ -179,7 +179,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return (ResultCode)_baseFileSystemProxy.Get.CreateSaveDataFileSystem(in attribute, in creationInfo, in metaInfo).Value;
         }
 
-        [CommandHipc(23)]
+        [CommandCmif(23)]
         // CreateSaveDataFileSystemBySystemSaveDataId(nn::fs::SaveDataAttribute attribute, nn::fs::SaveDataCreationInfo creationInfo) -> ()
         public ResultCode CreateSaveDataFileSystemBySystemSaveDataId(ServiceCtx context)
         {
@@ -189,7 +189,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return (ResultCode)_baseFileSystemProxy.Get.CreateSaveDataFileSystemBySystemSaveDataId(in attribute, in creationInfo).Value;
         }
 
-        [CommandHipc(24)]
+        [CommandCmif(24)]
         // RegisterSaveDataFileSystemAtomicDeletion(buffer<u64, 5> saveDataIds) -> ()
         public ResultCode RegisterSaveDataFileSystemAtomicDeletion(ServiceCtx context)
         {
@@ -199,7 +199,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return (ResultCode)_baseFileSystemProxy.Get.RegisterSaveDataFileSystemAtomicDeletion(new InBuffer(saveIdBuffer)).Value;
         }
 
-        [CommandHipc(25)]
+        [CommandCmif(25)]
         // DeleteSaveDataFileSystemBySaveDataSpaceId(u8 spaceId, u64 saveDataId) -> ()
         public ResultCode DeleteSaveDataFileSystemBySaveDataSpaceId(ServiceCtx context)
         {
@@ -209,14 +209,14 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return (ResultCode)_baseFileSystemProxy.Get.DeleteSaveDataFileSystemBySaveDataSpaceId(spaceId, saveDataId).Value;
         }
 
-        [CommandHipc(26)]
+        [CommandCmif(26)]
         // FormatSdCardDryRun() -> ()
         public ResultCode FormatSdCardDryRun(ServiceCtx context)
         {
             return (ResultCode)_baseFileSystemProxy.Get.FormatSdCardDryRun().Value;
         }
 
-        [CommandHipc(27)]
+        [CommandCmif(27)]
         // IsExFatSupported() -> (u8 isSupported)
         public ResultCode IsExFatSupported(ServiceCtx context)
         {
@@ -228,7 +228,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return ResultCode.Success;
         }
 
-        [CommandHipc(28)]
+        [CommandCmif(28)]
         // DeleteSaveDataFileSystemBySaveDataAttribute(u8 spaceId, nn::fs::SaveDataAttribute attribute) -> ()
         public ResultCode DeleteSaveDataFileSystemBySaveDataAttribute(ServiceCtx context)
         {
@@ -238,7 +238,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return (ResultCode)_baseFileSystemProxy.Get.DeleteSaveDataFileSystemBySaveDataAttribute(spaceId, in attribute).Value;
         }
 
-        [CommandHipc(30)]
+        [CommandCmif(30)]
         // OpenGameCardStorage(u32 handle, u32 partitionId) -> object<nn::fssrv::sf::IStorage>
         public ResultCode OpenGameCardStorage(ServiceCtx context)
         {
@@ -254,7 +254,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return ResultCode.Success;
         }
 
-        [CommandHipc(31)]
+        [CommandCmif(31)]
         // OpenGameCardFileSystem(u32 handle, u32 partitionId) -> object<nn::fssrv::sf::IFileSystem>
         public ResultCode OpenGameCardFileSystem(ServiceCtx context)
         {
@@ -270,7 +270,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return ResultCode.Success;
         }
 
-        [CommandHipc(32)]
+        [CommandCmif(32)]
         // ExtendSaveDataFileSystem(u8 spaceId, u64 saveDataId, s64 dataSize, s64 journalSize) -> ()
         public ResultCode ExtendSaveDataFileSystem(ServiceCtx context)
         {
@@ -282,7 +282,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return (ResultCode)_baseFileSystemProxy.Get.ExtendSaveDataFileSystem(spaceId, saveDataId, dataSize, journalSize).Value;
         }
 
-        [CommandHipc(33)]
+        [CommandCmif(33)]
         // DeleteCacheStorage(u16 index) -> ()
         public ResultCode DeleteCacheStorage(ServiceCtx context)
         {
@@ -291,7 +291,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return (ResultCode)_baseFileSystemProxy.Get.DeleteCacheStorage(index).Value;
         }
 
-        [CommandHipc(34)]
+        [CommandCmif(34)]
         // GetCacheStorageSize(u16 index) -> (s64 dataSize, s64 journalSize)
         public ResultCode GetCacheStorageSize(ServiceCtx context)
         {
@@ -306,7 +306,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return ResultCode.Success;
         }
 
-        [CommandHipc(35)]
+        [CommandCmif(35)]
         // CreateSaveDataFileSystemWithHashSalt(nn::fs::SaveDataAttribute attribute, nn::fs::SaveDataCreationInfo creationInfo, nn::fs::SaveDataMetaInfo metaInfo nn::fs::HashSalt hashSalt) -> ()
         public ResultCode CreateSaveDataFileSystemWithHashSalt(ServiceCtx context)
         {
@@ -318,7 +318,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return (ResultCode)_baseFileSystemProxy.Get.CreateSaveDataFileSystemWithHashSalt(in attribute, in creationInfo, in metaCreateInfo, in hashSalt).Value;
         }
 
-        [CommandHipc(37)] // 14.0.0+
+        [CommandCmif(37)] // 14.0.0+
         // CreateSaveDataFileSystemWithCreationInfo2(buffer<nn::fs::SaveDataCreationInfo2, 25> creationInfo) -> ()
         public ResultCode CreateSaveDataFileSystemWithCreationInfo2(ServiceCtx context)
         {
@@ -329,7 +329,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return (ResultCode)_baseFileSystemProxy.Get.CreateSaveDataFileSystemWithCreationInfo2(in creationInfo).Value;
         }
 
-        [CommandHipc(51)]
+        [CommandCmif(51)]
         // OpenSaveDataFileSystem(u8 spaceId, nn::fs::SaveDataAttribute attribute) -> object<nn::fssrv::sf::IFileSystem> saveDataFs
         public ResultCode OpenSaveDataFileSystem(ServiceCtx context)
         {
@@ -345,7 +345,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return ResultCode.Success;
         }
 
-        [CommandHipc(52)]
+        [CommandCmif(52)]
         // OpenSaveDataFileSystemBySystemSaveDataId(u8 spaceId, nn::fs::SaveDataAttribute attribute) -> object<nn::fssrv::sf::IFileSystem> systemSaveDataFs
         public ResultCode OpenSaveDataFileSystemBySystemSaveDataId(ServiceCtx context)
         {
@@ -361,7 +361,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return ResultCode.Success;
         }
 
-        [CommandHipc(53)]
+        [CommandCmif(53)]
         // OpenReadOnlySaveDataFileSystem(u8 spaceId, nn::fs::SaveDataAttribute attribute) -> object<nn::fssrv::sf::IFileSystem>
         public ResultCode OpenReadOnlySaveDataFileSystem(ServiceCtx context)
         {
@@ -377,7 +377,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return ResultCode.Success;
         }
 
-        [CommandHipc(57)]
+        [CommandCmif(57)]
         // ReadSaveDataFileSystemExtraDataBySaveDataSpaceId(u8 spaceId, u64 saveDataId) -> (buffer<nn::fs::SaveDataExtraData, 6> extraData)
         public ResultCode ReadSaveDataFileSystemExtraDataBySaveDataSpaceId(ServiceCtx context)
         {
@@ -395,7 +395,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return ResultCode.Success;
         }
 
-        [CommandHipc(58)]
+        [CommandCmif(58)]
         // ReadSaveDataFileSystemExtraData(u64 saveDataId) -> (buffer<nn::fs::SaveDataExtraData, 6> extraData)
         public ResultCode ReadSaveDataFileSystemExtraData(ServiceCtx context)
         {
@@ -412,7 +412,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return ResultCode.Success;
         }
 
-        [CommandHipc(59)]
+        [CommandCmif(59)]
         // WriteSaveDataFileSystemExtraData(u8 spaceId, u64 saveDataId, buffer<nn::fs::SaveDataExtraData, 5> extraData) -> ()
         public ResultCode WriteSaveDataFileSystemExtraData(ServiceCtx context)
         {
@@ -425,7 +425,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return (ResultCode)_baseFileSystemProxy.Get.WriteSaveDataFileSystemExtraData(saveDataId, spaceId, new InBuffer(extraDataBuffer)).Value;
         }
 
-        [CommandHipc(60)]
+        [CommandCmif(60)]
         // OpenSaveDataInfoReader() -> object<nn::fssrv::sf::ISaveDataInfoReader>
         public ResultCode OpenSaveDataInfoReader(ServiceCtx context)
         {
@@ -439,7 +439,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return ResultCode.Success;
         }
 
-        [CommandHipc(61)]
+        [CommandCmif(61)]
         // OpenSaveDataInfoReaderBySaveDataSpaceId(u8 spaceId) -> object<nn::fssrv::sf::ISaveDataInfoReader>
         public ResultCode OpenSaveDataInfoReaderBySaveDataSpaceId(ServiceCtx context)
         {
@@ -454,7 +454,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return ResultCode.Success;
         }
 
-        [CommandHipc(62)]
+        [CommandCmif(62)]
         // OpenSaveDataInfoReaderOnlyCacheStorage() -> object<nn::fssrv::sf::ISaveDataInfoReader>
         public ResultCode OpenSaveDataInfoReaderOnlyCacheStorage(ServiceCtx context)
         {
@@ -468,7 +468,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return ResultCode.Success;
         }
 
-        [CommandHipc(64)]
+        [CommandCmif(64)]
         // OpenSaveDataInternalStorageFileSystem(u8 spaceId, u64 saveDataId) -> object<nn::fssrv::sf::ISaveDataInfoReader>
         public ResultCode OpenSaveDataInternalStorageFileSystem(ServiceCtx context)
         {
@@ -484,7 +484,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return ResultCode.Success;
         }
 
-        [CommandHipc(65)]
+        [CommandCmif(65)]
         // UpdateSaveDataMacForDebug(u8 spaceId, u64 saveDataId) -> ()
         public ResultCode UpdateSaveDataMacForDebug(ServiceCtx context)
         {
@@ -494,7 +494,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return (ResultCode)_baseFileSystemProxy.Get.UpdateSaveDataMacForDebug(spaceId, saveDataId).Value;
         }
 
-        [CommandHipc(66)]
+        [CommandCmif(66)]
         public ResultCode WriteSaveDataFileSystemExtraDataWithMask(ServiceCtx context)
         {
             SaveDataSpaceId spaceId = (SaveDataSpaceId)context.RequestData.ReadInt64();
@@ -509,7 +509,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return (ResultCode)_baseFileSystemProxy.Get.WriteSaveDataFileSystemExtraDataWithMask(saveDataId, spaceId, new InBuffer(extraDataBuffer), new InBuffer(maskBuffer)).Value;
         }
 
-        [CommandHipc(67)]
+        [CommandCmif(67)]
         public ResultCode FindSaveDataWithFilter(ServiceCtx context)
         {
             SaveDataSpaceId spaceId = (SaveDataSpaceId)context.RequestData.ReadInt64();
@@ -529,7 +529,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return ResultCode.Success;
         }
 
-        [CommandHipc(68)]
+        [CommandCmif(68)]
         public ResultCode OpenSaveDataInfoReaderWithFilter(ServiceCtx context)
         {
             SaveDataSpaceId spaceId = (SaveDataSpaceId)context.RequestData.ReadInt64();
@@ -544,7 +544,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return ResultCode.Success;
         }
 
-        [CommandHipc(69)]
+        [CommandCmif(69)]
         public ResultCode ReadSaveDataFileSystemExtraDataBySaveDataAttribute(ServiceCtx context)
         {
             SaveDataSpaceId spaceId = (SaveDataSpaceId)context.RequestData.ReadInt64();
@@ -561,7 +561,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return ResultCode.Success;
         }
 
-        [CommandHipc(70)]
+        [CommandCmif(70)]
         public ResultCode WriteSaveDataFileSystemExtraDataWithMaskBySaveDataAttribute(ServiceCtx context)
         {
             SaveDataSpaceId spaceId = (SaveDataSpaceId)context.RequestData.ReadInt64();
@@ -576,7 +576,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return (ResultCode)_baseFileSystemProxy.Get.WriteSaveDataFileSystemExtraDataWithMaskBySaveDataAttribute(in attribute, spaceId, new InBuffer(extraDataBuffer), new InBuffer(maskBuffer)).Value;
         }
 
-        [CommandHipc(71)]
+        [CommandCmif(71)]
         public ResultCode ReadSaveDataFileSystemExtraDataWithMaskBySaveDataAttribute(ServiceCtx context)
         {
             SaveDataSpaceId spaceId = (SaveDataSpaceId)context.RequestData.ReadInt64();
@@ -596,7 +596,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return ResultCode.Success;
         }
 
-        [CommandHipc(80)]
+        [CommandCmif(80)]
         public ResultCode OpenSaveDataMetaFile(ServiceCtx context)
         {
             SaveDataSpaceId spaceId = (SaveDataSpaceId)context.RequestData.ReadInt32();
@@ -612,7 +612,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return ResultCode.Success;
         }
 
-        [CommandHipc(84)]
+        [CommandCmif(84)]
         public ResultCode ListAccessibleSaveDataOwnerId(ServiceCtx context)
         {
             int startIndex = context.RequestData.ReadInt32();
@@ -630,7 +630,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return ResultCode.Success;
         }
 
-        [CommandHipc(100)]
+        [CommandCmif(100)]
         public ResultCode OpenImageDirectoryFileSystem(ServiceCtx context)
         {
             ImageDirectoryId directoryId = (ImageDirectoryId)context.RequestData.ReadInt32();
@@ -644,7 +644,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return ResultCode.Success;
         }
 
-        [CommandHipc(101)]
+        [CommandCmif(101)]
         public ResultCode OpenBaseFileSystem(ServiceCtx context)
         {
             BaseFileSystemId fileSystemId = (BaseFileSystemId)context.RequestData.ReadInt32();
@@ -658,7 +658,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return ResultCode.Success;
         }
 
-        [CommandHipc(110)]
+        [CommandCmif(110)]
         public ResultCode OpenContentStorageFileSystem(ServiceCtx context)
         {
             ContentStorageId contentStorageId = (ContentStorageId)context.RequestData.ReadInt32();
@@ -672,7 +672,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return ResultCode.Success;
         }
 
-        [CommandHipc(120)]
+        [CommandCmif(120)]
         public ResultCode OpenCloudBackupWorkStorageFileSystem(ServiceCtx context)
         {
             CloudBackupWorkStorageId storageId = (CloudBackupWorkStorageId)context.RequestData.ReadInt32();
@@ -686,7 +686,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return ResultCode.Success;
         }
 
-        [CommandHipc(130)]
+        [CommandCmif(130)]
         public ResultCode OpenCustomStorageFileSystem(ServiceCtx context)
         {
             CustomStorageId customStorageId = (CustomStorageId)context.RequestData.ReadInt32();
@@ -700,7 +700,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return ResultCode.Success;
         }
 
-        [CommandHipc(200)]
+        [CommandCmif(200)]
         // OpenDataStorageByCurrentProcess() -> object<nn::fssrv::sf::IStorage> dataStorage
         public ResultCode OpenDataStorageByCurrentProcess(ServiceCtx context)
         {
@@ -713,7 +713,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return ResultCode.Success;
         }
 
-        [CommandHipc(202)]
+        [CommandCmif(202)]
         // OpenDataStorageByDataId(u8 storageId, nn::ncm::DataId dataId) -> object<nn::fssrv::sf::IStorage> dataStorage
         public ResultCode OpenDataStorageByDataId(ServiceCtx context)
         {
@@ -789,7 +789,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             throw new FileNotFoundException($"System archive with titleid {titleId:x16} was not found on Storage {storageId}. Found in {installedStorage}.");
         }
 
-        [CommandHipc(203)]
+        [CommandCmif(203)]
         // OpenPatchDataStorageByCurrentProcess() -> object<nn::fssrv::sf::IStorage>
         public ResultCode OpenPatchDataStorageByCurrentProcess(ServiceCtx context)
         {
@@ -802,7 +802,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return ResultCode.Success;
         }
 
-        [CommandHipc(205)]
+        [CommandCmif(205)]
         // OpenDataStorageWithProgramIndex(u8 program_index) -> object<nn::fssrv::sf::IStorage>
         public ResultCode OpenDataStorageWithProgramIndex(ServiceCtx context)
         {
@@ -822,7 +822,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return ResultCode.Success;
         }
 
-        [CommandHipc(400)]
+        [CommandCmif(400)]
         // OpenDataStorageByCurrentProcess() -> object<nn::fssrv::sf::IStorage> dataStorage
         public ResultCode OpenDeviceOperator(ServiceCtx context)
         {
@@ -836,7 +836,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return ResultCode.Success;
         }
 
-        [CommandHipc(601)]
+        [CommandCmif(601)]
         public ResultCode QuerySaveDataTotalSize(ServiceCtx context)
         {
             long dataSize = context.RequestData.ReadInt64();
@@ -850,13 +850,13 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return ResultCode.Success;
         }
 
-        [CommandHipc(511)]
+        [CommandCmif(511)]
         public ResultCode NotifySystemDataUpdateEvent(ServiceCtx context)
         {
             return (ResultCode)_baseFileSystemProxy.Get.NotifySystemDataUpdateEvent().Value;
         }
 
-        [CommandHipc(523)]
+        [CommandCmif(523)]
         public ResultCode SimulateDeviceDetectionEvent(ServiceCtx context)
         {
             bool signalEvent = context.RequestData.ReadBoolean();
@@ -867,7 +867,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return (ResultCode)_baseFileSystemProxy.Get.SimulateDeviceDetectionEvent(port, mode, signalEvent).Value;
         }
 
-        [CommandHipc(602)]
+        [CommandCmif(602)]
         public ResultCode VerifySaveDataFileSystem(ServiceCtx context)
         {
             ulong saveDataId = context.RequestData.ReadUInt64();
@@ -878,7 +878,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return (ResultCode)_baseFileSystemProxy.Get.VerifySaveDataFileSystem(saveDataId, new OutBuffer(readBuffer)).Value;
         }
 
-        [CommandHipc(603)]
+        [CommandCmif(603)]
         public ResultCode CorruptSaveDataFileSystem(ServiceCtx context)
         {
             ulong saveDataId = context.RequestData.ReadUInt64();
@@ -886,7 +886,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return (ResultCode)_baseFileSystemProxy.Get.CorruptSaveDataFileSystem(saveDataId).Value;
         }
 
-        [CommandHipc(604)]
+        [CommandCmif(604)]
         public ResultCode CreatePaddingFile(ServiceCtx context)
         {
             long size = context.RequestData.ReadInt64();
@@ -894,13 +894,13 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return (ResultCode)_baseFileSystemProxy.Get.CreatePaddingFile(size).Value;
         }
 
-        [CommandHipc(605)]
+        [CommandCmif(605)]
         public ResultCode DeleteAllPaddingFiles(ServiceCtx context)
         {
             return (ResultCode)_baseFileSystemProxy.Get.DeleteAllPaddingFiles().Value;
         }
 
-        [CommandHipc(606)]
+        [CommandCmif(606)]
         public ResultCode GetRightsId(ServiceCtx context)
         {
             StorageId storageId = (StorageId)context.RequestData.ReadInt64();
@@ -914,7 +914,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return ResultCode.Success;
         }
 
-        [CommandHipc(607)]
+        [CommandCmif(607)]
         public ResultCode RegisterExternalKey(ServiceCtx context)
         {
             RightsId rightsId = context.RequestData.ReadStruct<RightsId>();
@@ -923,13 +923,13 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return (ResultCode)_baseFileSystemProxy.Get.RegisterExternalKey(in rightsId, in accessKey).Value;
         }
 
-        [CommandHipc(608)]
+        [CommandCmif(608)]
         public ResultCode UnregisterAllExternalKey(ServiceCtx context)
         {
             return (ResultCode)_baseFileSystemProxy.Get.UnregisterAllExternalKey().Value;
         }
 
-        [CommandHipc(609)]
+        [CommandCmif(609)]
         public ResultCode GetRightsIdByPath(ServiceCtx context)
         {
             ref readonly var path = ref FileSystemProxyHelper.GetFspPath(context);
@@ -942,7 +942,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return ResultCode.Success;
         }
 
-        [CommandHipc(610)]
+        [CommandCmif(610)]
         public ResultCode GetRightsIdAndKeyGenerationByPath(ServiceCtx context)
         {
             ref readonly var path = ref FileSystemProxyHelper.GetFspPath(context);
@@ -957,7 +957,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return ResultCode.Success;
         }
 
-        [CommandHipc(611)]
+        [CommandCmif(611)]
         public ResultCode SetCurrentPosixTimeWithTimeDifference(ServiceCtx context)
         {
             int timeDifference = context.RequestData.ReadInt32();
@@ -967,7 +967,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return (ResultCode)_baseFileSystemProxy.Get.SetCurrentPosixTimeWithTimeDifference(time, timeDifference).Value;
         }
 
-        [CommandHipc(612)]
+        [CommandCmif(612)]
         public ResultCode GetFreeSpaceSizeForSaveData(ServiceCtx context)
         {
             SaveDataSpaceId spaceId = context.RequestData.ReadStruct<SaveDataSpaceId>();
@@ -980,7 +980,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return ResultCode.Success;
         }
 
-        [CommandHipc(613)]
+        [CommandCmif(613)]
         public ResultCode VerifySaveDataFileSystemBySaveDataSpaceId(ServiceCtx context)
         {
             SaveDataSpaceId spaceId = (SaveDataSpaceId)context.RequestData.ReadInt64();
@@ -992,7 +992,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return (ResultCode)_baseFileSystemProxy.Get.VerifySaveDataFileSystemBySaveDataSpaceId(spaceId, saveDataId, new OutBuffer(readBuffer)).Value;
         }
 
-        [CommandHipc(614)]
+        [CommandCmif(614)]
         public ResultCode CorruptSaveDataFileSystemBySaveDataSpaceId(ServiceCtx context)
         {
             SaveDataSpaceId spaceId = (SaveDataSpaceId)context.RequestData.ReadInt64();
@@ -1001,7 +1001,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return (ResultCode)_baseFileSystemProxy.Get.CorruptSaveDataFileSystemBySaveDataSpaceId(spaceId, saveDataId).Value;
         }
 
-        [CommandHipc(615)]
+        [CommandCmif(615)]
         public ResultCode QuerySaveDataInternalStorageTotalSize(ServiceCtx context)
         {
             SaveDataSpaceId spaceId = (SaveDataSpaceId)context.RequestData.ReadInt64();
@@ -1015,7 +1015,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return ResultCode.Success;
         }
 
-        [CommandHipc(616)]
+        [CommandCmif(616)]
         public ResultCode GetSaveDataCommitId(ServiceCtx context)
         {
             SaveDataSpaceId spaceId = (SaveDataSpaceId)context.RequestData.ReadInt64();
@@ -1029,7 +1029,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return ResultCode.Success;
         }
 
-        [CommandHipc(617)]
+        [CommandCmif(617)]
         public ResultCode UnregisterExternalKey(ServiceCtx context)
         {
             RightsId rightsId = context.RequestData.ReadStruct<RightsId>();
@@ -1037,7 +1037,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return (ResultCode)_baseFileSystemProxy.Get.UnregisterExternalKey(in rightsId).Value;
         }
 
-        [CommandHipc(620)]
+        [CommandCmif(620)]
         public ResultCode SetSdCardEncryptionSeed(ServiceCtx context)
         {
             EncryptionSeed encryptionSeed = context.RequestData.ReadStruct<EncryptionSeed>();
@@ -1045,7 +1045,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return (ResultCode)_baseFileSystemProxy.Get.SetSdCardEncryptionSeed(in encryptionSeed).Value;
         }
 
-        [CommandHipc(630)]
+        [CommandCmif(630)]
         // SetSdCardAccessibility(u8 isAccessible)
         public ResultCode SetSdCardAccessibility(ServiceCtx context)
         {
@@ -1054,7 +1054,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return (ResultCode)_baseFileSystemProxy.Get.SetSdCardAccessibility(isAccessible).Value;
         }
 
-        [CommandHipc(631)]
+        [CommandCmif(631)]
         // IsSdCardAccessible() -> u8 isAccessible
         public ResultCode IsSdCardAccessible(ServiceCtx context)
         {
@@ -1066,7 +1066,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return ResultCode.Success;
         }
 
-        [CommandHipc(702)]
+        [CommandCmif(702)]
         public ResultCode IsAccessFailureDetected(ServiceCtx context)
         {
             ulong processId = context.RequestData.ReadUInt64();
@@ -1079,7 +1079,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return ResultCode.Success;
         }
 
-        [CommandHipc(710)]
+        [CommandCmif(710)]
         public ResultCode ResolveAccessFailure(ServiceCtx context)
         {
             ulong processId = context.RequestData.ReadUInt64();
@@ -1087,7 +1087,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return (ResultCode)_baseFileSystemProxy.Get.ResolveAccessFailure(processId).Value;
         }
 
-        [CommandHipc(720)]
+        [CommandCmif(720)]
         public ResultCode AbandonAccessFailure(ServiceCtx context)
         {
             ulong processId = context.RequestData.ReadUInt64();
@@ -1095,7 +1095,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return (ResultCode)_baseFileSystemProxy.Get.AbandonAccessFailure(processId).Value;
         }
 
-        [CommandHipc(800)]
+        [CommandCmif(800)]
         public ResultCode GetAndClearErrorInfo(ServiceCtx context)
         {
             Result result = _baseFileSystemProxy.Get.GetAndClearErrorInfo(out FileSystemProxyErrorInfo errorInfo);
@@ -1106,7 +1106,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return ResultCode.Success;
         }
 
-        [CommandHipc(810)]
+        [CommandCmif(810)]
         public ResultCode RegisterProgramIndexMapInfo(ServiceCtx context)
         {
             int programCount = context.RequestData.ReadInt32();
@@ -1117,7 +1117,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return (ResultCode)_baseFileSystemProxy.Get.RegisterProgramIndexMapInfo(new InBuffer(mapInfoBuffer), programCount).Value;
         }
 
-        [CommandHipc(1000)]
+        [CommandCmif(1000)]
         public ResultCode SetBisRootForHost(ServiceCtx context)
         {
             BisPartitionId partitionId = (BisPartitionId)context.RequestData.ReadInt32();
@@ -1126,7 +1126,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return (ResultCode)_baseFileSystemProxy.Get.SetBisRootForHost(partitionId, in path).Value;
         }
 
-        [CommandHipc(1001)]
+        [CommandCmif(1001)]
         public ResultCode SetSaveDataSize(ServiceCtx context)
         {
             long dataSize = context.RequestData.ReadInt64();
@@ -1135,7 +1135,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return (ResultCode)_baseFileSystemProxy.Get.SetSaveDataSize(dataSize, journalSize).Value;
         }
 
-        [CommandHipc(1002)]
+        [CommandCmif(1002)]
         public ResultCode SetSaveDataRootPath(ServiceCtx context)
         {
             ref readonly var path = ref FileSystemProxyHelper.GetFspPath(context);
@@ -1143,13 +1143,13 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return (ResultCode)_baseFileSystemProxy.Get.SetSaveDataRootPath(in path).Value;
         }
 
-        [CommandHipc(1003)]
+        [CommandCmif(1003)]
         public ResultCode DisableAutoSaveDataCreation(ServiceCtx context)
         {
             return (ResultCode)_baseFileSystemProxy.Get.DisableAutoSaveDataCreation().Value;
         }
 
-        [CommandHipc(1004)]
+        [CommandCmif(1004)]
         // SetGlobalAccessLogMode(u32 mode)
         public ResultCode SetGlobalAccessLogMode(ServiceCtx context)
         {
@@ -1160,7 +1160,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return ResultCode.Success;
         }
 
-        [CommandHipc(1005)]
+        [CommandCmif(1005)]
         // GetGlobalAccessLogMode() -> u32 logMode
         public ResultCode GetGlobalAccessLogMode(ServiceCtx context)
         {
@@ -1171,7 +1171,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return ResultCode.Success;
         }
 
-        [CommandHipc(1006)]
+        [CommandCmif(1006)]
         // OutputAccessLogToSdCard(buffer<bytes, 5> log_text)
         public ResultCode OutputAccessLogToSdCard(ServiceCtx context)
         {
@@ -1183,13 +1183,13 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return ResultCode.Success;
         }
 
-        [CommandHipc(1007)]
+        [CommandCmif(1007)]
         public ResultCode RegisterUpdatePartition(ServiceCtx context)
         {
             return (ResultCode)_baseFileSystemProxy.Get.RegisterUpdatePartition().Value;
         }
 
-        [CommandHipc(1008)]
+        [CommandCmif(1008)]
         public ResultCode OpenRegisteredUpdatePartition(ServiceCtx context)
         {
             using var fileSystem = new SharedRef<IFileSystem>();
@@ -1202,7 +1202,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return ResultCode.Success;
         }
 
-        [CommandHipc(1009)]
+        [CommandCmif(1009)]
         public ResultCode GetAndClearMemoryReportInfo(ServiceCtx context)
         {
             Result result = _baseFileSystemProxy.Get.GetAndClearMemoryReportInfo(out MemoryReportInfo reportInfo);
@@ -1213,7 +1213,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return ResultCode.Success;
         }
 
-        [CommandHipc(1011)]
+        [CommandCmif(1011)]
         public ResultCode GetProgramIndexForAccessLog(ServiceCtx context)
         {
             Result result = _baseFileSystemProxy.Get.GetProgramIndexForAccessLog(out int programIndex, out int programCount);
@@ -1225,7 +1225,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return ResultCode.Success;
         }
 
-        [CommandHipc(1012)]
+        [CommandCmif(1012)]
         public ResultCode GetFsStackUsage(ServiceCtx context)
         {
             FsStackUsageThreadType threadType = context.RequestData.ReadStruct<FsStackUsageThreadType>();
@@ -1238,25 +1238,25 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return ResultCode.Success;
         }
 
-        [CommandHipc(1013)]
+        [CommandCmif(1013)]
         public ResultCode UnsetSaveDataRootPath(ServiceCtx context)
         {
             return (ResultCode)_baseFileSystemProxy.Get.UnsetSaveDataRootPath().Value;
         }
 
-        [CommandHipc(1014)]
+        [CommandCmif(1014)]
         public ResultCode OutputMultiProgramTagAccessLog(ServiceCtx context)
         {
             return (ResultCode)_baseFileSystemProxy.Get.OutputMultiProgramTagAccessLog().Value;
         }
 
-        [CommandHipc(1016)]
+        [CommandCmif(1016)]
         public ResultCode FlushAccessLogOnSdCard(ServiceCtx context)
         {
             return (ResultCode)_baseFileSystemProxy.Get.FlushAccessLogOnSdCard().Value;
         }
 
-        [CommandHipc(1017)]
+        [CommandCmif(1017)]
         public ResultCode OutputApplicationInfoAccessLog(ServiceCtx context)
         {
             ApplicationInfo info = context.RequestData.ReadStruct<ApplicationInfo>();
@@ -1264,7 +1264,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return (ResultCode)_baseFileSystemProxy.Get.OutputApplicationInfoAccessLog(in info).Value;
         }
 
-        [CommandHipc(1100)]
+        [CommandCmif(1100)]
         public ResultCode OverrideSaveDataTransferTokenSignVerificationKey(ServiceCtx context)
         {
             byte[] keyBuffer = new byte[context.Request.SendBuff[0].Size];
@@ -1273,7 +1273,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return (ResultCode)_baseFileSystemProxy.Get.OverrideSaveDataTransferTokenSignVerificationKey(new InBuffer(keyBuffer)).Value;
         }
 
-        [CommandHipc(1110)]
+        [CommandCmif(1110)]
         public ResultCode CorruptSaveDataFileSystemByOffset(ServiceCtx context)
         {
             SaveDataSpaceId spaceId = (SaveDataSpaceId)context.RequestData.ReadInt64();
@@ -1283,7 +1283,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return (ResultCode)_baseFileSystemProxy.Get.CorruptSaveDataFileSystemByOffset(spaceId, saveDataId, offset).Value;
         }
 
-        [CommandHipc(1200)] // 6.0.0+
+        [CommandCmif(1200)] // 6.0.0+
         // OpenMultiCommitManager() -> object<nn::fssrv::sf::IMultiCommitManager>
         public ResultCode OpenMultiCommitManager(ServiceCtx context)
         {

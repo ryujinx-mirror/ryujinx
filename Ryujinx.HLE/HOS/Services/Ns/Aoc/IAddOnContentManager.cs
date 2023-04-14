@@ -22,7 +22,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns.Aoc
             _addOnContentListChangedEvent = new KEvent(context.Device.System.KernelContext);
         }
 
-        [CommandHipc(0)] // 1.0.0-6.2.0
+        [CommandCmif(0)] // 1.0.0-6.2.0
         // CountAddOnContentByApplicationId(u64 title_id) -> u32
         public ResultCode CountAddOnContentByApplicationId(ServiceCtx context)
         {
@@ -31,7 +31,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns.Aoc
             return CountAddOnContentImpl(context, titleId);
         }
 
-        [CommandHipc(1)] // 1.0.0-6.2.0
+        [CommandCmif(1)] // 1.0.0-6.2.0
         // ListAddOnContentByApplicationId(u64 title_id, u32 start_index, u32 buffer_size) -> (u32 count, buffer<u32>)
         public ResultCode ListAddOnContentByApplicationId(ServiceCtx context)
         {
@@ -40,7 +40,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns.Aoc
             return ListAddContentImpl(context, titleId);
         }
 
-        [CommandHipc(2)]
+        [CommandCmif(2)]
         // CountAddOnContent(pid) -> u32
         public ResultCode CountAddOnContent(ServiceCtx context)
         {
@@ -51,7 +51,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns.Aoc
             return CountAddOnContentImpl(context, context.Device.Processes.ActiveApplication.ProgramId);
         }
 
-        [CommandHipc(3)]
+        [CommandCmif(3)]
         // ListAddOnContent(u32 start_index, u32 buffer_size, pid) -> (u32 count, buffer<u32>)
         public ResultCode ListAddOnContent(ServiceCtx context)
         {
@@ -62,7 +62,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns.Aoc
             return ListAddContentImpl(context, context.Device.Processes.ActiveApplication.ProgramId);
         }
 
-        [CommandHipc(4)] // 1.0.0-6.2.0
+        [CommandCmif(4)] // 1.0.0-6.2.0
         // GetAddOnContentBaseIdByApplicationId(u64 title_id) -> u64
         public ResultCode GetAddOnContentBaseIdByApplicationId(ServiceCtx context)
         {
@@ -71,7 +71,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns.Aoc
             return GetAddOnContentBaseIdImpl(context, titleId);
         }
 
-        [CommandHipc(5)]
+        [CommandCmif(5)]
         // GetAddOnContentBaseId(pid) -> u64
         public ResultCode GetAddOnContentBaseId(ServiceCtx context)
         {
@@ -82,7 +82,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns.Aoc
             return GetAddOnContentBaseIdImpl(context, context.Device.Processes.ActiveApplication.ProgramId);
         }
 
-        [CommandHipc(6)] // 1.0.0-6.2.0
+        [CommandCmif(6)] // 1.0.0-6.2.0
         // PrepareAddOnContentByApplicationId(u64 title_id, u32 index)
         public ResultCode PrepareAddOnContentByApplicationId(ServiceCtx context)
         {
@@ -91,7 +91,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns.Aoc
             return PrepareAddOnContentImpl(context, titleId);
         }
 
-        [CommandHipc(7)]
+        [CommandCmif(7)]
         // PrepareAddOnContent(u32 index, pid)
         public ResultCode PrepareAddOnContent(ServiceCtx context)
         {
@@ -102,14 +102,14 @@ namespace Ryujinx.HLE.HOS.Services.Ns.Aoc
             return PrepareAddOnContentImpl(context, context.Device.Processes.ActiveApplication.ProgramId);
         }
 
-        [CommandHipc(8)] // 4.0.0+
+        [CommandCmif(8)] // 4.0.0+
         // GetAddOnContentListChangedEvent() -> handle<copy>
         public ResultCode GetAddOnContentListChangedEvent(ServiceCtx context)
         {
             return GetAddOnContentListChangedEventImpl(context);
         }
 
-        [CommandHipc(9)] // 10.0.0+
+        [CommandCmif(9)] // 10.0.0+
         // GetAddOnContentLostErrorCode() -> u64
         public ResultCode GetAddOnContentLostErrorCode(ServiceCtx context)
         {
@@ -119,7 +119,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns.Aoc
             return ResultCode.Success;
         }
 
-        [CommandHipc(10)] // 11.0.0+
+        [CommandCmif(10)] // 11.0.0+
         // GetAddOnContentListChangedEventWithProcessId(pid) -> handle<copy>
         public ResultCode GetAddOnContentListChangedEventWithProcessId(ServiceCtx context)
         {
@@ -138,7 +138,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns.Aoc
             return GetAddOnContentListChangedEventImpl(context);
         }
 
-        [CommandHipc(11)] // 13.0.0+
+        [CommandCmif(11)] // 13.0.0+
         // NotifyMountAddOnContent(pid, u64 title_id)
         public ResultCode NotifyMountAddOnContent(ServiceCtx context)
         {
@@ -156,7 +156,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns.Aoc
             return ResultCode.Success;
         }
 
-        [CommandHipc(12)] // 13.0.0+
+        [CommandCmif(12)] // 13.0.0+
         // NotifyUnmountAddOnContent(pid, u64 title_id)
         public ResultCode NotifyUnmountAddOnContent(ServiceCtx context)
         {
@@ -171,7 +171,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns.Aoc
             return ResultCode.Success;
         }
 
-        [CommandHipc(50)] // 13.0.0+
+        [CommandCmif(50)] // 13.0.0+
         // CheckAddOnContentMountStatus(pid)
         public ResultCode CheckAddOnContentMountStatus(ServiceCtx context)
         {
@@ -185,7 +185,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns.Aoc
             return ResultCode.Success;
         }
 
-        [CommandHipc(100)] // 7.0.0+
+        [CommandCmif(100)] // 7.0.0+
         // CreateEcPurchasedEventManager() -> object<nn::ec::IPurchaseEventManager>
         public ResultCode CreateEcPurchasedEventManager(ServiceCtx context)
         {
@@ -194,7 +194,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns.Aoc
             return ResultCode.Success;
         }
 
-        [CommandHipc(101)] // 9.0.0+
+        [CommandCmif(101)] // 9.0.0+
         // CreatePermanentEcPurchasedEventManager() -> object<nn::ec::IPurchaseEventManager>
         public ResultCode CreatePermanentEcPurchasedEventManager(ServiceCtx context)
         {
@@ -205,7 +205,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns.Aoc
             return ResultCode.Success;
         }
 
-        [CommandHipc(110)] // 12.0.0+
+        [CommandCmif(110)] // 12.0.0+
         // CreateContentsServiceManager() -> object<nn::ec::IContentsServiceManager>
         public ResultCode CreateContentsServiceManager(ServiceCtx context)
         {

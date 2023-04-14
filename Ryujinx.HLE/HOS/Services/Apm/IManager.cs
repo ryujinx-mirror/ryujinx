@@ -8,7 +8,7 @@ namespace Ryujinx.HLE.HOS.Services.Apm
         protected abstract PerformanceMode GetPerformanceMode();
         protected abstract bool IsCpuOverclockEnabled();
 
-        [CommandHipc(0)]
+        [CommandCmif(0)]
         // OpenSession() -> object<nn::apm::ISession>
         public ResultCode OpenSession(ServiceCtx context)
         {
@@ -22,7 +22,7 @@ namespace Ryujinx.HLE.HOS.Services.Apm
             return resultCode;
         }
 
-        [CommandHipc(1)]
+        [CommandCmif(1)]
         // GetPerformanceMode() -> nn::apm::PerformanceMode
         public ResultCode GetPerformanceMode(ServiceCtx context)
         {
@@ -31,7 +31,7 @@ namespace Ryujinx.HLE.HOS.Services.Apm
             return ResultCode.Success;
         }
 
-        [CommandHipc(6)] // 7.0.0+
+        [CommandCmif(6)] // 7.0.0+
         // IsCpuOverclockEnabled() -> bool
         public ResultCode IsCpuOverclockEnabled(ServiceCtx context)
         {

@@ -17,7 +17,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             _transferMem = context.Device.System.AppletCaptureBufferTransfer;
         }
 
-        [CommandHipc(8)] // 2.0.0+
+        [CommandCmif(8)] // 2.0.0+
         // TakeScreenShotOfOwnLayer(b8, s32)
         public ResultCode TakeScreenShotOfOwnLayer(ServiceCtx context)
         {
@@ -29,7 +29,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             return ResultCode.Success;
         }
 
-        [CommandHipc(11)]
+        [CommandCmif(11)]
         // ReleaseLastApplicationCaptureBuffer()
         public ResultCode ReleaseLastApplicationCaptureBuffer(ServiceCtx context)
         {
@@ -43,7 +43,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             return ResultCode.Success;
         }
 
-        [CommandHipc(15)]
+        [CommandCmif(15)]
         // ReleaseCallerAppletCaptureBuffer()
         public ResultCode ReleaseCallerAppletCaptureBuffer(ServiceCtx context)
         {
@@ -57,7 +57,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             return ResultCode.Success;
         }
 
-        [CommandHipc(16)]
+        [CommandCmif(16)]
         // AcquireLastApplicationCaptureBufferEx() -> (b8, handle<copy>)
         public ResultCode AcquireLastApplicationCaptureBufferEx(ServiceCtx context)
         {
@@ -80,7 +80,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             return ResultCode.Success;
         }
 
-        [CommandHipc(18)]
+        [CommandCmif(18)]
         // AcquireCallerAppletCaptureBufferEx() -> (b8, handle<copy>)
         public ResultCode AcquireCallerAppletCaptureBufferEx(ServiceCtx context)
         {
