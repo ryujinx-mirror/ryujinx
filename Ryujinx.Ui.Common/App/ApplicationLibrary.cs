@@ -116,11 +116,13 @@ namespace Ryujinx.Ui.App.Common
                                 return;
                             }
 
-                            string extension = Path.GetExtension(app).ToLower();
+                            var fileInfo = new FileInfo(app);
+                            string extension = fileInfo.Extension.ToLower();
 
-                            if (!File.GetAttributes(app).HasFlag(FileAttributes.Hidden) && extension is ".nsp" or ".pfs0" or ".xci" or ".nca" or ".nro" or ".nso")
+                            if (!fileInfo.Attributes.HasFlag(FileAttributes.Hidden) && extension is ".nsp" or ".pfs0" or ".xci" or ".nca" or ".nro" or ".nso")
                             {
-                                applications.Add(app);
+                                var fullPath = fileInfo.ResolveLinkTarget(true)?.FullName ?? fileInfo.FullName;
+                                applications.Add(fullPath);
                                 numApplicationsFound++;
                             }
                         }
@@ -905,3 +907,4 @@ namespace Ryujinx.Ui.App.Common
         }
     }
 }
+
