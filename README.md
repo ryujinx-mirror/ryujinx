@@ -40,7 +40,7 @@
 
 ## Compatibility
 
-As of November 2022, Ryujinx has been tested on approximately 3,800 titles; over 3,600 boot past menus and into gameplay, with roughly 3,200 of those being considered playable.
+As of April 2023, Ryujinx has been tested on approximately 4,050 titles; over 4,000 boot past menus and into gameplay, with roughly 3,400 of those being considered playable.
 You can check out the compatibility list [here](https://github.com/Ryujinx/Ryujinx-Games-List/issues). Anyone is free to submit a new game test or update an existing game test entry; simply follow the new issue template and testing guidelines, or post as a reply to the applicable game issue. Use the search function to see if a game has been tested already!
 
 ## Usage
