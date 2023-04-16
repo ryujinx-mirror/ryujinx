@@ -589,8 +589,6 @@ namespace Ryujinx.Headless.SDL2
 
             _emulationContext = InitializeEmulationContext(window, renderer, options);
 
-            SetupProgressHandler();
-
             SystemVersion firmwareVersion = _contentManager.GetCurrentFirmwareVersion();
 
             Logger.Notice.Print(LogClass.Application, $"Using Firmware Version: {firmwareVersion?.VersionString}");
@@ -692,6 +690,8 @@ namespace Ryujinx.Headless.SDL2
 
                 return false;
             }
+
+            SetupProgressHandler();
 
             Translator.IsReadyForTranslation.Reset();
 
