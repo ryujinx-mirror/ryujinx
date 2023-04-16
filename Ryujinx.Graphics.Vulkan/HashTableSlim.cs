@@ -15,6 +15,7 @@ namespace Ryujinx.Graphics.Vulkan
 
         private struct Entry
         {
+            public int Hash;
             public K Key;
             public V Value;
         }
@@ -59,6 +60,7 @@ namespace Ryujinx.Graphics.Vulkan
         {
             var entry = new Entry()
             {
+                Hash = key.GetHashCode(),
                 Key = key,
                 Value = value
             };
@@ -91,12 +93,11 @@ namespace Ryujinx.Graphics.Vulkan
             var bucket = _hashTable[hashCode & TotalBucketsMask];
             if (bucket != null)
             {
-
                 for (int i = 0; i < bucket.Length; i++)
                 {
                     ref var entry = ref bucket[i];
 
-                    if (entry.Key.Equals(ref key))
+                    if (entry.Hash == hashCode && entry.Key.Equals(ref key))
                     {
                         value = entry.Value;
                         return true;
