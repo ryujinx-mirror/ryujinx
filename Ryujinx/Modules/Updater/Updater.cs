@@ -577,7 +577,7 @@ namespace Ryujinx.Modules
                 }
             }
 
-            return files;
+            return files.Where(f => !new FileInfo(f).Attributes.HasFlag(FileAttributes.Hidden | FileAttributes.System));
         }
 
         private static void MoveAllFilesOver(string root, string dest, UpdateDialog dialog)
