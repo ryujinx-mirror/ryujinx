@@ -27,7 +27,6 @@ namespace Ryujinx.Ava.UI.Helpers
              string closeButton,
              UserResult primaryButtonResult = UserResult.Ok,
              ManualResetEvent deferResetEvent = null,
-             Func<Window, Task> doWhileDeferred = null,
              TypedEventHandler<ContentDialog, ContentDialogButtonClickEventArgs> deferCloseAction = null)
         {
             UserResult result = UserResult.None;
@@ -78,12 +77,11 @@ namespace Ryujinx.Ava.UI.Helpers
             int iconSymbol,
             UserResult primaryButtonResult = UserResult.Ok,
             ManualResetEvent deferResetEvent = null,
-            Func<Window, Task> doWhileDeferred = null,
             TypedEventHandler<ContentDialog, ContentDialogButtonClickEventArgs> deferCloseAction = null)
         {
             Grid content = CreateTextDialogContent(primaryText, secondaryText, iconSymbol);
 
-            return await ShowContentDialog(title, content, primaryButton, secondaryButton, closeButton, primaryButtonResult, deferResetEvent, doWhileDeferred, deferCloseAction);
+            return await ShowContentDialog(title, content, primaryButton, secondaryButton, closeButton, primaryButtonResult, deferResetEvent, deferCloseAction);
         }
 
         public async static Task<UserResult> ShowDeferredContentDialog(
@@ -111,7 +109,6 @@ namespace Ryujinx.Ava.UI.Helpers
                 iconSymbol,
                 primaryButton == LocaleManager.Instance[LocaleKeys.InputDialogYes] ? UserResult.Yes : UserResult.Ok,
                 deferResetEvent,
-                doWhileDeferred,
                 DeferClose);
 
             async void DeferClose(ContentDialog sender, ContentDialogButtonClickEventArgs args)
@@ -236,11 +233,6 @@ namespace Ryujinx.Ava.UI.Helpers
                 primaryButtonResult);
         }
 
-        internal static UpdateWaitWindow CreateWaitingDialog(string mainText, string secondaryText)
-        {
-            return new(mainText, secondaryText);
-        }
-
         internal static async Task CreateUpdaterInfoDialog(string primary, string secondaryText)
         {
             await ShowTextDialog(
@@ -317,28 +309,6 @@ namespace Ryujinx.Ava.UI.Helpers
                 LocaleManager.Instance[LocaleKeys.DialogStopEmulationTitle],
                 LocaleManager.Instance[LocaleKeys.DialogStopEmulationMessage],
                 LocaleManager.Instance[LocaleKeys.DialogExitSubMessage]);
-        }
-
-        internal static async Task<string> CreateInputDialog(
-            string title,
-            string mainText,
-            string subText,
-            uint maxLength = int.MaxValue,
-            string input = "")
-        {
-            var result = await InputDialog.ShowInputDialog(
-                title,
-                mainText,
-                input,
-                subText,
-                maxLength);
-
-            if (result.Result == UserResult.Ok)
-            {
-                return result.Input;
-            }
-
-            return string.Empty;
         }
 
         public static async Task<ContentDialogResult> ShowAsync(ContentDialog contentDialog)

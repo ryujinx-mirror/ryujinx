@@ -48,6 +48,7 @@
             Grid.Column="1"
             HorizontalAlignment="Stretch"
             VerticalAlignment="Center"
+            Focusable="True"
             KeyUp="Message_KeyUp"
             Text="{Binding Message}"
             TextInput="Message_TextInput"
