@@ -94,24 +94,8 @@ namespace Ryujinx.Graphics.Vulkan.Effects
             var bufferRanges = new BufferRange(bufferHandle, 0, rangeSize);
             _pipeline.SetUniformBuffers(stackalloc[] { new BufferAssignment(2, bufferRanges) });
 
-            Span<GAL.Viewport> viewports = stackalloc GAL.Viewport[1];
-
-            viewports[0] = new GAL.Viewport(
-                new Rectangle<float>(0, 0, view.Width, view.Height),
-                ViewportSwizzle.PositiveX,
-                ViewportSwizzle.PositiveY,
-                ViewportSwizzle.PositiveZ,
-                ViewportSwizzle.PositiveW,
-                0f,
-                1f);
-
-            Span<Rectangle<int>> scissors = stackalloc Rectangle<int>[1];
-
             var dispatchX = BitUtils.DivRoundUp(view.Width, IPostProcessingEffect.LocalGroupSize);
             var dispatchY = BitUtils.DivRoundUp(view.Height, IPostProcessingEffect.LocalGroupSize);
-
-            _pipeline.SetScissors(stackalloc[] { new Rectangle<int>(0, 0, view.Width, view.Height) });
-            _pipeline.SetViewports(viewports, false);
 
             _pipeline.SetImage(0, _texture, GAL.Format.R8G8B8A8Unorm);
             _pipeline.DispatchCompute(dispatchX, dispatchY, 1);
