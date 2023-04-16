@@ -1,4 +1,4 @@
-﻿<UserControl 
+﻿<UserControl
     x:Class="Ryujinx.Ava.UI.Views.Settings.SettingsNetworkView"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -29,6 +29,17 @@
                     <TextBlock Text="{locale:Locale SettingsTabSystemEnableInternetAccess}"
                                ToolTip.Tip="{locale:Locale EnableInternetAccessTooltip}" />
                 </CheckBox>
+                <StackPanel Margin="10,0,0,0" Orientation="Horizontal">
+                    <TextBlock VerticalAlignment="Center"
+                               Text="{locale:Locale SettingsTabNetworkInterface}"
+                               ToolTip.Tip="{locale:Locale NetworkInterfaceTooltip}"
+                               Width="200" />
+                    <ComboBox SelectedIndex="{Binding NetworkInterfaceIndex}"
+                              ToolTip.Tip="{locale:Locale NetworkInterfaceTooltip}"
+                              HorizontalContentAlignment="Left"
+                              Items="{Binding NetworkInterfaceList}"
+                              Width="250" />
+                </StackPanel>
             </StackPanel>
         </Border>
     </ScrollViewer>

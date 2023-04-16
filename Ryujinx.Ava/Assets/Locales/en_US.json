@@ -638,5 +638,8 @@
   "SmaaHigh": "SMAA High",
   "SmaaUltra": "SMAA Ultra",
   "UserEditorTitle" : "Edit User",
-  "UserEditorTitleCreate" : "Create User"
+  "UserEditorTitleCreate" : "Create User",
+  "SettingsTabNetworkInterface": "Network Interface:",
+  "NetworkInterfaceTooltip": "The network interface used for LAN features",
+  "NetworkInterfaceDefault": "Default"
 }

@@ -177,6 +177,8 @@ namespace Ryujinx.Ava
             ConfigurationState.Instance.Graphics.ScalingFilter.Event       += UpdateScalingFilter;
             ConfigurationState.Instance.Graphics.ScalingFilterLevel.Event  += UpdateScalingFilterLevel;
 
+            ConfigurationState.Instance.Multiplayer.LanInterfaceId.Event   += UpdateLanInterfaceIdState;
+
             _gpuCancellationTokenSource = new CancellationTokenSource();
         }
 
@@ -381,6 +383,11 @@ namespace Ryujinx.Ava
             {
                 _viewModel.Volume = e.NewValue;
             });
+        }
+
+        private void UpdateLanInterfaceIdState(object sender, ReactiveEventArgs<string> e)
+        {
+            Device.Configuration.MultiplayerLanInterfaceId = e.NewValue;
         }
 
         public void Stop()
@@ -739,7 +746,8 @@ namespace Ryujinx.Ava
                                                      ConfigurationState.Instance.System.IgnoreMissingServices,
                                                      ConfigurationState.Instance.Graphics.AspectRatio,
                                                      ConfigurationState.Instance.System.AudioVolume,
-                                                     ConfigurationState.Instance.System.UseHypervisor);
+                                                     ConfigurationState.Instance.System.UseHypervisor,
+                                                     ConfigurationState.Instance.Multiplayer.LanInterfaceId.Value);
 
             Device = new Switch(configuration);
         }

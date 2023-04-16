@@ -14,7 +14,7 @@ namespace Ryujinx.Ui.Common.Configuration
         /// <summary>
         /// The current version of the file format
         /// </summary>
-        public const int CurrentVersion = 45;
+        public const int CurrentVersion = 46;
 
         /// <summary>
         /// Version of the configuration file format
@@ -349,6 +349,11 @@ namespace Ryujinx.Ui.Common.Configuration
         /// Preferred GPU
         /// </summary>
         public string PreferredGpu { get; set; }
+
+        /// <summary>
+        /// GUID for the network interface used by LAN (or 0 for default)
+        /// </summary>
+        public string MultiplayerLanInterfaceId { get; set; }
 
         /// <summary>
         /// Uses Hypervisor over JIT if available

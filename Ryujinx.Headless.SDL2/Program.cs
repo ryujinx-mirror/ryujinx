@@ -548,7 +548,8 @@ namespace Ryujinx.Headless.SDL2
                                                                   options.IgnoreMissingServices,
                                                                   options.AspectRatio,
                                                                   options.AudioVolume,
-                                                                  options.UseHypervisor);
+                                                                  options.UseHypervisor,
+                                                                  options.MultiplayerLanInterfaceId);
 
             return new Switch(configuration);
         }

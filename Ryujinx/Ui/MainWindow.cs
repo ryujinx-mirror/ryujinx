@@ -598,7 +598,8 @@ namespace Ryujinx.Ui
                                                                           ConfigurationState.Instance.System.IgnoreMissingServices,
                                                                           ConfigurationState.Instance.Graphics.AspectRatio,
                                                                           ConfigurationState.Instance.System.AudioVolume,
-                                                                          ConfigurationState.Instance.System.UseHypervisor);
+                                                                          ConfigurationState.Instance.System.UseHypervisor,
+                                                                          ConfigurationState.Instance.Multiplayer.LanInterfaceId.Value);
 
             _emulationContext = new HLE.Switch(configuration);
         }

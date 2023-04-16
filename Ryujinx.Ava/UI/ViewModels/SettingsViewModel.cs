@@ -23,6 +23,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Net.NetworkInformation;
 using TimeZone = Ryujinx.Ava.UI.Models.TimeZone;
 
 namespace Ryujinx.Ava.UI.ViewModels
@@ -34,6 +35,8 @@ namespace Ryujinx.Ava.UI.ViewModels
         private TimeZoneContentManager _timeZoneContentManager;
 
         private readonly List<string> _validTzRegions;
+
+        private readonly Dictionary<string, string> _networkInterfaces;
 
         private float _customResolutionScale;
         private int _resolutionScale;
@@ -50,6 +53,7 @@ namespace Ryujinx.Ava.UI.ViewModels
 
         public event Action CloseWindow;
         public event Action SaveSettingsEvent;
+        private int _networkInterfaceIndex;
 
         public int ResolutionScale
         {
@@ -240,6 +244,11 @@ namespace Ryujinx.Ava.UI.ViewModels
         public AvaloniaList<string> GameDirectories { get; set; }
         public ObservableCollection<ComboBoxItem> AvailableGpus { get; set; }
 
+        public AvaloniaList<string> NetworkInterfaceList
+        {
+            get => new AvaloniaList<string>(_networkInterfaces.Keys);
+        }
+
         public KeyboardHotkeys KeyboardHotkeys
         {
             get => _keyboardHotkeys;
@@ -248,6 +257,16 @@ namespace Ryujinx.Ava.UI.ViewModels
                 _keyboardHotkeys = value;
 
                 OnPropertyChanged();
+            }
+        }
+
+        public int NetworkInterfaceIndex
+        {
+            get => _networkInterfaceIndex;
+            set
+            {
+                _networkInterfaceIndex = value != -1 ? value : 0;
+                ConfigurationState.Instance.Multiplayer.LanInterfaceId.Value = _networkInterfaces[NetworkInterfaceList[_networkInterfaceIndex]];
             }
         }
 
@@ -267,8 +286,10 @@ namespace Ryujinx.Ava.UI.ViewModels
             TimeZones = new AvaloniaList<TimeZone>();
             AvailableGpus = new ObservableCollection<ComboBoxItem>();
             _validTzRegions = new List<string>();
+            _networkInterfaces = new Dictionary<string, string>();
 
             CheckSoundBackends();
+            PopulateNetworkInterfaces();
 
             if (Program.PreviewerDetached)
             {
@@ -324,6 +345,17 @@ namespace Ryujinx.Ava.UI.ViewModels
                 TimeZones.Add(new TimeZone($"UTC{hours:+0#;-0#;+00}:{minutes:D2}", location, abbr2));
 
                 _validTzRegions.Add(location);
+            }
+        }
+
+        private void PopulateNetworkInterfaces()
+        {
+            _networkInterfaces.Clear();
+            _networkInterfaces.Add(LocaleManager.Instance[LocaleKeys.NetworkInterfaceDefault], "0");
+
+            foreach (NetworkInterface networkInterface in NetworkInterface.GetAllNetworkInterfaces())
+            {
+                _networkInterfaces.Add(networkInterface.Name, networkInterface.Id);
             }
         }
 
@@ -414,6 +446,8 @@ namespace Ryujinx.Ava.UI.ViewModels
             EnableFsAccessLog = config.Logger.EnableFsAccessLog;
             FsGlobalAccessLogMode = config.System.FsGlobalAccessLogMode;
             OpenglDebugLevel = (int)config.Logger.GraphicsDebugLevel.Value;
+
+            NetworkInterfaceIndex = _networkInterfaces.Values.ToList().IndexOf(config.Multiplayer.LanInterfaceId.Value);
         }
 
         public void SaveSettings()
@@ -514,6 +548,8 @@ namespace Ryujinx.Ava.UI.ViewModels
             config.Logger.EnableFsAccessLog.Value = EnableFsAccessLog;
             config.System.FsGlobalAccessLogMode.Value = FsGlobalAccessLogMode;
             config.Logger.GraphicsDebugLevel.Value = (GraphicsDebugLevel)OpenglDebugLevel;
+
+            config.Multiplayer.LanInterfaceId.Value = _networkInterfaces[NetworkInterfaceList[NetworkInterfaceIndex]];
 
             config.ToFileFormat().SaveConfig(Program.ConfigurationPath);
 

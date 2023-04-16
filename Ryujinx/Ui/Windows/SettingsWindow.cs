@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Net.NetworkInformation;
 using System.Reflection;
 using System.Threading.Tasks;
 using GUI = Gtk.Builder.ObjectAttribute;
@@ -84,6 +85,7 @@ namespace Ryujinx.Ui.Windows
         [GUI] Adjustment      _systemTimeDaySpinAdjustment;
         [GUI] Adjustment      _systemTimeHourSpinAdjustment;
         [GUI] Adjustment      _systemTimeMinuteSpinAdjustment;
+        [GUI] ComboBoxText    _multiLanSelect;
         [GUI] CheckButton     _custThemeToggle;
         [GUI] Entry           _custThemePath;
         [GUI] ToggleButton    _browseThemePath;
@@ -348,6 +350,8 @@ namespace Ryujinx.Ui.Windows
             UpdatePreferredGpuComboBox();
 
             _graphicsBackend.Changed += (sender, e) => UpdatePreferredGpuComboBox();
+            PopulateNetworkInterfaces();
+            _multiLanSelect.SetActiveId(ConfigurationState.Instance.Multiplayer.LanInterfaceId.Value);
 
             _custThemePath.Buffer.Text           = ConfigurationState.Instance.Ui.CustomThemePath;
             _resScaleText.Buffer.Text            = ConfigurationState.Instance.Graphics.ResScaleCustom.Value.ToString();
@@ -490,6 +494,19 @@ namespace Ryujinx.Ui.Windows
             }
         }
 
+        private void PopulateNetworkInterfaces()
+        {
+            NetworkInterface[] interfaces = NetworkInterface.GetAllNetworkInterfaces();
+
+            foreach (NetworkInterface nif in interfaces)
+            {
+                string guid = nif.Id;
+                string name = nif.Name;
+
+                _multiLanSelect.Append(guid, name);
+            }
+        }
+
         private void UpdateSystemTimeSpinners()
         {
             //Bind system time events
@@ -616,6 +633,7 @@ namespace Ryujinx.Ui.Windows
             ConfigurationState.Instance.Graphics.AntiAliasing.Value               = Enum.Parse<AntiAliasing>(_antiAliasing.ActiveId);
             ConfigurationState.Instance.Graphics.ScalingFilter.Value              = Enum.Parse<ScalingFilter>(_scalingFilter.ActiveId);
             ConfigurationState.Instance.Graphics.ScalingFilterLevel.Value         = (int)_scalingFilterLevel.Value;
+            ConfigurationState.Instance.Multiplayer.LanInterfaceId.Value          = _multiLanSelect.ActiveId;
 
             _previousVolumeLevel = ConfigurationState.Instance.System.AudioVolume.Value;
 

@@ -6,7 +6,6 @@ using Ryujinx.HLE.HOS.Services.Nifm.StaticService.Types;
 using System;
 using System.Net.NetworkInformation;
 using System.Runtime.CompilerServices;
-using System.Text;
 
 namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService
 {
@@ -16,6 +15,7 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService
 
         private IPInterfaceProperties _targetPropertiesCache = null;
         private UnicastIPAddressInformation _targetAddressInfoCache = null;
+        private string _cacheChosenInterface = null;
 
         public IGeneralService()
         {
@@ -65,7 +65,7 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService
         {
             ulong networkProfileDataPosition = context.Request.RecvListBuff[0].Position;
 
-            (IPInterfaceProperties interfaceProperties, UnicastIPAddressInformation unicastAddress) = GetLocalInterface();
+            (IPInterfaceProperties interfaceProperties, UnicastIPAddressInformation unicastAddress) = GetLocalInterface(context);
 
             if (interfaceProperties == null || unicastAddress == null)
             {
@@ -95,7 +95,7 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService
         // GetCurrentIpAddress() -> nn::nifm::IpV4Address
         public ResultCode GetCurrentIpAddress(ServiceCtx context)
         {
-            (_, UnicastIPAddressInformation unicastAddress) = GetLocalInterface();
+            (_, UnicastIPAddressInformation unicastAddress) = GetLocalInterface(context);
 
             if (unicastAddress == null)
             {
@@ -113,7 +113,7 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService
         // GetCurrentIpConfigInfo() -> (nn::nifm::IpAddressSetting, nn::nifm::DnsSetting)
         public ResultCode GetCurrentIpConfigInfo(ServiceCtx context)
         {
-            (IPInterfaceProperties interfaceProperties, UnicastIPAddressInformation unicastAddress) = GetLocalInterface();
+            (IPInterfaceProperties interfaceProperties, UnicastIPAddressInformation unicastAddress) = GetLocalInterface(context);
 
             if (interfaceProperties == null || unicastAddress == null)
             {
@@ -163,51 +163,23 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService
             return ResultCode.Success;
         }
 
-        private (IPInterfaceProperties, UnicastIPAddressInformation) GetLocalInterface()
+        private (IPInterfaceProperties, UnicastIPAddressInformation) GetLocalInterface(ServiceCtx context)
         {
             if (!NetworkInterface.GetIsNetworkAvailable())
             {
                 return (null, null);
             }
 
-            if (_targetPropertiesCache != null && _targetAddressInfoCache != null)
+            string chosenInterface = context.Device.Configuration.MultiplayerLanInterfaceId;
+
+            if (_targetPropertiesCache == null || _targetAddressInfoCache == null || _cacheChosenInterface != chosenInterface)
             {
-                return (_targetPropertiesCache, _targetAddressInfoCache);
+                _cacheChosenInterface = chosenInterface;
+
+                (_targetPropertiesCache, _targetAddressInfoCache) = NetworkHelpers.GetLocalInterface(chosenInterface);
             }
 
-            IPInterfaceProperties       targetProperties  = null;
-            UnicastIPAddressInformation targetAddressInfo = null;
-
-            NetworkInterface[] interfaces = NetworkInterface.GetAllNetworkInterfaces();
-
-            foreach (NetworkInterface adapter in interfaces)
-            {
-                // Ignore loopback and non IPv4 capable interface.
-                if (targetProperties == null && adapter.NetworkInterfaceType != NetworkInterfaceType.Loopback && adapter.Supports(NetworkInterfaceComponent.IPv4))
-                {
-                    IPInterfaceProperties properties = adapter.GetIPProperties();
-
-                    if (properties.GatewayAddresses.Count > 0 && properties.DnsAddresses.Count > 0)
-                    {
-                        foreach (UnicastIPAddressInformation info in properties.UnicastAddresses)
-                        {
-                            // Only accept an IPv4 address
-                            if (info.Address.GetAddressBytes().Length == 4)
-                            {
-                                targetProperties  = properties;
-                                targetAddressInfo = info;
-
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-
-            _targetPropertiesCache  = targetProperties;
-            _targetAddressInfoCache = targetAddressInfo;
-
-            return (targetProperties, targetAddressInfo);
+            return (_targetPropertiesCache, _targetAddressInfoCache);
         }
 
         private void LocalInterfaceCacheHandler(object sender, EventArgs e)
