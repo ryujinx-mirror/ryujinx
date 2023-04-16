@@ -11,6 +11,8 @@ using Ryujinx.Common;
 using Ryujinx.Common.Utilities;
 using Ryujinx.HLE.HOS;
 using Ryujinx.Modules;
+using Ryujinx.Ui.Common;
+using Ryujinx.Ui.Common.Configuration;
 using Ryujinx.Ui.Common.Helper;
 using System;
 using System.Collections.Generic;
@@ -29,6 +31,30 @@ namespace Ryujinx.Ava.UI.Views.Main
         {
             InitializeComponent();
 
+            ToggleFileTypesMenuItem.Items = GenerateToggleFileTypeItems();
+            ChangeLanguageMenuItem.Items = GenerateLanguageMenuItems();
+        }
+
+        private CheckBox[] GenerateToggleFileTypeItems()
+        {
+            List<CheckBox> checkBoxes = new();
+
+            foreach (var item in Enum.GetValues(typeof (FileTypes)))
+            {
+                string fileName = Enum.GetName(typeof (FileTypes), item);
+                checkBoxes.Add(new CheckBox()
+                {
+                    Content = $".{fileName}",
+                    IsChecked = ((FileTypes)item).GetConfigValue(ConfigurationState.Instance.Ui.ShownFileTypes),
+                    Command = MiniCommand.Create(() => ViewModel.ToggleFileType(fileName))
+                });
+            }
+
+            return checkBoxes.ToArray();
+        }
+
+        private MenuItem[] GenerateLanguageMenuItems()
+        {
             List<MenuItem> menuItems = new();
 
             string localePath = "Ryujinx.Ava/Assets/Locales";
@@ -61,7 +87,7 @@ namespace Ryujinx.Ava.UI.Views.Main
                 menuItems.Add(menuItem);
             }
 
-            ChangeLanguageMenuItem.Items = menuItems.ToArray();
+            return menuItems.ToArray();
         }
 
         protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)

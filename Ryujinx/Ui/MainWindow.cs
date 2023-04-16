@@ -119,6 +119,12 @@ namespace Ryujinx.Ui
         [GUI] CheckMenuItem   _fileExtToggle;
         [GUI] CheckMenuItem   _pathToggle;
         [GUI] CheckMenuItem   _fileSizeToggle;
+        [GUI] CheckMenuItem   _nspShown;
+        [GUI] CheckMenuItem   _pfs0Shown;
+        [GUI] CheckMenuItem   _xciShown;
+        [GUI] CheckMenuItem   _ncaShown;
+        [GUI] CheckMenuItem   _nroShown;
+        [GUI] CheckMenuItem   _nsoShown;
         [GUI] Label           _gpuBackend;
         [GUI] Label           _dockedMode;
         [GUI] Label           _aspectRatio;
@@ -219,6 +225,20 @@ namespace Ryujinx.Ui
             _actionMenu.Sensitive = false;
             _pauseEmulation.Sensitive = false;
             _resumeEmulation.Sensitive = false;
+
+            _nspShown.Active  = ConfigurationState.Instance.Ui.ShownFileTypes.NSP.Value;
+            _pfs0Shown.Active = ConfigurationState.Instance.Ui.ShownFileTypes.PFS0.Value;
+            _xciShown.Active  = ConfigurationState.Instance.Ui.ShownFileTypes.XCI.Value;
+            _ncaShown.Active  = ConfigurationState.Instance.Ui.ShownFileTypes.NCA.Value;
+            _nroShown.Active  = ConfigurationState.Instance.Ui.ShownFileTypes.NRO.Value;
+            _nsoShown.Active  = ConfigurationState.Instance.Ui.ShownFileTypes.NSO.Value;
+
+            _nspShown.Toggled  += NSP_Shown_Toggled;
+            _pfs0Shown.Toggled += PFS0_Shown_Toggled;
+            _xciShown.Toggled  += XCI_Shown_Toggled;
+            _ncaShown.Toggled  += NCA_Shown_Toggled;
+            _nroShown.Toggled  += NRO_Shown_Toggled;
+            _nsoShown.Toggled  += NSO_Shown_Toggled;
 
             _fileTypesSubMenu.Visible = FileAssociationHelper.IsTypeAssociationSupported;
 
@@ -1755,6 +1775,54 @@ namespace Ryujinx.Ui
 
             SaveConfig();
             UpdateColumns();
+        }
+
+        private void NSP_Shown_Toggled(object sender, EventArgs args)
+        {
+            ConfigurationState.Instance.Ui.ShownFileTypes.NSP.Value = _nspShown.Active;
+
+            SaveConfig();
+            UpdateGameTable();
+        }
+
+        private void PFS0_Shown_Toggled(object sender, EventArgs args)
+        {
+            ConfigurationState.Instance.Ui.ShownFileTypes.PFS0.Value = _pfs0Shown.Active;
+
+            SaveConfig();
+            UpdateGameTable();
+        }
+
+        private void XCI_Shown_Toggled (object sender, EventArgs args)
+        {
+            ConfigurationState.Instance.Ui.ShownFileTypes.XCI.Value = _xciShown.Active;
+
+            SaveConfig();
+            UpdateGameTable();
+        }
+
+        private void NCA_Shown_Toggled (object sender, EventArgs args)
+        {
+            ConfigurationState.Instance.Ui.ShownFileTypes.NCA.Value = _ncaShown.Active;
+
+            SaveConfig();
+            UpdateGameTable();
+        }
+
+        private void NRO_Shown_Toggled (object sender, EventArgs args)
+        {
+            ConfigurationState.Instance.Ui.ShownFileTypes.NRO.Value = _nroShown.Active;
+
+            SaveConfig();
+            UpdateGameTable();
+        }
+
+        private void NSO_Shown_Toggled (object sender, EventArgs args)
+        {
+            ConfigurationState.Instance.Ui.ShownFileTypes.NSO.Value = _nsoShown.Active;
+
+            SaveConfig();
+            UpdateGameTable();
         }
 
         private void RefreshList_Pressed(object sender, ButtonReleaseEventArgs args)
