@@ -117,12 +117,20 @@ namespace Ryujinx.Graphics.OpenGL.Image
         {
             TextureView destinationView = (TextureView)destination;
 
-            if (!destinationView.Target.IsMultisample() && Target.IsMultisample())
+            bool srcIsMultisample = Target.IsMultisample();
+            bool dstIsMultisample = destinationView.Target.IsMultisample();
+
+            if (dstIsMultisample != srcIsMultisample && Info.Format.IsDepthOrStencil())
+            {
+                int layers = Math.Min(Info.GetLayers(), destinationView.Info.GetLayers() - firstLayer);
+                CopyWithBlitForDepthMS(destinationView, 0, firstLayer, layers);
+            }
+            else if (!dstIsMultisample && srcIsMultisample)
             {
                 int layers = Math.Min(Info.GetLayers(), destinationView.Info.GetLayers() - firstLayer);
                 _renderer.TextureCopyMS.CopyMSToNonMS(this, destinationView, 0, firstLayer, layers);
             }
-            else if (destinationView.Target.IsMultisample() && !Target.IsMultisample())
+            else if (dstIsMultisample && !srcIsMultisample)
             {
                 int layers = Math.Min(Info.GetLayers(), destinationView.Info.GetLayers() - firstLayer);
                 _renderer.TextureCopyMS.CopyNonMSToMS(this, destinationView, 0, firstLayer, layers);
@@ -143,11 +151,18 @@ namespace Ryujinx.Graphics.OpenGL.Image
         {
             TextureView destinationView = (TextureView)destination;
 
-            if (!destinationView.Target.IsMultisample() && Target.IsMultisample())
+            bool srcIsMultisample = Target.IsMultisample();
+            bool dstIsMultisample = destinationView.Target.IsMultisample();
+
+            if (dstIsMultisample != srcIsMultisample && Info.Format.IsDepthOrStencil())
+            {
+                CopyWithBlitForDepthMS(destinationView, srcLayer, dstLayer, 1);
+            }
+            else if (!dstIsMultisample && srcIsMultisample)
             {
                 _renderer.TextureCopyMS.CopyMSToNonMS(this, destinationView, srcLayer, dstLayer, 1);
             }
-            else if (destinationView.Target.IsMultisample() && !Target.IsMultisample())
+            else if (dstIsMultisample && !srcIsMultisample)
             {
                 _renderer.TextureCopyMS.CopyNonMSToMS(this, destinationView, srcLayer, dstLayer, 1);
             }
@@ -158,6 +173,61 @@ namespace Ryujinx.Graphics.OpenGL.Image
             else
             {
                 _renderer.TextureCopy.CopyUnscaled(this, destinationView, srcLayer, dstLayer, srcLevel, dstLevel, 1, 1);
+            }
+        }
+
+        private void CopyWithBlitForDepthMS(TextureView destinationView, int srcLayer, int dstLayer, int layers)
+        {
+            // This is currently used for multisample <-> non-multisample copies.
+            // We can't do that with compute because it's not possible to write depth textures on compute.
+            // It can be done with draws, but we don't have support for saving and restoring the OpenGL state
+            // for a draw with different state right now.
+            // This approach uses blit, which causes a resolution loss since some samples will be lost
+            // in the process.
+
+            Extents2D srcRegion = new Extents2D(0, 0, Width, Height);
+            Extents2D dstRegion = new Extents2D(0, 0, destinationView.Width, destinationView.Height);
+
+            if (destinationView.Target.IsMultisample())
+            {
+                TextureView intermmediate = _renderer.TextureCopy.IntermediatePool.GetOrCreateWithAtLeast(
+                    Info.Target,
+                    Info.BlockWidth,
+                    Info.BlockHeight,
+                    Info.BytesPerPixel,
+                    Format,
+                    destinationView.Width,
+                    destinationView.Height,
+                    Info.Depth,
+                    1,
+                    1);
+
+                _renderer.TextureCopy.Copy(this, intermmediate, srcRegion, dstRegion, false);
+                _renderer.TextureCopy.Copy(intermmediate, destinationView, dstRegion, dstRegion, false, srcLayer, dstLayer, 0, 0, layers, 1);
+            }
+            else
+            {
+                Target target = Target switch
+                {
+                    Target.Texture2DMultisample => Target.Texture2D,
+                    Target.Texture2DMultisampleArray => Target.Texture2DArray,
+                    _ => Target
+                };
+
+                TextureView intermmediate = _renderer.TextureCopy.IntermediatePool.GetOrCreateWithAtLeast(
+                    target,
+                    Info.BlockWidth,
+                    Info.BlockHeight,
+                    Info.BytesPerPixel,
+                    Format,
+                    Width,
+                    Height,
+                    Info.Depth,
+                    1,
+                    1);
+
+                _renderer.TextureCopy.Copy(this, intermmediate, srcRegion, srcRegion, false);
+                _renderer.TextureCopy.Copy(intermmediate, destinationView, srcRegion, dstRegion, false, srcLayer, dstLayer, 0, 0, layers, 1);
             }
         }
 

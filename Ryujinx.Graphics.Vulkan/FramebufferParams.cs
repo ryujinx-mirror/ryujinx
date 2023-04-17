@@ -234,7 +234,7 @@ namespace Ryujinx.Graphics.Vulkan
 
         public void InsertClearBarrierDS(CommandBufferScoped cbs)
         {
-            _depthStencil?.Storage?.InsertReadToWriteBarrier(cbs, AccessFlags.DepthStencilAttachmentWriteBit, PipelineStageFlags.EarlyFragmentTestsBit);
+            _depthStencil?.Storage?.InsertReadToWriteBarrier(cbs, AccessFlags.DepthStencilAttachmentWriteBit, PipelineStageFlags.LateFragmentTestsBit);
         }
     }
 }

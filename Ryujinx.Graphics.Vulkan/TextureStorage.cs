@@ -444,7 +444,7 @@ namespace Ryujinx.Graphics.Vulkan
 
         public void InsertReadToWriteBarrier(CommandBufferScoped cbs, AccessFlags dstAccessFlags, PipelineStageFlags dstStageFlags)
         {
-            if (_lastReadAccess != AccessFlags.NoneKhr)
+            if (_lastReadAccess != AccessFlags.None)
             {
                 ImageAspectFlags aspectFlags = Info.Format.ConvertAspectFlags();
 
@@ -462,7 +462,7 @@ namespace Ryujinx.Graphics.Vulkan
                     _info.GetLayers(),
                     _info.Levels);
 
-                _lastReadAccess = AccessFlags.NoneKhr;
+                _lastReadAccess = AccessFlags.None;
                 _lastReadStage = PipelineStageFlags.None;
             }
         }
@@ -472,7 +472,7 @@ namespace Ryujinx.Graphics.Vulkan
             _lastReadAccess |= dstAccessFlags;
             _lastReadStage |= dstStageFlags;
 
-            if (_lastModificationAccess != AccessFlags.NoneKhr)
+            if (_lastModificationAccess != AccessFlags.None)
             {
                 ImageAspectFlags aspectFlags = Info.Format.ConvertAspectFlags();
 
@@ -490,7 +490,7 @@ namespace Ryujinx.Graphics.Vulkan
                     _info.GetLayers(),
                     _info.Levels);
 
-                _lastModificationAccess = AccessFlags.NoneKhr;
+                _lastModificationAccess = AccessFlags.None;
             }
         }
 
