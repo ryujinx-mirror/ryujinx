@@ -33,6 +33,11 @@ namespace Ryujinx.Common.Memory
             return data;
         }
 
+        public ReadOnlySpan<byte> GetSpanSafe(int size)
+        {
+            return GetSpan((int)Math.Min((uint)_input.Length, (uint)size));
+        }
+
         public T ReadAt<T>(int offset) where T : unmanaged
         {
             return MemoryMarshal.Cast<byte, T>(_input.Slice(offset))[0];

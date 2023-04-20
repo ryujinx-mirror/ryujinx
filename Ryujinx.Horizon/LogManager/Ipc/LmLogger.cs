@@ -113,7 +113,7 @@ namespace Ryujinx.Horizon.LogManager.Ipc
                 }
                 else if (key == LogDataChunkKey.Message)
                 {
-                    string text = Encoding.UTF8.GetString(reader.GetSpan(size)).TrimEnd();
+                    string text = Encoding.UTF8.GetString(reader.GetSpanSafe(size)).TrimEnd();
 
                     if (isHeadPacket && isTailPacket)
                     {
@@ -131,23 +131,23 @@ namespace Ryujinx.Horizon.LogManager.Ipc
                 }
                 else if (key == LogDataChunkKey.Filename)
                 {
-                    _logPacket.Filename = Encoding.UTF8.GetString(reader.GetSpan(size)).TrimEnd();
+                    _logPacket.Filename = Encoding.UTF8.GetString(reader.GetSpanSafe(size)).TrimEnd();
                 }
                 else if (key == LogDataChunkKey.Function)
                 {
-                    _logPacket.Function = Encoding.UTF8.GetString(reader.GetSpan(size)).TrimEnd();
+                    _logPacket.Function = Encoding.UTF8.GetString(reader.GetSpanSafe(size)).TrimEnd();
                 }
                 else if (key == LogDataChunkKey.Module)
                 {
-                    _logPacket.Module = Encoding.UTF8.GetString(reader.GetSpan(size)).TrimEnd();
+                    _logPacket.Module = Encoding.UTF8.GetString(reader.GetSpanSafe(size)).TrimEnd();
                 }
                 else if (key == LogDataChunkKey.Thread)
                 {
-                    _logPacket.Thread = Encoding.UTF8.GetString(reader.GetSpan(size)).TrimEnd();
+                    _logPacket.Thread = Encoding.UTF8.GetString(reader.GetSpanSafe(size)).TrimEnd();
                 }
                 else if (key == LogDataChunkKey.ProgramName)
                 {
-                    _logPacket.ProgramName = Encoding.UTF8.GetString(reader.GetSpan(size)).TrimEnd();
+                    _logPacket.ProgramName = Encoding.UTF8.GetString(reader.GetSpanSafe(size)).TrimEnd();
                 }
             }
 
