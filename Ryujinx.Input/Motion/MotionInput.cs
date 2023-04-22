@@ -12,7 +12,6 @@ namespace Ryujinx.Input
         public Vector3 Rotation      { get; set; }
 
         private readonly MotionSensorFilter _filter;
-        private int _calibrationFrame = 0;
 
         public MotionInput()
         {
@@ -29,26 +28,6 @@ namespace Ryujinx.Input
         {
             if (TimeStamp != 0)
             {
-                if (gyro.Length() <= 1f && accel.Length() >= 0.8f && accel.Z >= 0.8f)
-                {
-                    _calibrationFrame++;
-
-                    if (_calibrationFrame >= 90)
-                    {
-                        gyro = Vector3.Zero;
-
-                        Rotation = Vector3.Zero;
-
-                        _filter.Reset();
-
-                        _calibrationFrame = 0;
-                    }
-                }
-                else
-                {
-                    _calibrationFrame = 0;
-                }
-
                 Accelerometer = -accel;
 
                 if (gyro.Length() < deadzone)
