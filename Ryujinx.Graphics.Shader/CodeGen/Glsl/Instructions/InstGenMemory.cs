@@ -677,7 +677,28 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
                 return vector;
             }
 
-            Append(ApplyScaling(AssemblePVector(pCount)));
+            string ApplyBias(string vector)
+            {
+                int gatherBiasPrecision = context.Config.GpuAccessor.QueryHostGatherBiasPrecision();
+                if (isGather && gatherBiasPrecision != 0)
+                {
+                    // GPU requires texture gather to be slightly offset to match NVIDIA behaviour when point is exactly between two texels.
+                    // Offset by the gather precision divided by 2 to correct for rounding.
+
+                    if (pCount == 1)
+                    {
+                        vector = $"{vector} + (1.0 / (float(textureSize({samplerName}, 0)) * float({1 << (gatherBiasPrecision + 1)})))";
+                    }
+                    else
+                    {
+                        vector = $"{vector} + (1.0 / (vec{pCount}(textureSize({samplerName}, 0).{"xyz".Substring(0, pCount)}) * float({1 << (gatherBiasPrecision + 1)})))";
+                    }
+                }
+
+                return vector;
+            }
+
+            Append(ApplyBias(ApplyScaling(AssemblePVector(pCount))));
 
             string AssembleDerivativesVector(int count)
             {

@@ -46,6 +46,7 @@ namespace Ryujinx.Graphics.Vulkan
         public readonly SampleCountFlags SupportedSampleCounts;
         public readonly PortabilitySubsetFlags PortabilitySubset;
         public readonly uint VertexBufferAlignment;
+        public readonly uint SubTexelPrecisionBits;
 
         public HardwareCapabilities(
             bool supportsIndexTypeUint8,
@@ -77,7 +78,8 @@ namespace Ryujinx.Graphics.Vulkan
             ShaderStageFlags requiredSubgroupSizeStages,
             SampleCountFlags supportedSampleCounts,
             PortabilitySubsetFlags portabilitySubset,
-            uint vertexBufferAlignment)
+            uint vertexBufferAlignment,
+            uint subTexelPrecisionBits)
         {
             SupportsIndexTypeUint8 = supportsIndexTypeUint8;
             SupportsCustomBorderColor = supportsCustomBorderColor;
@@ -109,6 +111,7 @@ namespace Ryujinx.Graphics.Vulkan
             SupportedSampleCounts = supportedSampleCounts;
             PortabilitySubset = portabilitySubset;
             VertexBufferAlignment = vertexBufferAlignment;
+            SubTexelPrecisionBits = subTexelPrecisionBits;
         }
     }
 }

@@ -48,6 +48,8 @@ namespace Ryujinx.Graphics.GAL
         public readonly float MaximumSupportedAnisotropy;
         public readonly int StorageBufferOffsetAlignment;
 
+        public readonly int GatherBiasPrecision;
+
         public Capabilities(
             TargetApi api,
             string vendorName,
@@ -87,7 +89,8 @@ namespace Ryujinx.Graphics.GAL
             uint maximumImagesPerStage,
             int maximumComputeSharedMemorySize,
             float maximumSupportedAnisotropy,
-            int storageBufferOffsetAlignment)
+            int storageBufferOffsetAlignment,
+            int gatherBiasPrecision)
         {
             Api = api;
             VendorName = vendorName;
@@ -128,6 +131,7 @@ namespace Ryujinx.Graphics.GAL
             MaximumComputeSharedMemorySize = maximumComputeSharedMemorySize;
             MaximumSupportedAnisotropy = maximumSupportedAnisotropy;
             StorageBufferOffsetAlignment = storageBufferOffsetAlignment;
+            GatherBiasPrecision = gatherBiasPrecision;
         }
     }
 }

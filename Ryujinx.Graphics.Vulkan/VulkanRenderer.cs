@@ -311,7 +311,8 @@ namespace Ryujinx.Graphics.Vulkan
                 propertiesSubgroupSizeControl.RequiredSubgroupSizeStages,
                 supportedSampleCounts,
                 portabilityFlags,
-                vertexBufferAlignment);
+                vertexBufferAlignment,
+                properties.Limits.SubTexelPrecisionBits);
 
             IsSharedMemory = MemoryAllocator.IsDeviceMemoryShared(_physicalDevice);
 
@@ -576,7 +577,8 @@ namespace Ryujinx.Graphics.Vulkan
                 maximumImagesPerStage: Constants.MaxImagesPerStage,
                 maximumComputeSharedMemorySize: (int)limits.MaxComputeSharedMemorySize,
                 maximumSupportedAnisotropy: (int)limits.MaxSamplerAnisotropy,
-                storageBufferOffsetAlignment: (int)limits.MinStorageBufferOffsetAlignment);
+                storageBufferOffsetAlignment: (int)limits.MinStorageBufferOffsetAlignment,
+                gatherBiasPrecision: IsIntelWindows || IsAmdWindows ? (int)Capabilities.SubTexelPrecisionBits : 0);
         }
 
         public HardwareInfo GetHardwareInfo()
