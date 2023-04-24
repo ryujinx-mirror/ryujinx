@@ -27,98 +27,103 @@ namespace Ryujinx.HLE.HOS.Ipc
 
         public IpcMessage()
         {
-            PtrBuff      = new List<IpcPtrBuffDesc>();
-            SendBuff     = new List<IpcBuffDesc>();
-            ReceiveBuff  = new List<IpcBuffDesc>();
-            ExchangeBuff = new List<IpcBuffDesc>();
-            RecvListBuff = new List<IpcRecvListBuffDesc>();
+            PtrBuff      = new List<IpcPtrBuffDesc>(0);
+            SendBuff     = new List<IpcBuffDesc>(0);
+            ReceiveBuff  = new List<IpcBuffDesc>(0);
+            ExchangeBuff = new List<IpcBuffDesc>(0);
+            RecvListBuff = new List<IpcRecvListBuffDesc>(0);
 
-            ObjectIds = new List<int>();
+            ObjectIds = new List<int>(0);
         }
 
-        public IpcMessage(ReadOnlySpan<byte> data, long cmdPtr) : this()
+        public IpcMessage(ReadOnlySpan<byte> data, long cmdPtr)
         {
             using (RecyclableMemoryStream ms = MemoryStreamManager.Shared.GetStream(data))
             {
                 BinaryReader reader = new BinaryReader(ms);
 
-                Initialize(reader, cmdPtr);
-            }
-        }
+                int word0 = reader.ReadInt32();
+                int word1 = reader.ReadInt32();
 
-        private void Initialize(BinaryReader reader, long cmdPtr)
-        {
-            int word0 = reader.ReadInt32();
-            int word1 = reader.ReadInt32();
+                Type = (IpcMessageType)(word0 & 0xffff);
 
-            Type = (IpcMessageType)(word0 & 0xffff);
+                int  ptrBuffCount  = (word0 >> 16) & 0xf;
+                int  sendBuffCount = (word0 >> 20) & 0xf;
+                int  recvBuffCount = (word0 >> 24) & 0xf;
+                int  xchgBuffCount = (word0 >> 28) & 0xf;
 
-            int  ptrBuffCount  = (word0 >> 16) & 0xf;
-            int  sendBuffCount = (word0 >> 20) & 0xf;
-            int  recvBuffCount = (word0 >> 24) & 0xf;
-            int  xchgBuffCount = (word0 >> 28) & 0xf;
+                int  rawDataSize   = (word1 >> 0) & 0x3ff;
+                int  recvListFlags = (word1 >> 10) & 0xf;
+                bool hndDescEnable = ((word1 >> 31) & 0x1) != 0;
 
-            int  rawDataSize   =  (word1 >>  0) & 0x3ff;
-            int  recvListFlags =  (word1 >> 10) & 0xf;
-            bool hndDescEnable = ((word1 >> 31) & 0x1) != 0;
-
-            if (hndDescEnable)
-            {
-                HandleDesc = new IpcHandleDesc(reader);
-            }
-
-            for (int index = 0; index < ptrBuffCount; index++)
-            {
-                PtrBuff.Add(new IpcPtrBuffDesc(reader));
-            }
-
-            void ReadBuff(List<IpcBuffDesc> buff, int count)
-            {
-                for (int index = 0; index < count; index++)
+                if (hndDescEnable)
                 {
-                    buff.Add(new IpcBuffDesc(reader));
+                    HandleDesc = new IpcHandleDesc(reader);
                 }
-            }
 
-            ReadBuff(SendBuff,     sendBuffCount);
-            ReadBuff(ReceiveBuff,  recvBuffCount);
-            ReadBuff(ExchangeBuff, xchgBuffCount);
+                PtrBuff = new List<IpcPtrBuffDesc>(ptrBuffCount);
 
-            rawDataSize *= 4;
+                for (int index = 0; index < ptrBuffCount; index++)
+                {
+                    PtrBuff.Add(new IpcPtrBuffDesc(reader));
+                }
 
-            long recvListPos = reader.BaseStream.Position + rawDataSize;
+                static List<IpcBuffDesc> ReadBuff(BinaryReader reader, int count)
+                {
+                    List<IpcBuffDesc> buff = new List<IpcBuffDesc>(count);
+                    
+                    for (int index = 0; index < count; index++)
+                    {
+                        buff.Add(new IpcBuffDesc(reader));
+                    }
+                    
+                    return buff;
+                }
+
+                SendBuff = ReadBuff(reader, sendBuffCount);
+                ReceiveBuff = ReadBuff(reader, recvBuffCount);
+                ExchangeBuff = ReadBuff(reader, xchgBuffCount);
+
+                rawDataSize *= 4;
+
+                long recvListPos = reader.BaseStream.Position + rawDataSize;
 
             // Only CMIF has the padding requirements.
             if (Type < IpcMessageType.TipcCloseSession)
             {
                 long pad0 = GetPadSize16(reader.BaseStream.Position + cmdPtr);
 
-                if (rawDataSize != 0)
-                {
-                    rawDataSize -= (int)pad0;
+                    if (rawDataSize != 0)
+                    {
+                        rawDataSize -= (int)pad0;
+                    }
+
+                    reader.BaseStream.Seek(pad0, SeekOrigin.Current);
                 }
 
-                reader.BaseStream.Seek(pad0, SeekOrigin.Current);
-            }
+                int recvListCount = recvListFlags - 2;
 
-            int recvListCount = recvListFlags - 2;
+                if (recvListCount == 0)
+                {
+                    recvListCount = 1;
+                }
+                else if (recvListCount < 0)
+                {
+                    recvListCount = 0;
+                }
 
-            if (recvListCount == 0)
-            {
-                recvListCount = 1;
-            }
-            else if (recvListCount < 0)
-            {
-                recvListCount = 0;
-            }
+                RawData = reader.ReadBytes(rawDataSize);
 
-            RawData = reader.ReadBytes(rawDataSize);
+                reader.BaseStream.Seek(recvListPos, SeekOrigin.Begin);
 
-            reader.BaseStream.Seek(recvListPos, SeekOrigin.Begin);
+                RecvListBuff = new List<IpcRecvListBuffDesc>(recvListCount);
 
-            for (int index = 0; index < recvListCount; index++)
-            {
-                RecvListBuff.Add(new IpcRecvListBuffDesc(reader.ReadUInt64()));
+                for (int index = 0; index < recvListCount; index++)
+                {
+                    RecvListBuff.Add(new IpcRecvListBuffDesc(reader.ReadUInt64()));
+                }
+
+                ObjectIds = new List<int>(0);
             }
         }
 

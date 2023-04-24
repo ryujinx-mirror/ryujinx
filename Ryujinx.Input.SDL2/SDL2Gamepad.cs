@@ -12,17 +12,7 @@ namespace Ryujinx.Input.SDL2
     {
         private bool HasConfiguration => _configuration != null;
 
-        private class ButtonMappingEntry
-        {
-            public readonly GamepadButtonInputId To;
-            public readonly GamepadButtonInputId From;
-
-            public ButtonMappingEntry(GamepadButtonInputId to, GamepadButtonInputId from)
-            {
-                To = to;
-                From = from;
-            }
-        }
+        private record struct ButtonMappingEntry(GamepadButtonInputId To, GamepadButtonInputId From);
 
         private StandardControllerInputConfig _configuration;
 
@@ -85,7 +75,7 @@ namespace Ryujinx.Input.SDL2
         public SDL2Gamepad(IntPtr gamepadHandle, string driverId)
         {
             _gamepadHandle = gamepadHandle;
-            _buttonsUserMapping = new List<ButtonMappingEntry>();
+            _buttonsUserMapping = new List<ButtonMappingEntry>(20);
 
             Name = SDL_GameControllerName(_gamepadHandle);
             Id = driverId;

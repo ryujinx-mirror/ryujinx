@@ -217,6 +217,8 @@ namespace Ryujinx.HLE.HOS.Services
 
             if (noReceive)
             {
+                response.PtrBuff.EnsureCapacity(request.RecvListBuff.Count);
+
                 for (int i = 0; i < request.RecvListBuff.Count; i++)
                 {
                     ulong size = (ulong)BinaryPrimitives.ReadInt16LittleEndian(request.RawData.AsSpan(sizesOffset + i * 2, 2));

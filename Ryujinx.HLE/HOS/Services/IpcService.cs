@@ -76,6 +76,8 @@ namespace Ryujinx.HLE.HOS.Services
 
                 context.RequestData.BaseStream.Seek(0x10 + dataPayloadSize, SeekOrigin.Begin);
 
+                context.Request.ObjectIds.EnsureCapacity(inputObjCount);
+
                 for (int index = 0; index < inputObjCount; index++)
                 {
                     context.Request.ObjectIds.Add(context.RequestData.ReadInt32());

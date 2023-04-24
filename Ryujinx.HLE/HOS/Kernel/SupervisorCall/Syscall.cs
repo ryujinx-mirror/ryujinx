@@ -9,6 +9,7 @@ using Ryujinx.HLE.HOS.Kernel.Process;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.Horizon.Common;
 using System;
+using System.Buffers;
 using System.Threading;
 
 namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
@@ -553,7 +554,9 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
 
             KProcess currentProcess = KernelStatic.GetCurrentProcess();
 
-            KSynchronizationObject[] syncObjs = handles.Length == 0 ? Array.Empty<KSynchronizationObject>() : new KSynchronizationObject[handles.Length];
+            KSynchronizationObject[] syncObjsArray = ArrayPool<KSynchronizationObject>.Shared.Rent(handles.Length);
+
+            Span<KSynchronizationObject> syncObjs = syncObjsArray.AsSpan(0, handles.Length);
 
             for (int index = 0; index < handles.Length; index++)
             {
@@ -605,6 +608,8 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
                     }
                 }
             }
+
+            ArrayPool<KSynchronizationObject>.Shared.Return(syncObjsArray);
 
             return result;
         }

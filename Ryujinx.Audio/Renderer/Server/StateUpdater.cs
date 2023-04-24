@@ -11,6 +11,7 @@ using Ryujinx.Audio.Renderer.Server.Voice;
 using Ryujinx.Audio.Renderer.Utils;
 using Ryujinx.Common.Logging;
 using System;
+using System.Buffers;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -149,12 +150,16 @@ namespace Ryujinx.Audio.Renderer.Server
                 state.InUse = false;
             }
 
+            Memory<VoiceUpdateState>[] voiceUpdateStatesArray = ArrayPool<Memory<VoiceUpdateState>>.Shared.Rent(Constants.VoiceChannelCountMax);
+            
+            Span<Memory<VoiceUpdateState>> voiceUpdateStates = voiceUpdateStatesArray.AsSpan(0, Constants.VoiceChannelCountMax);
+
             // Start processing
             for (int i = 0; i < context.GetCount(); i++)
             {
                 VoiceInParameter parameter = parameters[i];
 
-                Memory<VoiceUpdateState>[] voiceUpdateStates = new Memory<VoiceUpdateState>[Constants.VoiceChannelCountMax];
+                voiceUpdateStates.Fill(Memory<VoiceUpdateState>.Empty);
 
                 ref VoiceOutStatus outStatus = ref SpanIOHelper.GetWriteRef<VoiceOutStatus>(ref _output)[0];
 
@@ -196,6 +201,8 @@ namespace Ryujinx.Audio.Renderer.Server
                     currentVoiceState.WriteOutStatus(ref outStatus, ref parameter, voiceUpdateStates);
                 }
             }
+
+            ArrayPool<Memory<VoiceUpdateState>>.Shared.Return(voiceUpdateStatesArray);
 
             int currentOutputSize = _output.Length;
 

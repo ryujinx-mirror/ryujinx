@@ -1,6 +1,7 @@
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.Horizon.Common;
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Kernel.Threading
@@ -59,7 +60,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
             }
             else
             {
-                LinkedListNode<KThread>[] syncNodes = syncObjs.Length == 0 ? Array.Empty<LinkedListNode<KThread>>() : new LinkedListNode<KThread>[syncObjs.Length];
+                LinkedListNode<KThread>[] syncNodesArray = ArrayPool<LinkedListNode<KThread>>.Shared.Rent(syncObjs.Length);
+                
+                Span<LinkedListNode<KThread>> syncNodes = syncNodesArray.AsSpan(0, syncObjs.Length);
 
                 for (int index = 0; index < syncObjs.Length; index++)
                 {
@@ -101,6 +104,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
                         handleIndex = index;
                     }
                 }
+
+                ArrayPool<LinkedListNode<KThread>>.Shared.Return(syncNodesArray);
             }
 
             _context.CriticalSection.Leave();

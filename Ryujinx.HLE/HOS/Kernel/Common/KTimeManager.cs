@@ -71,7 +71,13 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
         {
             lock (_context.CriticalSection.Lock)
             {
-                _waitingObjects.RemoveAll(x => x.Object == schedulerObj);
+                for (int index = _waitingObjects.Count - 1; index >= 0; index--)
+                {
+                    if (_waitingObjects[index].Object == schedulerObj)
+                    {
+                        _waitingObjects.RemoveAt(index);
+                    }
+                }
             }
         }
 
@@ -105,16 +111,19 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
                             }
                             else
                             {
-                                while (Interlocked.Read(ref _enforceWakeupFromSpinWait) != 1 && PerformanceCounter.ElapsedTicks <= next.TimePoint)
+                                while (Interlocked.Read(ref _enforceWakeupFromSpinWait) != 1 && PerformanceCounter.ElapsedTicks < next.TimePoint)
                                 {
+                                    // Our time is close - don't let SpinWait go off and potentially Thread.Sleep().
                                     if (spinWait.NextSpinWillYield)
                                     {
                                         Thread.Yield();
 
                                         spinWait.Reset();
                                     }
-
-                                    spinWait.SpinOnce();
+                                    else
+                                    {
+                                        spinWait.SpinOnce();
+                                    }
                                 }
 
                                 spinWait.Reset();

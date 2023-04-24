@@ -378,7 +378,7 @@ namespace Ryujinx.Audio.Renderer.Server.Voice
         /// <param name="outStatus">The given user output.</param>
         /// <param name="parameter">The user parameter.</param>
         /// <param name="voiceUpdateStates">The voice states associated to the <see cref="VoiceState"/>.</param>
-        public void WriteOutStatus(ref VoiceOutStatus outStatus, ref VoiceInParameter parameter, Memory<VoiceUpdateState>[] voiceUpdateStates)
+        public void WriteOutStatus(ref VoiceOutStatus outStatus, ref VoiceInParameter parameter, ReadOnlySpan<Memory<VoiceUpdateState>> voiceUpdateStates)
         {
 #if DEBUG
             // Sanity check in debug mode of the internal state
@@ -424,7 +424,7 @@ namespace Ryujinx.Audio.Renderer.Server.Voice
         /// <param name="voiceUpdateStates">The voice states associated to the <see cref="VoiceState"/>.</param>
         /// <param name="mapper">The mapper to use.</param>
         /// <param name="behaviourContext">The behaviour context.</param>
-        public void UpdateWaveBuffers(out ErrorInfo[] errorInfos, ref VoiceInParameter parameter, Memory<VoiceUpdateState>[] voiceUpdateStates, ref PoolMapper mapper, ref BehaviourContext behaviourContext)
+        public void UpdateWaveBuffers(out ErrorInfo[] errorInfos, ref VoiceInParameter parameter, ReadOnlySpan<Memory<VoiceUpdateState>> voiceUpdateStates, ref PoolMapper mapper, ref BehaviourContext behaviourContext)
         {
             errorInfos = new ErrorInfo[Constants.VoiceWaveBufferCount * 2];
 
