@@ -1,6 +1,7 @@
 ﻿using Gtk;
 using Ryujinx.Common;
 using Ryujinx.Common.Configuration;
+using Ryujinx.Common.Logging;
 using Ryujinx.Common.Utilities;
 using Ryujinx.Ui.Common.Configuration;
 using Ryujinx.Ui.Common.Models.Amiibo;
@@ -12,7 +13,6 @@ using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using System.Text;
-using System.Text.Json;
 using System.Threading.Tasks;
 using AmiiboApi = Ryujinx.Ui.Common.Models.Amiibo.AmiiboApi;
 using AmiiboJsonSerializerContext = Ryujinx.Ui.Common.Models.Amiibo.AmiiboJsonSerializerContext;
@@ -57,7 +57,7 @@ namespace Ryujinx.Ui.Windows
 
             _httpClient = new HttpClient()
             {
-                Timeout = TimeSpan.FromMilliseconds(5000)
+                Timeout = TimeSpan.FromSeconds(30)
             };
 
             Directory.CreateDirectory(System.IO.Path.Join(AppDataManager.BaseDirPath, "system", "amiibo"));
@@ -93,8 +93,10 @@ namespace Ryujinx.Ui.Windows
                 {
                     amiiboJsonString = await DownloadAmiiboJson();
                 }
-                catch
+                catch (Exception ex)
                 {
+                    Logger.Error?.Print(LogClass.Application, $"Failed to download amiibo data: {ex}");
+
                     ShowInfoDialog();
 
                     Close();
@@ -183,8 +185,10 @@ namespace Ryujinx.Ui.Windows
 
                 return false;
             }
-            catch
+            catch (Exception ex)
             {
+                Logger.Error?.Print(LogClass.Application, $"Failed to check for amiibo updates: {ex}");
+
                 ShowInfoDialog();
 
                 return false;
@@ -208,6 +212,8 @@ namespace Ryujinx.Ui.Windows
             }
             else
             {
+                Logger.Error?.Print(LogClass.Application, $"Failed to download amiibo data. Response status code: {response.StatusCode}");
+
                 GtkDialog.CreateInfoDialog($"Amiibo API", "An error occured while fetching information from the API.");
 
                 Close();
@@ -232,6 +238,10 @@ namespace Ryujinx.Ui.Windows
                 int resizeWidth  = (int)(amiiboPreview.Width  * ratio);
 
                 _amiiboImage.Pixbuf = amiiboPreview.ScaleSimple(resizeWidth, resizeHeight, Gdk.InterpType.Bilinear);
+            }
+            else
+            {
+                Logger.Error?.Print(LogClass.Application, $"Failed to get amiibo preview. Response status code: {response.StatusCode}");
             }
         }
 

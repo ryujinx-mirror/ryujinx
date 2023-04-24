@@ -7,6 +7,7 @@ using Ryujinx.Ava.UI.Helpers;
 using Ryujinx.Ava.UI.Windows;
 using Ryujinx.Common;
 using Ryujinx.Common.Configuration;
+using Ryujinx.Common.Logging;
 using Ryujinx.Common.Utilities;
 using Ryujinx.Ui.Common.Models.Amiibo;
 using System;
@@ -42,13 +43,18 @@ namespace Ryujinx.Ava.UI.ViewModels
         private bool _showAllAmiibo;
         private bool _useRandomUuid;
         private string _usage;
-        
+
         private static readonly AmiiboJsonSerializerContext SerializerContext = new(JsonHelper.GetDefaultSerializerOptions());
 
         public AmiiboWindowViewModel(StyleableWindow owner, string lastScannedAmiiboId, string titleId)
         {
             _owner = owner;
-            _httpClient = new HttpClient { Timeout = TimeSpan.FromMilliseconds(5000) };
+
+            _httpClient = new HttpClient
+            {
+                Timeout = TimeSpan.FromSeconds(30)
+            };
+
             LastScannedAmiiboId = lastScannedAmiiboId;
             TitleId = titleId;
 
@@ -89,9 +95,7 @@ namespace Ryujinx.Ava.UI.ViewModels
             {
                 _showAllAmiibo = value;
 
-#pragma warning disable 4014
                 ParseAmiiboData();
-#pragma warning restore 4014
 
                 OnPropertyChanged();
             }
@@ -203,8 +207,10 @@ namespace Ryujinx.Ava.UI.ViewModels
                 {
                     amiiboJsonString = await DownloadAmiiboJson();
                 }
-                catch
+                catch (Exception ex)
                 {
+                    Logger.Error?.Print(LogClass.Application, $"Failed to download amiibo data: {ex}");
+
                     ShowInfoDialog();
                 }
             }
@@ -369,8 +375,10 @@ namespace Ryujinx.Ava.UI.ViewModels
 
                 return false;
             }
-            catch
+            catch (Exception ex)
             {
+                Logger.Error?.Print(LogClass.Application, $"Failed to check for amiibo updates: {ex}");
+
                 ShowInfoDialog();
 
                 return false;
@@ -392,6 +400,8 @@ namespace Ryujinx.Ava.UI.ViewModels
 
                 return amiiboJsonString;
             }
+
+            Logger.Error?.Print(LogClass.Application, $"Failed to download amiibo data. Response status code: {response.StatusCode}");
 
             await ContentDialogHelper.CreateInfoDialog(LocaleManager.Instance[LocaleKeys.DialogAmiiboApiTitle],
                 LocaleManager.Instance[LocaleKeys.DialogAmiiboApiFailFetchMessage],
@@ -428,6 +438,10 @@ namespace Ryujinx.Ava.UI.ViewModels
 
                     AmiiboImage = bitmap.CreateScaledBitmap(new PixelSize(resizeWidth, resizeHeight));
                 }
+            }
+            else
+            {
+                Logger.Error?.Print(LogClass.Application, $"Failed to get amiibo preview. Response status code: {response.StatusCode}");
             }
         }
 
