@@ -220,7 +220,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                     ((config.LastInVertexPipeline && isOutAttr) ||
                     (config.Stage == ShaderStage.Fragment && !isOutAttr)))
                 {
-                    int components = config.LastInPipeline ? context.Info.GetTransformFeedbackOutputComponents(attrOffset) : 1;
+                    int components = context.Info.GetTransformFeedbackOutputComponents(attrOffset);
                     string name = components > 1 ? $"{prefix}{(value >> 4)}" : $"{prefix}{(value >> 4)}_{swzMask}";
 
                     if (AttributeInfo.IsArrayAttributeGlsl(config.Stage, isOutAttr))

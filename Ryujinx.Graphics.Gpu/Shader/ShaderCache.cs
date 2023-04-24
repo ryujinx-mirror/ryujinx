@@ -449,7 +449,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
                         if (translatorContexts[i] != null)
                         {
                             translatorContexts[i].SetGeometryShaderLayerInputAttribute(info.GpLayerInputAttribute);
-                            translatorContexts[i].SetLastInVertexPipeline(translatorContexts[5] != null);
+                            translatorContexts[i].SetLastInVertexPipeline();
                             break;
                         }
                     }

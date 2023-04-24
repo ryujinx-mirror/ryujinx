@@ -673,7 +673,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             int components = 1;
             var type = attrInfo.Type & AggregateType.ElementTypeMask;
 
-            if (context.Config.LastInPipeline && isOutAttr)
+            if (isOutAttr)
             {
                 components = context.Info.GetTransformFeedbackOutputComponents(attr);
 

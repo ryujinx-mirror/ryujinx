@@ -341,7 +341,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                 attrOffset = attr;
                 type = elemType;
 
-                if (Config.LastInPipeline && isOutAttr)
+                if (isOutAttr)
                 {
                     int components = Info.GetTransformFeedbackOutputComponents(attr);
 

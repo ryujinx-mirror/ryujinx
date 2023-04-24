@@ -143,9 +143,9 @@ namespace Ryujinx.Graphics.Shader.Translation
             _config.SetGeometryShaderLayerInputAttribute(attr);
         }
 
-        public void SetLastInVertexPipeline(bool hasFragment)
+        public void SetLastInVertexPipeline()
         {
-            _config.SetLastInVertexPipeline(hasFragment);
+            _config.SetLastInVertexPipeline();
         }
 
         public ShaderProgram Translate(TranslatorContext other = null)

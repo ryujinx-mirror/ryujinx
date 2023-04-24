@@ -17,7 +17,6 @@ namespace Ryujinx.Graphics.Shader.Translation
         public ShaderStage Stage { get; }
 
         public bool GpPassthrough { get; }
-        public bool LastInPipeline { get; private set; }
         public bool LastInVertexPipeline { get; private set; }
 
         public bool HasLayerInputAttribute { get; private set; }
@@ -145,7 +144,6 @@ namespace Ryujinx.Graphics.Shader.Translation
             OmapSampleMask           = header.OmapSampleMask;
             OmapDepth                = header.OmapDepth;
             TransformFeedbackEnabled = gpuAccessor.QueryTransformFeedbackEnabled();
-            LastInPipeline           = true;
             LastInVertexPipeline     = header.Stage < ShaderStage.Fragment;
         }
 
@@ -253,13 +251,8 @@ namespace Ryujinx.Graphics.Shader.Translation
             GpLayerInputAttribute = attr;
         }
 
-        public void SetLastInVertexPipeline(bool hasFragment)
+        public void SetLastInVertexPipeline()
         {
-            if (!hasFragment)
-            {
-                LastInPipeline = true;
-            }
-
             LastInVertexPipeline = true;
         }
 
@@ -330,8 +323,6 @@ namespace Ryujinx.Graphics.Shader.Translation
                 _perPatchAttributeLocations = locationsMap;
                 config._perPatchAttributeLocations = locationsMap;
             }
-
-            LastInPipeline = false;
 
             // We don't consider geometry shaders using the geometry shader passthrough feature
             // as being the last because when this feature is used, it can't actually modify any of the outputs,
