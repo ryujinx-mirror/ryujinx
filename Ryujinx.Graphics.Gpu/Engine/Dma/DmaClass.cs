@@ -6,6 +6,7 @@ using Ryujinx.Graphics.Texture;
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
 
 namespace Ryujinx.Graphics.Gpu.Engine.Dma
@@ -30,6 +31,69 @@ namespace Ryujinx.Graphics.Gpu.Engine.Dma
             DstLinear = 1 << 8,
             MultiLineEnable = 1 << 9,
             RemapEnable = 1 << 10
+        }
+
+        /// <summary>
+        /// Texture parameters for copy.
+        /// </summary>
+        private struct TextureParams
+        {
+            /// <summary>
+            /// Copy region X coordinate.
+            /// </summary>
+            public readonly int RegionX;
+
+            /// <summary>
+            /// Copy region Y coordinate.
+            /// </summary>
+            public readonly int RegionY;
+
+            /// <summary>
+            /// Offset from the base pointer of the data in memory.
+            /// </summary>
+            public readonly int BaseOffset;
+
+            /// <summary>
+            /// Bytes per pixel.
+            /// </summary>
+            public readonly int Bpp;
+
+            /// <summary>
+            /// Whether the texture is linear. If false, the texture is block linear.
+            /// </summary>
+            public readonly bool Linear;
+
+            /// <summary>
+            /// Pixel offset from XYZ coordinates calculator.
+            /// </summary>
+            public readonly OffsetCalculator Calculator;
+
+            /// <summary>
+            /// Creates texture parameters.
+            /// </summary>
+            /// <param name="regionX">Copy region X coordinate</param>
+            /// <param name="regionY">Copy region Y coordinate</param>
+            /// <param name="baseOffset">Offset from the base pointer of the data in memory</param>
+            /// <param name="bpp">Bytes per pixel</param>
+            /// <param name="linear">Whether the texture is linear. If false, the texture is block linear</param>
+            /// <param name="calculator">Pixel offset from XYZ coordinates calculator</param>
+            public TextureParams(int regionX, int regionY, int baseOffset, int bpp, bool linear, OffsetCalculator calculator)
+            {
+                RegionX = regionX;
+                RegionY = regionY;
+                BaseOffset = baseOffset;
+                Bpp = bpp;
+                Linear = linear;
+                Calculator = calculator;
+            }
+        }
+
+        [StructLayout(LayoutKind.Sequential, Size = 3, Pack = 1)]
+        private struct UInt24
+        {
+            public byte Byte0;
+            public byte Byte1;
+            public byte Byte2;
         }
 
         /// <summary>
@@ -154,8 +218,10 @@ namespace Ryujinx.Graphics.Gpu.Engine.Dma
             {
                 // Buffer to texture copy.
                 int componentSize = (int)_state.State.SetRemapComponentsComponentSize + 1;
-                int srcBpp = remap ? ((int)_state.State.SetRemapComponentsNumSrcComponents + 1) * componentSize : 1;
-                int dstBpp = remap ? ((int)_state.State.SetRemapComponentsNumDstComponents + 1) * componentSize : 1;
+                int srcComponents = (int)_state.State.SetRemapComponentsNumSrcComponents + 1;
+                int dstComponents = (int)_state.State.SetRemapComponentsNumDstComponents + 1;
+                int srcBpp = remap ? srcComponents * componentSize : 1;
+                int dstBpp = remap ? dstComponents * componentSize : 1;
 
                 var dst = Unsafe.As<uint, DmaTexture>(ref _state.State.SetDstBlockSize);
                 var src = Unsafe.As<uint, DmaTexture>(ref _state.State.SetSrcBlockSize);
@@ -274,63 +340,51 @@ namespace Ryujinx.Graphics.Gpu.Engine.Dma
                     }
                 }
 
-                unsafe bool Convert<T>(Span<byte> dstSpan, ReadOnlySpan<byte> srcSpan) where T : unmanaged
-                {
-                    if (srcLinear && dstLinear && srcBpp == dstBpp)
-                    {
-                        // Optimized path for purely linear copies - we don't need to calculate every single byte offset,
-                        // and we can make use of Span.CopyTo which is very very fast (even compared to pointers)
-                        for (int y = 0; y < yCount; y++)
-                        {
-                            srcCalculator.SetY(srcRegionY + y);
-                            dstCalculator.SetY(dstRegionY + y);
-                            int srcOffset = srcCalculator.GetOffset(srcRegionX);
-                            int dstOffset = dstCalculator.GetOffset(dstRegionX);
-                            srcSpan.Slice(srcOffset - srcBaseOffset, xCount * srcBpp)
-                                .CopyTo(dstSpan.Slice(dstOffset - dstBaseOffset, xCount * dstBpp));
-                        }
-                    }
-                    else
-                    {
-                        fixed (byte* dstPtr = dstSpan, srcPtr = srcSpan)
-                        {
-                            byte* dstBase = dstPtr - dstBaseOffset; // Layout offset is relative to the base, so we need to subtract the span's offset.
-                            byte* srcBase = srcPtr - srcBaseOffset;
-
-                            for (int y = 0; y < yCount; y++)
-                            {
-                                srcCalculator.SetY(srcRegionY + y);
-                                dstCalculator.SetY(dstRegionY + y);
-
-                                for (int x = 0; x < xCount; x++)
-                                {
-                                    int srcOffset = srcCalculator.GetOffset(srcRegionX + x);
-                                    int dstOffset = dstCalculator.GetOffset(dstRegionX + x);
-
-                                    *(T*)(dstBase + dstOffset) = *(T*)(srcBase + srcOffset);
-                                }
-                            }
-                        }
-                    }
-
-                    return true;
-                }
-
                 // OPT: This allocates a (potentially) huge temporary array and then copies an existing
                 // region of memory into it, data that might get overwritten entirely anyways. Ideally this should
                 // all be rewritten to use pooled arrays, but that gets complicated with packed data and strides
                 Span<byte> dstSpan = memoryManager.GetSpan(dstGpuVa + (ulong)dstBaseOffset, dstSize).ToArray();
 
-                bool _ = srcBpp switch
+                TextureParams srcParams = new TextureParams(srcRegionX, srcRegionY, srcBaseOffset, srcBpp, srcLinear, srcCalculator);
+                TextureParams dstParams = new TextureParams(dstRegionX, dstRegionY, dstBaseOffset, dstBpp, dstLinear, dstCalculator);
+
+                // If remapping is enabled, we always copy the components directly, in order.
+                // If it's enabled, but the mapping is just XYZW, we also copy them in order.
+                bool isIdentityRemap = !remap ||
+                    (_state.State.SetRemapComponentsDstX == SetRemapComponentsDst.SrcX &&
+                    (dstComponents < 2 || _state.State.SetRemapComponentsDstY == SetRemapComponentsDst.SrcY) &&
+                    (dstComponents < 3 || _state.State.SetRemapComponentsDstZ == SetRemapComponentsDst.SrcZ) &&
+                    (dstComponents < 4 || _state.State.SetRemapComponentsDstW == SetRemapComponentsDst.SrcW));
+
+                if (isIdentityRemap)
                 {
-                    1 => Convert<byte>(dstSpan, srcSpan),
-                    2 => Convert<ushort>(dstSpan, srcSpan),
-                    4 => Convert<uint>(dstSpan, srcSpan),
-                    8 => Convert<ulong>(dstSpan, srcSpan),
-                    12 => Convert<Bpp12Pixel>(dstSpan, srcSpan),
-                    16 => Convert<Vector128<byte>>(dstSpan, srcSpan),
-                    _ => throw new NotSupportedException($"Unable to copy ${srcBpp} bpp pixel format.")
-                };
+                    // The order of the components doesn't change, so we can just copy directly
+                    // (with layout conversion if necessary).
+
+                    switch (srcBpp)
+                    {
+                        case 1: Copy<byte>(dstSpan, srcSpan, dstParams, srcParams); break;
+                        case 2: Copy<ushort>(dstSpan, srcSpan, dstParams, srcParams); break;
+                        case 4: Copy<uint>(dstSpan, srcSpan, dstParams, srcParams); break;
+                        case 8: Copy<ulong>(dstSpan, srcSpan, dstParams, srcParams); break;
+                        case 12: Copy<Bpp12Pixel>(dstSpan, srcSpan, dstParams, srcParams); break;
+                        case 16: Copy<Vector128<byte>>(dstSpan, srcSpan, dstParams, srcParams); break;
+                        default: throw new NotSupportedException($"Unable to copy ${srcBpp} bpp pixel format.");
+                    }
+                }
+                else
+                {
+                    // The order or value of the components might change.
+
+                    switch (componentSize)
+                    {
+                        case 1: CopyShuffle<byte>(dstSpan, srcSpan, dstParams, srcParams); break;
+                        case 2: CopyShuffle<ushort>(dstSpan, srcSpan, dstParams, srcParams); break;
+                        case 3: CopyShuffle<UInt24>(dstSpan, srcSpan, dstParams, srcParams); break;
+                        case 4: CopyShuffle<uint>(dstSpan, srcSpan, dstParams, srcParams); break;
+                        default: throw new NotSupportedException($"Unable to copy ${componentSize} component size.");
+                    }
+                }
 
                 memoryManager.Write(dstGpuVa + (ulong)dstBaseOffset, dstSpan);
             }
@@ -368,6 +422,133 @@ namespace Ryujinx.Graphics.Gpu.Engine.Dma
                     {
                         memoryManager.Physical.BufferCache.CopyBuffer(memoryManager, srcGpuVa, dstGpuVa, size);
                     }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Copies data from one texture to another, while performing layout conversion if necessary.
+        /// </summary>
+        /// <typeparam name="T">Pixel type</typeparam>
+        /// <param name="dstSpan">Destination texture memory region</param>
+        /// <param name="srcSpan">Source texture memory region</param>
+        /// <param name="dst">Destination texture parameters</param>
+        /// <param name="src">Source texture parameters</param>
+        private unsafe void Copy<T>(Span<byte> dstSpan, ReadOnlySpan<byte> srcSpan, TextureParams dst, TextureParams src) where T : unmanaged
+        {
+            int xCount = (int)_state.State.LineLengthIn;
+            int yCount = (int)_state.State.LineCount;
+
+            if (src.Linear && dst.Linear && src.Bpp == dst.Bpp)
+            {
+                // Optimized path for purely linear copies - we don't need to calculate every single byte offset,
+                // and we can make use of Span.CopyTo which is very very fast (even compared to pointers)
+                for (int y = 0; y < yCount; y++)
+                {
+                    src.Calculator.SetY(src.RegionY + y);
+                    dst.Calculator.SetY(dst.RegionY + y);
+                    int srcOffset = src.Calculator.GetOffset(src.RegionX);
+                    int dstOffset = dst.Calculator.GetOffset(dst.RegionX);
+                    srcSpan.Slice(srcOffset - src.BaseOffset, xCount * src.Bpp)
+                        .CopyTo(dstSpan.Slice(dstOffset - dst.BaseOffset, xCount * dst.Bpp));
+                }
+            }
+            else
+            {
+                fixed (byte* dstPtr = dstSpan, srcPtr = srcSpan)
+                {
+                    byte* dstBase = dstPtr - dst.BaseOffset; // Layout offset is relative to the base, so we need to subtract the span's offset.
+                    byte* srcBase = srcPtr - src.BaseOffset;
+
+                    for (int y = 0; y < yCount; y++)
+                    {
+                        src.Calculator.SetY(src.RegionY + y);
+                        dst.Calculator.SetY(dst.RegionY + y);
+
+                        for (int x = 0; x < xCount; x++)
+                        {
+                            int srcOffset = src.Calculator.GetOffset(src.RegionX + x);
+                            int dstOffset = dst.Calculator.GetOffset(dst.RegionX + x);
+
+                            *(T*)(dstBase + dstOffset) = *(T*)(srcBase + srcOffset);
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Sets texture pixel data to a constant value, while performing layout conversion if necessary.
+        /// </summary>
+        /// <typeparam name="T">Pixel type</typeparam>
+        /// <param name="dstSpan">Destination texture memory region</param>
+        /// <param name="dst">Destination texture parameters</param>
+        /// <param name="fillValue">Constant pixel value to be set</param>
+        private unsafe void Fill<T>(Span<byte> dstSpan, TextureParams dst, T fillValue) where T : unmanaged
+        {
+            int xCount = (int)_state.State.LineLengthIn;
+            int yCount = (int)_state.State.LineCount;
+
+            fixed (byte* dstPtr = dstSpan)
+            {
+                byte* dstBase = dstPtr - dst.BaseOffset; // Layout offset is relative to the base, so we need to subtract the span's offset.
+
+                for (int y = 0; y < yCount; y++)
+                {
+                    dst.Calculator.SetY(dst.RegionY + y);
+
+                    for (int x = 0; x < xCount; x++)
+                    {
+                        int dstOffset = dst.Calculator.GetOffset(dst.RegionX + x);
+
+                        *(T*)(dstBase + dstOffset) = fillValue;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Copies data from one texture to another, while performing layout conversion and component shuffling if necessary.
+        /// </summary>
+        /// <typeparam name="T">Pixel type</typeparam>
+        /// <param name="dstSpan">Destination texture memory region</param>
+        /// <param name="srcSpan">Source texture memory region</param>
+        /// <param name="dst">Destination texture parameters</param>
+        /// <param name="src">Source texture parameters</param>
+        private void CopyShuffle<T>(Span<byte> dstSpan, ReadOnlySpan<byte> srcSpan, TextureParams dst, TextureParams src) where T : unmanaged
+        {
+            int dstComponents = (int)_state.State.SetRemapComponentsNumDstComponents + 1;
+
+            for (int i = 0; i < dstComponents; i++)
+            {
+                SetRemapComponentsDst componentsDst = i switch
+                {
+                    0 => _state.State.SetRemapComponentsDstX,
+                    1 => _state.State.SetRemapComponentsDstY,
+                    2 => _state.State.SetRemapComponentsDstZ,
+                    _ => _state.State.SetRemapComponentsDstW
+                };
+
+                switch (componentsDst)
+                {
+                    case SetRemapComponentsDst.SrcX:
+                        Copy<T>(dstSpan.Slice(Unsafe.SizeOf<T>() * i), srcSpan, dst, src);
+                        break;
+                    case SetRemapComponentsDst.SrcY:
+                        Copy<T>(dstSpan.Slice(Unsafe.SizeOf<T>() * i), srcSpan.Slice(Unsafe.SizeOf<T>()), dst, src);
+                        break;
+                    case SetRemapComponentsDst.SrcZ:
+                        Copy<T>(dstSpan.Slice(Unsafe.SizeOf<T>() * i), srcSpan.Slice(Unsafe.SizeOf<T>() * 2), dst, src);
+                        break;
+                    case SetRemapComponentsDst.SrcW:
+                        Copy<T>(dstSpan.Slice(Unsafe.SizeOf<T>() * i), srcSpan.Slice(Unsafe.SizeOf<T>() * 3), dst, src);
+                        break;
+                    case SetRemapComponentsDst.ConstA:
+                        Fill<T>(dstSpan.Slice(Unsafe.SizeOf<T>() * i), dst, Unsafe.As<uint, T>(ref _state.State.SetRemapConstA));
+                        break;
+                    case SetRemapComponentsDst.ConstB:
+                        Fill<T>(dstSpan.Slice(Unsafe.SizeOf<T>() * i), dst, Unsafe.As<uint, T>(ref _state.State.SetRemapConstB));
+                        break;
                 }
             }
         }
