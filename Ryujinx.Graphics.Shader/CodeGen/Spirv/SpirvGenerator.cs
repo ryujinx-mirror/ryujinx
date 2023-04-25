@@ -63,7 +63,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
 
             if (config.Stage == ShaderStage.Fragment)
             {
-                if (context.Info.Inputs.Contains(AttributeConsts.Layer))
+                if (context.Info.IoDefinitions.Contains(new IoDefinition(StorageKind.Input, IoVariable.Layer)))
                 {
                     context.AddCapability(Capability.Geometry);
                 }
@@ -93,12 +93,18 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                 context.AddCapability(Capability.DrawParameters);
             }
 
-            Declarations.DeclareAll(context, info);
+            if (context.Info.IoDefinitions.Contains(new IoDefinition(StorageKind.Output, IoVariable.ViewportMask)))
+            {
+                context.AddExtension("SPV_NV_viewport_array2");
+                context.AddCapability(Capability.ShaderViewportMaskNV);
+            }
 
             if ((info.HelperFunctionsMask & NeedsInvocationIdMask) != 0)
             {
-                Declarations.DeclareInvocationId(context);
+                info.IoDefinitions.Add(new IoDefinition(StorageKind.Input, IoVariable.SubgroupLaneId));
             }
+
+            Declarations.DeclareAll(context, info);
 
             for (int funcIndex = 0; funcIndex < info.Functions.Count; funcIndex++)
             {
@@ -203,7 +209,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
 
                     if (context.Config.Options.TargetApi == TargetApi.Vulkan)
                     {
-                        // We invert the front face on Vulkan backend, so we need to do that here aswell.
+                        // We invert the front face on Vulkan backend, so we need to do that here as well.
                         tessCw = !tessCw;
                     }
 
@@ -250,7 +256,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                         ? ExecutionMode.OriginUpperLeft
                         : ExecutionMode.OriginLowerLeft);
 
-                    if (context.Outputs.ContainsKey(AttributeConsts.FragmentOutputDepth))
+                    if (context.Info.IoDefinitions.Contains(new IoDefinition(StorageKind.Output, IoVariable.FragmentOutputDepth)))
                     {
                         context.AddExecutionMode(spvFunc, ExecutionMode.DepthReplacing);
                     }
@@ -388,21 +394,6 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                     {
                         var source = context.Get(dest.VarType, assignment.Source);
                         context.Store(context.GetLocalPointer(dest), source);
-                    }
-                    else if (dest.Type == OperandType.Attribute || dest.Type == OperandType.AttributePerPatch)
-                    {
-                        bool perPatch = dest.Type == OperandType.AttributePerPatch;
-
-                        if (AttributeInfo.Validate(context.Config, dest.Value, isOutAttr: true, perPatch))
-                        {
-                            AggregateType elemType;
-
-                            var elemPointer = perPatch
-                                ? context.GetAttributePerPatchElemPointer(dest.Value, true, out elemType)
-                                : context.GetAttributeElemPointer(dest.Value, true, null, out elemType);
-
-                            context.Store(elemPointer, context.Get(elemType, assignment.Source));
-                        }
                     }
                     else if (dest.Type == OperandType.Argument)
                     {

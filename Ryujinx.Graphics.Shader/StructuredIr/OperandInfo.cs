@@ -23,8 +23,6 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             return type switch
             {
                 OperandType.Argument => AggregateType.S32,
-                OperandType.Attribute => AggregateType.FP32,
-                OperandType.AttributePerPatch => AggregateType.FP32,
                 OperandType.Constant => AggregateType.S32,
                 OperandType.ConstantBuffer => AggregateType.FP32,
                 OperandType.Undefined => AggregateType.S32,

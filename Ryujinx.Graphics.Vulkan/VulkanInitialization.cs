@@ -39,7 +39,8 @@ namespace Ryujinx.Graphics.Vulkan
             "VK_EXT_shader_subgroup_ballot",
             "VK_EXT_subgroup_size_control",
             "VK_NV_geometry_shader_passthrough",
-            "VK_KHR_portability_subset", // By spec, we should enable this if present.
+            "VK_NV_viewport_array2",
+            "VK_KHR_portability_subset" // As per spec, we should enable this if present.
         };
 
         private static readonly string[] _requiredExtensions = new string[]

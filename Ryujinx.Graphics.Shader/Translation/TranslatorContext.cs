@@ -34,15 +34,16 @@ namespace Ryujinx.Graphics.Shader.Translation
             _config = config;
         }
 
-        private static bool IsUserAttribute(Operand operand)
+        private static bool IsLoadUserDefined(Operation operation)
         {
-            if (operand != null && operand.Type.IsAttribute())
-            {
-                int value = operand.Value & AttributeConsts.Mask;
-                return value >= AttributeConsts.UserAttributeBase && value < AttributeConsts.UserAttributeEnd;
-            }
+            // TODO: Check if sources count match and all sources are constant.
+            return operation.Inst == Instruction.Load && (IoVariable)operation.GetSource(0).Value == IoVariable.UserDefined;
+        }
 
-            return false;
+        private static bool IsStoreUserDefined(Operation operation)
+        {
+            // TODO: Check if sources count match and all sources are constant.
+            return operation.Inst == Instruction.Store && (IoVariable)operation.GetSource(0).Value == IoVariable.UserDefined;
         }
 
         private static FunctionCode[] Combine(FunctionCode[] a, FunctionCode[] b, int aStart)
@@ -68,9 +69,9 @@ namespace Ryujinx.Graphics.Shader.Translation
             {
                 Operation operation = a[0].Code[index];
 
-                if (IsUserAttribute(operation.Dest))
+                if (IsStoreUserDefined(operation))
                 {
-                    int tIndex = (operation.Dest.Value - AttributeConsts.UserAttributeBase) / 4;
+                    int tIndex = operation.GetSource(1).Value * 4 + operation.GetSource(2).Value;
 
                     Operand temp = temps[tIndex];
 
@@ -82,6 +83,7 @@ namespace Ryujinx.Graphics.Shader.Translation
                     }
 
                     operation.Dest = temp;
+                    operation.TurnIntoCopy(operation.GetSource(operation.SourcesCount - 1));
                 }
 
                 if (operation.Inst == Instruction.Return)
@@ -100,18 +102,15 @@ namespace Ryujinx.Graphics.Shader.Translation
             {
                 Operation operation = b[0].Code[index];
 
-                for (int srcIndex = 0; srcIndex < operation.SourcesCount; srcIndex++)
+                if (IsLoadUserDefined(operation))
                 {
-                    Operand src = operation.GetSource(srcIndex);
+                    int tIndex = operation.GetSource(1).Value * 4 + operation.GetSource(2).Value;
 
-                    if (IsUserAttribute(src))
+                    Operand temp = temps[tIndex];
+
+                    if (temp != null)
                     {
-                        Operand temp = temps[(src.Value - AttributeConsts.UserAttributeBase) / 4];
-
-                        if (temp != null)
-                        {
-                            operation.SetSource(srcIndex, temp);
-                        }
+                        operation.TurnIntoCopy(temp);
                     }
                 }
 
@@ -209,15 +208,15 @@ namespace Ryujinx.Graphics.Shader.Translation
                     {
                         int attr = AttributeConsts.UserAttributeBase + attrIndex * 16 + c * 4;
 
-                        Operand value = context.LoadAttribute(Const(attr), Const(0), Const(v));
+                        Operand value = context.Load(StorageKind.Input, IoVariable.UserDefined, Const(v), Const(attrIndex), Const(c));
 
                         if (attr == layerOutputAttr)
                         {
-                            context.Copy(Attribute(AttributeConsts.Layer), value);
+                            context.Store(StorageKind.Output, IoVariable.Layer, null, value);
                         }
                         else
                         {
-                            context.Copy(Attribute(attr), value);
+                            context.Store(StorageKind.Output, IoVariable.UserDefined, null, Const(attrIndex), Const(c), value);
                             config.SetOutputUserAttribute(attrIndex);
                         }
 
@@ -227,11 +226,9 @@ namespace Ryujinx.Graphics.Shader.Translation
 
                 for (int c = 0; c < 4; c++)
                 {
-                    int attr = AttributeConsts.PositionX + c * 4;
+                    Operand value = context.Load(StorageKind.Input, IoVariable.Position, Const(v), Const(c));
 
-                    Operand value = context.LoadAttribute(Const(attr), Const(0), Const(v));
-
-                    context.Copy(Attribute(attr), value);
+                    context.Store(StorageKind.Output, IoVariable.Position, null, Const(c), value);
                 }
 
                 context.EmitVertex();

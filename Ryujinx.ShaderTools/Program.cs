@@ -86,8 +86,8 @@ namespace Ryujinx.ShaderTools
         static void Main(string[] args)
         {
             Parser.Default.ParseArguments<Options>(args)
-            .WithParsed(options => HandleArguments(options))
-            .WithNotParsed(errors => errors.Output());
+                .WithParsed(options => HandleArguments(options))
+                .WithNotParsed(errors => errors.Output());
         }
     }
 }

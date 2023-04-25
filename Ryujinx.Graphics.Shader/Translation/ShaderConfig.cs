@@ -41,6 +41,46 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         public bool TransformFeedbackEnabled { get; }
 
+        private TransformFeedbackOutput[] _transformFeedbackOutputs;
+
+        readonly struct TransformFeedbackVariable : IEquatable<TransformFeedbackVariable>
+        {
+            public IoVariable IoVariable { get; }
+            public int Location { get; }
+            public int Component { get; }
+
+            public TransformFeedbackVariable(IoVariable ioVariable, int location = 0, int component = 0)
+            {
+                IoVariable = ioVariable;
+                Location = location;
+                Component = component;
+            }
+
+            public override bool Equals(object other)
+            {
+                return other is TransformFeedbackVariable tfbVar && Equals(tfbVar);
+            }
+
+            public bool Equals(TransformFeedbackVariable other)
+            {
+                return IoVariable == other.IoVariable &&
+                    Location == other.Location &&
+                    Component == other.Component;
+            }
+
+            public override int GetHashCode()
+            {
+                return (int)IoVariable | (Location << 8) | (Component << 16);
+            }
+
+            public override string ToString()
+            {
+                return $"{IoVariable}.{Location}.{Component}";
+            }
+        }
+
+        private readonly Dictionary<TransformFeedbackVariable, TransformFeedbackOutput> _transformFeedbackDefinitions;
+
         public int Size { get; private set; }
 
         public byte ClipDistancesWritten { get; private set; }
@@ -102,6 +142,8 @@ namespace Ryujinx.Graphics.Shader.Translation
             GpuAccessor = gpuAccessor;
             Options     = options;
 
+            _transformFeedbackDefinitions = new Dictionary<TransformFeedbackVariable, TransformFeedbackOutput>();
+
             AccessibleStorageBuffersMask  = (1 << GlobalMemory.StorageMaxCount) - 1;
             AccessibleConstantBuffersMask = (1 << GlobalMemory.UbeMaxCount) - 1;
 
@@ -147,6 +189,173 @@ namespace Ryujinx.Graphics.Shader.Translation
             LastInVertexPipeline     = header.Stage < ShaderStage.Fragment;
         }
 
+        private void EnsureTransformFeedbackInitialized()
+        {
+            if (HasTransformFeedbackOutputs() && _transformFeedbackOutputs == null)
+            {
+                TransformFeedbackOutput[] transformFeedbackOutputs = new TransformFeedbackOutput[0xc0];
+                ulong vecMap = 0UL;
+
+                for (int tfbIndex = 0; tfbIndex < 4; tfbIndex++)
+                {
+                    var locations = GpuAccessor.QueryTransformFeedbackVaryingLocations(tfbIndex);
+                    var stride = GpuAccessor.QueryTransformFeedbackStride(tfbIndex);
+
+                    for (int i = 0; i < locations.Length; i++)
+                    {
+                        byte wordOffset = locations[i];
+                        if (wordOffset < 0xc0)
+                        {
+                            transformFeedbackOutputs[wordOffset] = new TransformFeedbackOutput(tfbIndex, i * 4, stride);
+                            vecMap |= 1UL << (wordOffset / 4);
+                        }
+                    }
+                }
+
+                _transformFeedbackOutputs = transformFeedbackOutputs;
+
+                while (vecMap != 0)
+                {
+                    int vecIndex = BitOperations.TrailingZeroCount(vecMap);
+
+                    for (int subIndex = 0; subIndex < 4; subIndex++)
+                    {
+                        int wordOffset = vecIndex * 4 + subIndex;
+                        int byteOffset = wordOffset * 4;
+
+                        if (transformFeedbackOutputs[wordOffset].Valid)
+                        {
+                            IoVariable ioVariable = Instructions.AttributeMap.GetIoVariable(this, byteOffset, out int location);
+                            int component = 0;
+
+                            if (HasPerLocationInputOrOutputComponent(ioVariable, location, subIndex, isOutput: true))
+                            {
+                                component = subIndex;
+                            }
+
+                            var transformFeedbackVariable = new TransformFeedbackVariable(ioVariable, location, component);
+                            _transformFeedbackDefinitions.TryAdd(transformFeedbackVariable, transformFeedbackOutputs[wordOffset]);
+                        }
+                    }
+
+                    vecMap &= ~(1UL << vecIndex);
+                }
+            }
+        }
+
+        public TransformFeedbackOutput[] GetTransformFeedbackOutputs()
+        {
+            EnsureTransformFeedbackInitialized();
+            return _transformFeedbackOutputs;
+        }
+
+        public bool TryGetTransformFeedbackOutput(IoVariable ioVariable, int location, int component, out TransformFeedbackOutput transformFeedbackOutput)
+        {
+            EnsureTransformFeedbackInitialized();
+            var transformFeedbackVariable = new TransformFeedbackVariable(ioVariable, location, component);
+            return _transformFeedbackDefinitions.TryGetValue(transformFeedbackVariable, out transformFeedbackOutput);
+        }
+
+        private bool HasTransformFeedbackOutputs()
+        {
+            return TransformFeedbackEnabled && (LastInVertexPipeline || Stage == ShaderStage.Fragment);
+        }
+
+        public bool HasTransformFeedbackOutputs(bool isOutput)
+        {
+            return TransformFeedbackEnabled && ((isOutput && LastInVertexPipeline) || (!isOutput && Stage == ShaderStage.Fragment));
+        }
+
+        public bool HasPerLocationInputOrOutput(IoVariable ioVariable, bool isOutput)
+        {
+            if (ioVariable == IoVariable.UserDefined)
+            {
+                return (!isOutput && !UsedFeatures.HasFlag(FeatureFlags.IaIndexing)) ||
+                       (isOutput && !UsedFeatures.HasFlag(FeatureFlags.OaIndexing));
+            }
+
+            return ioVariable == IoVariable.FragmentOutputColor;
+        }
+
+        public bool HasPerLocationInputOrOutputComponent(IoVariable ioVariable, int location, int component, bool isOutput)
+        {
+            if (ioVariable != IoVariable.UserDefined || !HasTransformFeedbackOutputs(isOutput))
+            {
+                return false;
+            }
+
+            return GetTransformFeedbackOutputComponents(location, component) == 1;
+        }
+
+        public TransformFeedbackOutput GetTransformFeedbackOutput(int wordOffset)
+        {
+            EnsureTransformFeedbackInitialized();
+
+            return _transformFeedbackOutputs[wordOffset];
+        }
+
+        public TransformFeedbackOutput GetTransformFeedbackOutput(int location, int component)
+        {
+            return GetTransformFeedbackOutput((AttributeConsts.UserAttributeBase / 4) + location * 4 + component);
+        }
+
+        public int GetTransformFeedbackOutputComponents(int location, int component)
+        {
+            EnsureTransformFeedbackInitialized();
+
+            int baseIndex = (AttributeConsts.UserAttributeBase / 4) + location * 4;
+            int index = baseIndex + component;
+            int count = 1;
+
+            for (; count < 4; count++)
+            {
+                ref var prev = ref _transformFeedbackOutputs[baseIndex + count - 1];
+                ref var curr = ref _transformFeedbackOutputs[baseIndex + count];
+
+                int prevOffset = prev.Offset;
+                int currOffset = curr.Offset;
+
+                if (!prev.Valid || !curr.Valid || prevOffset + 4 != currOffset)
+                {
+                    break;
+                }
+            }
+
+            if (baseIndex + count <= index)
+            {
+                return 1;
+            }
+
+            return count;
+        }
+
+        public AggregateType GetFragmentOutputColorType(int location)
+        {
+            return AggregateType.Vector4 | GpuAccessor.QueryFragmentOutputType(location).ToAggregateType();
+        }
+
+        public AggregateType GetUserDefinedType(int location, bool isOutput)
+        {
+            if ((!isOutput && UsedFeatures.HasFlag(FeatureFlags.IaIndexing)) ||
+                (isOutput && UsedFeatures.HasFlag(FeatureFlags.OaIndexing)))
+            {
+                return AggregateType.Array | AggregateType.Vector4 | AggregateType.FP32;
+            }
+
+            AggregateType type = AggregateType.Vector4;
+
+            if (Stage == ShaderStage.Vertex && !isOutput)
+            {
+                type |= GpuAccessor.QueryAttributeType(location).ToAggregateType();
+            }
+            else
+            {
+                type |= AggregateType.FP32;
+            }
+
+            return type;
+        }
+
         public int GetDepthRegister()
         {
             // The depth register is always two registers after the last color output.
@@ -184,7 +393,7 @@ namespace Ryujinx.Graphics.Shader.Translation
             return format;
         }
 
-        private bool FormatSupportsAtomic(TextureFormat format)
+        private static bool FormatSupportsAtomic(TextureFormat format)
         {
             return format == TextureFormat.R32Sint || format == TextureFormat.R32Uint;
         }

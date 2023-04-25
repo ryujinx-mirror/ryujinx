@@ -25,7 +25,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             Operand value = GetSrcReg(context, op.SrcB);
 
-            Operand res = EmitAtomicOp(context, Instruction.MrGlobal, op.Op, op.Size, addrLow, addrHigh, value);
+            Operand res = EmitAtomicOp(context, StorageKind.GlobalMemory, op.Op, op.Size, addrLow, addrHigh, value);
 
             context.Copy(GetDest(op.Dest), res);
         }
@@ -50,7 +50,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 _ => AtomSize.U32
             };
 
-            Operand res = EmitAtomicOp(context, Instruction.MrShared, op.AtomOp, size, offset, Const(0), value);
+            Operand res = EmitAtomicOp(context, StorageKind.SharedMemory, op.AtomOp, size, offset, Const(0), value);
 
             context.Copy(GetDest(op.Dest), res);
         }
@@ -130,7 +130,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             (Operand addrLow, Operand addrHigh) = Get40BitsAddress(context, new Register(op.SrcA, RegisterType.Gpr), op.E, op.Imm20);
 
-            EmitAtomicOp(context, Instruction.MrGlobal, (AtomOp)op.RedOp, op.RedSize, addrLow, addrHigh, GetDest(op.SrcB));
+            EmitAtomicOp(context, StorageKind.GlobalMemory, (AtomOp)op.RedOp, op.RedSize, addrLow, addrHigh, GetDest(op.SrcB));
         }
 
         public static void Stg(EmitterContext context)
@@ -156,7 +156,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
         private static Operand EmitAtomicOp(
             EmitterContext context,
-            Instruction mr,
+            StorageKind storageKind,
             AtomOp op,
             AtomSize type,
             Operand addrLow,
@@ -170,7 +170,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 case AtomOp.Add:
                     if (type == AtomSize.S32 || type == AtomSize.U32)
                     {
-                        res = context.AtomicAdd(mr, addrLow, addrHigh, value);
+                        res = context.AtomicAdd(storageKind, addrLow, addrHigh, value);
                     }
                     else
                     {
@@ -180,7 +180,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 case AtomOp.And:
                     if (type == AtomSize.S32 || type == AtomSize.U32)
                     {
-                        res = context.AtomicAnd(mr, addrLow, addrHigh, value);
+                        res = context.AtomicAnd(storageKind, addrLow, addrHigh, value);
                     }
                     else
                     {
@@ -190,7 +190,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 case AtomOp.Xor:
                     if (type == AtomSize.S32 || type == AtomSize.U32)
                     {
-                        res = context.AtomicXor(mr, addrLow, addrHigh, value);
+                        res = context.AtomicXor(storageKind, addrLow, addrHigh, value);
                     }
                     else
                     {
@@ -200,7 +200,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 case AtomOp.Or:
                     if (type == AtomSize.S32 || type == AtomSize.U32)
                     {
-                        res = context.AtomicOr(mr, addrLow, addrHigh, value);
+                        res = context.AtomicOr(storageKind, addrLow, addrHigh, value);
                     }
                     else
                     {
@@ -210,11 +210,11 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 case AtomOp.Max:
                     if (type == AtomSize.S32)
                     {
-                        res = context.AtomicMaxS32(mr, addrLow, addrHigh, value);
+                        res = context.AtomicMaxS32(storageKind, addrLow, addrHigh, value);
                     }
                     else if (type == AtomSize.U32)
                     {
-                        res = context.AtomicMaxU32(mr, addrLow, addrHigh, value);
+                        res = context.AtomicMaxU32(storageKind, addrLow, addrHigh, value);
                     }
                     else
                     {
@@ -224,11 +224,11 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 case AtomOp.Min:
                     if (type == AtomSize.S32)
                     {
-                        res = context.AtomicMinS32(mr, addrLow, addrHigh, value);
+                        res = context.AtomicMinS32(storageKind, addrLow, addrHigh, value);
                     }
                     else if (type == AtomSize.U32)
                     {
-                        res = context.AtomicMinU32(mr, addrLow, addrHigh, value);
+                        res = context.AtomicMinU32(storageKind, addrLow, addrHigh, value);
                     }
                     else
                     {

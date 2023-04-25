@@ -89,7 +89,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             Add(Instruction.ImageStore,               AggregateType.Void);
             Add(Instruction.ImageAtomic,              AggregateType.S32);
             Add(Instruction.IsNan,                    AggregateType.Bool,   AggregateType.Scalar);
-            Add(Instruction.LoadAttribute,            AggregateType.FP32,   AggregateType.S32,     AggregateType.S32,     AggregateType.S32);
+            Add(Instruction.Load,                     AggregateType.FP32);
             Add(Instruction.LoadConstant,             AggregateType.FP32,   AggregateType.S32,     AggregateType.S32);
             Add(Instruction.LoadGlobal,               AggregateType.U32,    AggregateType.S32,     AggregateType.S32);
             Add(Instruction.LoadLocal,                AggregateType.U32,    AggregateType.S32);
@@ -122,7 +122,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             Add(Instruction.ShuffleXor,               AggregateType.FP32,   AggregateType.FP32,    AggregateType.U32,     AggregateType.U32,     AggregateType.Bool);
             Add(Instruction.Sine,                     AggregateType.Scalar, AggregateType.Scalar);
             Add(Instruction.SquareRoot,               AggregateType.Scalar, AggregateType.Scalar);
-            Add(Instruction.StoreAttribute,           AggregateType.Void,   AggregateType.S32,     AggregateType.S32,     AggregateType.FP32);
+            Add(Instruction.Store,                    AggregateType.Void);
             Add(Instruction.StoreGlobal,              AggregateType.Void,   AggregateType.S32,     AggregateType.S32,     AggregateType.U32);
             Add(Instruction.StoreLocal,               AggregateType.Void,   AggregateType.S32,     AggregateType.U32);
             Add(Instruction.StoreShared,              AggregateType.Void,   AggregateType.S32,     AggregateType.U32);
@@ -166,7 +166,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             {
                 return AggregateType.FP32;
             }
-            else if (inst == Instruction.Call)
+            else if (inst == Instruction.Call || inst == Instruction.Load || inst == Instruction.Store)
             {
                 return AggregateType.S32;
             }

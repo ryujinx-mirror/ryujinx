@@ -170,10 +170,8 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
                 return false;
             }
 
-            return x.Type == OperandType.Attribute ||
-                   x.Type == OperandType.AttributePerPatch ||
-                   x.Type == OperandType.Constant ||
-                   x.Type == OperandType.ConstantBuffer;
+            // TODO: Handle Load operations with the same storage and the same constant parameters.
+            return x.Type == OperandType.Constant || x.Type == OperandType.ConstantBuffer;
         }
 
         private static bool PropagatePack(Operation packOp)

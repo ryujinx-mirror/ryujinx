@@ -29,15 +29,13 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
         public Instruction StorageBuffersArray { get; set; }
         public Instruction LocalMemory { get; set; }
         public Instruction SharedMemory { get; set; }
-        public Instruction InputsArray { get; set; }
-        public Instruction OutputsArray { get; set; }
         public Dictionary<TextureMeta, SamplerType> SamplersTypes { get; } = new Dictionary<TextureMeta, SamplerType>();
         public Dictionary<TextureMeta, (Instruction, Instruction, Instruction)> Samplers { get; } = new Dictionary<TextureMeta, (Instruction, Instruction, Instruction)>();
         public Dictionary<TextureMeta, (Instruction, Instruction)> Images { get; } = new Dictionary<TextureMeta, (Instruction, Instruction)>();
-        public Dictionary<int, Instruction> Inputs { get; } = new Dictionary<int, Instruction>();
-        public Dictionary<int, Instruction> Outputs { get; } = new Dictionary<int, Instruction>();
-        public Dictionary<int, Instruction> InputsPerPatch { get; } = new Dictionary<int, Instruction>();
-        public Dictionary<int, Instruction> OutputsPerPatch { get; } = new Dictionary<int, Instruction>();
+        public Dictionary<IoDefinition, Instruction> Inputs { get; } = new Dictionary<IoDefinition, Instruction>();
+        public Dictionary<IoDefinition, Instruction> Outputs { get; } = new Dictionary<IoDefinition, Instruction>();
+        public Dictionary<IoDefinition, Instruction> InputsPerPatch { get; } = new Dictionary<IoDefinition, Instruction>();
+        public Dictionary<IoDefinition, Instruction> OutputsPerPatch { get; } = new Dictionary<IoDefinition, Instruction>();
 
         public Instruction CoordTemp { get; set; }
         private readonly Dictionary<AstOperand, Instruction> _locals = new Dictionary<AstOperand, Instruction>();
@@ -163,16 +161,6 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             mainInterface.AddRange(InputsPerPatch.Values);
             mainInterface.AddRange(OutputsPerPatch.Values);
 
-            if (InputsArray != null)
-            {
-                mainInterface.Add(InputsArray);
-            }
-
-            if (OutputsArray != null)
-            {
-                mainInterface.Add(OutputsArray);
-            }
-
             return mainInterface.ToArray();
         }
 
@@ -228,8 +216,6 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                 return operand.Type switch
                 {
                     IrOperandType.Argument => GetArgument(type, operand),
-                    IrOperandType.Attribute => GetAttribute(type, operand.Value & AttributeConsts.Mask, (operand.Value & AttributeConsts.LoadOutputMask) != 0),
-                    IrOperandType.AttributePerPatch => GetAttributePerPatch(type, operand.Value & AttributeConsts.Mask, (operand.Value & AttributeConsts.LoadOutputMask) != 0),
                     IrOperandType.Constant => GetConstant(type, operand),
                     IrOperandType.ConstantBuffer => GetConstantBuffer(type, operand),
                     IrOperandType.LocalVariable => GetLocal(type, operand),
@@ -273,239 +259,6 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                 AggregateType.FP64 => Constant(TypeFP64(), 0d),
                 _ => Constant(GetType(type), 0)
             };
-        }
-
-        public Instruction GetAttributeElemPointer(int attr, bool isOutAttr, Instruction index, out AggregateType elemType)
-        {
-            var storageClass = isOutAttr ? StorageClass.Output : StorageClass.Input;
-            var attrInfo = AttributeInfo.From(Config, attr, isOutAttr);
-
-            int attrOffset = attrInfo.BaseValue;
-            AggregateType type = attrInfo.Type;
-
-            Instruction ioVariable, elemIndex;
-
-            Instruction invocationId = null;
-
-            if (Config.Stage == ShaderStage.TessellationControl && isOutAttr)
-            {
-                invocationId = Load(TypeS32(), Inputs[AttributeConsts.InvocationId]);
-            }
-
-            bool isUserAttr = attr >= AttributeConsts.UserAttributeBase && attr < AttributeConsts.UserAttributeEnd;
-
-            if (isUserAttr &&
-                ((!isOutAttr && Config.UsedFeatures.HasFlag(FeatureFlags.IaIndexing)) ||
-                (isOutAttr && Config.UsedFeatures.HasFlag(FeatureFlags.OaIndexing))))
-            {
-                elemType = AggregateType.FP32;
-                ioVariable = isOutAttr ? OutputsArray : InputsArray;
-                elemIndex = Constant(TypeU32(), attrInfo.GetInnermostIndex());
-                var vecIndex = Constant(TypeU32(), (attr - AttributeConsts.UserAttributeBase) >> 4);
-
-                bool isArray = AttributeInfo.IsArrayAttributeSpirv(Config.Stage, isOutAttr);
-
-                if (invocationId != null && isArray)
-                {
-                    return AccessChain(TypePointer(storageClass, GetType(elemType)), ioVariable, invocationId, index, vecIndex, elemIndex);
-                }
-                else if (invocationId != null)
-                {
-                    return AccessChain(TypePointer(storageClass, GetType(elemType)), ioVariable, invocationId, vecIndex, elemIndex);
-                }
-                else if (isArray)
-                {
-                    return AccessChain(TypePointer(storageClass, GetType(elemType)), ioVariable, index, vecIndex, elemIndex);
-                }
-                else
-                {
-                    return AccessChain(TypePointer(storageClass, GetType(elemType)), ioVariable, vecIndex, elemIndex);
-                }
-            }
-
-            bool isViewportInverse = attr == AttributeConsts.SupportBlockViewInverseX || attr == AttributeConsts.SupportBlockViewInverseY;
-
-            if (isViewportInverse)
-            {
-                elemType = AggregateType.FP32;
-                elemIndex = Constant(TypeU32(), (attr - AttributeConsts.SupportBlockViewInverseX) >> 2);
-                return AccessChain(TypePointer(StorageClass.Uniform, TypeFP32()), SupportBuffer, Constant(TypeU32(), 2), elemIndex);
-            }
-
-            elemType = attrInfo.Type & AggregateType.ElementTypeMask;
-
-            if (isUserAttr && Config.TransformFeedbackEnabled &&
-                ((isOutAttr && Config.LastInVertexPipeline) ||
-                (!isOutAttr && Config.Stage == ShaderStage.Fragment)))
-            {
-                attrOffset = attr;
-                type = elemType;
-
-                if (isOutAttr)
-                {
-                    int components = Info.GetTransformFeedbackOutputComponents(attr);
-
-                    if (components > 1)
-                    {
-                        attrOffset &= ~0xf;
-                        type = components switch
-                        {
-                            2 => AggregateType.Vector2 | AggregateType.FP32,
-                            3 => AggregateType.Vector3 | AggregateType.FP32,
-                            4 => AggregateType.Vector4 | AggregateType.FP32,
-                            _ => AggregateType.FP32
-                        };
-
-                        attrInfo = new AttributeInfo(attrOffset, (attr - attrOffset) / 4, components, type, false);
-                    }
-                }
-            }
-
-            ioVariable = isOutAttr ? Outputs[attrOffset] : Inputs[attrOffset];
-
-            bool isIndexed = AttributeInfo.IsArrayAttributeSpirv(Config.Stage, isOutAttr) && (!attrInfo.IsBuiltin || AttributeInfo.IsArrayBuiltIn(attr));
-
-            if ((type & (AggregateType.Array | AggregateType.ElementCountMask)) == 0)
-            {
-                if (invocationId != null)
-                {
-                    return isIndexed
-                        ? AccessChain(TypePointer(storageClass, GetType(elemType)), ioVariable, invocationId, index)
-                        : AccessChain(TypePointer(storageClass, GetType(elemType)), ioVariable, invocationId);
-                }
-                else
-                {
-                    return isIndexed ? AccessChain(TypePointer(storageClass, GetType(elemType)), ioVariable, index) : ioVariable;
-                }
-            }
-
-            elemIndex = Constant(TypeU32(), attrInfo.GetInnermostIndex());
-
-            if (invocationId != null && isIndexed)
-            {
-                return AccessChain(TypePointer(storageClass, GetType(elemType)), ioVariable, invocationId, index, elemIndex);
-            }
-            else if (invocationId != null)
-            {
-                return AccessChain(TypePointer(storageClass, GetType(elemType)), ioVariable, invocationId, elemIndex);
-            }
-            else if (isIndexed)
-            {
-                return AccessChain(TypePointer(storageClass, GetType(elemType)), ioVariable, index, elemIndex);
-            }
-            else
-            {
-                return AccessChain(TypePointer(storageClass, GetType(elemType)), ioVariable, elemIndex);
-            }
-        }
-
-        public Instruction GetAttributeElemPointer(Instruction attrIndex, bool isOutAttr, Instruction index, out AggregateType elemType)
-        {
-            var storageClass = isOutAttr ? StorageClass.Output : StorageClass.Input;
-
-            Instruction invocationId = null;
-
-            if (Config.Stage == ShaderStage.TessellationControl && isOutAttr)
-            {
-                invocationId = Load(TypeS32(), Inputs[AttributeConsts.InvocationId]);
-            }
-
-            elemType = AggregateType.FP32;
-            var ioVariable = isOutAttr ? OutputsArray : InputsArray;
-            var vecIndex = ShiftRightLogical(TypeS32(), attrIndex, Constant(TypeS32(), 2));
-            var elemIndex = BitwiseAnd(TypeS32(), attrIndex, Constant(TypeS32(), 3));
-
-            bool isArray = AttributeInfo.IsArrayAttributeSpirv(Config.Stage, isOutAttr);
-
-            if (invocationId != null && isArray)
-            {
-                return AccessChain(TypePointer(storageClass, GetType(elemType)), ioVariable, invocationId, index, vecIndex, elemIndex);
-            }
-            else if (invocationId != null)
-            {
-                return AccessChain(TypePointer(storageClass, GetType(elemType)), ioVariable, invocationId, vecIndex, elemIndex);
-            }
-            else if (isArray)
-            {
-                return AccessChain(TypePointer(storageClass, GetType(elemType)), ioVariable, index, vecIndex, elemIndex);
-            }
-            else
-            {
-                return AccessChain(TypePointer(storageClass, GetType(elemType)), ioVariable, vecIndex, elemIndex);
-            }
-        }
-
-        public Instruction GetAttribute(AggregateType type, int attr, bool isOutAttr, Instruction index = null)
-        {
-            if (!AttributeInfo.Validate(Config, attr, isOutAttr: false))
-            {
-                return GetConstant(type, new AstOperand(IrOperandType.Constant, 0));
-            }
-
-            var elemPointer = GetAttributeElemPointer(attr, isOutAttr, index, out var elemType);
-            var value = Load(GetType(elemType), elemPointer);
-
-            if (Config.Stage == ShaderStage.Fragment)
-            {
-                if (attr == AttributeConsts.PositionX || attr == AttributeConsts.PositionY)
-                {
-                    var pointerType = TypePointer(StorageClass.Uniform, TypeFP32());
-                    var fieldIndex = Constant(TypeU32(), 4);
-                    var scaleIndex = Constant(TypeU32(), 0);
-
-                    var scaleElemPointer = AccessChain(pointerType, SupportBuffer, fieldIndex, scaleIndex);
-                    var scale = Load(TypeFP32(), scaleElemPointer);
-
-                    value = FDiv(TypeFP32(), value, scale);
-                }
-                else if (attr == AttributeConsts.FrontFacing && Config.GpuAccessor.QueryHostHasFrontFacingBug())
-                {
-                    // Workaround for what appears to be a bug on Intel compiler.
-                    var valueFloat = Select(TypeFP32(), value, Constant(TypeFP32(), 1f), Constant(TypeFP32(), 0f));
-                    var valueAsInt = Bitcast(TypeS32(), valueFloat);
-                    var valueNegated = SNegate(TypeS32(), valueAsInt);
-
-                    value = SLessThan(TypeBool(), valueNegated, Constant(TypeS32(), 0));
-                }
-            }
-
-            return BitcastIfNeeded(type, elemType, value);
-        }
-
-        public Instruction GetAttributePerPatchElemPointer(int attr, bool isOutAttr, out AggregateType elemType)
-        {
-            var storageClass = isOutAttr ? StorageClass.Output : StorageClass.Input;
-            var attrInfo = AttributeInfo.FromPatch(Config, attr, isOutAttr);
-
-            int attrOffset = attrInfo.BaseValue;
-            Instruction ioVariable = isOutAttr ? OutputsPerPatch[attrOffset] : InputsPerPatch[attrOffset];
-
-            elemType = attrInfo.Type & AggregateType.ElementTypeMask;
-
-            if ((attrInfo.Type & (AggregateType.Array | AggregateType.ElementCountMask)) == 0)
-            {
-                return ioVariable;
-            }
-
-            var elemIndex = Constant(TypeU32(), attrInfo.GetInnermostIndex());
-            return AccessChain(TypePointer(storageClass, GetType(elemType)), ioVariable, elemIndex);
-        }
-
-        public Instruction GetAttributePerPatch(AggregateType type, int attr, bool isOutAttr)
-        {
-            if (!AttributeInfo.ValidatePerPatch(Config, attr, isOutAttr: false))
-            {
-                return GetConstant(type, new AstOperand(IrOperandType.Constant, 0));
-            }
-
-            var elemPointer = GetAttributePerPatchElemPointer(attr, isOutAttr, out var elemType);
-            return BitcastIfNeeded(type, elemType, Load(GetType(elemType), elemPointer));
-        }
-
-        public Instruction GetAttribute(AggregateType type, Instruction attr, bool isOutAttr, Instruction index = null)
-        {
-            var elemPointer = GetAttributeElemPointer(attr, isOutAttr, index, out var elemType);
-            return BitcastIfNeeded(type, elemType, Load(GetType(elemType), elemPointer));
         }
 
         public Instruction GetConstant(AggregateType type, AstOperand operand)

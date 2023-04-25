@@ -19,7 +19,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             int cbufSlot,
             int handle,
             int index,
-            params IAstNode[] sources) : base(inst, index, sources, sources.Length)
+            params IAstNode[] sources) : base(inst, StorageKind.None, index, sources, sources.Length)
         {
             Type = type;
             Format = format;

@@ -6,6 +6,7 @@ namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
     class Operation : INode
     {
         public Instruction Inst { get; private set; }
+        public StorageKind StorageKind { get; }
 
         private Operand[] _dests;
 
@@ -86,6 +87,23 @@ namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
         public Operation(Instruction inst, Operand dest, params Operand[] sources) : this(sources)
         {
             Inst = inst;
+
+            if (dest != null)
+            {
+                dest.AsgOp = this;
+
+                _dests = new[] { dest };
+            }
+            else
+            {
+                _dests = Array.Empty<Operand>();
+            }
+        }
+
+        public Operation(Instruction inst, StorageKind storageKind, Operand dest, params Operand[] sources) : this(sources)
+        {
+            Inst = inst;
+            StorageKind = storageKind;
 
             if (dest != null)
             {

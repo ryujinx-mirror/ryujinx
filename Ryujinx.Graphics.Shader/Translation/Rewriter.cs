@@ -34,7 +34,7 @@ namespace Ryujinx.Graphics.Shader.Translation
                     {
                         if (hasConstantBufferDrawParameters)
                         {
-                            if (ReplaceConstantBufferWithDrawParameters(operation))
+                            if (ReplaceConstantBufferWithDrawParameters(node, operation))
                             {
                                 config.SetUsedFeature(FeatureFlags.DrawParameters);
                             }
@@ -61,7 +61,7 @@ namespace Ryujinx.Graphics.Shader.Translation
 
                         nextNode = node.Next;
                     }
-                    else if (UsesGlobalMemory(operation.Inst))
+                    else if (UsesGlobalMemory(operation.Inst, operation.StorageKind))
                     {
                         nextNode = RewriteGlobalAccess(node, config)?.Next ?? nextNode;
                     }
@@ -169,9 +169,7 @@ namespace Ryujinx.Graphics.Shader.Translation
 
                 if (isAtomic)
                 {
-                    Instruction inst = (operation.Inst & ~Instruction.MrMask) | Instruction.MrStorage;
-
-                    storageOp = new Operation(inst, operation.Dest, sources);
+                    storageOp = new Operation(operation.Inst, StorageKind.StorageBuffer, operation.Dest, sources);
                 }
                 else if (operation.Inst == Instruction.LoadGlobal)
                 {
@@ -708,8 +706,15 @@ namespace Ryujinx.Graphics.Shader.Translation
             return node;
         }
 
-        private static bool ReplaceConstantBufferWithDrawParameters(Operation operation)
+        private static bool ReplaceConstantBufferWithDrawParameters(LinkedListNode<INode> node, Operation operation)
         {
+            Operand GenerateLoad(IoVariable ioVariable)
+            {
+                Operand value = Local();
+                node.List.AddBefore(node, new Operation(Instruction.Load, StorageKind.Input, value, Const((int)ioVariable)));
+                return value;
+            }
+
             bool modified = false;
 
             for (int srcIndex = 0; srcIndex < operation.SourcesCount; srcIndex++)
@@ -721,15 +726,15 @@ namespace Ryujinx.Graphics.Shader.Translation
                     switch (src.GetCbufOffset())
                     {
                         case Constants.NvnBaseVertexByteOffset / 4:
-                            operation.SetSource(srcIndex, Attribute(AttributeConsts.BaseVertex));
+                            operation.SetSource(srcIndex, GenerateLoad(IoVariable.BaseVertex));
                             modified = true;
                             break;
                         case Constants.NvnBaseInstanceByteOffset / 4:
-                            operation.SetSource(srcIndex, Attribute(AttributeConsts.BaseInstance));
+                            operation.SetSource(srcIndex, GenerateLoad(IoVariable.BaseInstance));
                             modified = true;
                             break;
                         case Constants.NvnDrawIndexByteOffset / 4:
-                            operation.SetSource(srcIndex, Attribute(AttributeConsts.DrawIndex));
+                            operation.SetSource(srcIndex, GenerateLoad(IoVariable.DrawIndex));
                             modified = true;
                             break;
                     }

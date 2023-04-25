@@ -177,7 +177,7 @@ namespace Ryujinx.Graphics.Shader.Translation
 
             if (config.Stage == ShaderStage.Vertex)
             {
-                InitializeOutput(context, AttributeConsts.PositionX, perPatch: false);
+                InitializePositionOutput(context);
             }
 
             UInt128 usedAttributes = context.Config.NextInputAttributesComponents;
@@ -194,20 +194,23 @@ namespace Ryujinx.Graphics.Shader.Translation
                     continue;
                 }
 
-                InitializeOutputComponent(context, AttributeConsts.UserAttributeBase + index * 4, perPatch: false);
+                InitializeOutputComponent(context, vecIndex, index & 3, perPatch: false);
             }
 
             if (context.Config.NextUsedInputAttributesPerPatch != null)
             {
                 foreach (int vecIndex in context.Config.NextUsedInputAttributesPerPatch.Order())
                 {
-                    InitializeOutput(context, AttributeConsts.UserAttributePerPatchBase + vecIndex * 16, perPatch: true);
+                    InitializeOutput(context, vecIndex, perPatch: true);
                 }
             }
 
             if (config.NextUsesFixedFuncAttributes)
             {
-                for (int i = 0; i < 4 + AttributeConsts.TexCoordCount; i++)
+                bool supportsLayerFromVertexOrTess = config.GpuAccessor.QueryHostSupportsLayerVertexTessellation();
+                int fixedStartAttr = supportsLayerFromVertexOrTess ? 0 : 1;
+
+                for (int i = fixedStartAttr; i < fixedStartAttr + 5 + AttributeConsts.TexCoordCount; i++)
                 {
                     int index = config.GetFreeUserAttribute(isOutput: true, i);
                     if (index < 0)
@@ -215,26 +218,58 @@ namespace Ryujinx.Graphics.Shader.Translation
                         break;
                     }
 
-                    InitializeOutput(context, AttributeConsts.UserAttributeBase + index * 16, perPatch: false);
+                    InitializeOutput(context, index, perPatch: false);
 
                     config.SetOutputUserAttributeFixedFunc(index);
                 }
             }
         }
 
-        private static void InitializeOutput(EmitterContext context, int baseAttr, bool perPatch)
+        private static void InitializePositionOutput(EmitterContext context)
         {
             for (int c = 0; c < 4; c++)
             {
-                int attrOffset = baseAttr + c * 4;
-                InitializeOutputComponent(context, attrOffset, perPatch);
+                context.Store(StorageKind.Output, IoVariable.Position, null, Const(c), ConstF(c == 3 ? 1f : 0f));
             }
         }
 
-        private static void InitializeOutputComponent(EmitterContext context, int attrOffset, bool perPatch)
+        private static void InitializeOutput(EmitterContext context, int location, bool perPatch)
         {
-            int c = (attrOffset >> 2) & 3;
-            context.Copy(perPatch ? AttributePerPatch(attrOffset) : Attribute(attrOffset), ConstF(c == 3 ? 1f : 0f));
+            for (int c = 0; c < 4; c++)
+            {
+                InitializeOutputComponent(context, location, c, perPatch);
+            }
+        }
+
+        private static void InitializeOutputComponent(EmitterContext context, int location, int c, bool perPatch)
+        {
+            StorageKind storageKind = perPatch ? StorageKind.OutputPerPatch : StorageKind.Output;
+
+            if (context.Config.UsedFeatures.HasFlag(FeatureFlags.OaIndexing))
+            {
+                Operand invocationId = null;
+
+                if (context.Config.Stage == ShaderStage.TessellationControl && !perPatch)
+                {
+                    invocationId = context.Load(StorageKind.Input, IoVariable.InvocationId);
+                }
+
+                int index = location * 4 + c;
+
+                context.Store(storageKind, IoVariable.UserDefined, invocationId, Const(index), ConstF(c == 3 ? 1f : 0f));
+            }
+            else
+            {
+                if (context.Config.Stage == ShaderStage.TessellationControl && !perPatch)
+                {
+                    Operand invocationId = context.Load(StorageKind.Input, IoVariable.InvocationId);
+                    context.Store(storageKind, IoVariable.UserDefined, Const(location), invocationId, Const(c), ConstF(c == 3 ? 1f : 0f));
+                }
+                else
+                {
+                    context.Store(storageKind, IoVariable.UserDefined, null, Const(location), Const(c), ConstF(c == 3 ? 1f : 0f));
+                }
+            }
         }
 
         private static void EmitOps(EmitterContext context, Block block)

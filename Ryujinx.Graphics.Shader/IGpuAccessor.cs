@@ -305,9 +305,9 @@ namespace Ryujinx.Graphics.Shader
         }
 
         /// <summary>
-        /// Queries host support for writes to Layer from vertex or tessellation shader stages.
+        /// Queries host support for writes to the layer from vertex or tessellation shader stages.
         /// </summary>
-        /// <returns>True if writes to layer from vertex or tessellation are supported, false otherwise</returns>
+        /// <returns>True if writes to the layer from vertex or tessellation are supported, false otherwise</returns>
         bool QueryHostSupportsLayerVertexTessellation()
         {
             return true;
@@ -350,10 +350,19 @@ namespace Ryujinx.Graphics.Shader
         }
 
         /// <summary>
-        /// Queries host GPU shader viewport index output support.
+        /// Queries host support for writes to the viewport index from vertex or tessellation shader stages.
         /// </summary>
-        /// <returns>True if the GPU and driver supports shader viewport index output, false otherwise</returns>
-        bool QueryHostSupportsViewportIndex()
+        /// <returns>True if writes to the viewport index from vertex or tessellation are supported, false otherwise</returns>
+        bool QueryHostSupportsViewportIndexVertexTessellation()
+        {
+            return true;
+        }
+
+        /// <summary>
+        /// Queries host GPU shader viewport mask output support.
+        /// </summary>
+        /// <returns>True if the GPU and driver supports shader viewport mask output, false otherwise</returns>
+        bool QueryHostSupportsViewportMask()
         {
             return true;
         }

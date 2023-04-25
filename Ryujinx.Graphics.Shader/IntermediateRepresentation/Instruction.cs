@@ -78,7 +78,7 @@ namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
         ImageStore,
         ImageAtomic,
         IsNan,
-        LoadAttribute,
+        Load,
         LoadConstant,
         LoadGlobal,
         LoadLocal,
@@ -116,7 +116,7 @@ namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
         ShuffleXor,
         Sine,
         SquareRoot,
-        StoreAttribute,
+        Store,
         StoreGlobal,
         StoreGlobal16,
         StoreGlobal8,
@@ -143,13 +143,6 @@ namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
 
         FP32 = 1 << 16,
         FP64 = 1 << 17,
-
-        MrShift = 18,
-
-        MrGlobal  = 0 << MrShift,
-        MrShared  = 1 << MrShift,
-        MrStorage = 2 << MrShift,
-        MrMask    = 3 << MrShift,
 
         Mask = 0xffff
     }

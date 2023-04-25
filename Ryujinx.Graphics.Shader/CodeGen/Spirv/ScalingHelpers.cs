@@ -156,7 +156,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             var vectorFloat = context.ConvertSToF(vector2Type, vector);
             var vectorScaled = context.VectorTimesScalar(vector2Type, vectorFloat, scaleNegated);
 
-            var fragCoordPointer = context.Inputs[AttributeConsts.PositionX];
+            var fragCoordPointer = context.Inputs[new IoDefinition(StorageKind.Input, IoVariable.FragmentCoord)];
             var fragCoord = context.Load(context.TypeVector(context.TypeFP32(), 4), fragCoordPointer);
             var fragCoordXY = context.VectorShuffle(vector2Type, fragCoord, fragCoord, 0, 1);
 

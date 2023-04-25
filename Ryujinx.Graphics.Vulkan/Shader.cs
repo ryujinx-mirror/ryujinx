@@ -76,10 +76,6 @@ namespace Ryujinx.Graphics.Vulkan
 
         private unsafe static byte[] GlslToSpirv(string glsl, ShaderStage stage)
         {
-            // TODO: We should generate the correct code on the shader translator instead of doing this compensation.
-            glsl = glsl.Replace("gl_VertexID", "(gl_VertexIndex - gl_BaseVertex)");
-            glsl = glsl.Replace("gl_InstanceID", "(gl_InstanceIndex - gl_BaseInstance)");
-
             Options options;
 
             lock (_shaderOptionsLock)

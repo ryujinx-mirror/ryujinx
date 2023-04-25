@@ -59,6 +59,11 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                 context.AppendLine("#extension GL_NV_geometry_shader_passthrough : enable");
             }
 
+            if (context.Config.GpuAccessor.QueryHostSupportsViewportMask())
+            {
+                context.AppendLine("#extension GL_NV_viewport_array2 : enable");
+            }
+
             context.AppendLine("#pragma optionNV(fastmath off)");
             context.AppendLine();
 
@@ -215,7 +220,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
                 if (context.Config.TransformFeedbackEnabled && context.Config.LastInVertexPipeline)
                 {
-                    var tfOutput = context.Info.GetTransformFeedbackOutput(AttributeConsts.PositionX);
+                    var tfOutput = context.Config.GetTransformFeedbackOutput(AttributeConsts.PositionX);
                     if (tfOutput.Valid)
                     {
                         context.AppendLine($"layout (xfb_buffer = {tfOutput.Buffer}, xfb_offset = {tfOutput.Offset}, xfb_stride = {tfOutput.Stride}) out gl_PerVertex");
@@ -552,7 +557,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
         private static void DeclareInputAttribute(CodeGenContext context, StructuredProgramInfo info, int attr)
         {
-            string suffix = AttributeInfo.IsArrayAttributeGlsl(context.Config.Stage, isOutAttr: false) ? "[]" : string.Empty;
+            string suffix = IsArrayAttributeGlsl(context.Config.Stage, isOutAttr: false) ? "[]" : string.Empty;
             string iq = string.Empty;
 
             if (context.Config.Stage == ShaderStage.Fragment)
@@ -569,8 +574,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
             if (context.Config.TransformFeedbackEnabled && context.Config.Stage == ShaderStage.Fragment)
             {
-                int attrOffset = AttributeConsts.UserAttributeBase + attr * 16;
-                int components = context.Info.GetTransformFeedbackOutputComponents(attrOffset);
+                int components = context.Config.GetTransformFeedbackOutputComponents(attr, 0);
 
                 if (components > 1)
                 {
@@ -652,13 +656,12 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
         private static void DeclareOutputAttribute(CodeGenContext context, int attr)
         {
-            string suffix = AttributeInfo.IsArrayAttributeGlsl(context.Config.Stage, isOutAttr: true) ? "[]" : string.Empty;
+            string suffix = IsArrayAttributeGlsl(context.Config.Stage, isOutAttr: true) ? "[]" : string.Empty;
             string name = $"{DefaultNames.OAttributePrefix}{attr}{suffix}";
 
             if (context.Config.TransformFeedbackEnabled && context.Config.LastInVertexPipeline)
             {
-                int attrOffset = AttributeConsts.UserAttributeBase + attr * 16;
-                int components = context.Info.GetTransformFeedbackOutputComponents(attrOffset);
+                int components = context.Config.GetTransformFeedbackOutputComponents(attr, 0);
 
                 if (components > 1)
                 {
@@ -672,7 +675,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
                     string xfb = string.Empty;
 
-                    var tfOutput = context.Info.GetTransformFeedbackOutput(attrOffset);
+                    var tfOutput = context.Config.GetTransformFeedbackOutput(attr, 0);
                     if (tfOutput.Valid)
                     {
                         xfb = $", xfb_buffer = {tfOutput.Buffer}, xfb_offset = {tfOutput.Offset}, xfb_stride = {tfOutput.Stride}";
@@ -687,7 +690,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
                     string xfb = string.Empty;
 
-                    var tfOutput = context.Info.GetTransformFeedbackOutput(attrOffset + c * 4);
+                    var tfOutput = context.Config.GetTransformFeedbackOutput(attr, c);
                     if (tfOutput.Valid)
                     {
                         xfb = $", xfb_buffer = {tfOutput.Buffer}, xfb_offset = {tfOutput.Offset}, xfb_stride = {tfOutput.Stride}";
@@ -724,6 +727,20 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
             context.AppendLine($"layout (location = {attr}, index = 0) out vec4 {name};");
             context.AppendLine($"layout (location = {attr}, index = 1) out vec4 {name2};");
+        }
+
+        private static bool IsArrayAttributeGlsl(ShaderStage stage, bool isOutAttr)
+        {
+            if (isOutAttr)
+            {
+                return stage == ShaderStage.TessellationControl;
+            }
+            else
+            {
+                return stage == ShaderStage.TessellationControl ||
+                       stage == ShaderStage.TessellationEvaluation ||
+                       stage == ShaderStage.Geometry;
+            }
         }
 
         private static void DeclareUsedOutputAttributesPerPatch(CodeGenContext context, HashSet<int> attrs)

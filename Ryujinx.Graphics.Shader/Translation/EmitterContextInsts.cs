@@ -7,54 +7,54 @@ namespace Ryujinx.Graphics.Shader.Translation
 {
     static class EmitterContextInsts
     {
-        public static Operand AtomicAdd(this EmitterContext context, Instruction mr, Operand a, Operand b, Operand c)
+        public static Operand AtomicAdd(this EmitterContext context, StorageKind storageKind, Operand a, Operand b, Operand c)
         {
-            return context.Add(Instruction.AtomicAdd | mr, Local(), a, b, c);
+            return context.Add(Instruction.AtomicAdd, storageKind, Local(), a, b, c);
         }
 
-        public static Operand AtomicAnd(this EmitterContext context, Instruction mr, Operand a, Operand b, Operand c)
+        public static Operand AtomicAnd(this EmitterContext context, StorageKind storageKind, Operand a, Operand b, Operand c)
         {
-            return context.Add(Instruction.AtomicAnd | mr, Local(), a, b, c);
+            return context.Add(Instruction.AtomicAnd, storageKind, Local(), a, b, c);
         }
 
-        public static Operand AtomicCompareAndSwap(this EmitterContext context, Instruction mr, Operand a, Operand b, Operand c, Operand d)
+        public static Operand AtomicCompareAndSwap(this EmitterContext context, StorageKind storageKind, Operand a, Operand b, Operand c, Operand d)
         {
-            return context.Add(Instruction.AtomicCompareAndSwap | mr, Local(), a, b, c, d);
+            return context.Add(Instruction.AtomicCompareAndSwap, storageKind, Local(), a, b, c, d);
         }
 
-        public static Operand AtomicMaxS32(this EmitterContext context, Instruction mr, Operand a, Operand b, Operand c)
+        public static Operand AtomicMaxS32(this EmitterContext context, StorageKind storageKind, Operand a, Operand b, Operand c)
         {
-            return context.Add(Instruction.AtomicMaxS32 | mr, Local(), a, b, c);
+            return context.Add(Instruction.AtomicMaxS32, storageKind, Local(), a, b, c);
         }
 
-        public static Operand AtomicMaxU32(this EmitterContext context, Instruction mr, Operand a, Operand b, Operand c)
+        public static Operand AtomicMaxU32(this EmitterContext context, StorageKind storageKind, Operand a, Operand b, Operand c)
         {
-            return context.Add(Instruction.AtomicMaxU32 | mr, Local(), a, b, c);
+            return context.Add(Instruction.AtomicMaxU32, storageKind, Local(), a, b, c);
         }
 
-        public static Operand AtomicMinS32(this EmitterContext context, Instruction mr, Operand a, Operand b, Operand c)
+        public static Operand AtomicMinS32(this EmitterContext context, StorageKind storageKind, Operand a, Operand b, Operand c)
         {
-            return context.Add(Instruction.AtomicMinS32 | mr, Local(), a, b, c);
+            return context.Add(Instruction.AtomicMinS32, storageKind, Local(), a, b, c);
         }
 
-        public static Operand AtomicMinU32(this EmitterContext context, Instruction mr, Operand a, Operand b, Operand c)
+        public static Operand AtomicMinU32(this EmitterContext context, StorageKind storageKind, Operand a, Operand b, Operand c)
         {
-            return context.Add(Instruction.AtomicMinU32 | mr, Local(), a, b, c);
+            return context.Add(Instruction.AtomicMinU32, storageKind, Local(), a, b, c);
         }
 
-        public static Operand AtomicOr(this EmitterContext context, Instruction mr, Operand a, Operand b, Operand c)
+        public static Operand AtomicOr(this EmitterContext context, StorageKind storageKind, Operand a, Operand b, Operand c)
         {
-            return context.Add(Instruction.AtomicOr | mr, Local(), a, b, c);
+            return context.Add(Instruction.AtomicOr, storageKind, Local(), a, b, c);
         }
 
-        public static Operand AtomicSwap(this EmitterContext context, Instruction mr, Operand a, Operand b, Operand c)
+        public static Operand AtomicSwap(this EmitterContext context, StorageKind storageKind, Operand a, Operand b, Operand c)
         {
-            return context.Add(Instruction.AtomicSwap | mr, Local(), a, b, c);
+            return context.Add(Instruction.AtomicSwap, storageKind, Local(), a, b, c);
         }
 
-        public static Operand AtomicXor(this EmitterContext context, Instruction mr, Operand a, Operand b, Operand c)
+        public static Operand AtomicXor(this EmitterContext context, StorageKind storageKind, Operand a, Operand b, Operand c)
         {
-            return context.Add(Instruction.AtomicXor | mr, Local(), a, b, c);
+            return context.Add(Instruction.AtomicXor, storageKind, Local(), a, b, c);
         }
 
         public static Operand Ballot(this EmitterContext context, Operand a)
@@ -549,9 +549,36 @@ namespace Ryujinx.Graphics.Shader.Translation
             return context.Add(fpType | Instruction.IsNan, Local(), a);
         }
 
-        public static Operand LoadAttribute(this EmitterContext context, Operand a, Operand b, Operand c)
+        public static Operand Load(this EmitterContext context, StorageKind storageKind, IoVariable ioVariable, Operand primVertex = null)
         {
-            return context.Add(Instruction.LoadAttribute, Local(), a, b, c);
+            return primVertex != null
+                ? context.Add(Instruction.Load, storageKind, Local(), Const((int)ioVariable), primVertex)
+                : context.Add(Instruction.Load, storageKind, Local(), Const((int)ioVariable));
+        }
+
+        public static Operand Load(
+            this EmitterContext context,
+            StorageKind storageKind,
+            IoVariable ioVariable,
+            Operand primVertex,
+            Operand elemIndex)
+        {
+            return primVertex != null
+                ? context.Add(Instruction.Load, storageKind, Local(), Const((int)ioVariable), primVertex, elemIndex)
+                : context.Add(Instruction.Load, storageKind, Local(), Const((int)ioVariable), elemIndex);
+        }
+
+        public static Operand Load(
+            this EmitterContext context,
+            StorageKind storageKind,
+            IoVariable ioVariable,
+            Operand primVertex,
+            Operand arrayIndex,
+            Operand elemIndex)
+        {
+            return primVertex != null
+                ? context.Add(Instruction.Load, storageKind, Local(), Const((int)ioVariable), primVertex, arrayIndex, elemIndex)
+                : context.Add(Instruction.Load, storageKind, Local(), Const((int)ioVariable), arrayIndex, elemIndex);
         }
 
         public static Operand LoadConstant(this EmitterContext context, Operand a, Operand b)
@@ -662,9 +689,43 @@ namespace Ryujinx.Graphics.Shader.Translation
             return context.Add(Instruction.ShuffleXor, (Local(), Local()), a, b, c);
         }
 
-        public static Operand StoreAttribute(this EmitterContext context, Operand a, Operand b, Operand c)
+        public static Operand Store(
+            this EmitterContext context,
+            StorageKind storageKind,
+            IoVariable ioVariable,
+            Operand invocationId,
+            Operand value)
         {
-            return context.Add(Instruction.StoreAttribute, null, a, b, c);
+            return invocationId != null
+                ? context.Add(Instruction.Store, storageKind, null, Const((int)ioVariable), invocationId, value)
+                : context.Add(Instruction.Store, storageKind, null, Const((int)ioVariable), value);
+        }
+
+        public static Operand Store(
+            this EmitterContext context,
+            StorageKind storageKind,
+            IoVariable ioVariable,
+            Operand invocationId,
+            Operand elemIndex,
+            Operand value)
+        {
+            return invocationId != null
+                ? context.Add(Instruction.Store, storageKind, null, Const((int)ioVariable), invocationId, elemIndex, value)
+                : context.Add(Instruction.Store, storageKind, null, Const((int)ioVariable), elemIndex, value);
+        }
+
+        public static Operand Store(
+            this EmitterContext context,
+            StorageKind storageKind,
+            IoVariable ioVariable,
+            Operand invocationId,
+            Operand arrayIndex,
+            Operand elemIndex,
+            Operand value)
+        {
+            return invocationId != null
+                ? context.Add(Instruction.Store, storageKind, null, Const((int)ioVariable), invocationId, arrayIndex, elemIndex, value)
+                : context.Add(Instruction.Store, storageKind, null, Const((int)ioVariable), arrayIndex, elemIndex, value);
         }
 
         public static Operand StoreGlobal(this EmitterContext context, Operand a, Operand b, Operand c)

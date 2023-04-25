@@ -35,7 +35,8 @@ namespace Ryujinx.Graphics.GAL
         public readonly bool SupportsNonConstantTextureOffset;
         public readonly bool SupportsShaderBallot;
         public readonly bool SupportsTextureShadowLod;
-        public readonly bool SupportsViewportIndex;
+        public readonly bool SupportsViewportIndexVertexTessellation;
+        public readonly bool SupportsViewportMask;
         public readonly bool SupportsViewportSwizzle;
         public readonly bool SupportsIndirectParameters;
 
@@ -80,7 +81,8 @@ namespace Ryujinx.Graphics.GAL
             bool supportsNonConstantTextureOffset,
             bool supportsShaderBallot,
             bool supportsTextureShadowLod,
-            bool supportsViewportIndex,
+            bool supportsViewportIndexVertexTessellation,
+            bool supportsViewportMask,
             bool supportsViewportSwizzle,
             bool supportsIndirectParameters,
             uint maximumUniformBuffersPerStage,
@@ -121,7 +123,8 @@ namespace Ryujinx.Graphics.GAL
             SupportsNonConstantTextureOffset = supportsNonConstantTextureOffset;
             SupportsShaderBallot = supportsShaderBallot;
             SupportsTextureShadowLod = supportsTextureShadowLod;
-            SupportsViewportIndex = supportsViewportIndex;
+            SupportsViewportIndexVertexTessellation = supportsViewportIndexVertexTessellation;
+            SupportsViewportMask = supportsViewportMask;
             SupportsViewportSwizzle = supportsViewportSwizzle;
             SupportsIndirectParameters = supportsIndirectParameters;
             MaximumUniformBuffersPerStage = maximumUniformBuffersPerStage;

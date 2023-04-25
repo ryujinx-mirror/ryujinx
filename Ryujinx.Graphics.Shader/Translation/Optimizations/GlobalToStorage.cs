@@ -45,7 +45,7 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
                     continue;
                 }
 
-                if (UsesGlobalMemory(operation.Inst))
+                if (UsesGlobalMemory(operation.Inst, operation.StorageKind))
                 {
                     Operand source = operation.GetSource(0);
 
@@ -104,9 +104,7 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
 
             if (isAtomic)
             {
-                Instruction inst = (operation.Inst & ~Instruction.MrMask) | Instruction.MrStorage;
-
-                storageOp = new Operation(inst, operation.Dest, sources);
+                storageOp = new Operation(operation.Inst, StorageKind.StorageBuffer, operation.Dest, sources);
             }
             else if (operation.Inst == Instruction.LoadGlobal)
             {

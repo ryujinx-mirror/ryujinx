@@ -76,11 +76,11 @@ namespace Ryujinx.Graphics.Shader.Instructions
             switch (op.SReg)
             {
                 case SReg.LaneId:
-                    src = Attribute(AttributeConsts.LaneId);
+                    src = context.Load(StorageKind.Input, IoVariable.SubgroupLaneId);
                     break;
 
                 case SReg.InvocationId:
-                    src = Attribute(AttributeConsts.InvocationId);
+                    src = context.Load(StorageKind.Input, IoVariable.InvocationId);
                     break;
 
                 case SReg.YDirection:
@@ -88,7 +88,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                     break;
 
                 case SReg.ThreadKill:
-                    src = context.Config.Stage == ShaderStage.Fragment ? Attribute(AttributeConsts.ThreadKill) : Const(0);
+                    src = context.Config.Stage == ShaderStage.Fragment ? context.Load(StorageKind.Input, IoVariable.ThreadKill) : Const(0);
                     break;
 
                 case SReg.InvocationInfo:
@@ -101,7 +101,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                         if (context.Config.Stage == ShaderStage.TessellationControl ||
                             context.Config.Stage == ShaderStage.TessellationEvaluation)
                         {
-                            src = context.ShiftLeft(Attribute(AttributeConsts.PatchVerticesIn), Const(16));
+                            src = context.ShiftLeft(context.Load(StorageKind.Input, IoVariable.PatchVertices), Const(16));
                         }
                         else
                         {
@@ -115,9 +115,9 @@ namespace Ryujinx.Graphics.Shader.Instructions
                     break;
 
                 case SReg.TId:
-                    Operand tidX = Attribute(AttributeConsts.ThreadIdX);
-                    Operand tidY = Attribute(AttributeConsts.ThreadIdY);
-                    Operand tidZ = Attribute(AttributeConsts.ThreadIdZ);
+                    Operand tidX = context.Load(StorageKind.Input, IoVariable.ThreadId, null, Const(0));
+                    Operand tidY = context.Load(StorageKind.Input, IoVariable.ThreadId, null, Const(1));
+                    Operand tidZ = context.Load(StorageKind.Input, IoVariable.ThreadId, null, Const(2));
 
                     tidY = context.ShiftLeft(tidY, Const(16));
                     tidZ = context.ShiftLeft(tidZ, Const(26));
@@ -126,39 +126,39 @@ namespace Ryujinx.Graphics.Shader.Instructions
                     break;
 
                 case SReg.TIdX:
-                    src = Attribute(AttributeConsts.ThreadIdX);
+                    src = context.Load(StorageKind.Input, IoVariable.ThreadId, null, Const(0));
                     break;
                 case SReg.TIdY:
-                    src = Attribute(AttributeConsts.ThreadIdY);
+                    src = context.Load(StorageKind.Input, IoVariable.ThreadId, null, Const(1));
                     break;
                 case SReg.TIdZ:
-                    src = Attribute(AttributeConsts.ThreadIdZ);
+                    src = context.Load(StorageKind.Input, IoVariable.ThreadId, null, Const(2));
                     break;
 
                 case SReg.CtaIdX:
-                    src = Attribute(AttributeConsts.CtaIdX);
+                    src = context.Load(StorageKind.Input, IoVariable.CtaId, null, Const(0));
                     break;
                 case SReg.CtaIdY:
-                    src = Attribute(AttributeConsts.CtaIdY);
+                    src = context.Load(StorageKind.Input, IoVariable.CtaId, null, Const(1));
                     break;
                 case SReg.CtaIdZ:
-                    src = Attribute(AttributeConsts.CtaIdZ);
+                    src = context.Load(StorageKind.Input, IoVariable.CtaId, null, Const(2));
                     break;
 
                 case SReg.EqMask:
-                    src = Attribute(AttributeConsts.EqMask);
+                    src = context.Load(StorageKind.Input, IoVariable.SubgroupEqMask, null, Const(0));
                     break;
                 case SReg.LtMask:
-                    src = Attribute(AttributeConsts.LtMask);
+                    src = context.Load(StorageKind.Input, IoVariable.SubgroupLtMask, null, Const(0));
                     break;
                 case SReg.LeMask:
-                    src = Attribute(AttributeConsts.LeMask);
+                    src = context.Load(StorageKind.Input, IoVariable.SubgroupLeMask, null, Const(0));
                     break;
                 case SReg.GtMask:
-                    src = Attribute(AttributeConsts.GtMask);
+                    src = context.Load(StorageKind.Input, IoVariable.SubgroupGtMask, null, Const(0));
                     break;
                 case SReg.GeMask:
-                    src = Attribute(AttributeConsts.GeMask);
+                    src = context.Load(StorageKind.Input, IoVariable.SubgroupGeMask, null, Const(0));
                     break;
 
                 default:

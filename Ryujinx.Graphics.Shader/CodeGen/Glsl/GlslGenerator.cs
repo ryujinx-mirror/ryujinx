@@ -1,5 +1,4 @@
 using Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions;
-using Ryujinx.Graphics.Shader.IntermediateRepresentation;
 using Ryujinx.Graphics.Shader.StructuredIr;
 using Ryujinx.Graphics.Shader.Translation;
 using System;
@@ -126,21 +125,10 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                 }
                 else if (node is AstAssignment assignment)
                 {
+                    AggregateType dstType = OperandManager.GetNodeDestType(context, assignment.Destination);
                     AggregateType srcType = OperandManager.GetNodeDestType(context, assignment.Source);
-                    AggregateType dstType = OperandManager.GetNodeDestType(context, assignment.Destination, isAsgDest: true);
 
-                    string dest;
-
-                    if (assignment.Destination is AstOperand operand && operand.Type.IsAttribute())
-                    {
-                        bool perPatch = operand.Type == OperandType.AttributePerPatch;
-                        dest = OperandManager.GetOutAttributeName(context, operand.Value, perPatch);
-                    }
-                    else
-                    {
-                        dest = InstGen.GetExpression(context, assignment.Destination);
-                    }
-
+                    string dest = InstGen.GetExpression(context, assignment.Destination);
                     string src = ReinterpretCast(context, assignment.Source, srcType, dstType);
 
                     context.AppendLine(dest + " = " + src + ";");

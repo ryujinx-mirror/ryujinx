@@ -65,49 +65,35 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
                 context.LeaveFunction();
             }
 
-            if (config.TransformFeedbackEnabled && (config.LastInVertexPipeline || config.Stage == ShaderStage.Fragment))
-            {
-                for (int tfbIndex = 0; tfbIndex < 4; tfbIndex++)
-                {
-                    var locations = config.GpuAccessor.QueryTransformFeedbackVaryingLocations(tfbIndex);
-                    var stride = config.GpuAccessor.QueryTransformFeedbackStride(tfbIndex);
-
-                    for (int i = 0; i < locations.Length; i++)
-                    {
-                        byte location = locations[i];
-                        if (location < 0xc0)
-                        {
-                            context.Info.TransformFeedbackOutputs[location] = new TransformFeedbackOutput(tfbIndex, i * 4, stride);
-                        }
-                    }
-                }
-            }
-
             return context.Info;
         }
 
         private static void AddOperation(StructuredProgramContext context, Operation operation)
         {
             Instruction inst = operation.Inst;
+            StorageKind storageKind = operation.StorageKind;
 
-            if (inst == Instruction.LoadAttribute)
+            if ((inst == Instruction.Load || inst == Instruction.Store) && storageKind.IsInputOrOutput())
             {
-                Operand src1 = operation.GetSource(0);
-                Operand src2 = operation.GetSource(1);
+                IoVariable ioVariable = (IoVariable)operation.GetSource(0).Value;
+                bool isOutput = storageKind.IsOutput();
+                bool perPatch = storageKind.IsPerPatch();
+                int location = 0;
+                int component = 0;
 
-                if (src1.Type == OperandType.Constant && src2.Type == OperandType.Constant)
+                if (context.Config.HasPerLocationInputOrOutput(ioVariable, isOutput))
                 {
-                    int attrOffset = (src1.Value & AttributeConsts.Mask) + (src2.Value << 2);
+                    location = operation.GetSource(1).Value;
 
-                    if ((src1.Value & AttributeConsts.LoadOutputMask) != 0)
+                    if (operation.SourcesCount > 2 &&
+                        operation.GetSource(2).Type == OperandType.Constant &&
+                        context.Config.HasPerLocationInputOrOutputComponent(ioVariable, location, operation.GetSource(2).Value, isOutput))
                     {
-                        context.Info.Outputs.Add(attrOffset);
-                    }
-                    else
-                    {
-                        context.Info.Inputs.Add(attrOffset);
+                        component = operation.GetSource(2).Value;
                     }
                 }
+
+                context.Info.IoDefinitions.Add(new IoDefinition(storageKind, ioVariable, location, component));
             }
 
             bool vectorDest = IsVectorDestInst(inst);
@@ -119,12 +105,12 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
 
             for (int index = 0; index < operation.SourcesCount; index++)
             {
-                sources[index] = context.GetOperandUse(operation.GetSource(index));
+                sources[index] = context.GetOperand(operation.GetSource(index));
             }
 
             for (int index = 0; index < outDestsCount; index++)
             {
-                AstOperand oper = context.GetOperandDef(operation.GetDest(1 + index));
+                AstOperand oper = context.GetOperand(operation.GetDest(1 + index));
 
                 oper.VarType = InstructionInfo.GetSrcVarType(inst, sourcesCount + index);
 
@@ -163,7 +149,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
                 }
                 else
                 {
-                    source = new AstOperation(inst, operation.Index, sources, operation.SourcesCount);
+                    source = new AstOperation(inst, operation.StorageKind, operation.Index, sources, operation.SourcesCount);
                 }
 
                 AggregateType destElemType = destType;
@@ -181,17 +167,17 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
 
                 for (int i = 0; i < operation.DestsCount; i++)
                 {
-                    AstOperand dest = context.GetOperandDef(operation.GetDest(i));
+                    AstOperand dest = context.GetOperand(operation.GetDest(i));
                     AstOperand index = new AstOperand(OperandType.Constant, i);
 
                     dest.VarType = destElemType;
 
-                    context.AddNode(new AstAssignment(dest, new AstOperation(Instruction.VectorExtract, new[] { destVec, index }, 2)));
+                    context.AddNode(new AstAssignment(dest, new AstOperation(Instruction.VectorExtract, StorageKind.None, new[] { destVec, index }, 2)));
                 }
             }
             else if (operation.Dest != null)
             {
-                AstOperand dest = context.GetOperandDef(operation.Dest);
+                AstOperand dest = context.GetOperand(operation.Dest);
 
                 // If all the sources are bool, it's better to use short-circuiting
                 // logical operations, rather than forcing a cast to int and doing
@@ -234,7 +220,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
                 }
                 else if (!isCopy)
                 {
-                    source = new AstOperation(inst, operation.Index, sources, operation.SourcesCount);
+                    source = new AstOperation(inst, operation.StorageKind, operation.Index, sources, operation.SourcesCount);
                 }
                 else
                 {
@@ -255,7 +241,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             }
             else
             {
-                context.AddNode(new AstOperation(inst, operation.Index, sources, operation.SourcesCount));
+                context.AddNode(new AstOperation(inst, operation.StorageKind, operation.Index, sources, operation.SourcesCount));
             }
 
             // Those instructions needs to be emulated by using helper functions,
@@ -263,13 +249,16 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             // decide which helper functions are needed on the final generated code.
             switch (operation.Inst)
             {
-                case Instruction.AtomicMaxS32 | Instruction.MrShared:
-                case Instruction.AtomicMinS32 | Instruction.MrShared:
-                    context.Info.HelperFunctionsMask |= HelperFunctionsMask.AtomicMinMaxS32Shared;
-                    break;
-                case Instruction.AtomicMaxS32 | Instruction.MrStorage:
-                case Instruction.AtomicMinS32 | Instruction.MrStorage:
-                    context.Info.HelperFunctionsMask |= HelperFunctionsMask.AtomicMinMaxS32Storage;
+                case Instruction.AtomicMaxS32:
+                case Instruction.AtomicMinS32:
+                    if (operation.StorageKind == StorageKind.SharedMemory)
+                    {
+                        context.Info.HelperFunctionsMask |= HelperFunctionsMask.AtomicMinMaxS32Shared;
+                    }
+                    else if (operation.StorageKind == StorageKind.StorageBuffer)
+                    {
+                        context.Info.HelperFunctionsMask |= HelperFunctionsMask.AtomicMinMaxS32Storage;
+                    }
                     break;
                 case Instruction.MultiplyHighS32:
                     context.Info.HelperFunctionsMask |= HelperFunctionsMask.MultiplyHighS32;

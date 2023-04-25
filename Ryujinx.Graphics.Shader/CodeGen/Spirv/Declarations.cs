@@ -1,21 +1,19 @@
 ﻿using Ryujinx.Common;
+using Ryujinx.Graphics.Shader.IntermediateRepresentation;
 using Ryujinx.Graphics.Shader.StructuredIr;
 using Ryujinx.Graphics.Shader.Translation;
 using Spv.Generator;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
 using static Spv.Specification;
+using SpvInstruction = Spv.Generator.Instruction;
 
 namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
 {
     static class Declarations
     {
-        // At least 16 attributes are guaranteed by the spec.
-        public const int MaxAttributes = 16;
-
         private static readonly string[] StagePrefixes = new string[] { "cp", "vp", "tcp", "tep", "gp", "fp" };
 
         public static void DeclareParameters(CodeGenContext context, StructuredFunction function)
@@ -59,7 +57,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             for (int funcIndex = 0; funcIndex < functions.Count; funcIndex++)
             {
                 StructuredFunction function = functions[funcIndex];
-                Instruction[] locals = new Instruction[function.InArguments.Length];
+                SpvInstruction[] locals = new SpvInstruction[function.InArguments.Length];
 
                 for (int i = 0; i < function.InArguments.Length; i++)
                 {
@@ -105,10 +103,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             DeclareStorageBuffers(context, context.Config.GetStorageBufferDescriptors());
             DeclareSamplers(context, context.Config.GetTextureDescriptors());
             DeclareImages(context, context.Config.GetImageDescriptors());
-            DeclareInputAttributes(context, info, perPatch: false);
-            DeclareOutputAttributes(context, info, perPatch: false);
-            DeclareInputAttributes(context, info, perPatch: true);
-            DeclareOutputAttributes(context, info, perPatch: true);
+            DeclareInputsAndOutputs(context, info);
         }
 
         private static void DeclareLocalMemory(CodeGenContext context, int size)
@@ -121,7 +116,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             context.SharedMemory = DeclareMemory(context, StorageClass.Workgroup, size);
         }
 
-        private static Instruction DeclareMemory(CodeGenContext context, StorageClass storage, int size)
+        private static SpvInstruction DeclareMemory(CodeGenContext context, StorageClass storage, int size)
         {
             var arrayType = context.TypeArray(context.TypeU32(), context.Constant(context.TypeU32(), size));
             var pointerType = context.TypePointer(storage, arrayType);
@@ -395,164 +390,104 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             };
         }
 
-        private static void DeclareInputAttributes(CodeGenContext context, StructuredProgramInfo info, bool perPatch)
+        private static void DeclareInputsAndOutputs(CodeGenContext context, StructuredProgramInfo info)
         {
-            bool iaIndexing = context.Config.UsedFeatures.HasFlag(FeatureFlags.IaIndexing);
-
-            if (iaIndexing && !perPatch)
+            foreach (var ioDefinition in info.IoDefinitions)
             {
-                var attrType = context.TypeVector(context.TypeFP32(), (LiteralInteger)4);
-                attrType = context.TypeArray(attrType, context.Constant(context.TypeU32(), (LiteralInteger)MaxAttributes));
+                var ioVariable = ioDefinition.IoVariable;
 
-                if (context.Config.Stage == ShaderStage.Geometry)
-                {
-                    attrType = context.TypeArray(attrType, context.Constant(context.TypeU32(), (LiteralInteger)context.InputVertices));
-                }
-
-                var spvType = context.TypePointer(StorageClass.Input, attrType);
-                var spvVar = context.Variable(spvType, StorageClass.Input);
-
-                if (context.Config.PassthroughAttributes != 0 && context.Config.GpuAccessor.QueryHostSupportsGeometryShaderPassthrough())
-                {
-                    context.Decorate(spvVar, Decoration.PassthroughNV);
-                }
-
-                context.Decorate(spvVar, Decoration.Location, (LiteralInteger)0);
-
-                context.AddGlobalVariable(spvVar);
-                context.InputsArray = spvVar;
-            }
-
-            var inputs = perPatch ? info.InputsPerPatch : info.Inputs;
-
-            foreach (int attr in inputs)
-            {
-                if (!AttributeInfo.Validate(context.Config, attr, isOutAttr: false, perPatch))
+                // Those are actually from constant buffer, rather than being actual inputs or outputs,
+                // so we must ignore them here as they are declared as part of the support buffer.
+                // TODO: Delete this after we represent this properly on the IR (as a constant buffer rather than "input").
+                if (ioVariable == IoVariable.FragmentOutputIsBgra ||
+                    ioVariable == IoVariable.SupportBlockRenderScale ||
+                    ioVariable == IoVariable.SupportBlockViewInverse)
                 {
                     continue;
                 }
 
-                bool isUserAttr = attr >= AttributeConsts.UserAttributeBase && attr < AttributeConsts.UserAttributeEnd;
-
-                if (iaIndexing && isUserAttr && !perPatch)
-                {
-                    continue;
-                }
+                bool isOutput = ioDefinition.StorageKind.IsOutput();
+                bool isPerPatch = ioDefinition.StorageKind.IsPerPatch();
 
                 PixelImap iq = PixelImap.Unused;
 
                 if (context.Config.Stage == ShaderStage.Fragment)
                 {
-                    if (attr >= AttributeConsts.UserAttributeBase && attr < AttributeConsts.UserAttributeEnd)
+                    if (ioVariable == IoVariable.UserDefined)
                     {
-                        iq = context.Config.ImapTypes[(attr - AttributeConsts.UserAttributeBase) / 16].GetFirstUsedType();
+                        iq = context.Config.ImapTypes[ioDefinition.Location].GetFirstUsedType();
                     }
                     else
                     {
-                        AttributeInfo attrInfo = AttributeInfo.From(context.Config, attr, isOutAttr: false);
-                        AggregateType elemType = attrInfo.Type & AggregateType.ElementTypeMask;
+                        (_, AggregateType varType) = IoMap.GetSpirvBuiltIn(ioVariable);
+                        AggregateType elemType = varType & AggregateType.ElementTypeMask;
 
-                        if (attrInfo.IsBuiltin && (elemType == AggregateType.S32 || elemType == AggregateType.U32))
+                        if (elemType == AggregateType.S32 || elemType == AggregateType.U32)
                         {
                             iq = PixelImap.Constant;
                         }
                     }
                 }
 
-                DeclareInputOrOutput(context, attr, perPatch, isOutAttr: false, iq);
+                DeclareInputOrOutput(context, ioDefinition, isOutput, isPerPatch, iq);
             }
         }
 
-        private static void DeclareOutputAttributes(CodeGenContext context, StructuredProgramInfo info, bool perPatch)
+        private static void DeclareInputOrOutput(CodeGenContext context, IoDefinition ioDefinition, bool isOutput, bool isPerPatch, PixelImap iq = PixelImap.Unused)
         {
-            bool oaIndexing = context.Config.UsedFeatures.HasFlag(FeatureFlags.OaIndexing);
+            IoVariable ioVariable = ioDefinition.IoVariable;
+            var storageClass = isOutput ? StorageClass.Output : StorageClass.Input;
 
-            if (oaIndexing && !perPatch)
+            bool isBuiltIn;
+            BuiltIn builtIn = default;
+            AggregateType varType;
+
+            if (ioVariable == IoVariable.UserDefined)
             {
-                var attrType = context.TypeVector(context.TypeFP32(), (LiteralInteger)4);
-                attrType = context.TypeArray(attrType, context.Constant(context.TypeU32(), (LiteralInteger)MaxAttributes));
+                varType = context.Config.GetUserDefinedType(ioDefinition.Location, isOutput);
+                isBuiltIn = false;
+            }
+            else if (ioVariable == IoVariable.FragmentOutputColor)
+            {
+                varType = context.Config.GetFragmentOutputColorType(ioDefinition.Location);
+                isBuiltIn = false;
+            }
+            else
+            {
+                (builtIn, varType) = IoMap.GetSpirvBuiltIn(ioVariable);
+                isBuiltIn = true;
 
-                if (context.Config.Stage == ShaderStage.TessellationControl)
+                if (varType == AggregateType.Invalid)
                 {
-                    attrType = context.TypeArray(attrType, context.Constant(context.TypeU32(), context.Config.ThreadsPerInputPrimitive));
+                    throw new InvalidOperationException($"Unknown variable {ioVariable}.");
                 }
-
-                var spvType = context.TypePointer(StorageClass.Output, attrType);
-                var spvVar = context.Variable(spvType, StorageClass.Output);
-
-                context.Decorate(spvVar, Decoration.Location, (LiteralInteger)0);
-
-                context.AddGlobalVariable(spvVar);
-                context.OutputsArray = spvVar;
             }
 
-            var outputs = perPatch ? info.OutputsPerPatch : info.Outputs;
+            bool hasComponent = context.Config.HasPerLocationInputOrOutputComponent(ioVariable, ioDefinition.Location, ioDefinition.Component, isOutput);
 
-            foreach (int attr in outputs)
+            if (hasComponent)
             {
-                if (!AttributeInfo.Validate(context.Config, attr, isOutAttr: true, perPatch))
+                varType &= AggregateType.ElementTypeMask;
+            }
+            else if (ioVariable == IoVariable.UserDefined && context.Config.HasTransformFeedbackOutputs(isOutput))
+            {
+                varType &= AggregateType.ElementTypeMask;
+                varType |= context.Config.GetTransformFeedbackOutputComponents(ioDefinition.Location, ioDefinition.Component) switch
                 {
-                    continue;
-                }
-
-                bool isUserAttr = attr >= AttributeConsts.UserAttributeBase && attr < AttributeConsts.UserAttributeEnd;
-
-                if (oaIndexing && isUserAttr && !perPatch)
-                {
-                    continue;
-                }
-
-                DeclareOutputAttribute(context, attr, perPatch);
+                    2 => AggregateType.Vector2,
+                    3 => AggregateType.Vector3,
+                    4 => AggregateType.Vector4,
+                    _ => AggregateType.Invalid
+                };
             }
 
-            if (context.Config.Stage == ShaderStage.Vertex)
-            {
-                DeclareOutputAttribute(context, AttributeConsts.PositionX, perPatch: false);
-            }
-        }
-
-        private static void DeclareOutputAttribute(CodeGenContext context, int attr, bool perPatch)
-        {
-            DeclareInputOrOutput(context, attr, perPatch, isOutAttr: true);
-        }
-
-        public static void DeclareInvocationId(CodeGenContext context)
-        {
-            DeclareInputOrOutput(context, AttributeConsts.LaneId, perPatch: false, isOutAttr: false);
-        }
-
-        private static void DeclareInputOrOutput(CodeGenContext context, int attr, bool perPatch, bool isOutAttr, PixelImap iq = PixelImap.Unused)
-        {
-            bool isUserAttr = attr >= AttributeConsts.UserAttributeBase && attr < AttributeConsts.UserAttributeEnd;
-            if (isUserAttr && context.Config.TransformFeedbackEnabled && !perPatch &&
-                ((isOutAttr && context.Config.LastInVertexPipeline) ||
-                (!isOutAttr && context.Config.Stage == ShaderStage.Fragment)))
-            {
-                DeclareTransformFeedbackInputOrOutput(context, attr, isOutAttr, iq);
-                return;
-            }
-
-            var dict = perPatch
-                ? (isOutAttr ? context.OutputsPerPatch : context.InputsPerPatch)
-                : (isOutAttr ? context.Outputs : context.Inputs);
-
-            var attrInfo = perPatch
-                ? AttributeInfo.FromPatch(context.Config, attr, isOutAttr)
-                : AttributeInfo.From(context.Config, attr, isOutAttr);
-
-            if (dict.ContainsKey(attrInfo.BaseValue))
-            {
-                return;
-            }
-
-            var storageClass = isOutAttr ? StorageClass.Output : StorageClass.Input;
-            var attrType = context.GetType(attrInfo.Type, attrInfo.Length);
+            var spvType = context.GetType(varType, IoMap.GetSpirvBuiltInArrayLength(ioVariable));
             bool builtInPassthrough = false;
 
-            if (AttributeInfo.IsArrayAttributeSpirv(context.Config.Stage, isOutAttr) && !perPatch && (!attrInfo.IsBuiltin || AttributeInfo.IsArrayBuiltIn(attr)))
+            if (!isPerPatch && IoMap.IsPerVertex(ioVariable, context.Config.Stage, isOutput))
             {
                 int arraySize = context.Config.Stage == ShaderStage.Geometry ? context.InputVertices : 32;
-                attrType = context.TypeArray(attrType, context.Constant(context.TypeU32(), (LiteralInteger)arraySize));
+                spvType = context.TypeArray(spvType, context.Constant(context.TypeU32(), (LiteralInteger)arraySize));
 
                 if (context.Config.GpPassthrough && context.Config.GpuAccessor.QueryHostSupportsGeometryShaderPassthrough())
                 {
@@ -560,69 +495,64 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                 }
             }
 
-            if (context.Config.Stage == ShaderStage.TessellationControl && isOutAttr && !perPatch)
+            if (context.Config.Stage == ShaderStage.TessellationControl && isOutput && !isPerPatch)
             {
-                attrType = context.TypeArray(attrType, context.Constant(context.TypeU32(), context.Config.ThreadsPerInputPrimitive));
+                spvType = context.TypeArray(spvType, context.Constant(context.TypeU32(), context.Config.ThreadsPerInputPrimitive));
             }
 
-            var spvType = context.TypePointer(storageClass, attrType);
-            var spvVar = context.Variable(spvType, storageClass);
+            var spvPointerType = context.TypePointer(storageClass, spvType);
+            var spvVar = context.Variable(spvPointerType, storageClass);
 
             if (builtInPassthrough)
             {
                 context.Decorate(spvVar, Decoration.PassthroughNV);
             }
 
-            if (attrInfo.IsBuiltin)
+            if (isBuiltIn)
             {
-                if (perPatch)
+                if (isPerPatch)
                 {
                     context.Decorate(spvVar, Decoration.Patch);
                 }
 
-                if (context.Config.GpuAccessor.QueryHostReducedPrecision() && attr == AttributeConsts.PositionX && context.Config.Stage != ShaderStage.Fragment)
+                if (context.Config.GpuAccessor.QueryHostReducedPrecision() && ioVariable == IoVariable.Position)
                 {
                     context.Decorate(spvVar, Decoration.Invariant);
                 }
 
-                context.Decorate(spvVar, Decoration.BuiltIn, (LiteralInteger)GetBuiltIn(context, attrInfo.BaseValue));
-
-                if (context.Config.TransformFeedbackEnabled && context.Config.LastInVertexPipeline && isOutAttr)
-                {
-                    var tfOutput = context.Info.GetTransformFeedbackOutput(attrInfo.BaseValue);
-                    if (tfOutput.Valid)
-                    {
-                        context.Decorate(spvVar, Decoration.XfbBuffer, (LiteralInteger)tfOutput.Buffer);
-                        context.Decorate(spvVar, Decoration.XfbStride, (LiteralInteger)tfOutput.Stride);
-                        context.Decorate(spvVar, Decoration.Offset, (LiteralInteger)tfOutput.Offset);
-                    }
-                }
+                context.Decorate(spvVar, Decoration.BuiltIn, (LiteralInteger)builtIn);
             }
-            else if (perPatch)
+            else if (isPerPatch)
             {
                 context.Decorate(spvVar, Decoration.Patch);
 
-                int location = context.Config.GetPerPatchAttributeLocation((attr - AttributeConsts.UserAttributePerPatchBase) / 16);
+                if (ioVariable == IoVariable.UserDefined)
+                {
+                    int location = context.Config.GetPerPatchAttributeLocation(ioDefinition.Location);
 
-                context.Decorate(spvVar, Decoration.Location, (LiteralInteger)location);
+                    context.Decorate(spvVar, Decoration.Location, (LiteralInteger)location);
+                }
             }
-            else if (isUserAttr)
+            else if (ioVariable == IoVariable.UserDefined)
             {
-                int location = (attr - AttributeConsts.UserAttributeBase) / 16;
+                context.Decorate(spvVar, Decoration.Location, (LiteralInteger)ioDefinition.Location);
 
-                context.Decorate(spvVar, Decoration.Location, (LiteralInteger)location);
+                if (hasComponent)
+                {
+                    context.Decorate(spvVar, Decoration.Component, (LiteralInteger)ioDefinition.Component);
+                }
 
-                if (!isOutAttr &&
-                    !perPatch &&
-                    (context.Config.PassthroughAttributes & (1 << location)) != 0 &&
+                if (!isOutput &&
+                    !isPerPatch &&
+                    (context.Config.PassthroughAttributes & (1 << ioDefinition.Location)) != 0 &&
                     context.Config.GpuAccessor.QueryHostSupportsGeometryShaderPassthrough())
                 {
                     context.Decorate(spvVar, Decoration.PassthroughNV);
                 }
             }
-            else if (attr >= AttributeConsts.FragmentOutputColorBase && attr < AttributeConsts.FragmentOutputColorEnd)
+            else if (ioVariable == IoVariable.FragmentOutputColor)
             {
-                int location = (attr - AttributeConsts.FragmentOutputColorBase) / 16;
+                int location = ioDefinition.Location;
 
                 if (context.Config.Stage == ShaderStage.Fragment && context.Config.GpuAccessor.QueryDualSourceBlendEnable())
                 {
@@ -646,7 +576,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                 }
             }
 
-            if (!isOutAttr)
+            if (!isOutput)
             {
                 switch (iq)
                 {
@@ -658,143 +588,23 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                         break;
                 }
             }
-
-            context.AddGlobalVariable(spvVar);
-            dict.Add(attrInfo.BaseValue, spvVar);
-        }
-
-        private static void DeclareTransformFeedbackInputOrOutput(CodeGenContext context, int attr, bool isOutAttr, PixelImap iq = PixelImap.Unused)
-        {
-            var dict = isOutAttr ? context.Outputs : context.Inputs;
-            var attrInfo = AttributeInfo.From(context.Config, attr, isOutAttr);
-
-            bool hasComponent = true;
-            int component = (attr >> 2) & 3;
-            int components = 1;
-            var type = attrInfo.Type & AggregateType.ElementTypeMask;
-
-            if (isOutAttr)
+            else if (context.Config.TryGetTransformFeedbackOutput(
+                ioVariable,
+                ioDefinition.Location,
+                ioDefinition.Component,
+                out var transformFeedbackOutput))
             {
-                components = context.Info.GetTransformFeedbackOutputComponents(attr);
-
-                if (components > 1)
-                {
-                    attr &= ~0xf;
-                    type = components switch
-                    {
-                        2 => AggregateType.Vector2 | AggregateType.FP32,
-                        3 => AggregateType.Vector3 | AggregateType.FP32,
-                        4 => AggregateType.Vector4 | AggregateType.FP32,
-                        _ => AggregateType.FP32
-                    };
-
-                    hasComponent = false;
-                }
-            }
-
-            if (dict.ContainsKey(attr))
-            {
-                return;
-            }
-
-            var storageClass = isOutAttr ? StorageClass.Output : StorageClass.Input;
-            var attrType = context.GetType(type, components);
-
-            if (AttributeInfo.IsArrayAttributeSpirv(context.Config.Stage, isOutAttr) && (!attrInfo.IsBuiltin || AttributeInfo.IsArrayBuiltIn(attr)))
-            {
-                int arraySize = context.Config.Stage == ShaderStage.Geometry ? context.InputVertices : 32;
-                attrType = context.TypeArray(attrType, context.Constant(context.TypeU32(), (LiteralInteger)arraySize));
-            }
-
-            if (context.Config.Stage == ShaderStage.TessellationControl && isOutAttr)
-            {
-                attrType = context.TypeArray(attrType, context.Constant(context.TypeU32(), context.Config.ThreadsPerInputPrimitive));
-            }
-
-            var spvType = context.TypePointer(storageClass, attrType);
-            var spvVar = context.Variable(spvType, storageClass);
-
-            Debug.Assert(attr >= AttributeConsts.UserAttributeBase && attr < AttributeConsts.UserAttributeEnd);
-            int location = (attr - AttributeConsts.UserAttributeBase) / 16;
-
-            context.Decorate(spvVar, Decoration.Location, (LiteralInteger)location);
-
-            if (hasComponent)
-            {
-                context.Decorate(spvVar, Decoration.Component, (LiteralInteger)component);
-            }
-
-            if (isOutAttr)
-            {
-                var tfOutput = context.Info.GetTransformFeedbackOutput(attr);
-                if (tfOutput.Valid)
-                {
-                    context.Decorate(spvVar, Decoration.XfbBuffer, (LiteralInteger)tfOutput.Buffer);
-                    context.Decorate(spvVar, Decoration.XfbStride, (LiteralInteger)tfOutput.Stride);
-                    context.Decorate(spvVar, Decoration.Offset, (LiteralInteger)tfOutput.Offset);
-                }
-            }
-            else
-            {
-                if ((context.Config.PassthroughAttributes & (1 << location)) != 0 &&
-                    context.Config.GpuAccessor.QueryHostSupportsGeometryShaderPassthrough())
-                {
-                    context.Decorate(spvVar, Decoration.PassthroughNV);
-                }
-
-                switch (iq)
-                {
-                    case PixelImap.Constant:
-                        context.Decorate(spvVar, Decoration.Flat);
-                        break;
-                    case PixelImap.ScreenLinear:
-                        context.Decorate(spvVar, Decoration.NoPerspective);
-                        break;
-                }
+                context.Decorate(spvVar, Decoration.XfbBuffer, (LiteralInteger)transformFeedbackOutput.Buffer);
+                context.Decorate(spvVar, Decoration.XfbStride, (LiteralInteger)transformFeedbackOutput.Stride);
+                context.Decorate(spvVar, Decoration.Offset, (LiteralInteger)transformFeedbackOutput.Offset);
             }
 
             context.AddGlobalVariable(spvVar);
-            dict.Add(attr, spvVar);
-        }
 
-        private static BuiltIn GetBuiltIn(CodeGenContext context, int attr)
-        {
-            return attr switch
-            {
-                AttributeConsts.TessLevelOuter0 => BuiltIn.TessLevelOuter,
-                AttributeConsts.TessLevelInner0 => BuiltIn.TessLevelInner,
-                AttributeConsts.Layer => BuiltIn.Layer,
-                AttributeConsts.ViewportIndex => BuiltIn.ViewportIndex,
-                AttributeConsts.PointSize => BuiltIn.PointSize,
-                AttributeConsts.PositionX => context.Config.Stage == ShaderStage.Fragment ? BuiltIn.FragCoord : BuiltIn.Position,
-                AttributeConsts.ClipDistance0 => BuiltIn.ClipDistance,
-                AttributeConsts.PointCoordX => BuiltIn.PointCoord,
-                AttributeConsts.TessCoordX => BuiltIn.TessCoord,
-                AttributeConsts.InstanceId => BuiltIn.InstanceId,
-                AttributeConsts.VertexId => BuiltIn.VertexId,
-                AttributeConsts.BaseInstance => BuiltIn.BaseInstance,
-                AttributeConsts.BaseVertex => BuiltIn.BaseVertex,
-                AttributeConsts.InstanceIndex => BuiltIn.InstanceIndex,
-                AttributeConsts.VertexIndex => BuiltIn.VertexIndex,
-                AttributeConsts.DrawIndex => BuiltIn.DrawIndex,
-                AttributeConsts.FrontFacing => BuiltIn.FrontFacing,
-                AttributeConsts.FragmentOutputDepth => BuiltIn.FragDepth,
-                AttributeConsts.ThreadKill => BuiltIn.HelperInvocation,
-                AttributeConsts.ThreadIdX => BuiltIn.LocalInvocationId,
-                AttributeConsts.CtaIdX => BuiltIn.WorkgroupId,
-                AttributeConsts.LaneId => BuiltIn.SubgroupLocalInvocationId,
-                AttributeConsts.InvocationId => BuiltIn.InvocationId,
-                AttributeConsts.PrimitiveId => BuiltIn.PrimitiveId,
-                AttributeConsts.PatchVerticesIn => BuiltIn.PatchVertices,
-                AttributeConsts.EqMask => BuiltIn.SubgroupEqMask,
-                AttributeConsts.GeMask => BuiltIn.SubgroupGeMask,
-                AttributeConsts.GtMask => BuiltIn.SubgroupGtMask,
-                AttributeConsts.LeMask => BuiltIn.SubgroupLeMask,
-                AttributeConsts.LtMask => BuiltIn.SubgroupLtMask,
-                AttributeConsts.SupportBlockViewInverseX => BuiltIn.Position,
-                AttributeConsts.SupportBlockViewInverseY => BuiltIn.Position,
-                _ => throw new ArgumentException($"Invalid attribute number 0x{attr:X}.")
-            };
+            var dict = isPerPatch
+                ? (isOutput ? context.OutputsPerPatch : context.InputsPerPatch)
+                : (isOutput ? context.Outputs : context.Inputs);
+            dict.Add(ioDefinition, spvVar);
         }
 
         private static string GetStagePrefix(ShaderStage stage)

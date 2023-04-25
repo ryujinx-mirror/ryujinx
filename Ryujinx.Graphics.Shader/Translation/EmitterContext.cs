@@ -67,7 +67,7 @@ namespace Ryujinx.Graphics.Shader.Translation
                 (Config.Options.Flags & TranslationFlags.VertexA) == 0)
             {
                 // Vulkan requires the point size to be always written on the shader if the primitive topology is points.
-                this.Copy(Attribute(AttributeConsts.PointSize), ConstF(Config.GpuAccessor.QueryPointSize()));
+                this.Store(StorageKind.Output, IoVariable.PointSize, null, ConstF(Config.GpuAccessor.QueryPointSize()));
             }
         }
 
@@ -81,6 +81,15 @@ namespace Ryujinx.Graphics.Shader.Translation
         public Operand Add(Instruction inst, Operand dest = null, params Operand[] sources)
         {
             Operation operation = new Operation(inst, dest, sources);
+
+            _operations.Add(operation);
+
+            return dest;
+        }
+
+        public Operand Add(Instruction inst, StorageKind storageKind, Operand dest = null, params Operand[] sources)
+        {
+            Operation operation = new Operation(inst, storageKind, dest, sources);
 
             _operations.Add(operation);
 
@@ -223,30 +232,35 @@ namespace Ryujinx.Graphics.Shader.Translation
         {
             if (Config.GpuAccessor.QueryViewportTransformDisable())
             {
-                Operand x = Attribute(AttributeConsts.PositionX | AttributeConsts.LoadOutputMask);
-                Operand y = Attribute(AttributeConsts.PositionY | AttributeConsts.LoadOutputMask);
-                Operand xScale = Attribute(AttributeConsts.SupportBlockViewInverseX);
-                Operand yScale = Attribute(AttributeConsts.SupportBlockViewInverseY);
+                Operand x = this.Load(StorageKind.Output, IoVariable.Position, null, Const(0));
+                Operand y = this.Load(StorageKind.Output, IoVariable.Position, null, Const(1));
+                Operand xScale = this.Load(StorageKind.Input, IoVariable.SupportBlockViewInverse, null, Const(0));
+                Operand yScale = this.Load(StorageKind.Input, IoVariable.SupportBlockViewInverse, null, Const(1));
                 Operand negativeOne = ConstF(-1.0f);
 
-                this.Copy(Attribute(AttributeConsts.PositionX), this.FPFusedMultiplyAdd(x, xScale, negativeOne));
-                this.Copy(Attribute(AttributeConsts.PositionY), this.FPFusedMultiplyAdd(y, yScale, negativeOne));
+                this.Store(StorageKind.Output, IoVariable.Position, null, Const(0), this.FPFusedMultiplyAdd(x, xScale, negativeOne));
+                this.Store(StorageKind.Output, IoVariable.Position, null, Const(1), this.FPFusedMultiplyAdd(y, yScale, negativeOne));
             }
 
             if (Config.Options.TargetApi == TargetApi.Vulkan && Config.GpuAccessor.QueryTransformDepthMinusOneToOne())
             {
-                Operand z = Attribute(AttributeConsts.PositionZ | AttributeConsts.LoadOutputMask);
-                Operand w = Attribute(AttributeConsts.PositionW | AttributeConsts.LoadOutputMask);
+                Operand z = this.Load(StorageKind.Output, IoVariable.Position, null, Const(2));
+                Operand w = this.Load(StorageKind.Output, IoVariable.Position, null, Const(3));
                 Operand halfW = this.FPMultiply(w, ConstF(0.5f));
 
-                this.Copy(Attribute(AttributeConsts.PositionZ), this.FPFusedMultiplyAdd(z, ConstF(0.5f), halfW));
+                this.Store(StorageKind.Output, IoVariable.Position, null, Const(2), this.FPFusedMultiplyAdd(z, ConstF(0.5f), halfW));
             }
 
             if (Config.Stage != ShaderStage.Geometry && Config.HasLayerInputAttribute)
             {
                 Config.SetUsedFeature(FeatureFlags.RtLayer);
 
-                this.Copy(Attribute(AttributeConsts.Layer), Attribute(Config.GpLayerInputAttribute | AttributeConsts.LoadOutputMask));
+                int attrVecIndex = Config.GpLayerInputAttribute >> 2;
+                int attrComponentIndex = Config.GpLayerInputAttribute & 3;
+
+                Operand layer = this.Load(StorageKind.Output, IoVariable.UserDefined, null, Const(attrVecIndex), Const(attrComponentIndex));
+
+                this.Store(StorageKind.Output, IoVariable.Layer, null, layer);
             }
         }
 
@@ -255,9 +269,9 @@ namespace Ryujinx.Graphics.Shader.Translation
             if (Config.GpuAccessor.QueryViewportTransformDisable())
             {
                 oldXLocal = Local();
-                this.Copy(oldXLocal, Attribute(AttributeConsts.PositionX | AttributeConsts.LoadOutputMask));
+                this.Copy(oldXLocal, this.Load(StorageKind.Output, IoVariable.Position, null, Const(0)));
                 oldYLocal = Local();
-                this.Copy(oldYLocal, Attribute(AttributeConsts.PositionY | AttributeConsts.LoadOutputMask));
+                this.Copy(oldYLocal, this.Load(StorageKind.Output, IoVariable.Position, null, Const(1)));
             }
             else
             {
@@ -268,7 +282,7 @@ namespace Ryujinx.Graphics.Shader.Translation
             if (Config.Options.TargetApi == TargetApi.Vulkan && Config.GpuAccessor.QueryTransformDepthMinusOneToOne())
             {
                 oldZLocal = Local();
-                this.Copy(oldZLocal, Attribute(AttributeConsts.PositionZ | AttributeConsts.LoadOutputMask));
+                this.Copy(oldZLocal, this.Load(StorageKind.Output, IoVariable.Position, null, Const(2)));
             }
             else
             {
@@ -293,17 +307,30 @@ namespace Ryujinx.Graphics.Shader.Translation
             }
             else if (Config.Stage == ShaderStage.Geometry)
             {
-                void WriteOutput(int index, int primIndex)
+                void WritePositionOutput(int primIndex)
                 {
-                    Operand x = this.LoadAttribute(Const(index), Const(0), Const(primIndex));
-                    Operand y = this.LoadAttribute(Const(index + 4), Const(0), Const(primIndex));
-                    Operand z = this.LoadAttribute(Const(index + 8), Const(0), Const(primIndex));
-                    Operand w = this.LoadAttribute(Const(index + 12), Const(0), Const(primIndex));
+                    Operand x = this.Load(StorageKind.Input, IoVariable.Position, Const(primIndex), Const(0));
+                    Operand y = this.Load(StorageKind.Input, IoVariable.Position, Const(primIndex), Const(1));
+                    Operand z = this.Load(StorageKind.Input, IoVariable.Position, Const(primIndex), Const(2));
+                    Operand w = this.Load(StorageKind.Input, IoVariable.Position, Const(primIndex), Const(3));
 
-                    this.Copy(Attribute(index), x);
-                    this.Copy(Attribute(index + 4), y);
-                    this.Copy(Attribute(index + 8), z);
-                    this.Copy(Attribute(index + 12), w);
+                    this.Store(StorageKind.Output, IoVariable.Position, null, Const(0), x);
+                    this.Store(StorageKind.Output, IoVariable.Position, null, Const(1), y);
+                    this.Store(StorageKind.Output, IoVariable.Position, null, Const(2), z);
+                    this.Store(StorageKind.Output, IoVariable.Position, null, Const(3), w);
+                }
+
+                void WriteUserDefinedOutput(int index, int primIndex)
+                {
+                    Operand x = this.Load(StorageKind.Input, IoVariable.UserDefined, Const(primIndex), Const(index), Const(0));
+                    Operand y = this.Load(StorageKind.Input, IoVariable.UserDefined, Const(primIndex), Const(index), Const(1));
+                    Operand z = this.Load(StorageKind.Input, IoVariable.UserDefined, Const(primIndex), Const(index), Const(2));
+                    Operand w = this.Load(StorageKind.Input, IoVariable.UserDefined, Const(primIndex), Const(index), Const(3));
+
+                    this.Store(StorageKind.Output, IoVariable.UserDefined, null, Const(index), Const(0), x);
+                    this.Store(StorageKind.Output, IoVariable.UserDefined, null, Const(index), Const(1), y);
+                    this.Store(StorageKind.Output, IoVariable.UserDefined, null, Const(index), Const(2), z);
+                    this.Store(StorageKind.Output, IoVariable.UserDefined, null, Const(index), Const(3), w);
                 }
 
                 if (Config.GpPassthrough && !Config.GpuAccessor.QueryHostSupportsGeometryShaderPassthrough())
@@ -312,13 +339,13 @@ namespace Ryujinx.Graphics.Shader.Translation
 
                     for (int primIndex = 0; primIndex < inputVertices; primIndex++)
                     {
-                        WriteOutput(AttributeConsts.PositionX, primIndex);
+                        WritePositionOutput(primIndex);
 
                         int passthroughAttributes = Config.PassthroughAttributes;
                         while (passthroughAttributes != 0)
                         {
                             int index = BitOperations.TrailingZeroCount(passthroughAttributes);
-                            WriteOutput(AttributeConsts.UserAttributeBase + index * 16, primIndex);
+                            WriteUserDefinedOutput(index, primIndex);
                             Config.SetOutputUserAttribute(index);
                             passthroughAttributes &= ~(1 << index);
                         }
@@ -337,11 +364,9 @@ namespace Ryujinx.Graphics.Shader.Translation
 
                 if (Config.OmapDepth)
                 {
-                    Operand dest = Attribute(AttributeConsts.FragmentOutputDepth);
-
                     Operand src = Register(Config.GetDepthRegister(), RegisterType.Gpr);
 
-                    this.Copy(dest, src);
+                    this.Store(StorageKind.Output, IoVariable.FragmentOutputDepth, null, src);
                 }
 
                 AlphaTestOp alphaTestOp = Config.GpuAccessor.QueryAlphaTestCompare();
@@ -390,32 +415,30 @@ namespace Ryujinx.Graphics.Shader.Translation
                             continue;
                         }
 
-                        int fragmentOutputColorAttr = AttributeConsts.FragmentOutputColorBase + rtIndex * 16;
-
                         Operand src = Register(regIndexBase + component, RegisterType.Gpr);
 
                         // Perform B <-> R swap if needed, for BGRA formats (not supported on OpenGL).
                         if (!supportsBgra && (component == 0 || component == 2))
                         {
-                            Operand isBgra = Attribute(AttributeConsts.FragmentOutputIsBgraBase + rtIndex * 4);
+                            Operand isBgra = this.Load(StorageKind.Input, IoVariable.FragmentOutputIsBgra, null, Const(rtIndex));
 
                             Operand lblIsBgra = Label();
                             Operand lblEnd = Label();
 
                             this.BranchIfTrue(lblIsBgra, isBgra);
 
-                            this.Copy(Attribute(fragmentOutputColorAttr + component * 4), src);
+                            this.Store(StorageKind.Output, IoVariable.FragmentOutputColor, null, Const(rtIndex), Const(component), src);
                             this.Branch(lblEnd);
 
                             MarkLabel(lblIsBgra);
 
-                            this.Copy(Attribute(fragmentOutputColorAttr + (2 - component) * 4), src);
+                            this.Store(StorageKind.Output, IoVariable.FragmentOutputColor, null, Const(rtIndex), Const(2 - component), src);
 
                             MarkLabel(lblEnd);
                         }
                         else
                         {
-                            this.Copy(Attribute(fragmentOutputColorAttr + component * 4), src);
+                            this.Store(StorageKind.Output, IoVariable.FragmentOutputColor, null, Const(rtIndex), Const(component), src);
                         }
                     }
 
@@ -441,8 +464,11 @@ namespace Ryujinx.Graphics.Shader.Translation
             // 11 01 01 01 01 00 00 00
             Operand ditherMask = Const(unchecked((int)0xfbb99110u));
 
-            Operand x = this.BitwiseAnd(this.FP32ConvertToU32(Attribute(AttributeConsts.PositionX)), Const(1));
-            Operand y = this.BitwiseAnd(this.FP32ConvertToU32(Attribute(AttributeConsts.PositionY)), Const(1));
+            Operand fragCoordX = this.Load(StorageKind.Input, IoVariable.FragmentCoord, null, Const(0));
+            Operand fragCoordY = this.Load(StorageKind.Input, IoVariable.FragmentCoord, null, Const(1));
+
+            Operand x = this.BitwiseAnd(this.FP32ConvertToU32(fragCoordX), Const(1));
+            Operand y = this.BitwiseAnd(this.FP32ConvertToU32(fragCoordY), Const(1));
             Operand xy = this.BitwiseOr(x, this.ShiftLeft(y, Const(1)));
 
             Operand alpha = Register(3, RegisterType.Gpr);

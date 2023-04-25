@@ -16,18 +16,13 @@ namespace Ryujinx.Graphics.Shader.Translation
         public const int UbeDescsSize  = StorageDescSize * UbeMaxCount;
         public const int UbeFirstCbuf  = 8;
 
-        public static bool UsesGlobalMemory(Instruction inst)
+        public static bool UsesGlobalMemory(Instruction inst, StorageKind storageKind)
         {
-            return (inst.IsAtomic() && IsGlobalMr(inst)) ||
+            return (inst.IsAtomic() && storageKind == StorageKind.GlobalMemory) ||
                     inst == Instruction.LoadGlobal ||
                     inst == Instruction.StoreGlobal ||
                     inst == Instruction.StoreGlobal16 ||
                     inst == Instruction.StoreGlobal8;
-        }
-
-        private static bool IsGlobalMr(Instruction inst)
-        {
-            return (inst & Instruction.MrMask) == Instruction.MrGlobal;
         }
 
         public static int GetStorageCbOffset(ShaderStage stage, int slot)

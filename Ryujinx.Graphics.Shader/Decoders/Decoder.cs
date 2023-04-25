@@ -295,10 +295,12 @@ namespace Ryujinx.Graphics.Shader.Decoders
                 if (isStore)
                 {
                     config.SetAllOutputUserAttributes();
+                    config.SetUsedFeature(FeatureFlags.OaIndexing);
                 }
                 else
                 {
                     config.SetAllInputUserAttributes();
+                    config.SetUsedFeature(FeatureFlags.IaIndexing);
                 }
             }
             else
@@ -340,7 +342,8 @@ namespace Ryujinx.Graphics.Shader.Decoders
                     }
 
                     if (!isStore &&
-                        ((attr >= AttributeConsts.FrontColorDiffuseR && attr < AttributeConsts.ClipDistance0) ||
+                        (attr == AttributeConsts.FogCoord ||
+                        (attr >= AttributeConsts.FrontColorDiffuseR && attr < AttributeConsts.ClipDistance0) ||
                         (attr >= AttributeConsts.TexCoordBase && attr < AttributeConsts.TexCoordEnd)))
                     {
                         config.SetUsedFeature(FeatureFlags.FixedFuncAttr);

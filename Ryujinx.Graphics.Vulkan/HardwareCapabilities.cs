@@ -40,6 +40,7 @@ namespace Ryujinx.Graphics.Vulkan
         public readonly bool SupportsPreciseOcclusionQueries;
         public readonly bool SupportsPipelineStatisticsQuery;
         public readonly bool SupportsGeometryShader;
+        public readonly bool SupportsViewportArray2;
         public readonly uint MinSubgroupSize;
         public readonly uint MaxSubgroupSize;
         public readonly ShaderStageFlags RequiredSubgroupSizeStages;
@@ -73,6 +74,7 @@ namespace Ryujinx.Graphics.Vulkan
             bool supportsPreciseOcclusionQueries,
             bool supportsPipelineStatisticsQuery,
             bool supportsGeometryShader,
+            bool supportsViewportArray2,
             uint minSubgroupSize,
             uint maxSubgroupSize,
             ShaderStageFlags requiredSubgroupSizeStages,
@@ -105,6 +107,7 @@ namespace Ryujinx.Graphics.Vulkan
             SupportsPreciseOcclusionQueries = supportsPreciseOcclusionQueries;
             SupportsPipelineStatisticsQuery = supportsPipelineStatisticsQuery;
             SupportsGeometryShader = supportsGeometryShader;
+            SupportsViewportArray2 = supportsViewportArray2;
             MinSubgroupSize = minSubgroupSize;
             MaxSubgroupSize = maxSubgroupSize;
             RequiredSubgroupSizeStages = requiredSubgroupSizeStages;

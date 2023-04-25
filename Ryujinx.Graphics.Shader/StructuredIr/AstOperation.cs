@@ -9,6 +9,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
     class AstOperation : AstNode
     {
         public Instruction Inst { get; }
+        public StorageKind StorageKind { get; }
 
         public int Index { get; }
 
@@ -16,9 +17,10 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
 
         public int SourcesCount => _sources.Length;
 
-        public AstOperation(Instruction inst, IAstNode[] sources, int sourcesCount)
+        public AstOperation(Instruction inst, StorageKind storageKind, IAstNode[] sources, int sourcesCount)
         {
-            Inst     = inst;
+            Inst = inst;
+            StorageKind = storageKind;
             _sources = sources;
 
             for (int index = 0; index < sources.Length; index++)
@@ -36,12 +38,12 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             Index = 0;
         }
 
-        public AstOperation(Instruction inst, int index, IAstNode[] sources, int sourcesCount) : this(inst, sources, sourcesCount)
+        public AstOperation(Instruction inst, StorageKind storageKind, int index, IAstNode[] sources, int sourcesCount) : this(inst, storageKind, sources, sourcesCount)
         {
             Index = index;
         }
 
-        public AstOperation(Instruction inst, params IAstNode[] sources) : this(inst, sources, sources.Length)
+        public AstOperation(Instruction inst, params IAstNode[] sources) : this(inst, StorageKind.None, sources, sources.Length)
         {
         }
 

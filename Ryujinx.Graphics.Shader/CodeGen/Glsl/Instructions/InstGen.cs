@@ -73,7 +73,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
                     // For shared memory access, the second argument is unused and should be ignored.
                     // It is there to make both storage and shared access have the same number of arguments.
                     // For storage, both inputs are consumed when the argument index is 0, so we should skip it here.
-                    if (argIndex == 1 && (atomic || (inst & Instruction.MrMask) == Instruction.MrShared))
+                    if (argIndex == 1 && (atomic || operation.StorageKind == StorageKind.SharedMemory))
                     {
                         continue;
                     }
@@ -85,14 +85,12 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 
                     if (argIndex == 0 && atomic)
                     {
-                        Instruction memRegion = inst & Instruction.MrMask;
-
-                        switch (memRegion)
+                        switch (operation.StorageKind)
                         {
-                            case Instruction.MrShared: args += LoadShared(context, operation); break;
-                            case Instruction.MrStorage: args += LoadStorage(context, operation); break;
+                            case StorageKind.SharedMemory: args += LoadShared(context, operation); break;
+                            case StorageKind.StorageBuffer: args += LoadStorage(context, operation); break;
 
-                            default: throw new InvalidOperationException($"Invalid memory region \"{memRegion}\".");
+                            default: throw new InvalidOperationException($"Invalid storage kind \"{operation.StorageKind}\".");
                         }
                     }
                     else
@@ -166,8 +164,8 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
                     case Instruction.ImageAtomic:
                         return ImageLoadOrStore(context, operation);
 
-                    case Instruction.LoadAttribute:
-                        return LoadAttribute(context, operation);
+                    case Instruction.Load:
+                        return Load(context, operation);
 
                     case Instruction.LoadConstant:
                         return LoadConstant(context, operation);
@@ -193,8 +191,8 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
                     case Instruction.PackHalf2x16:
                         return PackHalf2x16(context, operation);
 
-                    case Instruction.StoreAttribute:
-                        return StoreAttribute(context, operation);
+                    case Instruction.Store:
+                        return Store(context, operation);
 
                     case Instruction.StoreLocal:
                         return StoreLocal(context, operation);

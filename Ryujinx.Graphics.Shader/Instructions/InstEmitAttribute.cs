@@ -20,7 +20,16 @@ namespace Ryujinx.Graphics.Shader.Instructions
         {
             InstAld op = context.GetOp<InstAld>();
 
-            Operand primVertex = context.Copy(GetSrcReg(context, op.SrcB));
+            // Some of those attributes are per invocation,
+            // so we should ignore any primitive vertex indexing for those.
+            bool hasPrimitiveVertex = AttributeMap.HasPrimitiveVertex(context.Config.Stage, op.O) && !op.P;
+
+            if (!op.Phys)
+            {
+                hasPrimitiveVertex &= HasPrimitiveVertex(op.Imm11);
+            }
+
+            Operand primVertex = hasPrimitiveVertex ? context.Copy(GetSrcReg(context, op.SrcB)) : null;
 
             for (int index = 0; index < (int)op.AlSize + 1; index++)
             {
@@ -33,12 +42,13 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
                 if (op.Phys)
                 {
-                    Operand userAttrOffset = context.ISubtract(GetSrcReg(context, op.SrcA), Const(AttributeConsts.UserAttributeBase));
-                    Operand userAttrIndex = context.ShiftRightU32(userAttrOffset, Const(2));
+                    Operand offset = context.ISubtract(GetSrcReg(context, op.SrcA), Const(AttributeConsts.UserAttributeBase));
+                    Operand vecIndex = context.ShiftRightU32(offset, Const(4));
+                    Operand elemIndex = context.BitwiseAnd(context.ShiftRightU32(offset, Const(2)), Const(3));
 
-                    context.Copy(Register(rd), context.LoadAttribute(Const(AttributeConsts.UserAttributeBase), userAttrIndex, primVertex));
+                    StorageKind storageKind = op.O ? StorageKind.Output : StorageKind.Input;
 
-                    context.Config.SetUsedFeature(FeatureFlags.IaIndexing);
+                    context.Copy(Register(rd), context.Load(storageKind, IoVariable.UserDefined, primVertex, vecIndex, elemIndex));
                 }
                 else if (op.SrcB == RegisterConsts.RegisterZeroIndex || op.P)
                 {
@@ -46,14 +56,16 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
                     context.FlagAttributeRead(offset);
 
-                    if (op.O && CanLoadOutput(offset))
+                    bool isOutput = op.O && CanLoadOutput(offset);
+
+                    if (!op.P && !isOutput && TryConvertIdToIndexForVulkan(context, offset, out Operand value))
                     {
-                        offset |= AttributeConsts.LoadOutputMask;
+                        context.Copy(Register(rd), value);
                     }
-
-                    Operand src = op.P ? AttributePerPatch(offset) : CreateInputAttribute(context, offset);
-
-                    context.Copy(Register(rd), src);
+                    else
+                    {
+                        context.Copy(Register(rd), AttributeMap.GenerateAttributeLoad(context, primVertex, offset, isOutput, op.P));
+                    }
                 }
                 else
                 {
@@ -61,14 +73,9 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
                     context.FlagAttributeRead(offset);
 
-                    if (op.O && CanLoadOutput(offset))
-                    {
-                        offset |= AttributeConsts.LoadOutputMask;
-                    }
+                    bool isOutput = op.O && CanLoadOutput(offset);
 
-                    Operand src = Const(offset);
-
-                    context.Copy(Register(rd), context.LoadAttribute(src, Const(0), primVertex));
+                    context.Copy(Register(rd), AttributeMap.GenerateAttributeLoad(context, primVertex, offset, isOutput, false));
                 }
             }
         }
@@ -88,12 +95,14 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
                 if (op.Phys)
                 {
-                    Operand userAttrOffset = context.ISubtract(GetSrcReg(context, op.SrcA), Const(AttributeConsts.UserAttributeBase));
-                    Operand userAttrIndex = context.ShiftRightU32(userAttrOffset, Const(2));
+                    Operand offset = context.ISubtract(GetSrcReg(context, op.SrcA), Const(AttributeConsts.UserAttributeBase));
+                    Operand vecIndex = context.ShiftRightU32(offset, Const(4));
+                    Operand elemIndex = context.BitwiseAnd(context.ShiftRightU32(offset, Const(2)), Const(3));
+                    Operand invocationId = AttributeMap.HasInvocationId(context.Config.Stage, isOutput: true)
+                        ? context.Load(StorageKind.Input, IoVariable.InvocationId)
+                        : null;
 
-                    context.StoreAttribute(Const(AttributeConsts.UserAttributeBase), userAttrIndex, Register(rd));
-
-                    context.Config.SetUsedFeature(FeatureFlags.OaIndexing);
+                    context.Store(StorageKind.Output, IoVariable.UserDefined, invocationId, vecIndex, elemIndex, Register(rd));
                 }
                 else
                 {
@@ -110,9 +119,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
                     context.FlagAttributeWritten(offset);
 
-                    Operand dest = op.P ? AttributePerPatch(offset) : Attribute(offset);
-
-                    context.Copy(dest, Register(rd));
+                    AttributeMap.GenerateAttributeStore(context, offset, op.P, Register(rd));
                 }
             }
         }
@@ -129,13 +136,12 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             if (op.Idx)
             {
-                Operand userAttrOffset = context.ISubtract(GetSrcReg(context, op.SrcA), Const(AttributeConsts.UserAttributeBase));
-                Operand userAttrIndex = context.ShiftRightU32(userAttrOffset, Const(2));
+                Operand offset = context.ISubtract(GetSrcReg(context, op.SrcA), Const(AttributeConsts.UserAttributeBase));
+                Operand vecIndex = context.ShiftRightU32(offset, Const(4));
+                Operand elemIndex = context.BitwiseAnd(context.ShiftRightU32(offset, Const(2)), Const(3));
 
-                res = context.LoadAttribute(Const(AttributeConsts.UserAttributeBase), userAttrIndex, Const(0));
-                res = context.FPMultiply(res, Attribute(AttributeConsts.PositionW));
-
-                context.Config.SetUsedFeature(FeatureFlags.IaIndexing);
+                res = context.Load(StorageKind.Input, IoVariable.UserDefined, null, vecIndex, elemIndex);
+                res = context.FPMultiply(res, context.Load(StorageKind.Input, IoVariable.FragmentCoord, null, Const(3)));
             }
             else
             {
@@ -147,8 +153,20 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
                     if (context.Config.ImapTypes[index].GetFirstUsedType() == PixelImap.Perspective)
                     {
-                        res = context.FPMultiply(res, Attribute(AttributeConsts.PositionW));
+                        res = context.FPMultiply(res, context.Load(StorageKind.Input, IoVariable.FragmentCoord, null, Const(3)));
                     }
+                }
+                else if (op.Imm10 == AttributeConsts.PositionX || op.Imm10 == AttributeConsts.PositionY)
+                {
+                    // FragCoord X/Y must be divided by the render target scale, if resolution scaling is active,
+                    // because the shader code is not expecting scaled values.
+                    res = context.FPDivide(res, context.Load(StorageKind.Input, IoVariable.SupportBlockRenderScale, null, Const(0)));
+                }
+                else if (op.Imm10 == AttributeConsts.FrontFacing && context.Config.GpuAccessor.QueryHostHasFrontFacingBug())
+                {
+                    // gl_FrontFacing sometimes has incorrect (flipped) values depending how it is accessed on Intel GPUs.
+                    // This weird trick makes it behave.
+                    res = context.ICompareLess(context.INegate(context.IConvertS32ToFP32(res)), Const(0));
                 }
             }
 
@@ -216,17 +234,17 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
                     if (tempXLocal != null)
                     {
-                        context.Copy(Attribute(AttributeConsts.PositionX), tempXLocal);
+                        context.Copy(context.Load(StorageKind.Input, IoVariable.Position, null, Const(0)), tempXLocal);
                     }
 
                     if (tempYLocal != null)
                     {
-                        context.Copy(Attribute(AttributeConsts.PositionY), tempYLocal);
+                        context.Copy(context.Load(StorageKind.Input, IoVariable.Position, null, Const(1)), tempYLocal);
                     }
 
                     if (tempZLocal != null)
                     {
-                        context.Copy(Attribute(AttributeConsts.PositionZ), tempZLocal);
+                        context.Copy(context.Load(StorageKind.Input, IoVariable.Position, null, Const(2)), tempZLocal);
                     }
                 }
                 else
@@ -241,6 +259,13 @@ namespace Ryujinx.Graphics.Shader.Instructions
             }
         }
 
+        private static bool HasPrimitiveVertex(int attr)
+        {
+            return attr != AttributeConsts.PrimitiveId &&
+                   attr != AttributeConsts.TessCoordX &&
+                   attr != AttributeConsts.TessCoordY;
+        }
+
         private static bool CanLoadOutput(int attr)
         {
             return attr != AttributeConsts.TessCoordX && attr != AttributeConsts.TessCoordY;
@@ -252,13 +277,13 @@ namespace Ryujinx.Graphics.Shader.Instructions
             {
                 // TODO: If two sided rendering is enabled, then this should return
                 // FrontColor if the fragment is front facing, and back color otherwise.
-                int index = (attr - AttributeConsts.FrontColorDiffuseR) >> 4;
-                int userAttrIndex = context.Config.GetFreeUserAttribute(isOutput: false, index);
-                Operand frontAttr = Attribute(AttributeConsts.UserAttributeBase + userAttrIndex * 16 + (attr & 0xf));
-
-                context.Config.SetInputUserAttributeFixedFunc(userAttrIndex);
-
-                selectedAttr = frontAttr;
+                selectedAttr = GenerateIpaLoad(context, FixedFuncToUserAttribute(context.Config, attr, isOutput: false));
+                return true;
+            }
+            else if (attr == AttributeConsts.FogCoord)
+            {
+                // TODO: We likely need to emulate the fixed-function functionality for FogCoord here.
+                selectedAttr = GenerateIpaLoad(context, FixedFuncToUserAttribute(context.Config, attr, isOutput: false));
                 return true;
             }
             else if (attr >= AttributeConsts.BackColorDiffuseR && attr < AttributeConsts.ClipDistance0)
@@ -268,12 +293,17 @@ namespace Ryujinx.Graphics.Shader.Instructions
             }
             else if (attr >= AttributeConsts.TexCoordBase && attr < AttributeConsts.TexCoordEnd)
             {
-                selectedAttr = Attribute(FixedFuncToUserAttribute(context.Config, attr, AttributeConsts.TexCoordBase, 4, isOutput: false));
+                selectedAttr = GenerateIpaLoad(context, FixedFuncToUserAttribute(context.Config, attr, isOutput: false));
                 return true;
             }
 
-            selectedAttr = Attribute(attr);
+            selectedAttr = GenerateIpaLoad(context, attr);
             return false;
+        }
+
+        private static Operand GenerateIpaLoad(EmitterContext context, int offset)
+        {
+            return AttributeMap.GenerateAttributeLoad(context, null, offset, isOutput: false, isPerPatch: false);
         }
 
         private static int FixedFuncToUserAttribute(ShaderConfig config, int attr, bool isOutput)
@@ -286,13 +316,17 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 attr = FixedFuncToUserAttribute(config, attr, AttributeConsts.Layer, 0, isOutput);
                 config.SetLayerOutputAttribute(attr);
             }
+            else if (attr == AttributeConsts.FogCoord)
+            {
+                attr = FixedFuncToUserAttribute(config, attr, AttributeConsts.FogCoord, fixedStartAttr, isOutput);
+            }
             else if (attr >= AttributeConsts.FrontColorDiffuseR && attr < AttributeConsts.ClipDistance0)
             {
-                attr = FixedFuncToUserAttribute(config, attr, AttributeConsts.FrontColorDiffuseR, fixedStartAttr, isOutput);
+                attr = FixedFuncToUserAttribute(config, attr, AttributeConsts.FrontColorDiffuseR, fixedStartAttr + 1, isOutput);
             }
             else if (attr >= AttributeConsts.TexCoordBase && attr < AttributeConsts.TexCoordEnd)
             {
-                attr = FixedFuncToUserAttribute(config, attr, AttributeConsts.TexCoordBase, fixedStartAttr + 4, isOutput);
+                attr = FixedFuncToUserAttribute(config, attr, AttributeConsts.TexCoordBase, fixedStartAttr + 5, isOutput);
             }
 
             return attr;
@@ -301,11 +335,10 @@ namespace Ryujinx.Graphics.Shader.Instructions
         private static int FixedFuncToUserAttribute(ShaderConfig config, int attr, int baseAttr, int baseIndex, bool isOutput)
         {
             int index = (attr - baseAttr) >> 4;
-            int userAttrIndex = config.GetFreeUserAttribute(isOutput, index);
+            int userAttrIndex = config.GetFreeUserAttribute(isOutput, baseIndex + index);
 
             if ((uint)userAttrIndex < Constants.MaxAttributes)
             {
-                userAttrIndex += baseIndex;
                 attr = AttributeConsts.UserAttributeBase + userAttrIndex * 16 + (attr & 0xf);
 
                 if (isOutput)
@@ -317,25 +350,34 @@ namespace Ryujinx.Graphics.Shader.Instructions
                     config.SetInputUserAttributeFixedFunc(userAttrIndex);
                 }
             }
+            else
+            {
+                config.GpuAccessor.Log($"No enough user attributes for fixed attribute offset 0x{attr:X}.");
+            }
 
             return attr;
         }
 
-        private static Operand CreateInputAttribute(EmitterContext context, int attr)
+        private static bool TryConvertIdToIndexForVulkan(EmitterContext context, int attr, out Operand value)
         {
             if (context.Config.Options.TargetApi == TargetApi.Vulkan)
             {
                 if (attr == AttributeConsts.InstanceId)
                 {
-                    return context.ISubtract(Attribute(AttributeConsts.InstanceIndex), Attribute(AttributeConsts.BaseInstance));
+                    value = context.ISubtract(
+                        context.Load(StorageKind.Input, IoVariable.InstanceIndex),
+                        context.Load(StorageKind.Input, IoVariable.BaseInstance));
+                    return true;
                 }
                 else if (attr == AttributeConsts.VertexId)
                 {
-                    return Attribute(AttributeConsts.VertexIndex);
+                    value = context.Load(StorageKind.Input, IoVariable.VertexIndex);
+                    return true;
                 }
             }
 
-            return Attribute(attr);
+            value = null;
+            return false;
         }
     }
 }
