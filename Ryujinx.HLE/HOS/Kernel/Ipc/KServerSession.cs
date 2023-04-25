@@ -188,8 +188,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
 
             if (request.AsyncEvent == null)
             {
-                if (request.ClientThread.ShallBeTerminated ||
-                    request.ClientThread.SchedFlags == ThreadSchedState.TerminationPending)
+                if (request.ClientThread.TerminationRequested)
                 {
                     return KernelResult.ThreadTerminating;
                 }
@@ -1104,8 +1103,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
         {
             foreach (KSessionRequest request in IterateWithRemovalOfAllRequests())
             {
-                if (request.ClientThread.ShallBeTerminated ||
-                    request.ClientThread.SchedFlags == ThreadSchedState.TerminationPending)
+                if (request.ClientThread.TerminationRequested)
                 {
                     continue;
                 }

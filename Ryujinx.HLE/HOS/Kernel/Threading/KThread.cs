@@ -99,11 +99,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
         private int _shallBeTerminated;
 
-        public bool ShallBeTerminated
-        {
-            get => _shallBeTerminated != 0;
-            set => _shallBeTerminated = value ? 1 : 0;
-        }
+        private bool ShallBeTerminated => _shallBeTerminated != 0;
 
         public bool TerminationRequested => ShallBeTerminated || SchedFlags == ThreadSchedState.TerminationPending;
 
@@ -322,7 +318,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
             ThreadSchedState result;
 
-            if (Interlocked.CompareExchange(ref _shallBeTerminated, 1, 0) == 0)
+            if (Interlocked.Exchange(ref _shallBeTerminated, 1) == 0)
             {
                 if ((SchedFlags & ThreadSchedState.LowMask) == ThreadSchedState.None)
                 {
@@ -470,7 +466,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
         {
             KernelContext.CriticalSection.Enter();
 
-            if (ShallBeTerminated || SchedFlags == ThreadSchedState.TerminationPending)
+            if (TerminationRequested)
             {
                 KernelContext.CriticalSection.Leave();
 
@@ -552,7 +548,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
                     return KernelResult.InvalidState;
                 }
 
-                if (!ShallBeTerminated && SchedFlags != ThreadSchedState.TerminationPending)
+                if (!TerminationRequested)
                 {
                     if (pause)
                     {

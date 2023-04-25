@@ -47,8 +47,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
             KThread currentThread = KernelStatic.GetCurrentThread();
 
-            if (currentThread.ShallBeTerminated ||
-                currentThread.SchedFlags == ThreadSchedState.TerminationPending)
+            if (currentThread.TerminationRequested)
             {
                 result = KernelResult.ThreadTerminating;
             }
@@ -61,7 +60,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
             else
             {
                 LinkedListNode<KThread>[] syncNodesArray = ArrayPool<LinkedListNode<KThread>>.Shared.Rent(syncObjs.Length);
-                
+
                 Span<LinkedListNode<KThread>> syncNodes = syncNodesArray.AsSpan(0, syncObjs.Length);
 
                 for (int index = 0; index < syncObjs.Length; index++)

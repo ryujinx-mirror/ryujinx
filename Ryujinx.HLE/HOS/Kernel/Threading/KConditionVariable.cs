@@ -19,8 +19,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
             currentThread.WithholderNode = threadList.AddLast(currentThread);
 
-            if (currentThread.ShallBeTerminated ||
-                currentThread.SchedFlags == ThreadSchedState.TerminationPending)
+            if (currentThread.TerminationRequested)
             {
                 threadList.Remove(currentThread.WithholderNode);
 

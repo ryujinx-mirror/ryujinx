@@ -31,6 +31,13 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
             _context.CriticalSection.Enter();
 
+            if (currentThread.TerminationRequested)
+            {
+                _context.CriticalSection.Leave();
+
+                return KernelResult.ThreadTerminating;
+            }
+
             currentThread.SignaledObj   = null;
             currentThread.ObjSyncResult = Result.Success;
 
@@ -114,8 +121,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
             currentThread.SignaledObj   = null;
             currentThread.ObjSyncResult = KernelResult.TimedOut;
 
-            if (currentThread.ShallBeTerminated ||
-                currentThread.SchedFlags == ThreadSchedState.TerminationPending)
+            if (currentThread.TerminationRequested)
             {
                 _context.CriticalSection.Leave();
 
@@ -280,8 +286,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
             _context.CriticalSection.Enter();
 
-            if (currentThread.ShallBeTerminated ||
-                currentThread.SchedFlags == ThreadSchedState.TerminationPending)
+            if (currentThread.TerminationRequested)
             {
                 _context.CriticalSection.Leave();
 
@@ -351,8 +356,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
             _context.CriticalSection.Enter();
 
-            if (currentThread.ShallBeTerminated ||
-                currentThread.SchedFlags == ThreadSchedState.TerminationPending)
+            if (currentThread.TerminationRequested)
             {
                 _context.CriticalSection.Leave();
 
