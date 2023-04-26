@@ -18,7 +18,7 @@ jobs:
       NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
       GIT_COMMITTER_NAME: "RyujinxBot"
       GIT_COMMITTER_EMAIL: "61127645+RyujinxBot@users.noreply.github.com"
-      RYUJINX_PROJECT_FILE: "Ryujinx/Ryujinx.csproj"
+      RYUJINX_PROJECT_FILE: "src/Ryujinx/Ryujinx.csproj"
       NUGET_SOURCES_DESTDIR: "nuget-sources"
       RYUJINX_VERSION: "${{ inputs.ryujinx_version }}"
 
