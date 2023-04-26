@@ -1,8 +1,9 @@
-﻿using Ryujinx.Memory.Range;
+﻿using Ryujinx.Memory;
+using Ryujinx.Memory.Range;
 using System;
 using System.Collections.Generic;
 
-namespace Ryujinx.Memory.Tests
+namespace Ryujinx.Tests.Memory
 {
     public class MockVirtualMemoryManager : IVirtualMemoryManager
     {

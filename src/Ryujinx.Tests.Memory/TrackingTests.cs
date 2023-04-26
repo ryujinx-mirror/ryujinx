@@ -1,11 +1,12 @@
 ﻿using NUnit.Framework;
+using Ryujinx.Memory;
 using Ryujinx.Memory.Tracking;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 
-namespace Ryujinx.Memory.Tests
+namespace Ryujinx.Tests.Memory
 {
     public class TrackingTests
     {

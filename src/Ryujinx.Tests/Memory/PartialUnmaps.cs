@@ -5,7 +5,6 @@ using Ryujinx.Common.Memory.PartialUnmaps;
 using Ryujinx.Cpu;
 using Ryujinx.Cpu.Jit;
 using Ryujinx.Memory;
-using Ryujinx.Memory.Tests;
 using Ryujinx.Memory.Tracking;
 using System;
 using System.Collections.Generic;

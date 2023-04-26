@@ -1,8 +1,9 @@
 using NUnit.Framework;
+using Ryujinx.Memory;
 using System;
 using System.Runtime.InteropServices;
 
-namespace Ryujinx.Memory.Tests
+namespace Ryujinx.Tests.Memory
 {
     public class Tests
     {

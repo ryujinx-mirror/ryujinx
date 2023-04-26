@@ -1,10 +1,11 @@
 ﻿using NUnit.Framework;
+using Ryujinx.Memory;
 using Ryujinx.Memory.Tracking;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Ryujinx.Memory.Tests
+namespace Ryujinx.Tests.Memory
 {
     public class MultiRegionTrackingTests
     {
