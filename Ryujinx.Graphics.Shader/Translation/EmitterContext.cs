@@ -322,10 +322,10 @@ namespace Ryujinx.Graphics.Shader.Translation
 
                 void WriteUserDefinedOutput(int index, int primIndex)
                 {
-                    Operand x = this.Load(StorageKind.Input, IoVariable.UserDefined, Const(primIndex), Const(index), Const(0));
-                    Operand y = this.Load(StorageKind.Input, IoVariable.UserDefined, Const(primIndex), Const(index), Const(1));
-                    Operand z = this.Load(StorageKind.Input, IoVariable.UserDefined, Const(primIndex), Const(index), Const(2));
-                    Operand w = this.Load(StorageKind.Input, IoVariable.UserDefined, Const(primIndex), Const(index), Const(3));
+                    Operand x = this.Load(StorageKind.Input, IoVariable.UserDefined, Const(index), Const(primIndex), Const(0));
+                    Operand y = this.Load(StorageKind.Input, IoVariable.UserDefined, Const(index), Const(primIndex), Const(1));
+                    Operand z = this.Load(StorageKind.Input, IoVariable.UserDefined, Const(index), Const(primIndex), Const(2));
+                    Operand w = this.Load(StorageKind.Input, IoVariable.UserDefined, Const(index), Const(primIndex), Const(3));
 
                     this.Store(StorageKind.Output, IoVariable.UserDefined, null, Const(index), Const(0), x);
                     this.Store(StorageKind.Output, IoVariable.UserDefined, null, Const(index), Const(1), y);

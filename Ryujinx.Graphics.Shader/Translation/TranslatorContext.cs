@@ -208,7 +208,7 @@ namespace Ryujinx.Graphics.Shader.Translation
                     {
                         int attr = AttributeConsts.UserAttributeBase + attrIndex * 16 + c * 4;
 
-                        Operand value = context.Load(StorageKind.Input, IoVariable.UserDefined, Const(v), Const(attrIndex), Const(c));
+                        Operand value = context.Load(StorageKind.Input, IoVariable.UserDefined, Const(attrIndex), Const(v), Const(c));
 
                         if (attr == layerOutputAttr)
                         {
