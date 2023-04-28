@@ -95,6 +95,9 @@ namespace Ryujinx.Ava.UI.ViewModels
         private string _currentEmulatedGamePath;
         private AutoResetEvent _rendererWaitEvent;
         private WindowState _windowState;
+        private double _windowWidth;
+        private double _windowHeight;
+
         private bool _isActive;
 
         public ApplicationData ListSelectedApplication;
@@ -618,6 +621,28 @@ namespace Ryujinx.Ava.UI.ViewModels
             internal set
             {
                 _windowState = value;
+
+                OnPropertyChanged();
+            }
+        }
+        
+        public double WindowWidth
+        {
+            get => _windowWidth;
+            set
+            {
+                _windowWidth = value;
+
+                OnPropertyChanged();
+            }
+        }
+
+        public double WindowHeight
+        {
+            get => _windowHeight;
+            set
+            {
+                _windowHeight = value;
 
                 OnPropertyChanged();
             }

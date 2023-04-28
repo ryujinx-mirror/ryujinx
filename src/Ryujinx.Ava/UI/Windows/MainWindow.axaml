@@ -12,15 +12,14 @@
     Cursor="{Binding Cursor}"
     Title="{Binding Title}"
     WindowState="{Binding WindowState}"
-    Width="1280"
-    Height="777"
+    Width="{Binding WindowWidth}"
+    Height="{Binding WindowHeight}"
     MinWidth="1092"
     MinHeight="672"
     d:DesignHeight="720"
     d:DesignWidth="1280"
     x:CompileBindings="True"
     x:DataType="viewModels:MainWindowViewModel"
-    WindowStartupLocation="CenterScreen"
     mc:Ignorable="d"
     Focusable="True">
     <Window.Styles>

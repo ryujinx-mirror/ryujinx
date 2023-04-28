@@ -83,6 +83,27 @@ namespace Ryujinx.Ui.Common.Configuration
                 }
             }
 
+            // <summary>
+            /// Determines main window start-up position, size and state
+            ///<summary>
+            public class WindowStartupSettings
+            {
+                public ReactiveObject<int> WindowSizeWidth { get; private set; }
+                public ReactiveObject<int> WindowSizeHeight { get; private set; }
+                public ReactiveObject<int> WindowPositionX { get; private set; }
+                public ReactiveObject<int> WindowPositionY { get; private set; }
+                public ReactiveObject<bool> WindowMaximized { get; private set; }
+
+                public WindowStartupSettings()
+                {
+                    WindowSizeWidth = new ReactiveObject<int>();
+                    WindowSizeHeight = new ReactiveObject<int>();
+                    WindowPositionX = new ReactiveObject<int>();
+                    WindowPositionY = new ReactiveObject<int>();
+                    WindowMaximized = new ReactiveObject<bool>();
+                }
+            }
+
             /// <summary>
             /// Used to toggle columns in the GUI
             /// </summary>
@@ -102,6 +123,11 @@ namespace Ryujinx.Ui.Common.Configuration
             /// A list of file types to be hidden in the games List
             /// </summary>
             public ShownFileTypeSettings ShownFileTypes { get; private set; }
+
+            /// <summary>
+            /// Determines main window start-up position, size and state
+            /// </summary>
+            public WindowStartupSettings WindowStartup { get; private set; }
 
             /// <summary>
             /// Language Code for the UI
@@ -163,7 +189,8 @@ namespace Ryujinx.Ui.Common.Configuration
                 GuiColumns        = new Columns();
                 ColumnSort        = new ColumnSortSettings();
                 GameDirs          = new ReactiveObject<List<string>>();
-                ShownFileTypes   = new ShownFileTypeSettings();
+                ShownFileTypes    = new ShownFileTypeSettings();
+                WindowStartup     = new WindowStartupSettings();
                 EnableCustomTheme = new ReactiveObject<bool>();
                 CustomThemePath   = new ReactiveObject<string>();
                 BaseStyle         = new ReactiveObject<string>();
@@ -663,12 +690,12 @@ namespace Ryujinx.Ui.Common.Configuration
                     FileSizeColumn   = Ui.GuiColumns.FileSizeColumn,
                     PathColumn       = Ui.GuiColumns.PathColumn
                 },
-                ColumnSort                 = new ColumnSort
+                ColumnSort                = new ColumnSort
                 {
                     SortColumnId  = Ui.ColumnSort.SortColumnId,
                     SortAscending = Ui.ColumnSort.SortAscending
                 },
-                GameDirs                   = Ui.GameDirs,
+                GameDirs                  = Ui.GameDirs,
                 ShownFileTypes            = new ShownFileTypes
                 {
                     NSP = Ui.ShownFileTypes.NSP,
@@ -677,6 +704,14 @@ namespace Ryujinx.Ui.Common.Configuration
                     NCA = Ui.ShownFileTypes.NCA,
                     NRO = Ui.ShownFileTypes.NRO,
                     NSO = Ui.ShownFileTypes.NSO,
+                },
+                WindowStartup              = new WindowStartup
+                {
+                    WindowSizeWidth = Ui.WindowStartup.WindowSizeWidth,
+                    WindowSizeHeight = Ui.WindowStartup.WindowSizeHeight,
+                    WindowPositionX = Ui.WindowStartup.WindowPositionX,
+                    WindowPositionY = Ui.WindowStartup.WindowPositionY,
+                    WindowMaximized = Ui.WindowStartup.WindowMaximized,
                 },
                 LanguageCode               = Ui.LanguageCode,
                 EnableCustomTheme          = Ui.EnableCustomTheme,
@@ -781,6 +816,11 @@ namespace Ryujinx.Ui.Common.Configuration
             Ui.IsAscendingOrder.Value                 = true;
             Ui.StartFullscreen.Value                  = false;
             Ui.ShowConsole.Value                      = true;
+            Ui.WindowStartup.WindowSizeWidth.Value    = 1280;
+            Ui.WindowStartup.WindowSizeHeight.Value   = 760;
+            Ui.WindowStartup.WindowPositionX.Value    = 0;
+            Ui.WindowStartup.WindowPositionY.Value    = 0;
+            Ui.WindowStartup.WindowMaximized.Value    = false;
             Hid.EnableKeyboard.Value                  = false;
             Hid.EnableMouse.Value                     = false;
             Hid.Hotkeys.Value = new KeyboardHotkeys
@@ -1334,10 +1374,26 @@ namespace Ryujinx.Ui.Common.Configuration
 
             if (configurationFileFormat.Version < 46)
             {
-                Ryujinx.Common.Logging.Logger.Warning?.Print(LogClass.Application, $"Outdated configuration version {configurationFileFormat.Version}, migrating to version 45.");
+                Ryujinx.Common.Logging.Logger.Warning?.Print(LogClass.Application, $"Outdated configuration version {configurationFileFormat.Version}, migrating to version 46.");
 
                 configurationFileFormat.MultiplayerLanInterfaceId = "0";
 
+                configurationFileUpdated = true;
+            }
+
+            if (configurationFileFormat.Version < 47)
+            {
+                Ryujinx.Common.Logging.Logger.Warning?.Print(LogClass.Application, $"Outdated configuration version {configurationFileFormat.Version}, migrating to version 47.");
+
+                configurationFileFormat.WindowStartup = new WindowStartup
+                {
+                    WindowPositionX = 0,
+                    WindowPositionY = 0,
+                    WindowSizeHeight = 760,
+                    WindowSizeWidth = 1280,
+                    WindowMaximized = false,
+                };
+                
                 configurationFileUpdated = true;
             }
 
@@ -1416,6 +1472,11 @@ namespace Ryujinx.Ui.Common.Configuration
             Ui.ApplicationSort.Value                  = configurationFileFormat.ApplicationSort;
             Ui.StartFullscreen.Value                  = configurationFileFormat.StartFullscreen;
             Ui.ShowConsole.Value                      = configurationFileFormat.ShowConsole;
+            Ui.WindowStartup.WindowSizeWidth.Value    = configurationFileFormat.WindowStartup.WindowSizeWidth;
+            Ui.WindowStartup.WindowSizeHeight.Value   = configurationFileFormat.WindowStartup.WindowSizeHeight;
+            Ui.WindowStartup.WindowPositionX.Value    = configurationFileFormat.WindowStartup.WindowPositionX;
+            Ui.WindowStartup.WindowPositionY.Value    = configurationFileFormat.WindowStartup.WindowPositionY;
+            Ui.WindowStartup.WindowMaximized.Value    = configurationFileFormat.WindowStartup.WindowMaximized;
             Hid.EnableKeyboard.Value                  = configurationFileFormat.EnableKeyboard;
             Hid.EnableMouse.Value                     = configurationFileFormat.EnableMouse;
             Hid.Hotkeys.Value                         = configurationFileFormat.Hotkeys;

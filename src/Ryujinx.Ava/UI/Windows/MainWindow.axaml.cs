@@ -62,6 +62,8 @@ namespace Ryujinx.Ava.UI.Windows
 
             DataContext = ViewModel;
 
+            SetWindowSizePosition();
+
             InitializeComponent();
             Load();
 
@@ -297,6 +299,51 @@ namespace Ryujinx.Ava.UI.Windows
             LoadHotKeys();
         }
 
+        private void SetWindowSizePosition()
+        {
+            PixelPoint SavedPoint = new PixelPoint(ConfigurationState.Instance.Ui.WindowStartup.WindowPositionX, 
+                                                   ConfigurationState.Instance.Ui.WindowStartup.WindowPositionY);
+
+            ViewModel.WindowHeight = ConfigurationState.Instance.Ui.WindowStartup.WindowSizeHeight * Program.WindowScaleFactor;
+            ViewModel.WindowWidth = ConfigurationState.Instance.Ui.WindowStartup.WindowSizeWidth * Program.WindowScaleFactor;
+
+            ViewModel.WindowState = ConfigurationState.Instance.Ui.WindowStartup.WindowMaximized.Value is true ? WindowState.Maximized : WindowState.Normal;
+        
+            if (CheckScreenBounds(SavedPoint))
+            {
+                Position = SavedPoint;
+            }
+
+            else WindowStartupLocation = WindowStartupLocation.CenterScreen;
+        }
+
+        private bool CheckScreenBounds(PixelPoint configPoint)
+        {   
+            for (int i = 0; i < Screens.ScreenCount; i++)
+            {
+                if (Screens.All[i].Bounds.Contains(configPoint))
+                {
+                    return true;
+                }
+            }
+
+            Logger.Warning?.Print(LogClass.Application, $"Failed to find valid start-up coordinates. Defaulting to primary monitor center.");
+            return false;
+        }
+
+        private void SaveWindowSizePosition()
+        {
+            ConfigurationState.Instance.Ui.WindowStartup.WindowSizeHeight.Value = (int)Height;
+            ConfigurationState.Instance.Ui.WindowStartup.WindowSizeWidth.Value = (int)Width;
+
+            ConfigurationState.Instance.Ui.WindowStartup.WindowPositionX.Value = Position.X;
+            ConfigurationState.Instance.Ui.WindowStartup.WindowPositionY.Value = Position.Y;
+
+            ConfigurationState.Instance.Ui.WindowStartup.WindowMaximized.Value = WindowState == WindowState.Maximized;
+
+            MainWindowViewModel.SaveConfig();
+        }
+
         protected override void OnOpened(EventArgs e)
         {
             base.OnOpened(e);
@@ -387,6 +434,8 @@ namespace Ryujinx.Ava.UI.Windows
 
                 return;
             }
+
+            SaveWindowSizePosition();
 
             ApplicationLibrary.CancelLoading();
             InputManager.Dispose();

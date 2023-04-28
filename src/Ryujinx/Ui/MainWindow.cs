@@ -153,13 +153,8 @@ namespace Ryujinx.Ui
 
             // Apply custom theme if needed.
             ThemeHelper.ApplyTheme();
-            Gdk.Monitor monitor = Display.GetMonitor(0);
-            // Sets overridden fields.
-            int monitorWidth  = monitor.Geometry.Width  * monitor.ScaleFactor;
-            int monitorHeight = monitor.Geometry.Height * monitor.ScaleFactor;
 
-            DefaultWidth  = monitorWidth  < 1280 ? monitorWidth  : 1280;
-            DefaultHeight = monitorHeight < 760  ? monitorHeight : 760;
+            SetWindowSizePosition();
 
             Icon  = new Gdk.Pixbuf(Assembly.GetAssembly(typeof(ConfigurationState)), "Ryujinx.Ui.Common.Resources.Logo_Ryujinx.png");
             Title = $"Ryujinx {Program.Version}";
@@ -1314,6 +1309,7 @@ namespace Ryujinx.Ui
         {
             if (!_gameLoaded || !ConfigurationState.Instance.ShowConfirmExit || GtkDialog.CreateExitDialog())
             {
+                SaveWindowSizePosition();
                 End();
             }
         }
@@ -1322,12 +1318,40 @@ namespace Ryujinx.Ui
         {
             if (!_gameLoaded || !ConfigurationState.Instance.ShowConfirmExit || GtkDialog.CreateExitDialog())
             {
+                SaveWindowSizePosition();        
                 End();
             }
             else
             {
                 args.RetVal = true;
             }
+        }
+
+        private void SetWindowSizePosition()
+        {
+            DefaultWidth  = ConfigurationState.Instance.Ui.WindowStartup.WindowSizeWidth;
+            DefaultHeight = ConfigurationState.Instance.Ui.WindowStartup.WindowSizeHeight;
+
+            Move(ConfigurationState.Instance.Ui.WindowStartup.WindowPositionX, ConfigurationState.Instance.Ui.WindowStartup.WindowPositionY);
+
+            if (ConfigurationState.Instance.Ui.WindowStartup.WindowMaximized) 
+            { 
+                Maximize(); 
+            }
+        }
+
+        private void SaveWindowSizePosition()
+        {
+            GetSize(out int windowWidth, out int windowHeight);
+            GetPosition(out int windowXPos, out int windowYPos);
+
+            ConfigurationState.Instance.Ui.WindowStartup.WindowMaximized.Value = IsMaximized;
+            ConfigurationState.Instance.Ui.WindowStartup.WindowSizeWidth.Value = windowWidth;
+            ConfigurationState.Instance.Ui.WindowStartup.WindowSizeHeight.Value = windowHeight;
+            ConfigurationState.Instance.Ui.WindowStartup.WindowPositionX.Value = windowXPos;
+            ConfigurationState.Instance.Ui.WindowStartup.WindowPositionY.Value = windowYPos;
+
+            SaveConfig();        
         }
 
         private void StopEmulation_Pressed(object sender, EventArgs args)

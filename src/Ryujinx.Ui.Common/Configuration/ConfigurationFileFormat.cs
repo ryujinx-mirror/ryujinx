@@ -14,7 +14,7 @@ namespace Ryujinx.Ui.Common.Configuration
         /// <summary>
         /// The current version of the file format
         /// </summary>
-        public const int CurrentVersion = 46;
+        public const int CurrentVersion = 47;
 
         /// <summary>
         /// Version of the configuration file format
@@ -250,6 +250,11 @@ namespace Ryujinx.Ui.Common.Configuration
         /// A list of file types to be hidden in the games List
         /// </summary>
         public ShownFileTypes ShownFileTypes { get; set; }
+
+        /// <summary>
+        /// Main window start-up position, size and state
+        /// </summary>
+        public WindowStartup WindowStartup { get; set; }
 
         /// <summary>
         /// Language Code for the UI
