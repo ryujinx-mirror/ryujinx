@@ -30,14 +30,14 @@ mkdir -p "$TEMP_DIRECTORY"
 DOTNET_COMMON_ARGS="-p:DebugType=embedded -p:Version=$VERSION -p:SourceRevisionId=$SOURCE_REVISION_ID --self-contained true"
 
 dotnet restore
-dotnet build -c Release Ryujinx.Ava
-dotnet publish -c Release -r osx-arm64 -o "$TEMP_DIRECTORY/publish_arm64" $DOTNET_COMMON_ARGS Ryujinx.Ava
-dotnet publish -c Release -r osx-x64 -o "$TEMP_DIRECTORY/publish_x64" $DOTNET_COMMON_ARGS Ryujinx.Ava
+dotnet build -c Release src/Ryujinx.Ava
+dotnet publish -c Release -r osx-arm64 -o "$TEMP_DIRECTORY/publish_arm64" $DOTNET_COMMON_ARGS src/Ryujinx.Ava
+dotnet publish -c Release -r osx-x64 -o "$TEMP_DIRECTORY/publish_x64" $DOTNET_COMMON_ARGS src/Ryujinx.Ava
 
-# Get ride of the support library for ARMeilleur for x64 (that's only for arm64)
+# Get rid of the support library for ARMeilleure for x64 (that's only for arm64)
 rm -rf "$TEMP_DIRECTORY/publish_x64/libarmeilleure-jitsupport.dylib"
 
-# Get ride of libsoundio from arm64 builds as we don't have a arm64 variant
+# Get rid of libsoundio from arm64 builds as we don't have a arm64 variant
 # TODO: remove this once done
 rm -rf "$TEMP_DIRECTORY/publish_arm64/libsoundio.dylib"
 
