@@ -252,6 +252,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
         public void Interrupt()
         {
             _interrupt = true;
+            _event.Set();
         }
 
         /// <summary>
