@@ -57,5 +57,19 @@
 
             return thisAddress < otherEndAddress && otherAddress < thisEndAddress;
         }
+
+        /// <summary>
+        /// Returns a string summary of the memory range.
+        /// </summary>
+        /// <returns>A string summary of the memory range</returns>
+        public override string ToString()
+        {
+            if (Address == ulong.MaxValue)
+            {
+                return $"[Unmapped 0x{Size:X}]";
+            }
+
+            return $"[0x{Address:X}, 0x{EndAddress:X})";
+        }
     }
 }

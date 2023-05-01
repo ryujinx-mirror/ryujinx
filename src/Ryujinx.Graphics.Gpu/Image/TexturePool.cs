@@ -272,7 +272,15 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                     ulong address = descriptor.UnpackAddress();
 
-                    MultiRange range = _channel.MemoryManager.GetPhysicalRegions(address, texture.Size);
+                    if (!descriptor.Equals(ref DescriptorCache[request.ID]))
+                    {
+                        // If the pool entry has already been replaced, just remove the texture.
+
+                        texture.DecrementReferenceCount();
+                        continue;
+                    }
+
+                    MultiRange range = _channel.MemoryManager.Physical.TextureCache.UpdatePartiallyMapped(_channel.MemoryManager, address, texture);
 
                     // If the texture is not mapped at all, delete its reference.
 

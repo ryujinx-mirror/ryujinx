@@ -319,5 +319,14 @@ namespace Ryujinx.Memory.Range
 
             return hash.ToHashCode();
         }
+
+        /// <summary>
+        /// Returns a string summary of the ranges contained in the MultiRange.
+        /// </summary>
+        /// <returns>A string summary of the ranges contained within</returns>
+        public override string ToString()
+        {
+            return HasSingleRange ? _singleRange.ToString() : string.Join(", ", _ranges);
+        }
     }
 }

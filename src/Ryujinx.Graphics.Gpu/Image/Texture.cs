@@ -1610,6 +1610,8 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// </summary>
         public void UpdatePoolMappings()
         {
+            ChangedMapping = true;
+
             lock (_poolOwners)
             {
                 ulong address = 0;
@@ -1685,8 +1687,6 @@ namespace Ryujinx.Graphics.Gpu.Image
             {
                 Group.ClearModified(unmapRange);
             }
-
-            UpdatePoolMappings();
         }
 
         /// <summary>
