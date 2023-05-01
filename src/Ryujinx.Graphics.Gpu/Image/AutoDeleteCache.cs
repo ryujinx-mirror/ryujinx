@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 
 namespace Ryujinx.Graphics.Gpu.Image
@@ -9,6 +8,7 @@ namespace Ryujinx.Graphics.Gpu.Image
     /// </summary>
     class ShortTextureCacheEntry
     {
+        public bool IsAutoDelete;
         public readonly TextureDescriptor Descriptor;
         public readonly int InvalidatedSequence;
         public readonly Texture Texture;
@@ -21,6 +21,17 @@ namespace Ryujinx.Graphics.Gpu.Image
         public ShortTextureCacheEntry(TextureDescriptor descriptor, Texture texture)
         {
             Descriptor = descriptor;
+            InvalidatedSequence = texture.InvalidatedSequence;
+            Texture = texture;
+        }
+
+        /// <summary>
+        /// Create a new entry on the short duration texture cache from the auto delete cache.
+        /// </summary>
+        /// <param name="texture">The texture</param>
+        public ShortTextureCacheEntry(Texture texture)
+        {
+            IsAutoDelete = true;
             InvalidatedSequence = texture.InvalidatedSequence;
             Texture = texture;
         }
@@ -199,7 +210,11 @@ namespace Ryujinx.Graphics.Gpu.Image
             {
                 texture.DecrementReferenceCount();
 
-                _shortCacheLookup.Remove(texture.ShortCacheEntry.Descriptor);
+                if (!texture.ShortCacheEntry.IsAutoDelete)
+                {
+                    _shortCacheLookup.Remove(texture.ShortCacheEntry.Descriptor);
+                }
+
                 texture.ShortCacheEntry = null;
             }
         }
@@ -223,6 +238,25 @@ namespace Ryujinx.Graphics.Gpu.Image
         }
 
         /// <summary>
+        /// Adds a texture to the short duration cache without a descriptor. This typically keeps it alive for two ticks.
+        /// On expiry, it will be removed from the AutoDeleteCache.
+        /// </summary>
+        /// <param name="texture">Texture to add to the short cache</param>
+        public void AddShortCache(Texture texture)
+        {
+            if (texture.ShortCacheEntry != null)
+            {
+                var entry = new ShortTextureCacheEntry(texture);
+
+                _shortCacheBuilder.Add(entry);
+
+                texture.ShortCacheEntry = entry;
+
+                texture.IncrementReferenceCount();
+            }
+        }
+
+        /// <summary>
         /// Delete textures from the short duration cache.
         /// Moves the builder set to be deleted on next process.
         /// </summary>
@@ -234,7 +268,15 @@ namespace Ryujinx.Graphics.Gpu.Image
             {
                 entry.Texture.DecrementReferenceCount();
 
-                _shortCacheLookup.Remove(entry.Descriptor);
+                if (entry.IsAutoDelete)
+                {
+                    Remove(entry.Texture, false);
+                }
+                else
+                {
+                    _shortCacheLookup.Remove(entry.Descriptor);
+                }
+
                 entry.Texture.ShortCacheEntry = null;
             }
 

@@ -848,7 +848,17 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                             if (overlapInCache)
                             {
-                                _cache.Remove(overlap, flush);
+                                if (flush || overlap.HadPoolOwner || overlap.IsView)
+                                {
+                                    _cache.Remove(overlap, flush);
+                                }
+                                else
+                                {
+                                    // This texture has only ever been referenced in the AutoDeleteCache.
+                                    // Keep this texture alive with the short duration cache, as it may be used often but not sampled.
+
+                                    _cache.AddShortCache(overlap);
+                                }
                             }
 
                             removeOverlap = modified;
@@ -1196,6 +1206,16 @@ namespace Ryujinx.Graphics.Gpu.Image
         public void AddShortCache(Texture texture, ref TextureDescriptor descriptor)
         {
             _cache.AddShortCache(texture, ref descriptor);
+        }
+
+        /// <summary>
+        /// Adds a texture to the short duration cache without a descriptor. This typically keeps it alive for two ticks.
+        /// On expiry, it will be removed from the AutoDeleteCache.
+        /// </summary>
+        /// <param name="texture">Texture to add to the short cache</param>
+        public void AddShortCache(Texture texture)
+        {
+            _cache.AddShortCache(texture);
         }
 
         /// <summary>
