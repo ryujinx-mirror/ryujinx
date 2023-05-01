@@ -10,7 +10,7 @@ namespace Ryujinx.Graphics.Vulkan
 {
     class BufferManager : IDisposable
     {
-        private const MemoryPropertyFlags DefaultBufferMemoryFlags =
+        public const MemoryPropertyFlags DefaultBufferMemoryFlags =
             MemoryPropertyFlags.HostVisibleBit |
             MemoryPropertyFlags.HostCoherentBit |
             MemoryPropertyFlags.HostCachedBit;
@@ -40,6 +40,10 @@ namespace Ryujinx.Graphics.Vulkan
             BufferUsageFlags.VertexBufferBit |
             BufferUsageFlags.TransformFeedbackBufferBitExt;
 
+        private const BufferUsageFlags HostImportedBufferUsageFlags =
+            BufferUsageFlags.TransferSrcBit |
+            BufferUsageFlags.TransferDstBit;
+
         private readonly Device _device;
 
         private readonly IdList<BufferHolder> _buffers;
@@ -48,11 +52,47 @@ namespace Ryujinx.Graphics.Vulkan
 
         public StagingBuffer StagingBuffer { get; }
 
+        public MemoryRequirements HostImportedBufferMemoryRequirements { get; }
+
         public BufferManager(VulkanRenderer gd, Device device)
         {
             _device = device;
             _buffers = new IdList<BufferHolder>();
             StagingBuffer = new StagingBuffer(gd, this);
+
+            HostImportedBufferMemoryRequirements = GetHostImportedUsageRequirements(gd);
+        }
+
+        public unsafe BufferHandle CreateHostImported(VulkanRenderer gd, nint pointer, int size)
+        {
+            var usage = HostImportedBufferUsageFlags;
+
+            if (gd.Capabilities.SupportsIndirectParameters)
+            {
+                usage |= BufferUsageFlags.IndirectBufferBit;
+            }
+
+            var bufferCreateInfo = new BufferCreateInfo()
+            {
+                SType = StructureType.BufferCreateInfo,
+                Size = (ulong)size,
+                Usage = usage,
+                SharingMode = SharingMode.Exclusive
+            };
+
+            gd.Api.CreateBuffer(_device, in bufferCreateInfo, null, out var buffer).ThrowOnError();
+
+            (Auto<MemoryAllocation> allocation, ulong offset) = gd.HostMemoryAllocator.GetExistingAllocation(pointer, (ulong)size);
+
+            gd.Api.BindBufferMemory(_device, buffer, allocation.GetUnsafe().Memory, allocation.GetUnsafe().Offset + offset);
+
+            var holder = new BufferHolder(gd, _device, buffer, allocation, size, BufferAllocationType.HostMapped, BufferAllocationType.HostMapped, (int)offset);
+
+            BufferCount++;
+
+            ulong handle64 = (uint)_buffers.Add(holder);
+
+            return Unsafe.As<ulong, BufferHandle>(ref handle64);
         }
 
         public BufferHandle CreateWithHandle(VulkanRenderer gd, int size, BufferAllocationType baseType = BufferAllocationType.HostMapped, BufferHandle storageHint = default)
@@ -73,6 +113,32 @@ namespace Ryujinx.Graphics.Vulkan
             ulong handle64 = (uint)_buffers.Add(holder);
 
             return Unsafe.As<ulong, BufferHandle>(ref handle64);
+        }
+
+        public unsafe MemoryRequirements GetHostImportedUsageRequirements(VulkanRenderer gd)
+        {
+            var usage = HostImportedBufferUsageFlags;
+
+            if (gd.Capabilities.SupportsIndirectParameters)
+            {
+                usage |= BufferUsageFlags.IndirectBufferBit;
+            }
+
+            var bufferCreateInfo = new BufferCreateInfo()
+            {
+                SType = StructureType.BufferCreateInfo,
+                Size = (ulong)Environment.SystemPageSize,
+                Usage = usage,
+                SharingMode = SharingMode.Exclusive
+            };
+
+            gd.Api.CreateBuffer(_device, in bufferCreateInfo, null, out var buffer).ThrowOnError();
+
+            gd.Api.GetBufferMemoryRequirements(_device, buffer, out var requirements);
+
+            gd.Api.DestroyBuffer(_device, buffer, null);
+
+            return requirements;
         }
 
         public unsafe (VkBuffer buffer, MemoryAllocation allocation, BufferAllocationType resultType) CreateBacking(

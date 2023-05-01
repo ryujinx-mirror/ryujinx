@@ -108,6 +108,12 @@ namespace Ryujinx.Graphics.GAL.Multithreading.Resources
             }
         }
 
+        public void CopyTo(BufferRange range, int layer, int level, int stride)
+        {
+            _renderer.New<TextureCopyToBufferCommand>().Set(Ref(this), range, layer, level, stride);
+            _renderer.QueueCommand();
+        }
+
         public void SetData(SpanOrArray<byte> data)
         {
             _renderer.New<TextureSetDataCommand>().Set(Ref(this), Ref(data.ToArray()));

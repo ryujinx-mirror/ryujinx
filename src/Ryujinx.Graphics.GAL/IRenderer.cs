@@ -21,11 +21,14 @@ namespace Ryujinx.Graphics.GAL
         {
             return CreateBuffer(size, BufferHandle.Null);
         }
+        BufferHandle CreateBuffer(nint pointer, int size);
+        BufferHandle CreateBuffer(int size, BufferAccess access);
 
         IProgram CreateProgram(ShaderSource[] shaders, ShaderInfo info);
 
         ISampler CreateSampler(SamplerCreateInfo info);
         ITexture CreateTexture(TextureCreateInfo info, float scale);
+        bool PrepareHostMapping(nint address, ulong size);
 
         void CreateSync(ulong id, bool strict);
 

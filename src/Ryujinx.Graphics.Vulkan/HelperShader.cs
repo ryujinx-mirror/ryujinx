@@ -31,6 +31,7 @@ namespace Ryujinx.Graphics.Vulkan
         private readonly IProgram _programColorClearSI;
         private readonly IProgram _programColorClearUI;
         private readonly IProgram _programStrideChange;
+        private readonly IProgram _programConvertD32S8ToD24S8;
         private readonly IProgram _programConvertIndexBuffer;
         private readonly IProgram _programConvertIndirectData;
         private readonly IProgram _programColorCopyShortening;
@@ -156,6 +157,17 @@ namespace Ryujinx.Graphics.Vulkan
             {
                 new ShaderSource(ShaderBinaries.ColorDrawToMsVertexShaderSource, colorDrawToMsVertexBindings, ShaderStage.Vertex, TargetLanguage.Spirv),
                 new ShaderSource(ShaderBinaries.ColorDrawToMsFragmentShaderSource, colorDrawToMsFragmentBindings, ShaderStage.Fragment, TargetLanguage.Spirv),
+            });
+
+            var convertD32S8ToD24S8Bindings = new ShaderBindings(
+                new[] { 0 },
+                new[] { 1, 2 },
+                Array.Empty<int>(),
+                Array.Empty<int>());
+
+            _programConvertD32S8ToD24S8 = gd.CreateProgramWithMinimalLayout(new[]
+            {
+                new ShaderSource(ShaderBinaries.ConvertD32S8ToD24S8ShaderSource, convertD32S8ToD24S8Bindings, ShaderStage.Compute, TargetLanguage.Spirv),
             });
 
             var convertIndexBufferBindings = new ShaderBindings(
@@ -1642,6 +1654,82 @@ namespace Ryujinx.Graphics.Vulkan
             gd.BufferManager.Delete(patternBufferHandle);
 
             _pipeline.Finish(gd, cbs);
+        }
+
+        public unsafe void ConvertD32S8ToD24S8(VulkanRenderer gd, CommandBufferScoped cbs, BufferHolder src, Auto<DisposableBuffer> dstBufferAuto, int pixelCount, int dstOffset)
+        {
+            int inSize = pixelCount * 2 * sizeof(int);
+            int outSize = pixelCount * sizeof(int);
+
+            var srcBufferAuto = src.GetBuffer();
+
+            var srcBuffer = srcBufferAuto.Get(cbs, 0, inSize).Value;
+            var dstBuffer = dstBufferAuto.Get(cbs, dstOffset, outSize).Value;
+
+            var access = AccessFlags.ShaderWriteBit;
+            var stage = PipelineStageFlags.ComputeShaderBit;
+
+            BufferHolder.InsertBufferBarrier(
+                gd,
+                cbs.CommandBuffer,
+                srcBuffer,
+                BufferHolder.DefaultAccessFlags,
+                AccessFlags.ShaderReadBit,
+                PipelineStageFlags.AllCommandsBit,
+                stage,
+                0,
+                outSize);
+
+            BufferHolder.InsertBufferBarrier(
+                gd,
+                cbs.CommandBuffer,
+                dstBuffer,
+                BufferHolder.DefaultAccessFlags,
+                access,
+                PipelineStageFlags.AllCommandsBit,
+                stage,
+                0,
+                outSize);
+
+            const int ParamsBufferSize = sizeof(int) * 2;
+
+            Span<int> shaderParams = stackalloc int[2];
+
+            shaderParams[0] = pixelCount;
+            shaderParams[1] = dstOffset;
+
+            var bufferHandle = gd.BufferManager.CreateWithHandle(gd, ParamsBufferSize);
+
+            gd.BufferManager.SetData<int>(bufferHandle, 0, shaderParams);
+
+            _pipeline.SetCommandBuffer(cbs);
+
+            _pipeline.SetUniformBuffers(stackalloc[] { new BufferAssignment(0, new BufferRange(bufferHandle, 0, ParamsBufferSize)) });
+
+            Span<Auto<DisposableBuffer>> sbRanges = new Auto<DisposableBuffer>[2];
+
+            sbRanges[0] = srcBufferAuto;
+            sbRanges[1] = dstBufferAuto;
+
+            _pipeline.SetStorageBuffers(1, sbRanges);
+
+            _pipeline.SetProgram(_programConvertD32S8ToD24S8);
+            _pipeline.DispatchCompute(1, 1, 1);
+
+            gd.BufferManager.Delete(bufferHandle);
+
+            _pipeline.Finish(gd, cbs);
+
+            BufferHolder.InsertBufferBarrier(
+                gd,
+                cbs.CommandBuffer,
+                dstBuffer,
+                access,
+                BufferHolder.DefaultAccessFlags,
+                stage,
+                PipelineStageFlags.AllCommandsBit,
+                0,
+                outSize);
         }
 
         protected virtual void Dispose(bool disposing)

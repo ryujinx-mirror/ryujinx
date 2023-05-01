@@ -1,4 +1,5 @@
 ﻿using Ryujinx.Cpu.Tracking;
+using Ryujinx.Graphics.Gpu.Synchronization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,8 +14,14 @@ namespace Ryujinx.Graphics.Gpu.Image
     /// Also tracks copy dependencies for the handle - references to other handles that must be kept
     /// in sync with this one before use.
     /// </summary>
-    class TextureGroupHandle : IDisposable
+    class TextureGroupHandle : ISyncActionHandler, IDisposable
     {
+        private const int FlushBalanceIncrement = 6;
+        private const int FlushBalanceWriteCost = 1;
+        private const int FlushBalanceThreshold = 7;
+        private const int FlushBalanceMax = 60;
+        private const int FlushBalanceMin = -10;
+
         private TextureGroup _group;
         private int _bindCount;
         private int _firstLevel;
@@ -26,6 +33,8 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// The sync number last registered.
         /// </summary>
         private ulong _registeredSync;
+        private ulong _registeredBufferSync = ulong.MaxValue;
+        private ulong _registeredBufferGuestSync = ulong.MaxValue;
 
         /// <summary>
         /// The sync number when the texture was last modified by GPU.
@@ -41,6 +50,12 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// Whether a sync action is currently registered or not.
         /// </summary>
         private bool _syncActionRegistered;
+
+        /// <summary>
+        /// Determines the balance of synced writes to flushes.
+        /// Used to determine if the texture should always write data to a persistent buffer for flush.
+        /// </summary>
+        private int _flushBalance;
 
         /// <summary>
         /// The byte offset from the start of the storage of this handle.
@@ -132,6 +147,12 @@ namespace Ryujinx.Graphics.Gpu.Image
             }
 
             Handles = handles;
+
+            if (group.Storage.Info.IsLinear)
+            {
+                // Linear textures are presumed to be used for readback initially.
+                _flushBalance = FlushBalanceThreshold + FlushBalanceIncrement;
+            }
         }
 
         /// <summary>
@@ -157,6 +178,35 @@ namespace Ryujinx.Graphics.Gpu.Image
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Determine if the next sync will copy into the flush buffer.
+        /// </summary>
+        /// <returns>True if it will copy, false otherwise</returns>
+        private bool NextSyncCopies()
+        {
+            return _flushBalance - FlushBalanceWriteCost > FlushBalanceThreshold;
+        }
+
+        /// <summary>
+        /// Alters the flush balance by the given value. Should increase significantly with each sync, decrease with each write.
+        /// A flush balance higher than the threshold will cause a texture to repeatedly copy to a flush buffer on each use.
+        /// </summary>
+        /// <param name="modifier">Value to add to the existing flush balance</param>
+        /// <returns>True if the new balance is over the threshold, false otherwise</returns>
+        private bool ModifyFlushBalance(int modifier)
+        {
+            int result;
+            int existingBalance;
+            do
+            {
+                existingBalance = _flushBalance;
+                result = Math.Max(FlushBalanceMin, Math.Min(FlushBalanceMax, existingBalance + modifier));
+            }
+            while (Interlocked.CompareExchange(ref _flushBalance, result, existingBalance) != existingBalance);
+
+            return result > FlushBalanceThreshold;
         }
 
         /// <summary>
@@ -204,7 +254,7 @@ namespace Ryujinx.Graphics.Gpu.Image
             if (!_syncActionRegistered)
             {
                 _modifiedSync = context.SyncNumber;
-                context.RegisterSyncAction(SyncAction, true);
+                context.RegisterSyncAction(this, true);
                 _syncActionRegistered = true;
             }
 
@@ -241,6 +291,13 @@ namespace Ryujinx.Graphics.Gpu.Image
         {
             SignalModified(context);
 
+            if (!bound && _syncActionRegistered && NextSyncCopies())
+            {
+                // On unbind, textures that flush often should immediately create sync so their result can be obtained as soon as possible.
+
+                context.CreateHostSyncIfNeeded(HostSyncFlags.Force);
+            }
+
             // Note: Bind count currently resets to 0 on inherit for safety, as the handle <-> view relationship can change.
             _bindCount = Math.Max(0, _bindCount + (bound ? 1 : -1));
         }
@@ -266,25 +323,35 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// removing the modified flag if it was reached, or leaving it set if it has not yet been created.
         /// </summary>
         /// <param name="context">The GPU context used to wait for sync</param>
-        public void Sync(GpuContext context)
+        /// <returns>True if the texture data can be read from the flush buffer</returns>
+        public bool Sync(GpuContext context)
         {
-            ulong registeredSync = _registeredSync;
-            long diff = (long)(context.SyncNumber - registeredSync);
+            // Currently assumes the calling thread is a guest thread.
+
+            bool inBuffer = _registeredBufferGuestSync != ulong.MaxValue;
+            ulong sync = inBuffer ? _registeredBufferGuestSync : _registeredSync;
+
+            long diff = (long)(context.SyncNumber - sync);
+
+            ModifyFlushBalance(FlushBalanceIncrement);
 
             if (diff > 0)
             {
-                context.Renderer.WaitSync(registeredSync);
+                context.Renderer.WaitSync(sync);
 
-                if ((long)(_modifiedSync - registeredSync) > 0)
+                if ((long)(_modifiedSync - sync) > 0)
                 {
                     // Flush the data in a previous state. Do not remove the modified flag - it will be removed to ignore following writes.
-                    return;
+                    return inBuffer;
                 }
 
                 Modified = false;
+
+                return inBuffer;
             }
 
             // If the difference is <= 0, no data is not ready yet. Flush any data we can without waiting or removing modified flag.
+            return false;
         }
 
         /// <summary>
@@ -297,13 +364,39 @@ namespace Ryujinx.Graphics.Gpu.Image
         }
 
         /// <summary>
+        /// Action to perform before a sync number is registered after modification.
+        /// This action will copy the texture data to the flush buffer if this texture
+        /// flushes often enough, which is determined by the flush balance.
+        /// </summary>
+        /// <inheritdoc/>
+        public void SyncPreAction(bool syncpoint)
+        {
+            if (syncpoint || NextSyncCopies())
+            {
+                if (ModifyFlushBalance(0) && _registeredBufferSync != _modifiedSync)
+                {
+                    _group.FlushIntoBuffer(this);
+                    _registeredBufferSync = _modifiedSync;
+                }
+            }
+        }
+
+        /// <summary>
         /// Action to perform when a sync number is registered after modification.
         /// This action will register a read tracking action on the memory tracking handle so that a flush from CPU can happen.
         /// </summary>
-        private void SyncAction()
+        /// <inheritdoc/>
+        public bool SyncAction(bool syncpoint)
         {
             // The storage will need to signal modified again to update the sync number in future.
             _group.Storage.SignalModifiedDirty();
+
+            bool lastInBuffer = _registeredBufferSync == _modifiedSync;
+
+            if (!lastInBuffer)
+            {
+                _registeredBufferSync = ulong.MaxValue;
+            }
 
             lock (Overlaps)
             {
@@ -314,6 +407,7 @@ namespace Ryujinx.Graphics.Gpu.Image
             }
 
             // Register region tracking for CPU? (again)
+
             _registeredSync = _modifiedSync;
             _syncActionRegistered = false;
 
@@ -321,6 +415,14 @@ namespace Ryujinx.Graphics.Gpu.Image
             {
                 _group.RegisterAction(this);
             }
+
+            if (syncpoint)
+            {
+                _registeredBufferGuestSync = _registeredBufferSync;
+            }
+
+            // If the last modification is in the buffer, keep this sync action alive until it sees a syncpoint.
+            return syncpoint || !lastInBuffer;
         }
 
         /// <summary>

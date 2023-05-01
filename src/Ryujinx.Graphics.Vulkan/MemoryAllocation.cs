@@ -7,6 +7,7 @@ namespace Ryujinx.Graphics.Vulkan
     {
         private readonly MemoryAllocatorBlockList _owner;
         private readonly MemoryAllocatorBlockList.Block _block;
+        private readonly HostMemoryAllocator _hostMemory;
 
         public DeviceMemory Memory { get; }
         public IntPtr HostPointer { get;}
@@ -29,9 +30,30 @@ namespace Ryujinx.Graphics.Vulkan
             Size = size;
         }
 
+        public MemoryAllocation(
+            HostMemoryAllocator hostMemory,
+            DeviceMemory memory,
+            IntPtr hostPointer,
+            ulong offset,
+            ulong size)
+        {
+            _hostMemory = hostMemory;
+            Memory = memory;
+            HostPointer = hostPointer;
+            Offset = offset;
+            Size = size;
+        }
+
         public void Dispose()
         {
-            _owner.Free(_block, Offset, Size);
+            if (_hostMemory != null)
+            {
+                _hostMemory.Free(Memory, Offset, Size);
+            }
+            else
+            {
+                _owner.Free(_block, Offset, Size);
+            }
         }
     }
 }

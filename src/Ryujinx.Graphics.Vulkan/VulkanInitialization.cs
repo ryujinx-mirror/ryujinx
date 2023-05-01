@@ -27,6 +27,7 @@ namespace Ryujinx.Graphics.Vulkan
             ExtTransformFeedback.ExtensionName,
             KhrDrawIndirectCount.ExtensionName,
             KhrPushDescriptor.ExtensionName,
+            ExtExternalMemoryHost.ExtensionName,
             "VK_EXT_blend_operation_advanced",
             "VK_EXT_custom_border_color",
             "VK_EXT_descriptor_indexing", // Enabling this works around an issue with disposed buffer bindings on RADV.

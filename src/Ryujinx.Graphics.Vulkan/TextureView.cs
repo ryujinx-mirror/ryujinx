@@ -563,6 +563,34 @@ namespace Ryujinx.Graphics.Vulkan
             }
         }
 
+        public void CopyTo(BufferRange range, int layer, int level, int stride)
+        {
+            _gd.PipelineInternal.EndRenderPass();
+            var cbs = _gd.PipelineInternal.CurrentCommandBuffer;
+
+            int outSize = Info.GetMipSize(level);
+            int hostSize = GetBufferDataLength(outSize);
+
+            var image = GetImage().Get(cbs).Value;
+            int offset = range.Offset;
+
+            Auto<DisposableBuffer> autoBuffer = _gd.BufferManager.GetBuffer(cbs.CommandBuffer, range.Handle, true);
+            VkBuffer buffer = autoBuffer.Get(cbs, range.Offset, outSize).Value;
+
+            if (PrepareOutputBuffer(cbs, hostSize, buffer, out VkBuffer copyToBuffer, out BufferHolder tempCopyHolder))
+            {
+                offset = 0;
+            }
+
+            CopyFromOrToBuffer(cbs.CommandBuffer, copyToBuffer, image, hostSize, true, layer, level, 1, 1, singleSlice: true, offset, stride);
+
+            if (tempCopyHolder != null)
+            {
+                CopyDataToOutputBuffer(cbs, tempCopyHolder, autoBuffer, hostSize, range.Offset);
+                tempCopyHolder.Dispose();
+            }
+        }
+
         private ReadOnlySpan<byte> GetData(CommandBufferPool cbp, PersistentFlushBuffer flushBuffer)
         {
             int size = 0;
@@ -693,6 +721,30 @@ namespace Ryujinx.Graphics.Vulkan
             return storage;
         }
 
+        private bool PrepareOutputBuffer(CommandBufferScoped cbs, int hostSize, VkBuffer target, out VkBuffer copyTarget, out BufferHolder copyTargetHolder)
+        {
+            if (NeedsD24S8Conversion())
+            {
+                copyTargetHolder = _gd.BufferManager.Create(_gd, hostSize);
+                copyTarget = copyTargetHolder.GetBuffer().Get(cbs, 0, hostSize).Value;
+
+                return true;
+            }
+
+            copyTarget = target;
+            copyTargetHolder = null;
+
+            return false;
+        }
+
+        private void CopyDataToOutputBuffer(CommandBufferScoped cbs, BufferHolder hostData, Auto<DisposableBuffer> copyTarget, int hostSize, int dstOffset)
+        {
+            if (NeedsD24S8Conversion())
+            {
+                _gd.HelperShader.ConvertD32S8ToD24S8(_gd, cbs, hostData, copyTarget, hostSize / (2 * sizeof(int)), dstOffset);
+            }
+        }
+
         private bool NeedsD24S8Conversion()
         {
             return FormatCapabilities.IsD24S8(Info.Format) && VkFormat == VkFormat.D32SfloatS8Uint;
@@ -708,7 +760,9 @@ namespace Ryujinx.Graphics.Vulkan
             int dstLevel,
             int dstLayers,
             int dstLevels,
-            bool singleSlice)
+            bool singleSlice,
+            int offset = 0,
+            int stride = 0)
         {
             bool is3D = Info.Target == Target.Texture3D;
             int width = Math.Max(1, Info.Width >> dstLevel);
@@ -717,8 +771,6 @@ namespace Ryujinx.Graphics.Vulkan
             int layer = is3D ? 0 : dstLayer;
             int layers = dstLayers;
             int levels = dstLevels;
-
-            int offset = 0;
 
             for (int level = 0; level < levels; level++)
             {
@@ -731,7 +783,7 @@ namespace Ryujinx.Graphics.Vulkan
                     break;
                 }
 
-                int rowLength = (Info.GetMipStride(dstLevel + level) / Info.BytesPerPixel) * Info.BlockWidth;
+                int rowLength = ((stride == 0 ? Info.GetMipStride(dstLevel + level) : stride) / Info.BytesPerPixel) * Info.BlockWidth;
 
                 var aspectFlags = Info.Format.ConvertAspectFlags();
 

@@ -44,6 +44,7 @@ namespace Ryujinx.Graphics.Vulkan
         internal object QueueLock { get; private set; }
 
         internal MemoryAllocator MemoryAllocator { get; private set; }
+        internal HostMemoryAllocator HostMemoryAllocator { get; private set; }
         internal CommandBufferPool CommandBufferPool { get; private set; }
         internal DescriptorSetManager DescriptorSetManager { get; private set; }
         internal PipelineLayoutCache PipelineLayoutCache { get; private set; }
@@ -307,6 +308,7 @@ namespace Ryujinx.Graphics.Vulkan
                 _physicalDevice.PhysicalDeviceFeatures.PipelineStatisticsQuery,
                 _physicalDevice.PhysicalDeviceFeatures.GeometryShader,
                 _physicalDevice.IsDeviceExtensionPresent("VK_NV_viewport_array2"),
+                _physicalDevice.IsDeviceExtensionPresent(ExtExternalMemoryHost.ExtensionName),
                 propertiesSubgroupSizeControl.MinSubgroupSize,
                 propertiesSubgroupSizeControl.MaxSubgroupSize,
                 propertiesSubgroupSizeControl.RequiredSubgroupSizeStages,
@@ -318,6 +320,9 @@ namespace Ryujinx.Graphics.Vulkan
             IsSharedMemory = MemoryAllocator.IsDeviceMemoryShared(_physicalDevice);
 
             MemoryAllocator = new MemoryAllocator(Api, _physicalDevice, _device);
+
+            Api.TryGetDeviceExtension(_instance.Instance, _device, out ExtExternalMemoryHost hostMemoryApi);
+            HostMemoryAllocator = new HostMemoryAllocator(MemoryAllocator, Api, hostMemoryApi, _device);
 
             CommandBufferPool = new CommandBufferPool(Api, _device, Queue, QueueLock, queueFamilyIndex);
 
@@ -375,9 +380,19 @@ namespace Ryujinx.Graphics.Vulkan
             _initialized = true;
         }
 
+        public BufferHandle CreateBuffer(int size, BufferAccess access)
+        {
+            return BufferManager.CreateWithHandle(this, size, access.Convert());
+        }
+
         public BufferHandle CreateBuffer(int size, BufferHandle storageHint)
         {
             return BufferManager.CreateWithHandle(this, size, BufferAllocationType.Auto, storageHint);
+        }
+
+        public BufferHandle CreateBuffer(nint pointer, int size)
+        {
+            return BufferManager.CreateHostImported(this, pointer, size);
         }
 
         public IProgram CreateProgram(ShaderSource[] sources, ShaderInfo info)
@@ -815,6 +830,12 @@ namespace Ryujinx.Graphics.Vulkan
 
             // Last step destroy the instance
             _instance.Dispose();
+        }
+
+        public bool PrepareHostMapping(nint address, ulong size)
+        {
+            return Capabilities.SupportsHostImportedMemory &&
+                HostMemoryAllocator.TryImport(BufferManager.HostImportedBufferMemoryRequirements, BufferManager.DefaultBufferMemoryFlags, address, size);
         }
     }
 }

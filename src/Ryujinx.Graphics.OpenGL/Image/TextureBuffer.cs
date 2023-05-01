@@ -49,6 +49,11 @@ namespace Ryujinx.Graphics.OpenGL.Image
             return GetData();
         }
 
+        public void CopyTo(BufferRange range, int layer, int level, int stride)
+        {
+            throw new NotImplementedException();
+        }
+
         public void SetData(SpanOrArray<byte> data)
         {
             var dataSpan = data.AsSpan();

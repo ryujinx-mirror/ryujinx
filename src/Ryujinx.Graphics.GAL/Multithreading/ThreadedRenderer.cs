@@ -57,6 +57,7 @@ namespace Ryujinx.Graphics.GAL.Multithreading
         private int _refConsumerPtr;
 
         private Action _interruptAction;
+        private object _interruptLock = new();
 
         public event EventHandler<ScreenCaptureImageInfo> ScreenCaptured;
 
@@ -274,6 +275,24 @@ namespace Ryujinx.Graphics.GAL.Multithreading
             return handle;
         }
 
+        public BufferHandle CreateBuffer(nint pointer, int size)
+        {
+            BufferHandle handle = Buffers.CreateBufferHandle();
+            New<CreateHostBufferCommand>().Set(handle, pointer, size);
+            QueueCommand();
+
+            return handle;
+        }
+
+        public BufferHandle CreateBuffer(int size, BufferAccess access)
+        {
+            BufferHandle handle = Buffers.CreateBufferHandle();
+            New<CreateBufferAccessCommand>().Set(handle, size, access);
+            QueueCommand();
+
+            return handle;
+        }
+
         public IProgram CreateProgram(ShaderSource[] shaders, ShaderInfo info)
         {
             var program = new ThreadedProgram(this);
@@ -448,17 +467,25 @@ namespace Ryujinx.Graphics.GAL.Multithreading
             }
             else
             {
-                while (Interlocked.CompareExchange(ref _interruptAction, action, null) != null) { }
+                lock (_interruptLock)
+                {
+                    while (Interlocked.CompareExchange(ref _interruptAction, action, null) != null) { }
 
-                _galWorkAvailable.Set();
+                    _galWorkAvailable.Set();
 
-                _interruptRun.WaitOne();
+                    _interruptRun.WaitOne();
+                }
             }
         }
 
         public void SetInterruptAction(Action<Action> interruptAction)
         {
             // Threaded renderer ignores given interrupt action, as it provides its own to the child renderer.
+        }
+
+        public bool PrepareHostMapping(nint address, ulong size)
+        {
+            return _baseRenderer.PrepareHostMapping(address, size);
         }
 
         public void Dispose()

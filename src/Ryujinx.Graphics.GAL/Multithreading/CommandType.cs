@@ -4,6 +4,8 @@
     {
         Action,
         CreateBuffer,
+        CreateBufferAccess,
+        CreateHostBuffer,
         CreateProgram,
         CreateSampler,
         CreateSync,
@@ -29,6 +31,7 @@
         SamplerDispose,
 
         TextureCopyTo,
+        TextureCopyToBuffer,
         TextureCopyToScaled,
         TextureCopyToSlice,
         TextureCreateView,

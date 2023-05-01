@@ -8,6 +8,7 @@ using Ryujinx.Memory.Tracking;
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using System.Linq;
 using System.Threading;
 
 namespace Ryujinx.Graphics.Gpu.Memory
@@ -80,6 +81,34 @@ namespace Ryujinx.Graphics.Gpu.Memory
             {
                 rc.DecrementReferenceCount();
             }
+        }
+
+        /// <summary>
+        /// Gets a host pointer for a given range of application memory.
+        /// If the memory region is not a single contiguous block, this method returns 0.
+        /// </summary>
+        /// <remarks>
+        /// Getting a host pointer is unsafe. It should be considered invalid immediately if the GPU memory is unmapped.
+        /// </remarks>
+        /// <param name="range">Ranges of physical memory where the target data is located</param>
+        /// <returns>Pointer to the range of memory</returns>
+        public nint GetHostPointer(MultiRange range)
+        {
+            if (range.Count == 1)
+            {
+                var singleRange = range.GetSubRange(0);
+                if (singleRange.Address != MemoryManager.PteUnmapped)
+                {
+                    var regions = _cpuMemory.GetHostRegions(singleRange.Address, singleRange.Size);
+
+                    if (regions != null && regions.Count() == 1)
+                    {
+                        return (nint)regions.First().Address;
+                    }
+                }
+            }
+
+            return 0;
         }
 
         /// <summary>

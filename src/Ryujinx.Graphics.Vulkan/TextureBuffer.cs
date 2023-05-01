@@ -67,6 +67,11 @@ namespace Ryujinx.Graphics.Vulkan
             return GetData();
         }
 
+        public void CopyTo(BufferRange range, int layer, int level, int stride)
+        {
+            throw new NotImplementedException();
+        }
+
         public void Release()
         {
             if (_gd.Textures.Remove(this))

@@ -364,6 +364,15 @@ namespace Ryujinx.Graphics.Vulkan
             };
         }
 
+        public static BufferAllocationType Convert(this BufferAccess access)
+        {
+            return access switch
+            {
+                BufferAccess.FlushPersistent => BufferAllocationType.HostMapped,
+                _ => BufferAllocationType.Auto
+            };
+        }
+
         private static T2 LogInvalidAndReturn<T1, T2>(T1 value, string name, T2 defaultValue = default)
         {
             Logger.Debug?.Print(LogClass.Gpu, $"Invalid {name} enum value: {value}.");

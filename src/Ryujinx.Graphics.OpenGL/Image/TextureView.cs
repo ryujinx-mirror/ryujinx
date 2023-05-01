@@ -3,6 +3,7 @@ using Ryujinx.Common;
 using Ryujinx.Common.Memory;
 using Ryujinx.Graphics.GAL;
 using System;
+using System.Diagnostics;
 
 namespace Ryujinx.Graphics.OpenGL.Image
 {
@@ -285,6 +286,26 @@ namespace Ryujinx.Graphics.OpenGL.Image
 
                 return new PinnedSpan<byte>((byte*)target.ToPointer() + offset, size);
             }
+        }
+
+        public void CopyTo(BufferRange range, int layer, int level, int stride)
+        {
+            if (stride != 0 && stride != BitUtils.AlignUp(Info.Width * Info.BytesPerPixel, 4))
+            {
+                throw new NotSupportedException("Stride conversion for texture copy to buffer not supported.");
+            }
+
+            GL.BindBuffer(BufferTarget.PixelPackBuffer, range.Handle.ToInt32());
+
+            FormatInfo format = FormatTable.GetFormatInfo(Info.Format);
+            if (format.PixelFormat == PixelFormat.DepthStencil)
+            {
+                throw new InvalidOperationException("DepthStencil copy to buffer is not supported for layer/level > 0.");
+            }
+
+            int offset = WriteToPbo2D(range.Offset, layer, level);
+
+            Debug.Assert(offset == 0);
         }
 
         public void WriteToPbo(int offset, bool forceBgra)

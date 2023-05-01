@@ -3,6 +3,7 @@ using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.Gpu.Engine.GPFifo;
 using Ryujinx.Graphics.Gpu.Engine.InlineToMemory;
 using Ryujinx.Graphics.Gpu.Engine.Threed.Blender;
+using Ryujinx.Graphics.Gpu.Synchronization;
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
@@ -254,7 +255,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             uint syncpointId = (uint)argument & 0xFFFF;
 
             _context.AdvanceSequence();
-            _context.CreateHostSyncIfNeeded(true, true);
+            _context.CreateHostSyncIfNeeded(HostSyncFlags.StrictSyncpoint);
             _context.Renderer.UpdateCounters(); // Poll the query counters, the game may want an updated result.
             _context.Synchronization.IncrementSyncpoint(syncpointId);
         }
