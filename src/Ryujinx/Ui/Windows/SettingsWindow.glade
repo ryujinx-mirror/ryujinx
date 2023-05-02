@@ -160,19 +160,83 @@
                                   </packing>
                                 </child>
                                 <child>
-                                  <object class="GtkCheckButton" id="_hideCursorOnIdleToggle">
-                                    <property name="label" translatable="yes">Hide Cursor On Idle</property>
+                                  <object class="GtkBox" id="_hideCursorBox">
                                     <property name="visible">True</property>
-                                    <property name="can-focus">True</property>
-                                    <property name="receives-default">False</property>
-                                    <property name="halign">start</property>
-                                    <property name="draw-indicator">True</property>
+                                    <property name="can-focus">False</property>
+                                    <child>
+                                      <object class="GtkLabel">
+                                        <property name="visible">True</property>
+                                        <property name="can-focus">False</property>
+                                        <property name="halign">end</property>
+                                        <property name="label" translatable="yes">Hide Cursor:</property>
+                                      </object>
+                                      <packing>
+                                        <property name="expand">False</property>
+                                        <property name="fill">True</property>
+                                        <property name="padding">5</property>
+                                        <property name="position">2</property>
+                                      </packing>
+                                    </child>
+                                    <child>
+                                      <object class="GtkRadioButton" id="_hideCursorNever">
+                                        <property name="label" translatable="yes">Never</property>
+                                        <property name="visible">True</property>
+                                        <property name="can-focus">True</property>
+                                        <property name="receives-default">False</property>
+                                        <property name="halign">start</property>
+                                        <property name="margin-top">5</property>
+                                        <property name="margin-bottom">5</property>
+                                        <property name="active">True</property>
+                                        <property name="draw-indicator">True</property>
+                                      </object>
+                                      <packing>
+                                        <property name="expand">False</property>
+                                        <property name="fill">True</property>
+                                        <property name="position">3</property>
+                                      </packing>
+                                    </child>
+                                    <child>
+                                      <object class="GtkRadioButton" id="_hideCursorOnIdle">
+                                        <property name="label" translatable="yes">On Idle</property>
+                                        <property name="visible">True</property>
+                                        <property name="can-focus">True</property>
+                                        <property name="receives-default">False</property>
+                                        <property name="halign">start</property>
+                                        <property name="margin-top">5</property>
+                                        <property name="margin-bottom">5</property>
+                                        <property name="draw-indicator">True</property>
+                                        <property name="group">_hideCursorNever</property>
+                                      </object>
+                                      <packing>
+                                        <property name="expand">False</property>
+                                        <property name="fill">True</property>
+                                        <property name="position">4</property>
+                                      </packing>
+                                    </child>
+                                    <child>
+                                      <object class="GtkRadioButton" id="_hideCursorAlways">
+                                        <property name="label" translatable="yes">Always</property>
+                                        <property name="visible">True</property>
+                                        <property name="can-focus">True</property>
+                                        <property name="receives-default">False</property>
+                                        <property name="halign">start</property>
+                                        <property name="margin-top">5</property>
+                                        <property name="margin-bottom">5</property>
+                                        <property name="draw-indicator">True</property>
+                                        <property name="group">_hideCursorNever</property>
+                                      </object>
+                                      <packing>
+                                        <property name="expand">False</property>
+                                        <property name="fill">True</property>
+                                        <property name="position">5</property>
+                                      </packing>
+                                    </child>
                                   </object>
                                   <packing>
                                     <property name="expand">False</property>
                                     <property name="fill">True</property>
                                     <property name="padding">5</property>
-                                    <property name="position">3</property>
+                                    <property name="position">4</property>
                                   </packing>
                                 </child>
                               </object>

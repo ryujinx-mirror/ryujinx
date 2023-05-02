@@ -9,6 +9,7 @@ namespace Ryujinx.Ui.Common.Helper
 
         public static bool?  OverrideDockedMode      { get; private set; }
         public static string OverrideGraphicsBackend { get; private set; }
+        public static string OverrideHideCursor      { get; private set; }
         public static string BaseDirPathArg          { get; private set; }
         public static string Profile                 { get; private set; }
         public static string LaunchPathArg           { get; private set; }
@@ -75,6 +76,16 @@ namespace Ryujinx.Ui.Common.Helper
                         break;
                     case "--handheld-mode":
                         OverrideDockedMode = false;
+                        break;
+                    case "--hide-cursor":
+                        if (i + 1 >= args.Length)
+                        {
+                            Logger.Error?.Print(LogClass.Application, $"Invalid option '{arg}'");
+
+                            continue;
+                        }
+
+                        OverrideHideCursor = args[++i];
                         break;
                     default:
                         LaunchPathArg = arg;

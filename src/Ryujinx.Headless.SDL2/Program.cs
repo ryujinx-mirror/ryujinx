@@ -478,8 +478,8 @@ namespace Ryujinx.Headless.SDL2
         private static WindowBase CreateWindow(Options options)
         {
             return options.GraphicsBackend == GraphicsBackend.Vulkan
-                ? new VulkanWindow(_inputManager, options.LoggingGraphicsDebugLevel, options.AspectRatio, options.EnableMouse, options.HideCursor)
-                : new OpenGLWindow(_inputManager, options.LoggingGraphicsDebugLevel, options.AspectRatio, options.EnableMouse, options.HideCursor);
+                ? new VulkanWindow(_inputManager, options.LoggingGraphicsDebugLevel, options.AspectRatio, options.EnableMouse, options.HideCursorMode)
+                : new OpenGLWindow(_inputManager, options.LoggingGraphicsDebugLevel, options.AspectRatio, options.EnableMouse, options.HideCursorMode);
         }
 
         private static IRenderer CreateRenderer(Options options, WindowBase window)

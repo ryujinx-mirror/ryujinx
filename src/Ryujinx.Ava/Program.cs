@@ -183,6 +183,18 @@ namespace Ryujinx.Ava
             {
                 ConfigurationState.Instance.System.EnableDockedMode.Value = CommandLineState.OverrideDockedMode.Value;
             }
+
+            // Check if HideCursor was overridden.
+            if (CommandLineState.OverrideHideCursor is not null)
+            {
+                ConfigurationState.Instance.HideCursor.Value = CommandLineState.OverrideHideCursor!.ToLower() switch
+                {
+                    "never" => HideCursorMode.Never,
+                    "onidle" => HideCursorMode.OnIdle,
+                    "always" => HideCursorMode.Always,
+                    _ => ConfigurationState.Instance.HideCursor.Value
+                };
+            }
         }
 
         private static void PrintSystemInfo()

@@ -613,7 +613,7 @@ namespace Ryujinx.Ui.Common.Configuration
         /// <summary>
         /// Hide Cursor on Idle
         /// </summary>
-        public ReactiveObject<bool> HideCursorOnIdle { get; private set; }
+        public ReactiveObject<HideCursorMode> HideCursor { get; private set; }
 
         private ConfigurationState()
         {
@@ -626,7 +626,7 @@ namespace Ryujinx.Ui.Common.Configuration
             EnableDiscordIntegration = new ReactiveObject<bool>();
             CheckUpdatesOnStart      = new ReactiveObject<bool>();
             ShowConfirmExit          = new ReactiveObject<bool>();
-            HideCursorOnIdle         = new ReactiveObject<bool>();
+            HideCursor               = new ReactiveObject<HideCursorMode>();
         }
 
         public ConfigurationFileFormat ToFileFormat()
@@ -662,7 +662,7 @@ namespace Ryujinx.Ui.Common.Configuration
                 EnableDiscordIntegration   = EnableDiscordIntegration,
                 CheckUpdatesOnStart        = CheckUpdatesOnStart,
                 ShowConfirmExit            = ShowConfirmExit,
-                HideCursorOnIdle           = HideCursorOnIdle,
+                HideCursor                 = HideCursor,
                 EnableVsync                = Graphics.EnableVsync,
                 EnableShaderCache          = Graphics.EnableShaderCache,
                 EnableTextureRecompression = Graphics.EnableTextureRecompression,
@@ -767,7 +767,7 @@ namespace Ryujinx.Ui.Common.Configuration
             EnableDiscordIntegration.Value            = true;
             CheckUpdatesOnStart.Value                 = true;
             ShowConfirmExit.Value                     = true;
-            HideCursorOnIdle.Value                    = false;
+            HideCursor.Value                          = Ryujinx.Common.Configuration.HideCursorMode.Never;
             Graphics.EnableVsync.Value                = true;
             Graphics.EnableShaderCache.Value          = true;
             Graphics.EnableTextureRecompression.Value = false;
@@ -1046,7 +1046,7 @@ namespace Ryujinx.Ui.Common.Configuration
             {
                 Ryujinx.Common.Logging.Logger.Warning?.Print(LogClass.Application, $"Outdated configuration version {configurationFileFormat.Version}, migrating to version 22.");
 
-                configurationFileFormat.HideCursorOnIdle = false;
+                configurationFileFormat.HideCursor = HideCursorMode.Never;
 
                 configurationFileUpdated = true;
             }
@@ -1427,7 +1427,7 @@ namespace Ryujinx.Ui.Common.Configuration
             EnableDiscordIntegration.Value            = configurationFileFormat.EnableDiscordIntegration;
             CheckUpdatesOnStart.Value                 = configurationFileFormat.CheckUpdatesOnStart;
             ShowConfirmExit.Value                     = configurationFileFormat.ShowConfirmExit;
-            HideCursorOnIdle.Value                    = configurationFileFormat.HideCursorOnIdle;
+            HideCursor.Value                          = configurationFileFormat.HideCursor;
             Graphics.EnableVsync.Value                = configurationFileFormat.EnableVsync;
             Graphics.EnableShaderCache.Value          = configurationFileFormat.EnableShaderCache;
             Graphics.EnableTextureRecompression.Value = configurationFileFormat.EnableTextureRecompression;

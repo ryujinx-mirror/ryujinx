@@ -132,7 +132,7 @@ namespace Ryujinx.Ava.UI.ViewModels
         public bool EnableDiscordIntegration { get; set; }
         public bool CheckUpdatesOnStart { get; set; }
         public bool ShowConfirmExit { get; set; }
-        public bool HideCursorOnIdle { get; set; }
+        public int HideCursor { get; set; }
         public bool EnableDockedMode { get; set; }
         public bool EnableKeyboard { get; set; }
         public bool EnableMouse { get; set; }
@@ -375,7 +375,7 @@ namespace Ryujinx.Ava.UI.ViewModels
             EnableDiscordIntegration = config.EnableDiscordIntegration;
             CheckUpdatesOnStart = config.CheckUpdatesOnStart;
             ShowConfirmExit = config.ShowConfirmExit;
-            HideCursorOnIdle = config.HideCursorOnIdle;
+            HideCursor = (int)config.HideCursor.Value;
 
             GameDirectories.Clear();
             GameDirectories.AddRange(config.Ui.GameDirs.Value);
@@ -458,7 +458,7 @@ namespace Ryujinx.Ava.UI.ViewModels
             config.EnableDiscordIntegration.Value = EnableDiscordIntegration;
             config.CheckUpdatesOnStart.Value = CheckUpdatesOnStart;
             config.ShowConfirmExit.Value = ShowConfirmExit;
-            config.HideCursorOnIdle.Value = HideCursorOnIdle;
+            config.HideCursor.Value = (HideCursorMode)HideCursor;
 
             if (_directoryChanged)
             {

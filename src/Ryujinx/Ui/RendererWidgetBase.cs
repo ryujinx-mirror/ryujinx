@@ -72,7 +72,7 @@ namespace Ryujinx.Ui
         const int CursorHideIdleTime = 5; // seconds
         private static readonly Cursor _invisibleCursor = new Cursor(Display.Default, CursorType.BlankCursor);
         private long _lastCursorMoveTime;
-        private bool _hideCursorOnIdle;
+        private HideCursorMode _hideCursorMode;
         private InputManager _inputManager;
         private IKeyboard _keyboardInterface;
         private GraphicsDebugLevel _glLogLevel;
@@ -113,10 +113,10 @@ namespace Ryujinx.Ui
 
             _gpuCancellationTokenSource = new CancellationTokenSource();
 
-            _hideCursorOnIdle = ConfigurationState.Instance.HideCursorOnIdle;
+            _hideCursorMode = ConfigurationState.Instance.HideCursor;
             _lastCursorMoveTime = Stopwatch.GetTimestamp();
 
-            ConfigurationState.Instance.HideCursorOnIdle.Event += HideCursorStateChanged;
+            ConfigurationState.Instance.HideCursor.Event += HideCursorStateChanged;
             ConfigurationState.Instance.Graphics.AntiAliasing.Event += UpdateAnriAliasing;
             ConfigurationState.Instance.Graphics.ScalingFilter.Event += UpdateScalingFilter;
             ConfigurationState.Instance.Graphics.ScalingFilterLevel.Event += UpdateScalingFilterLevel;
@@ -145,26 +145,32 @@ namespace Ryujinx.Ui
             return Renderer.GetHardwareInfo().GpuVendor;
         }
 
-        private void HideCursorStateChanged(object sender, ReactiveEventArgs<bool> state)
+        private void HideCursorStateChanged(object sender, ReactiveEventArgs<HideCursorMode> state)
         {
             Application.Invoke(delegate
             {
-                _hideCursorOnIdle = state.NewValue;
+                _hideCursorMode = state.NewValue;
 
-                if (_hideCursorOnIdle)
+                switch (_hideCursorMode)
                 {
-                    _lastCursorMoveTime = Stopwatch.GetTimestamp();
-                }
-                else
-                {
-                    Window.Cursor = null;
+                    case HideCursorMode.Never:
+                        Window.Cursor = null;
+                        break;
+                    case HideCursorMode.OnIdle:
+                        _lastCursorMoveTime = Stopwatch.GetTimestamp();
+                        break;
+                    case HideCursorMode.Always:
+                        Window.Cursor = _invisibleCursor;
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
                 }
             });
         }
 
         private void Renderer_Destroyed(object sender, EventArgs e)
         {
-            ConfigurationState.Instance.HideCursorOnIdle.Event -= HideCursorStateChanged;
+            ConfigurationState.Instance.HideCursor.Event -= HideCursorStateChanged;
             ConfigurationState.Instance.Graphics.AntiAliasing.Event -= UpdateAnriAliasing;
             ConfigurationState.Instance.Graphics.ScalingFilter.Event -= UpdateScalingFilter;
             ConfigurationState.Instance.Graphics.ScalingFilterLevel.Event -= UpdateScalingFilterLevel;
@@ -180,7 +186,7 @@ namespace Ryujinx.Ui
 
         protected override bool OnMotionNotifyEvent(EventMotion evnt)
         {
-            if (_hideCursorOnIdle)
+            if (_hideCursorMode == HideCursorMode.OnIdle)
             {
                 _lastCursorMoveTime = Stopwatch.GetTimestamp();
             }
@@ -315,15 +321,28 @@ namespace Ryujinx.Ui
 
             _toggleDockedMode = toggleDockedMode;
 
-            if (_hideCursorOnIdle && !ConfigurationState.Instance.Hid.EnableMouse)
+            if (ConfigurationState.Instance.Hid.EnableMouse.Value)
             {
-                long cursorMoveDelta = Stopwatch.GetTimestamp() - _lastCursorMoveTime;
-                Window.Cursor = (cursorMoveDelta >= CursorHideIdleTime * Stopwatch.Frequency) ? _invisibleCursor : null;
+                if (_isMouseInClient)
+                {
+                    Window.Cursor = _invisibleCursor;
+                }
             }
-
-            if (ConfigurationState.Instance.Hid.EnableMouse && _isMouseInClient)
+            else
             {
-                Window.Cursor = _invisibleCursor;
+                switch (_hideCursorMode)
+                {
+                    case HideCursorMode.OnIdle:
+                        long cursorMoveDelta = Stopwatch.GetTimestamp() - _lastCursorMoveTime;
+                        Window.Cursor = (cursorMoveDelta >= CursorHideIdleTime * Stopwatch.Frequency) ? _invisibleCursor : null;
+                        break;
+                    case HideCursorMode.Always:
+                        Window.Cursor = _invisibleCursor;
+                        break;
+                    case HideCursorMode.Never:
+                        Window.Cursor = null;
+                        break;
+                }
             }
         }
 

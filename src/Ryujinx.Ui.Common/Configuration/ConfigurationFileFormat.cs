@@ -162,9 +162,9 @@ namespace Ryujinx.Ui.Common.Configuration
         public bool ShowConfirmExit { get; set; }
 
         /// <summary>
-        /// Hide Cursor on Idle
+        /// Whether to hide cursor on idle, always or never
         /// </summary>
-        public bool HideCursorOnIdle { get; set; }
+        public HideCursorMode HideCursor { get; set; }
 
         /// <summary>
         /// Enables or disables Vertical Sync

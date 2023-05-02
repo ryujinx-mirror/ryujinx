@@ -209,7 +209,7 @@ namespace Ryujinx
                 }
             }
 
-            // Check if graphics backend was overridden
+            // Check if graphics backend was overridden.
             if (CommandLineState.OverrideGraphicsBackend != null)
             {
                 if (CommandLineState.OverrideGraphicsBackend.ToLower() == "opengl")
@@ -224,7 +224,19 @@ namespace Ryujinx
                 }
             }
 
-            // Check if docked mode was overriden.
+            // Check if HideCursor was overridden.
+            if (CommandLineState.OverrideHideCursor is not null)
+            {
+                ConfigurationState.Instance.HideCursor.Value = CommandLineState.OverrideHideCursor!.ToLower() switch
+                {
+                    "never" => HideCursorMode.Never,
+                    "onidle" => HideCursorMode.OnIdle,
+                    "always" => HideCursorMode.Always,
+                    _ => ConfigurationState.Instance.HideCursor.Value
+                };
+            }
+
+            // Check if docked mode was overridden.
             if (CommandLineState.OverrideDockedMode.HasValue)
             {
                 ConfigurationState.Instance.System.EnableDockedMode.Value = CommandLineState.OverrideDockedMode.Value;
