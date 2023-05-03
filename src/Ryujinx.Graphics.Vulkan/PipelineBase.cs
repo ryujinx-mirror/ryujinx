@@ -1015,8 +1015,8 @@ namespace Ryujinx.Graphics.Vulkan
 
         private void SetRenderTargetsInternal(ITexture[] colors, ITexture depthStencil, bool filterWriteMasked)
         {
-            FramebufferParams?.UpdateModifications();
             CreateFramebuffer(colors, depthStencil, filterWriteMasked);
+            FramebufferParams?.UpdateModifications();
             CreateRenderPass();
             SignalStateChange();
             SignalAttachmentChange();
