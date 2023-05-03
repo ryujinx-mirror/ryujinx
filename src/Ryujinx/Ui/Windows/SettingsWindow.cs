@@ -720,6 +720,7 @@ namespace Ryujinx.Ui.Windows
             if (Directory.Exists(_addGameDirBox.Buffer.Text))
             {
                 _gameDirsBoxStore.AppendValues(_addGameDirBox.Buffer.Text);
+                _directoryChanged = true;
             }
             else
             {
