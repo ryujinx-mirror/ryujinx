@@ -28,8 +28,8 @@ namespace Ryujinx.Ui.Windows
             builder.Autoconnect(this);
             _baseTitleInfoLabel.Text = $"Cheats Available for {titleName} [{titleId:X16}]";
 
-            string modsBasePath  = ModLoader.GetModsBasePath();
-            string titleModsPath = ModLoader.GetTitleDir(modsBasePath, titleId.ToString("X16"));
+            string modsBasePath  = virtualFileSystem.ModLoader.GetModsBasePath();
+            string titleModsPath = virtualFileSystem.ModLoader.GetTitleDir(modsBasePath, titleId.ToString("X16"));
 
             _enabledCheatsPath = System.IO.Path.Combine(titleModsPath, "cheats", "enabled.txt");
 

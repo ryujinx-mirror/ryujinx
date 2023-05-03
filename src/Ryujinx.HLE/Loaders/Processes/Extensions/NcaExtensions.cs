@@ -8,7 +8,6 @@ using LibHac.Ns;
 using LibHac.Tools.FsSystem;
 using LibHac.Tools.FsSystem.NcaUtils;
 using Ryujinx.Common.Logging;
-using Ryujinx.HLE.HOS;
 using System.IO;
 using System.Linq;
 using ApplicationId = LibHac.Ncm.ApplicationId;
@@ -36,8 +35,8 @@ namespace Ryujinx.HLE.Loaders.Processes.Extensions
             // Collecting mods related to AocTitleIds and ProgramId.
             device.Configuration.VirtualFileSystem.ModLoader.CollectMods(
                 device.Configuration.ContentManager.GetAocTitleIds().Prepend(metaLoader.GetProgramId()),
-                ModLoader.GetModsBasePath(),
-                ModLoader.GetSdModsBasePath());
+                device.Configuration.VirtualFileSystem.ModLoader.GetModsBasePath(),
+                device.Configuration.VirtualFileSystem.ModLoader.GetSdModsBasePath());
 
             // Load Nacp file.
             var nacpData = new BlitStruct<ApplicationControlProperty>(1);
