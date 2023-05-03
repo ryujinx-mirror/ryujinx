@@ -1576,8 +1576,8 @@ namespace Ryujinx.Ava.UI.ViewModels
         {
             if (SelectedApplication != null)
             {
-                string modsBasePath  = VirtualFileSystem.ModLoader.GetModsBasePath();
-                string titleModsPath = VirtualFileSystem.ModLoader.GetTitleDir(modsBasePath, SelectedApplication.TitleId);
+                string modsBasePath  = ModLoader.GetModsBasePath();
+                string titleModsPath = ModLoader.GetTitleDir(modsBasePath, SelectedApplication.TitleId);
 
                 OpenHelper.OpenFolder(titleModsPath);
             }
@@ -1587,8 +1587,8 @@ namespace Ryujinx.Ava.UI.ViewModels
         {
             if (SelectedApplication != null)
             {
-                string sdModsBasePath = VirtualFileSystem.ModLoader.GetSdModsBasePath();
-                string titleModsPath  = VirtualFileSystem.ModLoader.GetTitleDir(sdModsBasePath, SelectedApplication.TitleId);
+                string sdModsBasePath = ModLoader.GetSdModsBasePath();
+                string titleModsPath  = ModLoader.GetTitleDir(sdModsBasePath, SelectedApplication.TitleId);
 
                 OpenHelper.OpenFolder(titleModsPath);
             }

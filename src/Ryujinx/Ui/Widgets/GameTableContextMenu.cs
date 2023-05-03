@@ -460,16 +460,16 @@ namespace Ryujinx.Ui.Widgets
 
         private void OpenTitleModDir_Clicked(object sender, EventArgs args)
         {
-            string modsBasePath  = _virtualFileSystem.ModLoader.GetModsBasePath();
-            string titleModsPath = _virtualFileSystem.ModLoader.GetTitleDir(modsBasePath, _titleIdText);
+            string modsBasePath  = ModLoader.GetModsBasePath();
+            string titleModsPath = ModLoader.GetTitleDir(modsBasePath, _titleIdText);
 
             OpenHelper.OpenFolder(titleModsPath);
         }
 
         private void OpenTitleSdModDir_Clicked(object sender, EventArgs args)
         {
-            string sdModsBasePath  = _virtualFileSystem.ModLoader.GetSdModsBasePath();
-            string titleModsPath   = _virtualFileSystem.ModLoader.GetTitleDir(sdModsBasePath, _titleIdText);
+            string sdModsBasePath  = ModLoader.GetSdModsBasePath();
+            string titleModsPath   = ModLoader.GetTitleDir(sdModsBasePath, _titleIdText);
 
             OpenHelper.OpenFolder(titleModsPath);
         }
