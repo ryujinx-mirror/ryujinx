@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace Ryujinx.Horizon.Bcat.Ipc.Types
+namespace Ryujinx.HLE.HOS.Services.Bcat.ServiceCreator.Types
 {
     [StructLayout(LayoutKind.Sequential, Size = 0x200)]
     public struct DeliveryCacheProgressImpl
