@@ -249,6 +249,8 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <param name="copyTexture">Copy texture to find or create</param>
         /// <param name="offset">Offset to be added to the physical texture address</param>
         /// <param name="formatInfo">Format information of the copy texture</param>
+        /// <param name="depthAlias">Indicates if aliasing between color and depth format should be allowed</param>
+        /// <param name="shouldCreate">Indicates if a new texture should be created if none is found on the cache</param>
         /// <param name="preferScaling">Indicates if the texture should be scaled from the start</param>
         /// <param name="sizeHint">A hint indicating the minimum used size for the texture</param>
         /// <returns>The texture</returns>
@@ -257,6 +259,7 @@ namespace Ryujinx.Graphics.Gpu.Image
             TwodTexture copyTexture,
             ulong offset,
             FormatInfo formatInfo,
+            bool depthAlias,
             bool shouldCreate,
             bool preferScaling,
             Size sizeHint)
@@ -292,6 +295,11 @@ namespace Ryujinx.Graphics.Gpu.Image
                 formatInfo);
 
             TextureSearchFlags flags = TextureSearchFlags.ForCopy;
+
+            if (depthAlias)
+            {
+                flags |= TextureSearchFlags.DepthAlias;
+            }
 
             if (preferScaling)
             {

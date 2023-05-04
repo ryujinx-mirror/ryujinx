@@ -1118,7 +1118,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         {
             bool forSampler = (flags & TextureSearchFlags.ForSampler) != 0;
 
-            TextureMatchQuality matchQuality = TextureCompatibility.FormatMatches(Info, info, forSampler, (flags & TextureSearchFlags.ForCopy) != 0);
+            TextureMatchQuality matchQuality = TextureCompatibility.FormatMatches(Info, info, forSampler, (flags & TextureSearchFlags.DepthAlias) != 0);
 
             if (matchQuality == TextureMatchQuality.NoMatch)
             {

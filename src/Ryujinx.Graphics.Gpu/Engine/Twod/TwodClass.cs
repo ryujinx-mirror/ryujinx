@@ -300,11 +300,16 @@ namespace Ryujinx.Graphics.Gpu.Engine.Twod
                 IsCopyRegionComplete(srcCopyTexture, srcCopyTextureFormat, srcX1, srcY1, srcX2, srcY2) &&
                 IsCopyRegionComplete(dstCopyTexture, dstCopyTextureFormat, dstX1, dstY1, dstX2, dstY2);
 
+            // We can only allow aliasing of color formats as depth if the source and destination textures
+            // are the same, as we can't blit between different depth formats.
+            bool srcDepthAlias = srcCopyTexture.Format == dstCopyTexture.Format;
+
             var srcTexture = memoryManager.Physical.TextureCache.FindOrCreateTexture(
                 memoryManager,
                 srcCopyTexture,
                 offset,
                 srcCopyTextureFormat,
+                srcDepthAlias,
                 !canDirectCopy,
                 false,
                 srcHint);
@@ -325,6 +330,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Twod
             // When the source texture that was found has a depth format,
             // we must enforce the target texture also has a depth format,
             // as copies between depth and color formats are not allowed.
+            // For depth blit, the destination texture format should always match exactly.
 
             if (srcTexture.Format.IsDepthOrStencil())
             {
@@ -340,7 +346,8 @@ namespace Ryujinx.Graphics.Gpu.Engine.Twod
                 dstCopyTexture,
                 0,
                 dstCopyTextureFormat,
-                true,
+                depthAlias: false,
+                shouldCreate: true,
                 srcTexture.ScaleMode == TextureScaleMode.Scaled,
                 dstHint);
 

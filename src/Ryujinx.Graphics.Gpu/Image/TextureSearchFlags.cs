@@ -11,7 +11,8 @@ namespace Ryujinx.Graphics.Gpu.Image
         None        = 0,
         ForSampler  = 1 << 1,
         ForCopy     = 1 << 2,
-        WithUpscale = 1 << 3,
-        NoCreate    = 1 << 4
+        DepthAlias  = 1 << 3,
+        WithUpscale = 1 << 4,
+        NoCreate    = 1 << 5
     }
 }

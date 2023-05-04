@@ -220,18 +220,18 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <param name="lhs">Texture information to compare</param>
         /// <param name="rhs">Texture information to compare with</param>
         /// <param name="forSampler">Indicates that the texture will be used for shader sampling</param>
-        /// <param name="forCopy">Indicates that the texture will be used as copy source or target</param>
+        /// <param name="depthAlias">Indicates if aliasing between color and depth format should be allowed</param>
         /// <returns>A value indicating how well the formats match</returns>
-        public static TextureMatchQuality FormatMatches(TextureInfo lhs, TextureInfo rhs, bool forSampler, bool forCopy)
+        public static TextureMatchQuality FormatMatches(TextureInfo lhs, TextureInfo rhs, bool forSampler, bool depthAlias)
         {
             // D32F and R32F texture have the same representation internally,
             // however the R32F format is used to sample from depth textures.
-            if (lhs.FormatInfo.Format == Format.D32Float && rhs.FormatInfo.Format == Format.R32Float && (forSampler || forCopy))
+            if (lhs.FormatInfo.Format == Format.D32Float && rhs.FormatInfo.Format == Format.R32Float && (forSampler || depthAlias))
             {
                 return TextureMatchQuality.FormatAlias;
             }
 
-            if (forCopy)
+            if (depthAlias)
             {
                 // The 2D engine does not support depth-stencil formats, so it will instead
                 // use equivalent color formats. We must also consider them as compatible.
