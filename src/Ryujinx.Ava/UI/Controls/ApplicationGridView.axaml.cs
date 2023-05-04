@@ -9,10 +9,10 @@ using System;
 
 namespace Ryujinx.Ava.UI.Controls
 {
-    public partial class GameGridView : UserControl
+    public partial class ApplicationGridView : UserControl
     {
         public static readonly RoutedEvent<ApplicationOpenedEventArgs> ApplicationOpenedEvent =
-            RoutedEvent.Register<GameGridView, ApplicationOpenedEventArgs>(nameof(ApplicationOpened), RoutingStrategies.Bubble);
+            RoutedEvent.Register<ApplicationGridView, ApplicationOpenedEventArgs>(nameof(ApplicationOpened), RoutingStrategies.Bubble);
 
         public event EventHandler<ApplicationOpenedEventArgs> ApplicationOpened
         {
@@ -20,7 +20,7 @@ namespace Ryujinx.Ava.UI.Controls
             remove { RemoveHandler(ApplicationOpenedEvent, value); }
         }
 
-        public GameGridView()
+        public ApplicationGridView()
         {
             InitializeComponent();
         }
@@ -49,7 +49,7 @@ namespace Ryujinx.Ava.UI.Controls
             }
         }
 
-        private void SearchBox_OnKeyUp(object sender, KeyEventArgs e)
+        private void SearchBox_OnKeyUp(object sender, KeyEventArgs args)
         {
             (DataContext as MainWindowViewModel).SearchText = (sender as TextBox).Text;
         }

@@ -88,16 +88,16 @@
                     <main:MainViewControls
                         Name="ViewControls"
                         Grid.Row="0"/>
-                    <controls:GameListView
-                        x:Name="GameList"
+                    <controls:ApplicationListView
+                        x:Name="ApplicationList"
                         Grid.Row="1"
                         HorizontalAlignment="Stretch"
                         VerticalAlignment="Stretch"
                         HorizontalContentAlignment="Stretch"
                         VerticalContentAlignment="Stretch"
                         IsVisible="{Binding IsList}" />
-                    <controls:GameGridView
-                        x:Name="GameGrid"
+                    <controls:ApplicationGridView
+                        x:Name="ApplicationGrid"
                         Grid.Row="1"
                         HorizontalAlignment="Stretch"
                         VerticalAlignment="Stretch"

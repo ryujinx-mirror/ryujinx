@@ -103,50 +103,6 @@
       <Generator>MSBuild:Compile</Generator>
     </AvaloniaResource>
     <AvaloniaResource Include="Assets\Styles\Styles.xaml" />
-
-    <Compile Update="App.axaml.cs">
-      <DependentUpon>App.axaml</DependentUpon>
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Update="Ui\Windows\MainWindow.axaml.cs">
-      <DependentUpon>MainWindow.axaml</DependentUpon>
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Update="Ui\Windows\AboutWindow.axaml.cs">
-      <DependentUpon>AboutWindow.axaml</DependentUpon>
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Update="Ui\Applet\ErrorAppletWindow.axaml.cs">
-      <DependentUpon>ProfileWindow.axaml</DependentUpon>
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Update="Ui\Applet\SwkbdAppletWindow.axaml.cs">
-      <DependentUpon>ProfileWindow.axaml</DependentUpon>
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Update="Ui\Controls\InputDialog.axaml.cs">
-      <DependentUpon>InputDialog.axaml</DependentUpon>
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Update="Ui\Windows\ContentDialogOverlay.xaml.cs">
-      <DependentUpon>ContentDialogOverlay.xaml</DependentUpon>
-    </Compile>
-    <Compile Update="Ui\Controls\GameListView.axaml.cs">
-      <DependentUpon>GameListView.axaml</DependentUpon>
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Update="UI\Views\User\UserEditorView.axaml.cs">
-      <DependentUpon>UserEditor.axaml</DependentUpon>
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Update="UI\Views\User\UserRecovererView.axaml.cs">
-      <DependentUpon>UserRecoverer.axaml</DependentUpon>
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Update="UI\Views\User\UserSelectorView.axaml.cs">
-      <DependentUpon>UserSelector.axaml</DependentUpon>
-      <SubType>Code</SubType>
-    </Compile>
   </ItemGroup>
 
   <ItemGroup>

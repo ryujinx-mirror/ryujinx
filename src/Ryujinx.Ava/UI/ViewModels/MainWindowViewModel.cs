@@ -6,8 +6,6 @@ using Avalonia.Threading;
 using DynamicData;
 using DynamicData.Binding;
 using LibHac.Common;
-using LibHac.Fs;
-using LibHac.Tools.FsSystem.NcaUtils;
 using Ryujinx.Ava.Common;
 using Ryujinx.Ava.Common.Locale;
 using Ryujinx.Ava.Input;
@@ -33,13 +31,11 @@ using SixLabors.ImageSharp.PixelFormats;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Globalization;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Path = System.IO.Path;
 using ShaderCacheLoadingState = Ryujinx.Graphics.Gpu.Shader.ShaderCacheState;
-using UserId = LibHac.Fs.UserId;
 
 namespace Ryujinx.Ava.UI.ViewModels
 {
@@ -346,11 +342,11 @@ namespace Ryujinx.Ava.UI.ViewModels
             }
         }
 
-        public bool EnabledUserSaveDirectory => !Utilities.IsZeros(SelectedApplication.ControlHolder.ByteSpan) && SelectedApplication.ControlHolder.Value.UserAccountSaveDataSize > 0;
+        public bool OpenUserSaveDirectoryEnabled => !Utilities.IsZeros(SelectedApplication.ControlHolder.ByteSpan) && SelectedApplication.ControlHolder.Value.UserAccountSaveDataSize > 0;
 
-        public bool EnabledDeviceSaveDirectory => !Utilities.IsZeros(SelectedApplication.ControlHolder.ByteSpan) && SelectedApplication.ControlHolder.Value.DeviceSaveDataSize > 0;
+        public bool OpenDeviceSaveDirectoryEnabled => !Utilities.IsZeros(SelectedApplication.ControlHolder.ByteSpan) && SelectedApplication.ControlHolder.Value.DeviceSaveDataSize > 0;
 
-        public bool EnabledBcatSaveDirectory => !Utilities.IsZeros(SelectedApplication.ControlHolder.ByteSpan) && SelectedApplication.ControlHolder.Value.BcatDeliveryCacheStorageSize > 0;
+        public bool OpenBcatSaveDirectoryEnabled => !Utilities.IsZeros(SelectedApplication.ControlHolder.ByteSpan) && SelectedApplication.ControlHolder.Value.BcatDeliveryCacheStorageSize > 0;
 
         public string LoadHeading
         {
@@ -941,7 +937,7 @@ namespace Ryujinx.Ava.UI.ViewModels
             };
         }
 
-        private void RefreshView()
+        public void RefreshView()
         {
             RefreshGrid();
         }
@@ -1114,30 +1110,6 @@ namespace Ryujinx.Ava.UI.ViewModels
                         throw new ArgumentException($"Unknown Progress Handler type {typeof(T)}");
                 }
             }));
-        }
-
-        private async void ExtractLogo()
-        {
-            if (SelectedApplication != null)
-            {
-                await ApplicationHelper.ExtractSection(NcaSectionType.Logo, SelectedApplication.Path, SelectedApplication.TitleName);
-            }
-        }
-
-        private async void ExtractRomFs()
-        {
-            if (SelectedApplication != null)
-            {
-                await ApplicationHelper.ExtractSection(NcaSectionType.Data, SelectedApplication.Path, SelectedApplication.TitleName);
-            }
-        }
-
-        private async void ExtractExeFs()
-        {
-            if (SelectedApplication != null)
-            {
-                await ApplicationHelper.ExtractSection(NcaSectionType.Code, SelectedApplication.Path, SelectedApplication.TitleName);
-            }
         }
 
         private void PrepareLoadScreen()
@@ -1383,239 +1355,9 @@ namespace Ryujinx.Ava.UI.ViewModels
             await NavigationDialogHost.Show(AccountManager, ContentManager, VirtualFileSystem, LibHacHorizonManager.RyujinxClient);
         }
 
-        public void OpenPtcDirectory()
-        {
-            ApplicationData selection = SelectedApplication;
-            if (selection != null)
-            {
-                string ptcDir = Path.Combine(AppDataManager.GamesDirPath, selection.TitleId, "cache", "cpu");
-                string mainPath = Path.Combine(ptcDir, "0");
-                string backupPath = Path.Combine(ptcDir, "1");
-
-                if (!Directory.Exists(ptcDir))
-                {
-                    Directory.CreateDirectory(ptcDir);
-                    Directory.CreateDirectory(mainPath);
-                    Directory.CreateDirectory(backupPath);
-                }
-
-                OpenHelper.OpenFolder(ptcDir);
-            }
-        }
-
-        public async void PurgePtcCache()
-        {
-            ApplicationData selection = SelectedApplication;
-            if (selection != null)
-            {
-                DirectoryInfo mainDir = new(Path.Combine(AppDataManager.GamesDirPath, selection.TitleId, "cache", "cpu", "0"));
-                DirectoryInfo backupDir = new(Path.Combine(AppDataManager.GamesDirPath, selection.TitleId, "cache", "cpu", "1"));
-
-                // FIXME: Found a way to reproduce the bold effect on the title name (fork?).
-                UserResult result = await ContentDialogHelper.CreateConfirmationDialog(LocaleManager.Instance[LocaleKeys.DialogWarning],
-                                                                                       LocaleManager.Instance.UpdateAndGetDynamicValue(LocaleKeys.DialogPPTCDeletionMessage, selection.TitleName),
-                                                                                       LocaleManager.Instance[LocaleKeys.InputDialogYes],
-                                                                                       LocaleManager.Instance[LocaleKeys.InputDialogNo],
-                                                                                       LocaleManager.Instance[LocaleKeys.RyujinxConfirm]);
-
-                List<FileInfo> cacheFiles = new();
-
-                if (mainDir.Exists)
-                {
-                    cacheFiles.AddRange(mainDir.EnumerateFiles("*.cache"));
-                }
-
-                if (backupDir.Exists)
-                {
-                    cacheFiles.AddRange(backupDir.EnumerateFiles("*.cache"));
-                }
-
-                if (cacheFiles.Count > 0 && result == UserResult.Yes)
-                {
-                    foreach (FileInfo file in cacheFiles)
-                    {
-                        try
-                        {
-                            file.Delete();
-                        }
-                        catch (Exception e)
-                        {
-                            await ContentDialogHelper.CreateErrorDialog(LocaleManager.Instance.UpdateAndGetDynamicValue(LocaleKeys.DialogPPTCDeletionErrorMessage, file.Name, e));
-                        }
-                    }
-                }
-            }
-        }
-
-        public void OpenShaderCacheDirectory()
-        {
-            ApplicationData selection = SelectedApplication;
-            if (selection != null)
-            {
-                string shaderCacheDir = Path.Combine(AppDataManager.GamesDirPath, selection.TitleId, "cache", "shader");
-
-                if (!Directory.Exists(shaderCacheDir))
-                {
-                    Directory.CreateDirectory(shaderCacheDir);
-                }
-
-                OpenHelper.OpenFolder(shaderCacheDir);
-            }
-        }
-
         public void SimulateWakeUpMessage()
         {
             AppHost.Device.System.SimulateWakeUpMessage();
-        }
-
-        public async void PurgeShaderCache()
-        {
-            ApplicationData selection = SelectedApplication;
-            if (selection != null)
-            {
-                DirectoryInfo shaderCacheDir = new(Path.Combine(AppDataManager.GamesDirPath, selection.TitleId, "cache", "shader"));
-
-                // FIXME: Found a way to reproduce the bold effect on the title name (fork?).
-                UserResult result = await ContentDialogHelper.CreateConfirmationDialog(LocaleManager.Instance[LocaleKeys.DialogWarning],
-                                                                                       LocaleManager.Instance.UpdateAndGetDynamicValue(LocaleKeys.DialogShaderDeletionMessage, selection.TitleName),
-                                                                                       LocaleManager.Instance[LocaleKeys.InputDialogYes],
-                                                                                       LocaleManager.Instance[LocaleKeys.InputDialogNo],
-                                                                                       LocaleManager.Instance[LocaleKeys.RyujinxConfirm]);
-
-                List<DirectoryInfo> oldCacheDirectories = new();
-                List<FileInfo> newCacheFiles = new();
-
-                if (shaderCacheDir.Exists)
-                {
-                    oldCacheDirectories.AddRange(shaderCacheDir.EnumerateDirectories("*"));
-                    newCacheFiles.AddRange(shaderCacheDir.GetFiles("*.toc"));
-                    newCacheFiles.AddRange(shaderCacheDir.GetFiles("*.data"));
-                }
-
-                if ((oldCacheDirectories.Count > 0 || newCacheFiles.Count > 0) && result == UserResult.Yes)
-                {
-                    foreach (DirectoryInfo directory in oldCacheDirectories)
-                    {
-                        try
-                        {
-                            directory.Delete(true);
-                        }
-                        catch (Exception e)
-                        {
-                            await ContentDialogHelper.CreateErrorDialog(LocaleManager.Instance.UpdateAndGetDynamicValue(LocaleKeys.DialogPPTCDeletionErrorMessage, directory.Name, e));
-                        }
-                    }
-                }
-
-                foreach (FileInfo file in newCacheFiles)
-                {
-                    try
-                    {
-                        file.Delete();
-                    }
-                    catch (Exception e)
-                    {
-                        await ContentDialogHelper.CreateErrorDialog(LocaleManager.Instance.UpdateAndGetDynamicValue(LocaleKeys.ShaderCachePurgeError, file.Name, e));
-                    }
-                }
-            }
-        }
-
-        public void ToggleFavorite()
-        {
-            ApplicationData selection = SelectedApplication;
-            if (selection != null)
-            {
-                selection.Favorite = !selection.Favorite;
-
-                ApplicationLibrary.LoadAndSaveMetaData(selection.TitleId, appMetadata =>
-                {
-                    appMetadata.Favorite = selection.Favorite;
-                });
-
-                RefreshView();
-            }
-        }
-
-        public void OpenUserSaveDirectory()
-        {
-            OpenSaveDirectory(SaveDataType.Account, userId: new UserId((ulong)AccountManager.LastOpenedUser.UserId.High, (ulong)AccountManager.LastOpenedUser.UserId.Low));
-        }
-
-        public void OpenDeviceSaveDirectory()
-        {
-            OpenSaveDirectory(SaveDataType.Device, userId: default);
-        }
-
-        public void OpenBcatSaveDirectory()
-        {
-            OpenSaveDirectory(SaveDataType.Bcat, userId: default);
-        }
-
-        private void OpenSaveDirectory(SaveDataType saveDataType, UserId userId)
-        {
-            if (SelectedApplication != null)
-            {
-                if (!ulong.TryParse(SelectedApplication.TitleId, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out ulong titleIdNumber))
-                {
-                    Dispatcher.UIThread.InvokeAsync(async () =>
-                    {
-                        await ContentDialogHelper.CreateErrorDialog(LocaleManager.Instance[LocaleKeys.DialogRyujinxErrorMessage], LocaleManager.Instance[LocaleKeys.DialogInvalidTitleIdErrorMessage]);
-                    });
-
-                    return;
-                }
-
-                var saveDataFilter = SaveDataFilter.Make(titleIdNumber, saveDataType, userId, saveDataId: default, index: default);
-
-                ApplicationHelper.OpenSaveDir(in saveDataFilter, titleIdNumber, SelectedApplication.ControlHolder, SelectedApplication.TitleName);
-            }
-        }
-
-        public void OpenModsDirectory()
-        {
-            if (SelectedApplication != null)
-            {
-                string modsBasePath  = VirtualFileSystem.ModLoader.GetModsBasePath();
-                string titleModsPath = VirtualFileSystem.ModLoader.GetTitleDir(modsBasePath, SelectedApplication.TitleId);
-
-                OpenHelper.OpenFolder(titleModsPath);
-            }
-        }
-
-        public void OpenSdModsDirectory()
-        {
-            if (SelectedApplication != null)
-            {
-                string sdModsBasePath = VirtualFileSystem.ModLoader.GetSdModsBasePath();
-                string titleModsPath  = VirtualFileSystem.ModLoader.GetTitleDir(sdModsBasePath, SelectedApplication.TitleId);
-
-                OpenHelper.OpenFolder(titleModsPath);
-            }
-        }
-
-        public async void OpenTitleUpdateManager()
-        {
-            if (SelectedApplication != null)
-            {
-                await TitleUpdateWindow.Show(VirtualFileSystem, ulong.Parse(SelectedApplication.TitleId, NumberStyles.HexNumber), SelectedApplication.TitleName);
-            }
-        }
-
-        public async void OpenDownloadableContentManager()
-        {
-            if (SelectedApplication != null)
-            {
-                await DownloadableContentManagerWindow.Show(VirtualFileSystem, ulong.Parse(SelectedApplication.TitleId, NumberStyles.HexNumber), SelectedApplication.TitleName);
-            }
-        }
-
-        public async void OpenCheatManager()
-        {
-            if (SelectedApplication != null)
-            {
-                await new CheatWindow(VirtualFileSystem, SelectedApplication.TitleId, SelectedApplication.TitleName).ShowDialog(TopLevel as Window);
-            }
         }
 
         public async void LoadApplications()

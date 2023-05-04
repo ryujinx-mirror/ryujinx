@@ -288,13 +288,13 @@ namespace Ryujinx.Ava.UI.Windows
         {
             StatusBarView.VolumeStatus.Click += VolumeStatus_CheckedChanged;
 
-            GameGrid.ApplicationOpened += Application_Opened;
+            ApplicationGrid.ApplicationOpened += Application_Opened;
 
-            GameGrid.DataContext = ViewModel;
+            ApplicationGrid.DataContext = ViewModel;
 
-            GameList.ApplicationOpened += Application_Opened;
+            ApplicationList.ApplicationOpened += Application_Opened;
 
-            GameList.DataContext = ViewModel;
+            ApplicationList.DataContext = ViewModel;
 
             LoadHotKeys();
         }
