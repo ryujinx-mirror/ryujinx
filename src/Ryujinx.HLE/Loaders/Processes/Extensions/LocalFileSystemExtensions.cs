@@ -2,6 +2,7 @@
 using LibHac.FsSystem;
 using LibHac.Loader;
 using LibHac.Ns;
+using Ryujinx.HLE.HOS;
 using Ryujinx.HLE.Loaders.Processes.Extensions;
 using ApplicationId = LibHac.Ncm.ApplicationId;
 
@@ -17,8 +18,8 @@ namespace Ryujinx.HLE.Loaders.Processes
 
             device.Configuration.VirtualFileSystem.ModLoader.CollectMods(
                 new[] { programId },
-                device.Configuration.VirtualFileSystem.ModLoader.GetModsBasePath(),
-                device.Configuration.VirtualFileSystem.ModLoader.GetSdModsBasePath());
+                ModLoader.GetModsBasePath(),
+                ModLoader.GetSdModsBasePath());
 
             if (programId != 0)
             {
