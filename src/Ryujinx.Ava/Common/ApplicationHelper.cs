@@ -233,9 +233,14 @@ namespace Ryujinx.Ava.Common
 
                     try
                     {
-                        IFileSystem ncaFileSystem = patchNca != null
-                            ? mainNca.OpenFileSystemWithPatch(patchNca, index, IntegrityCheckLevel.ErrorOnInvalid)
-                            : mainNca.OpenFileSystem(index, IntegrityCheckLevel.ErrorOnInvalid);
+                        bool sectionExistsInPatch = false;
+                        if (patchNca != null)
+                        {
+                            sectionExistsInPatch = patchNca.CanOpenSection(index);
+                        }
+
+                        IFileSystem ncaFileSystem = sectionExistsInPatch ? mainNca.OpenFileSystemWithPatch(patchNca, index, IntegrityCheckLevel.ErrorOnInvalid)
+                                                                         : mainNca.OpenFileSystem(index, IntegrityCheckLevel.ErrorOnInvalid);
 
                         FileSystemClient fsClient = _horizonClient.Fs;
 

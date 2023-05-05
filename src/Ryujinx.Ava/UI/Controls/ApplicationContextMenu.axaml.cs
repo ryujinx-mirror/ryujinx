@@ -289,13 +289,13 @@ namespace Ryujinx.Ava.UI.Controls
             }
         }
 
-        public async void ExtractApplicationLogo_Click(object sender, RoutedEventArgs args)
+        public async void ExtractApplicationExeFs_Click(object sender, RoutedEventArgs args)
         {
             var viewModel = (sender as MenuItem)?.DataContext as MainWindowViewModel;
 
             if (viewModel?.SelectedApplication != null)
             {
-                await ApplicationHelper.ExtractSection(NcaSectionType.Logo, viewModel.SelectedApplication.Path, viewModel.SelectedApplication.TitleName);
+                await ApplicationHelper.ExtractSection(NcaSectionType.Code, viewModel.SelectedApplication.Path, viewModel.SelectedApplication.TitleName);
             }
         }
 
@@ -309,13 +309,13 @@ namespace Ryujinx.Ava.UI.Controls
             }
         }
 
-        public async void ExtractApplicationExeFs_Click(object sender, RoutedEventArgs args)
+        public async void ExtractApplicationLogo_Click(object sender, RoutedEventArgs args)
         {
             var viewModel = (sender as MenuItem)?.DataContext as MainWindowViewModel;
 
             if (viewModel?.SelectedApplication != null)
             {
-                await ApplicationHelper.ExtractSection(NcaSectionType.Code, viewModel.SelectedApplication.Path, viewModel.SelectedApplication.TitleName);
+                await ApplicationHelper.ExtractSection(NcaSectionType.Logo, viewModel.SelectedApplication.Path, viewModel.SelectedApplication.TitleName);
             }
         }
     }

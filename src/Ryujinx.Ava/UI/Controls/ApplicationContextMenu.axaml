@@ -65,7 +65,7 @@
     </MenuItem>
     <MenuItem Header="{locale:Locale GameListContextMenuExtractData}">
         <MenuItem
-            Click="ExtractApplicationLogo_Click"
+            Click="ExtractApplicationExeFs_Click"
             Header="{locale:Locale GameListContextMenuExtractDataExeFS}"
             ToolTip.Tip="{locale:Locale GameListContextMenuExtractDataExeFSToolTip}" />
         <MenuItem
@@ -73,7 +73,7 @@
             Header="{locale:Locale GameListContextMenuExtractDataRomFS}"
             ToolTip.Tip="{locale:Locale GameListContextMenuExtractDataRomFSToolTip}" />
         <MenuItem
-            Click="ExtractApplicationExeFs_Click"
+            Click="ExtractApplicationLogo_Click"
             Header="{locale:Locale GameListContextMenuExtractDataLogo}"
             ToolTip.Tip="{locale:Locale GameListContextMenuExtractDataLogoToolTip}" />
     </MenuItem>
