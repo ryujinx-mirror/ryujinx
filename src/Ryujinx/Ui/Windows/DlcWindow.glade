@@ -89,7 +89,7 @@
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
-                    <property name="tooltip_text" translatable="yes">Adds an update to this list</property>
+                    <property name="tooltip_text" translatable="yes">Adds a DLC to this list</property>
                     <property name="margin_left">10</property>
                     <signal name="clicked" handler="AddButton_Clicked" swapped="no"/>
                   </object>
@@ -105,7 +105,7 @@
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
-                    <property name="tooltip_text" translatable="yes">Removes the selected update</property>
+                    <property name="tooltip_text" translatable="yes">Removes the selected DLC</property>
                     <property name="margin_left">10</property>
                     <signal name="clicked" handler="RemoveButton_Clicked" swapped="no"/>
                   </object>
@@ -121,7 +121,7 @@
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
-                    <property name="tooltip_text" translatable="yes">Removes the selected update</property>
+                    <property name="tooltip_text" translatable="yes">Removes all DLCs</property>
                     <property name="margin_left">10</property>
                     <signal name="clicked" handler="RemoveAllButton_Clicked" swapped="no"/>
                   </object>
