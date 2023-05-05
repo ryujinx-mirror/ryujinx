@@ -104,7 +104,7 @@ namespace Ryujinx.Graphics.OpenGL
 
         private static GpuVendor GetGpuVendor()
         {
-            string vendor = GL.GetString(StringName.Vendor).ToLower();
+            string vendor = GL.GetString(StringName.Vendor).ToLowerInvariant();
 
             if (vendor == "nvidia corporation")
             {
@@ -112,7 +112,7 @@ namespace Ryujinx.Graphics.OpenGL
             }
             else if (vendor == "intel")
             {
-                string renderer = GL.GetString(StringName.Renderer).ToLower();
+                string renderer = GL.GetString(StringName.Renderer).ToLowerInvariant();
 
                 return renderer.Contains("mesa") ? GpuVendor.IntelUnix : GpuVendor.IntelWindows;
             }
