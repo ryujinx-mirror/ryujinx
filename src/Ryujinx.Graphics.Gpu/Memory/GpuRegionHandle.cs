@@ -1,5 +1,4 @@
-﻿using Ryujinx.Cpu.Tracking;
-using Ryujinx.Memory.Tracking;
+﻿using Ryujinx.Memory.Tracking;
 using System;
 
 namespace Ryujinx.Graphics.Gpu.Memory
@@ -9,7 +8,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
     /// </summary>
     class GpuRegionHandle : IRegionHandle
     {
-        private readonly CpuRegionHandle[] _cpuRegionHandles;
+        private readonly RegionHandle[] _cpuRegionHandles;
 
         public bool Dirty
         {
@@ -35,7 +34,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// Create a new GpuRegionHandle, made up of mulitple CpuRegionHandles.
         /// </summary>
         /// <param name="cpuRegionHandles">The CpuRegionHandles that make up this handle</param>
-        public GpuRegionHandle(CpuRegionHandle[] cpuRegionHandles)
+        public GpuRegionHandle(RegionHandle[] cpuRegionHandles)
         {
             _cpuRegionHandles = cpuRegionHandles;
         }

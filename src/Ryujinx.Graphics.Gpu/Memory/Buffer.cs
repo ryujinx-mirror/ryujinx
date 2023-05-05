@@ -1,4 +1,3 @@
-using Ryujinx.Cpu.Tracking;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.Gpu.Synchronization;
 using Ryujinx.Memory.Range;
@@ -54,8 +53,8 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// </remarks>
         private BufferModifiedRangeList _modifiedRanges = null;
 
-        private readonly CpuMultiRegionHandle _memoryTrackingGranular;
-        private readonly CpuRegionHandle _memoryTracking;
+        private readonly MultiRegionHandle _memoryTrackingGranular;
+        private readonly RegionHandle _memoryTracking;
 
         private readonly RegionSignal _externalFlushDelegate;
         private readonly Action<ulong, ulong> _loadDelegate;
@@ -102,7 +101,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
                     }
                     else
                     {
-                        return Enumerable.Repeat(buffer._memoryTracking.GetHandle(), 1);
+                        return Enumerable.Repeat(buffer._memoryTracking, 1);
                     }
                 });
             }

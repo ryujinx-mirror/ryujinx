@@ -1,5 +1,5 @@
-﻿using Ryujinx.Cpu.Tracking;
-using Ryujinx.Graphics.Gpu.Synchronization;
+﻿using Ryujinx.Graphics.Gpu.Synchronization;
+using Ryujinx.Memory.Tracking;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -85,7 +85,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <summary>
         /// The CPU memory tracking handles that cover this handle.
         /// </summary>
-        public CpuRegionHandle[] Handles { get; }
+        public RegionHandle[] Handles { get; }
 
         /// <summary>
         /// True if a texture overlapping this handle has been modified. Is set false when the flush action is called.
@@ -127,7 +127,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                                   int firstLevel,
                                   int baseSlice,
                                   int sliceCount,
-                                  CpuRegionHandle[] handles)
+                                  RegionHandle[] handles)
         {
             _group = group;
             _firstLayer = firstLayer;
@@ -642,7 +642,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// </summary>
         public void Dispose()
         {
-            foreach (CpuRegionHandle handle in Handles)
+            foreach (RegionHandle handle in Handles)
             {
                 handle.Dispose();
             }

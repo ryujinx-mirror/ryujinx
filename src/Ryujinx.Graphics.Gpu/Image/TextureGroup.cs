@@ -1,10 +1,10 @@
 ﻿using Ryujinx.Common.Memory;
-using Ryujinx.Cpu.Tracking;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.Gpu.Memory;
 using Ryujinx.Graphics.Texture;
 using Ryujinx.Memory;
 using Ryujinx.Memory.Range;
+using Ryujinx.Memory.Tracking;
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
@@ -255,7 +255,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                 {
                     TextureGroupHandle group = _handles[baseHandle + i];
 
-                    foreach (CpuRegionHandle handle in group.Handles)
+                    foreach (RegionHandle handle in group.Handles)
                     {
                         if (handle.Dirty)
                         {
@@ -296,7 +296,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                     bool handleDirty = false;
                     bool handleUnmapped = false;
 
-                    foreach (CpuRegionHandle handle in group.Handles)
+                    foreach (RegionHandle handle in group.Handles)
                     {
                         if (handle.Dirty)
                         {
@@ -703,7 +703,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <param name="group">The group to register an action for</param>
         public void RegisterAction(TextureGroupHandle group)
         {
-            foreach (CpuRegionHandle handle in group.Handles)
+            foreach (RegionHandle handle in group.Handles)
             {
                 handle.RegisterAction((address, size) => FlushAction(group, address, size));
             }
@@ -985,7 +985,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <param name="address">The start address of the tracked region</param>
         /// <param name="size">The size of the tracked region</param>
         /// <returns>A CpuRegionHandle covering the given range</returns>
-        private CpuRegionHandle GenerateHandle(ulong address, ulong size)
+        private RegionHandle GenerateHandle(ulong address, ulong size)
         {
             return _physicalMemory.BeginTracking(address, size, ResourceKind.Texture);
         }
@@ -1005,7 +1005,7 @@ namespace Ryujinx.Graphics.Gpu.Image
             int endOffset = _allOffsets[viewEnd] + _sliceSizes[lastLevel];
             int size = endOffset - offset;
 
-            var result = new List<CpuRegionHandle>();
+            var result = new List<RegionHandle>();
 
             for (int i = 0; i < TextureRange.Count; i++)
             {
@@ -1050,7 +1050,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                 views,
                 result.ToArray());
 
-            foreach (CpuRegionHandle handle in result)
+            foreach (RegionHandle handle in result)
             {
                 handle.RegisterDirtyEvent(() => DirtyAction(groupHandle));
             }
@@ -1248,7 +1248,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                                 continue;
                             }
 
-                            foreach (CpuRegionHandle handle in groupHandle.Handles)
+                            foreach (RegionHandle handle in groupHandle.Handles)
                             {
                                 bool hasMatch = false;
 
@@ -1270,7 +1270,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                     }
                     else
                     {
-                        foreach (CpuRegionHandle handle in groupHandle.Handles)
+                        foreach (RegionHandle handle in groupHandle.Handles)
                         {
                             handle.Reprotect();
                         }
@@ -1303,7 +1303,7 @@ namespace Ryujinx.Graphics.Gpu.Image
             if (!(_hasMipViews || _hasLayerViews))
             {
                 // Single dirty region.
-                var cpuRegionHandles = new CpuRegionHandle[TextureRange.Count];
+                var cpuRegionHandles = new RegionHandle[TextureRange.Count];
                 int count = 0;
 
                 for (int i = 0; i < TextureRange.Count; i++)
@@ -1322,7 +1322,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                 var groupHandle = new TextureGroupHandle(this, 0, Storage.Size, _views, 0, 0, 0, _allOffsets.Length, cpuRegionHandles);
 
-                foreach (CpuRegionHandle handle in cpuRegionHandles)
+                foreach (RegionHandle handle in cpuRegionHandles)
                 {
                     handle.RegisterDirtyEvent(() => DirtyAction(groupHandle));
                 }

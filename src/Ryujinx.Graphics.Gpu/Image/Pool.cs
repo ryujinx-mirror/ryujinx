@@ -1,5 +1,5 @@
-using Ryujinx.Cpu.Tracking;
 using Ryujinx.Graphics.Gpu.Memory;
+using Ryujinx.Memory.Tracking;
 using System;
 using System.Runtime.InteropServices;
 
@@ -40,7 +40,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// </summary>
         public ulong Size { get; }
 
-        private readonly CpuMultiRegionHandle _memoryTracking;
+        private readonly MultiRegionHandle _memoryTracking;
         private readonly Action<ulong, ulong> _modifiedDelegate;
 
         private int _modifiedSequenceOffset;

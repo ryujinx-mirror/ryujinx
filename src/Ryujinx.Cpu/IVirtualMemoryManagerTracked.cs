@@ -1,5 +1,4 @@
-﻿using Ryujinx.Cpu.Tracking;
-using Ryujinx.Memory;
+﻿using Ryujinx.Memory;
 using Ryujinx.Memory.Tracking;
 using System;
 using System.Collections.Generic;
@@ -30,7 +29,7 @@ namespace Ryujinx.Cpu
         /// <param name="size">Size of the region</param>
         /// <param name="id">Handle ID</param>
         /// <returns>The memory tracking handle</returns>
-        CpuRegionHandle BeginTracking(ulong address, ulong size, int id);
+        RegionHandle BeginTracking(ulong address, ulong size, int id);
 
         /// <summary>
         /// Obtains a memory tracking handle for the given virtual region, with a specified granularity. This should be disposed when finished with.
@@ -41,7 +40,7 @@ namespace Ryujinx.Cpu
         /// <param name="granularity">Desired granularity of write tracking</param>
         /// <param name="id">Handle ID</param>
         /// <returns>The memory tracking handle</returns>
-        CpuMultiRegionHandle BeginGranularTracking(ulong address, ulong size, IEnumerable<IRegionHandle> handles, ulong granularity, int id);
+        MultiRegionHandle BeginGranularTracking(ulong address, ulong size, IEnumerable<IRegionHandle> handles, ulong granularity, int id);
 
         /// <summary>
         /// Obtains a smart memory tracking handle for the given virtual region, with a specified granularity. This should be disposed when finished with.
@@ -51,6 +50,6 @@ namespace Ryujinx.Cpu
         /// <param name="granularity">Desired granularity of write tracking</param>
         /// <param name="id">Handle ID</param>
         /// <returns>The memory tracking handle</returns>
-        CpuSmartMultiRegionHandle BeginSmartGranularTracking(ulong address, ulong size, ulong granularity, int id);
+        SmartMultiRegionHandle BeginSmartGranularTracking(ulong address, ulong size, ulong granularity, int id);
     }
 }
