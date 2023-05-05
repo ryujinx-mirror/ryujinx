@@ -68,6 +68,9 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
         private int _referenceCount = 1;
 
+        private ulong _dirtyStart = ulong.MaxValue;
+        private ulong _dirtyEnd = ulong.MaxValue;
+
         /// <summary>
         /// Creates a new instance of the buffer.
         /// </summary>
@@ -221,6 +224,26 @@ namespace Ryujinx.Graphics.Gpu.Memory
                     }
 
                     _sequenceNumber = _context.SequenceNumber;
+                    _dirtyStart = ulong.MaxValue;
+                }
+            }
+
+            if (_dirtyStart != ulong.MaxValue)
+            {
+                ulong end = address + size;
+
+                if (end > _dirtyStart && address < _dirtyEnd)
+                {
+                    if (_modifiedRanges != null)
+                    {
+                        _modifiedRanges.ExcludeModifiedRegions(_dirtyStart, _dirtyEnd - _dirtyStart, _loadDelegate);
+                    }
+                    else
+                    {
+                        LoadRegion(_dirtyStart, _dirtyEnd - _dirtyStart);
+                    }
+
+                    _dirtyStart = ulong.MaxValue;
                 }
             }
         }
@@ -291,7 +314,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
         }
 
         /// <summary>
-        /// Inherit modified ranges from another buffer.
+        /// Inherit modified and dirty ranges from another buffer.
         /// </summary>
         /// <param name="from">The buffer to inherit from</param>
         public void InheritModifiedRanges(Buffer from)
@@ -320,6 +343,11 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
                 _modifiedRanges.InheritRanges(from._modifiedRanges, registerRangeAction);
             }
+
+            if (from._dirtyStart != ulong.MaxValue)
+            {
+                ForceDirty(from._dirtyStart, from._dirtyEnd - from._dirtyStart);
+            }
         }
 
         /// <summary>
@@ -336,6 +364,44 @@ namespace Ryujinx.Graphics.Gpu.Memory
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Clear the dirty range that overlaps with the given region.
+        /// </summary>
+        /// <param name="address">Start address of the modified region</param>
+        /// <param name="size">Size of the modified region</param>
+        private void ClearDirty(ulong address, ulong size)
+        {
+            if (_dirtyStart != ulong.MaxValue)
+            {
+                ulong end = address + size;
+
+                if (end > _dirtyStart && address < _dirtyEnd)
+                {
+                    if (address <= _dirtyStart)
+                    {
+                        // Cut off the start.
+
+                        if (end < _dirtyEnd)
+                        {
+                            _dirtyStart = end;
+                        }
+                        else
+                        {
+                            _dirtyStart = ulong.MaxValue;
+                        }
+                    }
+                    else if (end >= _dirtyEnd)
+                    {
+                        // Cut off the end.
+
+                        _dirtyEnd = address;
+                    }
+
+                    // If fully contained, do nothing.
+                }
+            }
         }
 
         /// <summary>
@@ -356,6 +422,8 @@ namespace Ryujinx.Graphics.Gpu.Memory
             {
                 mSize = maxSize;
             }
+
+            ClearDirty(mAddress, mSize);
 
             if (_modifiedRanges != null)
             {
@@ -380,14 +448,12 @@ namespace Ryujinx.Graphics.Gpu.Memory
         }
 
         /// <summary>
-        /// Force a region of the buffer to be dirty. Avoids reprotection and nullifies sequence number check.
+        /// Force a region of the buffer to be dirty within the memory tracking. Avoids reprotection and nullifies sequence number check.
         /// </summary>
         /// <param name="mAddress">Start address of the modified region</param>
         /// <param name="mSize">Size of the region to force dirty</param>
-        public void ForceDirty(ulong mAddress, ulong mSize)
+        private void ForceTrackingDirty(ulong mAddress, ulong mSize)
         {
-            _modifiedRanges?.Clear(mAddress, mSize);
-
             if (_useGranular)
             {
                 _memoryTrackingGranular.ForceDirty(mAddress, mSize);
@@ -396,6 +462,39 @@ namespace Ryujinx.Graphics.Gpu.Memory
             {
                 _memoryTracking.ForceDirty();
                 _sequenceNumber--;
+            }
+        }
+
+        /// <summary>
+        /// Force a region of the buffer to be dirty. Avoids reprotection and nullifies sequence number check.
+        /// </summary>
+        /// <param name="mAddress">Start address of the modified region</param>
+        /// <param name="mSize">Size of the region to force dirty</param>
+        public void ForceDirty(ulong mAddress, ulong mSize)
+        {
+            _modifiedRanges?.Clear(mAddress, mSize);
+
+            ulong end = mAddress + mSize;
+
+            if (_dirtyStart == ulong.MaxValue)
+            {
+                _dirtyStart = mAddress;
+                _dirtyEnd = end;
+            }
+            else
+            {
+                // Is the new range more than a page away from the existing one?
+
+                if ((long)(mAddress - _dirtyEnd) >= (long)MemoryManager.PageSize ||
+                    (long)(_dirtyStart - end) >= (long)MemoryManager.PageSize)
+                {
+                    ForceTrackingDirty(mAddress, mSize);
+                }
+                else
+                {
+                    _dirtyStart = Math.Min(_dirtyStart, mAddress);
+                    _dirtyEnd = Math.Max(_dirtyEnd, end);
+                }
             }
         }
 
