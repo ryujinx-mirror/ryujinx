@@ -68,7 +68,6 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
                         }
 
                         ConstantFolding.RunPass(operation);
-
                         Simplification.RunPass(operation);
 
                         if (DestIsLocalVar(operation))

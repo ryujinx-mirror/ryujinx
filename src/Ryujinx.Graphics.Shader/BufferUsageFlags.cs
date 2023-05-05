@@ -6,7 +6,7 @@ namespace Ryujinx.Graphics.Shader
     /// Flags that indicate how a buffer will be used in a shader.
     /// </summary>
     [Flags]
-    public enum BufferUsageFlags
+    public enum BufferUsageFlags : byte
     {
         None = 0,
 

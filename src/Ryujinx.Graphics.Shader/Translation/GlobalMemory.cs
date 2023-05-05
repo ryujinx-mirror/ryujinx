@@ -16,6 +16,8 @@ namespace Ryujinx.Graphics.Shader.Translation
         public const int UbeDescsSize  = StorageDescSize * UbeMaxCount;
         public const int UbeFirstCbuf  = 8;
 
+        public const int DriverReservedCb = 0;
+
         public static bool UsesGlobalMemory(Instruction inst, StorageKind storageKind)
         {
             return (inst.IsAtomic() && storageKind == StorageKind.GlobalMemory) ||

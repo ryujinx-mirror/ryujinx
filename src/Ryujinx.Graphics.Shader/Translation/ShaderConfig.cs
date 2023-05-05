@@ -125,6 +125,9 @@ namespace Ryujinx.Graphics.Shader.Translation
         private readonly Dictionary<TextureInfo, TextureMeta> _usedTextures;
         private readonly Dictionary<TextureInfo, TextureMeta> _usedImages;
 
+        private readonly Dictionary<int, int> _sbSlots;
+        private readonly Dictionary<int, int> _sbSlotsReverse;
+
         private BufferDescriptor[] _cachedConstantBufferDescriptors;
         private BufferDescriptor[] _cachedStorageBufferDescriptors;
         private TextureDescriptor[] _cachedTextureDescriptors;
@@ -152,6 +155,9 @@ namespace Ryujinx.Graphics.Shader.Translation
 
             _usedTextures = new Dictionary<TextureInfo, TextureMeta>();
             _usedImages   = new Dictionary<TextureInfo, TextureMeta>();
+
+            _sbSlots        = new Dictionary<int, int>();
+            _sbSlotsReverse = new Dictionary<int, int>();
         }
 
         public ShaderConfig(
@@ -770,9 +776,8 @@ namespace Ryujinx.Graphics.Shader.Translation
                 usedMask |= (int)GpuAccessor.QueryConstantBufferUse();
             }
 
-            return _cachedConstantBufferDescriptors = GetBufferDescriptors(
+            return _cachedConstantBufferDescriptors = GetUniformBufferDescriptors(
                 usedMask,
-                0,
                 UsedFeatures.HasFlag(FeatureFlags.CbIndexing),
                 out _firstConstantBufferBinding,
                 GpuAccessor.QueryBindingConstantBuffer);
@@ -785,7 +790,7 @@ namespace Ryujinx.Graphics.Shader.Translation
                 return _cachedStorageBufferDescriptors;
             }
 
-            return _cachedStorageBufferDescriptors = GetBufferDescriptors(
+            return _cachedStorageBufferDescriptors = GetStorageBufferDescriptors(
                 _usedStorageBuffers,
                 _usedStorageBuffersWrite,
                 true,
@@ -793,7 +798,48 @@ namespace Ryujinx.Graphics.Shader.Translation
                 GpuAccessor.QueryBindingStorageBuffer);
         }
 
-        private static BufferDescriptor[] GetBufferDescriptors(
+        private static BufferDescriptor[] GetUniformBufferDescriptors(int usedMask, bool isArray, out int firstBinding, Func<int, int> getBindingCallback)
+        {
+            firstBinding = 0;
+            int lastSlot = -1;
+            bool hasFirstBinding = false;
+            var descriptors = new BufferDescriptor[BitOperations.PopCount((uint)usedMask)];
+
+            for (int i = 0; i < descriptors.Length; i++)
+            {
+                int slot = BitOperations.TrailingZeroCount(usedMask);
+
+                if (isArray)
+                {
+                    // The next array entries also consumes bindings, even if they are unused.
+                    for (int j = lastSlot + 1; j < slot; j++)
+                    {
+                        int binding = getBindingCallback(j);
+
+                        if (!hasFirstBinding)
+                        {
+                            firstBinding = binding;
+                            hasFirstBinding = true;
+                        }
+                    }
+                }
+
+                lastSlot = slot;
+                descriptors[i] = new BufferDescriptor(getBindingCallback(slot), slot);
+
+                if (!hasFirstBinding)
+                {
+                    firstBinding = descriptors[i].Binding;
+                    hasFirstBinding = true;
+                }
+
+                usedMask &= ~(1 << slot);
+            }
+
+            return descriptors;
+        }
+
+        private BufferDescriptor[] GetStorageBufferDescriptors(
             int usedMask,
             int writtenMask,
             bool isArray,
@@ -827,7 +873,9 @@ namespace Ryujinx.Graphics.Shader.Translation
 
                 lastSlot = slot;
 
-                descriptors[i] = new BufferDescriptor(getBindingCallback(slot), slot);
+                (int sbCbSlot, int sbCbOffset) = GetSbCbInfo(slot);
+
+                descriptors[i] = new BufferDescriptor(getBindingCallback(slot), slot, sbCbSlot, sbCbOffset);
 
                 if (!hasFirstBinding)
                 {
@@ -922,6 +970,40 @@ namespace Ryujinx.Graphics.Shader.Translation
         public int FindImageDescriptorIndex(AstTextureOperation texOp)
         {
             return FindDescriptorIndex(GetImageDescriptors(), texOp);
+        }
+
+        public int GetSbSlot(byte sbCbSlot, ushort sbCbOffset)
+        {
+            int key = PackSbCbInfo(sbCbSlot, sbCbOffset);
+
+            if (!_sbSlots.TryGetValue(key, out int slot))
+            {
+                slot = _sbSlots.Count;
+                _sbSlots.Add(key, slot);
+                _sbSlotsReverse.Add(slot, key);
+            }
+
+            return slot;
+        }
+
+        public (int, int) GetSbCbInfo(int slot)
+        {
+            if (_sbSlotsReverse.TryGetValue(slot, out int key))
+            {
+                return UnpackSbCbInfo(key);
+            }
+
+            throw new ArgumentException($"Invalid slot {slot}.", nameof(slot));
+        }
+
+        private static int PackSbCbInfo(int sbCbSlot, int sbCbOffset)
+        {
+            return sbCbOffset | ((int)sbCbSlot << 16);
+        }
+
+        private static (int, int) UnpackSbCbInfo(int key)
+        {
+            return ((byte)(key >> 16), (ushort)key);
         }
 
         public ShaderProgramInfo CreateProgramInfo(ShaderIdentification identification = ShaderIdentification.None)

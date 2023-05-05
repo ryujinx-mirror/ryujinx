@@ -351,11 +351,8 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                 {
                     BufferDescriptor sb = info.SBuffers[index];
 
-                    ulong sbDescAddress = _channel.BufferManager.GetGraphicsUniformBufferAddress(stage, 0);
-
-                    int sbDescOffset = 0x110 + stage * 0x100 + sb.Slot * 0x10;
-
-                    sbDescAddress += (ulong)sbDescOffset;
+                    ulong sbDescAddress = _channel.BufferManager.GetGraphicsUniformBufferAddress(stage, sb.SbCbSlot);
+                    sbDescAddress += (ulong)sb.SbCbOffset * 4;
 
                     SbDescriptor sbDescriptor = _channel.MemoryManager.Physical.Read<SbDescriptor>(sbDescAddress);
 

@@ -8,6 +8,20 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
 {
     static class GlobalToStorage
     {
+        private struct SearchResult
+        {
+            public static SearchResult NotFound => new SearchResult(-1, 0);
+            public bool Found => SbCbSlot != -1;
+            public int SbCbSlot { get; }
+            public int SbCbOffset { get; }
+
+            public SearchResult(int sbCbSlot, int sbCbOffset)
+            {
+                SbCbSlot = sbCbSlot;
+                SbCbOffset = sbCbOffset;
+            }
+        }
+
         public static void RunPass(BasicBlock block, ShaderConfig config, ref int sbUseMask, ref int ubeUseMask)
         {
             int sbStart = GetStorageBaseCbOffset(config.Stage);
@@ -49,30 +63,33 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
                 {
                     Operand source = operation.GetSource(0);
 
-                    int storageIndex = SearchForStorageBase(block, source, sbStart, sbEnd);
-
-                    if (storageIndex >= 0)
+                    var result = SearchForStorageBase(config, block, source);
+                    if (!result.Found)
                     {
-                        // Storage buffers are implemented using global memory access.
-                        // If we know from where the base address of the access is loaded,
-                        // we can guess which storage buffer it is accessing.
-                        // We can then replace the global memory access with a storage
-                        // buffer access.
-                        node = ReplaceGlobalWithStorage(block, node, config, storageIndex);
+                        continue;
                     }
-                    else if (config.Stage == ShaderStage.Compute && operation.Inst == Instruction.LoadGlobal)
+
+                    if (config.Stage == ShaderStage.Compute &&
+                        operation.Inst == Instruction.LoadGlobal &&
+                        result.SbCbSlot == DriverReservedCb &&
+                        result.SbCbOffset >= UbeBaseOffset &&
+                        result.SbCbOffset < UbeBaseOffset + UbeDescsSize)
                     {
                         // Here we effectively try to replace a LDG instruction with LDC.
                         // The hardware only supports a limited amount of constant buffers
                         // so NVN "emulates" more constant buffers using global memory access.
                         // Here we try to replace the global access back to a constant buffer
                         // load.
-                        storageIndex = SearchForStorageBase(block, source, ubeStart, ubeStart + ubeEnd);
-
-                        if (storageIndex >= 0)
-                        {
-                            node = ReplaceLdgWithLdc(node, config, storageIndex);
-                        }
+                        node = ReplaceLdgWithLdc(node, config, (result.SbCbOffset - UbeBaseOffset) / StorageDescSize);
+                    }
+                    else
+                    {
+                        // Storage buffers are implemented using global memory access.
+                        // If we know from where the base address of the access is loaded,
+                        // we can guess which storage buffer it is accessing.
+                        // We can then replace the global memory access with a storage
+                        // buffer access.
+                        node = ReplaceGlobalWithStorage(block, node, config, config.GetSbSlot((byte)result.SbCbSlot, (ushort)result.SbCbOffset));
                     }
                 }
             }
@@ -159,7 +176,9 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
 
             if (byteOffset == null)
             {
-                Operand baseAddrLow = Cbuf(0, baseAddressCbOffset);
+                (int sbCbSlot, int sbCbOffset) = config.GetSbCbInfo(storageIndex);
+
+                Operand baseAddrLow = Cbuf(sbCbSlot, sbCbOffset);
                 Operand baseAddrTrunc = Local();
 
                 Operand alignMask = Const(-config.GpuAccessor.QueryHostStorageBufferOffsetAlignment());
@@ -360,20 +379,20 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
             return node;
         }
 
-        private static int SearchForStorageBase(BasicBlock block, Operand globalAddress, int sbStart, int sbEnd)
+        private static SearchResult SearchForStorageBase(ShaderConfig config, BasicBlock block, Operand globalAddress)
         {
             globalAddress = Utils.FindLastOperation(globalAddress, block);
 
             if (globalAddress.Type == OperandType.ConstantBuffer)
             {
-                return GetStorageIndex(globalAddress, sbStart, sbEnd);
+                return GetStorageIndex(config, globalAddress);
             }
 
             Operation operation = globalAddress.AsgOp as Operation;
 
             if (operation == null || operation.Inst != Instruction.Add)
             {
-                return -1;
+                return SearchResult.NotFound;
             }
 
             Operand src1 = operation.GetSource(0);
@@ -382,34 +401,65 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
             if ((src1.Type == OperandType.LocalVariable && src2.Type == OperandType.Constant) ||
                 (src2.Type == OperandType.LocalVariable && src1.Type == OperandType.Constant))
             {
+                Operand baseAddr;
+
                 if (src1.Type == OperandType.LocalVariable)
                 {
-                    operation = Utils.FindLastOperation(src1, block).AsgOp as Operation;
+                    baseAddr = Utils.FindLastOperation(src1, block);
                 }
                 else
                 {
-                    operation = Utils.FindLastOperation(src2, block).AsgOp as Operation;
+                    baseAddr = Utils.FindLastOperation(src2, block);
                 }
+
+                var result = GetStorageIndex(config, baseAddr);
+                if (result.Found)
+                {
+                    return result;
+                }
+
+                operation = baseAddr.AsgOp as Operation;
 
                 if (operation == null || operation.Inst != Instruction.Add)
                 {
-                    return -1;
+                    return SearchResult.NotFound;
                 }
             }
+
+            var selectedResult = SearchResult.NotFound;
 
             for (int index = 0; index < operation.SourcesCount; index++)
             {
                 Operand source = operation.GetSource(index);
 
-                int storageIndex = GetStorageIndex(source, sbStart, sbEnd);
+                var result = GetStorageIndex(config, source);
 
-                if (storageIndex != -1)
+                // If we already have a result, we give preference to the ones from
+                // the driver reserved constant buffer, as those are the ones that
+                // contains the base address.
+                if (result.Found && (!selectedResult.Found || result.SbCbSlot == GlobalMemory.DriverReservedCb))
                 {
-                    return storageIndex;
+                    selectedResult = result;
                 }
             }
 
-            return -1;
+            return selectedResult;
+        }
+
+        private static SearchResult GetStorageIndex(ShaderConfig config, Operand operand)
+        {
+            if (operand.Type == OperandType.ConstantBuffer)
+            {
+                int slot = operand.GetCbufSlot();
+                int offset = operand.GetCbufOffset();
+
+                if ((offset & 3) == 0)
+                {
+                    return new SearchResult(slot, offset);
+                }
+            }
+
+            return SearchResult.NotFound;
         }
 
         private static int GetStorageIndex(Operand operand, int sbStart, int sbEnd)
