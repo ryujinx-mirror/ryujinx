@@ -1099,6 +1099,10 @@ namespace Ryujinx.Ava.UI.ViewModels
                                 LoadHeading = LocaleManager.Instance[LocaleKeys.CompilingShaders];
                                 IsLoadingIndeterminate = false;
                                 break;
+                            case ShaderCacheLoadingState.Packaging:
+                                LoadHeading = LocaleManager.Instance[LocaleKeys.PackagingShaders];
+                                IsLoadingIndeterminate = false;
+                                break;
                             case ShaderCacheLoadingState.Loaded:
                                 LoadHeading = LocaleManager.Instance.UpdateAndGetDynamicValue(LocaleKeys.LoadingHeading, TitleName);
                                 IsLoadingIndeterminate = true;
