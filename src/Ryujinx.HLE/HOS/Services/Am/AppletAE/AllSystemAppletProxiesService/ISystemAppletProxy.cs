@@ -92,6 +92,15 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService
             return ResultCode.Success;
         }
 
+        [CommandCmif(23)]
+        // GetAppletCommonFunctions() -> object<nn::am::service::IAppletCommonFunctions>
+        public ResultCode GetAppletCommonFunctions(ServiceCtx context)
+        {
+            MakeObject(context, new IAppletCommonFunctions());
+
+            return ResultCode.Success;
+        }
+
         [CommandCmif(1000)]
         // GetDebugFunctions() -> object<nn::am::service::IDebugFunctions>
         public ResultCode GetDebugFunctions(ServiceCtx context)
