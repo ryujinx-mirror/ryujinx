@@ -9,7 +9,7 @@ using System.Linq;
 
 namespace Ryujinx.HLE.Loaders.Processes
 {
-    public struct ProcessResult
+    public class ProcessResult
     {
         public static ProcessResult Failed => new(null, new ApplicationControlProperty(), false, false, null, 0, 0, 0, TitleLanguage.AmericanEnglish);
 
