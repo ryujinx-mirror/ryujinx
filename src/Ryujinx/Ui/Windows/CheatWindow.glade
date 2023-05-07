@@ -32,6 +32,21 @@
               </packing>
             </child>
             <child>
+              <object class="GtkTextView" id="_buildIdTextView">
+                <property name="visible">True</property>
+                <property name="margin_top">10</property>
+                <property name="halign">center</property>
+                <property name="margin_bottom">10</property>
+                <property name="editable">False</property>
+                <property name="cursor_visible">False</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+            <child>
               <object class="GtkScrolledWindow">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
@@ -57,7 +72,7 @@
               <packing>
                 <property name="expand">True</property>
                 <property name="fill">True</property>
-                <property name="position">1</property>
+                <property name="position">2</property>
               </packing>
             </child>
           </object>

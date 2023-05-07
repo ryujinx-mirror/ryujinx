@@ -1626,9 +1626,12 @@ namespace Ryujinx.Ui
 
         private void ManageCheats_Pressed(object sender, EventArgs args)
         {
-           var window = new CheatWindow(_virtualFileSystem,
-                                        _emulationContext.Processes.ActiveApplication.ProgramId,
-                                        _emulationContext.Processes.ActiveApplication.ApplicationControlProperties.Title[(int)_emulationContext.System.State.DesiredTitleLanguage].NameString.ToString());
+            var window = new CheatWindow(
+                _virtualFileSystem,
+                _emulationContext.Processes.ActiveApplication.ProgramId,
+                _emulationContext.Processes.ActiveApplication.ApplicationControlProperties
+                    .Title[(int)_emulationContext.System.State.DesiredTitleLanguage].NameString.ToString(), 
+                _currentEmulatedGamePath);
 
             window.Destroyed += CheatWindow_Destroyed;
             window.Show();
