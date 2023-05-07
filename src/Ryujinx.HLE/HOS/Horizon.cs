@@ -200,9 +200,10 @@ namespace Ryujinx.HLE.HOS
 
             LibHacHorizonManager = device.Configuration.LibHacHorizonManager;
 
+            // We hardcode a clock source id to avoid it changing between each start.
             // TODO: use set:sys (and get external clock source id from settings)
             // TODO: use "time!standard_steady_clock_rtc_update_interval_minutes" and implement a worker thread to be accurate.
-            UInt128 clockSourceId = UInt128Utils.CreateRandom();
+            UInt128 clockSourceId = new UInt128(0x36a0328702ce8bc1, 0x1608eaba02333284);
             IRtcManager.GetExternalRtcValue(out ulong rtcValue);
 
             // We assume the rtc is system time.
@@ -222,22 +223,22 @@ namespace Ryujinx.HLE.HOS
                 internalOffset = internalOffset.AddSeconds(-3600L);
             }
 
-            internalOffset = new TimeSpanType(-internalOffset.NanoSeconds);
+            systemTime = new TimeSpanType(systemTime.NanoSeconds + internalOffset.NanoSeconds);
 
             // First init the standard steady clock
-            TimeServiceManager.Instance.SetupStandardSteadyClock(TickSource, clockSourceId, systemTime, internalOffset, TimeSpanType.Zero, false);
+            TimeServiceManager.Instance.SetupStandardSteadyClock(TickSource, clockSourceId, TimeSpanType.Zero, TimeSpanType.Zero, TimeSpanType.Zero, false);
             TimeServiceManager.Instance.SetupStandardLocalSystemClock(TickSource, new SystemClockContext(), systemTime.ToSeconds());
+            TimeServiceManager.Instance.StandardLocalSystemClock.GetClockContext(TickSource, out SystemClockContext localSytemClockContext);
 
             if (NxSettings.Settings.TryGetValue("time!standard_network_clock_sufficient_accuracy_minutes", out object standardNetworkClockSufficientAccuracyMinutes))
             {
                 TimeSpanType standardNetworkClockSufficientAccuracy = new TimeSpanType((int)standardNetworkClockSufficientAccuracyMinutes * 60000000000);
 
                 // The network system clock needs a valid system clock, as such we setup this system clock using the local system clock.
-                TimeServiceManager.Instance.StandardLocalSystemClock.GetClockContext(TickSource, out SystemClockContext localSytemClockContext);
                 TimeServiceManager.Instance.SetupStandardNetworkSystemClock(localSytemClockContext, standardNetworkClockSufficientAccuracy);
             }
 
-            TimeServiceManager.Instance.SetupStandardUserSystemClock(TickSource, false, SteadyClockTimePoint.GetRandom());
+            TimeServiceManager.Instance.SetupStandardUserSystemClock(TickSource, true, localSytemClockContext.SteadyTimePoint);
 
             // FIXME: TimeZone should be init here but it's actually done in ContentManager
 
