@@ -3,12 +3,12 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:locale="clr-namespace:Ryujinx.Ava.Common.Locale"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:viewModels="clr-namespace:Ryujinx.Ava.UI.ViewModels"
-    mc:Ignorable="d"
     x:CompileBindings="True"
-    x:DataType="viewModels:SettingsViewModel">
+    x:DataType="viewModels:SettingsViewModel"
+    mc:Ignorable="d">
     <Design.DataContext>
         <viewModels:SettingsViewModel />
     </Design.DataContext>
@@ -27,13 +27,15 @@
                 <TextBlock Classes="h1" Text="{locale:Locale SettingsTabSystemCore}" />
                 <StackPanel Margin="10,0,0,0" Orientation="Vertical">
                     <StackPanel Margin="0,0,0,10" Orientation="Horizontal">
-                        <TextBlock VerticalAlignment="Center"
-                                   Text="{locale:Locale SettingsTabSystemSystemRegion}"
-                                   Width="250" />
-                        <ComboBox SelectedIndex="{Binding Region}"
-                                  ToolTip.Tip="{locale:Locale RegionTooltip}"
-                                  HorizontalContentAlignment="Left"
-                                  Width="350">
+                        <TextBlock
+                            Width="250"
+                            VerticalAlignment="Center"
+                            Text="{locale:Locale SettingsTabSystemSystemRegion}" />
+                        <ComboBox
+                            Width="350"
+                            HorizontalContentAlignment="Left"
+                            SelectedIndex="{Binding Region}"
+                            ToolTip.Tip="{locale:Locale RegionTooltip}">
                             <ComboBoxItem>
                                 <TextBlock Text="{locale:Locale SettingsTabSystemSystemRegionJapan}" />
                             </ComboBoxItem>
@@ -58,20 +60,21 @@
                         </ComboBox>
                     </StackPanel>
                     <StackPanel Margin="0,0,0,10" Orientation="Horizontal">
-                        <TextBlock VerticalAlignment="Center"
-                                   Text="{locale:Locale SettingsTabSystemSystemLanguage}"
-                                   ToolTip.Tip="{locale:Locale LanguageTooltip}"
-                                   Width="250" />
-                        <ComboBox SelectedIndex="{Binding Language}"
-                                  ToolTip.Tip="{locale:Locale LanguageTooltip}"
-                                  HorizontalContentAlignment="Left"
-                                  Width="350">
+                        <TextBlock
+                            Width="250"
+                            VerticalAlignment="Center"
+                            Text="{locale:Locale SettingsTabSystemSystemLanguage}"
+                            ToolTip.Tip="{locale:Locale LanguageTooltip}" />
+                        <ComboBox
+                            Width="350"
+                            HorizontalContentAlignment="Left"
+                            SelectedIndex="{Binding Language}"
+                            ToolTip.Tip="{locale:Locale LanguageTooltip}">
                             <ComboBoxItem>
                                 <TextBlock Text="{locale:Locale SettingsTabSystemSystemLanguageJapanese}" />
                             </ComboBoxItem>
                             <ComboBoxItem>
-                                <TextBlock
-                                    Text="{locale:Locale SettingsTabSystemSystemLanguageAmericanEnglish}" />
+                                <TextBlock Text="{locale:Locale SettingsTabSystemSystemLanguageAmericanEnglish}" />
                             </ComboBoxItem>
                             <ComboBoxItem>
                                 <TextBlock Text="{locale:Locale SettingsTabSystemSystemLanguageFrench}" />
@@ -104,71 +107,67 @@
                                 <TextBlock Text="{locale:Locale SettingsTabSystemSystemLanguageTaiwanese}" />
                             </ComboBoxItem>
                             <ComboBoxItem>
-                                <TextBlock
-                                    Text="{locale:Locale SettingsTabSystemSystemLanguageBritishEnglish}" />
+                                <TextBlock Text="{locale:Locale SettingsTabSystemSystemLanguageBritishEnglish}" />
                             </ComboBoxItem>
                             <ComboBoxItem>
-                                <TextBlock
-                                    Text="{locale:Locale SettingsTabSystemSystemLanguageCanadianFrench}" />
+                                <TextBlock Text="{locale:Locale SettingsTabSystemSystemLanguageCanadianFrench}" />
                             </ComboBoxItem>
                             <ComboBoxItem>
-                                <TextBlock
-                                    Text="{locale:Locale SettingsTabSystemSystemLanguageLatinAmericanSpanish}" />
+                                <TextBlock Text="{locale:Locale SettingsTabSystemSystemLanguageLatinAmericanSpanish}" />
                             </ComboBoxItem>
                             <ComboBoxItem>
-                                <TextBlock
-                                    Text="{locale:Locale SettingsTabSystemSystemLanguageSimplifiedChinese}" />
+                                <TextBlock Text="{locale:Locale SettingsTabSystemSystemLanguageSimplifiedChinese}" />
                             </ComboBoxItem>
                             <ComboBoxItem>
-                                <TextBlock
-                                    Text="{locale:Locale SettingsTabSystemSystemLanguageTraditionalChinese}" />
+                                <TextBlock Text="{locale:Locale SettingsTabSystemSystemLanguageTraditionalChinese}" />
                             </ComboBoxItem>
                             <ComboBoxItem>
-                                <TextBlock
-                                    Text="{locale:Locale SettingsTabSystemSystemLanguageBrazilianPortuguese}" />
+                                <TextBlock Text="{locale:Locale SettingsTabSystemSystemLanguageBrazilianPortuguese}" />
                             </ComboBoxItem>
                         </ComboBox>
                     </StackPanel>
                     <StackPanel Margin="0,0,0,10" Orientation="Horizontal">
-                        <TextBlock VerticalAlignment="Center"
-                                   Text="{locale:Locale SettingsTabSystemSystemTimeZone}"
-                                   ToolTip.Tip="{locale:Locale TimezoneTooltip}"
-                                   Width="250" />
+                        <TextBlock
+                            Width="250"
+                            VerticalAlignment="Center"
+                            Text="{locale:Locale SettingsTabSystemSystemTimeZone}"
+                            ToolTip.Tip="{locale:Locale TimezoneTooltip}" />
                         <AutoCompleteBox
                             Name="TimeZoneBox"
                             Width="350"
-                            MaxDropDownHeight="500"
                             FilterMode="Contains"
                             Items="{Binding TimeZones}"
+                            MaxDropDownHeight="500"
                             SelectionChanged="TimeZoneBox_OnSelectionChanged"
                             Text="{Binding Path=TimeZone, Mode=OneWay}"
                             TextChanged="TimeZoneBox_OnTextChanged"
                             ToolTip.Tip="{locale:Locale TimezoneTooltip}" />
                     </StackPanel>
                     <StackPanel Margin="0,0,0,10" Orientation="Horizontal">
-                        <TextBlock VerticalAlignment="Center"
-                                   Text="{locale:Locale SettingsTabSystemSystemTime}"
-                                   ToolTip.Tip="{locale:Locale TimeTooltip}"
-                                   Width="250"/>
-                        <DatePicker VerticalAlignment="Center" SelectedDate="{Binding DateOffset}"
-                                    ToolTip.Tip="{locale:Locale TimeTooltip}"
-                                    Width="350" />
+                        <TextBlock
+                            Width="250"
+                            VerticalAlignment="Center"
+                            Text="{locale:Locale SettingsTabSystemSystemTime}"
+                            ToolTip.Tip="{locale:Locale TimeTooltip}" />
+                        <DatePicker
+                            Width="350"
+                            VerticalAlignment="Center"
+                            SelectedDate="{Binding CurrentDate}"
+                            ToolTip.Tip="{locale:Locale TimeTooltip}" />
                     </StackPanel>
                     <StackPanel Margin="250,0,0,10" Orientation="Horizontal">
                         <TimePicker
+                            Width="350"
                             VerticalAlignment="Center"
                             ClockIdentifier="24HourClock"
-                            SelectedTime="{Binding TimeOffset}"
-                            Width="350"
+                            SelectedTime="{Binding CurrentTime}"
                             ToolTip.Tip="{locale:Locale TimeTooltip}" />
                     </StackPanel>
                     <CheckBox IsChecked="{Binding EnableVsync}">
-                        <TextBlock Text="{locale:Locale SettingsTabSystemEnableVsync}"
-                                   ToolTip.Tip="{locale:Locale VSyncToggleTooltip}" />
+                        <TextBlock Text="{locale:Locale SettingsTabSystemEnableVsync}" ToolTip.Tip="{locale:Locale VSyncToggleTooltip}" />
                     </CheckBox>
                     <CheckBox IsChecked="{Binding EnableFsIntegrityChecks}">
-                        <TextBlock Text="{locale:Locale SettingsTabSystemEnableFsIntegrityChecks}"
-                                   ToolTip.Tip="{locale:Locale FsIntegrityToggleTooltip}" />
+                        <TextBlock Text="{locale:Locale SettingsTabSystemEnableFsIntegrityChecks}" ToolTip.Tip="{locale:Locale FsIntegrityToggleTooltip}" />
                     </CheckBox>
                 </StackPanel>
                 <Separator Height="1" />
@@ -180,12 +179,10 @@
                     Margin="10,0,0,0"
                     HorizontalAlignment="Stretch"
                     Orientation="Vertical">
-                    <CheckBox IsChecked="{Binding ExpandDramSize}"
-                              ToolTip.Tip="{locale:Locale DRamTooltip}">
+                    <CheckBox IsChecked="{Binding ExpandDramSize}" ToolTip.Tip="{locale:Locale DRamTooltip}">
                         <TextBlock Text="{locale:Locale SettingsTabSystemExpandDramSize}" />
                     </CheckBox>
-                    <CheckBox IsChecked="{Binding IgnoreMissingServices}"
-                              ToolTip.Tip="{locale:Locale IgnoreMissingServicesTooltip}">
+                    <CheckBox IsChecked="{Binding IgnoreMissingServices}" ToolTip.Tip="{locale:Locale IgnoreMissingServicesTooltip}">
                         <TextBlock Text="{locale:Locale SettingsTabSystemIgnoreMissingServices}" />
                     </CheckBox>
                 </StackPanel>

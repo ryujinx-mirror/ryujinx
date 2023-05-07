@@ -238,8 +238,9 @@ namespace Ryujinx.Ava.UI.ViewModels
             }
         }
 
-        public DateTimeOffset DateOffset { get; set; }
-        public TimeSpan TimeOffset { get; set; }
+        public DateTimeOffset CurrentDate { get; set; }
+        public TimeSpan CurrentTime { get; set; }
+
         internal AvaloniaList<TimeZone> TimeZones { get; set; }
         public AvaloniaList<string> GameDirectories { get; set; }
         public ObservableCollection<ComboBoxItem> AvailableGpus { get; set; }
@@ -397,10 +398,11 @@ namespace Ryujinx.Ava.UI.ViewModels
             Language = (int)config.System.Language.Value;
             TimeZone = config.System.TimeZone;
 
-            DateTime dateTimeOffset = DateTime.Now.AddSeconds(config.System.SystemTimeOffset);
+            DateTime currentDateTime = DateTime.Now;
 
-            DateOffset = dateTimeOffset.Date;
-            TimeOffset = dateTimeOffset.TimeOfDay;
+            CurrentDate = currentDateTime.Date;
+            CurrentTime = currentDateTime.TimeOfDay.Add(TimeSpan.FromSeconds(config.System.SystemTimeOffset));
+
             EnableVsync = config.Graphics.EnableVsync;
             EnableFsIntegrityChecks = config.System.EnableFsIntegrityChecks;
             ExpandDramSize = config.System.ExpandRam;
@@ -487,9 +489,7 @@ namespace Ryujinx.Ava.UI.ViewModels
                 config.System.TimeZone.Value = TimeZone;
             }
 
-            TimeSpan systemTimeOffset = DateOffset - DateTime.Now;
-
-            config.System.SystemTimeOffset.Value = systemTimeOffset.Seconds;
+            config.System.SystemTimeOffset.Value = Convert.ToInt64((CurrentDate.ToUnixTimeSeconds() + CurrentTime.TotalSeconds) - DateTimeOffset.Now.ToUnixTimeSeconds());
             config.Graphics.EnableVsync.Value = EnableVsync;
             config.System.EnableFsIntegrityChecks.Value = EnableFsIntegrityChecks;
             config.System.ExpandRam.Value = ExpandDramSize;
