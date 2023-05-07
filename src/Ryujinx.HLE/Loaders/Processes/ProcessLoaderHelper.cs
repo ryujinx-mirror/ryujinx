@@ -219,7 +219,7 @@ namespace Ryujinx.HLE.Loaders.Processes
             Switch device,
             KernelContext context,
             MetaLoader metaLoader,
-            ApplicationControlProperty applicationControlProperties,
+            BlitStruct<ApplicationControlProperty> applicationControlProperties,
             bool diskCacheEnabled,
             bool allowCodeMemoryForJit,
             string name,
@@ -355,7 +355,7 @@ namespace Ryujinx.HLE.Loaders.Processes
                 context.Device.System.TickSource,
                 context.Device.Gpu,
                 $"{programId:x16}",
-                applicationControlProperties.DisplayVersionString.ToString(),
+                applicationControlProperties.Value.DisplayVersionString.ToString(),
                 diskCacheEnabled,
                 codeStart,
                 codeSize);

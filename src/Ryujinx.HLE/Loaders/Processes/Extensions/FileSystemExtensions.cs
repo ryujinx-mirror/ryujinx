@@ -116,7 +116,7 @@ namespace Ryujinx.HLE.Loaders.Processes.Extensions
                 device,
                 device.System.KernelContext,
                 metaLoader,
-                nacpData.Value,
+                nacpData,
                 enablePtc,
                 allowCodeMemoryForJit,
                 programName,

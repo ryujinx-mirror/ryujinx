@@ -209,7 +209,7 @@ namespace Ryujinx.HLE.Loaders.Processes
             ProcessResult processResult = ProcessLoaderHelper.LoadNsos(_device,
                                                                        _device.System.KernelContext,
                                                                        dummyExeFs.GetNpdm(),
-                                                                       nacpData.Value,
+                                                                       nacpData,
                                                                        diskCacheEnabled: false,
                                                                        allowCodeMemoryForJit: true,
                                                                        programName,

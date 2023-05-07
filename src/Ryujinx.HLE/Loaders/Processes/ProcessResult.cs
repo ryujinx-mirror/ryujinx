@@ -1,4 +1,5 @@
-﻿using LibHac.Loader;
+﻿using LibHac.Common;
+using LibHac.Loader;
 using LibHac.Ns;
 using Ryujinx.Common.Logging;
 using Ryujinx.Cpu;
@@ -11,7 +12,7 @@ namespace Ryujinx.HLE.Loaders.Processes
 {
     public class ProcessResult
     {
-        public static ProcessResult Failed => new(null, new ApplicationControlProperty(), false, false, null, 0, 0, 0, TitleLanguage.AmericanEnglish);
+        public static ProcessResult Failed => new(null, new BlitStruct<ApplicationControlProperty>(1), false, false, null, 0, 0, 0, TitleLanguage.AmericanEnglish);
 
         private readonly byte _mainThreadPriority;
         private readonly uint _mainThreadStackSize;
@@ -31,15 +32,15 @@ namespace Ryujinx.HLE.Loaders.Processes
         public readonly bool   AllowCodeMemoryForJit;
 
         public ProcessResult(
-            MetaLoader                 metaLoader,
-            ApplicationControlProperty applicationControlProperties,
-            bool                       diskCacheEnabled,
-            bool                       allowCodeMemoryForJit,
-            IDiskCacheLoadState        diskCacheLoadState,
-            ulong                      pid,
-            byte                       mainThreadPriority,
-            uint                       mainThreadStackSize,
-            TitleLanguage              titleLanguage)
+            MetaLoader                             metaLoader,
+            BlitStruct<ApplicationControlProperty> applicationControlProperties,
+            bool                                   diskCacheEnabled,
+            bool                                   allowCodeMemoryForJit,
+            IDiskCacheLoadState                    diskCacheLoadState,
+            ulong                                  pid,
+            byte                                   mainThreadPriority,
+            uint                                   mainThreadStackSize,
+            TitleLanguage                          titleLanguage)
         {
             _mainThreadPriority  = mainThreadPriority;
             _mainThreadStackSize = mainThreadStackSize;
@@ -48,7 +49,7 @@ namespace Ryujinx.HLE.Loaders.Processes
             ProcessId          = pid;
 
             MetaLoader                   = metaLoader;
-            ApplicationControlProperties = applicationControlProperties;
+            ApplicationControlProperties = applicationControlProperties.Value;
 
             if (metaLoader is not null)
             {
