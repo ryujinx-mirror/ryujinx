@@ -66,6 +66,8 @@ namespace Ryujinx.Graphics.Vulkan
         private ulong _vertexBuffersDirty;
         protected Rectangle<int> ClearScissor;
 
+        private readonly VertexBufferUpdater _vertexBufferUpdater;
+
         public SupportBufferUpdater SupportBufferUpdater;
         public IndexBufferPattern QuadsToTrisPattern;
         public IndexBufferPattern TriFanToTrisPattern;
@@ -96,6 +98,7 @@ namespace Ryujinx.Graphics.Vulkan
             gd.Api.CreatePipelineCache(device, pipelineCacheCreateInfo, null, out PipelineCache).ThrowOnError();
 
             _descriptorSetUpdater = new DescriptorSetUpdater(gd, this);
+            _vertexBufferUpdater = new VertexBufferUpdater(gd);
 
             _transformFeedbackBuffers = new BufferState[Constants.MaxTransformFeedbackBuffers];
             _vertexBuffers = new VertexBufferState[Constants.MaxVertexBuffers + 1];
@@ -1185,6 +1188,9 @@ namespace Ryujinx.Graphics.Vulkan
 
             int validCount = 1;
 
+            BufferHandle lastHandle = default;
+            Auto<DisposableBuffer> lastBuffer = default;
+
             for (int i = 0; i < count; i++)
             {
                 var vertexBuffer = vertexBuffers[i];
@@ -1194,7 +1200,12 @@ namespace Ryujinx.Graphics.Vulkan
 
                 if (vertexBuffer.Buffer.Handle != BufferHandle.Null)
                 {
-                    var vb = Gd.BufferManager.GetBuffer(CommandBuffer, vertexBuffer.Buffer.Handle, false);
+                    Auto<DisposableBuffer> vb = (vertexBuffer.Buffer.Handle == lastHandle) ? lastBuffer :
+                        Gd.BufferManager.GetBuffer(CommandBuffer, vertexBuffer.Buffer.Handle, false);
+
+                    lastHandle = vertexBuffer.Buffer.Handle;
+                    lastBuffer = vb;
+
                     if (vb != null)
                     {
                         int binding = i + 1;
@@ -1222,23 +1233,28 @@ namespace Ryujinx.Graphics.Vulkan
                         ref var buffer = ref _vertexBuffers[binding];
                         int oldScalarAlign = buffer.AttributeScalarAlignment;
 
-                        buffer.Dispose();
-
                         if (Gd.Capabilities.VertexBufferAlignment < 2 &&
                             (vertexBuffer.Stride % FormatExtensions.MaxBufferFormatScalarSize) == 0)
                         {
-                            buffer = new VertexBufferState(
-                                vb,
-                                descriptorIndex,
-                                vertexBuffer.Buffer.Offset,
-                                vbSize,
-                                vertexBuffer.Stride);
+                            if (!buffer.Matches(vb, descriptorIndex, vertexBuffer.Buffer.Offset, vbSize, vertexBuffer.Stride))
+                            {
+                                buffer.Dispose();
 
-                            buffer.BindVertexBuffer(Gd, Cbs, (uint)binding, ref _newState);
+                                buffer = new VertexBufferState(
+                                    vb,
+                                    descriptorIndex,
+                                    vertexBuffer.Buffer.Offset,
+                                    vbSize,
+                                    vertexBuffer.Stride);
+
+                                buffer.BindVertexBuffer(Gd, Cbs, (uint)binding, ref _newState, _vertexBufferUpdater);
+                            }
                         }
                         else
                         {
                             // May need to be rewritten. Bind this buffer before draw.
+
+                            buffer.Dispose();
 
                             buffer = new VertexBufferState(
                                 vertexBuffer.Buffer.Handle,
@@ -1254,6 +1270,8 @@ namespace Ryujinx.Graphics.Vulkan
                     }
                 }
             }
+
+            _vertexBufferUpdater.Commit(Cbs);
 
             _newState.VertexBindingDescriptionsCount = (uint)validCount;
             SignalStateChange();
@@ -1596,10 +1614,12 @@ namespace Ryujinx.Graphics.Vulkan
                 {
                     int i = BitOperations.TrailingZeroCount(_vertexBuffersDirty);
 
-                    _vertexBuffers[i].BindVertexBuffer(Gd, Cbs, (uint)i, ref _newState);
+                    _vertexBuffers[i].BindVertexBuffer(Gd, Cbs, (uint)i, ref _newState, _vertexBufferUpdater);
 
                     _vertexBuffersDirty &= ~(1UL << i);
                 }
+
+                _vertexBufferUpdater.Commit(Cbs);
             }
 
             if (_stateDirty || Pbp != pbp)
@@ -1712,6 +1732,7 @@ namespace Ryujinx.Graphics.Vulkan
                 _framebuffer?.Dispose();
                 _newState.Dispose();
                 _descriptorSetUpdater.Dispose();
+                _vertexBufferUpdater.Dispose();
 
                 for (int i = 0; i < _vertexBuffers.Length; i++)
                 {

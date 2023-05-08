@@ -46,7 +46,7 @@ namespace Ryujinx.Graphics.Vulkan
             AttributeScalarAlignment = 1;
         }
 
-        public void BindVertexBuffer(VulkanRenderer gd, CommandBufferScoped cbs, uint binding, ref PipelineState state)
+        public void BindVertexBuffer(VulkanRenderer gd, CommandBufferScoped cbs, uint binding, ref PipelineState state, VertexBufferUpdater updater)
         {
             var autoBuffer = _buffer;
 
@@ -65,21 +65,7 @@ namespace Ryujinx.Graphics.Vulkan
 
                         var buffer = autoBuffer.Get(cbs, 0, newSize).Value;
 
-                        if (gd.Capabilities.SupportsExtendedDynamicState)
-                        {
-                            gd.ExtendedDynamicStateApi.CmdBindVertexBuffers2(
-                                cbs.CommandBuffer,
-                                binding,
-                                1,
-                                buffer,
-                                0,
-                                (ulong)newSize,
-                                (ulong)stride);
-                        }
-                        else
-                        {
-                            gd.Api.CmdBindVertexBuffers(cbs.CommandBuffer, binding, 1, buffer, 0);
-                        }
+                        updater.BindVertexBuffer(cbs, binding, buffer, 0, (ulong)newSize, (ulong)stride);
 
                         _buffer = autoBuffer;
 
@@ -106,27 +92,18 @@ namespace Ryujinx.Graphics.Vulkan
             {
                 var buffer = autoBuffer.Get(cbs, _offset, _size).Value;
 
-                if (gd.Capabilities.SupportsExtendedDynamicState)
-                {
-                    gd.ExtendedDynamicStateApi.CmdBindVertexBuffers2(
-                        cbs.CommandBuffer,
-                        binding,
-                        1,
-                        buffer,
-                        (ulong)_offset,
-                        (ulong)_size,
-                        (ulong)_stride);
-                }
-                else
-                {
-                    gd.Api.CmdBindVertexBuffers(cbs.CommandBuffer, binding, 1, buffer, (ulong)_offset);
-                }
+                updater.BindVertexBuffer(cbs, binding, buffer, (ulong)_offset, (ulong)_size, (ulong)_stride);
             }
         }
 
         public bool BoundEquals(Auto<DisposableBuffer> buffer)
         {
             return _buffer == buffer;
+        }
+
+        public bool Matches(Auto<DisposableBuffer> buffer, int descriptorIndex, int offset, int size, int stride = 0)
+        {
+            return _buffer == buffer && DescriptorIndex == descriptorIndex && _offset == offset && _size == size && _stride == stride;
         }
 
         public void Swap(Auto<DisposableBuffer> from, Auto<DisposableBuffer> to)
