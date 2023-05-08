@@ -25,6 +25,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Net.NetworkInformation;
 using TimeZone = Ryujinx.Ava.UI.Models.TimeZone;
+using Silk.NET.Vulkan;
 
 namespace Ryujinx.Ava.UI.ViewModels
 {
@@ -310,7 +311,7 @@ namespace Ryujinx.Ava.UI.ViewModels
         {
             _gpuIds = new List<string>();
             List<string> names = new();
-            var devices = VulkanRenderer.GetPhysicalDevices();
+            var devices = VulkanRenderer.GetPhysicalDevices(Vk.GetApi());
 
             if (devices.Length == 0)
             {

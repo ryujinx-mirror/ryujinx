@@ -35,6 +35,7 @@ using Ryujinx.Input.HLE;
 using Ryujinx.Ui.Common;
 using Ryujinx.Ui.Common.Configuration;
 using Ryujinx.Ui.Common.Helper;
+using Silk.NET.Vulkan;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
@@ -701,6 +702,7 @@ namespace Ryujinx.Ava
             if (ConfigurationState.Instance.Graphics.GraphicsBackend.Value == GraphicsBackend.Vulkan)
             {
                 renderer = new VulkanRenderer(
+                    Vk.GetApi(),
                     (_rendererHost.EmbeddedWindow as EmbeddedWindowVulkan).CreateSurface,
                     VulkanHelper.GetRequiredInstanceExtensions,
                     ConfigurationState.Instance.Graphics.PreferredGpu.Value);

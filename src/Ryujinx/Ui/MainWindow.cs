@@ -426,7 +426,7 @@ namespace Ryujinx.Ui
             if (ConfigurationState.Instance.Graphics.GraphicsBackend == GraphicsBackend.Vulkan)
             {
                 string preferredGpu = ConfigurationState.Instance.Graphics.PreferredGpu.Value;
-                renderer = new VulkanRenderer(CreateVulkanSurface, VulkanHelper.GetRequiredInstanceExtensions, preferredGpu);
+                renderer = new VulkanRenderer(Vk.GetApi(), CreateVulkanSurface, VulkanHelper.GetRequiredInstanceExtensions, preferredGpu);
             }
             else
             {

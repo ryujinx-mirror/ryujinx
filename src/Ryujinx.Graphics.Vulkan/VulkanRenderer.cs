@@ -89,11 +89,12 @@ namespace Ryujinx.Graphics.Vulkan
 
         public event EventHandler<ScreenCaptureImageInfo> ScreenCaptured;
 
-        public VulkanRenderer(Func<Instance, Vk, SurfaceKHR> surfaceFunc, Func<string[]> requiredExtensionsFunc, string preferredGpuId)
+        public VulkanRenderer(Vk api, Func<Instance, Vk, SurfaceKHR> surfaceFunc, Func<string[]> requiredExtensionsFunc, string preferredGpuId)
         {
             _getSurface = surfaceFunc;
             _getRequiredExtensions = requiredExtensionsFunc;
             _preferredGpuId = preferredGpuId;
+            Api = api;
             Shaders = new HashSet<ShaderCollection>();
             Textures = new HashSet<ITexture>();
             Samplers = new HashSet<SamplerHolder>();
@@ -345,31 +346,27 @@ namespace Ryujinx.Graphics.Vulkan
 
         private unsafe void SetupContext(GraphicsDebugLevel logLevel)
         {
-            var api = Vk.GetApi();
+            _instance = VulkanInitialization.CreateInstance(Api, logLevel, _getRequiredExtensions());
+            _debugMessenger = new VulkanDebugMessenger(Api, _instance.Instance, logLevel);
 
-            Api = api;
-
-            _instance = VulkanInitialization.CreateInstance(api, logLevel, _getRequiredExtensions());
-            _debugMessenger = new VulkanDebugMessenger(api, _instance.Instance, logLevel);
-
-            if (api.TryGetInstanceExtension(_instance.Instance, out KhrSurface surfaceApi))
+            if (Api.TryGetInstanceExtension(_instance.Instance, out KhrSurface surfaceApi))
             {
                 SurfaceApi = surfaceApi;
             }
 
-            _surface = _getSurface(_instance.Instance, api);
-            _physicalDevice = VulkanInitialization.FindSuitablePhysicalDevice(api, _instance, _surface, _preferredGpuId);
+            _surface = _getSurface(_instance.Instance, Api);
+            _physicalDevice = VulkanInitialization.FindSuitablePhysicalDevice(Api, _instance, _surface, _preferredGpuId);
 
-            var queueFamilyIndex = VulkanInitialization.FindSuitableQueueFamily(api, _physicalDevice, _surface, out uint maxQueueCount);
+            var queueFamilyIndex = VulkanInitialization.FindSuitableQueueFamily(Api, _physicalDevice, _surface, out uint maxQueueCount);
 
-            _device = VulkanInitialization.CreateDevice(api, _physicalDevice, queueFamilyIndex, maxQueueCount);
+            _device = VulkanInitialization.CreateDevice(Api, _physicalDevice, queueFamilyIndex, maxQueueCount);
 
-            if (api.TryGetDeviceExtension(_instance.Instance, _device, out KhrSwapchain swapchainApi))
+            if (Api.TryGetDeviceExtension(_instance.Instance, _device, out KhrSwapchain swapchainApi))
             {
                 SwapchainApi = swapchainApi;
             }
 
-            api.GetDeviceQueue(_device, queueFamilyIndex, 0, out var queue);
+            Api.GetDeviceQueue(_device, queueFamilyIndex, 0, out var queue);
             Queue = queue;
             QueueLock = new object();
 
@@ -603,11 +600,11 @@ namespace Ryujinx.Graphics.Vulkan
             return new HardwareInfo(GpuVendor, GpuRenderer);
         }
 
-        public static DeviceInfo[] GetPhysicalDevices()
+        public static DeviceInfo[] GetPhysicalDevices(Vk api)
         {
             try
             {
-                return VulkanInitialization.GetSuitablePhysicalDevices(Vk.GetApi());
+                return VulkanInitialization.GetSuitablePhysicalDevices(api);
             }
             catch (Exception)
             {

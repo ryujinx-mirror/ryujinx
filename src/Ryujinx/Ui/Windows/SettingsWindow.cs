@@ -13,6 +13,7 @@ using Ryujinx.Ui.Common.Configuration;
 using Ryujinx.Ui.Common.Configuration.System;
 using Ryujinx.Ui.Helper;
 using Ryujinx.Ui.Widgets;
+using Silk.NET.Vulkan;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -477,7 +478,7 @@ namespace Ryujinx.Ui.Windows
 
             if (Enum.Parse<GraphicsBackend>(_graphicsBackend.ActiveId) == GraphicsBackend.Vulkan)
             {
-                var devices = VulkanRenderer.GetPhysicalDevices();
+                var devices = VulkanRenderer.GetPhysicalDevices(Vk.GetApi());
                 string preferredGpuIdFromConfig = ConfigurationState.Instance.Graphics.PreferredGpu.Value;
                 string preferredGpuId = preferredGpuIdFromConfig;
                 bool noGpuId = string.IsNullOrEmpty(preferredGpuIdFromConfig);

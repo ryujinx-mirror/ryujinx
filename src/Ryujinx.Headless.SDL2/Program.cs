@@ -487,11 +487,12 @@ namespace Ryujinx.Headless.SDL2
             if (options.GraphicsBackend == GraphicsBackend.Vulkan && window is VulkanWindow vulkanWindow)
             {
                 string preferredGpuId = string.Empty;
+                Vk api = Vk.GetApi();
 
                 if (!string.IsNullOrEmpty(options.PreferredGpuVendor))
                 {
                     string preferredGpuVendor = options.PreferredGpuVendor.ToLowerInvariant();
-                    var devices = VulkanRenderer.GetPhysicalDevices();
+                    var devices = VulkanRenderer.GetPhysicalDevices(api);
 
                     foreach (var device in devices)
                     {
@@ -504,6 +505,7 @@ namespace Ryujinx.Headless.SDL2
                 }
 
                 return new VulkanRenderer(
+                    api,
                     (instance, vk) => new SurfaceKHR((ulong)(vulkanWindow.CreateWindowSurface(instance.Handle))),
                     vulkanWindow.GetRequiredInstanceExtensions,
                     preferredGpuId);
