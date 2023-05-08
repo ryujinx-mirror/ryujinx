@@ -105,6 +105,23 @@ namespace Ryujinx.Graphics.Vulkan
             }
         }
 
+        public bool TryIncrementReferenceCount()
+        {
+            int lastValue;
+            do
+            {
+                lastValue = _referenceCount;
+
+                if (lastValue == 0)
+                {
+                    return false;
+                }
+            }
+            while (Interlocked.CompareExchange(ref _referenceCount, lastValue + 1, lastValue) != lastValue);
+
+            return true;
+        }
+
         public void IncrementReferenceCount()
         {
             if (Interlocked.Increment(ref _referenceCount) == 1)

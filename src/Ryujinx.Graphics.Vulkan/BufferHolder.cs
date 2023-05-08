@@ -599,9 +599,10 @@ namespace Ryujinx.Graphics.Vulkan
             Auto<DisposableBuffer> dst,
             int srcOffset,
             int dstOffset,
-            int size)
+            int size,
+            bool registerSrcUsage = true)
         {
-            var srcBuffer = src.Get(cbs, srcOffset, size).Value;
+            var srcBuffer = registerSrcUsage ? src.Get(cbs, srcOffset, size).Value : src.GetUnsafe().Value;
             var dstBuffer = dst.Get(cbs, dstOffset, size).Value;
 
             InsertBufferBarrier(

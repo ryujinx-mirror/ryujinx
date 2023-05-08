@@ -31,7 +31,7 @@ namespace Ryujinx.Graphics.Vulkan
             public SemaphoreHolder Semaphore;
 
             public List<IAuto> Dependants;
-            public HashSet<MultiFenceHolder> Waitables;
+            public List<MultiFenceHolder> Waitables;
             public HashSet<SemaphoreHolder> Dependencies;
 
             public void Initialize(Vk api, Device device, CommandPool pool)
@@ -47,7 +47,7 @@ namespace Ryujinx.Graphics.Vulkan
                 api.AllocateCommandBuffers(device, allocateInfo, out CommandBuffer);
 
                 Dependants = new List<IAuto>();
-                Waitables = new HashSet<MultiFenceHolder>();
+                Waitables = new List<MultiFenceHolder>();
                 Dependencies = new HashSet<SemaphoreHolder>();
             }
         }
@@ -143,8 +143,10 @@ namespace Ryujinx.Graphics.Vulkan
         public void AddWaitable(int cbIndex, MultiFenceHolder waitable)
         {
             ref var entry = ref _commandBuffers[cbIndex];
-            waitable.AddFence(cbIndex, entry.Fence);
-            entry.Waitables.Add(waitable);
+            if (waitable.AddFence(cbIndex, entry.Fence))
+            {
+                entry.Waitables.Add(waitable);
+            }
         }
 
         public bool HasWaitableOnRentedCommandBuffer(MultiFenceHolder waitable, int offset, int size)
@@ -156,7 +158,7 @@ namespace Ryujinx.Graphics.Vulkan
                     ref var entry = ref _commandBuffers[i];
 
                     if (entry.InUse &&
-                        entry.Waitables.Contains(waitable) &&
+                        waitable.HasFence(i) &&
                         waitable.IsBufferRangeInUse(i, offset, size))
                     {
                         return true;
@@ -331,7 +333,7 @@ namespace Ryujinx.Graphics.Vulkan
 
             foreach (var waitable in entry.Waitables)
             {
-                waitable.RemoveFence(cbIndex, entry.Fence);
+                waitable.RemoveFence(cbIndex);
                 waitable.RemoveBufferUses(cbIndex);
             }
 

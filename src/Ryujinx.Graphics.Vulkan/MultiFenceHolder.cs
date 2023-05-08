@@ -1,6 +1,5 @@
 ﻿using Silk.NET.Vulkan;
-using System.Collections.Generic;
-using System.Linq;
+using System;
 
 namespace Ryujinx.Graphics.Vulkan
 {
@@ -11,7 +10,7 @@ namespace Ryujinx.Graphics.Vulkan
     {
         private static int BufferUsageTrackingGranularity = 4096;
 
-        private readonly Dictionary<FenceHolder, int> _fences;
+        private readonly FenceHolder[] _fences;
         private BufferUsageBitmap _bufferUsageBitmap;
 
         /// <summary>
@@ -19,7 +18,7 @@ namespace Ryujinx.Graphics.Vulkan
         /// </summary>
         public MultiFenceHolder()
         {
-            _fences = new Dictionary<FenceHolder, int>();
+            _fences = new FenceHolder[CommandBufferPool.MaxCommandBuffers];
         }
 
         /// <summary>
@@ -28,7 +27,7 @@ namespace Ryujinx.Graphics.Vulkan
         /// <param name="size">Size of the buffer</param>
         public MultiFenceHolder(int size)
         {
-            _fences = new Dictionary<FenceHolder, int>();
+            _fences = new FenceHolder[CommandBufferPool.MaxCommandBuffers];
             _bufferUsageBitmap = new BufferUsageBitmap(size, BufferUsageTrackingGranularity);
         }
 
@@ -80,25 +79,37 @@ namespace Ryujinx.Graphics.Vulkan
         /// </summary>
         /// <param name="cbIndex">Command buffer index of the command buffer that owns the fence</param>
         /// <param name="fence">Fence to be added</param>
-        public void AddFence(int cbIndex, FenceHolder fence)
+        /// <returns>True if the command buffer's previous fence value was null</returns>
+        public bool AddFence(int cbIndex, FenceHolder fence)
         {
-            lock (_fences)
+            ref FenceHolder fenceRef = ref _fences[cbIndex];
+
+            if (fenceRef == null)
             {
-                _fences.TryAdd(fence, cbIndex);
+                fenceRef = fence;
+                return true;
             }
+
+            return false;
         }
 
         /// <summary>
         /// Removes a fence from the holder.
         /// </summary>
         /// <param name="cbIndex">Command buffer index of the command buffer that owns the fence</param>
-        /// <param name="fence">Fence to be removed</param>
-        public void RemoveFence(int cbIndex, FenceHolder fence)
+        public void RemoveFence(int cbIndex)
         {
-            lock (_fences)
-            {
-                _fences.Remove(fence);
-            }
+            _fences[cbIndex] = null;
+        }
+
+        /// <summary>
+        /// Determines if a fence referenced on the given command buffer.
+        /// </summary>
+        /// <param name="cbIndex">Index of the command buffer to check if it's used</param>
+        /// <returns>True if referenced, false otherwise</returns>
+        public bool HasFence(int cbIndex)
+        {
+            return _fences[cbIndex] != null;
         }
 
         /// <summary>
@@ -147,21 +158,29 @@ namespace Ryujinx.Graphics.Vulkan
         /// <returns>True if all fences were signaled before the timeout expired, false otherwise</returns>
         private bool WaitForFencesImpl(Vk api, Device device, int offset, int size, bool hasTimeout, ulong timeout)
         {
-            FenceHolder[] fenceHolders;
-            Fence[] fences;
+            Span<FenceHolder> fenceHolders = new FenceHolder[CommandBufferPool.MaxCommandBuffers];
 
-            lock (_fences)
+            int count = size != 0 ? GetOverlappingFences(fenceHolders, offset, size) : GetFences(fenceHolders);
+            Span<Fence> fences = stackalloc Fence[count];
+
+            int fenceCount = 0;
+
+            for (int i = 0; i < count; i++)
             {
-                fenceHolders = size != 0 ? GetOverlappingFences(offset, size) : _fences.Keys.ToArray();
-                fences = new Fence[fenceHolders.Length];
-
-                for (int i = 0; i < fenceHolders.Length; i++)
+                if (fenceHolders[i].TryGet(out Fence fence))
                 {
-                    fences[i] = fenceHolders[i].Get();
+                    fences[fenceCount] = fence;
+
+                    if (fenceCount < i)
+                    {
+                        fenceHolders[fenceCount] = fenceHolders[i];
+                    }
+
+                    fenceCount++;
                 }
             }
 
-            if (fences.Length == 0)
+            if (fenceCount == 0)
             {
                 return true;
             }
@@ -170,14 +189,14 @@ namespace Ryujinx.Graphics.Vulkan
 
             if (hasTimeout)
             {
-                signaled = FenceHelper.AllSignaled(api, device, fences, timeout);
+                signaled = FenceHelper.AllSignaled(api, device, fences.Slice(0, fenceCount), timeout);
             }
             else
             {
-                FenceHelper.WaitAllIndefinitely(api, device, fences);
+                FenceHelper.WaitAllIndefinitely(api, device, fences.Slice(0, fenceCount));
             }
 
-            for (int i = 0; i < fenceHolders.Length; i++)
+            for (int i = 0; i < fenceCount; i++)
             {
                 fenceHolders[i].Put();
             }
@@ -186,27 +205,49 @@ namespace Ryujinx.Graphics.Vulkan
         }
 
         /// <summary>
-        /// Gets fences to wait for use of a given buffer region.
+        /// Gets fences to wait for.
         /// </summary>
-        /// <param name="offset">Offset of the range</param>
-        /// <param name="size">Size of the range in bytes</param>
-        /// <returns>Fences for the specified region</returns>
-        private FenceHolder[] GetOverlappingFences(int offset, int size)
+        /// <param name="storage">Span to store fences in</param>
+        /// <returns>Number of fences placed in storage</returns>
+        private int GetFences(Span<FenceHolder> storage)
         {
-            List<FenceHolder> overlapping = new List<FenceHolder>();
+            int count = 0;
 
-            foreach (var kv in _fences)
+            for (int i = 0; i < _fences.Length; i++)
             {
-                var fence = kv.Key;
-                var ownerCbIndex = kv.Value;
+                var fence = _fences[i];
 
-                if (_bufferUsageBitmap.OverlapsWith(ownerCbIndex, offset, size))
+                if (fence != null)
                 {
-                    overlapping.Add(fence);
+                    storage[count++] = fence;
                 }
             }
 
-            return overlapping.ToArray();
+            return count;
+        }
+
+        /// <summary>
+        /// Gets fences to wait for use of a given buffer region.
+        /// </summary>
+        /// <param name="storage">Span to store overlapping fences in</param>
+        /// <param name="offset">Offset of the range</param>
+        /// <param name="size">Size of the range in bytes</param>
+        /// <returns>Number of fences for the specified region placed in storage</returns>
+        private int GetOverlappingFences(Span<FenceHolder> storage, int offset, int size)
+        {
+            int count = 0;
+
+            for (int i = 0; i < _fences.Length; i++)
+            {
+                var fence = _fences[i];
+
+                if (fence != null && _bufferUsageBitmap.OverlapsWith(i, offset, size))
+                {
+                    storage[count++] = fence;
+                }
+            }
+
+            return count;
         }
     }
 }

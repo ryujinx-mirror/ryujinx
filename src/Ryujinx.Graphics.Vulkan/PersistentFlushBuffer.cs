@@ -34,16 +34,26 @@ namespace Ryujinx.Graphics.Vulkan
         public Span<byte> GetBufferData(CommandBufferPool cbp, BufferHolder buffer, int offset, int size)
         {
             var flushStorage = ResizeIfNeeded(size);
+            Auto<DisposableBuffer> srcBuffer;
 
             using (var cbs = cbp.Rent())
             {
-                var srcBuffer = buffer.GetBuffer(cbs.CommandBuffer);
+                srcBuffer = buffer.GetBuffer(cbs.CommandBuffer);
                 var dstBuffer = flushStorage.GetBuffer(cbs.CommandBuffer);
 
-                BufferHolder.Copy(_gd, cbs, srcBuffer, dstBuffer, offset, 0, size);
+                if (srcBuffer.TryIncrementReferenceCount())
+                {
+                    BufferHolder.Copy(_gd, cbs, srcBuffer, dstBuffer, offset, 0, size, registerSrcUsage: false);
+                }
+                else
+                {
+                    // Source buffer is no longer alive, don't copy anything to flush storage.
+                    srcBuffer = null;
+                }
             }
 
             flushStorage.WaitForFences();
+            srcBuffer?.DecrementReferenceCount();
             return flushStorage.GetDataStorage(0, size);
         }
 
