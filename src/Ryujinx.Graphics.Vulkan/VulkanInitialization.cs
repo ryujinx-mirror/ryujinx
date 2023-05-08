@@ -351,26 +351,26 @@ namespace Ryujinx.Graphics.Vulkan
 
             var features = new PhysicalDeviceFeatures()
             {
-                DepthBiasClamp = true,
+                DepthBiasClamp = supportedFeatures.DepthBiasClamp,
                 DepthClamp = supportedFeatures.DepthClamp,
                 DualSrcBlend = supportedFeatures.DualSrcBlend,
-                FragmentStoresAndAtomics = true,
+                FragmentStoresAndAtomics = supportedFeatures.FragmentStoresAndAtomics,
                 GeometryShader = supportedFeatures.GeometryShader,
-                ImageCubeArray = true,
-                IndependentBlend = true,
+                ImageCubeArray = supportedFeatures.ImageCubeArray,
+                IndependentBlend = supportedFeatures.IndependentBlend,
                 LogicOp = supportedFeatures.LogicOp,
                 OcclusionQueryPrecise = supportedFeatures.OcclusionQueryPrecise,
                 MultiViewport = supportedFeatures.MultiViewport,
                 PipelineStatisticsQuery = supportedFeatures.PipelineStatisticsQuery,
-                SamplerAnisotropy = true,
-                ShaderClipDistance = true,
+                SamplerAnisotropy = supportedFeatures.SamplerAnisotropy,
+                ShaderClipDistance = supportedFeatures.ShaderClipDistance,
                 ShaderFloat64 = supportedFeatures.ShaderFloat64,
                 ShaderImageGatherExtended = supportedFeatures.ShaderImageGatherExtended,
                 ShaderStorageImageMultisample = supportedFeatures.ShaderStorageImageMultisample,
                 // ShaderStorageImageReadWithoutFormat = true,
                 // ShaderStorageImageWriteWithoutFormat = true,
                 TessellationShader = supportedFeatures.TessellationShader,
-                VertexPipelineStoresAndAtomics = true,
+                VertexPipelineStoresAndAtomics = supportedFeatures.VertexPipelineStoresAndAtomics,
                 RobustBufferAccess = useRobustBufferAccess
             };
 
