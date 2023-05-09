@@ -145,7 +145,7 @@ namespace Ryujinx.Horizon.Generators.Hipc
 
                                 if (bufferFixedSize != null)
                                 {
-                                    arg = $"new CommandArg({bufferFlags}, {bufferFixedSize})";
+                                    arg = $"new CommandArg({bufferFlags} | HipcBufferFlags.FixedSize, {bufferFixedSize})";
                                 }
                                 else
                                 {
