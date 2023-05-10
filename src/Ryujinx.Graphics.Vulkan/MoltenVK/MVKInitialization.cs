@@ -25,6 +25,8 @@ namespace Ryujinx.Graphics.Vulkan.MoltenVK
             config.SemaphoreSupportStyle = MVKVkSemaphoreSupportStyle.MVK_CONFIG_VK_SEMAPHORE_SUPPORT_STYLE_SINGLE_QUEUE;
             config.SynchronousQueueSubmits = false;
 
+            config.ResumeLostDevice = true;
+
             vkSetMoltenVKConfigurationMVK(IntPtr.Zero, config, configSize);
         }
     }
