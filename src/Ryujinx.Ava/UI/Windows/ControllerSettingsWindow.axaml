@@ -21,35 +21,54 @@
     <UserControl.Resources>
         <helpers:KeyValueConverter x:Key="Key" />
     </UserControl.Resources>
+    <UserControl.Styles>
+        <Style Selector="ToggleButton">
+            <Setter Property="Width" Value="90" />
+            <Setter Property="Height" Value="27" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+        </Style>
+    </UserControl.Styles>
+    
     <StackPanel
         HorizontalAlignment="Stretch"
         VerticalAlignment="Stretch"
         Orientation="Vertical">
-        <Grid Margin="2,2,2,5" HorizontalAlignment="Stretch">
+        <Grid Margin="0,2,0,5" HorizontalAlignment="Stretch">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="0.5*" />
-                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <!-- Player selection -->
             <Border
+                Grid.Row="0"
                 Grid.Column="0"
-                Margin="0,0,2,0"
                 BorderBrush="{DynamicResource ThemeControlBorderColor}"
                 BorderThickness="1"
-                Padding="2,0">
-                <StackPanel
+                Padding="2">
+                <Grid
                     Margin="2"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
-                    Orientation="Vertical">
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Center">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
                     <TextBlock
-                        Margin="0,0,0,4"
-                        HorizontalAlignment="Center"
+                        Margin="5,0,10,0"
+                        Width="90"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Center"
                         Text="{locale:Locale ControllerSettingsPlayer}" />
                     <ComboBox
+                        Grid.Column="1"
                         Name="PlayerIndexBox"
-                        Width="150"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Center"
                         SelectionChanged="PlayerIndexBox_OnSelectionChanged"
                         Items="{Binding PlayerIndexes}"
                         SelectedIndex="{Binding PlayerId}">
@@ -59,69 +78,147 @@
                             </DataTemplate>
                         </ComboBox.ItemTemplate>
                     </ComboBox>
-                </StackPanel>
+                </Grid>
             </Border>
-
-            <!--  Main Controller Settings  -->
+            <!-- Profile selection -->
             <Border
-                Grid.Column="1"
-                Margin="0,0,2,0"
-                BorderBrush="{DynamicResource ThemeControlBorderColor}"
-                BorderThickness="1"
-                Padding="2,0">
-                <StackPanel
-                    Margin="2"
-                    HorizontalAlignment="Stretch"
-                    VerticalAlignment="Center"
-                    Orientation="Vertical">
-                    <TextBlock
-                        Margin="0,0,0,5"
-                        HorizontalAlignment="Center"
-                        Text="{locale:Locale ControllerSettingsInputDevice}" />
-                    <Grid HorizontalAlignment="Stretch">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <ComboBox
-                            Name="DeviceBox"
-                            HorizontalAlignment="Stretch"
-                            Items="{Binding DeviceList}"
-                            SelectedIndex="{Binding Device}" />
-                        <Button
-                            Grid.Column="1"
-                            MinWidth="0"
-                            Margin="5,0,0,0"
-                            VerticalAlignment="Center"
-                            Command="{Binding LoadDevices}">
-                            <ui:SymbolIcon
-                                Symbol="Refresh"
-                                FontSize="15"
-                                Height="20" />
-                        </Button>
-                    </Grid>
-                </StackPanel>
-            </Border>
-            <Border
-                Grid.Column="2"
-                Margin="0,0,2,0"
-                BorderBrush="{DynamicResource ThemeControlBorderColor}"
-                BorderThickness="1"
-                Padding="2,0">
+               Grid.Row="1"
+               Grid.Column="0"
+               Margin="0,-1,0,0"
+               BorderBrush="{DynamicResource ThemeControlBorderColor}"
+               BorderThickness="1"
+               Padding="2">
                 <Grid
                     Margin="2"
                     HorizontalAlignment="Stretch"
                     VerticalAlignment="Center">
-                    <Grid.RowDefinitions>
-                        <RowDefinition />
-                        <RowDefinition />
-                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
                     <TextBlock
-                        Margin="0,0,0,4"
-                        HorizontalAlignment="Center"
+                        Margin="5,0,10,0"
+                        Width="90"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Center"
+                        Text="{locale:Locale ControllerSettingsProfile}" />
+                    <ui:ComboBox
+                        Grid.Column="1"
+                        IsEditable="True"
+                        Name="ProfileBox"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Center"
+                        SelectedIndex="0"
+                        Items="{Binding ProfilesList}"
+                        Text="{Binding ProfileName}" />
+                    <Button
+                        Grid.Column="2"
+                        MinWidth="0"
+                        Margin="5,0,0,0"
+                        VerticalAlignment="Center"
+                        ToolTip.Tip="{locale:Locale ControllerSettingsLoadProfileToolTip}"
+                        Command="{Binding LoadProfile}">
+                        <ui:SymbolIcon
+                            Symbol="Upload"
+                            FontSize="15"
+                            Height="20" />
+                    </Button>
+                    <Button
+                        Grid.Column="3"
+                            MinWidth="0"
+                            Margin="5,0,0,0"
+                            VerticalAlignment="Center"
+                            ToolTip.Tip="{locale:Locale ControllerSettingsSaveProfileToolTip}"
+                            Command="{Binding SaveProfile}">
+                        <ui:SymbolIcon
+                            Symbol="Save"
+                            FontSize="15"
+                            Height="20" />
+                    </Button>
+                    <Button
+                        Grid.Column="4"
+                            MinWidth="0"
+                            Margin="5,0,0,0"
+                            VerticalAlignment="Center"
+                            ToolTip.Tip="{locale:Locale ControllerSettingsRemoveProfileToolTip}"
+                            Command="{Binding RemoveProfile}">
+                        <ui:SymbolIcon
+                            Symbol="Delete"
+                            FontSize="15"
+                            Height="20" />
+                    </Button>
+                </Grid>
+            </Border>
+
+            <!-- Input device -->
+            <Border
+                Grid.Row="0"
+                Grid.Column="1"
+                Margin="-1,0,0,0"
+                BorderBrush="{DynamicResource ThemeControlBorderColor}"
+                BorderThickness="1"
+                Padding="2">
+                <Grid Margin="2" HorizontalAlignment="Stretch">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock
+                        Grid.Column="0"
+                        Margin="5,0,10,0"
+                        Width="90"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Center"
+                        Text="{locale:Locale ControllerSettingsInputDevice}" />
+                    <ComboBox
+                        Grid.Column="1"
+                        Name="DeviceBox"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Center"
+                        Items="{Binding DeviceList}"
+                        SelectedIndex="{Binding Device}" />
+                    <Button
+                        Grid.Column="2"
+                        MinWidth="0"
+                        Margin="5,0,0,0"
+                        VerticalAlignment="Center"
+                        Command="{Binding LoadDevices}">
+                        <ui:SymbolIcon
+                            Symbol="Refresh"
+                            FontSize="15"
+                            Height="20"/>
+                    </Button>
+                </Grid>
+            </Border>            
+
+            <!-- Controler type -->
+            <Border
+                Grid.Row="1"
+                Grid.Column="1"
+                Margin="-1,-1,0,0"
+                BorderBrush="{DynamicResource ThemeControlBorderColor}"
+                BorderThickness="1"
+                Padding="2">
+                <Grid
+                    Margin="2"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Center">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock
+                        Margin="5,0,10,0"
+                        Width="90"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Center"
                         Text="{locale:Locale ControllerSettingsControllerType}" />
                     <ComboBox
-                        Grid.Row="1"
+                        Grid.Column="1"
                         HorizontalAlignment="Stretch"
                         Items="{Binding Controllers}"
                         SelectedIndex="{Binding Controller}">
@@ -132,64 +229,6 @@
                         </ComboBox.ItemTemplate>
                     </ComboBox>
                 </Grid>
-            </Border>
-            <Border
-                Grid.Column="3"
-                BorderBrush="{DynamicResource ThemeControlBorderColor}"
-                BorderThickness="1"
-                Padding="2,0" >
-                <StackPanel
-                    Margin="2"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
-                    Orientation="Vertical">
-                    <TextBlock
-                        Margin="0,0,0,4"
-                        HorizontalAlignment="Center"
-                        Text="{locale:Locale ControllerSettingsProfile}" />
-                    <StackPanel Orientation="Horizontal">
-                        <ui:ComboBox
-                            IsEditable="True"
-                            Name="ProfileBox"
-                            Width="100"
-                            SelectedIndex="0"
-                            Items="{Binding ProfilesList}"
-                            Text="{Binding ProfileName}" />
-                        <Button
-                            MinWidth="0"
-                            Margin="5,0,0,0"
-                            VerticalAlignment="Center"
-                            ToolTip.Tip="{locale:Locale ControllerSettingsLoadProfileToolTip}"
-                            Command="{Binding LoadProfile}">
-                            <ui:SymbolIcon
-                                Symbol="Upload"
-                                FontSize="15"
-                                Height="20" />
-                        </Button>
-                        <Button
-                            MinWidth="0"
-                            Margin="5,0,0,0"
-                            VerticalAlignment="Center"
-                            ToolTip.Tip="{locale:Locale ControllerSettingsSaveProfileToolTip}"
-                            Command="{Binding SaveProfile}">
-                            <ui:SymbolIcon
-                                Symbol="Save"
-                                FontSize="15"
-                                Height="20" />
-                        </Button>
-                        <Button
-                            MinWidth="0"
-                            Margin="5,0,0,0"
-                            VerticalAlignment="Center"
-                            ToolTip.Tip="{locale:Locale ControllerSettingsRemoveProfileToolTip}"
-                            Command="{Binding RemoveProfile}">
-                            <ui:SymbolIcon
-                                Symbol="Delete"
-                                FontSize="15"
-                                Height="20" />
-                        </Button>
-                    </StackPanel>
-                </StackPanel>
             </Border>
         </Grid>
 
@@ -206,7 +245,7 @@
 
             <!--  Left  -->
             <Grid
-                Margin="0,0,10,0"
+                Margin="0,0,5,0"
                 Grid.Column="0"
                 VerticalAlignment="Stretch"
                 DockPanel.Dock="Left">
@@ -221,7 +260,8 @@
                     Grid.Row="0"
                     BorderBrush="{DynamicResource ThemeControlBorderColor}"
                     BorderThickness="1"
-                    IsVisible="{Binding IsLeft}">
+                    IsVisible="{Binding IsLeft}"
+                    MinHeight="90">
                     <Grid Margin="10" HorizontalAlignment="Stretch">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition />
@@ -232,7 +272,6 @@
                             <RowDefinition />
                         </Grid.RowDefinitions>
                         <StackPanel
-                            Margin="0,0,0,4"
                             Grid.Column="0"
                             Grid.Row="0"
                             Background="{DynamicResource ThemeDarkColor}"
@@ -243,10 +282,7 @@
                                 VerticalAlignment="Center"
                                 Text="{locale:Locale ControllerSettingsTriggerZL}"
                                 TextAlignment="Center" />
-                            <ToggleButton
-                                Width="90"
-                                Height="27"
-                                HorizontalAlignment="Stretch">
+                            <ToggleButton>
                                 <TextBlock
                                     Text="{Binding Configuration.ButtonZl, Mode=TwoWay, Converter={StaticResource Key}}"
                                     TextAlignment="Center" />
@@ -263,19 +299,15 @@
                                 VerticalAlignment="Center"
                                 Text="{locale:Locale ControllerSettingsTriggerL}"
                                 TextAlignment="Center" />
-                            <ToggleButton
-                                Width="90"
-                                Height="27"
-                                HorizontalAlignment="Stretch">
+                            <ToggleButton>
                                 <TextBlock
                                     Text="{Binding Configuration.ButtonL, Mode=TwoWay, Converter={StaticResource Key}}"
                                     TextAlignment="Center" />
                             </ToggleButton>
                         </StackPanel>
                         <StackPanel
-                            Margin="0,0,0,4"
                             Grid.Column="1"
-                            Grid.Row="0"
+                            Grid.Row="1"
                             Background="{DynamicResource ThemeDarkColor}"
                             Orientation="Horizontal">
                             <TextBlock
@@ -284,10 +316,7 @@
                                 VerticalAlignment="Center"
                                 Text="{locale:Locale ControllerSettingsButtonMinus}"
                                 TextAlignment="Center" />
-                            <ToggleButton
-                                Width="90"
-                                Height="27"
-                                HorizontalAlignment="Stretch">
+                            <ToggleButton>
                                 <TextBlock
                                     Text="{Binding Configuration.ButtonMinus, Mode=TwoWay, Converter={StaticResource Key}}"
                                     TextAlignment="Center" />
@@ -301,7 +330,8 @@
                     Grid.Row="1"
                     BorderBrush="{DynamicResource ThemeControlBorderColor}"
                     BorderThickness="1"
-                    IsVisible="{Binding IsLeft}">
+                    IsVisible="{Binding IsLeft}"
+                    Margin="0,5,0,0">
                     <StackPanel Margin="10" Orientation="Vertical">
                         <TextBlock
                             Margin="0,0,0,10"
@@ -320,10 +350,7 @@
                                     VerticalAlignment="Center"
                                     Text="{locale:Locale ControllerSettingsLStickButton}"
                                     TextAlignment="Center" />
-                                <ToggleButton
-                                    Width="90"
-                                    Height="27"
-                                    HorizontalAlignment="Stretch">
+                                <ToggleButton>
                                     <TextBlock
                                         Text="{Binding Configuration.LeftKeyboardStickButton, Mode=TwoWay, Converter={StaticResource Key}}"
                                         TextAlignment="Center" />
@@ -339,10 +366,7 @@
                                     VerticalAlignment="Center"
                                     Text="{locale:Locale ControllerSettingsLStickUp}"
                                     TextAlignment="Center" />
-                                <ToggleButton
-                                    Width="90"
-                                    Height="27"
-                                    HorizontalAlignment="Stretch">
+                                <ToggleButton>
                                     <TextBlock
                                         Text="{Binding Configuration.LeftStickUp, Mode=TwoWay, Converter={StaticResource Key}}"
                                         TextAlignment="Center" />
@@ -358,10 +382,7 @@
                                     VerticalAlignment="Center"
                                     Text="{locale:Locale ControllerSettingsLStickDown}"
                                     TextAlignment="Center" />
-                                <ToggleButton
-                                    Width="90"
-                                    Height="27"
-                                    HorizontalAlignment="Stretch">
+                                <ToggleButton>
                                     <TextBlock
                                         Text="{Binding Configuration.LeftStickDown, Mode=TwoWay, Converter={StaticResource Key}}"
                                         TextAlignment="Center" />
@@ -377,10 +398,7 @@
                                     VerticalAlignment="Center"
                                     Text="{locale:Locale ControllerSettingsLStickLeft}"
                                     TextAlignment="Center" />
-                                <ToggleButton
-                                    Width="90"
-                                    Height="27"
-                                    HorizontalAlignment="Stretch">
+                                <ToggleButton>
                                     <TextBlock
                                         Text="{Binding Configuration.LeftStickLeft, Mode=TwoWay, Converter={StaticResource Key}}"
                                         TextAlignment="Center" />
@@ -396,10 +414,7 @@
                                     VerticalAlignment="Center"
                                     Text="{locale:Locale ControllerSettingsLStickRight}"
                                     TextAlignment="Center" />
-                                <ToggleButton
-                                    Width="90"
-                                    Height="27"
-                                    HorizontalAlignment="Stretch">
+                                <ToggleButton>
                                     <TextBlock
                                         Text="{Binding Configuration.LeftStickRight, Mode=TwoWay, Converter={StaticResource Key}}"
                                         TextAlignment="Center" />
@@ -419,10 +434,7 @@
                                     VerticalAlignment="Center"
                                     Text="{locale:Locale ControllerSettingsLStickButton}"
                                     TextAlignment="Center" />
-                                <ToggleButton
-                                    Width="90"
-                                    Height="27"
-                                    HorizontalAlignment="Stretch">
+                                <ToggleButton>
                                     <TextBlock
                                         Text="{Binding Configuration.LeftControllerStickButton, Mode=TwoWay, Converter={StaticResource Key}}"
                                         TextAlignment="Center" />
@@ -438,16 +450,13 @@
                                     VerticalAlignment="Center"
                                     Text="{locale:Locale ControllerSettingsLStickStick}"
                                     TextAlignment="Center" />
-                                <ToggleButton
-                                    Width="90"
-                                    Height="27"
-                                    HorizontalAlignment="Stretch"
-                                    Tag="stick">
+                                <ToggleButton Tag="stick">
                                     <TextBlock
                                         Text="{Binding Configuration.LeftJoystick, Mode=TwoWay, Converter={StaticResource Key}}"
                                         TextAlignment="Center" />
                                 </ToggleButton>
                             </StackPanel>
+                            <Separator Margin="0,8,0,8" Height="1" />
                             <CheckBox IsChecked="{Binding Configuration.LeftInvertStickX}">
                                 <TextBlock Text="{locale:Locale ControllerSettingsLStickInvertXAxis}" />
                             </CheckBox>
@@ -457,9 +466,11 @@
                             <CheckBox IsChecked="{Binding Configuration.LeftRotate90}">
                                 <TextBlock Text="{locale:Locale ControllerSettingsRotate90}" />
                             </CheckBox>
-                            <Separator Margin="0,4,0,4" Height="1" />
+                            <Separator Margin="0,8,0,8" Height="1" />
                             <StackPanel Orientation="Vertical">
-                                <TextBlock Text="{locale:Locale ControllerSettingsLStickDeadzone}" />
+                                <TextBlock 
+                                    HorizontalAlignment="Center" 
+                                    Text="{locale:Locale ControllerSettingsLStickDeadzone}" />
                                 <StackPanel
                                     HorizontalAlignment="Center"
                                     VerticalAlignment="Center"
@@ -473,9 +484,12 @@
                                         Value="{Binding Configuration.DeadzoneLeft, Mode=TwoWay}" />
                                     <TextBlock
                                         VerticalAlignment="Center"
+                                        Width="25"
                                         Text="{Binding Configuration.DeadzoneLeft, StringFormat=\{0:0.00\}}" />
                                 </StackPanel>
-                                <TextBlock Text="{locale:Locale ControllerSettingsStickRange}" />
+                                <TextBlock 
+                                    HorizontalAlignment="Center" 
+                                    Text="{locale:Locale ControllerSettingsStickRange}" />
                                 <StackPanel
                                     HorizontalAlignment="Center"
                                     VerticalAlignment="Center"
@@ -489,6 +503,7 @@
                                         Value="{Binding Configuration.RangeLeft, Mode=TwoWay}" />
                                     <TextBlock
                                         VerticalAlignment="Center"
+                                        Width="25"
                                         Text="{Binding Configuration.RangeLeft, StringFormat=\{0:0.00\}}" />
                                 </StackPanel>
                             </StackPanel>
@@ -502,7 +517,8 @@
                     BorderBrush="{DynamicResource ThemeControlBorderColor}"
                     BorderThickness="1"
                     VerticalAlignment="Top"
-                    IsVisible="{Binding IsLeft}">
+                    IsVisible="{Binding IsLeft}"
+                    Margin="0,5,0,0">
                     <StackPanel Margin="10" Orientation="Vertical">
                         <TextBlock
                             Margin="0,0,0,10"
@@ -519,8 +535,6 @@
                                     Text="{locale:Locale ControllerSettingsDPadUp}"
                                     TextAlignment="Center" />
                                 <ToggleButton
-                                    Width="90"
-                                    Height="27"
                                     HorizontalAlignment="Stretch">
                                     <TextBlock
                                         Text="{Binding Configuration.DpadUp, Mode=TwoWay, Converter={StaticResource Key}}"
@@ -538,8 +552,6 @@
                                     Text="{locale:Locale ControllerSettingsDPadDown}"
                                     TextAlignment="Center" />
                                 <ToggleButton
-                                    Width="90"
-                                    Height="27"
                                     HorizontalAlignment="Stretch">
                                     <TextBlock
                                         Text="{Binding Configuration.DpadDown, Mode=TwoWay, Converter={StaticResource Key}}"
@@ -557,8 +569,6 @@
                                     Text="{locale:Locale ControllerSettingsDPadLeft}"
                                     TextAlignment="Center" />
                                 <ToggleButton
-                                    Width="90"
-                                    Height="27"
                                     HorizontalAlignment="Stretch">
                                     <TextBlock
                                         Text="{Binding Configuration.DpadLeft, Mode=TwoWay, Converter={StaticResource Key}}"
@@ -576,8 +586,6 @@
                                     Text="{locale:Locale ControllerSettingsDPadRight}"
                                     TextAlignment="Center" />
                                 <ToggleButton
-                                    Width="90"
-                                    Height="27"
                                     HorizontalAlignment="Stretch">
                                     <TextBlock
                                         Text="{Binding Configuration.DpadRight, Mode=TwoWay, Converter={StaticResource Key}}"
@@ -590,11 +598,11 @@
             </Grid>
 
             <!--  Triggers And Side Buttons-->
-            <StackPanel Grid.Column="1" HorizontalAlignment="Stretch">
+            <StackPanel Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                 <Border
                     BorderBrush="{DynamicResource ThemeControlBorderColor}"
-                    BorderThickness="1">
-                    <StackPanel Margin="10" Orientation="Vertical">
+                    BorderThickness="1" MinHeight="90">
+                    <StackPanel Margin="8" Orientation="Vertical">
                         <TextBlock HorizontalAlignment="Center" Text="{locale:Locale ControllerSettingsTriggerThreshold}" />
                         <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
                             <Slider
@@ -604,7 +612,9 @@
                                 IsSnapToTickEnabled="True"
                                 Minimum="0"
                                 Value="{Binding Configuration.TriggerThreshold, Mode=TwoWay}" />
-                            <TextBlock Text="{Binding Configuration.TriggerThreshold, StringFormat=\{0:0.00\}}" />
+                            <TextBlock
+                              Width="25"
+                              Text="{Binding Configuration.TriggerThreshold, StringFormat=\{0:0.00\}}" />
                         </StackPanel>
                         <StackPanel
                             Margin="0,4,0,0"
@@ -619,10 +629,7 @@
                                 VerticalAlignment="Center"
                                 Text="{locale:Locale ControllerSettingsLeftSR}"
                                 TextAlignment="Center" />
-                            <ToggleButton
-                                Width="90"
-                                Height="27"
-                                HorizontalAlignment="Stretch">
+                            <ToggleButton>
                                 <TextBlock
                                     Text="{Binding Configuration.LeftButtonSr, Mode=TwoWay, Converter={StaticResource Key}}"
                                     TextAlignment="Center" />
@@ -641,10 +648,7 @@
                                 VerticalAlignment="Center"
                                 Text="{locale:Locale ControllerSettingsLeftSL}"
                                 TextAlignment="Center" />
-                            <ToggleButton
-                                Width="90"
-                                Height="27"
-                                HorizontalAlignment="Stretch">
+                            <ToggleButton>
                                 <TextBlock
                                     Text="{Binding Configuration.LeftButtonSl, Mode=TwoWay, Converter={StaticResource Key}}"
                                     TextAlignment="Center" />
@@ -663,10 +667,7 @@
                                 VerticalAlignment="Center"
                                 Text="{locale:Locale ControllerSettingsRightSR}"
                                 TextAlignment="Center" />
-                            <ToggleButton
-                                Width="90"
-                                Height="27"
-                                HorizontalAlignment="Stretch">
+                            <ToggleButton>
                                 <TextBlock
                                     Text="{Binding Configuration.RightButtonSr, Mode=TwoWay, Converter={StaticResource Key}}"
                                     TextAlignment="Center" />
@@ -685,10 +686,7 @@
                                 VerticalAlignment="Center"
                                 Text="{locale:Locale ControllerSettingsRightSL}"
                                 TextAlignment="Center" />
-                            <ToggleButton
-                                Width="90"
-                                Height="27"
-                                HorizontalAlignment="Stretch">
+                            <ToggleButton>
                                 <TextBlock
                                     Text="{Binding Configuration.RightButtonSl, Mode=TwoWay, Converter={StaticResource Key}}"
                                     TextAlignment="Center" />
@@ -702,14 +700,15 @@
                     Margin="0,10,0,0"
                     MaxHeight="250"
                     HorizontalAlignment="Stretch"
-                    VerticalAlignment="Top"
+                    VerticalAlignment="Stretch"
                     Source="{Binding Image}" />
 
                 <!--  Motion+Rumble  -->
-                <StackPanel Margin="0,10,0,0" Orientation="Vertical" >
+                <StackPanel Margin="0,10,0,0" Orientation="Vertical" VerticalAlignment="Bottom">
                     <Border
                         BorderBrush="{DynamicResource ThemeControlBorderColor}"
                         BorderThickness="1"
+                        VerticalAlignment="Bottom"
                         HorizontalAlignment="Stretch"
                         IsVisible="{Binding IsController}">
                         <Grid>
@@ -733,7 +732,8 @@
                         BorderBrush="{DynamicResource ThemeControlBorderColor}"
                         BorderThickness="1"
                         HorizontalAlignment="Stretch"
-                        IsVisible="{Binding IsController}">
+                        IsVisible="{Binding IsController}"
+                        Margin="0,-1,0,0">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
@@ -756,7 +756,7 @@
 
             <!--Right Controls-->
             <Grid
-                Margin="10,0,0,0"
+                Margin="5,0,0,0"
                 Grid.Column="2"
                 VerticalAlignment="Top"
                 HorizontalAlignment="Stretch" >
@@ -770,165 +770,99 @@
                     Grid.Row="0"
                     BorderBrush="{DynamicResource ThemeControlBorderColor}"
                     BorderThickness="1"
-                    IsVisible="{Binding IsRight}">
-                    <StackPanel Margin="10" Orientation="Vertical">
-                        <Grid HorizontalAlignment="Stretch">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition />
-                                <ColumnDefinition />
-                            </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition />
-                                <RowDefinition />
-                            </Grid.RowDefinitions>
-                            <StackPanel
-                                Margin="0,0,0,4"
-                                Grid.Column="1"
-                                Grid.Row="0"
-                                Background="{DynamicResource ThemeDarkColor}"
-                                Orientation="Horizontal">
-                                <TextBlock
-                                    Width="20"
-                                    HorizontalAlignment="Center"
-                                    VerticalAlignment="Center"
-                                    Text="{locale:Locale ControllerSettingsTriggerZR}"
-                                    TextAlignment="Center" />
-                                <ToggleButton
-                                    Width="90"
-                                    Height="27"
-                                    HorizontalAlignment="Stretch">
-                                    <TextBlock
-                                        Text="{Binding Configuration.ButtonZr, Mode=TwoWay, Converter={StaticResource Key}}"
-                                        TextAlignment="Center" />
-                                </ToggleButton>
-                            </StackPanel>
-                            <StackPanel
-                                Grid.Column="1"
-                                Grid.Row="1"
+                    IsVisible="{Binding IsRight}"
+                    MinHeight="90">
+                    <Grid Margin="10" HorizontalAlignment="Stretch">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition />
+                            <ColumnDefinition />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition />
+                            <RowDefinition />
+                        </Grid.RowDefinitions>
+                        <StackPanel
+                            Grid.Column="1"
+                            Grid.Row="0"
+                            Background="{DynamicResource ThemeDarkColor}"
+                            Orientation="Horizontal">
+                            <TextBlock
+                                Width="20"
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Center"
-                                Background="{DynamicResource ThemeDarkColor}"
-                                Orientation="Horizontal">
+                                Text="{locale:Locale ControllerSettingsTriggerZR}"
+                                TextAlignment="Center" />
+                            <ToggleButton>
                                 <TextBlock
-                                    Width="20"
-                                    HorizontalAlignment="Center"
-                                    VerticalAlignment="Center"
-                                    Text="{locale:Locale ControllerSettingsTriggerR}"
+                                    Text="{Binding Configuration.ButtonZr, Mode=TwoWay, Converter={StaticResource Key}}"
                                     TextAlignment="Center" />
-                                <ToggleButton
-                                    Width="90"
-                                    Height="27"
-                                    HorizontalAlignment="Stretch">
-                                    <TextBlock
-                                        Text="{Binding Configuration.ButtonR, Mode=TwoWay, Converter={StaticResource Key}}"
-                                        TextAlignment="Center" />
-                                </ToggleButton>
-                            </StackPanel>
-                            <StackPanel
-                                Margin="0,0,8,4"
-                                Grid.Column="0"
-                                Grid.Row="0"
-                                HorizontalAlignment="Right"
+                            </ToggleButton>
+                        </StackPanel>
+                        <StackPanel
+                            Grid.Column="1"
+                            Grid.Row="1"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Background="{DynamicResource ThemeDarkColor}"
+                            Orientation="Horizontal">
+                            <TextBlock
+                                Width="20"
+                                HorizontalAlignment="Center"
                                 VerticalAlignment="Center"
-                                Background="{DynamicResource ThemeDarkColor}"
-                                Orientation="Horizontal">
+                                Text="{locale:Locale ControllerSettingsTriggerR}"
+                                TextAlignment="Center" />
+                            <ToggleButton>
                                 <TextBlock
-                                    Width="20"
-                                    HorizontalAlignment="Center"
-                                    VerticalAlignment="Center"
-                                    Text="{locale:Locale ControllerSettingsButtonPlus}"
+                                    Text="{Binding Configuration.ButtonR, Mode=TwoWay, Converter={StaticResource Key}}"
                                     TextAlignment="Center" />
-                                <ToggleButton
-                                    Width="90"
-                                    Height="27"
-                                    HorizontalAlignment="Stretch">
-                                    <TextBlock
-                                        Text="{Binding Configuration.ButtonPlus, Mode=TwoWay, Converter={StaticResource Key}}"
-                                        TextAlignment="Center" />
-                                </ToggleButton>
-                            </StackPanel>
-                        </Grid>
-                    </StackPanel>
+                            </ToggleButton>
+                        </StackPanel>
+                        <StackPanel
+                            Grid.Column="0"
+                            Grid.Row="1"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center"
+                            Background="{DynamicResource ThemeDarkColor}"
+                            Orientation="Horizontal">
+                            <TextBlock
+                                Width="20"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Text="{locale:Locale ControllerSettingsButtonPlus}"
+                                TextAlignment="Center" />
+                            <ToggleButton>
+                                <TextBlock
+                                    Text="{Binding Configuration.ButtonPlus, Mode=TwoWay, Converter={StaticResource Key}}"
+                                    TextAlignment="Center" />
+                            </ToggleButton>
+                        </StackPanel>
+                    </Grid>
                 </Border>
                 <Border
                     Grid.Row="1"
                     BorderBrush="{DynamicResource ThemeControlBorderColor}"
                     BorderThickness="1"
-                    IsVisible="{Binding IsRight}">
+                    IsVisible="{Binding IsRight}"
+                    Margin="0,5,0,0">
                     <StackPanel Margin="10" Orientation="Vertical">
                         <TextBlock
                             Margin="0,0,0,10"
                             HorizontalAlignment="Center"
                             Text="{locale:Locale ControllerSettingsButtons}" />
-                        <Grid HorizontalAlignment="Stretch">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition />
-                                <ColumnDefinition />
-                            </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition />
-                                <RowDefinition />
-                            </Grid.RowDefinitions>
-                            <!--  Right Buttons X  -->
-                            <StackPanel
-                                Margin="0,0,0,4"
-                                Grid.Column="0"
-                                Grid.Row="0"
-                                Background="{DynamicResource ThemeDarkColor}"
-                                Orientation="Horizontal">
-                                <TextBlock
-                                    Width="20"
-                                    HorizontalAlignment="Center"
-                                    VerticalAlignment="Center"
-                                    Text="{locale:Locale ControllerSettingsButtonX}"
-                                    TextAlignment="Center" />
-                                <ToggleButton
-                                    Width="90"
-                                    Height="27"
-                                    HorizontalAlignment="Stretch">
-                                    <TextBlock
-                                        Text="{Binding Configuration.ButtonX, Mode=TwoWay, Converter={StaticResource Key}}"
-                                        TextAlignment="Center" />
-                                </ToggleButton>
-                            </StackPanel>
-                            <!--  Right Buttons Y  -->
-                            <StackPanel
-                                Grid.Column="0"
-                                Grid.Row="1"
-                                Background="{DynamicResource ThemeDarkColor}"
-                                Orientation="Horizontal">
-                                <TextBlock
-                                    Width="20"
-                                    HorizontalAlignment="Center"
-                                    VerticalAlignment="Center"
-                                    Text="{locale:Locale ControllerSettingsButtonY}"
-                                    TextAlignment="Center" />
-                                <ToggleButton
-                                    Width="90"
-                                    Height="27"
-                                    HorizontalAlignment="Stretch">
-                                    <TextBlock
-                                        Text="{Binding Configuration.ButtonY, Mode=TwoWay, Converter={StaticResource Key}}"
-                                        TextAlignment="Center" />
-                                </ToggleButton>
-                            </StackPanel>
+                        <StackPanel Orientation="Vertical">
                             <!--  Right Buttons A  -->
                             <StackPanel
                                 Margin="0,0,0,4"
-                                Grid.Column="1"
-                                Grid.Row="0"
                                 Background="{DynamicResource ThemeDarkColor}"
                                 Orientation="Horizontal">
                                 <TextBlock
-                                    Width="20"
+                                    Width="120"
+                                    Margin="0,0,10,0"
                                     HorizontalAlignment="Center"
                                     VerticalAlignment="Center"
                                     Text="{locale:Locale ControllerSettingsButtonA}"
                                     TextAlignment="Center" />
-                                <ToggleButton
-                                    Width="90"
-                                    Height="27"
-                                    HorizontalAlignment="Stretch">
+                                <ToggleButton>
                                     <TextBlock
                                         Text="{Binding Configuration.ButtonA, Mode=TwoWay, Converter={StaticResource Key}}"
                                         TextAlignment="Center" />
@@ -936,26 +870,59 @@
                             </StackPanel>
                             <!--  Right Buttons B  -->
                             <StackPanel
-                                Grid.Column="1"
-                                Grid.Row="1"
+                                Margin="0,0,0,4"
                                 Background="{DynamicResource ThemeDarkColor}"
                                 Orientation="Horizontal">
                                 <TextBlock
-                                    Width="20"
+                                    Width="120"
+                                    Margin="0,0,10,0"
                                     HorizontalAlignment="Center"
                                     VerticalAlignment="Center"
                                     Text="{locale:Locale ControllerSettingsButtonB}"
                                     TextAlignment="Center" />
-                                <ToggleButton
-                                    Width="90"
-                                    Height="27"
-                                    HorizontalAlignment="Stretch">
+                                <ToggleButton>
                                     <TextBlock
                                         Text="{Binding Configuration.ButtonB, Mode=TwoWay, Converter={StaticResource Key}}"
                                         TextAlignment="Center" />
                                 </ToggleButton>
                             </StackPanel>
-                        </Grid>
+                            <!--  Right Buttons X  -->
+                            <StackPanel
+                                Margin="0,0,0,4"
+                                Background="{DynamicResource ThemeDarkColor}"
+                                Orientation="Horizontal">
+                                <TextBlock
+                                    Width="120"
+                                    Margin="0,0,10,0"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Text="{locale:Locale ControllerSettingsButtonX}"
+                                    TextAlignment="Center" />
+                                <ToggleButton>
+                                    <TextBlock
+                                        Text="{Binding Configuration.ButtonX, Mode=TwoWay, Converter={StaticResource Key}}"
+                                        TextAlignment="Center" />
+                                </ToggleButton>
+                            </StackPanel>
+                            <!--  Right Buttons Y  -->
+                            <StackPanel
+                                Margin="0,0,0,4"
+                                Background="{DynamicResource ThemeDarkColor}"
+                                Orientation="Horizontal">
+                                <TextBlock
+                                    Width="120"
+                                    Margin="0,0,10,0"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Text="{locale:Locale ControllerSettingsButtonY}"
+                                    TextAlignment="Center" />
+                                <ToggleButton>
+                                    <TextBlock
+                                        Text="{Binding Configuration.ButtonY, Mode=TwoWay, Converter={StaticResource Key}}"
+                                        TextAlignment="Center" />
+                                </ToggleButton>
+                            </StackPanel>
+                        </StackPanel>
                     </StackPanel>
                 </Border>
                 <Border
@@ -963,7 +930,8 @@
                     Padding="10"
                     BorderBrush="{DynamicResource ThemeControlBorderColor}"
                     BorderThickness="1"
-                    IsVisible="{Binding IsRight}">
+                    IsVisible="{Binding IsRight}"
+                    Margin="0,5,0,0">
                     <StackPanel Orientation="Vertical">
                         <TextBlock
                             Margin="0,0,0,10"
@@ -982,10 +950,7 @@
                                     VerticalAlignment="Center"
                                     Text="{locale:Locale ControllerSettingsRStickButton}"
                                     TextAlignment="Center" />
-                                <ToggleButton
-                                    Width="90"
-                                    Height="27"
-                                    HorizontalAlignment="Stretch">
+                                <ToggleButton>
                                     <TextBlock
                                         Text="{Binding Configuration.RightKeyboardStickButton, Mode=TwoWay, Converter={StaticResource Key}}"
                                         TextAlignment="Center" />
@@ -1001,10 +966,7 @@
                                     VerticalAlignment="Center"
                                     Text="{locale:Locale ControllerSettingsRStickUp}"
                                     TextAlignment="Center" />
-                                <ToggleButton
-                                    Width="90"
-                                    Height="27"
-                                    HorizontalAlignment="Stretch">
+                                <ToggleButton>
                                     <TextBlock
                                         Text="{Binding Configuration.RightStickUp, Mode=TwoWay, Converter={StaticResource Key}}"
                                         TextAlignment="Center" />
@@ -1020,10 +982,7 @@
                                     VerticalAlignment="Center"
                                     Text="{locale:Locale ControllerSettingsRStickDown}"
                                     TextAlignment="Center" />
-                                <ToggleButton
-                                    Width="90"
-                                    Height="27"
-                                    HorizontalAlignment="Stretch">
+                                <ToggleButton>
                                     <TextBlock
                                         Text="{Binding Configuration.RightStickDown, Mode=TwoWay, Converter={StaticResource Key}}"
                                         TextAlignment="Center" />
@@ -1039,10 +998,7 @@
                                     VerticalAlignment="Center"
                                     Text="{locale:Locale ControllerSettingsRStickLeft}"
                                     TextAlignment="Center" />
-                                <ToggleButton
-                                    Width="90"
-                                    Height="27"
-                                    HorizontalAlignment="Stretch">
+                                <ToggleButton>
                                     <TextBlock
                                         Text="{Binding Configuration.RightStickLeft, Mode=TwoWay, Converter={StaticResource Key}}"
                                         TextAlignment="Center" />
@@ -1058,10 +1014,7 @@
                                     VerticalAlignment="Center"
                                     Text="{locale:Locale ControllerSettingsRStickRight}"
                                     TextAlignment="Center" />
-                                <ToggleButton
-                                    Width="90"
-                                    Height="27"
-                                    HorizontalAlignment="Stretch">
+                                <ToggleButton>
                                     <TextBlock
                                         Text="{Binding Configuration.RightStickRight, Mode=TwoWay, Converter={StaticResource Key}}"
                                         TextAlignment="Center" />
@@ -1081,10 +1034,7 @@
                                     VerticalAlignment="Center"
                                     Text="{locale:Locale ControllerSettingsRStickButton}"
                                     TextAlignment="Center" />
-                                <ToggleButton
-                                    Width="90"
-                                    Height="27"
-                                    HorizontalAlignment="Stretch">
+                                <ToggleButton>
                                     <TextBlock
                                         Text="{Binding Configuration.RightControllerStickButton, Mode=TwoWay, Converter={StaticResource Key}}"
                                         TextAlignment="Center" />
@@ -1101,16 +1051,13 @@
                                     VerticalAlignment="Center"
                                     Text="{locale:Locale ControllerSettingsRStickStick}"
                                     TextAlignment="Center" />
-                                <ToggleButton
-                                    Width="90"
-                                    Height="27"
-                                    HorizontalAlignment="Stretch"
-                                    Tag="stick">
+                                <ToggleButton Tag="stick">
                                     <TextBlock
                                         Text="{Binding Configuration.RightJoystick, Mode=TwoWay, Converter={StaticResource Key}}"
                                         TextAlignment="Center" />
                                 </ToggleButton>
                             </StackPanel>
+                            <Separator Margin="0,8,0,8" Height="1" />
                             <CheckBox IsChecked="{Binding Configuration.RightInvertStickX}">
                                 <TextBlock Text="{locale:Locale ControllerSettingsRStickInvertXAxis}" />
                             </CheckBox>
@@ -1120,9 +1067,11 @@
                             <CheckBox IsChecked="{Binding Configuration.RightRotate90}">
                                 <TextBlock Text="{locale:Locale ControllerSettingsRotate90}" />
                             </CheckBox>
-                            <Separator Margin="0,4,0,4" Height="1" />
+                            <Separator Margin="0,8,0,8" Height="1" />
                             <StackPanel Orientation="Vertical">
-                                <TextBlock Text="{locale:Locale ControllerSettingsRStickDeadzone}" />
+                                <TextBlock 
+                                    HorizontalAlignment="Center" 
+                                    Text="{locale:Locale ControllerSettingsRStickDeadzone}" />
                                 <StackPanel
                                     HorizontalAlignment="Center"
                                     VerticalAlignment="Center"
@@ -1138,9 +1087,12 @@
                                         Value="{Binding Configuration.DeadzoneRight, Mode=TwoWay}" />
                                     <TextBlock
                                         VerticalAlignment="Center"
+                                        Width="25"
                                         Text="{Binding Configuration.DeadzoneRight, StringFormat=\{0:0.00\}}" />
                                 </StackPanel>
-                                <TextBlock Text="{locale:Locale ControllerSettingsStickRange}" />
+                                <TextBlock 
+                                    HorizontalAlignment="Center" 
+                                    Text="{locale:Locale ControllerSettingsStickRange}" />
                                 <StackPanel
                                     HorizontalAlignment="Center"
                                     VerticalAlignment="Center"
@@ -1154,6 +1106,7 @@
                                         Value="{Binding Configuration.RangeRight, Mode=TwoWay}" />
                                     <TextBlock
                                         VerticalAlignment="Center"
+                                        Width="25"
                                         Text="{Binding Configuration.RangeRight, StringFormat=\{0:0.00\}}" />
                                 </StackPanel>
                             </StackPanel>
