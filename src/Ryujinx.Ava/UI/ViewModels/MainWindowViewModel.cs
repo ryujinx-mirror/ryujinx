@@ -1524,10 +1524,9 @@ namespace Ryujinx.Ava.UI.ViewModels
         {
             ApplicationLibrary.LoadAndSaveMetaData(titleId, appMetadata =>
             {
-                if (DateTime.TryParse(appMetadata.LastPlayed, out DateTime lastPlayedDateTime))
+                if (appMetadata.LastPlayed.HasValue)
                 {
-                    double sessionTimePlayed = DateTime.UtcNow.Subtract(lastPlayedDateTime).TotalSeconds;
-
+                    double sessionTimePlayed = DateTime.UtcNow.Subtract(appMetadata.LastPlayed.Value).TotalSeconds;
                     appMetadata.TimePlayed += Math.Round(sessionTimePlayed, MidpointRounding.AwayFromZero);
                 }
             });

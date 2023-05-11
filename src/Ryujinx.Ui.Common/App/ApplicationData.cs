@@ -10,27 +10,44 @@ using LibHac.Tools.FsSystem.NcaUtils;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.FileSystem;
 using System;
+using System.Globalization;
 using System.IO;
+using System.Text.Json.Serialization;
 
 namespace Ryujinx.Ui.App.Common
 {
     public class ApplicationData
     {
-        public bool   Favorite      { get; set; }
-        public byte[] Icon          { get; set; }
-        public string TitleName     { get; set; }
-        public string TitleId       { get; set; }
-        public string Developer     { get; set; }
-        public string Version       { get; set; }
-        public string TimePlayed    { get; set; }
-        public double TimePlayedNum { get; set; }
-        public string LastPlayed    { get; set; }
-        public string FileExtension { get; set; }
-        public string FileSize      { get; set; }
-        public double FileSizeBytes { get; set; }
-        public string Path          { get; set; }
+        public bool      Favorite      { get; set; }
+        public byte[]    Icon          { get; set; }
+        public string    TitleName     { get; set; }
+        public string    TitleId       { get; set; }
+        public string    Developer     { get; set; }
+        public string    Version       { get; set; }
+        public string    TimePlayed    { get; set; }
+        public double    TimePlayedNum { get; set; }
+        public DateTime? LastPlayed    { get; set; }
+        public string    FileExtension { get; set; }
+        public string    FileSize      { get; set; }
+        public double    FileSizeBytes { get; set; }
+        public string    Path          { get; set; }
         public BlitStruct<ApplicationControlProperty> ControlHolder { get; set; }
-        
+
+        [JsonIgnore]
+        public string LastPlayedString
+        {
+            get
+            {
+                if (!LastPlayed.HasValue)
+                {
+                    // TODO: maybe put localized string here instead of just "Never"
+                    return "Never";
+                }
+
+                return LastPlayed.Value.ToLocalTime().ToString(CultureInfo.CurrentCulture);
+            }
+        }
+
         public static string GetApplicationBuildId(VirtualFileSystem virtualFileSystem, string titleFilePath)
         {
             using FileStream file = new(titleFilePath, FileMode.Open, FileAccess.Read);

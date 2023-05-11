@@ -671,7 +671,7 @@ namespace Ryujinx.Ava
 
             _viewModel.ApplicationLibrary.LoadAndSaveMetaData(Device.Processes.ActiveApplication.ProgramIdText, appMetadata =>
             {
-                appMetadata.LastPlayed = DateTime.UtcNow.ToString();
+                appMetadata.LastPlayed = DateTime.UtcNow;
             });
 
             return true;

@@ -876,7 +876,7 @@ namespace Ryujinx.Ui
 
                 _applicationLibrary.LoadAndSaveMetaData(_emulationContext.Processes.ActiveApplication.ProgramIdText, appMetadata =>
                 {
-                    appMetadata.LastPlayed = DateTime.UtcNow.ToString();
+                    appMetadata.LastPlayed = DateTime.UtcNow;
                 });
             }
         }
@@ -1019,10 +1019,11 @@ namespace Ryujinx.Ui
             {
                 _applicationLibrary.LoadAndSaveMetaData(titleId, appMetadata =>
                 {
-                    DateTime lastPlayedDateTime = DateTime.Parse(appMetadata.LastPlayed);
-                    double   sessionTimePlayed  = DateTime.UtcNow.Subtract(lastPlayedDateTime).TotalSeconds;
-
-                    appMetadata.TimePlayed += Math.Round(sessionTimePlayed, MidpointRounding.AwayFromZero);
+                    if (appMetadata.LastPlayed.HasValue)
+                    {
+                        double sessionTimePlayed = DateTime.UtcNow.Subtract(appMetadata.LastPlayed.Value).TotalSeconds;
+                        appMetadata.TimePlayed += Math.Round(sessionTimePlayed, MidpointRounding.AwayFromZero);
+                    }
                 });
             }
         }
@@ -1089,7 +1090,7 @@ namespace Ryujinx.Ui
                     args.AppData.Developer,
                     args.AppData.Version,
                     args.AppData.TimePlayed,
-                    args.AppData.LastPlayed,
+                    args.AppData.LastPlayedString,
                     args.AppData.FileExtension,
                     args.AppData.FileSize,
                     args.AppData.Path,

@@ -129,7 +129,7 @@
                                         TextWrapping="Wrap" />
                                     <TextBlock
                                         HorizontalAlignment="Stretch"
-                                        Text="{Binding LastPlayed}"
+                                        Text="{Binding LastPlayed, Converter={helpers:NullableDateTimeConverter}}"
                                         TextAlignment="Right"
                                         TextWrapping="Wrap" />
                                     <TextBlock
