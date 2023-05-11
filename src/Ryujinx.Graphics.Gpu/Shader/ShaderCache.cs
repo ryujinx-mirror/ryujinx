@@ -591,7 +591,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 return true;
             }
 
-            ReadOnlySpan<byte> memoryCode = memoryManager.GetSpan(gpuVa, shader.Code.Length);
+            ReadOnlySpan<byte> memoryCode = memoryManager.GetSpanMapped(gpuVa, shader.Code.Length);
 
             return memoryCode.SequenceEqual(shader.Code);
         }
