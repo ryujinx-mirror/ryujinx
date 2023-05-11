@@ -180,7 +180,7 @@ namespace Ryujinx.Ui.Windows
 
                 if (response.IsSuccessStatusCode)
                 {
-                    return response.Content.Headers.LastModified != oldLastModified;
+                    return response.Content.Headers.LastModified != new DateTimeOffset(oldLastModified.Ticks - (oldLastModified.Ticks % TimeSpan.TicksPerSecond), TimeSpan.Zero);
                 }
 
                 return false;
