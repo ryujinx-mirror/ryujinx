@@ -2,8 +2,8 @@
 
 set -e
 
-if [ "$#" -ne 6 ]; then
-    echo "usage <BASE_DIR> <TEMP_DIRECTORY> <OUTPUT_DIRECTORY> <ENTITLEMENTS_FILE_PATH> <VERSION> <SOURCE_REVISION_ID>"
+if [ "$#" -lt 7 ]; then
+    echo "usage <BASE_DIR> <TEMP_DIRECTORY> <OUTPUT_DIRECTORY> <ENTITLEMENTS_FILE_PATH> <VERSION> <SOURCE_REVISION_ID> <CONFIGURATION> <EXTRA_ARGS>"
     exit 1
 fi
 
@@ -17,8 +17,16 @@ OUTPUT_DIRECTORY=$(readlink -f "$3")
 ENTITLEMENTS_FILE_PATH=$(readlink -f "$4")
 VERSION=$5
 SOURCE_REVISION_ID=$6
+CONFIGURATION=$7
+EXTRA_ARGS=$8
 
-RELEASE_TAR_FILE_NAME=Ryujinx-$VERSION-macos_universal.app.tar
+if [ "$VERSION" == "1.1.0" ];
+then
+  RELEASE_TAR_FILE_NAME=Ryujinx-$CONFIGURATION-$VERSION+$SOURCE_REVISION_ID-macos_universal.app.tar
+else
+  RELEASE_TAR_FILE_NAME=Ryujinx-$VERSION-macos_universal.app.tar
+fi
+
 ARM64_APP_BUNDLE="$TEMP_DIRECTORY/output_arm64/Ryujinx.app"
 X64_APP_BUNDLE="$TEMP_DIRECTORY/output_x64/Ryujinx.app"
 UNIVERSAL_APP_BUNDLE="$OUTPUT_DIRECTORY/Ryujinx.app"
@@ -27,12 +35,12 @@ EXECUTABLE_SUB_PATH=Contents/MacOS/Ryujinx
 rm -rf "$TEMP_DIRECTORY"
 mkdir -p "$TEMP_DIRECTORY"
 
-DOTNET_COMMON_ARGS="-p:DebugType=embedded -p:Version=$VERSION -p:SourceRevisionId=$SOURCE_REVISION_ID --self-contained true"
+DOTNET_COMMON_ARGS="-p:DebugType=embedded -p:Version=$VERSION -p:SourceRevisionId=$SOURCE_REVISION_ID --self-contained true $EXTRA_ARGS"
 
 dotnet restore
-dotnet build -c Release src/Ryujinx.Ava
-dotnet publish -c Release -r osx-arm64 -o "$TEMP_DIRECTORY/publish_arm64" $DOTNET_COMMON_ARGS src/Ryujinx.Ava
-dotnet publish -c Release -r osx-x64 -o "$TEMP_DIRECTORY/publish_x64" $DOTNET_COMMON_ARGS src/Ryujinx.Ava
+dotnet build -c $CONFIGURATION src/Ryujinx.Ava
+dotnet publish -c $CONFIGURATION -r osx-arm64 -o "$TEMP_DIRECTORY/publish_arm64" $DOTNET_COMMON_ARGS src/Ryujinx.Ava
+dotnet publish -c $CONFIGURATION -r osx-x64 -o "$TEMP_DIRECTORY/publish_x64" $DOTNET_COMMON_ARGS src/Ryujinx.Ava
 
 # Get rid of the support library for ARMeilleure for x64 (that's only for arm64)
 rm -rf "$TEMP_DIRECTORY/publish_x64/libarmeilleure-jitsupport.dylib"
@@ -68,7 +76,7 @@ else
     LIPO=lipo
 fi
 
-# Make it the executable universal
+# Make the executable universal
 $LIPO "$ARM64_APP_BUNDLE/$EXECUTABLE_SUB_PATH" "$X64_APP_BUNDLE/$EXECUTABLE_SUB_PATH" -output "$UNIVERSAL_APP_BUNDLE/$EXECUTABLE_SUB_PATH" -create
 
 # Patch up the Info.plist to have appropriate version
@@ -87,10 +95,10 @@ then
 
     # NOTE: Currently require https://github.com/indygreg/apple-platform-rs/pull/44 to work on other OSes.
     # cargo install --git "https://github.com/marysaka/apple-platform-rs" --branch "fix/adhoc-app-bundle" apple-codesign --bin "rcodesign"
-    echo "Usign rcodesign for ad-hoc signing"
+    echo "Using rcodesign for ad-hoc signing"
     rcodesign sign --entitlements-xml-path "$ENTITLEMENTS_FILE_PATH" "$UNIVERSAL_APP_BUNDLE"
 else
-    echo "Usign codesign for ad-hoc signing"
+    echo "Using codesign for ad-hoc signing"
     codesign --entitlements "$ENTITLEMENTS_FILE_PATH" -f --deep -s - "$UNIVERSAL_APP_BUNDLE"
 fi
 
