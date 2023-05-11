@@ -956,7 +956,7 @@ namespace Ryujinx.Graphics.Texture.Astc
                 {
                     Span<uint> val = ReadUintColorValues(2, colorValues, ref colorValuesPosition);
                     int l0 = (int)((val[0] >> 2) | (val[1] & 0xC0));
-                    int l1 = (int)Math.Max(l0 + (val[1] & 0x3F), 0xFFU);
+                    int l1 = (int)Math.Min(l0 + (val[1] & 0x3F), 0xFFU);
 
                     endPoints[0] = new AstcPixel(0xFF, (short)l0, (short)l0, (short)l0);
                     endPoints[1] = new AstcPixel(0xFF, (short)l1, (short)l1, (short)l1);
