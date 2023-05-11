@@ -1442,14 +1442,6 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                 return GetZeroOperationResult(context, texOp, AggregateType.FP32, colorIsVector);
             }
 
-            // This combination is valid, but not available on GLSL.
-            // For now, ignore the LOD level and do a normal sample.
-            // TODO: How to implement it properly?
-            if (hasLodLevel && isArray && isShadow)
-            {
-                hasLodLevel = false;
-            }
-
             int srcIndex = isBindless ? 1 : 0;
 
             SpvInstruction Src(AggregateType type)
