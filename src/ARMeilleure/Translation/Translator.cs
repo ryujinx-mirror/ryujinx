@@ -54,6 +54,7 @@ namespace ARMeilleure.Translation
         internal TranslatorQueue Queue { get; }
         internal IMemoryManager Memory { get; }
 
+        private Thread[] _backgroundTranslationThreads;
         private volatile int _threadCount;
 
         // FIXME: Remove this once the init logic of the emulator will be redone.
@@ -127,18 +128,22 @@ namespace ARMeilleure.Translation
                 int unboundedThreadCount = Math.Max(1, (Environment.ProcessorCount - 6) / 3);
                 int threadCount          = Math.Min(4, unboundedThreadCount);
 
+                Thread[] backgroundTranslationThreads = new Thread[threadCount];
+
                 for (int i = 0; i < threadCount; i++)
                 {
                     bool last = i != 0 && i == unboundedThreadCount - 1;
 
-                    Thread backgroundTranslatorThread = new Thread(BackgroundTranslate)
+                    backgroundTranslationThreads[i] = new Thread(BackgroundTranslate)
                     {
                         Name = "CPU.BackgroundTranslatorThread." + i,
                         Priority = last ? ThreadPriority.Lowest : ThreadPriority.Normal
                     };
 
-                    backgroundTranslatorThread.Start();
+                    backgroundTranslationThreads[i].Start();
                 }
+
+                Interlocked.Exchange(ref _backgroundTranslationThreads, backgroundTranslationThreads);
             }
 
             Statistics.InitializeTimer();
@@ -162,9 +167,20 @@ namespace ARMeilleure.Translation
 
             if (Interlocked.Decrement(ref _threadCount) == 0)
             {
+                Queue.Dispose();
+
+                Thread[] backgroundTranslationThreads = Interlocked.Exchange(ref _backgroundTranslationThreads, null);
+
+                if (backgroundTranslationThreads != null)
+                {
+                    foreach (Thread thread in backgroundTranslationThreads)
+                    {
+                        thread.Join();
+                    }
+                }
+
                 ClearJitCache();
 
-                Queue.Dispose();
                 Stubs.Dispose();
                 FunctionTable.Dispose();
                 CountTable.Dispose();
