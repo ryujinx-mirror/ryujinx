@@ -67,7 +67,19 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
 
                 const int sampleCount = Constants.TargetSampleCount;
 
-                short[] outputBuffer = new short[bufferCount * sampleCount];
+                uint inputCount;
+
+                // In case of upmixing to 5.1, we allocate the right amount.
+                if (bufferCount != channelCount && channelCount == 6)
+                {
+                    inputCount = (uint)channelCount;
+                }
+                else
+                {
+                    inputCount = bufferCount;
+                }
+
+                short[] outputBuffer = new short[inputCount * sampleCount];
 
                 for (int i = 0; i < bufferCount; i++)
                 {
@@ -79,7 +91,7 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
                     }
                 }
 
-                device.AppendBuffer(outputBuffer, InputCount);
+                device.AppendBuffer(outputBuffer, inputCount);
             }
             else
             {
