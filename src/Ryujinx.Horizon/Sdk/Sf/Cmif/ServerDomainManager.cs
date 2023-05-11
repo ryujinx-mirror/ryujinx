@@ -165,6 +165,12 @@ namespace Ryujinx.Horizon.Sdk.Sf.Cmif
 
                     entry.Owner = null;
                     obj = entry.Obj;
+
+                    if (obj.ServiceObject is IDisposable disposableObj)
+                    {
+                        disposableObj.Dispose();
+                    }
+
                     entry.Obj = null;
                     _entries.Remove(entry.Node);
                     entry.Node = null;
