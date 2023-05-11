@@ -92,7 +92,7 @@ jobs:
           dotnet publish -c Release -r "${{ matrix.DOTNET_RUNTIME_IDENTIFIER }}" -o ./publish_ava/publish -p:Version="${{ steps.version_info.outputs.build_version }}" -p:SourceRevisionId="${{ steps.version_info.outputs.git_short_hash }}" -p:DebugType=embedded src/Ryujinx.Ava --self-contained true
 
       - name: Packing Windows builds
-        if: matrix.os == "windows-latest"
+        if: matrix.os == 'windows-latest'
         run: |
           pushd publish_gtk
           7z a ../release_output/ryujinx-${{ steps.version_info.outputs.build_version }}-win_x64.zip publish
@@ -108,7 +108,7 @@ jobs:
         shell: bash
 
       - name: Packing Linux builds
-        if: matrix.os == "ubuntu-latest"
+        if: matrix.os == 'ubuntu-latest'
         run: |
           pushd publish_gtk
           chmod +x publish/Ryujinx.sh publish/Ryujinx
