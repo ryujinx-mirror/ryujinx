@@ -430,9 +430,9 @@ namespace Ryujinx.Audio.Renderer.Dsp
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void RemapLegacyChannelEffectMappingToChannelResourceMapping(bool isSupported, Span<ushort> bufferIndices)
+        public static void RemapLegacyChannelEffectMappingToChannelResourceMapping(bool isSupported, Span<ushort> bufferIndices, uint channelCount)
         {
-            if (!isSupported && bufferIndices.Length == 6)
+            if (!isSupported && channelCount == 6)
             {
                 ushort backLeft = bufferIndices[2];
                 ushort backRight = bufferIndices[3];
@@ -447,9 +447,9 @@ namespace Ryujinx.Audio.Renderer.Dsp
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void RemapChannelResourceMappingToLegacy(bool isSupported, Span<ushort> bufferIndices)
+        public static void RemapChannelResourceMappingToLegacy(bool isSupported, Span<ushort> bufferIndices, uint channelCount)
         {
-            if (isSupported && bufferIndices.Length == 6)
+            if (isSupported && channelCount == 6)
             {
                 ushort frontCenter = bufferIndices[2];
                 ushort lowFrequency = bufferIndices[3];

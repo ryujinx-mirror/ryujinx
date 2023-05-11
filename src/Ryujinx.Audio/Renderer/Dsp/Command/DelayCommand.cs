@@ -49,8 +49,8 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
                 OutputBufferIndices[i] = (ushort)(bufferOffset + Parameter.Output[i]);
             }
 
-            DataSourceHelper.RemapLegacyChannelEffectMappingToChannelResourceMapping(newEffectChannelMappingSupported, InputBufferIndices);
-            DataSourceHelper.RemapLegacyChannelEffectMappingToChannelResourceMapping(newEffectChannelMappingSupported, OutputBufferIndices);
+            DataSourceHelper.RemapLegacyChannelEffectMappingToChannelResourceMapping(newEffectChannelMappingSupported, InputBufferIndices, Parameter.ChannelCount);
+            DataSourceHelper.RemapLegacyChannelEffectMappingToChannelResourceMapping(newEffectChannelMappingSupported, OutputBufferIndices, Parameter.ChannelCount);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]

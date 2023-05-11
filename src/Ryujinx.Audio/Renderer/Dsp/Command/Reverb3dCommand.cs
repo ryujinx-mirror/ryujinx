@@ -66,8 +66,8 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
 
             // NOTE: We do the opposite as Nintendo here for now to restore previous behaviour
             // TODO: Update reverb 3d processing and remove this to use RemapLegacyChannelEffectMappingToChannelResourceMapping.
-            DataSourceHelper.RemapChannelResourceMappingToLegacy(newEffectChannelMappingSupported, InputBufferIndices);
-            DataSourceHelper.RemapChannelResourceMappingToLegacy(newEffectChannelMappingSupported, OutputBufferIndices);
+            DataSourceHelper.RemapChannelResourceMappingToLegacy(newEffectChannelMappingSupported, InputBufferIndices, Parameter.ChannelCount);
+            DataSourceHelper.RemapChannelResourceMappingToLegacy(newEffectChannelMappingSupported, OutputBufferIndices, Parameter.ChannelCount);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -116,7 +116,7 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
                 for (int i = 0; i < targetEarlyDelayLineIndicesTable.Length; i++)
                 {
                     int earlyDelayIndex = targetEarlyDelayLineIndicesTable[i];
-                    int outputIndex = outputEarlyIndicesTable[i];
+                    int outputIndex = outputEarlyIndicesTable[earlyDelayIndex];
 
                     float tempTapOut = state.PreDelayLine.TapUnsafe(state.EarlyDelayTime[earlyDelayIndex], delayLineSampleIndexOffset);
 
