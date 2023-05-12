@@ -12,6 +12,28 @@ namespace Ryujinx.Graphics.Vulkan
             ShaderStageFlags.FragmentBit |
             ShaderStageFlags.ComputeBit;
 
+        private static ShaderStageFlags ActiveStages(uint stages)
+        {
+            ShaderStageFlags stageFlags = 0;
+
+            while (stages != 0)
+            {
+                int stage = BitOperations.TrailingZeroCount(stages);
+                stages &= ~(1u << stage);
+
+                stageFlags |= stage switch
+                {
+                    1 => ShaderStageFlags.FragmentBit,
+                    2 => ShaderStageFlags.GeometryBit,
+                    3 => ShaderStageFlags.TessellationControlBit,
+                    4 => ShaderStageFlags.TessellationEvaluationBit,
+                    _ => ShaderStageFlags.VertexBit | ShaderStageFlags.ComputeBit
+                };
+            }
+
+            return stageFlags;
+        }
+
         public static unsafe DescriptorSetLayout[] Create(VulkanRenderer gd, Device device, uint stages, bool usePd, out PipelineLayout layout)
         {
             int stagesCount = BitOperations.PopCount(stages);
@@ -34,6 +56,7 @@ namespace Ryujinx.Graphics.Vulkan
             };
 
             int iter = 0;
+            var activeStages = ActiveStages(stages);
 
             while (stages != 0)
             {
@@ -67,12 +90,16 @@ namespace Ryujinx.Graphics.Vulkan
 
                 void SetStorage(DescriptorSetLayoutBinding* bindings, int maxPerStage, int start = 0)
                 {
+                    // There's a bug on MoltenVK where using the same buffer across different stages
+                    // causes invalid resource errors, allow the binding on all active stages as workaround.
+                    var flags = gd.IsMoltenVk ? activeStages : stageFlags;
+
                     bindings[start + iter] = new DescriptorSetLayoutBinding
                     {
                         Binding = (uint)(start + stage * maxPerStage),
                         DescriptorType = DescriptorType.StorageBuffer,
                         DescriptorCount = (uint)maxPerStage,
-                        StageFlags = stageFlags
+                        StageFlags = flags
                     };
                 }
 
