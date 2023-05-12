@@ -9,6 +9,7 @@
         Incompatible = 0,
         LayoutIncompatible,
         CopyOnly,
+        FormatAlias,
         Full
     }
 }

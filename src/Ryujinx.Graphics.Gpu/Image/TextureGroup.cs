@@ -68,6 +68,11 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// </summary>
         public bool HasIncompatibleOverlaps => _incompatibleOverlaps.Count > 0;
 
+        /// <summary>
+        /// Number indicating the order this texture group was modified relative to others.
+        /// </summary>
+        public long ModifiedSequence { get; private set; }
+
         private readonly GpuContext _context;
         private readonly PhysicalMemory _physicalMemory;
 
@@ -664,6 +669,8 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <param name="texture">The texture that has been modified</param>
         public void SignalModified(Texture texture)
         {
+            ModifiedSequence = _context.GetModifiedSequence();
+
             ClearIncompatibleOverlaps(texture);
 
             EvaluateRelevantHandles(texture, (baseHandle, regionCount, split) =>
@@ -684,6 +691,8 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <param name="bound">True if this texture is being bound, false if unbound</param>
         public void SignalModifying(Texture texture, bool bound)
         {
+            ModifiedSequence = _context.GetModifiedSequence();
+
             ClearIncompatibleOverlaps(texture);
 
             EvaluateRelevantHandles(texture, (baseHandle, regionCount, split) =>

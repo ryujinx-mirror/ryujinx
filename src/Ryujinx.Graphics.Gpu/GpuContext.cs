@@ -98,6 +98,8 @@ namespace Ryujinx.Graphics.Gpu
         private Thread _gpuThread;
         private bool _pendingSync;
 
+        private long _modifiedSequence;
+
         /// <summary>
         /// Creates a new instance of the GPU emulation context.
         /// </summary>
@@ -198,6 +200,15 @@ namespace Ryujinx.Graphics.Gpu
             ulong errorBias = (nanoseconds - rounded) * NsToTicksFractionNumerator / NsToTicksFractionDenominator;
 
             return divided * NsToTicksFractionNumerator + errorBias;
+        }
+
+        /// <summary>
+        /// Gets a sequence number for resource modification ordering. This increments on each call.
+        /// </summary>
+        /// <returns>A sequence number for resource modification ordering</returns>
+        public long GetModifiedSequence()
+        {
+            return _modifiedSequence++;
         }
 
         /// <summary>
