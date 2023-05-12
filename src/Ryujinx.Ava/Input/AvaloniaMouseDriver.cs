@@ -70,11 +70,14 @@ namespace Ryujinx.Ava.Input
 
         private void Parent_PointerReleaseEvent(object o, PointerReleasedEventArgs args)
         {
-            int button = (int)args.InitialPressMouseButton - 1;
-
-            if (PressedButtons.Count() >= button)
+            if (args.InitialPressMouseButton != Avalonia.Input.MouseButton.None)
             {
-                PressedButtons[button] = false;
+                int button = (int)args.InitialPressMouseButton;
+
+                if (PressedButtons.Count() >= button)
+                {
+                    PressedButtons[button] = false;
+                }
             }
         }
 
