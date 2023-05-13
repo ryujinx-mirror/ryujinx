@@ -12,6 +12,7 @@ concurrency: flatpak-release
 
 jobs:
   release:
+    timeout-minutes: 35
     runs-on: ubuntu-latest
 
     env:

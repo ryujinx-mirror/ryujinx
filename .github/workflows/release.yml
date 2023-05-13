@@ -46,6 +46,7 @@ jobs:
   release:
     name: Release ${{ matrix.OS_NAME }}
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 35
     strategy:
       matrix:
         os: [ ubuntu-latest, windows-latest ]
@@ -143,13 +144,14 @@ jobs:
   macos_release:
     name: Release MacOS universal
     runs-on: ubuntu-latest
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v3
 
       - uses: actions/setup-dotnet@v3
         with:
           global-json-file: global.json
-          
+
       - name: Setup LLVM 14
         run: |
           wget https://apt.llvm.org/llvm.sh
