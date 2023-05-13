@@ -56,6 +56,7 @@ namespace Ryujinx.Graphics.Vulkan
         private int _writeCount;
         private int _flushCount;
         private int _flushTemp;
+        private int _lastFlushWrite = -1;
 
         private ReaderWriterLock _flushLock;
         private FenceHolder _flushFence;
@@ -200,14 +201,21 @@ namespace Ryujinx.Graphics.Vulkan
         {
             if (_baseType == BufferAllocationType.Auto)
             {
-                if (_writeCount >= WriteCountThreshold || _setCount >= SetCountThreshold || _flushCount >= FlushCountThreshold)
+                // When flushed, wait for a bit more info to make a decision.
+                bool wasFlushed = _flushTemp > 0;
+                int multiplier = wasFlushed ? 2 : 0;
+                if (_writeCount >= (WriteCountThreshold << multiplier) || _setCount >= (SetCountThreshold << multiplier) || _flushCount >= (FlushCountThreshold << multiplier))
                 {
                     if (_flushCount > 0 || _flushTemp-- > 0)
                     {
                         // Buffers that flush should ideally be mapped in host address space for easy copies.
                         // If the buffer is large it will do better on GPU memory, as there will be more writes than data flushes (typically individual pages).
                         // If it is small, then it's likely most of the buffer will be flushed so we want it on host memory, as access is cached.
-                        DesiredType = Size > DeviceLocalSizeThreshold ? BufferAllocationType.DeviceLocalMapped : BufferAllocationType.HostMapped;
+
+                        bool hostMappingSensitive = _gd.Vendor == Vendor.Nvidia;
+                        bool deviceLocalMapped = Size > DeviceLocalSizeThreshold || (wasFlushed && _writeCount > _flushCount * 10 && hostMappingSensitive) || _currentType == BufferAllocationType.DeviceLocalMapped;
+
+                        DesiredType = deviceLocalMapped ? BufferAllocationType.DeviceLocalMapped : BufferAllocationType.HostMapped;
 
                         // It's harder for a buffer that is flushed to revert to another type of mapping.
                         if (_flushCount > 0)
@@ -215,17 +223,18 @@ namespace Ryujinx.Graphics.Vulkan
                             _flushTemp = 1000;
                         }
                     }
-                    else if (_writeCount >= WriteCountThreshold)
+                    else if (_writeCount >= (WriteCountThreshold << multiplier))
                     {
                         // Buffers that are written often should ideally be in the device local heap. (Storage buffers)
                         DesiredType = BufferAllocationType.DeviceLocal;
                     }
-                    else if (_setCount > SetCountThreshold)
+                    else if (_setCount > (SetCountThreshold << multiplier))
                     {
                         // Buffers that have their data set often should ideally be host mapped. (Constant buffers)
                         DesiredType = BufferAllocationType.HostMapped;
                     }
 
+                    _lastFlushWrite = -1;
                     _flushCount = 0;
                     _writeCount = 0;
                     _setCount = 0;
@@ -418,7 +427,12 @@ namespace Ryujinx.Graphics.Vulkan
 
             WaitForFlushFence();
 
-            _flushCount++;
+            if (_lastFlushWrite != _writeCount)
+            {
+                // If it's on the same page as the last flush, ignore it.
+                _lastFlushWrite = _writeCount;
+                _flushCount++;
+            }
 
             Span<byte> result;
 
