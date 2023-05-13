@@ -306,6 +306,8 @@ namespace Ryujinx.Graphics.OpenGL.Image
             int offset = WriteToPbo2D(range.Offset, layer, level);
 
             Debug.Assert(offset == 0);
+
+            GL.BindBuffer(BufferTarget.PixelPackBuffer, 0);
         }
 
         public void WriteToPbo(int offset, bool forceBgra)

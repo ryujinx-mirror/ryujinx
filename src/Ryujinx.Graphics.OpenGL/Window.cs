@@ -93,7 +93,7 @@ namespace Ryujinx.Graphics.OpenGL
                     oldView.Dispose();
                 }
             }
-            
+
             GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, drawFramebuffer);
             GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, readFramebuffer);
 
