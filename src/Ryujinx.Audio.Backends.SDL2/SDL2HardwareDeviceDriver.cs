@@ -5,6 +5,7 @@ using Ryujinx.Memory;
 using Ryujinx.SDL2.Common;
 using System;
 using System.Collections.Concurrent;
+using System.Runtime.InteropServices;
 using System.Threading;
 
 using static Ryujinx.Audio.Integration.IHardwareDeviceDriver;
@@ -18,6 +19,13 @@ namespace Ryujinx.Audio.Backends.SDL2
         private readonly ManualResetEvent _pauseEvent;
         private readonly ConcurrentDictionary<SDL2HardwareDeviceSession, byte> _sessions;
 
+        private bool _supportSurroundConfiguration;
+
+        // TODO: Add this to SDL2-CS
+        // NOTE: We use a DllImport here because of marshaling issue for spec.
+        [DllImport("SDL2")]
+        private static extern int SDL_GetDefaultAudioInfo(IntPtr name, out SDL_AudioSpec spec, int isCapture);
+
         public SDL2HardwareDeviceDriver()
         {
             _updateRequiredEvent = new ManualResetEvent(false);
@@ -25,6 +33,20 @@ namespace Ryujinx.Audio.Backends.SDL2
             _sessions = new ConcurrentDictionary<SDL2HardwareDeviceSession, byte>();
 
             SDL2Driver.Instance.Initialize();
+
+            int res = SDL_GetDefaultAudioInfo(IntPtr.Zero, out var spec, 0);
+
+            if (res != 0)
+            {
+                Logger.Error?.Print(LogClass.Application,
+                    $"SDL_GetDefaultAudioInfo failed with error \"{SDL_GetError()}\"");
+
+                _supportSurroundConfiguration = true;
+            }
+            else
+            {
+                _supportSurroundConfiguration = spec.channels == 6;
+            }
         }
 
         public static bool IsSupported => IsSupportedInternal();
@@ -164,6 +186,11 @@ namespace Ryujinx.Audio.Backends.SDL2
 
         public bool SupportsChannelCount(uint channelCount)
         {
+            if (channelCount == 6)
+            {
+                return _supportSurroundConfiguration;
+            }
+
             return true;
         }
 

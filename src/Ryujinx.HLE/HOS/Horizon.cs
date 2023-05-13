@@ -261,7 +261,7 @@ namespace Ryujinx.HLE.HOS
             AudioInputManager = new AudioInputManager();
             AudioRendererManager = new AudioRendererManager(tickSource);
             AudioRendererManager.SetVolume(Device.Configuration.AudioVolume);
-            AudioDeviceSessionRegistry = new VirtualDeviceSessionRegistry();
+            AudioDeviceSessionRegistry = new VirtualDeviceSessionRegistry(Device.AudioDeviceDriver);
 
             IWritableEvent[] audioOutputRegisterBufferEvents = new IWritableEvent[Constants.AudioOutSessionCountMax];
 

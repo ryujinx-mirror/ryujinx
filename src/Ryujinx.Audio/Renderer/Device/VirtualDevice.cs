@@ -45,7 +45,7 @@ namespace Ryujinx.Audio.Renderer.Device
         /// <param name="name">The name of the <see cref="VirtualDevice"/>.</param>
         /// <param name="channelCount">The count of channels supported by the <see cref="VirtualDevice"/>.</param>
         /// <param name="isExternalOutput">Indicate if the <see cref="VirtualDevice"/> is provided by an external interface.</param>
-        private VirtualDevice(string name, uint channelCount, bool isExternalOutput)
+        public VirtualDevice(string name, uint channelCount, bool isExternalOutput)
         {
             Name = name;
             ChannelCount = channelCount;

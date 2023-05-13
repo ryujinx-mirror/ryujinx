@@ -1,3 +1,4 @@
+using Ryujinx.Audio.Integration;
 using System.Collections.Generic;
 
 namespace Ryujinx.Audio.Renderer.Device
@@ -22,7 +23,23 @@ namespace Ryujinx.Audio.Renderer.Device
         /// The current active <see cref="VirtualDevice"/>.
         /// </summary>
         // TODO: make this configurable
-        public VirtualDevice ActiveDevice = VirtualDevice.Devices[2];
+        public VirtualDevice ActiveDevice { get; }
+
+        public VirtualDeviceSessionRegistry(IHardwareDeviceDriver driver)
+        {
+            uint channelCount;
+
+            if (driver.GetRealDeviceDriver().SupportsChannelCount(6))
+            {
+                channelCount = 6;
+            }
+            else
+            {
+                channelCount = 2;
+            }
+
+            ActiveDevice = new VirtualDevice("AudioTvOutput", channelCount, false);
+        }
 
         /// <summary>
         /// Get the associated <see cref="T:VirtualDeviceSession[]"/> from an AppletResourceId.
