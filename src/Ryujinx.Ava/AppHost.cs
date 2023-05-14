@@ -86,7 +86,7 @@ namespace Ryujinx.Ava
         private KeyboardHotkeyState         _prevHotkeyState;
 
         private long _lastCursorMoveTime;
-        private bool _isCursorInRenderer;
+        private bool _isCursorInRenderer = true;
 
         private bool _isStopped;
         private bool _isActive;
@@ -160,7 +160,9 @@ namespace Ryujinx.Ava
 
             ConfigurationState.Instance.HideCursor.Event += HideCursorState_Changed;
 
-            _topLevel.PointerMoved += TopLevel_PointerMoved;
+            _topLevel.PointerMoved += TopLevel_PointerEnterOrMoved;
+            _topLevel.PointerEnter += TopLevel_PointerEnterOrMoved;
+            _topLevel.PointerLeave += TopLevel_PointerLeave;
 
             if (OperatingSystem.IsWindows())
             {
@@ -183,7 +185,7 @@ namespace Ryujinx.Ava
             _gpuCancellationTokenSource = new CancellationTokenSource();
         }
 
-        private void TopLevel_PointerMoved(object sender, PointerEventArgs e)
+        private void TopLevel_PointerEnterOrMoved(object sender, PointerEventArgs e)
         {
             if (sender is MainWindow window)
             {
@@ -201,6 +203,12 @@ namespace Ryujinx.Ava
                 }
             }
         }
+
+        private void TopLevel_PointerLeave(object sender, PointerEventArgs e)
+        {
+            _isCursorInRenderer = false;
+        }
+
         private void UpdateScalingFilterLevel(object sender, ReactiveEventArgs<int> e)
         {
             _renderer.Window?.SetScalingFilter((Graphics.GAL.ScalingFilter)ConfigurationState.Instance.Graphics.ScalingFilter.Value);
@@ -446,7 +454,9 @@ namespace Ryujinx.Ava
             ConfigurationState.Instance.Graphics.ScalingFilterLevel.Event  -= UpdateScalingFilterLevel;
             ConfigurationState.Instance.Graphics.AntiAliasing.Event        -= UpdateAntiAliasing;
 
-            _topLevel.PointerMoved -= TopLevel_PointerMoved;
+            _topLevel.PointerMoved -= TopLevel_PointerEnterOrMoved;
+            _topLevel.PointerEnter -= TopLevel_PointerEnterOrMoved;
+            _topLevel.PointerLeave -= TopLevel_PointerLeave;
 
             _gpuCancellationTokenSource.Cancel();
             _gpuCancellationTokenSource.Dispose();
