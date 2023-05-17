@@ -36,4 +36,9 @@ sleep 1
 # Now replace and reopen.
 rm -rf "$INSTALL_DIRECTORY"
 mv "$NEW_APP_DIRECTORY" "$INSTALL_DIRECTORY"
-open -a "$INSTALL_DIRECTORY" --args "$APP_ARGUMENTS"
+
+if [ "$#" -le 3 ]; then
+    open -a "$INSTALL_DIRECTORY"
+else
+    open -a "$INSTALL_DIRECTORY" --args "$APP_ARGUMENTS"
+fi
