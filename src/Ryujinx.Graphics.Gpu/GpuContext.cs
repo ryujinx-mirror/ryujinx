@@ -99,6 +99,7 @@ namespace Ryujinx.Graphics.Gpu
         private bool _pendingSync;
 
         private long _modifiedSequence;
+        private ulong _firstTimestamp;
 
         /// <summary>
         /// Creates a new instance of the GPU emulation context.
@@ -123,6 +124,8 @@ namespace Ryujinx.Graphics.Gpu
             DeferredActions = new Queue<Action>();
 
             PhysicalMemoryRegistry = new ConcurrentDictionary<ulong, PhysicalMemory>();
+
+            _firstTimestamp = ConvertNanosecondsToTicks((ulong)PerformanceCounter.ElapsedNanoseconds);
         }
 
         /// <summary>
@@ -217,7 +220,8 @@ namespace Ryujinx.Graphics.Gpu
         /// <returns>The current GPU timestamp</returns>
         public ulong GetTimestamp()
         {
-            ulong ticks = ConvertNanosecondsToTicks((ulong)PerformanceCounter.ElapsedNanoseconds);
+            // Guest timestamp will start at 0, instead of host value. 
+            ulong ticks = ConvertNanosecondsToTicks((ulong)PerformanceCounter.ElapsedNanoseconds) - _firstTimestamp;
 
             if (GraphicsConfig.FastGpuTime)
             {
