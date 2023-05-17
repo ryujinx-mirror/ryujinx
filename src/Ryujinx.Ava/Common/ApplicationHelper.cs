@@ -193,7 +193,7 @@ namespace Ryujinx.Ava.Common
                             if (nca.Header.ContentType == NcaContentType.Program)
                             {
                                 int dataIndex = Nca.GetSectionIndexFromType(NcaSectionType.Data, NcaContentType.Program);
-                                if (nca.Header.GetFsHeader(dataIndex).IsPatchSection())
+                                if (nca.SectionExists(NcaSectionType.Data) && nca.Header.GetFsHeader(dataIndex).IsPatchSection())
                                 {
                                     patchNca = nca;
                                 }
