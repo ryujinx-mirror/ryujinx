@@ -415,7 +415,7 @@ namespace Ryujinx.Graphics.Vulkan
 
             var sampler = linearFilter ? _samplerLinear : _samplerNearest;
 
-            _pipeline.SetTextureAndSampler(ShaderStage.Fragment, 0, src, sampler);
+            _pipeline.SetTextureAndSamplerIdentitySwizzle(ShaderStage.Fragment, 0, src, sampler);
 
             Span<float> region = stackalloc float[RegionBufferSize / sizeof(float)];
 
@@ -625,7 +625,7 @@ namespace Ryujinx.Graphics.Vulkan
 
         private void BlitDepthStencilDraw(TextureView src, bool isDepth)
         {
-            _pipeline.SetTextureAndSampler(ShaderStage.Fragment, 0, src, _samplerNearest);
+            _pipeline.SetTextureAndSamplerIdentitySwizzle(ShaderStage.Fragment, 0, src, _samplerNearest);
 
             if (isDepth)
             {
@@ -1037,7 +1037,7 @@ namespace Ryujinx.Graphics.Vulkan
                     var srcView = Create2DLayerView(src, srcLayer + z, srcLevel + l, srcFormat);
                     var dstView = Create2DLayerView(dst, dstLayer + z, dstLevel + l);
 
-                    _pipeline.SetTextureAndSampler(ShaderStage.Compute, 0, srcView, null);
+                    _pipeline.SetTextureAndSamplerIdentitySwizzle(ShaderStage.Compute, 0, srcView, null);
                     _pipeline.SetImage(0, dstView, dstFormat);
 
                     int dispatchX = (Math.Min(srcView.Info.Width, dstView.Info.Width) + 31) / 32;
@@ -1177,7 +1177,7 @@ namespace Ryujinx.Graphics.Vulkan
                     var srcView = Create2DLayerView(src, srcLayer + z, 0, format);
                     var dstView = Create2DLayerView(dst, dstLayer + z, 0);
 
-                    _pipeline.SetTextureAndSampler(ShaderStage.Compute, 0, srcView, null);
+                    _pipeline.SetTextureAndSamplerIdentitySwizzle(ShaderStage.Compute, 0, srcView, null);
                     _pipeline.SetImage(0, dstView, format);
 
                     _pipeline.DispatchCompute(dispatchX, dispatchY, 1);
@@ -1313,7 +1313,7 @@ namespace Ryujinx.Graphics.Vulkan
                     var srcView = Create2DLayerView(src, srcLayer + z, 0, format);
                     var dstView = Create2DLayerView(dst, dstLayer + z, 0);
 
-                    _pipeline.SetTextureAndSampler(ShaderStage.Fragment, 0, srcView, null);
+                    _pipeline.SetTextureAndSamplerIdentitySwizzle(ShaderStage.Fragment, 0, srcView, null);
                     _pipeline.SetRenderTarget(
                         ((TextureView)dstView).GetView(format).GetImageViewForAttachment(),
                         (uint)dst.Width,
@@ -1384,7 +1384,7 @@ namespace Ryujinx.Graphics.Vulkan
 
         private void CopyMSAspectDraw(TextureView src, bool fromMS, bool isDepth)
         {
-            _pipeline.SetTextureAndSampler(ShaderStage.Fragment, 0, src, _samplerNearest);
+            _pipeline.SetTextureAndSamplerIdentitySwizzle(ShaderStage.Fragment, 0, src, _samplerNearest);
 
             if (isDepth)
             {

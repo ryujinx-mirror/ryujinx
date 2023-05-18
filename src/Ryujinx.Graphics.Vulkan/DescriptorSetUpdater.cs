@@ -228,7 +228,12 @@ namespace Ryujinx.Graphics.Vulkan
             SignalDirty(DirtyFlags.Storage);
         }
 
-        public void SetTextureAndSampler(CommandBufferScoped cbs, ShaderStage stage, int binding, ITexture texture, ISampler sampler)
+        public void SetTextureAndSampler(
+            CommandBufferScoped cbs,
+            ShaderStage stage,
+            int binding,
+            ITexture texture,
+            ISampler sampler)
         {
             if (texture is TextureBuffer textureBuffer)
             {
@@ -249,6 +254,28 @@ namespace Ryujinx.Graphics.Vulkan
             }
 
             SignalDirty(DirtyFlags.Texture);
+        }
+
+        public void SetTextureAndSamplerIdentitySwizzle(
+            CommandBufferScoped cbs,
+            ShaderStage stage,
+            int binding,
+            ITexture texture,
+            ISampler sampler)
+        {
+            if (texture is TextureView view)
+            {
+                view.Storage.InsertWriteToReadBarrier(cbs, AccessFlags.ShaderReadBit, stage.ConvertToPipelineStageFlags());
+
+                _textureRefs[binding] = view.GetIdentityImageView();
+                _samplerRefs[binding] = ((SamplerHolder)sampler)?.GetSampler();
+
+                SignalDirty(DirtyFlags.Texture);
+            }
+            else
+            {
+                SetTextureAndSampler(cbs, stage, binding, texture, sampler);
+            }
         }
 
         public void SetUniformBuffers(CommandBuffer commandBuffer, ReadOnlySpan<BufferAssignment> buffers)

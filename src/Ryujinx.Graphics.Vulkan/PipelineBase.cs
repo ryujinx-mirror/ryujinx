@@ -1098,6 +1098,11 @@ namespace Ryujinx.Graphics.Vulkan
             _descriptorSetUpdater.SetTextureAndSampler(Cbs, stage, binding, texture, sampler);
         }
 
+        public void SetTextureAndSamplerIdentitySwizzle(ShaderStage stage, int binding, ITexture texture, ISampler sampler)
+        {
+            _descriptorSetUpdater.SetTextureAndSamplerIdentitySwizzle(Cbs, stage, binding, texture, sampler);
+        }
+
         public void SetTransformFeedbackBuffers(ReadOnlySpan<BufferRange> buffers)
         {
             PauseTransformFeedbackInternal();
