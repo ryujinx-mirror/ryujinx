@@ -23,8 +23,6 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         public const int PrimitiveRestartStateIndex = 12;
         public const int RenderTargetStateIndex = 27;
 
-        private const ulong MaxUnknownStorageSize = 0x100000;
-
         private readonly GpuContext _context;
         private readonly GpuChannel _channel;
         private readonly DeviceStateWithShadow<ThreedClassState> _state;
@@ -359,7 +357,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                     SbDescriptor sbDescriptor = _channel.MemoryManager.Physical.Read<SbDescriptor>(sbDescAddress);
 
                     uint size;
-                    if (sb.SbCbSlot == 0)
+                    if (sb.SbCbSlot == Constants.DriverReservedUniformBuffer)
                     {
                         // Only trust the SbDescriptor size if it comes from slot 0.
                         size = (uint)sbDescriptor.Size;
@@ -367,7 +365,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                     else
                     {
                         // TODO: Use full mapped size and somehow speed up buffer sync.
-                        size = (uint)_channel.MemoryManager.GetMappedSize(sbDescriptor.PackAddress(), MaxUnknownStorageSize);
+                        size = (uint)_channel.MemoryManager.GetMappedSize(sbDescriptor.PackAddress(), Constants.MaxUnknownStorageSize);
                     }
 
                     _channel.BufferManager.SetGraphicsStorageBuffer(stage, sb.Slot, sbDescriptor.PackAddress(), size, sb.Flags);

@@ -1,4 +1,5 @@
-﻿using Ryujinx.Graphics.GAL;
+﻿using Ryujinx.Common.Logging;
+using Ryujinx.Graphics.GAL;
 using Silk.NET.Vulkan;
 using System;
 using System.Runtime.CompilerServices;
@@ -95,16 +96,27 @@ namespace Ryujinx.Graphics.Vulkan
             return Unsafe.As<ulong, BufferHandle>(ref handle64);
         }
 
-        public BufferHandle CreateWithHandle(VulkanRenderer gd, int size, BufferAllocationType baseType = BufferAllocationType.HostMapped, BufferHandle storageHint = default)
+        public BufferHandle CreateWithHandle(
+            VulkanRenderer gd,
+            int size,
+            BufferAllocationType baseType = BufferAllocationType.HostMapped,
+            BufferHandle storageHint = default)
         {
             return CreateWithHandle(gd, size, out _, baseType, storageHint);
         }
 
-        public BufferHandle CreateWithHandle(VulkanRenderer gd, int size, out BufferHolder holder, BufferAllocationType baseType = BufferAllocationType.HostMapped, BufferHandle storageHint = default)
+        public BufferHandle CreateWithHandle(
+            VulkanRenderer gd,
+            int size,
+            out BufferHolder holder,
+            BufferAllocationType baseType = BufferAllocationType.HostMapped,
+            BufferHandle storageHint = default)
         {
             holder = Create(gd, size, baseType: baseType, storageHint: storageHint);
             if (holder == null)
             {
+                Logger.Error?.Print(LogClass.Gpu, $"Failed to create buffer with size 0x{size:X} and type \"{baseType}\".");
+
                 return BufferHandle.Null;
             }
 

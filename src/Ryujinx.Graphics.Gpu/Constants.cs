@@ -41,22 +41,6 @@ namespace Ryujinx.Graphics.Gpu
         public const int TotalTransformFeedbackBuffers = 4;
 
         /// <summary>
-        /// Maximum number of textures on a single shader stage.
-        /// </summary>
-        /// <remarks>
-        /// The maximum number of textures is API limited, the hardware supports an unlimited amount.
-        /// </remarks>
-        public const int TotalTextures = 32;
-
-        /// <summary>
-        /// Maximum number of images on a single shader stage.
-        /// </summary>
-        /// <remarks>
-        /// The maximum number of images is API limited, the hardware supports an unlimited amount.
-        /// </remarks>
-        public const int TotalImages = 8;
-
-        /// <summary>
         /// Maximum number of render target color buffers.
         /// </summary>
         public const int TotalRenderTargets = 8;
@@ -100,5 +84,15 @@ namespace Ryujinx.Graphics.Gpu
         /// Expected byte alignment for storage buffers
         /// </summary>
         public const int StorageAlignment = 16;
+
+        /// <summary>
+        /// Number of the uniform buffer reserved by the driver to store the storage buffer base addresses.
+        /// </summary>
+        public const int DriverReservedUniformBuffer = 0;
+
+        /// <summary>
+        /// Maximum size that an storage buffer is assumed to have when the correct size is unknown.
+        /// </summary>
+        public const ulong MaxUnknownStorageSize = 0x100000;
     }
 }
