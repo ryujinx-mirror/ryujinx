@@ -160,7 +160,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 {
                     // FragCoord X/Y must be divided by the render target scale, if resolution scaling is active,
                     // because the shader code is not expecting scaled values.
-                    res = context.FPDivide(res, context.Load(StorageKind.Input, IoVariable.SupportBlockRenderScale, null, Const(0)));
+                    res = context.FPDivide(res, context.Load(StorageKind.ConstantBuffer, SupportBuffer.Binding, Const((int)SupportBufferField.RenderScale), Const(0)));
                 }
                 else if (op.Imm10 == AttributeConsts.FrontFacing && context.Config.GpuAccessor.QueryHostHasFrontFacingBug())
                 {

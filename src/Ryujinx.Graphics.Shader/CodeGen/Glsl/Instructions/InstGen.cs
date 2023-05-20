@@ -167,9 +167,6 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
                     case Instruction.Load:
                         return Load(context, operation);
 
-                    case Instruction.LoadConstant:
-                        return LoadConstant(context, operation);
-
                     case Instruction.LoadLocal:
                         return LoadLocal(context, operation);
 

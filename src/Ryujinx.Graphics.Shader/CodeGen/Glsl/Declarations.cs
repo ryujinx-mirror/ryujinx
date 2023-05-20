@@ -3,6 +3,7 @@ using Ryujinx.Graphics.Shader.StructuredIr;
 using Ryujinx.Graphics.Shader.Translation;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Numerics;
 
@@ -102,13 +103,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                 context.AppendLine();
             }
 
-            var cBufferDescriptors = context.Config.GetConstantBufferDescriptors();
-            if (cBufferDescriptors.Length != 0)
-            {
-                DeclareUniforms(context, cBufferDescriptors);
-
-                context.AppendLine();
-            }
+            DeclareConstantBuffers(context, context.Config.Properties.ConstantBuffers.Values);
 
             var sBufferDescriptors = context.Config.GetStorageBufferDescriptors();
             if (sBufferDescriptors.Length != 0)
@@ -265,17 +260,11 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                         scaleElements++; // Also includes render target scale, for gl_FragCoord.
                     }
 
-                    DeclareSupportUniformBlock(context, context.Config.Stage, scaleElements);
-
                     if (context.Config.UsedFeatures.HasFlag(FeatureFlags.IntegerSampling) && scaleElements != 0)
                     {
                         AppendHelperFunction(context, $"Ryujinx.Graphics.Shader/CodeGen/Glsl/HelperFunctions/TexelFetchScale_{stage}.glsl");
                         context.AppendLine();
                     }
-                }
-                else if (isFragment || context.Config.Stage == ShaderStage.Vertex)
-                {
-                    DeclareSupportUniformBlock(context, context.Config.Stage, 0);
                 }
             }
 
@@ -389,36 +378,38 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             };
         }
 
-        private static void DeclareUniforms(CodeGenContext context, BufferDescriptor[] descriptors)
+        private static void DeclareConstantBuffers(CodeGenContext context, IEnumerable<BufferDefinition> buffers)
         {
-            string ubSize = "[" + NumberFormatter.FormatInt(Constants.ConstantBufferSize / 16) + "]";
-
-            if (context.Config.UsedFeatures.HasFlag(FeatureFlags.CbIndexing))
+            foreach (BufferDefinition buffer in buffers)
             {
-                string ubName = OperandManager.GetShaderStagePrefix(context.Config.Stage);
-
-                ubName += "_" + DefaultNames.UniformNamePrefix;
-
-                string blockName = $"{ubName}_{DefaultNames.BlockSuffix}";
-
-                context.AppendLine($"layout (binding = {context.Config.FirstConstantBufferBinding}, std140) uniform {blockName}");
-                context.EnterScope();
-                context.AppendLine("vec4 " + DefaultNames.DataName + ubSize + ";");
-                context.LeaveScope($" {ubName}[{NumberFormatter.FormatInt(descriptors.Max(x => x.Slot) + 1)}];");
-            }
-            else
-            {
-                foreach (var descriptor in descriptors)
+                string layout = buffer.Layout switch
                 {
-                    string ubName = OperandManager.GetShaderStagePrefix(context.Config.Stage);
+                    BufferLayout.Std140 => "std140",
+                    _ => "std430"
+                };
 
-                    ubName += "_" + DefaultNames.UniformNamePrefix + descriptor.Slot;
+                context.AppendLine($"layout (binding = {buffer.Binding}, {layout}) uniform _{buffer.Name}");
+                context.EnterScope();
 
-                    context.AppendLine($"layout (binding = {descriptor.Binding}, std140) uniform {ubName}");
-                    context.EnterScope();
-                    context.AppendLine("vec4 " + OperandManager.GetUbName(context.Config.Stage, descriptor.Slot, false) + ubSize + ";");
-                    context.LeaveScope(";");
+                foreach (StructureField field in buffer.Type.Fields)
+                {
+                    if (field.Type.HasFlag(AggregateType.Array))
+                    {
+                        string typeName = GetVarTypeName(context, field.Type & ~AggregateType.Array);
+                        string arraySize = field.ArrayLength.ToString(CultureInfo.InvariantCulture);
+
+                        context.AppendLine($"{typeName} {field.Name}[{arraySize}];");
+                    }
+                    else
+                    {
+                        string typeName = GetVarTypeName(context, field.Type);
+
+                        context.AppendLine($"{typeName} {field.Name};");
+                    }
                 }
+
+                context.LeaveScope($" {buffer.Name};");
+                context.AppendLine();
             }
         }
 
@@ -757,39 +748,6 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             string name = $"{DefaultNames.PerPatchAttributePrefix}{attr}";
 
             context.AppendLine($"layout (location = {location}) patch out vec4 {name};");
-        }
-
-        private static void DeclareSupportUniformBlock(CodeGenContext context, ShaderStage stage, int scaleElements)
-        {
-            bool needsSupportBlock = stage == ShaderStage.Fragment ||
-                (context.Config.LastInVertexPipeline && context.Config.GpuAccessor.QueryViewportTransformDisable());
-
-            if (!needsSupportBlock && scaleElements == 0)
-            {
-                return;
-            }
-
-            context.AppendLine($"layout (binding = 0, std140) uniform {DefaultNames.SupportBlockName}");
-            context.EnterScope();
-
-            switch (stage)
-            {
-                case ShaderStage.Fragment:
-                case ShaderStage.Vertex:
-                    context.AppendLine($"uint {DefaultNames.SupportBlockAlphaTestName};");
-                    context.AppendLine($"bool {DefaultNames.SupportBlockIsBgraName}[{SupportBuffer.FragmentIsBgraCount}];");
-                    context.AppendLine($"vec4 {DefaultNames.SupportBlockViewportInverse};");
-                    context.AppendLine($"int {DefaultNames.SupportBlockFragmentScaleCount};");
-                    break;
-                case ShaderStage.Compute:
-                    context.AppendLine($"uint s_reserved[{SupportBuffer.ComputeRenderScaleOffset / SupportBuffer.FieldSize}];");
-                    break;
-            }
-
-            context.AppendLine($"float {DefaultNames.SupportBlockRenderScaleName}[{SupportBuffer.RenderScaleMaxCount}];");
-
-            context.LeaveScope(";");
-            context.AppendLine();
         }
 
         private static void AppendHelperFunction(CodeGenContext context, string filename)

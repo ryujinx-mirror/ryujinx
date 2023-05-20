@@ -215,29 +215,6 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             return GenerateLoadOrStore(context, operation, isStore: false);
         }
 
-        public static string LoadConstant(CodeGenContext context, AstOperation operation)
-        {
-            IAstNode src1 = operation.GetSource(0);
-            IAstNode src2 = operation.GetSource(1);
-
-            string offsetExpr = GetSoureExpr(context, src2, GetSrcVarType(operation.Inst, 1));
-            offsetExpr = Enclose(offsetExpr, src2, Instruction.ShiftRightS32, isLhs: true);
-
-            var config = context.Config;
-            bool indexElement = !config.GpuAccessor.QueryHostHasVectorIndexingBug();
-
-            if (src1 is AstOperand operand && operand.Type == OperandType.Constant)
-            {
-                bool cbIndexable = config.UsedFeatures.HasFlag(Translation.FeatureFlags.CbIndexing);
-                return OperandManager.GetConstantBufferName(operand.Value, offsetExpr, config.Stage, cbIndexable, indexElement);
-            }
-            else
-            {
-                string slotExpr = GetSoureExpr(context, src1, GetSrcVarType(operation.Inst, 0));
-                return OperandManager.GetConstantBufferName(slotExpr, offsetExpr, config.Stage, indexElement);
-            }
-        }
-
         public static string LoadLocal(CodeGenContext context, AstOperation operation)
         {
             return LoadLocalOrShared(context, operation, DefaultNames.LocalMemoryName);
@@ -809,9 +786,29 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             string varName;
             AggregateType varType;
             int srcIndex = 0;
+            int inputsCount = isStore ? operation.SourcesCount - 1 : operation.SourcesCount;
 
             switch (storageKind)
             {
+                case StorageKind.ConstantBuffer:
+                    if (!(operation.GetSource(srcIndex++) is AstOperand bindingIndex) || bindingIndex.Type != OperandType.Constant)
+                    {
+                        throw new InvalidOperationException($"First input of {operation.Inst} with {storageKind} storage must be a constant operand.");
+                    }
+
+                    int binding = bindingIndex.Value;
+                    BufferDefinition buffer = context.Config.Properties.ConstantBuffers[binding];
+
+                    if (!(operation.GetSource(srcIndex++) is AstOperand fieldIndex) || fieldIndex.Type != OperandType.Constant)
+                    {
+                        throw new InvalidOperationException($"Second input of {operation.Inst} with {storageKind} storage must be a constant operand.");
+                    }
+
+                    StructureField field = buffer.Type.Fields[fieldIndex.Value];
+                    varName = $"{buffer.Name}.{field.Name}";
+                    varType = field.Type;
+                    break;
+
                 case StorageKind.Input:
                 case StorageKind.InputPerPatch:
                 case StorageKind.Output:
@@ -864,38 +861,37 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
                             varName = $"gl_out[{expr}].{varName}";
                         }
                     }
-
-                    int firstSrcIndex = srcIndex;
-                    int inputsCount = isStore ? operation.SourcesCount - 1 : operation.SourcesCount;
-
-                    for (; srcIndex < inputsCount; srcIndex++)
-                    {
-                        IAstNode src = operation.GetSource(srcIndex);
-
-                        if ((varType & AggregateType.ElementCountMask) != 0 &&
-                            srcIndex == inputsCount - 1 &&
-                            src is AstOperand elementIndex &&
-                            elementIndex.Type == OperandType.Constant)
-                        {
-                            varName += "." + "xyzw"[elementIndex.Value & 3];
-                        }
-                        else if (srcIndex == firstSrcIndex && context.Config.Stage == ShaderStage.TessellationControl && storageKind == StorageKind.Output)
-                        {
-                            // GLSL requires that for tessellation control shader outputs,
-                            // that the index expression must be *exactly* "gl_InvocationID",
-                            // otherwise the compilation fails.
-                            // TODO: Get rid of this and use expression propagation to make sure we generate the correct code from IR.
-                            varName += "[gl_InvocationID]";
-                        }
-                        else
-                        {
-                            varName += $"[{GetSoureExpr(context, src, AggregateType.S32)}]";
-                        }
-                    }
                     break;
 
                 default:
                     throw new InvalidOperationException($"Invalid storage kind {storageKind}.");
+            }
+
+            int firstSrcIndex = srcIndex;
+
+            for (; srcIndex < inputsCount; srcIndex++)
+            {
+                IAstNode src = operation.GetSource(srcIndex);
+
+                if ((varType & AggregateType.ElementCountMask) != 0 &&
+                    srcIndex == inputsCount - 1 &&
+                    src is AstOperand elementIndex &&
+                    elementIndex.Type == OperandType.Constant)
+                {
+                    varName += "." + "xyzw"[elementIndex.Value & 3];
+                }
+                else if (srcIndex == firstSrcIndex && context.Config.Stage == ShaderStage.TessellationControl && storageKind == StorageKind.Output)
+                {
+                    // GLSL requires that for tessellation control shader outputs,
+                    // that the index expression must be *exactly* "gl_InvocationID",
+                    // otherwise the compilation fails.
+                    // TODO: Get rid of this and use expression propagation to make sure we generate the correct code from IR.
+                    varName += "[gl_InvocationID]";
+                }
+                else
+                {
+                    varName += $"[{GetSoureExpr(context, src, AggregateType.S32)}]";
+                }
             }
 
             if (isStore)

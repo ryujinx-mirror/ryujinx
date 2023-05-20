@@ -73,27 +73,34 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             Instruction inst = operation.Inst;
             StorageKind storageKind = operation.StorageKind;
 
-            if ((inst == Instruction.Load || inst == Instruction.Store) && storageKind.IsInputOrOutput())
+            if (inst == Instruction.Load || inst == Instruction.Store)
             {
-                IoVariable ioVariable = (IoVariable)operation.GetSource(0).Value;
-                bool isOutput = storageKind.IsOutput();
-                bool perPatch = storageKind.IsPerPatch();
-                int location = 0;
-                int component = 0;
-
-                if (context.Config.HasPerLocationInputOrOutput(ioVariable, isOutput))
+                if (storageKind.IsInputOrOutput())
                 {
-                    location = operation.GetSource(1).Value;
+                    IoVariable ioVariable = (IoVariable)operation.GetSource(0).Value;
+                    bool isOutput = storageKind.IsOutput();
+                    bool perPatch = storageKind.IsPerPatch();
+                    int location = 0;
+                    int component = 0;
 
-                    if (operation.SourcesCount > 2 &&
-                        operation.GetSource(2).Type == OperandType.Constant &&
-                        context.Config.HasPerLocationInputOrOutputComponent(ioVariable, location, operation.GetSource(2).Value, isOutput))
+                    if (context.Config.HasPerLocationInputOrOutput(ioVariable, isOutput))
                     {
-                        component = operation.GetSource(2).Value;
-                    }
-                }
+                        location = operation.GetSource(1).Value;
 
-                context.Info.IoDefinitions.Add(new IoDefinition(storageKind, ioVariable, location, component));
+                        if (operation.SourcesCount > 2 &&
+                            operation.GetSource(2).Type == OperandType.Constant &&
+                            context.Config.HasPerLocationInputOrOutputComponent(ioVariable, location, operation.GetSource(2).Value, isOutput))
+                        {
+                            component = operation.GetSource(2).Value;
+                        }
+                    }
+
+                    context.Info.IoDefinitions.Add(new IoDefinition(storageKind, ioVariable, location, component));
+                }
+                else if (storageKind == StorageKind.ConstantBuffer && operation.GetSource(0).Type == OperandType.Constant)
+                {
+                    context.Config.ResourceManager.SetUsedConstantBufferBinding(operation.GetSource(0).Value);
+                }
             }
 
             bool vectorDest = IsVectorDestInst(inst);
@@ -105,7 +112,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
 
             for (int index = 0; index < operation.SourcesCount; index++)
             {
-                sources[index] = context.GetOperand(operation.GetSource(index));
+                sources[index] = context.GetOperandOrCbLoad(operation.GetSource(index));
             }
 
             for (int index = 0; index < outDestsCount; index++)

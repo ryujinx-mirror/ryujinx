@@ -24,7 +24,6 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             {
                 OperandType.Argument => AggregateType.S32,
                 OperandType.Constant => AggregateType.S32,
-                OperandType.ConstantBuffer => AggregateType.FP32,
                 OperandType.Undefined => AggregateType.S32,
                 _ => throw new ArgumentException($"Invalid operand type \"{type}\".")
             };

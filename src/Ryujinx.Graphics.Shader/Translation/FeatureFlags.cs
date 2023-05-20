@@ -19,7 +19,6 @@ namespace Ryujinx.Graphics.Shader.Translation
         InstanceId = 1 << 3,
         DrawParameters = 1 << 4,
         RtLayer = 1 << 5,
-        CbIndexing = 1 << 6,
         IaIndexing = 1 << 7,
         OaIndexing = 1 << 8,
         FixedFuncAttr = 1 << 9

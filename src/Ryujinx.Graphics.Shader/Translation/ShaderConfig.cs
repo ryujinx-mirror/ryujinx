@@ -39,6 +39,10 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         public TranslationOptions Options { get; }
 
+        public ShaderProperties Properties { get; }
+
+        public ResourceManager ResourceManager { get; }
+
         public bool TransformFeedbackEnabled { get; }
 
         private TransformFeedbackOutput[] _transformFeedbackOutputs;
@@ -109,7 +113,6 @@ namespace Ryujinx.Graphics.Shader.Translation
         public int AccessibleStorageBuffersMask { get; private set; }
         public int AccessibleConstantBuffersMask { get; private set; }
 
-        private int _usedConstantBuffers;
         private int _usedStorageBuffers;
         private int _usedStorageBuffersWrite;
 
@@ -128,20 +131,17 @@ namespace Ryujinx.Graphics.Shader.Translation
         private readonly Dictionary<int, int> _sbSlots;
         private readonly Dictionary<int, int> _sbSlotsReverse;
 
-        private BufferDescriptor[] _cachedConstantBufferDescriptors;
         private BufferDescriptor[] _cachedStorageBufferDescriptors;
         private TextureDescriptor[] _cachedTextureDescriptors;
         private TextureDescriptor[] _cachedImageDescriptors;
 
-        private int _firstConstantBufferBinding;
         private int _firstStorageBufferBinding;
 
-        public int FirstConstantBufferBinding => _firstConstantBufferBinding;
         public int FirstStorageBufferBinding => _firstStorageBufferBinding;
 
-        public ShaderConfig(IGpuAccessor gpuAccessor, TranslationOptions options)
+        public ShaderConfig(ShaderStage stage, IGpuAccessor gpuAccessor, TranslationOptions options)
         {
-            Stage       = ShaderStage.Compute;
+            Stage       = stage;
             GpuAccessor = gpuAccessor;
             Options     = options;
 
@@ -158,6 +158,9 @@ namespace Ryujinx.Graphics.Shader.Translation
 
             _sbSlots        = new Dictionary<int, int>();
             _sbSlotsReverse = new Dictionary<int, int>();
+
+            Properties = new ShaderProperties();
+            ResourceManager = new ResourceManager(stage, gpuAccessor, Properties);
         }
 
         public ShaderConfig(
@@ -165,9 +168,8 @@ namespace Ryujinx.Graphics.Shader.Translation
             OutputTopology outputTopology,
             int maxOutputVertices,
             IGpuAccessor gpuAccessor,
-            TranslationOptions options) : this(gpuAccessor, options)
+            TranslationOptions options) : this(stage, gpuAccessor, options)
         {
-            Stage                    = stage;
             ThreadsPerInputPrimitive = 1;
             OutputTopology           = outputTopology;
             MaxOutputVertices        = maxOutputVertices;
@@ -179,9 +181,8 @@ namespace Ryujinx.Graphics.Shader.Translation
             }
         }
 
-        public ShaderConfig(ShaderHeader header, IGpuAccessor gpuAccessor, TranslationOptions options) : this(gpuAccessor, options)
+        public ShaderConfig(ShaderHeader header, IGpuAccessor gpuAccessor, TranslationOptions options) : this(header.Stage, gpuAccessor, options)
         {
-            Stage                    = header.Stage;
             GpPassthrough            = header.Stage == ShaderStage.Geometry && header.GpPassthrough;
             ThreadsPerInputPrimitive = header.ThreadsPerInputPrimitive;
             OutputTopology           = header.OutputTopology;
@@ -428,12 +429,13 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         public void InheritFrom(ShaderConfig other)
         {
+            ResourceManager.InheritFrom(other.ResourceManager);
+
             ClipDistancesWritten |= other.ClipDistancesWritten;
             UsedFeatures |= other.UsedFeatures;
 
             UsedInputAttributes |= other.UsedInputAttributes;
             UsedOutputAttributes |= other.UsedOutputAttributes;
-            _usedConstantBuffers |= other._usedConstantBuffers;
             _usedStorageBuffers |= other._usedStorageBuffers;
             _usedStorageBuffersWrite |= other._usedStorageBuffersWrite;
 
@@ -641,11 +643,6 @@ namespace Ryujinx.Graphics.Shader.Translation
             AccessibleConstantBuffersMask = ubeMask;
         }
 
-        public void SetUsedConstantBuffer(int slot)
-        {
-            _usedConstantBuffers |= 1 << slot;
-        }
-
         public void SetUsedStorageBuffer(int slot, bool write)
         {
             int mask = 1 << slot;
@@ -762,27 +759,6 @@ namespace Ryujinx.Graphics.Shader.Translation
             return meta;
         }
 
-        public BufferDescriptor[] GetConstantBufferDescriptors()
-        {
-            if (_cachedConstantBufferDescriptors != null)
-            {
-                return _cachedConstantBufferDescriptors;
-            }
-
-            int usedMask = _usedConstantBuffers;
-
-            if (UsedFeatures.HasFlag(FeatureFlags.CbIndexing))
-            {
-                usedMask |= (int)GpuAccessor.QueryConstantBufferUse();
-            }
-
-            return _cachedConstantBufferDescriptors = GetUniformBufferDescriptors(
-                usedMask,
-                UsedFeatures.HasFlag(FeatureFlags.CbIndexing),
-                out _firstConstantBufferBinding,
-                GpuAccessor.QueryBindingConstantBuffer);
-        }
-
         public BufferDescriptor[] GetStorageBufferDescriptors()
         {
             if (_cachedStorageBufferDescriptors != null)
@@ -796,47 +772,6 @@ namespace Ryujinx.Graphics.Shader.Translation
                 true,
                 out _firstStorageBufferBinding,
                 GpuAccessor.QueryBindingStorageBuffer);
-        }
-
-        private static BufferDescriptor[] GetUniformBufferDescriptors(int usedMask, bool isArray, out int firstBinding, Func<int, int> getBindingCallback)
-        {
-            firstBinding = 0;
-            int lastSlot = -1;
-            bool hasFirstBinding = false;
-            var descriptors = new BufferDescriptor[BitOperations.PopCount((uint)usedMask)];
-
-            for (int i = 0; i < descriptors.Length; i++)
-            {
-                int slot = BitOperations.TrailingZeroCount(usedMask);
-
-                if (isArray)
-                {
-                    // The next array entries also consumes bindings, even if they are unused.
-                    for (int j = lastSlot + 1; j < slot; j++)
-                    {
-                        int binding = getBindingCallback(j);
-
-                        if (!hasFirstBinding)
-                        {
-                            firstBinding = binding;
-                            hasFirstBinding = true;
-                        }
-                    }
-                }
-
-                lastSlot = slot;
-                descriptors[i] = new BufferDescriptor(getBindingCallback(slot), slot);
-
-                if (!hasFirstBinding)
-                {
-                    firstBinding = descriptors[i].Binding;
-                    hasFirstBinding = true;
-                }
-
-                usedMask &= ~(1 << slot);
-            }
-
-            return descriptors;
         }
 
         private BufferDescriptor[] GetStorageBufferDescriptors(
@@ -1009,7 +944,7 @@ namespace Ryujinx.Graphics.Shader.Translation
         public ShaderProgramInfo CreateProgramInfo(ShaderIdentification identification = ShaderIdentification.None)
         {
             return new ShaderProgramInfo(
-                GetConstantBufferDescriptors(),
+                ResourceManager.GetConstantBufferDescriptors(),
                 GetStorageBufferDescriptors(),
                 GetTextureDescriptors(),
                 GetImageDescriptors(),

@@ -234,8 +234,8 @@ namespace Ryujinx.Graphics.Shader.Translation
             {
                 Operand x = this.Load(StorageKind.Output, IoVariable.Position, null, Const(0));
                 Operand y = this.Load(StorageKind.Output, IoVariable.Position, null, Const(1));
-                Operand xScale = this.Load(StorageKind.Input, IoVariable.SupportBlockViewInverse, null, Const(0));
-                Operand yScale = this.Load(StorageKind.Input, IoVariable.SupportBlockViewInverse, null, Const(1));
+                Operand xScale = this.Load(StorageKind.ConstantBuffer, SupportBuffer.Binding, Const((int)SupportBufferField.ViewportInverse), Const(0));
+                Operand yScale = this.Load(StorageKind.ConstantBuffer, SupportBuffer.Binding, Const((int)SupportBufferField.ViewportInverse), Const(1));
                 Operand negativeOne = ConstF(-1.0f);
 
                 this.Store(StorageKind.Output, IoVariable.Position, null, Const(0), this.FPFusedMultiplyAdd(x, xScale, negativeOne));
@@ -420,7 +420,7 @@ namespace Ryujinx.Graphics.Shader.Translation
                         // Perform B <-> R swap if needed, for BGRA formats (not supported on OpenGL).
                         if (!supportsBgra && (component == 0 || component == 2))
                         {
-                            Operand isBgra = this.Load(StorageKind.Input, IoVariable.FragmentOutputIsBgra, null, Const(rtIndex));
+                            Operand isBgra = this.Load(StorageKind.ConstantBuffer, SupportBuffer.Binding, Const((int)SupportBufferField.FragmentIsBgra), Const(rtIndex));
 
                             Operand lblIsBgra = Label();
                             Operand lblEnd = Label();

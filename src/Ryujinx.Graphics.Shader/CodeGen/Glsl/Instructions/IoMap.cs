@@ -27,7 +27,6 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
                 IoVariable.FragmentCoord => ("gl_FragCoord", AggregateType.Vector4 | AggregateType.FP32),
                 IoVariable.FragmentOutputColor => GetFragmentOutputColorVariableName(config, location),
                 IoVariable.FragmentOutputDepth => ("gl_FragDepth", AggregateType.FP32),
-                IoVariable.FragmentOutputIsBgra => (DefaultNames.SupportBlockIsBgraName, AggregateType.Array | AggregateType.Bool),
                 IoVariable.FrontColorDiffuse => ("gl_FrontColor", AggregateType.Vector4 | AggregateType.FP32), // Deprecated.
                 IoVariable.FrontColorSpecular  => ("gl_FrontSecondaryColor", AggregateType.Vector4 | AggregateType.FP32), // Deprecated.
                 IoVariable.FrontFacing => ("gl_FrontFacing", AggregateType.Bool),
@@ -46,8 +45,6 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
                 IoVariable.SubgroupLaneId => GetSubgroupInvocationIdVariableName(config),
                 IoVariable.SubgroupLeMask => GetSubgroupMaskVariableName(config, "Le"),
                 IoVariable.SubgroupLtMask => GetSubgroupMaskVariableName(config, "Lt"),
-                IoVariable.SupportBlockRenderScale => (DefaultNames.SupportBlockRenderScaleName, AggregateType.Array | AggregateType.FP32),
-                IoVariable.SupportBlockViewInverse => (DefaultNames.SupportBlockViewportInverse, AggregateType.Vector2 | AggregateType.FP32),
                 IoVariable.TessellationCoord => ("gl_TessCoord", AggregateType.Vector3 | AggregateType.FP32),
                 IoVariable.TessellationLevelInner => ("gl_TessLevelInner", AggregateType.Array | AggregateType.FP32),
                 IoVariable.TessellationLevelOuter => ("gl_TessLevelOuter", AggregateType.Array | AggregateType.FP32),

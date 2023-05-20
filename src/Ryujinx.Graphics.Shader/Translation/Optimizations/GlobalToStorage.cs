@@ -347,21 +347,23 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
                 return wordOffset;
             }
 
-            Operand[] sources = new Operand[operation.SourcesCount];
+            Operand cbufOffset = GetCbufOffset();
+            Operand vecIndex = Local();
+            Operand elemIndex = Local();
+
+            node.List.AddBefore(node, new Operation(Instruction.ShiftRightU32, 0, vecIndex, cbufOffset, Const(2)));
+            node.List.AddBefore(node, new Operation(Instruction.BitwiseAnd, 0, elemIndex, cbufOffset, Const(3)));
+
+            Operand[] sources = new Operand[4];
 
             int cbSlot = UbeFirstCbuf + storageIndex;
 
-            sources[0] = Const(cbSlot);
-            sources[1] = GetCbufOffset();
+            sources[0] = Const(config.ResourceManager.GetConstantBufferBinding(cbSlot));
+            sources[1] = Const(0);
+            sources[2] = vecIndex;
+            sources[3] = elemIndex;
 
-            config.SetUsedConstantBuffer(cbSlot);
-
-            for (int index = 2; index < operation.SourcesCount; index++)
-            {
-                sources[index] = operation.GetSource(index);
-            }
-
-            Operation ldcOp = new Operation(Instruction.LoadConstant, operation.Dest, sources);
+            Operation ldcOp = new Operation(Instruction.Load, StorageKind.ConstantBuffer, operation.Dest, sources);
 
             for (int index = 0; index < operation.SourcesCount; index++)
             {

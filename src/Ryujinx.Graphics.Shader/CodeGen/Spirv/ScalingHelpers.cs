@@ -63,7 +63,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             if (context.Config.Stage == ShaderStage.Vertex)
             {
                 var scaleCountPointerType = context.TypePointer(StorageClass.Uniform, context.TypeS32());
-                var scaleCountElemPointer = context.AccessChain(scaleCountPointerType, context.SupportBuffer, context.Constant(context.TypeU32(), 3));
+                var scaleCountElemPointer = context.AccessChain(scaleCountPointerType, context.ConstantBuffers[0], context.Constant(context.TypeU32(), 3));
                 var scaleCount = context.Load(context.TypeS32(), scaleCountElemPointer);
 
                 scaleIndex = context.IAdd(context.TypeU32(), scaleIndex, scaleCount);
@@ -71,7 +71,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
 
             scaleIndex = context.IAdd(context.TypeU32(), scaleIndex, context.Constant(context.TypeU32(), 1));
 
-            var scaleElemPointer = context.AccessChain(pointerType, context.SupportBuffer, fieldIndex, scaleIndex);
+            var scaleElemPointer = context.AccessChain(pointerType, context.ConstantBuffers[0], fieldIndex, scaleIndex);
             var scale = context.Load(context.TypeFP32(), scaleElemPointer);
 
             var ivector2Type = context.TypeVector(context.TypeS32(), 2);
@@ -201,7 +201,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                 if (context.Config.Stage == ShaderStage.Vertex)
                 {
                     var scaleCountPointerType = context.TypePointer(StorageClass.Uniform, context.TypeS32());
-                    var scaleCountElemPointer = context.AccessChain(scaleCountPointerType, context.SupportBuffer, context.Constant(context.TypeU32(), 3));
+                    var scaleCountElemPointer = context.AccessChain(scaleCountPointerType, context.ConstantBuffers[0], context.Constant(context.TypeU32(), 3));
                     var scaleCount = context.Load(context.TypeS32(), scaleCountElemPointer);
 
                     scaleIndex = context.IAdd(context.TypeU32(), scaleIndex, scaleCount);
@@ -209,7 +209,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
 
                 scaleIndex = context.IAdd(context.TypeU32(), scaleIndex, context.Constant(context.TypeU32(), 1));
 
-                var scaleElemPointer = context.AccessChain(pointerType, context.SupportBuffer, fieldIndex, scaleIndex);
+                var scaleElemPointer = context.AccessChain(pointerType, context.ConstantBuffers[0], fieldIndex, scaleIndex);
                 var scale = context.GlslFAbs(context.TypeFP32(), context.Load(context.TypeFP32(), scaleElemPointer));
 
                 var passthrough = context.FOrdEqual(context.TypeBool(), scale, context.Constant(context.TypeFP32(), 1f));

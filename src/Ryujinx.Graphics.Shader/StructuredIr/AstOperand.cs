@@ -15,9 +15,6 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
 
         public int Value { get; }
 
-        public int CbufSlot   { get; }
-        public int CbufOffset { get; }
-
         private AstOperand()
         {
             Defs = new HashSet<IAstNode>();
@@ -29,16 +26,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
         public AstOperand(Operand operand) : this()
         {
             Type = operand.Type;
-
-            if (Type == OperandType.ConstantBuffer)
-            {
-                CbufSlot   = operand.GetCbufSlot();
-                CbufOffset = operand.GetCbufOffset();
-            }
-            else
-            {
-                Value = operand.Value;
-            }
+            Value = operand.Value;
         }
 
         public AstOperand(OperandType type, int value = 0)  : this()

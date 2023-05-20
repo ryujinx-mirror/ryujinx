@@ -549,11 +549,31 @@ namespace Ryujinx.Graphics.Shader.Translation
             return context.Add(fpType | Instruction.IsNan, Local(), a);
         }
 
+        public static Operand Load(this EmitterContext context, StorageKind storageKind, int binding)
+        {
+            return context.Add(Instruction.Load, storageKind, Local(), Const(binding));
+        }
+
+        public static Operand Load(this EmitterContext context, StorageKind storageKind, int binding, Operand e0)
+        {
+            return context.Add(Instruction.Load, storageKind, Local(), Const(binding), e0);
+        }
+
+        public static Operand Load(this EmitterContext context, StorageKind storageKind, int binding, Operand e0, Operand e1)
+        {
+            return context.Add(Instruction.Load, storageKind, Local(), Const(binding), e0, e1);
+        }
+
+        public static Operand Load(this EmitterContext context, StorageKind storageKind, int binding, Operand e0, Operand e1, Operand e2)
+        {
+            return context.Add(Instruction.Load, storageKind, Local(), Const(binding), e0, e1, e2);
+        }
+
         public static Operand Load(this EmitterContext context, StorageKind storageKind, IoVariable ioVariable, Operand primVertex = null)
         {
             return primVertex != null
-                ? context.Add(Instruction.Load, storageKind, Local(), Const((int)ioVariable), primVertex)
-                : context.Add(Instruction.Load, storageKind, Local(), Const((int)ioVariable));
+                ? context.Load(storageKind, (int)ioVariable, primVertex)
+                : context.Load(storageKind, (int)ioVariable);
         }
 
         public static Operand Load(
@@ -564,8 +584,8 @@ namespace Ryujinx.Graphics.Shader.Translation
             Operand elemIndex)
         {
             return primVertex != null
-                ? context.Add(Instruction.Load, storageKind, Local(), Const((int)ioVariable), primVertex, elemIndex)
-                : context.Add(Instruction.Load, storageKind, Local(), Const((int)ioVariable), elemIndex);
+                ? context.Load(storageKind, (int)ioVariable, primVertex, elemIndex)
+                : context.Load(storageKind, (int)ioVariable, elemIndex);
         }
 
         public static Operand Load(
@@ -577,22 +597,8 @@ namespace Ryujinx.Graphics.Shader.Translation
             Operand elemIndex)
         {
             return primVertex != null
-                ? context.Add(Instruction.Load, storageKind, Local(), Const((int)ioVariable), primVertex, arrayIndex, elemIndex)
-                : context.Add(Instruction.Load, storageKind, Local(), Const((int)ioVariable), arrayIndex, elemIndex);
-        }
-
-        public static Operand LoadConstant(this EmitterContext context, Operand a, Operand b)
-        {
-            if (a.Type == OperandType.Constant)
-            {
-                context.Config.SetUsedConstantBuffer(a.Value);
-            }
-            else
-            {
-                context.Config.SetUsedFeature(FeatureFlags.CbIndexing);
-            }
-
-            return context.Add(Instruction.LoadConstant, Local(), a, b);
+                ? context.Load(storageKind, (int)ioVariable, primVertex, arrayIndex, elemIndex)
+                : context.Load(storageKind, (int)ioVariable, arrayIndex, elemIndex);
         }
 
         public static Operand LoadGlobal(this EmitterContext context, Operand a, Operand b)

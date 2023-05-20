@@ -9,7 +9,7 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
     {
         public static void RunPass(BasicBlock[] blocks, ShaderConfig config)
         {
-            RunOptimizationPasses(blocks);
+            RunOptimizationPasses(blocks, config);
 
             int sbUseMask = 0;
             int ubeUseMask = 0;
@@ -31,10 +31,10 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
             config.SetAccessibleBufferMasks(sbUseMask, ubeUseMask);
 
             // Run optimizations one last time to remove any code that is now optimizable after above passes.
-            RunOptimizationPasses(blocks);
+            RunOptimizationPasses(blocks, config);
         }
 
-        private static void RunOptimizationPasses(BasicBlock[] blocks)
+        private static void RunOptimizationPasses(BasicBlock[] blocks, ShaderConfig config)
         {
             bool modified;
 
@@ -73,7 +73,7 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
                             continue;
                         }
 
-                        ConstantFolding.RunPass(operation);
+                        ConstantFolding.RunPass(config, operation);
                         Simplification.RunPass(operation);
 
                         if (DestIsLocalVar(operation))

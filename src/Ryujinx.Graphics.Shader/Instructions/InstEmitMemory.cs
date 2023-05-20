@@ -1,6 +1,7 @@
 using Ryujinx.Graphics.Shader.Decoders;
 using Ryujinx.Graphics.Shader.IntermediateRepresentation;
 using Ryujinx.Graphics.Shader.Translation;
+using System.Numerics;
 
 using static Ryujinx.Graphics.Shader.Instructions.InstEmitHelper;
 using static Ryujinx.Graphics.Shader.IntermediateRepresentation.OperandHelper;
@@ -80,7 +81,6 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             Operand addr = context.IAdd(srcA, Const(Imm16ToSInt(op.CbufOffset)));
             Operand wordOffset = context.ShiftRightU32(addr, Const(2));
-            Operand bitOffset = GetBitOffset(context, addr);
 
             for (int index = 0; index < count; index++)
             {
@@ -92,11 +92,11 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 }
 
                 Operand offset = context.IAdd(wordOffset, Const(index));
-                Operand value = context.LoadConstant(slot, offset);
+                Operand value = EmitLoadConstant(context, slot, offset);
 
                 if (isSmallInt)
                 {
-                    value = ExtractSmallInt(context, (LsSize)op.LsSize, bitOffset, value);
+                    value = ExtractSmallInt(context, (LsSize)op.LsSize, GetBitOffset(context, addr), value);
                 }
 
                 context.Copy(Register(dest), value);
@@ -152,6 +152,39 @@ namespace Ryujinx.Graphics.Shader.Instructions
             InstSts op = context.GetOp<InstSts>();
 
             EmitStore(context, MemoryRegion.Shared, op.LsSize, GetSrcReg(context, op.SrcA), op.Dest, Imm24ToSInt(op.Imm24));
+        }
+
+        private static Operand EmitLoadConstant(EmitterContext context, Operand slot, Operand offset)
+        {
+            Operand vecIndex = context.ShiftRightU32(offset, Const(2));
+            Operand elemIndex = context.BitwiseAnd(offset, Const(3));
+
+            if (slot.Type == OperandType.Constant)
+            {
+                int binding = context.Config.ResourceManager.GetConstantBufferBinding(slot.Value);
+                return context.Load(StorageKind.ConstantBuffer, binding, Const(0), vecIndex, elemIndex);
+            }
+            else
+            {
+                Operand value = Const(0);
+
+                uint cbUseMask = context.Config.GpuAccessor.QueryConstantBufferUse();
+
+                while (cbUseMask != 0)
+                {
+                    int cbIndex = BitOperations.TrailingZeroCount(cbUseMask);
+                    int binding = context.Config.ResourceManager.GetConstantBufferBinding(cbIndex);
+
+                    Operand isCurrent = context.ICompareEqual(slot, Const(cbIndex));
+                    Operand currentValue = context.Load(StorageKind.ConstantBuffer, binding, Const(0), vecIndex, elemIndex);
+
+                    value = context.ConditionalSelect(isCurrent, currentValue, value);
+
+                    cbUseMask &= ~(1u << cbIndex);
+                }
+
+                return value;
+            }
         }
 
         private static Operand EmitAtomicOp(

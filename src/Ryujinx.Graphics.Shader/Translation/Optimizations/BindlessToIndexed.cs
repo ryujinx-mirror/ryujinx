@@ -32,25 +32,49 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
                     continue;
                 }
 
-                if (handleAsgOp.Inst != Instruction.LoadConstant)
+                if (handleAsgOp.Inst != Instruction.Load ||
+                    handleAsgOp.StorageKind != StorageKind.ConstantBuffer ||
+                    handleAsgOp.SourcesCount != 4)
                 {
                     continue;
                 }
 
                 Operand ldcSrc0 = handleAsgOp.GetSource(0);
+
+                if (ldcSrc0.Type != OperandType.Constant ||
+                    !config.ResourceManager.TryGetConstantBufferSlot(ldcSrc0.Value, out int src0CbufSlot) ||
+                    src0CbufSlot != 2)
+                {
+                    continue;
+                }
+
                 Operand ldcSrc1 = handleAsgOp.GetSource(1);
 
-                if (ldcSrc0.Type != OperandType.Constant || ldcSrc0.Value != 2)
+                // We expect field index 0 to be accessed.
+                if (ldcSrc1.Type != OperandType.Constant || ldcSrc1.Value != 0)
                 {
                     continue;
                 }
 
-                if (!(ldcSrc1.AsgOp is Operation shrOp) || shrOp.Inst != Instruction.ShiftRightU32)
+                Operand ldcSrc2 = handleAsgOp.GetSource(2);
+
+                // FIXME: This is missing some checks, for example, a check to ensure that the shift value is 2.
+                // Might be not worth fixing since if that doesn't kick in, the result will be no texture
+                // to access anyway which is also wrong.
+                // Plus this whole transform is fundamentally flawed as-is since we have no way to know the array size.
+                // Eventually, this should be entirely removed in favor of a implementation that supports true bindless
+                // texture access.
+                if (!(ldcSrc2.AsgOp is Operation shrOp) || shrOp.Inst != Instruction.ShiftRightU32)
                 {
                     continue;
                 }
 
-                if (!(shrOp.GetSource(0).AsgOp is Operation addOp) || addOp.Inst != Instruction.Add)
+                if (!(shrOp.GetSource(0).AsgOp is Operation shrOp2) || shrOp2.Inst != Instruction.ShiftRightU32)
+                {
+                    continue;
+                }
+
+                if (!(shrOp2.GetSource(0).AsgOp is Operation addOp) || addOp.Inst != Instruction.Add)
                 {
                     continue;
                 }

@@ -298,6 +298,33 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             return newTemp;
         }
 
+        public IAstNode GetOperandOrCbLoad(Operand operand)
+        {
+            if (operand.Type == OperandType.ConstantBuffer)
+            {
+                int cbufSlot = operand.GetCbufSlot();
+                int cbufOffset = operand.GetCbufOffset();
+
+                int binding = Config.ResourceManager.GetConstantBufferBinding(cbufSlot);
+                int vecIndex = cbufOffset >> 2;
+                int elemIndex = cbufOffset & 3;
+
+                Config.ResourceManager.SetUsedConstantBufferBinding(binding);
+
+                IAstNode[] sources = new IAstNode[]
+                {
+                    new AstOperand(OperandType.Constant, binding),
+                    new AstOperand(OperandType.Constant, 0),
+                    new AstOperand(OperandType.Constant, vecIndex),
+                    new AstOperand(OperandType.Constant, elemIndex)
+                };
+
+                return new AstOperation(Instruction.Load, StorageKind.ConstantBuffer, sources, sources.Length);
+            }
+
+            return GetOperand(operand);
+        }
+
         public AstOperand GetOperand(Operand operand)
         {
             if (operand == null)
@@ -307,11 +334,6 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
 
             if (operand.Type != OperandType.LocalVariable)
             {
-                if (operand.Type == OperandType.ConstantBuffer)
-                {
-                    Config.SetUsedConstantBuffer(operand.GetCbufSlot());
-                }
-
                 return new AstOperand(operand);
             }
 

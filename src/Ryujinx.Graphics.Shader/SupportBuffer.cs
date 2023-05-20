@@ -1,4 +1,6 @@
 using Ryujinx.Common.Memory;
+using Ryujinx.Graphics.Shader.StructuredIr;
+using Ryujinx.Graphics.Shader.Translation;
 using System.Runtime.CompilerServices;
 
 namespace Ryujinx.Graphics.Shader
@@ -11,8 +13,20 @@ namespace Ryujinx.Graphics.Shader
         public T W;
     }
 
+    enum SupportBufferField
+    {
+        // Must match the order of the fields on the struct.
+        FragmentAlphaTest,
+        FragmentIsBgra,
+        ViewportInverse,
+        FragmentRenderScaleCount,
+        RenderScale
+    }
+
     public struct SupportBuffer
     {
+        internal const int Binding = 0;
+
         public static int FieldSize;
         public static int RequiredSize;
 
@@ -45,6 +59,18 @@ namespace Ryujinx.Graphics.Shader
             FragmentRenderScaleCountOffset = OffsetOf(ref instance, ref instance.FragmentRenderScaleCount);
             GraphicsRenderScaleOffset = OffsetOf(ref instance, ref instance.RenderScale);
             ComputeRenderScaleOffset = GraphicsRenderScaleOffset + FieldSize;
+        }
+
+        internal static StructureType GetStructureType()
+        {
+            return new StructureType(new[]
+            {
+                new StructureField(AggregateType.U32, "s_alpha_test"),
+                new StructureField(AggregateType.Array | AggregateType.U32, "s_is_bgra", FragmentIsBgraCount),
+                new StructureField(AggregateType.Vector4 | AggregateType.FP32, "s_viewport_inverse"),
+                new StructureField(AggregateType.S32, "s_frag_scale_count"),
+                new StructureField(AggregateType.Array | AggregateType.FP32, "s_render_scale", RenderScaleMaxCount)
+            });
         }
 
         public Vector4<int> FragmentAlphaTest;

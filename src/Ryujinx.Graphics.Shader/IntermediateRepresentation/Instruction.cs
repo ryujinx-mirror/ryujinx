@@ -79,7 +79,6 @@ namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
         ImageAtomic,
         IsNan,
         Load,
-        LoadConstant,
         LoadGlobal,
         LoadLocal,
         LoadShared,

@@ -83,7 +83,6 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             Add(Instruction.ImageAtomic,              InstType.Special);
             Add(Instruction.IsNan,                    InstType.CallUnary,      "isnan");
             Add(Instruction.Load,                     InstType.Special);
-            Add(Instruction.LoadConstant,             InstType.Special);
             Add(Instruction.LoadLocal,                InstType.Special);
             Add(Instruction.LoadShared,               InstType.Special);
             Add(Instruction.LoadStorage,              InstType.Special);

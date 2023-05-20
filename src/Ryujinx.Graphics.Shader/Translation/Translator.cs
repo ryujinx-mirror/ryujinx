@@ -99,7 +99,7 @@ namespace Ryujinx.Graphics.Shader.Translation
 
             if (options.Flags.HasFlag(TranslationFlags.Compute))
             {
-                config = new ShaderConfig(gpuAccessor, options);
+                config = new ShaderConfig(ShaderStage.Compute, gpuAccessor, options);
 
                 program = Decoder.Decode(config, address);
             }

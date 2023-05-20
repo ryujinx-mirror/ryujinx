@@ -1,6 +1,6 @@
 ﻿ivec2 Helper_TexelFetchScale(ivec2 inputVec, int samplerIndex)
 {
-    float scale = abs(s_render_scale[1 + samplerIndex + s_frag_scale_count]);
+    float scale = abs(support_buffer.s_render_scale[1 + samplerIndex + support_buffer.s_frag_scale_count]);
     if (scale == 1.0)
     {
         return inputVec;
@@ -11,7 +11,7 @@
 
 int Helper_TextureSizeUnscale(int size, int samplerIndex)
 {
-    float scale = abs(s_render_scale[1 + samplerIndex + s_frag_scale_count]);
+    float scale = abs(support_buffer.s_render_scale[1 + samplerIndex + support_buffer.s_frag_scale_count]);
     if (scale == 1.0)
     {
         return size;
