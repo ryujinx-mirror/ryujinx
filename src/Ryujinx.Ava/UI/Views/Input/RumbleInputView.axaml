@@ -1,11 +1,14 @@
-<UserControl 
+<UserControl
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:locale="clr-namespace:Ryujinx.Ava.Common.Locale"
+    xmlns:viewModels="clr-namespace:Ryujinx.Ava.UI.ViewModels"
     mc:Ignorable="d"
-    x:Class="Ryujinx.Ava.UI.Windows.RumbleSettingsWindow"
+    x:Class="Ryujinx.Ava.UI.Views.Input.RumbleInputView"
+    x:DataType="viewModels:RumbleInputViewModel"
+    x:CompileBindings="True"
     Focusable="True">
     <Grid Margin="10">
         <Grid.RowDefinitions>

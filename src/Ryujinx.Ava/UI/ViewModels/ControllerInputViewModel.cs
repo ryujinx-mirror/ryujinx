@@ -7,6 +7,7 @@ using Ryujinx.Ava.Common.Locale;
 using Ryujinx.Ava.Input;
 using Ryujinx.Ava.UI.Helpers;
 using Ryujinx.Ava.UI.Models;
+using Ryujinx.Ava.UI.Views.Input;
 using Ryujinx.Ava.UI.Windows;
 using Ryujinx.Common;
 using Ryujinx.Common.Configuration;
@@ -30,7 +31,7 @@ using Key = Ryujinx.Common.Configuration.Hid.Key;
 
 namespace Ryujinx.Ava.UI.ViewModels
 {
-    public class ControllerSettingsViewModel : BaseModel, IDisposable
+    public class ControllerInputViewModel : BaseModel, IDisposable
     {
         private const string Disabled = "disabled";
         private const string ProControllerResource = "Ryujinx.Ui.Common/Resources/Controller_ProCon.svg";
@@ -231,7 +232,7 @@ namespace Ryujinx.Ava.UI.ViewModels
 
         public InputConfig Config { get; set; }
 
-        public ControllerSettingsViewModel(UserControl owner) : this()
+        public ControllerInputViewModel(UserControl owner) : this()
         {
             _owner = owner;
 
@@ -258,7 +259,7 @@ namespace Ryujinx.Ava.UI.ViewModels
             }
         }
 
-        public ControllerSettingsViewModel()
+        public ControllerInputViewModel()
         {
             PlayerIndexes = new ObservableCollection<PlayerModel>();
             Controllers = new ObservableCollection<ControllerModel>();
@@ -328,12 +329,12 @@ namespace Ryujinx.Ava.UI.ViewModels
 
         public async void ShowMotionConfig()
         {
-            await MotionSettingsWindow.Show(this);
+            await MotionInputView.Show(this);
         }
 
         public async void ShowRumbleConfig()
         {
-            await RumbleSettingsWindow.Show(this);
+            await RumbleInputView.Show(this);
         }
 
         private void LoadInputDriver()

@@ -4,7 +4,6 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Ryujinx.Ava.Common.Locale;
-using Ryujinx.Ava.UI.Controls;
 using Ryujinx.Ava.UI.Helpers;
 using Ryujinx.Ava.UI.Models;
 using Ryujinx.Ava.UI.ViewModels;
@@ -13,18 +12,18 @@ using Ryujinx.Input;
 using Ryujinx.Input.Assigner;
 using System;
 
-namespace Ryujinx.Ava.UI.Windows
+namespace Ryujinx.Ava.UI.Views.Input
 {
-    public partial class ControllerSettingsWindow : UserControl
+    public partial class ControllerInputView : UserControl
     {
         private bool _dialogOpen;
 
         private ButtonKeyAssigner _currentAssigner;
-        internal ControllerSettingsViewModel ViewModel { get; set; }
+        internal ControllerInputViewModel ViewModel { get; set; }
 
-        public ControllerSettingsWindow()
+        public ControllerInputView()
         {
-            DataContext = ViewModel = new ControllerSettingsViewModel(this);
+            DataContext = ViewModel = new ControllerInputViewModel(this);
 
             InitializeComponent();
 
