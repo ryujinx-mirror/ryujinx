@@ -219,12 +219,11 @@ namespace Ryujinx.Graphics.Gpu.Shader
             GpuAccessor gpuAccessor = new GpuAccessor(_context, channel, gpuAccessorState);
 
             TranslatorContext translatorContext = DecodeComputeShader(gpuAccessor, _context.Capabilities.Api, gpuVa);
-
             TranslatedShader translatedShader = TranslateShader(_dumper, channel, translatorContext, cachedGuestCode);
 
             ShaderSource[] shaderSourcesArray = new ShaderSource[] { CreateShaderSource(translatedShader.Program) };
-
-            IProgram hostProgram = _context.Renderer.CreateProgram(shaderSourcesArray, new ShaderInfo(-1));
+            ShaderInfo info = ShaderInfoBuilder.BuildForCompute(_context, translatedShader.Program.Info);
+            IProgram hostProgram = _context.Renderer.CreateProgram(shaderSourcesArray, info);
 
             cpShader = new CachedShaderProgram(hostProgram, specState, translatedShader.Shader);
 
@@ -363,6 +362,8 @@ namespace Ryujinx.Graphics.Gpu.Shader
 
             TranslatorContext previousStage = null;
 
+            ShaderInfoBuilder infoBuilder = new ShaderInfoBuilder(_context);
+
             for (int stageIndex = 0; stageIndex < Constants.ShaderStages; stageIndex++)
             {
                 TranslatorContext currentStage = translatorContexts[stageIndex + 1];
@@ -398,6 +399,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
                     if (program != null)
                     {
                         shaderSources.Add(CreateShaderSource(program));
+                        infoBuilder.AddStageInfo(program.Info);
                     }
 
                     previousStage = currentStage;
@@ -414,8 +416,9 @@ namespace Ryujinx.Graphics.Gpu.Shader
 
             ShaderSource[] shaderSourcesArray = shaderSources.ToArray();
 
-            int fragmentOutputMap = shaders[5]?.Info.FragmentOutputMap ?? -1;
-            IProgram hostProgram = _context.Renderer.CreateProgram(shaderSourcesArray, new ShaderInfo(fragmentOutputMap, pipeline));
+            ShaderInfo info = infoBuilder.Build(pipeline);
+
+            IProgram hostProgram = _context.Renderer.CreateProgram(shaderSourcesArray, info);
 
             gpShaders = new CachedShaderProgram(hostProgram, specState, shaders);
 
@@ -466,7 +469,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// <returns>Shader source</returns>
         public static ShaderSource CreateShaderSource(ShaderProgram program)
         {
-            return new ShaderSource(program.Code, program.BinaryCode, GetBindings(program.Info), program.Info.Stage, program.Language);
+            return new ShaderSource(program.Code, program.BinaryCode, program.Info.Stage, program.Language);
         }
 
         /// <summary>
@@ -715,25 +718,6 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 ShaderStage.Fragment => 4,
                 _ => 0
             };
-        }
-
-        /// <summary>
-        /// Gets information about the bindings used by a shader program.
-        /// </summary>
-        /// <param name="info">Shader program information to get the information from</param>
-        /// <returns>Shader bindings</returns>
-        public static ShaderBindings GetBindings(ShaderProgramInfo info)
-        {
-            var uniformBufferBindings = info.CBuffers.Select(x => x.Binding).ToArray();
-            var storageBufferBindings = info.SBuffers.Select(x => x.Binding).ToArray();
-            var textureBindings = info.Textures.Select(x => x.Binding).ToArray();
-            var imageBindings = info.Images.Select(x => x.Binding).ToArray();
-
-            return new ShaderBindings(
-                uniformBufferBindings,
-                storageBufferBindings,
-                textureBindings,
-                imageBindings);
         }
 
         /// <summary>

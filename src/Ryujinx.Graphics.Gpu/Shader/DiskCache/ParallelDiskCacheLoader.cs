@@ -491,23 +491,16 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
             {
                 ShaderSource[] shaderSources = new ShaderSource[compilation.TranslatedStages.Length];
 
-                int fragmentOutputMap = -1;
+                ShaderInfoBuilder shaderInfoBuilder = new ShaderInfoBuilder(_context);
 
                 for (int index = 0; index < compilation.TranslatedStages.Length; index++)
                 {
                     ShaderProgram shader = compilation.TranslatedStages[index];
                     shaderSources[index] = CreateShaderSource(shader);
-
-                    if (shader.Info.Stage == ShaderStage.Fragment)
-                    {
-                        fragmentOutputMap = shader.Info.FragmentOutputMap;
-                    }
+                    shaderInfoBuilder.AddStageInfo(shader.Info);
                 }
 
-                ShaderInfo shaderInfo = compilation.SpecializationState.PipelineState.HasValue
-                    ? new ShaderInfo(fragmentOutputMap, compilation.SpecializationState.PipelineState.Value, fromCache: true)
-                    : new ShaderInfo(fragmentOutputMap, fromCache: true);
-
+                ShaderInfo shaderInfo = shaderInfoBuilder.Build(compilation.SpecializationState.PipelineState, fromCache: true);
                 IProgram hostProgram = _context.Renderer.CreateProgram(shaderSources, shaderInfo);
                 CachedShaderProgram program = new CachedShaderProgram(hostProgram, compilation.SpecializationState, compilation.Shaders);
 

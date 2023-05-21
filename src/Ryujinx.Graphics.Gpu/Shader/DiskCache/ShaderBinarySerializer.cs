@@ -42,25 +42,10 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
                 int binaryCodeLength = reader.ReadInt32();
                 byte[] binaryCode = reader.ReadBytes(binaryCodeLength);
 
-                output.Add(new ShaderSource(binaryCode, GetBindings(stages, stage), stage, TargetLanguage.Spirv));
+                output.Add(new ShaderSource(binaryCode, stage, TargetLanguage.Spirv));
             }
 
             return output.ToArray();
-        }
-
-        private static ShaderBindings GetBindings(CachedShaderStage[] stages, ShaderStage stage)
-        {
-            for (int i = 0; i < stages.Length; i++)
-            {
-                CachedShaderStage currentStage = stages[i];
-
-                if (currentStage?.Info != null && currentStage.Info.Stage == stage)
-                {
-                    return ShaderCache.GetBindings(currentStage.Info);
-                }
-            }
-
-            return new ShaderBindings(Array.Empty<int>(), Array.Empty<int>(), Array.Empty<int>(), Array.Empty<int>());
         }
     }
 }

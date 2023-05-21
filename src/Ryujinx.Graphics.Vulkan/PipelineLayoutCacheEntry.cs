@@ -1,6 +1,7 @@
 using Ryujinx.Graphics.GAL;
 using Silk.NET.Vulkan;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace Ryujinx.Graphics.Vulkan
 {
@@ -16,7 +17,7 @@ namespace Ryujinx.Graphics.Vulkan
         private readonly int[] _dsCacheCursor;
         private int _dsLastCbIndex;
 
-        private PipelineLayoutCacheEntry(VulkanRenderer gd, Device device)
+        private PipelineLayoutCacheEntry(VulkanRenderer gd, Device device, int setsCount)
         {
             _gd = gd;
             _device = device;
@@ -25,27 +26,24 @@ namespace Ryujinx.Graphics.Vulkan
 
             for (int i = 0; i < CommandBufferPool.MaxCommandBuffers; i++)
             {
-                _dsCache[i] = new List<Auto<DescriptorSetCollection>>[PipelineBase.DescriptorSetLayouts];
+                _dsCache[i] = new List<Auto<DescriptorSetCollection>>[setsCount];
 
-                for (int j = 0; j < PipelineBase.DescriptorSetLayouts; j++)
+                for (int j = 0; j < _dsCache[i].Length; j++)
                 {
                     _dsCache[i][j] = new List<Auto<DescriptorSetCollection>>();
                 }
             }
 
-            _dsCacheCursor = new int[PipelineBase.DescriptorSetLayouts];
+            _dsCacheCursor = new int[setsCount];
         }
 
-        public PipelineLayoutCacheEntry(VulkanRenderer gd, Device device, uint stages, bool usePd) : this(gd, device)
+        public PipelineLayoutCacheEntry(
+            VulkanRenderer gd,
+            Device device,
+            ReadOnlyCollection<ResourceDescriptorCollection> setDescriptors,
+            bool usePushDescriptors) : this(gd, device, setDescriptors.Count)
         {
-            DescriptorSetLayouts = PipelineLayoutFactory.Create(gd, device, stages, usePd, out var pipelineLayout);
-            PipelineLayout = pipelineLayout;
-        }
-
-        public PipelineLayoutCacheEntry(VulkanRenderer gd, Device device, ShaderSource[] shaders) : this(gd, device)
-        {
-            DescriptorSetLayouts = PipelineLayoutFactory.CreateMinimal(gd, device, shaders, out var pipelineLayout);
-            PipelineLayout = pipelineLayout;
+            (DescriptorSetLayouts, PipelineLayout) = PipelineLayoutFactory.Create(gd, device, setDescriptors, usePushDescriptors);
         }
 
         public Auto<DescriptorSetCollection> GetNewDescriptorSetCollection(
@@ -58,7 +56,7 @@ namespace Ryujinx.Graphics.Vulkan
             {
                 _dsLastCbIndex = commandBufferIndex;
 
-                for (int i = 0; i < PipelineBase.DescriptorSetLayouts; i++)
+                for (int i = 0; i < _dsCacheCursor.Length; i++)
                 {
                     _dsCacheCursor[i] = 0;
                 }

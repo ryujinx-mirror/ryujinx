@@ -26,8 +26,6 @@ namespace Ryujinx.Graphics.Vulkan
 
         public ShaderStageFlags StageFlags => _stage;
 
-        public ShaderBindings Bindings { get; }
-
         public ProgramLinkStatus CompileStatus { private set; get; }
 
         public readonly Task CompileTask;
@@ -36,7 +34,6 @@ namespace Ryujinx.Graphics.Vulkan
         {
             _api = api;
             _device = device;
-            Bindings = shaderSource.Bindings;
 
             CompileStatus = ProgramLinkStatus.Incomplete;
 

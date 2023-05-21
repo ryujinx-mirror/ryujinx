@@ -36,6 +36,56 @@ namespace Ryujinx.Graphics.Vulkan
             };
         }
 
+        public static ShaderStageFlags Convert(this ResourceStages stages)
+        {
+            ShaderStageFlags stageFlags = stages.HasFlag(ResourceStages.Compute)
+                ? ShaderStageFlags.ComputeBit
+                : ShaderStageFlags.None;
+
+            if (stages.HasFlag(ResourceStages.Vertex))
+            {
+                stageFlags |= ShaderStageFlags.VertexBit;
+            }
+
+            if (stages.HasFlag(ResourceStages.TessellationControl))
+            {
+                stageFlags |= ShaderStageFlags.TessellationControlBit;
+            }
+
+            if (stages.HasFlag(ResourceStages.TessellationEvaluation))
+            {
+                stageFlags |= ShaderStageFlags.TessellationEvaluationBit;
+            }
+
+            if (stages.HasFlag(ResourceStages.Geometry))
+            {
+                stageFlags |= ShaderStageFlags.GeometryBit;
+            }
+
+            if (stages.HasFlag(ResourceStages.Fragment))
+            {
+                stageFlags |= ShaderStageFlags.FragmentBit;
+            }
+
+            return stageFlags;
+        }
+
+        public static DescriptorType Convert(this ResourceType type)
+        {
+            return type switch
+            {
+                ResourceType.UniformBuffer => DescriptorType.UniformBuffer,
+                ResourceType.StorageBuffer => DescriptorType.StorageBuffer,
+                ResourceType.Texture => DescriptorType.SampledImage,
+                ResourceType.Sampler => DescriptorType.Sampler,
+                ResourceType.TextureAndSampler => DescriptorType.CombinedImageSampler,
+                ResourceType.Image => DescriptorType.StorageImage,
+                ResourceType.BufferTexture => DescriptorType.UniformTexelBuffer,
+                ResourceType.BufferImage => DescriptorType.StorageTexelBuffer,
+                _ => throw new ArgumentException($"Invalid resource type \"{type}\".")
+            };
+        }
+
         public static SamplerAddressMode Convert(this AddressMode mode)
         {
             return mode switch
@@ -48,7 +98,7 @@ namespace Ryujinx.Graphics.Vulkan
                 AddressMode.ClampToBorder => SamplerAddressMode.ClampToBorder,
                 AddressMode.MirroredRepeat => SamplerAddressMode.MirroredRepeat,
                 AddressMode.ClampToEdge => SamplerAddressMode.ClampToEdge,
-                _ => LogInvalidAndReturn(mode, nameof(AddressMode), SamplerAddressMode.ClampToEdge)  // TODO: Should be clamp.
+                _ => LogInvalidAndReturn(mode, nameof(AddressMode), SamplerAddressMode.ClampToEdge) // TODO: Should be clamp.
             };
         }
 

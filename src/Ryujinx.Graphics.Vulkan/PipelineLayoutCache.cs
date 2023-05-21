@@ -1,52 +1,101 @@
 using Ryujinx.Graphics.GAL;
 using Silk.NET.Vulkan;
-using System.Collections.Generic;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.ObjectModel;
 
 namespace Ryujinx.Graphics.Vulkan
 {
     class PipelineLayoutCache
     {
-        private readonly PipelineLayoutCacheEntry[] _plce;
-        private readonly List<PipelineLayoutCacheEntry> _plceMinimal;
+        private readonly struct PlceKey : IEquatable<PlceKey>
+        {
+            public readonly ReadOnlyCollection<ResourceDescriptorCollection> SetDescriptors;
+            public readonly bool UsePushDescriptors;
+
+            public PlceKey(ReadOnlyCollection<ResourceDescriptorCollection> setDescriptors, bool usePushDescriptors)
+            {
+                SetDescriptors = setDescriptors;
+                UsePushDescriptors = usePushDescriptors;
+            }
+
+            public override int GetHashCode()
+            {
+                HashCode hasher = new HashCode();
+
+                if (SetDescriptors != null)
+                {
+                    foreach (var setDescriptor in SetDescriptors)
+                    {
+                        hasher.Add(setDescriptor);
+                    }
+                }
+
+                hasher.Add(UsePushDescriptors);
+
+                return hasher.ToHashCode();
+            }
+
+            public override bool Equals(object obj)
+            {
+                return obj is PlceKey other && Equals(other);
+            }
+
+            public bool Equals(PlceKey other)
+            {
+                if ((SetDescriptors == null) != (other.SetDescriptors == null))
+                {
+                    return false;
+                }
+
+                if (SetDescriptors != null)
+                {
+                    if (SetDescriptors.Count != other.SetDescriptors.Count)
+                    {
+                        return false;
+                    }
+
+                    for (int index = 0; index < SetDescriptors.Count; index++)
+                    {
+                        if (!SetDescriptors[index].Equals(other.SetDescriptors[index]))
+                        {
+                            return false;
+                        }
+                    }
+                }
+
+                return UsePushDescriptors == other.UsePushDescriptors;
+            }
+        }
+
+        private readonly ConcurrentDictionary<PlceKey, PipelineLayoutCacheEntry> _plces;
 
         public PipelineLayoutCache()
         {
-            _plce = new PipelineLayoutCacheEntry[1 << Constants.MaxShaderStages];
-            _plceMinimal = new List<PipelineLayoutCacheEntry>();
+            _plces = new ConcurrentDictionary<PlceKey, PipelineLayoutCacheEntry>();
         }
 
-        public PipelineLayoutCacheEntry Create(VulkanRenderer gd, Device device, ShaderSource[] shaders)
+        public PipelineLayoutCacheEntry GetOrCreate(
+            VulkanRenderer gd,
+            Device device,
+            ReadOnlyCollection<ResourceDescriptorCollection> setDescriptors,
+            bool usePushDescriptors)
         {
-            var plce = new PipelineLayoutCacheEntry(gd, device, shaders);
-            _plceMinimal.Add(plce);
-            return plce;
-        }
+            var key = new PlceKey(setDescriptors, usePushDescriptors);
 
-        public PipelineLayoutCacheEntry GetOrCreate(VulkanRenderer gd, Device device, uint stages, bool usePd)
-        {
-            if (_plce[stages] == null)
-            {
-                _plce[stages] = new PipelineLayoutCacheEntry(gd, device, stages, usePd);
-            }
-
-            return _plce[stages];
+            return _plces.GetOrAdd(key, (newKey) => new PipelineLayoutCacheEntry(gd, device, setDescriptors, usePushDescriptors));
         }
 
         protected virtual unsafe void Dispose(bool disposing)
         {
             if (disposing)
             {
-                for (int i = 0; i < _plce.Length; i++)
-                {
-                    _plce[i]?.Dispose();
-                }
-
-                foreach (var plce in _plceMinimal)
+                foreach (var plce in _plces.Values)
                 {
                     plce.Dispose();
                 }
 
-                _plceMinimal.Clear();
+                _plces.Clear();
             }
         }
 

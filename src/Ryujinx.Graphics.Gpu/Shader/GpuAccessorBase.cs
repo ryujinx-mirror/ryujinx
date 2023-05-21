@@ -110,16 +110,16 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 Logger.Error?.Print(LogClass.Gpu, $"{resourceName} index {index} exceeds per stage limit of {maxPerStage}.");
             }
 
-            return GetStageIndex() * (int)maxPerStage + index;
+            return GetStageIndex(_stageIndex) * (int)maxPerStage + index;
         }
 
-        private int GetStageIndex()
+        public static int GetStageIndex(int stageIndex)
         {
             // This is just a simple remapping to ensure that most frequently used shader stages
             // have the lowest binding numbers.
             // This is useful because if we need to run on a system with a low limit on the bindings,
             // then we can still get most games working as the most common shaders will have low binding numbers.
-            return _stageIndex switch
+            return stageIndex switch
             {
                 4 => 1, // Fragment
                 3 => 2, // Geometry

@@ -54,29 +54,29 @@ namespace Ryujinx.Graphics.Vulkan.Effects
             var scalingShader = EmbeddedResources.Read("Ryujinx.Graphics.Vulkan/Effects/Shaders/FsrScaling.spv");
             var sharpeningShader = EmbeddedResources.Read("Ryujinx.Graphics.Vulkan/Effects/Shaders/FsrSharpening.spv");
 
-            var computeBindings = new ShaderBindings(
-                new[] { 2 },
-                Array.Empty<int>(),
-                new[] { 1 },
-                new[] { 0 });
+            var scalingResourceLayout = new ResourceLayoutBuilder()
+                .Add(ResourceStages.Compute, ResourceType.UniformBuffer, 2)
+                .Add(ResourceStages.Compute, ResourceType.TextureAndSampler, 1)
+                .Add(ResourceStages.Compute, ResourceType.Image, 0).Build();
 
-            var sharpeningBindings = new ShaderBindings(
-                new[] { 2, 3, 4 },
-                Array.Empty<int>(),
-                new[] { 1 },
-                new[] { 0 });
+            var sharpeningResourceLayout = new ResourceLayoutBuilder()
+                .Add(ResourceStages.Compute, ResourceType.UniformBuffer, 2)
+                .Add(ResourceStages.Compute, ResourceType.UniformBuffer, 3)
+                .Add(ResourceStages.Compute, ResourceType.UniformBuffer, 4)
+                .Add(ResourceStages.Compute, ResourceType.TextureAndSampler, 1)
+                .Add(ResourceStages.Compute, ResourceType.Image, 0).Build();
 
             _sampler = _renderer.CreateSampler(GAL.SamplerCreateInfo.Create(MinFilter.Linear, MagFilter.Linear));
 
             _scalingProgram = _renderer.CreateProgramWithMinimalLayout(new[]
             {
-                new ShaderSource(scalingShader, computeBindings, ShaderStage.Compute, TargetLanguage.Spirv)
-            });
+                new ShaderSource(scalingShader, ShaderStage.Compute, TargetLanguage.Spirv)
+            }, scalingResourceLayout);
 
             _sharpeningProgram = _renderer.CreateProgramWithMinimalLayout(new[]
             {
-                new ShaderSource(sharpeningShader, sharpeningBindings, ShaderStage.Compute, TargetLanguage.Spirv)
-            });
+                new ShaderSource(sharpeningShader, ShaderStage.Compute, TargetLanguage.Spirv)
+            }, sharpeningResourceLayout);
         }
 
         public void Run(
@@ -160,10 +160,8 @@ namespace Ryujinx.Graphics.Vulkan.Effects
             _pipeline.ComputeBarrier();
 
             // Sharpening pass
-            _pipeline.SetCommandBuffer(cbs);
             _pipeline.SetProgram(_sharpeningProgram);
             _pipeline.SetTextureAndSampler(ShaderStage.Compute, 1, _intermediaryTexture, _sampler);
-            _pipeline.SetUniformBuffers(stackalloc[] { new BufferAssignment(2, bufferRanges) });
             var sharpeningRange = new BufferRange(sharpeningBufferHandle, 0, sizeof(float));
             _pipeline.SetUniformBuffers(stackalloc[] { new BufferAssignment(4, sharpeningRange) });
             _pipeline.SetImage(0, destinationTexture);
