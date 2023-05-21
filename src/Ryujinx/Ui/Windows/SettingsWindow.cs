@@ -478,7 +478,7 @@ namespace Ryujinx.Ui.Windows
 
             if (Enum.Parse<GraphicsBackend>(_graphicsBackend.ActiveId) == GraphicsBackend.Vulkan)
             {
-                var devices = VulkanRenderer.GetPhysicalDevices(Vk.GetApi());
+                var devices = VulkanRenderer.GetPhysicalDevices();
                 string preferredGpuIdFromConfig = ConfigurationState.Instance.Graphics.PreferredGpu.Value;
                 string preferredGpuId = preferredGpuIdFromConfig;
                 bool noGpuId = string.IsNullOrEmpty(preferredGpuIdFromConfig);
