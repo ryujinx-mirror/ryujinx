@@ -187,27 +187,6 @@ namespace Ryujinx.Graphics.Shader.Instructions
             context.Config.GpuAccessor.Log("Shader instruction Longjmp is not implemented.");
         }
 
-        public static void P2rR(EmitterContext context)
-        {
-            InstP2rR op = context.GetOp<InstP2rR>();
-
-            context.Config.GpuAccessor.Log("Shader instruction P2rR is not implemented.");
-        }
-
-        public static void P2rI(EmitterContext context)
-        {
-            InstP2rI op = context.GetOp<InstP2rI>();
-
-            context.Config.GpuAccessor.Log("Shader instruction P2rI is not implemented.");
-        }
-
-        public static void P2rC(EmitterContext context)
-        {
-            InstP2rC op = context.GetOp<InstP2rC>();
-
-            context.Config.GpuAccessor.Log("Shader instruction P2rC is not implemented.");
-        }
-
         public static void Pexit(EmitterContext context)
         {
             InstPexit op = context.GetOp<InstPexit>();

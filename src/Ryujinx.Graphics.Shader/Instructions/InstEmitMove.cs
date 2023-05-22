@@ -209,21 +209,15 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 return context.ICompareNotEqual(context.BitwiseAnd(value, Const(1 << bit)), Const(0));
             }
 
-            if (ccpr)
+            int count = ccpr ? RegisterConsts.FlagsCount : RegisterConsts.PredsCount;
+            RegisterType type = ccpr ? RegisterType.Flag : RegisterType.Predicate;
+            int shift = (int)byteSel * 8;
+            
+            for (int bit = 0; bit < count; bit++)
             {
-                // TODO: Support Register to condition code flags copy.
-                context.Config.GpuAccessor.Log("R2P.CC not implemented.");
-            }
-            else
-            {
-                int shift = (int)byteSel * 8;
-
-                for (int bit = 0; bit < RegisterConsts.PredsCount; bit++)
-                {
-                    Operand pred = Register(bit, RegisterType.Predicate);
-                    Operand res = context.ConditionalSelect(Test(mask, bit), Test(value, bit + shift), pred);
-                    context.Copy(pred, res);
-                }
+                Operand flag = Register(bit, type);
+                Operand res = context.ConditionalSelect(Test(mask, bit), Test(value, bit + shift), flag);
+                context.Copy(flag, res);
             }
         }
 
