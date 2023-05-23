@@ -295,6 +295,7 @@ namespace Ryujinx.Graphics.Vulkan
                 supportsSubgroupSizeControl,
                 featuresShaderInt8.ShaderInt8,
                 _physicalDevice.IsDeviceExtensionPresent("VK_EXT_shader_stencil_export"),
+                features2.Features.ShaderStorageImageMultisample,
                 _physicalDevice.IsDeviceExtensionPresent(ExtConditionalRendering.ExtensionName),
                 _physicalDevice.IsDeviceExtensionPresent(ExtExtendedDynamicState.ExtensionName),
                 features2.Features.MultiViewport,

@@ -28,6 +28,7 @@ namespace Ryujinx.Graphics.Vulkan
         public readonly bool SupportsSubgroupSizeControl;
         public readonly bool SupportsShaderInt8;
         public readonly bool SupportsShaderStencilExport;
+        public readonly bool SupportsShaderStorageImageMultisample;
         public readonly bool SupportsConditionalRendering;
         public readonly bool SupportsExtendedDynamicState;
         public readonly bool SupportsMultiView;
@@ -63,6 +64,7 @@ namespace Ryujinx.Graphics.Vulkan
             bool supportsSubgroupSizeControl,
             bool supportsShaderInt8,
             bool supportsShaderStencilExport,
+            bool supportsShaderStorageImageMultisample,
             bool supportsConditionalRendering,
             bool supportsExtendedDynamicState,
             bool supportsMultiView,
@@ -97,6 +99,7 @@ namespace Ryujinx.Graphics.Vulkan
             SupportsSubgroupSizeControl = supportsSubgroupSizeControl;
             SupportsShaderInt8 = supportsShaderInt8;
             SupportsShaderStencilExport = supportsShaderStencilExport;
+            SupportsShaderStorageImageMultisample = supportsShaderStorageImageMultisample;
             SupportsConditionalRendering = supportsConditionalRendering;
             SupportsExtendedDynamicState = supportsExtendedDynamicState;
             SupportsMultiView = supportsMultiView;
