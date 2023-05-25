@@ -49,13 +49,17 @@ namespace Ryujinx.Graphics.Shader.Translation
         private readonly List<Operation> _operations;
         private readonly Dictionary<ulong, BlockLabel> _labels;
 
-        public EmitterContext(DecodedProgram program, ShaderConfig config, bool isNonMain)
+        public EmitterContext()
+        {
+            _operations = new List<Operation>();
+            _labels = new Dictionary<ulong, BlockLabel>();
+        }
+
+        public EmitterContext(DecodedProgram program, ShaderConfig config, bool isNonMain) : this()
         {
             Program = program;
             Config = config;
             IsNonMain = isNonMain;
-            _operations = new List<Operation>();
-            _labels = new Dictionary<ulong, BlockLabel>();
 
             EmitStart();
         }

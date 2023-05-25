@@ -239,33 +239,10 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                 context.AppendLine();
             }
 
-            bool isFragment = context.Config.Stage == ShaderStage.Fragment;
-
-            if (isFragment || context.Config.Stage == ShaderStage.Compute || context.Config.Stage == ShaderStage.Vertex)
+            if (context.Config.Stage == ShaderStage.Fragment && context.Config.GpuAccessor.QueryEarlyZForce())
             {
-                if (isFragment && context.Config.GpuAccessor.QueryEarlyZForce())
-                {
-                    context.AppendLine("layout(early_fragment_tests) in;");
-                    context.AppendLine();
-                }
-
-                if ((context.Config.UsedFeatures & (FeatureFlags.FragCoordXY | FeatureFlags.IntegerSampling)) != 0)
-                {
-                    string stage = OperandManager.GetShaderStagePrefix(context.Config.Stage);
-
-                    int scaleElements = context.Config.GetTextureDescriptors().Length + context.Config.GetImageDescriptors().Length;
-
-                    if (isFragment)
-                    {
-                        scaleElements++; // Also includes render target scale, for gl_FragCoord.
-                    }
-
-                    if (context.Config.UsedFeatures.HasFlag(FeatureFlags.IntegerSampling) && scaleElements != 0)
-                    {
-                        AppendHelperFunction(context, $"Ryujinx.Graphics.Shader/CodeGen/Glsl/HelperFunctions/TexelFetchScale_{stage}.glsl");
-                        context.AppendLine();
-                    }
-                }
+                context.AppendLine("layout(early_fragment_tests) in;");
+                context.AppendLine();
             }
 
             if ((info.HelperFunctionsMask & HelperFunctionsMask.AtomicMinMaxS32Shared) != 0)

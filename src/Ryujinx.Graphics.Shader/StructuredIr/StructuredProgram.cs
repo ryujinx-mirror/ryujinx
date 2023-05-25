@@ -8,11 +8,11 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
 {
     static class StructuredProgram
     {
-        public static StructuredProgramInfo MakeStructuredProgram(Function[] functions, ShaderConfig config)
+        public static StructuredProgramInfo MakeStructuredProgram(IReadOnlyList<Function> functions, ShaderConfig config)
         {
             StructuredProgramContext context = new StructuredProgramContext(config);
 
-            for (int funcIndex = 0; funcIndex < functions.Length; funcIndex++)
+            for (int funcIndex = 0; funcIndex < functions.Count; funcIndex++)
             {
                 Function function = functions[funcIndex];
 

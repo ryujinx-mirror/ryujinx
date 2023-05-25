@@ -101,6 +101,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             Add(Instruction.MemoryBarrier,            InstType.CallNullary,    "memoryBarrier");
             Add(Instruction.Minimum,                  InstType.CallBinary,     "min");
             Add(Instruction.MinimumU32,               InstType.CallBinary,     "min");
+            Add(Instruction.Modulo,                   InstType.CallBinary,     "mod");
             Add(Instruction.Multiply,                 InstType.OpBinaryCom,    "*",               1);
             Add(Instruction.MultiplyHighS32,          InstType.CallBinary,     HelperFunctionNames.MultiplyHighS32);
             Add(Instruction.MultiplyHighU32,          InstType.CallBinary,     HelperFunctionNames.MultiplyHighU32);

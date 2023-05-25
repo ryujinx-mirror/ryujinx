@@ -1,11 +1,11 @@
 using Ryujinx.Graphics.Shader.IntermediateRepresentation;
-using static Ryujinx.Graphics.Shader.IntermediateRepresentation.OperandHelper;
+using System.Collections.Generic;
 
 namespace Ryujinx.Graphics.Shader.Translation
 {
     static class ShaderIdentifier
     {
-        public static ShaderIdentification Identify(Function[] functions, ShaderConfig config)
+        public static ShaderIdentification Identify(IReadOnlyList<Function> functions, ShaderConfig config)
         {
             if (config.Stage == ShaderStage.Geometry &&
                 config.GpuAccessor.QueryPrimitiveTopology() == InputTopology.Triangles &&
@@ -20,12 +20,12 @@ namespace Ryujinx.Graphics.Shader.Translation
             return ShaderIdentification.None;
         }
 
-        private static bool IsLayerPassthroughGeometryShader(Function[] functions, out int layerInputAttr)
+        private static bool IsLayerPassthroughGeometryShader(IReadOnlyList<Function> functions, out int layerInputAttr)
         {
             bool writesLayer = false;
             layerInputAttr = 0;
 
-            if (functions.Length != 1)
+            if (functions.Count != 1)
             {
                 return false;
             }

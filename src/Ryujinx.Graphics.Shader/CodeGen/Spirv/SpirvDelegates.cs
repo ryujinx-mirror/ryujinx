@@ -67,6 +67,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
         public readonly FuncBinaryInstruction GlslSMax;
         public readonly FuncBinaryInstruction GlslFMin;
         public readonly FuncBinaryInstruction GlslSMin;
+        public readonly FuncBinaryInstruction FMod;
         public readonly FuncBinaryInstruction FMul;
         public readonly FuncBinaryInstruction IMul;
         public readonly FuncBinaryInstruction FSub;
@@ -174,6 +175,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             GlslSMax = context.GlslSMax;
             GlslFMin = context.GlslFMin;
             GlslSMin = context.GlslSMin;
+            FMod = context.FMod;
             FMul = context.FMul;
             IMul = context.IMul;
             FSub = context.FSub;

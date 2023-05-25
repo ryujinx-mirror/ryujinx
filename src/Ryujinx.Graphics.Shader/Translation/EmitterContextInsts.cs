@@ -307,6 +307,11 @@ namespace Ryujinx.Graphics.Shader.Translation
             return context.Add(fpType | Instruction.Minimum, Local(), a, b);
         }
 
+        public static Operand FPModulo(this EmitterContext context, Operand a, Operand b, Instruction fpType = Instruction.FP32)
+        {
+            return context.Add(fpType | Instruction.Modulo, Local(), a, b);
+        }
+
         public static Operand FPMultiply(this EmitterContext context, Operand a, Operand b, Instruction fpType = Instruction.FP32)
         {
             return context.Add(fpType | Instruction.Multiply, Local(), a, b);
@@ -656,7 +661,6 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         public static void Return(this EmitterContext context, Operand returnValue)
         {
-            context.PrepareForReturn();
             context.Add(Instruction.Return, null, returnValue);
         }
 

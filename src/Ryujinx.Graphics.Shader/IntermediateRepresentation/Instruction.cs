@@ -97,6 +97,7 @@ namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
         MemoryBarrier,
         Minimum,
         MinimumU32,
+        Modulo,
         Multiply,
         MultiplyHighS32,
         MultiplyHighU32,

@@ -11,7 +11,7 @@ namespace Ryujinx.Graphics.Shader.Translation
 {
     static class Rewriter
     {
-        public static void RunPass(BasicBlock[] blocks, ShaderConfig config)
+        public static void RunPass(HelperFunctionManager hfm, BasicBlock[] blocks, ShaderConfig config)
         {
             bool isVertexShader = config.Stage == ShaderStage.Vertex;
             bool hasConstantBufferDrawParameters = config.GpuAccessor.QueryHasConstantBufferDrawParameters();
@@ -54,9 +54,14 @@ namespace Ryujinx.Graphics.Shader.Translation
 
                     if (operation is TextureOperation texOp)
                     {
+                        node = InsertTexelFetchScale(hfm, node, config);
+                        node = InsertTextureSizeUnscale(hfm, node, config);
+
                         if (texOp.Inst == Instruction.TextureSample)
                         {
-                            node = RewriteTextureSample(node, config);
+                            node = InsertCoordNormalization(node, config);
+                            node = InsertCoordGatherBias(node, config);
+                            node = InsertConstOffsets(node, config);
 
                             if (texOp.Type == SamplerType.TextureBuffer && !supportsSnormBufferTextureFormat)
                             {
@@ -344,8 +349,277 @@ namespace Ryujinx.Graphics.Shader.Translation
             return node;
         }
 
-        private static LinkedListNode<INode> RewriteTextureSample(LinkedListNode<INode> node, ShaderConfig config)
+        private static LinkedListNode<INode> InsertTexelFetchScale(HelperFunctionManager hfm, LinkedListNode<INode> node, ShaderConfig config)
         {
+            TextureOperation texOp = (TextureOperation)node.Value;
+
+            bool isBindless = (texOp.Flags & TextureFlags.Bindless)  != 0;
+            bool intCoords  = (texOp.Flags & TextureFlags.IntCoords) != 0;
+
+            bool isArray   = (texOp.Type & SamplerType.Array)   != 0;
+            bool isIndexed = (texOp.Type & SamplerType.Indexed) != 0;
+
+            int coordsCount = texOp.Type.GetDimensions();
+
+            int coordsIndex = isBindless || isIndexed ? 1 : 0;
+
+            bool isImage = IsImageInstructionWithScale(texOp.Inst);
+
+            if ((texOp.Inst == Instruction.TextureSample || isImage) &&
+                intCoords &&
+                !isBindless &&
+                !isIndexed &&
+                config.Stage.SupportsRenderScale() &&
+                TypeSupportsScale(texOp.Type))
+            {
+                int functionId = hfm.GetOrCreateFunctionId(HelperFunctionName.TexelFetchScale);
+                int samplerIndex = isImage
+                    ? config.GetTextureDescriptors().Length + config.FindImageDescriptorIndex(texOp)
+                    : config.FindTextureDescriptorIndex(texOp);
+
+                for (int index = 0; index < coordsCount; index++)
+                {
+                    Operand scaledCoord = Local();
+                    Operand[] callArgs;
+
+                    if (config.Stage == ShaderStage.Fragment)
+                    {
+                        callArgs = new Operand[] { Const(functionId), texOp.GetSource(coordsIndex + index), Const(samplerIndex), Const(index) };
+                    }
+                    else
+                    {
+                        callArgs = new Operand[] { Const(functionId), texOp.GetSource(coordsIndex + index), Const(samplerIndex) };
+                    }
+
+                    node.List.AddBefore(node, new Operation(Instruction.Call, 0, scaledCoord, callArgs));
+
+                    texOp.SetSource(coordsIndex + index, scaledCoord);
+                }
+            }
+
+            return node;
+        }
+
+        private static LinkedListNode<INode> InsertTextureSizeUnscale(HelperFunctionManager hfm, LinkedListNode<INode> node, ShaderConfig config)
+        {
+            TextureOperation texOp = (TextureOperation)node.Value;
+
+            bool isBindless = (texOp.Flags & TextureFlags.Bindless)  != 0;
+            bool intCoords  = (texOp.Flags & TextureFlags.IntCoords) != 0;
+
+            bool isArray   = (texOp.Type & SamplerType.Array)   != 0;
+            bool isIndexed = (texOp.Type & SamplerType.Indexed) != 0;
+
+            if (texOp.Inst == Instruction.TextureSize &&
+                texOp.Index < 2 &&
+                !isBindless &&
+                !isIndexed &&
+                config.Stage.SupportsRenderScale() &&
+                TypeSupportsScale(texOp.Type))
+            {
+                int functionId = hfm.GetOrCreateFunctionId(HelperFunctionName.TextureSizeUnscale);
+                int samplerIndex = config.FindTextureDescriptorIndex(texOp, ignoreType: true);
+
+                for (int index = texOp.DestsCount - 1; index >= 0; index--)
+                {
+                    Operand dest = texOp.GetDest(index);
+
+                    Operand unscaledSize = Local();
+
+                    // Replace all uses with the unscaled size value.
+                    // This must be done before the call is added, since it also is a use of the original size.
+                    foreach (INode useOp in dest.UseOps)
+                    {
+                        for (int srcIndex = 0; srcIndex < useOp.SourcesCount; srcIndex++)
+                        {
+                            if (useOp.GetSource(srcIndex) == dest)
+                            {
+                                useOp.SetSource(srcIndex, unscaledSize);
+                            }
+                        }
+                    }
+
+                    Operand[] callArgs = new Operand[] { Const(functionId), dest, Const(samplerIndex) };
+
+                    node.List.AddAfter(node, new Operation(Instruction.Call, 0, unscaledSize, callArgs));
+                }
+            }
+
+            return node;
+        }
+
+        private static bool IsImageInstructionWithScale(Instruction inst)
+        {
+            // Currently, we don't support scaling images that are modified,
+            // so we only need to care about the load instruction.
+            return inst == Instruction.ImageLoad;
+        }
+
+        private static bool TypeSupportsScale(SamplerType type)
+        {
+            return (type & SamplerType.Mask) == SamplerType.Texture2D;
+        }
+
+        private static LinkedListNode<INode> InsertCoordNormalization(LinkedListNode<INode> node, ShaderConfig config)
+        {
+            // Emulate non-normalized coordinates by normalizing the coordinates on the shader.
+            // Without normalization, the coordinates are expected to the in the [0, W or H] range,
+            // and otherwise, it is expected to be in the [0, 1] range.
+            // We normalize by dividing the coords by the texture size.
+
+            TextureOperation texOp = (TextureOperation)node.Value;
+
+            bool isBindless = (texOp.Flags & TextureFlags.Bindless)  != 0;
+            bool intCoords  = (texOp.Flags & TextureFlags.IntCoords) != 0;
+
+            bool isCoordNormalized = isBindless || config.GpuAccessor.QueryTextureCoordNormalized(texOp.Handle, texOp.CbufSlot);
+
+            if (isCoordNormalized || intCoords)
+            {
+                return node;
+            }
+
+            bool isArray   = (texOp.Type & SamplerType.Array)   != 0;
+            bool isIndexed = (texOp.Type & SamplerType.Indexed) != 0;
+
+            int coordsCount = texOp.Type.GetDimensions();
+            int coordsIndex = isBindless || isIndexed ? 1 : 0;
+
+            config.SetUsedFeature(FeatureFlags.IntegerSampling);
+
+            int normCoordsCount = (texOp.Type & SamplerType.Mask) == SamplerType.TextureCube ? 2 : coordsCount;
+
+            for (int index = 0; index < normCoordsCount; index++)
+            {
+                Operand coordSize = Local();
+
+                Operand[] texSizeSources;
+
+                if (isBindless || isIndexed)
+                {
+                    texSizeSources = new Operand[] { texOp.GetSource(0), Const(0) };
+                }
+                else
+                {
+                    texSizeSources = new Operand[] { Const(0) };
+                }
+
+                node.List.AddBefore(node, new TextureOperation(
+                    Instruction.TextureSize,
+                    texOp.Type,
+                    texOp.Format,
+                    texOp.Flags,
+                    texOp.CbufSlot,
+                    texOp.Handle,
+                    index,
+                    new[] { coordSize },
+                    texSizeSources));
+
+                config.SetUsedTexture(Instruction.TextureSize, texOp.Type, texOp.Format, texOp.Flags, texOp.CbufSlot, texOp.Handle);
+
+                Operand source = texOp.GetSource(coordsIndex + index);
+
+                Operand coordNormalized = Local();
+
+                node.List.AddBefore(node, new Operation(Instruction.FP32 | Instruction.Divide, coordNormalized, source, GenerateI2f(node, coordSize)));
+
+                texOp.SetSource(coordsIndex + index, coordNormalized);
+            }
+
+            return node;
+        }
+
+        private static LinkedListNode<INode> InsertCoordGatherBias(LinkedListNode<INode> node, ShaderConfig config)
+        {
+            // The gather behavior when the coordinate sits right in the middle of two texels is not well defined.
+            // To ensure the correct texel is sampled, we add a small bias value to the coordinate.
+            // This value is calculated as the minimum value required to change the texel it will sample from,
+            // and is 0 if the host does not require the bias.
+
+            TextureOperation texOp = (TextureOperation)node.Value;
+
+            bool isBindless = (texOp.Flags & TextureFlags.Bindless) != 0;
+            bool isGather   = (texOp.Flags & TextureFlags.Gather)   != 0;
+
+            int gatherBiasPrecision = config.GpuAccessor.QueryHostGatherBiasPrecision();
+
+            if (!isGather || gatherBiasPrecision == 0)
+            {
+                return node;
+            }
+
+            bool intCoords = (texOp.Flags & TextureFlags.IntCoords) != 0;
+
+            bool isArray   = (texOp.Type & SamplerType.Array)   != 0;
+            bool isIndexed = (texOp.Type & SamplerType.Indexed) != 0;
+
+            int coordsCount = texOp.Type.GetDimensions();
+            int coordsIndex = isBindless || isIndexed ? 1 : 0;
+
+            config.SetUsedFeature(FeatureFlags.IntegerSampling);
+
+            int normCoordsCount = (texOp.Type & SamplerType.Mask) == SamplerType.TextureCube ? 2 : coordsCount;
+
+            for (int index = 0; index < normCoordsCount; index++)
+            {
+                Operand coordSize = Local();
+                Operand scaledSize = Local();
+                Operand bias = Local();
+
+                Operand[] texSizeSources;
+
+                if (isBindless || isIndexed)
+                {
+                    texSizeSources = new Operand[] { texOp.GetSource(0), Const(0) };
+                }
+                else
+                {
+                    texSizeSources = new Operand[] { Const(0) };
+                }
+
+                node.List.AddBefore(node, new TextureOperation(
+                    Instruction.TextureSize,
+                    texOp.Type,
+                    texOp.Format,
+                    texOp.Flags,
+                    texOp.CbufSlot,
+                    texOp.Handle,
+                    index,
+                    new[] { coordSize },
+                    texSizeSources));
+
+                config.SetUsedTexture(Instruction.TextureSize, texOp.Type, texOp.Format, texOp.Flags, texOp.CbufSlot, texOp.Handle);
+
+                node.List.AddBefore(node, new Operation(
+                    Instruction.FP32 | Instruction.Multiply,
+                    scaledSize,
+                    GenerateI2f(node, coordSize),
+                    ConstF((float)(1 << (gatherBiasPrecision + 1)))));
+                node.List.AddBefore(node, new Operation(Instruction.FP32 | Instruction.Divide, bias, ConstF(1f), scaledSize));
+
+                Operand source = texOp.GetSource(coordsIndex + index);
+
+                Operand coordBiased = Local();
+
+                node.List.AddBefore(node, new Operation(Instruction.FP32 | Instruction.Add, coordBiased, source, bias));
+
+                texOp.SetSource(coordsIndex + index, coordBiased);
+            }
+
+            return node;
+        }
+
+        private static LinkedListNode<INode> InsertConstOffsets(LinkedListNode<INode> node, ShaderConfig config)
+        {
+            // Non-constant texture offsets are not allowed (according to the spec),
+            // however some GPUs does support that.
+            // For GPUs where it is not supported, we can replace the instruction with the following:
+            // For texture*Offset, we replace it by texture*, and add the offset to the P coords.
+            // The offset can be calculated as offset / textureSize(lod), where lod = textureQueryLod(coords).
+            // For texelFetchOffset, we replace it by texelFetch and add the offset to the P coords directly.
+            // For textureGatherOffset, we split the operation into up to 4 operations, one for each component
+            // that is accessed, where each textureGather operation has a different offset for each pixel.
+
             TextureOperation texOp = (TextureOperation)node.Value;
 
             bool hasOffset  = (texOp.Flags & TextureFlags.Offset)  != 0;
@@ -355,9 +629,7 @@ namespace Ryujinx.Graphics.Shader.Translation
 
             bool isBindless = (texOp.Flags & TextureFlags.Bindless) != 0;
 
-            bool isCoordNormalized = isBindless || config.GpuAccessor.QueryTextureCoordNormalized(texOp.Handle, texOp.CbufSlot);
-
-            if (!hasInvalidOffset && isCoordNormalized)
+            if (!hasInvalidOffset)
             {
                 return node;
             }
@@ -454,7 +726,7 @@ namespace Ryujinx.Graphics.Shader.Translation
 
             hasInvalidOffset &= !areAllOffsetsConstant;
 
-            if (!hasInvalidOffset && isCoordNormalized)
+            if (!hasInvalidOffset)
             {
                 return node;
             }
@@ -473,63 +745,6 @@ namespace Ryujinx.Graphics.Shader.Translation
 
             int componentIndex = texOp.Index;
 
-            Operand Float(Operand value)
-            {
-                Operand res = Local();
-
-                node.List.AddBefore(node, new Operation(Instruction.ConvertS32ToFP32, res, value));
-
-                return res;
-            }
-
-            // Emulate non-normalized coordinates by normalizing the coordinates on the shader.
-            // Without normalization, the coordinates are expected to the in the [0, W or H] range,
-            // and otherwise, it is expected to be in the [0, 1] range.
-            // We normalize by dividing the coords by the texture size.
-            if (!isCoordNormalized && !intCoords)
-            {
-                config.SetUsedFeature(FeatureFlags.IntegerSampling);
-
-                int normCoordsCount = (texOp.Type & SamplerType.Mask) == SamplerType.TextureCube ? 2 : coordsCount;
-
-                for (int index = 0; index < normCoordsCount; index++)
-                {
-                    Operand coordSize = Local();
-
-                    Operand[] texSizeSources;
-
-                    if (isBindless || isIndexed)
-                    {
-                        texSizeSources = new Operand[] { sources[0], Const(0) };
-                    }
-                    else
-                    {
-                        texSizeSources = new Operand[] { Const(0) };
-                    }
-
-                    node.List.AddBefore(node, new TextureOperation(
-                        Instruction.TextureSize,
-                        texOp.Type,
-                        texOp.Format,
-                        texOp.Flags,
-                        texOp.CbufSlot,
-                        texOp.Handle,
-                        index,
-                        new[] { coordSize },
-                        texSizeSources));
-
-                    config.SetUsedTexture(Instruction.TextureSize, texOp.Type, texOp.Format, texOp.Flags, texOp.CbufSlot, texOp.Handle);
-
-                    Operand source = sources[coordsIndex + index];
-
-                    Operand coordNormalized = Local();
-
-                    node.List.AddBefore(node, new Operation(Instruction.FP32 | Instruction.Divide, coordNormalized, source, Float(coordSize)));
-
-                    sources[coordsIndex + index] = coordNormalized;
-                }
-            }
-
             Operand[] dests = new Operand[texOp.DestsCount];
 
             for (int i = 0; i < texOp.DestsCount; i++)
@@ -541,15 +756,7 @@ namespace Ryujinx.Graphics.Shader.Translation
 
             LinkedListNode<INode> oldNode = node;
 
-            // Technically, non-constant texture offsets are not allowed (according to the spec),
-            // however some GPUs does support that.
-            // For GPUs where it is not supported, we can replace the instruction with the following:
-            // For texture*Offset, we replace it by texture*, and add the offset to the P coords.
-            // The offset can be calculated as offset / textureSize(lod), where lod = textureQueryLod(coords).
-            // For texelFetchOffset, we replace it by texelFetch and add the offset to the P coords directly.
-            // For textureGatherOffset, we split the operation into up to 4 operations, one for each component
-            // that is accessed, where each textureGather operation has a different offset for each pixel.
-            if (hasInvalidOffset && isGather && !isShadow)
+            if (isGather && !isShadow)
             {
                 config.SetUsedFeature(FeatureFlags.IntegerSampling);
 
@@ -557,7 +764,7 @@ namespace Ryujinx.Graphics.Shader.Translation
 
                 sources.CopyTo(newSources, 0);
 
-                Operand[] texSizes = InsertTextureSize(node, texOp, lodSources, bindlessHandle, coordsCount);
+                Operand[] texSizes = InsertTextureLod(node, texOp, lodSources, bindlessHandle, coordsCount);
 
                 int destIndex = 0;
 
@@ -576,7 +783,11 @@ namespace Ryujinx.Graphics.Shader.Translation
 
                         Operand intOffset = offsets[index + (hasOffsets ? compIndex * coordsCount : 0)];
 
-                        node.List.AddBefore(node, new Operation(Instruction.FP32 | Instruction.Divide, offset, Float(intOffset), Float(texSizes[index])));
+                        node.List.AddBefore(node, new Operation(
+                            Instruction.FP32 | Instruction.Divide,
+                            offset,
+                            GenerateI2f(node, intOffset),
+                            GenerateI2f(node, texSizes[index])));
 
                         Operand source = sources[coordsIndex + index];
 
@@ -603,45 +814,46 @@ namespace Ryujinx.Graphics.Shader.Translation
             }
             else
             {
-                if (hasInvalidOffset)
+                if (intCoords)
                 {
-                    if (intCoords)
+                    for (int index = 0; index < coordsCount; index++)
                     {
-                        for (int index = 0; index < coordsCount; index++)
-                        {
-                            Operand source = sources[coordsIndex + index];
+                        Operand source = sources[coordsIndex + index];
 
-                            Operand coordPlusOffset = Local();
+                        Operand coordPlusOffset = Local();
 
-                            node.List.AddBefore(node, new Operation(Instruction.Add, coordPlusOffset, source, offsets[index]));
+                        node.List.AddBefore(node, new Operation(Instruction.Add, coordPlusOffset, source, offsets[index]));
 
-                            sources[coordsIndex + index] = coordPlusOffset;
-                        }
+                        sources[coordsIndex + index] = coordPlusOffset;
                     }
-                    else
+                }
+                else
+                {
+                    config.SetUsedFeature(FeatureFlags.IntegerSampling);
+
+                    Operand[] texSizes = InsertTextureLod(node, texOp, lodSources, bindlessHandle, coordsCount);
+
+                    for (int index = 0; index < coordsCount; index++)
                     {
-                        config.SetUsedFeature(FeatureFlags.IntegerSampling);
+                        config.SetUsedTexture(Instruction.TextureSize, texOp.Type, texOp.Format, texOp.Flags, texOp.CbufSlot, texOp.Handle);
 
-                        Operand[] texSizes = InsertTextureSize(node, texOp, lodSources, bindlessHandle, coordsCount);
+                        Operand offset = Local();
 
-                        for (int index = 0; index < coordsCount; index++)
-                        {
-                            config.SetUsedTexture(Instruction.TextureSize, texOp.Type, texOp.Format, texOp.Flags, texOp.CbufSlot, texOp.Handle);
+                        Operand intOffset = offsets[index];
 
-                            Operand offset = Local();
+                        node.List.AddBefore(node, new Operation(
+                            Instruction.FP32 | Instruction.Divide,
+                            offset,
+                            GenerateI2f(node, intOffset),
+                            GenerateI2f(node, texSizes[index])));
 
-                            Operand intOffset = offsets[index];
+                        Operand source = sources[coordsIndex + index];
 
-                            node.List.AddBefore(node, new Operation(Instruction.FP32 | Instruction.Divide, offset, Float(intOffset), Float(texSizes[index])));
+                        Operand coordPlusOffset = Local();
 
-                            Operand source = sources[coordsIndex + index];
+                        node.List.AddBefore(node, new Operation(Instruction.FP32 | Instruction.Add, coordPlusOffset, source, offset));
 
-                            Operand coordPlusOffset = Local();
-
-                            node.List.AddBefore(node, new Operation(Instruction.FP32 | Instruction.Add, coordPlusOffset, source, offset));
-
-                            sources[coordsIndex + index] = coordPlusOffset;
-                        }
+                        sources[coordsIndex + index] = coordPlusOffset;
                     }
                 }
 
@@ -669,22 +881,13 @@ namespace Ryujinx.Graphics.Shader.Translation
             return node;
         }
 
-        private static Operand[] InsertTextureSize(
+        private static Operand[] InsertTextureLod(
             LinkedListNode<INode> node,
             TextureOperation texOp,
             Operand[] lodSources,
             Operand bindlessHandle,
             int coordsCount)
         {
-            Operand Int(Operand value)
-            {
-                Operand res = Local();
-
-                node.List.AddBefore(node, new Operation(Instruction.ConvertFP32ToS32, res, value));
-
-                return res;
-            }
-
             Operand[] texSizes = new Operand[coordsCount];
 
             Operand lod = Local();
@@ -708,11 +911,11 @@ namespace Ryujinx.Graphics.Shader.Translation
 
                 if (bindlessHandle != null)
                 {
-                    texSizeSources = new Operand[] { bindlessHandle, Int(lod) };
+                    texSizeSources = new Operand[] { bindlessHandle, GenerateF2i(node, lod) };
                 }
                 else
                 {
-                    texSizeSources = new Operand[] { Int(lod) };
+                    texSizeSources = new Operand[] { GenerateF2i(node, lod) };
                 }
 
                 node.List.AddBefore(node, new TextureOperation(
@@ -794,6 +997,24 @@ namespace Ryujinx.Graphics.Shader.Translation
             }
 
             return node;
+        }
+
+        private static Operand GenerateI2f(LinkedListNode<INode> node, Operand value)
+        {
+            Operand res = Local();
+
+            node.List.AddBefore(node, new Operation(Instruction.ConvertS32ToFP32, res, value));
+
+            return res;
+        }
+
+        private static Operand GenerateF2i(LinkedListNode<INode> node, Operand value)
+        {
+            Operand res = Local();
+
+            node.List.AddBefore(node, new Operation(Instruction.ConvertFP32ToS32, res, value));
+
+            return res;
         }
 
         private static bool ReplaceConstantBufferWithDrawParameters(LinkedListNode<INode> node, Operation operation)

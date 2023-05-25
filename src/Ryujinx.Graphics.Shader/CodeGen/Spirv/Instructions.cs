@@ -4,7 +4,6 @@ using Ryujinx.Graphics.Shader.Translation;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Numerics;
 using static Spv.Specification;
 
@@ -114,6 +113,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             Add(Instruction.MemoryBarrier,            GenerateMemoryBarrier);
             Add(Instruction.Minimum,                  GenerateMinimum);
             Add(Instruction.MinimumU32,               GenerateMinimumU32);
+            Add(Instruction.Modulo,                   GenerateModulo);
             Add(Instruction.Multiply,                 GenerateMultiply);
             Add(Instruction.MultiplyHighS32,          GenerateMultiplyHighS32);
             Add(Instruction.MultiplyHighU32,          GenerateMultiplyHighU32);
@@ -744,8 +744,6 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                 pCoords = Src(AggregateType.S32);
             }
 
-            pCoords = ScalingHelpers.ApplyScaling(context, texOp, pCoords, intCoords: true, isBindless, isIndexed, isArray, pCount);
-
             (var imageType, var imageVariable) = context.Images[new TextureMeta(texOp.CbufSlot, texOp.Handle, texOp.Format)];
 
             var image = context.Load(imageType, imageVariable);
@@ -1040,6 +1038,11 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             return GenerateBinaryU32(context, operation, context.Delegates.GlslUMin);
         }
 
+        private static OperationResult GenerateModulo(CodeGenContext context, AstOperation operation)
+        {
+            return GenerateBinary(context, operation, context.Delegates.FMod, null);
+        }
+
         private static OperationResult GenerateMultiply(CodeGenContext context, AstOperation operation)
         {
             return GenerateBinary(context, operation, context.Delegates.FMul, context.Delegates.IMul);
@@ -1101,7 +1104,15 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
 
         private static OperationResult GenerateReturn(CodeGenContext context, AstOperation operation)
         {
-            context.Return();
+            if (operation.SourcesCount != 0)
+            {
+                context.ReturnValue(context.Get(context.CurrentFunction.ReturnType, operation.GetSource(0)));
+            }
+            else
+            {
+                context.Return();
+            }
+
             return OperationResult.Invalid;
         }
 
@@ -1439,35 +1450,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                 }
             }
 
-            SpvInstruction ApplyBias(SpvInstruction vector, SpvInstruction image)
-            {
-                int gatherBiasPrecision = context.Config.GpuAccessor.QueryHostGatherBiasPrecision();
-                if (isGather && gatherBiasPrecision != 0)
-                {
-                    // GPU requires texture gather to be slightly offset to match NVIDIA behaviour when point is exactly between two texels.
-                    // Offset by the gather precision divided by 2 to correct for rounding.
-                    var sizeType = pCount == 1 ? context.TypeS32() : context.TypeVector(context.TypeS32(), pCount);
-                    var pVectorType = pCount == 1 ? context.TypeFP32() : context.TypeVector(context.TypeFP32(), pCount);
-
-                    var bias = context.Constant(context.TypeFP32(), (float)(1 << (gatherBiasPrecision + 1)));
-                    var biasVector = context.CompositeConstruct(pVectorType, Enumerable.Repeat(bias, pCount).ToArray());
-
-                    var one = context.Constant(context.TypeFP32(), 1f);
-                    var oneVector = context.CompositeConstruct(pVectorType, Enumerable.Repeat(one, pCount).ToArray());
-
-                    var divisor = context.FMul(
-                        pVectorType,
-                        context.ConvertSToF(pVectorType, context.ImageQuerySize(sizeType, image)),
-                        biasVector);
-
-                    vector = context.FAdd(pVectorType, vector, context.FDiv(pVectorType, oneVector, divisor));
-                }
-
-                return vector;
-            }
-
             SpvInstruction pCoords = AssemblePVector(pCount);
-            pCoords = ScalingHelpers.ApplyScaling(context, texOp, pCoords, intCoords, isBindless, isIndexed, isArray, pCount);
 
             SpvInstruction AssembleDerivativesVector(int count)
             {
@@ -1638,8 +1621,6 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                 image = context.Image(imageType, image);
             }
 
-            pCoords = ApplyBias(pCoords, image);
-
             var operands = operandsList.ToArray();
 
             SpvInstruction result;
@@ -1753,11 +1734,6 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                 if (dimensions != 1)
                 {
                     result = context.CompositeExtract(context.TypeS32(), result, (SpvLiteralInteger)texOp.Index);
-                }
-
-                if (texOp.Index < 2 || (type & SamplerType.Mask) == SamplerType.Texture3D)
-                {
-                    result = ScalingHelpers.ApplyUnscaling(context, texOp.WithType(type), result, isBindless, isIndexed);
                 }
 
                 return new OperationResult(AggregateType.S32, result);

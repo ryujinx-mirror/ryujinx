@@ -860,7 +860,7 @@ namespace Ryujinx.Graphics.Shader.Translation
             return descriptors;
         }
 
-        public (TextureDescriptor, int) FindTextureDescriptor(AstTextureOperation texOp)
+        public TextureDescriptor FindTextureDescriptor(AstTextureOperation texOp)
         {
             TextureDescriptor[] descriptors = GetTextureDescriptors();
 
@@ -872,11 +872,11 @@ namespace Ryujinx.Graphics.Shader.Translation
                     descriptor.HandleIndex == texOp.Handle &&
                     descriptor.Format == texOp.Format)
                 {
-                    return (descriptor, i);
+                    return descriptor;
                 }
             }
 
-            return (default, -1);
+            return default;
         }
 
         private static int FindDescriptorIndex(TextureDescriptor[] array, AstTextureOperation texOp)
@@ -897,12 +897,30 @@ namespace Ryujinx.Graphics.Shader.Translation
             return -1;
         }
 
-        public int FindTextureDescriptorIndex(AstTextureOperation texOp)
+        private static int FindDescriptorIndex(TextureDescriptor[] array, TextureOperation texOp, bool ignoreType = false)
         {
-            return FindDescriptorIndex(GetTextureDescriptors(), texOp);
+            for (int i = 0; i < array.Length; i++)
+            {
+                var descriptor = array[i];
+
+                if ((descriptor.Type == texOp.Type || ignoreType) &&
+                    descriptor.CbufSlot == texOp.CbufSlot &&
+                    descriptor.HandleIndex == texOp.Handle &&
+                    descriptor.Format == texOp.Format)
+                {
+                    return i;
+                }
+            }
+
+            return -1;
         }
 
-        public int FindImageDescriptorIndex(AstTextureOperation texOp)
+        public int FindTextureDescriptorIndex(TextureOperation texOp, bool ignoreType = false)
+        {
+            return FindDescriptorIndex(GetTextureDescriptors(), texOp, ignoreType);
+        }
+
+        public int FindImageDescriptorIndex(TextureOperation texOp)
         {
             return FindDescriptorIndex(GetImageDescriptors(), texOp);
         }

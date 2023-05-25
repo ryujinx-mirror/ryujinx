@@ -5,10 +5,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="CodeGen\Glsl\HelperFunctions\TexelFetchScale_vp.glsl" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\Ryujinx.Common\Ryujinx.Common.csproj" />
     <ProjectReference Include="..\Spv.Generator\Spv.Generator.csproj" />
   </ItemGroup>
@@ -25,9 +21,6 @@
     <EmbeddedResource Include="CodeGen\Glsl\HelperFunctions\StoreSharedSmallInt.glsl" />
     <EmbeddedResource Include="CodeGen\Glsl\HelperFunctions\StoreStorageSmallInt.glsl" />
     <EmbeddedResource Include="CodeGen\Glsl\HelperFunctions\SwizzleAdd.glsl" />
-    <EmbeddedResource Include="CodeGen\Glsl\HelperFunctions\TexelFetchScale_vp.glsl" />
-    <EmbeddedResource Include="CodeGen\Glsl\HelperFunctions\TexelFetchScale_fp.glsl" />
-    <EmbeddedResource Include="CodeGen\Glsl\HelperFunctions\TexelFetchScale_cp.glsl" />
   </ItemGroup>
 
 </Project>

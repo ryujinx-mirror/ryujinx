@@ -36,6 +36,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
         public Dictionary<IoDefinition, Instruction> OutputsPerPatch { get; } = new Dictionary<IoDefinition, Instruction>();
 
         public Instruction CoordTemp { get; set; }
+        public StructuredFunction CurrentFunction { get; set; }
         private readonly Dictionary<AstOperand, Instruction> _locals = new Dictionary<AstOperand, Instruction>();
         private readonly Dictionary<int, Instruction[]> _localForArgs = new Dictionary<int, Instruction[]>();
         private readonly Dictionary<int, Instruction> _funcArgs = new Dictionary<int, Instruction>();
