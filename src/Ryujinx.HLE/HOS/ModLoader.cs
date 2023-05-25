@@ -167,12 +167,12 @@ namespace Ryujinx.HLE.HOS
 
                 if (StrEquals(RomfsDir, modDir.Name))
                 {
-                    mods.RomfsDirs.Add(mod = new Mod<DirectoryInfo>($"<{titleId} RomFs>", modDir));
+                    mods.RomfsDirs.Add(mod = new Mod<DirectoryInfo>(dir.Name, modDir));
                     types.Append('R');
                 }
                 else if (StrEquals(ExefsDir, modDir.Name))
                 {
-                    mods.ExefsDirs.Add(mod = new Mod<DirectoryInfo>($"<{titleId} ExeFs>", modDir));
+                    mods.ExefsDirs.Add(mod = new Mod<DirectoryInfo>(dir.Name, modDir));
                     types.Append('E');
                 }
                 else if (StrEquals(CheatDir, modDir.Name))
