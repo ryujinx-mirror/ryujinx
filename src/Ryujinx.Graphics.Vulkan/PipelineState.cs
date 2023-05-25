@@ -1,4 +1,5 @@
-﻿using Silk.NET.Vulkan;
+﻿using Ryujinx.Common.Memory;
+using Silk.NET.Vulkan;
 using System;
 
 namespace Ryujinx.Graphics.Vulkan
@@ -308,6 +309,8 @@ namespace Ryujinx.Graphics.Vulkan
         public PipelineLayout PipelineLayout;
         public SpecData SpecializationData;
 
+        private Array32<VertexInputAttributeDescription> _vertexAttributeDescriptions2;
+
         public void Initialize()
         {
             Stages = new NativeArray<PipelineShaderStageCreateInfo>(Constants.MaxShaderStages);
@@ -400,7 +403,15 @@ namespace Ryujinx.Graphics.Vulkan
 
             Pipeline pipelineHandle = default;
 
+            bool isMoltenVk = gd.IsMoltenVk;
+
+            if (isMoltenVk)
+            {
+                UpdateVertexAttributeDescriptions();
+            }
+
             fixed (VertexInputAttributeDescription* pVertexAttributeDescriptions = &Internal.VertexAttributeDescriptions[0])
+            fixed (VertexInputAttributeDescription* pVertexAttributeDescriptions2 = &_vertexAttributeDescriptions2[0])
             fixed (VertexInputBindingDescription* pVertexBindingDescriptions = &Internal.VertexBindingDescriptions[0])
             fixed (Viewport* pViewports = &Internal.Viewports[0])
             fixed (Rect2D* pScissors = &Internal.Scissors[0])
@@ -410,7 +421,7 @@ namespace Ryujinx.Graphics.Vulkan
                 {
                     SType = StructureType.PipelineVertexInputStateCreateInfo,
                     VertexAttributeDescriptionCount = VertexAttributeDescriptionsCount,
-                    PVertexAttributeDescriptions = pVertexAttributeDescriptions,
+                    PVertexAttributeDescriptions = isMoltenVk ? pVertexAttributeDescriptions2 : pVertexAttributeDescriptions,
                     VertexBindingDescriptionCount = VertexBindingDescriptionsCount,
                     PVertexBindingDescriptions = pVertexBindingDescriptions
                 };
@@ -609,6 +620,40 @@ namespace Ryujinx.Graphics.Vulkan
                     gd.Capabilities.MaxSubgroupSize >= RequiredSubgroupSize;
 
                 Stages[index].PNext = canUseExplicitSubgroupSize ? StageRequiredSubgroupSizes.Pointer + index : null;
+            }
+        }
+
+        private void UpdateVertexAttributeDescriptions()
+        {
+            // Vertex attributes exceeding the stride are invalid.
+            // In metal, they cause glitches with the vertex shader fetching incorrect values.
+            // To work around this, we reduce the format to something that doesn't exceed the stride if possible.
+            // The assumption is that the exceeding components are not actually accessed on the shader.
+
+            for (int index = 0; index < VertexAttributeDescriptionsCount; index++)
+            {
+                var attribute = Internal.VertexAttributeDescriptions[index];
+                ref var vb = ref Internal.VertexBindingDescriptions[(int)attribute.Binding];
+
+                Format format = attribute.Format;
+
+                while (vb.Stride != 0 && attribute.Offset + FormatTable.GetAttributeFormatSize(format) > vb.Stride)
+                {
+                    Format newFormat = FormatTable.DropLastComponent(format);
+
+                    if (newFormat == format)
+                    {
+                        // That case means we failed to find a format that fits within the stride,
+                        // so just restore the original format and give up.
+                        format = attribute.Format;
+                        break;
+                    }
+
+                    format = newFormat;
+                }
+
+                attribute.Format = format;
+                _vertexAttributeDescriptions2[index] = attribute;
             }
         }
 
