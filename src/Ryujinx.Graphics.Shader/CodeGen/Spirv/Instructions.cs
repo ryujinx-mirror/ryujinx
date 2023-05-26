@@ -2245,7 +2245,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             {
                 var result = emitF(context.TypeFP64(), context.GetFP64(src1), context.GetFP64(src2));
 
-                if (!context.Config.GpuAccessor.QueryHostReducedPrecision())
+                if (!context.Config.GpuAccessor.QueryHostReducedPrecision() || operation.ForcePrecise)
                 {
                     context.Decorate(result, Decoration.NoContraction);
                 }
@@ -2256,7 +2256,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             {
                 var result = emitF(context.TypeFP32(), context.GetFP32(src1), context.GetFP32(src2));
 
-                if (!context.Config.GpuAccessor.QueryHostReducedPrecision())
+                if (!context.Config.GpuAccessor.QueryHostReducedPrecision() || operation.ForcePrecise)
                 {
                     context.Decorate(result, Decoration.NoContraction);
                 }
@@ -2316,7 +2316,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             {
                 var result = emitF(context.TypeFP64(), context.GetFP64(src1), context.GetFP64(src2), context.GetFP64(src3));
 
-                if (!context.Config.GpuAccessor.QueryHostReducedPrecision())
+                if (!context.Config.GpuAccessor.QueryHostReducedPrecision() || operation.ForcePrecise)
                 {
                     context.Decorate(result, Decoration.NoContraction);
                 }
@@ -2327,7 +2327,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             {
                 var result = emitF(context.TypeFP32(), context.GetFP32(src1), context.GetFP32(src2), context.GetFP32(src3));
 
-                if (!context.Config.GpuAccessor.QueryHostReducedPrecision())
+                if (!context.Config.GpuAccessor.QueryHostReducedPrecision() || operation.ForcePrecise)
                 {
                     context.Decorate(result, Decoration.NoContraction);
                 }

@@ -319,7 +319,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
                     new AstOperand(OperandType.Constant, elemIndex)
                 };
 
-                return new AstOperation(Instruction.Load, StorageKind.ConstantBuffer, sources, sources.Length);
+                return new AstOperation(Instruction.Load, StorageKind.ConstantBuffer, false, sources, sources.Length);
             }
 
             return GetOperand(operand);

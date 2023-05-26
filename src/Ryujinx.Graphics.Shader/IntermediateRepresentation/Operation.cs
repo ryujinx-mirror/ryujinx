@@ -8,6 +8,8 @@ namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
         public Instruction Inst { get; private set; }
         public StorageKind StorageKind { get; }
 
+        public bool ForcePrecise { get; set; }
+
         private Operand[] _dests;
 
         public Operand Dest
