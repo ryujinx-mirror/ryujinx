@@ -366,7 +366,7 @@ namespace Ryujinx.Graphics.Shader.Translation
             bool isImage = IsImageInstructionWithScale(texOp.Inst);
 
             if ((texOp.Inst == Instruction.TextureSample || isImage) &&
-                intCoords &&
+                (intCoords || isImage) &&
                 !isBindless &&
                 !isIndexed &&
                 config.Stage.SupportsRenderScale() &&
