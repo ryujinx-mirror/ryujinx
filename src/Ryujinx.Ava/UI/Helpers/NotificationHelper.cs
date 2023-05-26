@@ -3,21 +3,20 @@ using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Threading;
 using Ryujinx.Ava.Common.Locale;
+using Ryujinx.Common;
 using System;
 using System.Collections.Concurrent;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace Ryujinx.Ava.UI.Helpers
 {
     public static class NotificationHelper
     {
-        private const int MaxNotifications      = 4; 
+        private const int MaxNotifications      = 4;
         private const int NotificationDelayInMs = 5000;
 
         private static WindowNotificationManager _notificationManager;
 
-        private static readonly ManualResetEvent                 _templateAppliedEvent = new(false);
         private static readonly BlockingCollection<Notification> _notifications        = new();
 
         public static void SetNotificationManager(Window host)
@@ -29,25 +28,31 @@ namespace Ryujinx.Ava.UI.Helpers
                 Margin   = new Thickness(0, 0, 15, 40)
             };
 
+            var maybeAsyncWorkQueue = new Lazy<AsyncWorkQueue<Notification>>(
+                () => new AsyncWorkQueue<Notification>(notification =>
+                    {
+                        Dispatcher.UIThread.Post(() =>
+                        {
+                            _notificationManager.Show(notification);
+                        });
+                    },
+                    "UI.NotificationThread",
+                    _notifications),
+                LazyThreadSafetyMode.ExecutionAndPublication);
+
             _notificationManager.TemplateApplied += (sender, args) =>
             {
-                _templateAppliedEvent.Set();
+                // NOTE: Force creation of the AsyncWorkQueue.
+                _ = maybeAsyncWorkQueue.Value;
             };
 
-            Task.Run(async () =>
+            host.Closing += (sender, args) =>
             {
-                _templateAppliedEvent.WaitOne();
-
-                foreach (var notification in _notifications.GetConsumingEnumerable())
+                if (maybeAsyncWorkQueue.IsValueCreated)
                 {
-                    Dispatcher.UIThread.Post(() =>
-                    {
-                        _notificationManager.Show(notification);
-                    });
-
-                    await Task.Delay(NotificationDelayInMs / MaxNotifications);
+                    maybeAsyncWorkQueue.Value.Dispose();
                 }
-            });
+            };
         }
 
         public static void Show(string title, string text, NotificationType type, bool waitingExit = false, Action onClick = null, Action onClose = null)

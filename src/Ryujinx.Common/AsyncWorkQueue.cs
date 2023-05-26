@@ -22,9 +22,11 @@ namespace Ryujinx.Common
             _cts = new CancellationTokenSource();
             _queue = collection;
             _workerAction = callback;
-            _workerThread = new Thread(DoWork) { Name = name };
-
-            _workerThread.IsBackground = true;
+            _workerThread = new Thread(DoWork)
+            {
+                Name = name,
+                IsBackground = true
+            };
             _workerThread.Start();
         }
 
