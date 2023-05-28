@@ -35,6 +35,7 @@ namespace Ryujinx.Graphics.Vulkan
         public Array16<Rect2D> Scissors;
         public Array8<PipelineColorBlendAttachmentState> ColorBlendAttachmentState;
         public Array9<Format> AttachmentFormats;
+        public uint AttachmentIntegerFormatMask;
 
         public override bool Equals(object obj)
         {

@@ -1487,6 +1487,7 @@ namespace Ryujinx.Graphics.Vulkan
         {
             var dstAttachmentFormats = _newState.Internal.AttachmentFormats.AsSpan();
             FramebufferParams.AttachmentFormats.CopyTo(dstAttachmentFormats);
+            _newState.Internal.AttachmentIntegerFormatMask = FramebufferParams.AttachmentIntegerFormatMask;
 
             for (int i = FramebufferParams.AttachmentFormats.Length; i < dstAttachmentFormats.Length; i++)
             {
