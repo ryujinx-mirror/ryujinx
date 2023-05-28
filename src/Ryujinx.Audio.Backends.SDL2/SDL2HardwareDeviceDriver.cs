@@ -45,7 +45,7 @@ namespace Ryujinx.Audio.Backends.SDL2
             }
             else
             {
-                _supportSurroundConfiguration = spec.channels == 6;
+                _supportSurroundConfiguration = spec.channels >= 6;
             }
         }
 
