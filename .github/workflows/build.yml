@@ -27,7 +27,7 @@ jobs:
   build:
     name: ${{ matrix.OS_NAME }} (${{ matrix.configuration }})
     runs-on: ${{ matrix.os }}
-    timeout-minutes: ${{ vars.JOB_TIMEOUT }}
+    timeout-minutes: ${{ fromJSON(vars.JOB_TIMEOUT) }}
     strategy:
       matrix:
         os: [ubuntu-latest, macOS-latest, windows-latest]
@@ -110,7 +110,7 @@ jobs:
   build_macos:
     name: macOS Universal (${{ matrix.configuration }})
     runs-on: ubuntu-latest
-    timeout-minutes: ${{ vars.JOB_TIMEOUT }}
+    timeout-minutes: ${{ fromJSON(vars.JOB_TIMEOUT) }}
     strategy:
       matrix:
         configuration: [ Debug, Release ]
