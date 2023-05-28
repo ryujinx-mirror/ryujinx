@@ -12,7 +12,7 @@ concurrency: flatpak-release
 
 jobs:
   release:
-    timeout-minutes: 35
+    timeout-minutes: ${{ vars.JOB_TIMEOUT }}
     runs-on: ubuntu-latest
 
     env:
