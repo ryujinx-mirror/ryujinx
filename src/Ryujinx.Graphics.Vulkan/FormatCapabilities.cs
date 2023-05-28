@@ -65,6 +65,13 @@ namespace Ryujinx.Graphics.Vulkan
             return (formatFeatureFlags & flags) == flags;
         }
 
+        public bool BufferFormatSupports(FormatFeatureFlags flags, VkFormat format)
+        {
+            _api.GetPhysicalDeviceFormatProperties(_physicalDevice, format, out var fp);
+
+            return (fp.BufferFeatures & flags) == flags;
+        }
+
         public bool OptimalFormatSupports(FormatFeatureFlags flags, GAL.Format format)
         {
             var formatFeatureFlags = _optimalTable[(int)format];

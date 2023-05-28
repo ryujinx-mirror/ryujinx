@@ -551,7 +551,6 @@ namespace Ryujinx.Graphics.Vulkan
                         (uint)maxDrawCount,
                         (uint)stride);
                 }
-
             }
             else
             {
