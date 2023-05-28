@@ -1024,6 +1024,8 @@ namespace Ryujinx.Ui
                         double sessionTimePlayed = DateTime.UtcNow.Subtract(appMetadata.LastPlayed.Value).TotalSeconds;
                         appMetadata.TimePlayed += Math.Round(sessionTimePlayed, MidpointRounding.AwayFromZero);
                     }
+
+                    appMetadata.LastPlayed = DateTime.UtcNow;
                 });
             }
         }
