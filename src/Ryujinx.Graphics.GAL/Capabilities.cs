@@ -39,6 +39,7 @@ namespace Ryujinx.Graphics.GAL
         public readonly bool SupportsViewportMask;
         public readonly bool SupportsViewportSwizzle;
         public readonly bool SupportsIndirectParameters;
+        public readonly bool SupportsDepthClipControl;
 
         public readonly uint MaximumUniformBuffersPerStage;
         public readonly uint MaximumStorageBuffersPerStage;
@@ -85,6 +86,7 @@ namespace Ryujinx.Graphics.GAL
             bool supportsViewportMask,
             bool supportsViewportSwizzle,
             bool supportsIndirectParameters,
+            bool supportsDepthClipControl,
             uint maximumUniformBuffersPerStage,
             uint maximumStorageBuffersPerStage,
             uint maximumTexturesPerStage,
@@ -127,6 +129,7 @@ namespace Ryujinx.Graphics.GAL
             SupportsViewportMask = supportsViewportMask;
             SupportsViewportSwizzle = supportsViewportSwizzle;
             SupportsIndirectParameters = supportsIndirectParameters;
+            SupportsDepthClipControl = supportsDepthClipControl;
             MaximumUniformBuffersPerStage = maximumUniformBuffersPerStage;
             MaximumStorageBuffersPerStage = maximumStorageBuffersPerStage;
             MaximumTexturesPerStage = maximumTexturesPerStage;

@@ -43,6 +43,7 @@ namespace Ryujinx.Graphics.Vulkan
         public readonly bool SupportsGeometryShader;
         public readonly bool SupportsViewportArray2;
         public readonly bool SupportsHostImportedMemory;
+        public readonly bool SupportsDepthClipControl;
         public readonly uint MinSubgroupSize;
         public readonly uint MaxSubgroupSize;
         public readonly ShaderStageFlags RequiredSubgroupSizeStages;
@@ -79,6 +80,7 @@ namespace Ryujinx.Graphics.Vulkan
             bool supportsGeometryShader,
             bool supportsViewportArray2,
             bool supportsHostImportedMemory,
+            bool supportsDepthClipControl,
             uint minSubgroupSize,
             uint maxSubgroupSize,
             ShaderStageFlags requiredSubgroupSizeStages,
@@ -114,6 +116,7 @@ namespace Ryujinx.Graphics.Vulkan
             SupportsGeometryShader = supportsGeometryShader;
             SupportsViewportArray2 = supportsViewportArray2;
             SupportsHostImportedMemory = supportsHostImportedMemory;
+            SupportsDepthClipControl = supportsDepthClipControl;
             MinSubgroupSize = minSubgroupSize;
             MaxSubgroupSize = maxSubgroupSize;
             RequiredSubgroupSizeStages = requiredSubgroupSizeStages;

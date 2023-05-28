@@ -304,6 +304,12 @@ namespace Ryujinx.Graphics.Vulkan
             set => Internal.Id9 = (Internal.Id9 & 0xFFFFFFFFFFFFFFCF) | ((ulong)value << 4);
         }
 
+        public bool DepthMode
+        {
+            get => ((Internal.Id9 >> 6) & 0x1) != 0UL;
+            set => Internal.Id9 = (Internal.Id9 & 0xFFFFFFFFFFFFFFBF) | ((value ? 1UL : 0UL) << 6);
+        }
+
         public NativeArray<PipelineShaderStageCreateInfo> Stages;
         public NativeArray<PipelineShaderStageRequiredSubgroupSizeCreateInfoEXT> StageRequiredSubgroupSizes;
         public PipelineLayout PipelineLayout;
@@ -331,6 +337,7 @@ namespace Ryujinx.Graphics.Vulkan
 
             LineWidth = 1f;
             SamplesCount = 1;
+            DepthMode = true;
         }
 
         public unsafe Auto<DisposablePipeline> CreateComputePipeline(
@@ -481,6 +488,17 @@ namespace Ryujinx.Graphics.Vulkan
                     ScissorCount = ScissorsCount,
                     PScissors = pScissors
                 };
+
+                if (gd.Capabilities.SupportsDepthClipControl)
+                {
+                    var viewportDepthClipControlState = new PipelineViewportDepthClipControlCreateInfoEXT()
+                    {
+                        SType = StructureType.PipelineViewportDepthClipControlCreateInfoExt,
+                        NegativeOneToOne = DepthMode
+                    };
+
+                    viewportState.PNext = &viewportDepthClipControlState;
+                }
 
                 var multisampleState = new PipelineMultisampleStateCreateInfo
                 {

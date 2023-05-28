@@ -216,6 +216,11 @@ namespace Ryujinx.Graphics.Vulkan
                 SType = StructureType.PhysicalDeviceCustomBorderColorFeaturesExt
             };
 
+            PhysicalDeviceDepthClipControlFeaturesEXT featuresDepthClipControl = new PhysicalDeviceDepthClipControlFeaturesEXT()
+            {
+                SType = StructureType.PhysicalDeviceDepthClipControlFeaturesExt
+            };
+
             PhysicalDevicePortabilitySubsetFeaturesKHR featuresPortabilitySubset = new PhysicalDevicePortabilitySubsetFeaturesKHR()
             {
                 SType = StructureType.PhysicalDevicePortabilitySubsetFeaturesKhr
@@ -242,6 +247,14 @@ namespace Ryujinx.Graphics.Vulkan
             {
                 featuresCustomBorderColor.PNext = features2.PNext;
                 features2.PNext = &featuresCustomBorderColor;
+            }
+
+            bool supportsDepthClipControl = _physicalDevice.IsDeviceExtensionPresent("VK_EXT_depth_clip_control");
+
+            if (supportsDepthClipControl)
+            {
+                featuresDepthClipControl.PNext = features2.PNext;
+                features2.PNext = &featuresDepthClipControl;
             }
 
             bool usePortability = _physicalDevice.IsDeviceExtensionPresent("VK_KHR_portability_subset");
@@ -310,6 +323,7 @@ namespace Ryujinx.Graphics.Vulkan
                 _physicalDevice.PhysicalDeviceFeatures.GeometryShader,
                 _physicalDevice.IsDeviceExtensionPresent("VK_NV_viewport_array2"),
                 _physicalDevice.IsDeviceExtensionPresent(ExtExternalMemoryHost.ExtensionName),
+                supportsDepthClipControl && featuresDepthClipControl.DepthClipControl,
                 propertiesSubgroupSizeControl.MinSubgroupSize,
                 propertiesSubgroupSizeControl.MaxSubgroupSize,
                 propertiesSubgroupSizeControl.RequiredSubgroupSizeStages,
@@ -585,6 +599,7 @@ namespace Ryujinx.Graphics.Vulkan
                 supportsViewportMask: Capabilities.SupportsViewportArray2,
                 supportsViewportSwizzle: false,
                 supportsIndirectParameters: true,
+                supportsDepthClipControl: Capabilities.SupportsDepthClipControl,
                 maximumUniformBuffersPerStage: Constants.MaxUniformBuffersPerStage,
                 maximumStorageBuffersPerStage: Constants.MaxStorageBuffersPerStage,
                 maximumTexturesPerStage: Constants.MaxTexturesPerStage,

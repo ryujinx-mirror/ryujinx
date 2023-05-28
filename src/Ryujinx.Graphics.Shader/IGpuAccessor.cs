@@ -368,6 +368,15 @@ namespace Ryujinx.Graphics.Shader
         }
 
         /// <summary>
+        /// Queries whether the host supports depth clip control.
+        /// </summary>
+        /// <returns>True if the GPU and driver supports depth clip control, false otherwise</returns>
+        bool QueryHostSupportsDepthClipControl()
+        {
+            return true;
+        }
+
+        /// <summary>
         /// Queries the point size from the GPU state, used when it is not explicitly set on the shader.
         /// </summary>
         /// <returns>Current point size</returns>

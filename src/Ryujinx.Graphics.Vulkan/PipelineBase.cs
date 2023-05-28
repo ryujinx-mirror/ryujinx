@@ -813,8 +813,12 @@ namespace Ryujinx.Graphics.Vulkan
 
         public void SetDepthMode(DepthMode mode)
         {
-            // Currently this is emulated on the shader, because Vulkan had no support for changing the depth mode.
-            // In the future, we may want to use the VK_EXT_depth_clip_control extension to change it here.
+            bool oldMode = _newState.DepthMode;
+            _newState.DepthMode = mode == DepthMode.MinusOneToOne;
+            if (_newState.DepthMode != oldMode)
+            {
+                SignalStateChange();
+            }
         }
 
         public void SetDepthTest(DepthTestDescriptor depthTest)

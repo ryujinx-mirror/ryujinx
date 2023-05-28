@@ -165,6 +165,8 @@ namespace Ryujinx.Graphics.Gpu.Shader
 
         public bool QueryHostSupportsViewportMask() => _context.Capabilities.SupportsViewportMask;
 
+        public bool QueryHostSupportsDepthClipControl() => _context.Capabilities.SupportsDepthClipControl;
+
         /// <summary>
         /// Converts a packed Maxwell texture format to the shader translator texture format.
         /// </summary>
