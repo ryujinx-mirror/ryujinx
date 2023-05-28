@@ -72,6 +72,18 @@
                     LineHeight="12"
                     Text="{Binding Version}"
                     TextAlignment="Center" />
+                <Button
+                    Padding="5"
+                    HorizontalAlignment="Center"
+                    Background="Transparent"
+                    Click="Button_OnClick"
+                    Tag="https://github.com/Ryujinx/Ryujinx/wiki/Changelog#ryujinx-changelog">
+                    <TextBlock
+                        FontSize="10"
+                        Text="{locale:Locale AboutChangelogButton}"
+                        TextAlignment="Center"
+                        ToolTip.Tip="{locale:Locale AboutChangelogButtonTooltipMessage}" />
+                </Button>
             </StackPanel>
             <StackPanel
                 Grid.Row="2"

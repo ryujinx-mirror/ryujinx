@@ -637,5 +637,7 @@
   "SettingsTabNetworkInterface": "Network Interface:",
   "NetworkInterfaceTooltip": "The network interface used for LAN features",
   "NetworkInterfaceDefault": "Default",
-  "PackagingShaders": "Packaging Shaders"
+  "PackagingShaders": "Packaging Shaders",
+  "AboutChangelogButton": "View Changelog on GitHub",
+  "AboutChangelogButtonTooltipMessage": "Click to open the changelog for this version in your default browser."
 }

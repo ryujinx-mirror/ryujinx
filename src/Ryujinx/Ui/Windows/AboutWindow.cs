@@ -76,5 +76,10 @@ namespace Ryujinx.Ui.Windows
         {
             OpenHelper.OpenUrl("https://github.com/Ryujinx/Ryujinx/graphs/contributors?type=a");
         }
+
+        private void ChangelogButton_Pressed(object sender, ButtonPressEventArgs args)
+        {
+            OpenHelper.OpenUrl("https://github.com/Ryujinx/Ryujinx/wiki/Changelog#ryujinx-changelog");
+        }
     }
 }

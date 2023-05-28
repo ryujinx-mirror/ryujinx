@@ -48,6 +48,8 @@ namespace Ryujinx.Ui.Windows
         private Label          _patreonNamesLabel;
         private ScrolledWindow _patreonNamesScrolled;
         private TextView       _patreonNamesText;
+        private EventBox       _changelogEventBox;
+        private Label          _changelogLinkLabel;
 
         private void InitializeComponent()
         {
@@ -147,6 +149,23 @@ namespace Ryujinx.Ui.Windows
                 Justify = Justification.Center,
                 Margin  = 5
             };
+
+            //
+            // _changelogEventBox
+            //
+            _changelogEventBox = new EventBox();
+            _changelogEventBox.ButtonPressEvent += ChangelogButton_Pressed;
+
+            //
+            // _changelogLinkLabel
+            //
+            _changelogLinkLabel = new Label("View Changelog on GitHub")
+            {
+                TooltipText = "Click to open the changelog for this version in your default browser.",
+                Justify = Justification.Center,
+                Attributes  = new AttrList()
+            };
+            _changelogLinkLabel.Attributes.Insert(new Pango.AttrUnderline(Underline.Single));
 
             //
             // _disclaimerLabel
@@ -464,8 +483,11 @@ namespace Ryujinx.Ui.Windows
             _socialBox.Add(_discordEventBox);
             _socialBox.Add(_twitterEventBox);
 
+            _changelogEventBox.Add(_changelogLinkLabel);
+
             _leftBox.Add(_logoBox);
             _leftBox.Add(_versionLabel);
+            _leftBox.Add(_changelogEventBox);
             _leftBox.Add(_disclaimerLabel);
             _leftBox.Add(_amiiboApiLink);
             _leftBox.Add(_socialBox);
