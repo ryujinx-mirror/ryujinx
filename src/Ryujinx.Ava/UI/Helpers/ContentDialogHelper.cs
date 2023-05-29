@@ -6,7 +6,6 @@ using Avalonia.Threading;
 using FluentAvalonia.Core;
 using FluentAvalonia.UI.Controls;
 using Ryujinx.Ava.Common.Locale;
-using Ryujinx.Ava.UI.Controls;
 using Ryujinx.Ava.UI.Windows;
 using Ryujinx.Common.Logging;
 using System;
@@ -19,7 +18,7 @@ namespace Ryujinx.Ava.UI.Helpers
     {
         private static bool _isChoiceDialogOpen;
 
-        public async static Task<UserResult> ShowContentDialog(
+        private async static Task<UserResult> ShowContentDialog(
              string title,
              object content,
              string primaryButton,
@@ -67,7 +66,7 @@ namespace Ryujinx.Ava.UI.Helpers
             return result;
         }
 
-        private async static Task<UserResult> ShowTextDialog(
+        public async static Task<UserResult> ShowTextDialog(
             string title,
             string primaryText,
             string secondaryText,
@@ -319,7 +318,7 @@ namespace Ryujinx.Ava.UI.Helpers
 
             Window parent = GetMainWindow();
 
-            if (parent != null && parent.IsActive && parent is MainWindow window && window.ViewModel.IsGameRunning)
+            if (parent is { IsActive: true } and MainWindow window && window.ViewModel.IsGameRunning)
             {
                 contentDialogOverlayWindow = new()
                 {

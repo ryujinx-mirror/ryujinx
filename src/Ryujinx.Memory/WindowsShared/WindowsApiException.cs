@@ -1,7 +1,9 @@
 using System;
+using System.Runtime.Versioning;
 
 namespace Ryujinx.Memory.WindowsShared
 {
+    [SupportedOSPlatform("windows")]
     class WindowsApiException : Exception
     {
         public WindowsApiException()

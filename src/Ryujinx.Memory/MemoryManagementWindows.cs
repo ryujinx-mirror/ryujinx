@@ -1,5 +1,6 @@
 ﻿using Ryujinx.Memory.WindowsShared;
 using System;
+using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 
 namespace Ryujinx.Memory
@@ -36,7 +37,7 @@ namespace Ryujinx.Memory
 
             if (ptr == IntPtr.Zero)
             {
-                throw new OutOfMemoryException();
+                throw new SystemException(Marshal.GetLastPInvokeErrorMessage());
             }
 
             return ptr;
@@ -48,7 +49,7 @@ namespace Ryujinx.Memory
 
             if (ptr == IntPtr.Zero)
             {
-                throw new OutOfMemoryException();
+                throw new SystemException(Marshal.GetLastPInvokeErrorMessage());
             }
 
             return ptr;

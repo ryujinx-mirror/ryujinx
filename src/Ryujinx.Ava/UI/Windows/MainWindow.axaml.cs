@@ -23,6 +23,7 @@ using Ryujinx.Ui.Common.Helper;
 using System;
 using System.ComponentModel;
 using System.IO;
+using System.Runtime.Versioning;
 using System.Threading.Tasks;
 using InputManager = Ryujinx.Input.HLE.InputManager;
 
@@ -258,7 +259,64 @@ namespace Ryujinx.Ava.UI.Windows
             ApplicationHelper.Initialize(VirtualFileSystem, AccountManager, LibHacHorizonManager.RyujinxClient, this);
         }
 
-        protected void CheckLaunchState()
+        [SupportedOSPlatform("linux")]
+        private static async void ShowVmMaxMapCountWarning()
+        {
+            LocaleManager.Instance.UpdateAndGetDynamicValue(LocaleKeys.LinuxVmMaxMapCountWarningTextSecondary,
+                LinuxHelper.VmMaxMapCount, LinuxHelper.RecommendedVmMaxMapCount);
+
+            await ContentDialogHelper.CreateWarningDialog(
+                LocaleManager.Instance[LocaleKeys.LinuxVmMaxMapCountWarningTextPrimary],
+                LocaleManager.Instance[LocaleKeys.LinuxVmMaxMapCountWarningTextSecondary]
+            );
+        }
+
+        [SupportedOSPlatform("linux")]
+        private static async void ShowVmMaxMapCountDialog()
+        {
+            LocaleManager.Instance.UpdateAndGetDynamicValue(LocaleKeys.LinuxVmMaxMapCountDialogTextPrimary,
+                LinuxHelper.RecommendedVmMaxMapCount);
+
+            UserResult response = await ContentDialogHelper.ShowTextDialog(
+                $"Ryujinx - {LocaleManager.Instance[LocaleKeys.LinuxVmMaxMapCountDialogTitle]}",
+                LocaleManager.Instance[LocaleKeys.LinuxVmMaxMapCountDialogTextPrimary],
+                LocaleManager.Instance[LocaleKeys.LinuxVmMaxMapCountDialogTextSecondary],
+                LocaleManager.Instance[LocaleKeys.LinuxVmMaxMapCountDialogButtonUntilRestart],
+                LocaleManager.Instance[LocaleKeys.LinuxVmMaxMapCountDialogButtonPersistent],
+                LocaleManager.Instance[LocaleKeys.InputDialogNo],
+                (int)Symbol.Help
+            );
+
+            int rc;
+
+            switch (response)
+            {
+                case UserResult.Ok:
+                    rc = LinuxHelper.RunPkExec($"echo {LinuxHelper.RecommendedVmMaxMapCount} > {LinuxHelper.VmMaxMapCountPath}");
+                    if (rc == 0)
+                    {
+                        Logger.Info?.Print(LogClass.Application, $"vm.max_map_count set to {LinuxHelper.VmMaxMapCount} until the next restart.");
+                    }
+                    else
+                    {
+                        Logger.Error?.Print(LogClass.Application, $"Unable to change vm.max_map_count. Process exited with code: {rc}");
+                    }
+                    break;
+                case UserResult.No:
+                    rc = LinuxHelper.RunPkExec($"echo \"vm.max_map_count = {LinuxHelper.RecommendedVmMaxMapCount}\" > {LinuxHelper.SysCtlConfigPath} && sysctl -p {LinuxHelper.SysCtlConfigPath}");
+                    if (rc == 0)
+                    {
+                        Logger.Info?.Print(LogClass.Application, $"vm.max_map_count set to {LinuxHelper.VmMaxMapCount}. Written to config: {LinuxHelper.SysCtlConfigPath}");
+                    }
+                    else
+                    {
+                        Logger.Error?.Print(LogClass.Application, $"Unable to write new value for vm.max_map_count to config. Process exited with code: {rc}");
+                    }
+                    break;
+            }
+        }
+
+        private void CheckLaunchState()
         {
             if (ShowKeyErrorOnLoad)
             {
@@ -266,6 +324,20 @@ namespace Ryujinx.Ava.UI.Windows
 
                 Dispatcher.UIThread.Post(async () => await
                     UserErrorDialog.ShowUserErrorDialog(UserError.NoKeys, this));
+            }
+
+            if (OperatingSystem.IsLinux() && LinuxHelper.VmMaxMapCount < LinuxHelper.RecommendedVmMaxMapCount)
+            {
+                Logger.Warning?.Print(LogClass.Application, $"The value of vm.max_map_count is lower than {LinuxHelper.RecommendedVmMaxMapCount}. ({LinuxHelper.VmMaxMapCount})");
+
+                if (LinuxHelper.PkExecPath is not null)
+                {
+                    Dispatcher.UIThread.Post(ShowVmMaxMapCountDialog);
+                }
+                else
+                {
+                    Dispatcher.UIThread.Post(ShowVmMaxMapCountWarning);
+                }
             }
 
             if (_deferLoad)

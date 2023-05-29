@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Text;
 
@@ -53,9 +54,9 @@ namespace Ryujinx.Memory
 
             IntPtr ptr = mmap(IntPtr.Zero, size, prot, flags, -1, 0);
 
-            if (ptr == new IntPtr(-1L))
+            if (ptr == MAP_FAILED)
             {
-                throw new OutOfMemoryException();
+                throw new SystemException(Marshal.GetLastPInvokeErrorMessage());
             }
 
             if (!_allocations.TryAdd(ptr, size))
@@ -76,17 +77,33 @@ namespace Ryujinx.Memory
                 prot |= MmapProts.PROT_EXEC;
             }
 
-            return mprotect(address, size, prot) == 0;
+            if (mprotect(address, size, prot) != 0)
+            {
+                throw new SystemException(Marshal.GetLastPInvokeErrorMessage());
+            }
+
+            return true;
         }
 
         public static bool Decommit(IntPtr address, ulong size)
         {
             // Must be writable for madvise to work properly.
-            mprotect(address, size, MmapProts.PROT_READ | MmapProts.PROT_WRITE);
+            if (mprotect(address, size, MmapProts.PROT_READ | MmapProts.PROT_WRITE) != 0)
+            {
+                throw new SystemException(Marshal.GetLastPInvokeErrorMessage());
+            }
 
-            madvise(address, size, MADV_REMOVE);
+            if (madvise(address, size, MADV_REMOVE) != 0)
+            {
+                throw new SystemException(Marshal.GetLastPInvokeErrorMessage());
+            }
 
-            return mprotect(address, size, MmapProts.PROT_NONE) == 0;
+            if (mprotect(address, size, MmapProts.PROT_NONE) != 0)
+            {
+                throw new SystemException(Marshal.GetLastPInvokeErrorMessage());
+            }
+
+            return true;
         }
 
         public static bool Reprotect(IntPtr address, ulong size, MemoryPermission permission)

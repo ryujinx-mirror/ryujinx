@@ -264,6 +264,71 @@ namespace Ryujinx
             MainWindow mainWindow = new MainWindow();
             mainWindow.Show();
 
+            if (OperatingSystem.IsLinux())
+            {
+                int currentVmMaxMapCount = LinuxHelper.VmMaxMapCount;
+
+                if (LinuxHelper.VmMaxMapCount < LinuxHelper.RecommendedVmMaxMapCount)
+                {
+                    Logger.Warning?.Print(LogClass.Application, $"The value of vm.max_map_count is lower than {LinuxHelper.RecommendedVmMaxMapCount}. ({currentVmMaxMapCount})");
+
+                    if (LinuxHelper.PkExecPath is not null)
+                    {
+                        var buttonTexts = new Dictionary<int, string>()
+                        {
+                            { 0, "Yes, until the next restart" },
+                            { 1, "Yes, permanently" },
+                            { 2, "No" }
+                        };
+
+                        ResponseType response = GtkDialog.CreateCustomDialog(
+                            "Ryujinx - Low limit for memory mappings detected",
+                            $"Would you like to increase the value of vm.max_map_count to {LinuxHelper.RecommendedVmMaxMapCount}?",
+                            "Some games might try to create more memory mappings than currently allowed. " +
+                            "Ryujinx will crash as soon as this limit gets exceeded.",
+                            buttonTexts,
+                            MessageType.Question);
+
+                        int rc;
+
+                        switch ((int)response)
+                        {
+                            case 0:
+                                rc = LinuxHelper.RunPkExec($"echo {LinuxHelper.RecommendedVmMaxMapCount} > {LinuxHelper.VmMaxMapCountPath}");
+                                if (rc == 0)
+                                {
+                                    Logger.Info?.Print(LogClass.Application, $"vm.max_map_count set to {LinuxHelper.VmMaxMapCount} until the next restart.");
+                                }
+                                else
+                                {
+                                    Logger.Error?.Print(LogClass.Application, $"Unable to change vm.max_map_count. Process exited with code: {rc}");
+                                }
+                                break;
+                            case 1:
+                                rc = LinuxHelper.RunPkExec($"echo \"vm.max_map_count = {LinuxHelper.RecommendedVmMaxMapCount}\" > {LinuxHelper.SysCtlConfigPath} && sysctl -p {LinuxHelper.SysCtlConfigPath}");
+                                if (rc == 0)
+                                {
+                                    Logger.Info?.Print(LogClass.Application, $"vm.max_map_count set to {LinuxHelper.VmMaxMapCount}. Written to config: {LinuxHelper.SysCtlConfigPath}");
+                                }
+                                else
+                                {
+                                    Logger.Error?.Print(LogClass.Application, $"Unable to write new value for vm.max_map_count to config. Process exited with code: {rc}");
+                                }
+                                break;
+                        }
+                    }
+                    else
+                    {
+                        GtkDialog.CreateWarningDialog(
+                            "Max amount of memory mappings is lower than recommended.",
+                            $"The current value of vm.max_map_count ({currentVmMaxMapCount}) is lower than {LinuxHelper.RecommendedVmMaxMapCount}." +
+                            "Some games might try to create more memory mappings than currently allowed. " +
+                            "Ryujinx will crash as soon as this limit gets exceeded.\n\n" +
+                            "You might want to either manually increase the limit or install pkexec, which allows Ryujinx to assist with that.");
+                    }
+                }
+            }
+
             if (CommandLineState.LaunchPathArg != null)
             {
                 mainWindow.RunApplication(CommandLineState.LaunchPathArg, CommandLineState.StartFullscreenArg);

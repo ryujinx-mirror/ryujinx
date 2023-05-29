@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.InteropServices;
 
 namespace Ryujinx.Memory
 {
@@ -8,7 +9,7 @@ namespace Ryujinx.Memory
         {
         }
 
-        public MemoryProtectionException(MemoryPermission permission) : base($"Failed to set memory protection to \"{permission}\".")
+        public MemoryProtectionException(MemoryPermission permission) : base($"Failed to set memory protection to \"{permission}\": {Marshal.GetLastPInvokeErrorMessage()}")
         {
         }
 

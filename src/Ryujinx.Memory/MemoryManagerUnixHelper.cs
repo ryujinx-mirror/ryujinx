@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 
 namespace Ryujinx.Memory
 {
+    [SupportedOSPlatform("linux")]
+    [SupportedOSPlatform("macos")]
     public static partial class MemoryManagerUnixHelper
     {
         [Flags]
@@ -40,6 +43,8 @@ namespace Ryujinx.Memory
             O_NONBLOCK = 128,
             O_SYNC = 256,
         }
+
+        public const IntPtr MAP_FAILED = -1;
 
         private const int MAP_ANONYMOUS_LINUX_GENERIC = 0x20;
         private const int MAP_NORESERVE_LINUX_GENERIC = 0x4000;

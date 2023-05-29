@@ -1,8 +1,10 @@
 using System;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 
 namespace Ryujinx.Memory.WindowsShared
 {
+    [SupportedOSPlatform("windows")]
     static partial class WindowsApi
     {
         public static readonly IntPtr InvalidHandleValue = new IntPtr(-1);
