@@ -3,6 +3,9 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:locale="clr-namespace:Ryujinx.Ava.Common.Locale">
+	<MenuItem
+        Click="RunApplication_Click"
+        Header="{locale:Locale GameListContextMenuRunApplication}" />
     <MenuItem
         Click="ToggleFavorite_Click"
         Header="{locale:Locale GameListContextMenuToggleFavorite}"

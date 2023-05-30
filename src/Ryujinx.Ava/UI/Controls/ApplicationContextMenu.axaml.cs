@@ -323,5 +323,15 @@ namespace Ryujinx.Ava.UI.Controls
                 await ApplicationHelper.ExtractSection(NcaSectionType.Logo, viewModel.SelectedApplication.Path, viewModel.SelectedApplication.TitleName);
             }
         }
+
+        public void RunApplication_Click(object sender, RoutedEventArgs args)
+        {
+            var viewModel = (sender as MenuItem)?.DataContext as MainWindowViewModel;
+
+            if (viewModel?.SelectedApplication != null)
+            {
+                viewModel.LoadApplication(viewModel.SelectedApplication.Path);
+            }
+        }
     }
 }
