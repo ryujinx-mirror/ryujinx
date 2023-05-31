@@ -155,6 +155,9 @@ namespace Ryujinx.Graphics.Shader.Translation
             {
                 other._config.MergeOutputUserAttributes(_config.UsedOutputAttributes, Enumerable.Empty<int>());
 
+                // We need to share the resource manager since both shaders accesses the same constant buffers.
+                other._config.ResourceManager = _config.ResourceManager;
+
                 FunctionCode[] otherCode = EmitShader(other._program, other._config, initializeOutputs: true, out int aStart);
 
                 code = Combine(otherCode, code, aStart);

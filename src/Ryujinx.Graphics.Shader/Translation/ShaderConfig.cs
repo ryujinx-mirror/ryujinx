@@ -39,9 +39,9 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         public TranslationOptions Options { get; }
 
-        public ShaderProperties Properties { get; }
+        public ShaderProperties Properties => ResourceManager.Properties;
 
-        public ResourceManager ResourceManager { get; }
+        public ResourceManager ResourceManager { get; set; }
 
         public bool TransformFeedbackEnabled { get; }
 
@@ -159,8 +159,7 @@ namespace Ryujinx.Graphics.Shader.Translation
             _sbSlots        = new Dictionary<int, int>();
             _sbSlotsReverse = new Dictionary<int, int>();
 
-            Properties = new ShaderProperties();
-            ResourceManager = new ResourceManager(stage, gpuAccessor, Properties);
+            ResourceManager = new ResourceManager(stage, gpuAccessor, new ShaderProperties());
         }
 
         public ShaderConfig(
@@ -429,8 +428,6 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         public void InheritFrom(ShaderConfig other)
         {
-            ResourceManager.InheritFrom(other.ResourceManager);
-
             ClipDistancesWritten |= other.ClipDistancesWritten;
             UsedFeatures |= other.UsedFeatures;
 

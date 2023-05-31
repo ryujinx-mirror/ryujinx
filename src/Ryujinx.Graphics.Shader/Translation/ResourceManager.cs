@@ -17,6 +17,8 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         private readonly HashSet<int> _usedConstantBufferBindings;
 
+        public ShaderProperties Properties => _properties;
+
         public ResourceManager(ShaderStage stage, IGpuAccessor gpuAccessor, ShaderProperties properties)
         {
             _gpuAccessor = gpuAccessor;
@@ -96,19 +98,6 @@ namespace Ryujinx.Graphics.Shader.Translation
             });
 
             _properties.AddConstantBuffer(binding, new BufferDefinition(BufferLayout.Std140, 0, binding, name, type));
-        }
-
-        public void InheritFrom(ResourceManager other)
-        {
-            for (int i = 0; i < other._cbSlotToBindingMap.Length; i++)
-            {
-                int binding = other._cbSlotToBindingMap[i];
-
-                if (binding >= 0)
-                {
-                    _cbSlotToBindingMap[i] = binding;
-                }
-            }
         }
 
         public static string GetShaderStagePrefix(ShaderStage stage)
