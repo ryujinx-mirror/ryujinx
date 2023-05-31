@@ -358,7 +358,7 @@ namespace Ryujinx.Graphics.Vulkan
 
         public void Draw(int vertexCount, int instanceCount, int firstVertex, int firstInstance)
         {
-            if (!_program.IsLinked)
+            if (!_program.IsLinked || vertexCount == 0)
             {
                 return;
             }
@@ -422,7 +422,7 @@ namespace Ryujinx.Graphics.Vulkan
 
         public void DrawIndexed(int indexCount, int instanceCount, int firstIndex, int firstVertex, int firstInstance)
         {
-            if (!_program.IsLinked)
+            if (!_program.IsLinked || indexCount == 0)
             {
                 return;
             }
