@@ -58,11 +58,20 @@
                         JustifyContent="SpaceAround"
                         RowSpacing="2">
                         <TextBlock
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
                             FontSize="28"
                             FontWeight="Bold"
                             Text="Ryujinx"
-                            TextAlignment="Left" />
-                        <TextBlock Text="(REE-YOU-JINX)" TextAlignment="Left" />
+                            TextAlignment="Center"
+                            Width="100" />
+                        <TextBlock
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            FontSize="11"
+                            Text="(REE-YOU-JINX)"
+                            TextAlignment="Center"
+                            Width="100" />
                     </flex:FlexPanel>
                 </Grid>
                 <TextBlock
