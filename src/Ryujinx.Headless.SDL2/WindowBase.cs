@@ -62,6 +62,7 @@ namespace Ryujinx.Headless.SDL2
         private readonly long _ticksPerFrame;
         private readonly CancellationTokenSource _gpuCancellationTokenSource;
         private readonly ManualResetEvent _exitEvent;
+        private readonly ManualResetEvent _gpuDoneEvent;
 
         private long _ticks;
         private bool _isActive;
@@ -91,6 +92,7 @@ namespace Ryujinx.Headless.SDL2
             _ticksPerFrame = Stopwatch.Frequency / TargetFps;
             _gpuCancellationTokenSource = new CancellationTokenSource();
             _exitEvent = new ManualResetEvent(false);
+            _gpuDoneEvent = new ManualResetEvent(false);
             _aspectRatio = aspectRatio;
             _enableMouse = enableMouse;
             HostUiTheme = new HeadlessHostUiTheme();
@@ -275,6 +277,14 @@ namespace Ryujinx.Headless.SDL2
                         _ticks = Math.Min(_ticks - _ticksPerFrame, _ticksPerFrame);
                     }
                 }
+
+                // Make sure all commands in the run loop are fully executed before leaving the loop.
+                if (Device.Gpu.Renderer is ThreadedRenderer threaded)
+                {
+                    threaded.FlushThreadedCommands();
+                }
+
+                _gpuDoneEvent.Set();
             });
 
             FinalizeWindowRenderer();
@@ -404,7 +414,10 @@ namespace Ryujinx.Headless.SDL2
 
             MainLoop();
 
-            renderLoopThread.Join();
+            // NOTE: The render loop is allowed to stay alive until the renderer itself is disposed, as it may handle resource dispose.
+            // We only need to wait for all commands submitted during the main gpu loop to be processed.
+            _gpuDoneEvent.WaitOne();
+            _gpuDoneEvent.Dispose();
             nvStutterWorkaround?.Join();
 
             Exit();

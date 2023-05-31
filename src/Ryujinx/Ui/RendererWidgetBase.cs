@@ -65,6 +65,7 @@ namespace Ryujinx.Ui
         private KeyboardHotkeyState _prevHotkeyState;
 
         private readonly ManualResetEvent _exitEvent;
+        private readonly ManualResetEvent _gpuDoneEvent;
 
         private readonly CancellationTokenSource _gpuCancellationTokenSource;
 
@@ -110,6 +111,7 @@ namespace Ryujinx.Ui
                           | EventMask.KeyReleaseMask));
 
             _exitEvent = new ManualResetEvent(false);
+            _gpuDoneEvent = new ManualResetEvent(false);
 
             _gpuCancellationTokenSource = new CancellationTokenSource();
 
@@ -499,6 +501,14 @@ namespace Ryujinx.Ui
                         _ticks = Math.Min(_ticks - _ticksPerFrame, _ticksPerFrame);
                     }
                 }
+
+                // Make sure all commands in the run loop are fully executed before leaving the loop.
+                if (Device.Gpu.Renderer is ThreadedRenderer threaded)
+                {
+                    threaded.FlushThreadedCommands();
+                }
+
+                _gpuDoneEvent.Set();
             });
         }
 
@@ -542,7 +552,10 @@ namespace Ryujinx.Ui
 
             MainLoop();
 
-            renderLoopThread.Join();
+            // NOTE: The render loop is allowed to stay alive until the renderer itself is disposed, as it may handle resource dispose.
+            // We only need to wait for all commands submitted during the main gpu loop to be processed.
+            _gpuDoneEvent.WaitOne();
+            _gpuDoneEvent.Dispose();
             nvStutterWorkaround?.Join();
 
             Exit();

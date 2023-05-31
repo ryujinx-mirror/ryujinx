@@ -390,7 +390,6 @@ namespace Ryujinx.Graphics.Gpu
         /// </summary>
         public void Dispose()
         {
-            Renderer.Dispose();
             GPFifo.Dispose();
             HostInitalized.Dispose();
 
@@ -403,6 +402,8 @@ namespace Ryujinx.Graphics.Gpu
             PhysicalMemoryRegistry.Clear();
 
             RunDeferredActions();
+
+            Renderer.Dispose();
         }
     }
 }

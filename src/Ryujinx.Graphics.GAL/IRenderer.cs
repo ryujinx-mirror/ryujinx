@@ -1,5 +1,6 @@
 using Ryujinx.Common.Configuration;
 using System;
+using System.Threading;
 
 namespace Ryujinx.Graphics.GAL
 {
@@ -52,7 +53,7 @@ namespace Ryujinx.Graphics.GAL
 
         void ResetCounter(CounterType type);
 
-        void RunLoop(Action gpuLoop)
+        void RunLoop(ThreadStart gpuLoop)
         {
             gpuLoop();
         }
