@@ -21,6 +21,7 @@ namespace Ryujinx.Ava.UI.Helpers
             if (value is byte[] buffer && targetType == typeof(IImage))
             {
                 MemoryStream mem = new(buffer);
+
                 return new Bitmap(mem);
             }
 
