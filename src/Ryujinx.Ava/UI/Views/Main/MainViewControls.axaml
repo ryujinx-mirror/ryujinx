@@ -16,6 +16,7 @@
     </Design.DataContext>
     <DockPanel
         Margin="0,0,0,5"
+        Height="35"
         HorizontalAlignment="Stretch">
         <Button
             Width="40"
