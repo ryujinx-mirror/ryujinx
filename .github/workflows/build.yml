@@ -18,6 +18,10 @@ on:
       - '*.yml'
       - 'README.md'
 
+concurrency:
+  group: pr-checks-${{ github.event.number }}
+  cancel-in-progress: true
+
 env:
   POWERSHELL_TELEMETRY_OPTOUT: 1
   DOTNET_CLI_TELEMETRY_OPTOUT: 1
