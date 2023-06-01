@@ -1,3 +1,4 @@
+using Ryujinx.Common.Logging.Targets;
 using Ryujinx.Common.SystemInterop;
 using System;
 using System.Collections.Generic;
@@ -52,6 +53,16 @@ namespace Ryujinx.Common.Logging
                 if (m_EnabledClasses[(int)logClass])
                 {
                     Updated?.Invoke(null, new LogEventArgs(Level, m_Time.Elapsed, Thread.CurrentThread.Name, FormatMessage(logClass, caller, message), data));
+                }
+            }
+
+            [StackTraceHidden]
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public void PrintStack(LogClass logClass, string message, [CallerMemberName] string caller = "")
+            {
+                if (m_EnabledClasses[(int)logClass])
+                {
+                    Updated?.Invoke(null, new LogEventArgs(Level, m_Time.Elapsed, Thread.CurrentThread.Name, FormatMessage(logClass, caller, message), new StackTrace(true)));
                 }
             }
 
@@ -122,7 +133,7 @@ namespace Ryujinx.Common.Logging
                 AsyncLogTargetOverflowAction.Discard));
 
             Notice = new Log(LogLevel.Notice);
-            
+
             // Enable important log levels before configuration is loaded
             Error = new Log(LogLevel.Error);
             Warning = new Log(LogLevel.Warning);

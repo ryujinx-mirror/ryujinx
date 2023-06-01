@@ -2,7 +2,7 @@
 using System.Collections.Concurrent;
 using System.Threading;
 
-namespace Ryujinx.Common.Logging
+namespace Ryujinx.Common.Logging.Targets
 {
     public enum AsyncLogTargetOverflowAction
     {

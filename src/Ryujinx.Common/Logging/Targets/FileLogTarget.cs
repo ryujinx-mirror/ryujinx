@@ -1,8 +1,9 @@
-﻿using System;
+﻿using Ryujinx.Common.Logging.Formatters;
+using System;
 using System.IO;
 using System.Linq;
 
-namespace Ryujinx.Common.Logging
+namespace Ryujinx.Common.Logging.Targets
 {
     public class FileLogTarget : ILogTarget
     {

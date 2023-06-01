@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Ryujinx.Common.Logging.Formatters;
+using System;
 using System.Text.Json.Serialization;
 
 namespace Ryujinx.Common.Logging

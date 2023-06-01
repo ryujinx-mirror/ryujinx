@@ -1,7 +1,7 @@
 ﻿using Ryujinx.Common.Utilities;
 using System.IO;
 
-namespace Ryujinx.Common.Logging
+namespace Ryujinx.Common.Logging.Targets
 {
     public class JsonLogTarget : ILogTarget
     {

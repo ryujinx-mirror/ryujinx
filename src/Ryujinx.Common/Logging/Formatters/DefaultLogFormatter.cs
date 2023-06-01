@@ -1,6 +1,7 @@
-﻿using System.Text;
+﻿using System.Diagnostics;
+using System.Text;
 
-namespace Ryujinx.Common.Logging
+namespace Ryujinx.Common.Logging.Formatters
 {
     internal class DefaultLogFormatter : ILogFormatter
     {
@@ -27,6 +28,14 @@ namespace Ryujinx.Common.Logging
 
                 if (args.Data is not null)
                 {
+                    if (args.Data is StackTrace trace)
+                    {
+                        sb.Append('\n');
+                        sb.Append(trace);
+
+                        return sb.ToString();
+                    }
+
                     sb.Append(' ');
                     DynamicObjectFormatter.Format(sb, args.Data);
                 }

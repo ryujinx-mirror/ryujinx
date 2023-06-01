@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Ryujinx.Common.Logging
+namespace Ryujinx.Common.Logging.Targets
 {
     public interface ILogTarget : IDisposable
     {

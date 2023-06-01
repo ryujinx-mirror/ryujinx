@@ -1,5 +1,6 @@
 ﻿using Ryujinx.Common;
 using Ryujinx.Common.Logging;
+using Ryujinx.Common.Logging.Targets;
 using System;
 
 namespace Ryujinx.Ui.Common.Configuration
