@@ -165,6 +165,7 @@ namespace Ryujinx.Graphics.Vulkan
             pipeline.DepthTestEnable = state.DepthTest.TestEnable;
             pipeline.DepthWriteEnable = state.DepthTest.WriteEnable;
             pipeline.DepthCompareOp = state.DepthTest.Func.Convert();
+            pipeline.DepthMode = state.DepthMode == DepthMode.MinusOneToOne;
 
             pipeline.FrontFace = state.FrontFace.Convert();
 

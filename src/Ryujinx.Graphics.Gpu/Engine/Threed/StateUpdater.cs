@@ -771,7 +771,11 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         /// </summary>
         private void UpdateDepthMode()
         {
-            _context.Renderer.Pipeline.SetDepthMode(GetDepthMode());
+            DepthMode mode = GetDepthMode();
+
+            _pipeline.DepthMode = mode;
+
+            _context.Renderer.Pipeline.SetDepthMode(mode);
         }
 
         /// <summary>

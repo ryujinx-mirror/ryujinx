@@ -63,6 +63,8 @@ namespace Ryujinx.Graphics.GAL
         public bool PrimitiveRestartEnable;
         public uint PatchControlPoints;
 
+        public DepthMode DepthMode;
+
         public void SetVertexAttribs(ReadOnlySpan<VertexAttribDescriptor> vertexAttribs)
         {
             VertexAttribCount = vertexAttribs.Length;

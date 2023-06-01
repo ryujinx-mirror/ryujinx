@@ -737,6 +737,19 @@ namespace Ryujinx.Graphics.Gpu.Shader
         }
 
         /// <summary>
+        /// Populates pipeline state that doesn't exist in older caches with default values
+        /// based on specialization state.
+        /// </summary>
+        /// <param name="pipelineState">Pipeline state to prepare</param>
+        private void PreparePipelineState(ref ProgramPipelineState pipelineState)
+        {
+            if (!_compute)
+            {
+                pipelineState.DepthMode = GraphicsState.DepthMode ? DepthMode.MinusOneToOne : DepthMode.ZeroToOne;
+            }
+        }
+
+        /// <summary>
         /// Reads shader specialization state that has been serialized.
         /// </summary>
         /// <param name="dataReader">Data reader</param>
@@ -776,6 +789,8 @@ namespace Ryujinx.Graphics.Gpu.Shader
             {
                 ProgramPipelineState pipelineState = default;
                 dataReader.ReadWithMagicAndSize(ref pipelineState, PgpsMagic);
+
+                specState.PreparePipelineState(ref pipelineState);
                 specState.PipelineState = pipelineState;
             }
 
