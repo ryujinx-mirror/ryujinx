@@ -4,7 +4,6 @@ using Ryujinx.Graphics.Shader;
 using Ryujinx.Graphics.Shader.Translation;
 using Silk.NET.Vulkan;
 using System;
-using Format = Ryujinx.Graphics.GAL.Format;
 
 namespace Ryujinx.Graphics.Vulkan.Effects
 {
@@ -149,7 +148,7 @@ namespace Ryujinx.Graphics.Vulkan.Effects
                 1,
                 1,
                 1,
-                Format.R8G8Unorm,
+                GAL.Format.R8G8Unorm,
                 DepthStencilMode.Depth,
                 Target.Texture2D,
                 SwizzleComponent.Red,
@@ -165,7 +164,7 @@ namespace Ryujinx.Graphics.Vulkan.Effects
                 1,
                 1,
                 1,
-                Format.R8Unorm,
+                GAL.Format.R8Unorm,
                 DepthStencilMode.Depth,
                 Target.Texture2D,
                 SwizzleComponent.Red,
@@ -192,30 +191,9 @@ namespace Ryujinx.Graphics.Vulkan.Effects
                 _edgeOutputTexture?.Dispose();
                 _blendOutputTexture?.Dispose();
 
-                var info = view.Info;
-
-                if (view.Info.Format.IsBgr())
-                {
-                    info = new TextureCreateInfo(info.Width,
-                        info.Height,
-                        info.Depth,
-                        info.Levels,
-                        info.Samples,
-                        info.BlockWidth,
-                        info.BlockHeight,
-                        info.BytesPerPixel,
-                        info.Format,
-                        info.DepthStencilMode,
-                        info.Target,
-                        info.SwizzleB,
-                        info.SwizzleG,
-                        info.SwizzleR,
-                        info.SwizzleA);
-                }
-
-                _outputTexture = _renderer.CreateTexture(info, view.ScaleFactor) as TextureView;
-                _edgeOutputTexture = _renderer.CreateTexture(info, view.ScaleFactor) as TextureView;
-                _blendOutputTexture = _renderer.CreateTexture(info, view.ScaleFactor) as TextureView;
+                _outputTexture = _renderer.CreateTexture(view.Info, view.ScaleFactor) as TextureView;
+                _edgeOutputTexture = _renderer.CreateTexture(view.Info, view.ScaleFactor) as TextureView;
+                _blendOutputTexture = _renderer.CreateTexture(view.Info, view.ScaleFactor) as TextureView;
             }
 
             _pipeline.SetCommandBuffer(cbs);
@@ -240,7 +218,7 @@ namespace Ryujinx.Graphics.Vulkan.Effects
             _renderer.BufferManager.SetData(bufferHandle, 0, resolutionBuffer);
             var bufferRanges = new BufferRange(bufferHandle, 0, rangeSize);
             _pipeline.SetUniformBuffers(stackalloc[] { new BufferAssignment(2, bufferRanges) });
-            _pipeline.SetImage(0, _edgeOutputTexture, GAL.Format.R8G8B8A8Unorm);
+            _pipeline.SetImage(0, _edgeOutputTexture, FormatTable.ConvertRgba8SrgbToUnorm(view.Info.Format));
             _pipeline.DispatchCompute(dispatchX, dispatchY, 1);
             _pipeline.ComputeBarrier();
 
@@ -250,7 +228,7 @@ namespace Ryujinx.Graphics.Vulkan.Effects
             _pipeline.SetTextureAndSampler(ShaderStage.Compute, 1, _edgeOutputTexture, _samplerLinear);
             _pipeline.SetTextureAndSampler(ShaderStage.Compute, 3, _areaTexture, _samplerLinear);
             _pipeline.SetTextureAndSampler(ShaderStage.Compute, 4, _searchTexture, _samplerLinear);
-            _pipeline.SetImage(0, _blendOutputTexture, GAL.Format.R8G8B8A8Unorm);
+            _pipeline.SetImage(0, _blendOutputTexture, FormatTable.ConvertRgba8SrgbToUnorm(view.Info.Format));
             _pipeline.DispatchCompute(dispatchX, dispatchY, 1);
             _pipeline.ComputeBarrier();
 
@@ -259,7 +237,7 @@ namespace Ryujinx.Graphics.Vulkan.Effects
             _pipeline.Specialize(_specConstants);
             _pipeline.SetTextureAndSampler(ShaderStage.Compute, 3, _blendOutputTexture, _samplerLinear);
             _pipeline.SetTextureAndSampler(ShaderStage.Compute, 1, view, _samplerLinear);
-            _pipeline.SetImage(0, _outputTexture, GAL.Format.R8G8B8A8Unorm);
+            _pipeline.SetImage(0, _outputTexture, FormatTable.ConvertRgba8SrgbToUnorm(view.Info.Format));
             _pipeline.DispatchCompute(dispatchX, dispatchY, 1);
             _pipeline.ComputeBarrier();
 

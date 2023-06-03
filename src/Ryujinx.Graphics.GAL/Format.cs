@@ -383,6 +383,7 @@ namespace Ryujinx.Graphics.GAL
                 case Format.R10G10B10A2Unorm:
                 case Format.R10G10B10A2Uint:
                 case Format.R11G11B10Float:
+                case Format.B8G8R8A8Unorm:
                     return true;
             }
 

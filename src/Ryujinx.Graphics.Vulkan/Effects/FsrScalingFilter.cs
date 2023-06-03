@@ -96,8 +96,6 @@ namespace Ryujinx.Graphics.Vulkan.Effects
             {
                 var originalInfo = view.Info;
 
-                var swapRB = originalInfo.Format.IsBgr() && originalInfo.SwizzleR == SwizzleComponent.Red;
-
                 var info = new TextureCreateInfo(
                     width,
                     height,
@@ -110,9 +108,9 @@ namespace Ryujinx.Graphics.Vulkan.Effects
                     originalInfo.Format,
                     originalInfo.DepthStencilMode,
                     originalInfo.Target,
-                    swapRB ? originalInfo.SwizzleB : originalInfo.SwizzleR,
+                    originalInfo.SwizzleR,
                     originalInfo.SwizzleG,
-                    swapRB ? originalInfo.SwizzleR : originalInfo.SwizzleB,
+                    originalInfo.SwizzleB,
                     originalInfo.SwizzleA);
                 _intermediaryTexture?.Dispose();
                 _intermediaryTexture = _renderer.CreateTexture(info, view.ScaleFactor) as TextureView;
@@ -155,7 +153,7 @@ namespace Ryujinx.Graphics.Vulkan.Effects
 
             var bufferRanges = new BufferRange(bufferHandle, 0, rangeSize);
             _pipeline.SetUniformBuffers(stackalloc[] { new BufferAssignment(2, bufferRanges) });
-            _pipeline.SetImage(0, _intermediaryTexture, GAL.Format.R8G8B8A8Unorm);
+            _pipeline.SetImage(0, _intermediaryTexture, FormatTable.ConvertRgba8SrgbToUnorm(view.Info.Format));
             _pipeline.DispatchCompute(dispatchX, dispatchY, 1);
             _pipeline.ComputeBarrier();
 

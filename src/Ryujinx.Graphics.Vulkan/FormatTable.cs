@@ -169,6 +169,16 @@ namespace Ryujinx.Graphics.Vulkan
             return _table[(int)format];
         }
 
+        public static Format ConvertRgba8SrgbToUnorm(Format format)
+        {
+            return format switch
+            {
+                Format.R8G8B8A8Srgb => Format.R8G8B8A8Unorm,
+                Format.B8G8R8A8Srgb => Format.B8G8R8A8Unorm,
+                _ => format
+            };
+        }
+
         public static int GetAttributeFormatSize(VkFormat format)
         {
             switch (format)

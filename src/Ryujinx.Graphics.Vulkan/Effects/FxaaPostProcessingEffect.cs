@@ -56,28 +56,7 @@ namespace Ryujinx.Graphics.Vulkan.Effects
             if (_texture == null || _texture.Width != view.Width || _texture.Height != view.Height)
             {
                 _texture?.Dispose();
-
-                var info = view.Info;
-
-                if (view.Info.Format.IsBgr())
-                {
-                    info = new TextureCreateInfo(info.Width,
-                        info.Height,
-                        info.Depth,
-                        info.Levels,
-                        info.Samples,
-                        info.BlockWidth,
-                        info.BlockHeight,
-                        info.BytesPerPixel,
-                        info.Format,
-                        info.DepthStencilMode,
-                        info.Target,
-                        info.SwizzleB,
-                        info.SwizzleG,
-                        info.SwizzleR,
-                        info.SwizzleA);
-                }
-                _texture = _renderer.CreateTexture(info, view.ScaleFactor) as TextureView;
+                _texture = _renderer.CreateTexture(view.Info, view.ScaleFactor) as TextureView;
             }
 
             _pipeline.SetCommandBuffer(cbs);
@@ -96,7 +75,7 @@ namespace Ryujinx.Graphics.Vulkan.Effects
             var dispatchX = BitUtils.DivRoundUp(view.Width, IPostProcessingEffect.LocalGroupSize);
             var dispatchY = BitUtils.DivRoundUp(view.Height, IPostProcessingEffect.LocalGroupSize);
 
-            _pipeline.SetImage(0, _texture, GAL.Format.R8G8B8A8Unorm);
+            _pipeline.SetImage(0, _texture, FormatTable.ConvertRgba8SrgbToUnorm(view.Info.Format));
             _pipeline.DispatchCompute(dispatchX, dispatchY, 1);
 
             _renderer.BufferManager.Delete(bufferHandle);
