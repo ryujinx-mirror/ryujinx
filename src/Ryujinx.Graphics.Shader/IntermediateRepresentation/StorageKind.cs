@@ -11,7 +11,12 @@ namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
         StorageBuffer,
         LocalMemory,
         SharedMemory,
-        GlobalMemory
+        GlobalMemory,
+        // TODO: Remove those and store type as a field on the Operation class itself.
+        GlobalMemoryS8,
+        GlobalMemoryS16,
+        GlobalMemoryU8,
+        GlobalMemoryU16
     }
 
     static class StorageKindExtensions

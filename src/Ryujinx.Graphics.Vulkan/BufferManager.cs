@@ -115,8 +115,6 @@ namespace Ryujinx.Graphics.Vulkan
             holder = Create(gd, size, baseType: baseType, storageHint: storageHint);
             if (holder == null)
             {
-                Logger.Error?.Print(LogClass.Gpu, $"Failed to create buffer with size 0x{size:X} and type \"{baseType}\".");
-
                 return BufferHandle.Null;
             }
 
@@ -263,6 +261,8 @@ namespace Ryujinx.Graphics.Vulkan
 
                 return holder;
             }
+
+            Logger.Error?.Print(LogClass.Gpu, $"Failed to create buffer with size 0x{size:X} and type \"{baseType}\".");
 
             return null;
         }

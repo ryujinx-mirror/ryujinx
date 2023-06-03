@@ -7,17 +7,15 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
 {
     static class Optimizer
     {
-        public static void RunPass(BasicBlock[] blocks, ShaderConfig config)
+        public static void RunPass(HelperFunctionManager hfm, BasicBlock[] blocks, ShaderConfig config)
         {
             RunOptimizationPasses(blocks, config);
 
-            int sbUseMask = 0;
-            int ubeUseMask = 0;
+            GlobalToStorage.RunPass(hfm, blocks, config);
 
             // Those passes are looking for specific patterns and only needs to run once.
             for (int blkIndex = 0; blkIndex < blocks.Length; blkIndex++)
             {
-                GlobalToStorage.RunPass(blocks[blkIndex], config, ref sbUseMask, ref ubeUseMask);
                 BindlessToIndexed.RunPass(blocks[blkIndex], config);
                 BindlessElimination.RunPass(blocks[blkIndex], config);
 
@@ -27,8 +25,6 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
                     EliminateMultiplyByFragmentCoordW(blocks[blkIndex]);
                 }
             }
-
-            config.SetAccessibleBufferMasks(sbUseMask, ubeUseMask);
 
             // Run optimizations one last time to remove any code that is now optimizable after above passes.
             RunOptimizationPasses(blocks, config);

@@ -118,6 +118,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                     switch (operation.StorageKind)
                     {
                         case StorageKind.ConstantBuffer:
+                        case StorageKind.StorageBuffer:
                             if (!(operation.GetSource(0) is AstOperand bindingIndex) || bindingIndex.Type != OperandType.Constant)
                             {
                                 throw new InvalidOperationException($"First input of {operation.Inst} with {operation.StorageKind} storage must be a constant operand.");
@@ -128,7 +129,9 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                                 throw new InvalidOperationException($"Second input of {operation.Inst} with {operation.StorageKind} storage must be a constant operand.");
                             }
 
-                            BufferDefinition buffer = context.Config.Properties.ConstantBuffers[bindingIndex.Value];
+                            BufferDefinition buffer = operation.StorageKind == StorageKind.ConstantBuffer
+                                ? context.Config.Properties.ConstantBuffers[bindingIndex.Value]
+                                : context.Config.Properties.StorageBuffers[bindingIndex.Value];
                             StructureField field = buffer.Type.Fields[fieldIndex.Value];
 
                             return field.Type & AggregateType.ElementTypeMask;

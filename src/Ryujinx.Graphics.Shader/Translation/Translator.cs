@@ -78,7 +78,7 @@ namespace Ryujinx.Graphics.Shader.Translation
 
                     Ssa.Rename(cfg.Blocks);
 
-                    Optimizer.RunPass(cfg.Blocks, config);
+                    Optimizer.RunPass(hfm, cfg.Blocks, config);
                     Rewriter.RunPass(hfm, cfg.Blocks, config);
                 }
 

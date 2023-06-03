@@ -187,30 +187,6 @@ namespace Ryujinx.Graphics.Gpu.Engine.Compute
                 info = cs.Shaders[0].Info;
             }
 
-            for (int index = 0; index < info.CBuffers.Count; index++)
-            {
-                BufferDescriptor cb = info.CBuffers[index];
-
-                // NVN uses the "hardware" constant buffer for anything that is less than 8,
-                // and those are already bound above.
-                // Anything greater than or equal to 8 uses the emulated constant buffers.
-                // They are emulated using global memory loads.
-                if (cb.Slot < 8)
-                {
-                    continue;
-                }
-
-                ulong cbDescAddress = _channel.BufferManager.GetComputeUniformBufferAddress(0);
-
-                int cbDescOffset = 0x260 + (cb.Slot - 8) * 0x10;
-
-                cbDescAddress += (ulong)cbDescOffset;
-
-                SbDescriptor cbDescriptor = _channel.MemoryManager.Physical.Read<SbDescriptor>(cbDescAddress);
-
-                _channel.BufferManager.SetComputeUniformBuffer(cb.Slot, cbDescriptor.PackAddress(), (uint)cbDescriptor.Size);
-            }
-
             _channel.BufferManager.SetComputeBufferBindings(cs.Bindings);
 
             _channel.TextureManager.SetComputeBindings(cs.Bindings);

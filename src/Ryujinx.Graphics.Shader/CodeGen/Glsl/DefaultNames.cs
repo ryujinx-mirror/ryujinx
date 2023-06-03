@@ -11,12 +11,6 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
         public const string IAttributePrefix = "in_attr";
         public const string OAttributePrefix = "out_attr";
 
-        public const string StorageNamePrefix = "s";
-
-        public const string DataName = "data";
-
-        public const string BlockSuffix = "block";
-
         public const string LocalMemoryName  = "local_mem";
         public const string SharedMemoryName = "shared_mem";
 

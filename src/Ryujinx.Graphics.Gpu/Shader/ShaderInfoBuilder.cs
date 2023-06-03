@@ -92,7 +92,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
             int imageBinding = stageIndex * imagesPerStage * 2;
 
             AddDescriptor(stages, ResourceType.UniformBuffer, UniformSetIndex, uniformBinding, uniformsPerStage);
-            AddArrayDescriptor(stages, ResourceType.StorageBuffer, StorageSetIndex, storageBinding, storagesPerStage);
+            AddDescriptor(stages, ResourceType.StorageBuffer, StorageSetIndex, storageBinding, storagesPerStage);
             AddDualDescriptor(stages, ResourceType.TextureAndSampler, ResourceType.BufferTexture, TextureSetIndex, textureBinding, texturesPerStage);
             AddDualDescriptor(stages, ResourceType.Image, ResourceType.BufferImage, ImageSetIndex, imageBinding, imagesPerStage);
 
@@ -131,19 +131,6 @@ namespace Ryujinx.Graphics.Gpu.Shader
         {
             AddDescriptor(stages, type, setIndex, binding, count);
             AddDescriptor(stages, type2, setIndex, binding + count, count);
-        }
-
-        /// <summary>
-        /// Adds an array resource to the list of descriptors.
-        /// </summary>
-        /// <param name="stages">Shader stages where the resource is used</param>
-        /// <param name="type">Type of the resource</param>
-        /// <param name="setIndex">Descriptor set number where the resource will be bound</param>
-        /// <param name="binding">Binding number where the resource will be bound</param>
-        /// <param name="count">Number of resources bound at the binding location</param>
-        private void AddArrayDescriptor(ResourceStages stages, ResourceType type, int setIndex, int binding, int count)
-        {
-            _resourceDescriptors[setIndex].Add(new ResourceDescriptor(binding, count, type, stages));
         }
 
         /// <summary>

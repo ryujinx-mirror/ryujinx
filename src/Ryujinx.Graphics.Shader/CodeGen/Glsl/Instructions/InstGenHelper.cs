@@ -85,7 +85,6 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             Add(Instruction.Load,                     InstType.Special);
             Add(Instruction.LoadLocal,                InstType.Special);
             Add(Instruction.LoadShared,               InstType.Special);
-            Add(Instruction.LoadStorage,              InstType.Special);
             Add(Instruction.Lod,                      InstType.Special);
             Add(Instruction.LogarithmB2,              InstType.CallUnary,      "log2");
             Add(Instruction.LogicalAnd,               InstType.OpBinaryCom,    "&&",              9);
@@ -123,9 +122,6 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             Add(Instruction.StoreShared,              InstType.Special);
             Add(Instruction.StoreShared16,            InstType.Special);
             Add(Instruction.StoreShared8,             InstType.Special);
-            Add(Instruction.StoreStorage,             InstType.Special);
-            Add(Instruction.StoreStorage16,           InstType.Special);
-            Add(Instruction.StoreStorage8,            InstType.Special);
             Add(Instruction.Subtract,                 InstType.OpBinary,       "-",               2);
             Add(Instruction.SwizzleAdd,               InstType.CallTernary,    HelperFunctionNames.SwizzleAdd);
             Add(Instruction.TextureSample,            InstType.Special);

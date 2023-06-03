@@ -81,11 +81,6 @@ namespace Ryujinx.Graphics.Gpu
         public const int GobAlignment = 64;
 
         /// <summary>
-        /// Expected byte alignment for storage buffers
-        /// </summary>
-        public const int StorageAlignment = 16;
-
-        /// <summary>
         /// Number of the uniform buffer reserved by the driver to store the storage buffer base addresses.
         /// </summary>
         public const int DriverReservedUniformBuffer = 0;

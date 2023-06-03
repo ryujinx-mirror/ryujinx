@@ -5,6 +5,7 @@ using Ryujinx.Graphics.Shader.Translation;
 using Spv.Generator;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
 using static Spv.Specification;
@@ -99,7 +100,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             }
 
             DeclareConstantBuffers(context, context.Config.Properties.ConstantBuffers.Values);
-            DeclareStorageBuffers(context, context.Config.GetStorageBufferDescriptors());
+            DeclareStorageBuffers(context, context.Config.Properties.StorageBuffers.Values);
             DeclareSamplers(context, context.Config.GetTextureDescriptors());
             DeclareImages(context, context.Config.GetImageDescriptors());
             DeclareInputsAndOutputs(context, info);
@@ -128,6 +129,16 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
 
         private static void DeclareConstantBuffers(CodeGenContext context, IEnumerable<BufferDefinition> buffers)
         {
+            DeclareBuffers(context, buffers, isBuffer: false);
+        }
+
+        private static void DeclareStorageBuffers(CodeGenContext context, IEnumerable<BufferDefinition> buffers)
+        {
+            DeclareBuffers(context, buffers, isBuffer: true);
+        }
+
+        private static void DeclareBuffers(CodeGenContext context, IEnumerable<BufferDefinition> buffers, bool isBuffer)
+        {
             HashSet<SpvInstruction> decoratedTypes = new HashSet<SpvInstruction>();
 
             foreach (BufferDefinition buffer in buffers)
@@ -155,6 +166,12 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                             context.Decorate(structFieldTypes[fieldIndex], Decoration.ArrayStride, (LiteralInteger)fieldSize);
                         }
 
+                        // Zero lengths are assumed to be a "runtime array" (which does not have a explicit length
+                        // specified on the shader, and instead assumes the bound buffer length).
+                        // It is only valid as the last struct element.
+
+                        Debug.Assert(field.ArrayLength > 0 || fieldIndex == buffer.Type.Fields.Length - 1);
+
                         offset += fieldSize * field.ArrayLength;
                     }
                     else
@@ -163,54 +180,35 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                     }
                 }
 
-                var ubStructType = context.TypeStruct(false, structFieldTypes);
+                var structType = context.TypeStruct(false, structFieldTypes);
 
-                if (decoratedTypes.Add(ubStructType))
+                if (decoratedTypes.Add(structType))
                 {
-                    context.Decorate(ubStructType, Decoration.Block);
+                    context.Decorate(structType, isBuffer ? Decoration.BufferBlock : Decoration.Block);
 
                     for (int fieldIndex = 0; fieldIndex < structFieldOffsets.Length; fieldIndex++)
                     {
-                        context.MemberDecorate(ubStructType, fieldIndex, Decoration.Offset, (LiteralInteger)structFieldOffsets[fieldIndex]);
+                        context.MemberDecorate(structType, fieldIndex, Decoration.Offset, (LiteralInteger)structFieldOffsets[fieldIndex]);
                     }
                 }
 
-                var ubPointerType = context.TypePointer(StorageClass.Uniform, ubStructType);
-                var ubVariable = context.Variable(ubPointerType, StorageClass.Uniform);
+                var pointerType = context.TypePointer(StorageClass.Uniform, structType);
+                var variable = context.Variable(pointerType, StorageClass.Uniform);
 
-                context.Name(ubVariable, buffer.Name);
-                context.Decorate(ubVariable, Decoration.DescriptorSet, (LiteralInteger)buffer.Set);
-                context.Decorate(ubVariable, Decoration.Binding, (LiteralInteger)buffer.Binding);
-                context.AddGlobalVariable(ubVariable);
-                context.ConstantBuffers.Add(buffer.Binding, ubVariable);
+                context.Name(variable, buffer.Name);
+                context.Decorate(variable, Decoration.DescriptorSet, (LiteralInteger)buffer.Set);
+                context.Decorate(variable, Decoration.Binding, (LiteralInteger)buffer.Binding);
+                context.AddGlobalVariable(variable);
+
+                if (isBuffer)
+                {
+                    context.StorageBuffers.Add(buffer.Binding, variable);
+                }
+                else
+                {
+                    context.ConstantBuffers.Add(buffer.Binding, variable);
+                }
             }
-        }
-
-        private static void DeclareStorageBuffers(CodeGenContext context, BufferDescriptor[] descriptors)
-        {
-            if (descriptors.Length == 0)
-            {
-                return;
-            }
-
-            int setIndex = context.Config.Options.TargetApi == TargetApi.Vulkan ? 1 : 0;
-            int count = descriptors.Max(x => x.Slot) + 1;
-
-            var sbArrayType = context.TypeRuntimeArray(context.TypeU32());
-            context.Decorate(sbArrayType, Decoration.ArrayStride, (LiteralInteger)4);
-            var sbStructType = context.TypeStruct(true, sbArrayType);
-            context.Decorate(sbStructType, Decoration.BufferBlock);
-            context.MemberDecorate(sbStructType, 0, Decoration.Offset, (LiteralInteger)0);
-            var sbStructArrayType = context.TypeArray(sbStructType, context.Constant(context.TypeU32(), count));
-            var sbPointerType = context.TypePointer(StorageClass.Uniform, sbStructArrayType);
-            var sbVariable = context.Variable(sbPointerType, StorageClass.Uniform);
-
-            context.Name(sbVariable, $"{GetStagePrefix(context.Config.Stage)}_s");
-            context.Decorate(sbVariable, Decoration.DescriptorSet, (LiteralInteger)setIndex);
-            context.Decorate(sbVariable, Decoration.Binding, (LiteralInteger)context.Config.FirstStorageBufferBinding);
-            context.AddGlobalVariable(sbVariable);
-
-            context.StorageBuffersArray = sbVariable;
         }
 
         private static void DeclareSamplers(CodeGenContext context, TextureDescriptor[] descriptors)

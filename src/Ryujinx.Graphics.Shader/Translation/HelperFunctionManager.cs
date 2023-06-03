@@ -19,6 +19,14 @@ namespace Ryujinx.Graphics.Shader.Translation
             _stage = stage;
         }
 
+        public int AddFunction(Function function)
+        {
+            int functionId = _functionList.Count;
+            _functionList.Add(function);
+
+            return functionId;
+        }
+
         public int GetOrCreateFunctionId(HelperFunctionName functionName)
         {
             if (_functionIds.TryGetValue(functionName, out int functionId))
@@ -27,8 +35,7 @@ namespace Ryujinx.Graphics.Shader.Translation
             }
 
             Function function = GenerateFunction(functionName);
-            functionId = _functionList.Count;
-            _functionList.Add(function);
+            functionId = AddFunction(function);
             _functionIds.Add(functionName, functionId);
 
             return functionId;

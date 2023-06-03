@@ -70,30 +70,6 @@ namespace Ryujinx.Graphics.Vulkan
             }
         }
 
-        public unsafe void UpdateStorageBuffers(int setIndex, int baseBinding, ReadOnlySpan<DescriptorBufferInfo> bufferInfo)
-        {
-            if (bufferInfo.Length == 0)
-            {
-                return;
-            }
-
-            fixed (DescriptorBufferInfo* pBufferInfo = bufferInfo)
-            {
-                var writeDescriptorSet = new WriteDescriptorSet
-                {
-                    SType = StructureType.WriteDescriptorSet,
-                    DstSet = _descriptorSets[setIndex],
-                    DstBinding = (uint)(baseBinding & ~(Constants.MaxStorageBuffersPerStage - 1)),
-                    DstArrayElement = (uint)(baseBinding & (Constants.MaxStorageBuffersPerStage - 1)),
-                    DescriptorType = DescriptorType.StorageBuffer,
-                    DescriptorCount = (uint)bufferInfo.Length,
-                    PBufferInfo = pBufferInfo
-                };
-
-                _holder.Api.UpdateDescriptorSets(_holder.Device, 1, writeDescriptorSet, 0, null);
-            }
-        }
-
         public unsafe void UpdateImage(int setIndex, int bindingIndex, DescriptorImageInfo imageInfo, DescriptorType type)
         {
             if (imageInfo.ImageView.Handle != 0UL)

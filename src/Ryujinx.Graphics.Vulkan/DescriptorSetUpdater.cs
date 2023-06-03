@@ -448,14 +448,7 @@ namespace Ryujinx.Graphics.Vulkan
                     }
 
                     ReadOnlySpan<DescriptorBufferInfo> storageBuffers = _storageBuffers;
-                    if (program.HasMinimalLayout)
-                    {
-                        dsc.UpdateBuffers(0, binding, storageBuffers.Slice(binding, count), DescriptorType.StorageBuffer);
-                    }
-                    else
-                    {
-                        dsc.UpdateStorageBuffers(0, binding, storageBuffers.Slice(binding, count));
-                    }
+                    dsc.UpdateBuffers(0, binding, storageBuffers.Slice(binding, count), DescriptorType.StorageBuffer);
                 }
                 else if (setIndex == PipelineBase.TextureSetIndex)
                 {

@@ -2,10 +2,8 @@ using Ryujinx.Graphics.Shader.IntermediateRepresentation;
 using Ryujinx.Graphics.Shader.StructuredIr;
 using System.Collections.Generic;
 using System.Linq;
-using System.Numerics;
 
 using static Ryujinx.Graphics.Shader.IntermediateRepresentation.OperandHelper;
-using static Ryujinx.Graphics.Shader.Translation.GlobalMemory;
 
 namespace Ryujinx.Graphics.Shader.Translation
 {
@@ -23,11 +21,10 @@ namespace Ryujinx.Graphics.Shader.Translation
             {
                 BasicBlock block = blocks[blkIndex];
 
-                for (LinkedListNode<INode> node = block.Operations.First; node != null;)
+                for (LinkedListNode<INode> node = block.Operations.First; node != null; node = node.Next)
                 {
                     if (node.Value is not Operation operation)
                     {
-                        node = node.Next;
                         continue;
                     }
 
@@ -56,8 +53,6 @@ namespace Ryujinx.Graphics.Shader.Translation
                         InsertVectorComponentSelect(node, config);
                     }
 
-                    LinkedListNode<INode> nextNode = node.Next;
-
                     if (operation is TextureOperation texOp)
                     {
                         node = InsertTexelFetchScale(hfm, node, config);
@@ -74,15 +69,7 @@ namespace Ryujinx.Graphics.Shader.Translation
                                 node = InsertSnormNormalization(node, config);
                             }
                         }
-
-                        nextNode = node.Next;
                     }
-                    else if (UsesGlobalMemory(operation.Inst, operation.StorageKind))
-                    {
-                        nextNode = RewriteGlobalAccess(node, config)?.Next ?? nextNode;
-                    }
-
-                    node = nextNode;
                 }
             }
         }
@@ -182,196 +169,6 @@ namespace Ryujinx.Graphics.Shader.Translation
             }
 
             operation.TurnIntoCopy(result);
-        }
-
-        private static LinkedListNode<INode> RewriteGlobalAccess(LinkedListNode<INode> node, ShaderConfig config)
-        {
-            Operation operation = (Operation)node.Value;
-
-            bool isAtomic = operation.Inst.IsAtomic();
-            bool isStg16Or8 = operation.Inst == Instruction.StoreGlobal16 || operation.Inst == Instruction.StoreGlobal8;
-            bool isWrite = isAtomic || operation.Inst == Instruction.StoreGlobal || isStg16Or8;
-
-            Operation storageOp = null;
-
-            Operand PrependOperation(Instruction inst, params Operand[] sources)
-            {
-                Operand local = Local();
-
-                node.List.AddBefore(node, new Operation(inst, local, sources));
-
-                return local;
-            }
-
-            Operand PrependStorageOperation(Instruction inst, StorageKind storageKind, params Operand[] sources)
-            {
-                Operand local = Local();
-
-                node.List.AddBefore(node, new Operation(inst, storageKind, local, sources));
-
-                return local;
-            }
-
-            Operand PrependExistingOperation(Operation operation)
-            {
-                Operand local = Local();
-
-                operation.Dest = local;
-                node.List.AddBefore(node, operation);
-
-                return local;
-            }
-
-            Operand addrLow  = operation.GetSource(0);
-            Operand addrHigh = operation.GetSource(1);
-
-            Operand sbBaseAddrLow = Const(0);
-            Operand sbSlot        = Const(0);
-
-            Operand alignMask = Const(-config.GpuAccessor.QueryHostStorageBufferOffsetAlignment());
-
-            Operand BindingRangeCheck(int cbOffset, out Operand baseAddrLow)
-            {
-                baseAddrLow          = Cbuf(DriverReservedCb, cbOffset);
-                Operand baseAddrHigh = Cbuf(DriverReservedCb, cbOffset + 1);
-                Operand size         = Cbuf(DriverReservedCb, cbOffset + 2);
-
-                Operand offset = PrependOperation(Instruction.Subtract, addrLow, baseAddrLow);
-                Operand borrow = PrependOperation(Instruction.CompareLessU32, addrLow, baseAddrLow);
-
-                Operand inRangeLow = PrependOperation(Instruction.CompareLessU32, offset, size);
-
-                Operand addrHighBorrowed = PrependOperation(Instruction.Add, addrHigh, borrow);
-
-                Operand inRangeHigh = PrependOperation(Instruction.CompareEqual, addrHighBorrowed, baseAddrHigh);
-
-                return PrependOperation(Instruction.BitwiseAnd, inRangeLow, inRangeHigh);
-            }
-
-            int sbUseMask = config.AccessibleStorageBuffersMask;
-
-            while (sbUseMask != 0)
-            {
-                int slot = BitOperations.TrailingZeroCount(sbUseMask);
-
-                sbUseMask &= ~(1 << slot);
-
-                int cbOffset = GetStorageCbOffset(config.Stage, slot);
-                slot = config.GetSbSlot(DriverReservedCb, (ushort)cbOffset);
-
-                config.SetUsedStorageBuffer(slot, isWrite);
-
-                Operand inRange = BindingRangeCheck(cbOffset, out Operand baseAddrLow);
-
-                sbBaseAddrLow = PrependOperation(Instruction.ConditionalSelect, inRange, baseAddrLow, sbBaseAddrLow);
-                sbSlot        = PrependOperation(Instruction.ConditionalSelect, inRange, Const(slot), sbSlot);
-            }
-
-            if (config.AccessibleStorageBuffersMask != 0)
-            {
-                Operand baseAddrTrunc = PrependOperation(Instruction.BitwiseAnd, sbBaseAddrLow, alignMask);
-                Operand byteOffset    = PrependOperation(Instruction.Subtract, addrLow, baseAddrTrunc);
-
-                Operand[] sources = new Operand[operation.SourcesCount];
-
-                sources[0] = sbSlot;
-
-                if (isStg16Or8)
-                {
-                    sources[1] = byteOffset;
-                }
-                else
-                {
-                    sources[1] = PrependOperation(Instruction.ShiftRightU32, byteOffset, Const(2));
-                }
-
-                for (int index = 2; index < operation.SourcesCount; index++)
-                {
-                    sources[index] = operation.GetSource(index);
-                }
-
-                if (isAtomic)
-                {
-                    storageOp = new Operation(operation.Inst, StorageKind.StorageBuffer, operation.Dest, sources);
-                }
-                else if (operation.Inst == Instruction.LoadGlobal)
-                {
-                    storageOp = new Operation(Instruction.LoadStorage, operation.Dest, sources);
-                }
-                else
-                {
-                    Instruction storeInst = operation.Inst switch
-                    {
-                        Instruction.StoreGlobal16 => Instruction.StoreStorage16,
-                        Instruction.StoreGlobal8 => Instruction.StoreStorage8,
-                        _ => Instruction.StoreStorage
-                    };
-
-                    storageOp = new Operation(storeInst, null, sources);
-                }
-            }
-            else if (operation.Dest != null)
-            {
-                storageOp = new Operation(Instruction.Copy, operation.Dest, Const(0));
-            }
-
-            if (operation.Inst == Instruction.LoadGlobal)
-            {
-                int cbeUseMask = config.AccessibleConstantBuffersMask;
-
-                while (cbeUseMask != 0)
-                {
-                    int slot = BitOperations.TrailingZeroCount(cbeUseMask);
-                    int cbSlot = UbeFirstCbuf + slot;
-
-                    cbeUseMask &= ~(1 << slot);
-
-                    Operand previousResult = PrependExistingOperation(storageOp);
-
-                    int cbOffset = GetConstantUbeOffset(slot);
-
-                    Operand inRange = BindingRangeCheck(cbOffset, out Operand baseAddrLow);
-
-                    Operand baseAddrTruncConst = PrependOperation(Instruction.BitwiseAnd, baseAddrLow, alignMask);
-                    Operand byteOffsetConst = PrependOperation(Instruction.Subtract, addrLow, baseAddrTruncConst);
-
-                    Operand cbIndex = PrependOperation(Instruction.ShiftRightU32, byteOffsetConst, Const(2));
-                    Operand vecIndex = PrependOperation(Instruction.ShiftRightU32, cbIndex, Const(2));
-                    Operand elemIndex = PrependOperation(Instruction.BitwiseAnd, cbIndex, Const(3));
-
-                    Operand[] sourcesCb = new Operand[4];
-
-                    sourcesCb[0] = Const(config.ResourceManager.GetConstantBufferBinding(cbSlot));
-                    sourcesCb[1] = Const(0);
-                    sourcesCb[2] = vecIndex;
-                    sourcesCb[3] = elemIndex;
-
-                    Operand ldcResult = PrependStorageOperation(Instruction.Load, StorageKind.ConstantBuffer, sourcesCb);
-
-                    storageOp = new Operation(Instruction.ConditionalSelect, operation.Dest, inRange, ldcResult, previousResult);
-                }
-            }
-
-            for (int index = 0; index < operation.SourcesCount; index++)
-            {
-                operation.SetSource(index, null);
-            }
-
-            LinkedListNode<INode> oldNode = node;
-            LinkedList<INode> oldNodeList = oldNode.List;
-
-            if (storageOp != null)
-            {
-                node = node.List.AddBefore(node, storageOp);
-            }
-            else
-            {
-                node = null;
-            }
-
-            oldNodeList.Remove(oldNode);
-
-            return node;
         }
 
         private static LinkedListNode<INode> InsertTexelFetchScale(HelperFunctionManager hfm, LinkedListNode<INode> node, ShaderConfig config)

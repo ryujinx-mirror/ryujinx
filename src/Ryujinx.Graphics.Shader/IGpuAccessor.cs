@@ -79,7 +79,7 @@ namespace Ryujinx.Graphics.Shader
         /// <returns>Binding number</returns>
         int QueryBindingConstantBuffer(int index)
         {
-            return index;
+            return index + 1;
         }
 
         /// <summary>

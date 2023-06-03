@@ -1,4 +1,5 @@
 ﻿using Ryujinx.Graphics.Shader.IntermediateRepresentation;
+using System.Collections.Generic;
 
 namespace Ryujinx.Graphics.Shader.Translation.Optimizations
 {
@@ -92,6 +93,18 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
             }
 
             return source;
+        }
+
+        public static void DeleteNode(LinkedListNode<INode> node, Operation operation)
+        {
+            node.List.Remove(node);
+
+            for (int srcIndex = 0; srcIndex < operation.SourcesCount; srcIndex++)
+            {
+                operation.SetSource(srcIndex, null);
+            }
+
+            operation.Dest = null;
         }
     }
 }

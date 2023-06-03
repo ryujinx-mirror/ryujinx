@@ -164,6 +164,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             if (op.Ccc == Ccc.T)
             {
+                context.PrepareForReturn();
                 context.Return();
             }
             else
@@ -175,6 +176,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 {
                     Operand lblSkip = Label();
                     context.BranchIfFalse(lblSkip, cond);
+                    context.PrepareForReturn();
                     context.Return();
                     context.MarkLabel(lblSkip);
                 }

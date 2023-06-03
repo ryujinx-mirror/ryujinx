@@ -68,33 +68,45 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 
                 string args = string.Empty;
 
-                for (int argIndex = 0; argIndex < arity; argIndex++)
+                if (atomic && operation.StorageKind == StorageKind.StorageBuffer)
                 {
+                    args = GenerateLoadOrStore(context, operation, isStore: false);
+
+                    AggregateType dstType = operation.Inst == Instruction.AtomicMaxS32 || operation.Inst == Instruction.AtomicMinS32
+                        ? AggregateType.S32
+                        : AggregateType.U32;
+
+                    for (int argIndex = operation.SourcesCount - arity + 2; argIndex < operation.SourcesCount; argIndex++)
+                    {
+                        args += ", " + GetSoureExpr(context, operation.GetSource(argIndex), dstType);
+                    }
+                }
+                else if (atomic && operation.StorageKind == StorageKind.SharedMemory)
+                {
+                    args = LoadShared(context, operation);
+
                     // For shared memory access, the second argument is unused and should be ignored.
                     // It is there to make both storage and shared access have the same number of arguments.
                     // For storage, both inputs are consumed when the argument index is 0, so we should skip it here.
-                    if (argIndex == 1 && (atomic || operation.StorageKind == StorageKind.SharedMemory))
-                    {
-                        continue;
-                    }
 
-                    if (argIndex != 0)
+                    for (int argIndex = 2; argIndex < arity; argIndex++)
                     {
                         args += ", ";
-                    }
 
-                    if (argIndex == 0 && atomic)
+                        AggregateType dstType = GetSrcVarType(inst, argIndex);
+
+                        args += GetSoureExpr(context, operation.GetSource(argIndex), dstType);
+                    }
+                }
+                else
+                {
+                    for (int argIndex = 0; argIndex < arity; argIndex++)
                     {
-                        switch (operation.StorageKind)
+                        if (argIndex != 0)
                         {
-                            case StorageKind.SharedMemory: args += LoadShared(context, operation); break;
-                            case StorageKind.StorageBuffer: args += LoadStorage(context, operation); break;
-
-                            default: throw new InvalidOperationException($"Invalid storage kind \"{operation.StorageKind}\".");
+                            args += ", ";
                         }
-                    }
-                    else
-                    {
+
                         AggregateType dstType = GetSrcVarType(inst, argIndex);
 
                         args += GetSoureExpr(context, operation.GetSource(argIndex), dstType);
@@ -173,9 +185,6 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
                     case Instruction.LoadShared:
                         return LoadShared(context, operation);
 
-                    case Instruction.LoadStorage:
-                        return LoadStorage(context, operation);
-
                     case Instruction.Lod:
                         return Lod(context, operation);
 
@@ -202,15 +211,6 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 
                     case Instruction.StoreShared8:
                         return StoreShared8(context, operation);
-
-                    case Instruction.StoreStorage:
-                        return StoreStorage(context, operation);
-
-                    case Instruction.StoreStorage16:
-                        return StoreStorage16(context, operation);
-
-                    case Instruction.StoreStorage8:
-                        return StoreStorage8(context, operation);
 
                     case Instruction.TextureSample:
                         return TextureSample(context, operation);

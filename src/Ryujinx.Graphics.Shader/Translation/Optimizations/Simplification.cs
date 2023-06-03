@@ -13,12 +13,18 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
             switch (operation.Inst)
             {
                 case Instruction.Add:
-                case Instruction.BitwiseExclusiveOr:
                     TryEliminateBinaryOpCommutative(operation, 0);
                     break;
 
                 case Instruction.BitwiseAnd:
                     TryEliminateBitwiseAnd(operation);
+                    break;
+
+                case Instruction.BitwiseExclusiveOr:
+                    if (!TryEliminateXorSwap(operation))
+                    {
+                        TryEliminateBinaryOpCommutative(operation, 0);
+                    }
                     break;
 
                 case Instruction.BitwiseOr:
@@ -49,8 +55,9 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
         private static void TryEliminateBitwiseAnd(Operation operation)
         {
             // Try to recognize and optimize those 3 patterns (in order):
-            // x & 0xFFFFFFFF == x,          0xFFFFFFFF & y == y,
-            // x & 0x00000000 == 0x00000000, 0x00000000 & y == 0x00000000
+            //  x & 0xFFFFFFFF == x,          0xFFFFFFFF & y == y,
+            //  x & 0x00000000 == 0x00000000, 0x00000000 & y == 0x00000000
+
             Operand x = operation.GetSource(0);
             Operand y = operation.GetSource(1);
 
@@ -68,11 +75,62 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
             }
         }
 
+        private static bool TryEliminateXorSwap(Operation xCopyOp)
+        {
+            // Try to recognize XOR swap pattern:
+            //  x = x ^ y
+            //  y = x ^ y
+            //  x = x ^ y
+            // Or, in SSA:
+            //  x2 = x ^ y
+            //  y2 = x2 ^ y
+            //  x3 = x2 ^ y2
+            // Transform it into something more sane:
+            //  temp = y
+            //  y = x
+            //  x = temp
+
+            // Note that because XOR is commutative, there are actually
+            // multiple possible combinations of this pattern, for
+            // simplicity this only catches one of them.
+
+            Operand x = xCopyOp.GetSource(0);
+            Operand y = xCopyOp.GetSource(1);
+
+            if (x.AsgOp is not Operation tCopyOp || tCopyOp.Inst != Instruction.BitwiseExclusiveOr ||
+                y.AsgOp is not Operation yCopyOp || yCopyOp.Inst != Instruction.BitwiseExclusiveOr)
+            {
+                return false;
+            }
+
+            if (tCopyOp == yCopyOp)
+            {
+                return false;
+            }
+
+            if (yCopyOp.GetSource(0) != x ||
+                yCopyOp.GetSource(1) != tCopyOp.GetSource(1) ||
+                x.UseOps.Count != 2)
+            {
+                return false;
+            }
+
+            x = tCopyOp.GetSource(0);
+            y = tCopyOp.GetSource(1);
+
+            tCopyOp.TurnIntoCopy(y); // Temp = Y
+            yCopyOp.TurnIntoCopy(x); // Y = X
+            xCopyOp.TurnIntoCopy(tCopyOp.Dest); // X = Temp
+
+            return true;
+        }
+
         private static void TryEliminateBitwiseOr(Operation operation)
         {
             // Try to recognize and optimize those 3 patterns (in order):
-            // x | 0x00000000 == x,          0x00000000 | y == y,
-            // x | 0xFFFFFFFF == 0xFFFFFFFF, 0xFFFFFFFF | y == 0xFFFFFFFF
+            //  x | 0x00000000 == x,          0x00000000 | y == y,
+            //  x | 0xFFFFFFFF == 0xFFFFFFFF, 0xFFFFFFFF | y == 0xFFFFFFFF
+
             Operand x = operation.GetSource(0);
             Operand y = operation.GetSource(1);
 

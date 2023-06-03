@@ -222,7 +222,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// <param name="gpuVa">Start GPU virtual address of the buffer</param>
         private void RecordStorageAlignment(BuffersPerStage buffers, int index, ulong gpuVa)
         {
-            bool unaligned = (gpuVa & (Constants.StorageAlignment - 1)) != 0;
+            bool unaligned = (gpuVa & ((ulong)_context.Capabilities.StorageBufferOffsetAlignment - 1)) != 0;
 
             if (unaligned || HasUnalignedStorageBuffers)
             {
