@@ -6,10 +6,11 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 
 namespace ARMeilleure.Translation.Cache
 {
-    static class JitCache
+    static partial class JitCache
     {
         private const int PageSize = 4 * 1024;
         private const int PageMask = PageSize - 1;
@@ -27,6 +28,10 @@ namespace ARMeilleure.Translation.Cache
         private static readonly object _lock = new object();
         private static bool _initialized;
 
+        [SupportedOSPlatform("windows")]
+        [LibraryImport("kernel32.dll", SetLastError = true)]
+        public static partial IntPtr FlushInstructionCache(IntPtr hProcess, IntPtr lpAddress, UIntPtr dwSize);
+
         public static void Initialize(IJitMemoryAllocator allocator)
         {
             if (_initialized) return;
@@ -36,7 +41,11 @@ namespace ARMeilleure.Translation.Cache
                 if (_initialized) return;
 
                 _jitRegion = new ReservedRegion(allocator, CacheSize);
-                _jitCacheInvalidator = new JitCacheInvalidation(allocator);
+
+                if (!OperatingSystem.IsWindows() && !OperatingSystem.IsMacOS())
+                {
+                    _jitCacheInvalidator = new JitCacheInvalidation(allocator);
+                }
 
                 _cacheAllocator = new CacheMemoryAllocator(CacheSize);
 
@@ -77,7 +86,14 @@ namespace ARMeilleure.Translation.Cache
                     Marshal.Copy(code, 0, funcPtr, code.Length);
                     ReprotectAsExecutable(funcOffset, code.Length);
 
-                    _jitCacheInvalidator.Invalidate(funcPtr, (ulong)code.Length);
+                    if (OperatingSystem.IsWindows() && RuntimeInformation.ProcessArchitecture == Architecture.Arm64)
+                    {
+                        FlushInstructionCache(Process.GetCurrentProcess().Handle, funcPtr, (UIntPtr)code.Length);
+                    }
+                    else
+                    {
+                        _jitCacheInvalidator?.Invalidate(funcPtr, (ulong)code.Length);
+                    }
                 }
 
                 Add(funcOffset, code.Length, func.UnwindInfo);

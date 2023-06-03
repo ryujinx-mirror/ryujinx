@@ -47,8 +47,8 @@ namespace ARMeilleure.Translation.Cache
 
         public JitCacheInvalidation(IJitMemoryAllocator allocator)
         {
-            // On macOS, a different path is used to write to the JIT cache, which does the invalidation.
-            if (!OperatingSystem.IsMacOS() && RuntimeInformation.ProcessArchitecture == Architecture.Arm64)
+            // On macOS and Windows, a different path is used to write to the JIT cache, which does the invalidation.
+            if (RuntimeInformation.ProcessArchitecture == Architecture.Arm64)
             {
                 ulong size = (ulong)_invalidationCode.Length * sizeof(int);
                 ulong mask = (ulong)ReservedRegion.DefaultGranularity - 1;
