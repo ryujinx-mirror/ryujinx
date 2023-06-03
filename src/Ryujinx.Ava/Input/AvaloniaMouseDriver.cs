@@ -1,7 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
-using FluentAvalonia.Core;
 using Ryujinx.Input;
 using System;
 using System.Numerics;
@@ -30,14 +29,14 @@ namespace Ryujinx.Ava.Input
             _window = window;
 
             _widget.PointerMoved        += Parent_PointerMovedEvent;
-            _widget.PointerPressed      += Parent_PointerPressEvent;
-            _widget.PointerReleased     += Parent_PointerReleaseEvent;
-            _widget.PointerWheelChanged += Parent_ScrollEvent;
+            _widget.PointerPressed      += Parent_PointerPressedEvent;
+            _widget.PointerReleased     += Parent_PointerReleasedEvent;
+            _widget.PointerWheelChanged += Parent_PointerWheelChanged;
             
             _window.PointerMoved        += Parent_PointerMovedEvent;
-            _window.PointerPressed      += Parent_PointerPressEvent;
-            _window.PointerReleased     += Parent_PointerReleaseEvent;
-            _window.PointerWheelChanged += Parent_ScrollEvent;
+            _window.PointerPressed      += Parent_PointerPressedEvent;
+            _window.PointerReleased     += Parent_PointerReleasedEvent;
+            _window.PointerWheelChanged += Parent_PointerWheelChanged;
 
             PressedButtons = new bool[(int)MouseButton.Count];
 
@@ -63,29 +62,25 @@ namespace Ryujinx.Ava.Input
             _size = new Size((int)rect.Width, (int)rect.Height);
         }
 
-        private void Parent_ScrollEvent(object o, PointerWheelEventArgs args)
+        private void Parent_PointerWheelChanged(object o, PointerWheelEventArgs args)
         {
             Scroll = new Vector2((float)args.Delta.X, (float)args.Delta.Y);
         }
 
-        private void Parent_PointerReleaseEvent(object o, PointerReleasedEventArgs args)
+        private void Parent_PointerReleasedEvent(object o, PointerReleasedEventArgs args)
         {
-            if (args.InitialPressMouseButton != Avalonia.Input.MouseButton.None)
-            {
-                int button = (int)args.InitialPressMouseButton;
+            uint button = (uint)args.InitialPressMouseButton - 1;
 
-                if (PressedButtons.Count() >= button)
-                {
-                    PressedButtons[button] = false;
-                }
+            if ((uint)PressedButtons.Length > button)
+            {
+                PressedButtons[button] = false;
             }
         }
-
-        private void Parent_PointerPressEvent(object o, PointerPressedEventArgs args)
+        private void Parent_PointerPressedEvent(object o, PointerPressedEventArgs args)
         {
-            int button = (int)args.GetCurrentPoint(_widget).Properties.PointerUpdateKind;
+            uint button = (uint)args.GetCurrentPoint(_widget).Properties.PointerUpdateKind;
 
-            if (PressedButtons.Count() >= button)
+            if ((uint)PressedButtons.Length > button)
             {
                 PressedButtons[button] = true;
             }
@@ -100,17 +95,17 @@ namespace Ryujinx.Ava.Input
 
         public void SetMousePressed(MouseButton button)
         {
-            if (PressedButtons.Count() >= (int)button)
+            if ((uint)PressedButtons.Length > (uint)button)
             {
-                PressedButtons[(int)button] = true;
+                PressedButtons[(uint)button] = true;
             }
         }
 
         public void SetMouseReleased(MouseButton button)
         {
-            if (PressedButtons.Count() >= (int)button)
+            if ((uint)PressedButtons.Length > (uint)button)
             {
-                PressedButtons[(int)button] = false;
+                PressedButtons[(uint)button] = false;
             }
         }
 
@@ -121,9 +116,9 @@ namespace Ryujinx.Ava.Input
 
         public bool IsButtonPressed(MouseButton button)
         {
-            if (PressedButtons.Count() >= (int)button)
+            if ((uint)PressedButtons.Length > (uint)button)
             {
-                return PressedButtons[(int)button];
+                return PressedButtons[(uint)button];
             }
 
             return false;
@@ -149,14 +144,14 @@ namespace Ryujinx.Ava.Input
             _isDisposed = true;
 
             _widget.PointerMoved        -= Parent_PointerMovedEvent;
-            _widget.PointerPressed      -= Parent_PointerPressEvent;
-            _widget.PointerReleased     -= Parent_PointerReleaseEvent;
-            _widget.PointerWheelChanged -= Parent_ScrollEvent;
+            _widget.PointerPressed      -= Parent_PointerPressedEvent;
+            _widget.PointerReleased     -= Parent_PointerReleasedEvent;
+            _widget.PointerWheelChanged -= Parent_PointerWheelChanged;
 
             _window.PointerMoved        -= Parent_PointerMovedEvent;
-            _window.PointerPressed      -= Parent_PointerPressEvent;
-            _window.PointerReleased     -= Parent_PointerReleaseEvent;
-            _window.PointerWheelChanged -= Parent_ScrollEvent;
+            _window.PointerPressed      -= Parent_PointerPressedEvent;
+            _window.PointerReleased     -= Parent_PointerReleasedEvent;
+            _window.PointerWheelChanged -= Parent_PointerWheelChanged;
 
             _widget = null;
         }
