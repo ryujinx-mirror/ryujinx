@@ -257,6 +257,7 @@ namespace Ryujinx.Ava.UI.ViewModels
 
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(EnableNonGameRunningControls));
+                OnPropertyChanged(nameof(IsAppletMenuActive));
                 OnPropertyChanged(nameof(StatusBarVisible));
                 OnPropertyChanged(nameof(ShowFirmwareStatus));
             }
