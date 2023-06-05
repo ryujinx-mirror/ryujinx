@@ -565,6 +565,18 @@ namespace Ryujinx.Modules
         {
             var files = Directory.EnumerateFiles(HomeDir); // All files directly in base dir.
 
+            // Determine and exclude user files only when the updater is running, not when cleaning old files
+            if (Running)
+            {
+                // Compare the loose files in base directory against the loose files from the incoming update, and store foreign ones in a user list.
+                var oldFiles = Directory.EnumerateFiles(HomeDir, "*", SearchOption.TopDirectoryOnly).Select(Path.GetFileName);
+                var newFiles = Directory.EnumerateFiles(UpdatePublishDir, "*", SearchOption.TopDirectoryOnly).Select(Path.GetFileName);
+                var userFiles = oldFiles.Except(newFiles).Select(filename => Path.Combine(HomeDir, filename));
+
+                // Remove user files from the paths in files.
+                files = files.Except(userFiles);
+            }
+
             if (OperatingSystem.IsWindows())
             {
                 foreach (string dir in WindowsDependencyDirs)
