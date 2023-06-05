@@ -90,6 +90,7 @@ namespace Ryujinx.Graphics.Texture
 
                 mipOffsets[level] = layerSize;
                 sliceSizes[level] = totalBlocksOfGobsInY * robSize;
+                levelSizes[level] = totalBlocksOfGobsInZ * sliceSizes[level];
 
                 if (is3D)
                 {
@@ -116,11 +117,14 @@ namespace Ryujinx.Graphics.Texture
                         // The slice only covers up to the end of this slice's depth, rather than the full aligned size.
                         // Avoids size being too large on partial views of 3d textures.
 
-                        sliceSizes[level] -= gobSize * (mipGobBlocksInZ - gobRemainderZ);
+                        levelSizes[level] -= gobSize * (mipGobBlocksInZ - gobRemainderZ);
+
+                        if (sliceSizes[level] > levelSizes[level])
+                        {
+                            sliceSizes[level] = levelSizes[level];
+                        }
                     }
                 }
-
-                levelSizes[level] = totalBlocksOfGobsInZ * sliceSizes[level];
 
                 layerSize += levelSizes[level];
 
