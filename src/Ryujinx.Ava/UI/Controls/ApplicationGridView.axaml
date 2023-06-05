@@ -32,10 +32,10 @@
             <ListBox.ItemsPanel>
                 <ItemsPanelTemplate>
                     <flex:FlexPanel
-                        HorizontalAlignment="Stretch"
+                        HorizontalAlignment="Center"
                         VerticalAlignment="Stretch"
                         AlignContent="FlexStart"
-                        JustifyContent="Center" />
+                        JustifyContent="FlexStart" />
                 </ItemsPanelTemplate>
             </ListBox.ItemsPanel>
             <ListBox.Styles>
