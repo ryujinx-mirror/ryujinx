@@ -28,18 +28,18 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
                 for (int i = 1; i < info.Functions.Count; i++)
                 {
-                    PrintFunction(context, info, info.Functions[i]);
+                    PrintFunction(context, info.Functions[i]);
 
                     context.AppendLine();
                 }
             }
 
-            PrintFunction(context, info, info.Functions[0], MainFunctionName);
+            PrintFunction(context, info.Functions[0], MainFunctionName);
 
             return context.GetCode();
         }
 
-        private static void PrintFunction(CodeGenContext context, StructuredProgramInfo info, StructuredFunction function, string funcName = null)
+        private static void PrintFunction(CodeGenContext context, StructuredFunction function, string funcName = null)
         {
             context.CurrentFunction = function;
 
@@ -48,7 +48,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
             Declarations.DeclareLocals(context, function);
 
-            PrintBlock(context, function.MainBlock);
+            PrintBlock(context, function.MainBlock, funcName == MainFunctionName);
 
             context.LeaveScope();
         }
@@ -72,7 +72,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             return $"{Declarations.GetVarTypeName(context, function.ReturnType)} {funcName ?? function.Name}({string.Join(", ", args)})";
         }
 
-        private static void PrintBlock(CodeGenContext context, AstBlock block)
+        private static void PrintBlock(CodeGenContext context, AstBlock block, bool isMainFunction)
         {
             AstBlockVisitor visitor = new AstBlockVisitor(block);
 
@@ -112,10 +112,32 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                 }
             };
 
+            bool supportsBarrierDivergence = context.Config.GpuAccessor.QueryHostSupportsShaderBarrierDivergence();
+            bool mayHaveReturned = false;
+
             foreach (IAstNode node in visitor.Visit())
             {
                 if (node is AstOperation operation)
                 {
+                    if (!supportsBarrierDivergence)
+                    {
+                        if (operation.Inst == IntermediateRepresentation.Instruction.Barrier)
+                        {
+                            // Barrier on divergent control flow paths may cause the GPU to hang,
+                            // so skip emitting the barrier for those cases.
+                            if (visitor.Block.Type != AstBlockType.Main || mayHaveReturned || !isMainFunction)
+                            {
+                                context.Config.GpuAccessor.Log($"Shader has barrier on potentially divergent block, the barrier will be removed.");
+
+                                continue;
+                            }
+                        }
+                        else if (operation.Inst == IntermediateRepresentation.Instruction.Return)
+                        {
+                            mayHaveReturned = true;
+                        }
+                    }
+
                     string expr = InstGen.GetExpression(context, operation);
 
                     if (expr != null)

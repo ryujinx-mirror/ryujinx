@@ -76,6 +76,9 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
 
         public SpirvDelegates Delegates { get; }
 
+        public bool IsMainFunction { get; private set; }
+        public bool MayHaveReturned { get; set; }
+
         public CodeGenContext(
             StructuredProgramInfo info,
             ShaderConfig config,
@@ -108,8 +111,10 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             Delegates = new SpirvDelegates(this);
         }
 
-        public void StartFunction()
+        public void StartFunction(bool isMainFunction)
         {
+            IsMainFunction = isMainFunction;
+            MayHaveReturned = false;
             _locals.Clear();
             _localForArgs.Clear();
             _funcArgs.Clear();

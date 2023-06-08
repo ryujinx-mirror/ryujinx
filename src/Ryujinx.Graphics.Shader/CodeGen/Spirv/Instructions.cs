@@ -242,6 +242,16 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
 
         private static OperationResult GenerateBarrier(CodeGenContext context, AstOperation operation)
         {
+            // Barrier on divergent control flow paths may cause the GPU to hang,
+            // so skip emitting the barrier for those cases.
+            if (!context.Config.GpuAccessor.QueryHostSupportsShaderBarrierDivergence() &&
+                (context.CurrentBlock.Type != AstBlockType.Main || context.MayHaveReturned || !context.IsMainFunction))
+            {
+                context.Config.GpuAccessor.Log($"Shader has barrier on potentially divergent block, the barrier will be removed.");
+
+                return OperationResult.Invalid;
+            }
+
             context.ControlBarrier(
                 context.Constant(context.TypeU32(), Scope.Workgroup),
                 context.Constant(context.TypeU32(), Scope.Workgroup),
@@ -1092,6 +1102,8 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
 
         private static OperationResult GenerateReturn(CodeGenContext context, AstOperation operation)
         {
+            context.MayHaveReturned = true;
+
             if (operation.SourcesCount != 0)
             {
                 context.ReturnValue(context.Get(context.CurrentFunction.ReturnType, operation.GetSource(0)));

@@ -332,6 +332,15 @@ namespace Ryujinx.Graphics.Shader
         }
 
         /// <summary>
+        /// Queries host GPU shader support for barrier instructions on divergent control flow paths.
+        /// </summary>
+        /// <returns>True if the GPU supports barriers on divergent control flow paths, false otherwise</returns>
+        bool QueryHostSupportsShaderBarrierDivergence()
+        {
+            return true;
+        }
+
+        /// <summary>
         /// Queries host GPU support for 64-bit floating point (double precision) operations on the shader.
         /// </summary>
         /// <returns>True if the GPU and driver supports double operations, false otherwise</returns>

@@ -148,7 +148,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
 
             context.CurrentFunction = function;
             context.AddFunction(spvFunc);
-            context.StartFunction();
+            context.StartFunction(isMainFunction: funcIndex == 0);
 
             Declarations.DeclareParameters(context, function);
 

@@ -595,6 +595,7 @@ namespace Ryujinx.Graphics.Vulkan
                 supportsCubemapView: !IsAmdGcn,
                 supportsNonConstantTextureOffset: false,
                 supportsShaderBallot: false,
+                supportsShaderBarrierDivergence: Vendor != Vendor.Intel,
                 supportsShaderFloat64: Capabilities.SupportsShaderFloat64,
                 supportsTextureShadowLod: false,
                 supportsViewportIndexVertexTessellation: featuresVk12.ShaderOutputViewportIndex,
