@@ -15,6 +15,7 @@ namespace Ryujinx.Graphics.Vulkan
         private readonly Device _device;
 
         private readonly Auto<DisposableImageView> _imageView;
+        private readonly Auto<DisposableImageView> _imageViewDraw;
         private readonly Auto<DisposableImageView> _imageViewIdentity;
         private readonly Auto<DisposableImageView> _imageView2dArray;
         private Dictionary<GAL.Format, TextureView> _selfManagedViews;
@@ -127,7 +128,8 @@ namespace Ryujinx.Graphics.Vulkan
                 ComponentSwizzle.B,
                 ComponentSwizzle.A);
 
-            _imageViewIdentity = CreateImageView(identityComponentMapping, subresourceRangeDepth, type, usage);
+            _imageViewDraw = CreateImageView(identityComponentMapping, subresourceRangeDepth, type, usage);
+            _imageViewIdentity = aspectFlagsDepth == aspectFlags ? _imageViewDraw : CreateImageView(identityComponentMapping, subresourceRange, type, usage);
 
             // Framebuffer attachments also require 3D textures to be bound as 2D array.
             if (info.Target == Target.Texture3D)
@@ -169,7 +171,7 @@ namespace Ryujinx.Graphics.Vulkan
 
         public Auto<DisposableImageView> GetImageViewForAttachment()
         {
-            return _imageView2dArray ?? _imageViewIdentity;
+            return _imageView2dArray ?? _imageViewDraw;
         }
 
         public void CopyTo(ITexture destination, int firstLayer, int firstLevel)
@@ -908,6 +910,11 @@ namespace Ryujinx.Graphics.Vulkan
                     _imageView.Dispose();
                     _imageViewIdentity.Dispose();
                     _imageView2dArray?.Dispose();
+
+                    if (_imageViewDraw != _imageViewIdentity)
+                    {
+                        _imageViewDraw.Dispose();
+                    }
 
                     Storage.DecrementViewsCount();
                 }
