@@ -45,10 +45,99 @@ namespace Ryujinx.Graphics.Shader.Translation
         {
             return functionName switch
             {
+                HelperFunctionName.ConvertDoubleToFloat => GenerateConvertDoubleToFloatFunction(),
+                HelperFunctionName.ConvertFloatToDouble => GenerateConvertFloatToDoubleFunction(),
                 HelperFunctionName.TexelFetchScale => GenerateTexelFetchScaleFunction(),
                 HelperFunctionName.TextureSizeUnscale => GenerateTextureSizeUnscaleFunction(),
                 _ => throw new ArgumentException($"Invalid function name {functionName}")
             };
+        }
+
+        private Function GenerateConvertDoubleToFloatFunction()
+        {
+            EmitterContext context = new EmitterContext();
+
+            Operand valueLow = Argument(0);
+            Operand valueHigh = Argument(1);
+
+            Operand mantissaLow = context.BitwiseAnd(valueLow, Const(((1 << 22) - 1)));
+            Operand mantissa = context.ShiftRightU32(valueLow, Const(22));
+
+            mantissa = context.BitwiseOr(mantissa, context.ShiftLeft(context.BitwiseAnd(valueHigh, Const(0xfffff)), Const(10)));
+            mantissa = context.BitwiseOr(mantissa, context.ConditionalSelect(mantissaLow, Const(1), Const(0)));
+
+            Operand exp = context.BitwiseAnd(context.ShiftRightU32(valueHigh, Const(20)), Const(0x7ff));
+            Operand sign = context.ShiftRightS32(valueHigh, Const(31));
+
+            Operand resultSign = context.ShiftLeft(sign, Const(31));
+
+            Operand notZero = context.BitwiseOr(mantissa, exp);
+
+            Operand lblNotZero = Label();
+
+            context.BranchIfTrue(lblNotZero, notZero);
+
+            context.Return(resultSign);
+
+            context.MarkLabel(lblNotZero);
+
+            Operand notNaNOrInf = context.ICompareNotEqual(exp, Const(0x7ff));
+
+            mantissa = context.BitwiseOr(mantissa, Const(0x40000000));
+            exp = context.ISubtract(exp, Const(0x381));
+
+            // Note: Overflow cases are not handled here and might produce incorrect results.
+
+            Operand roundBits = context.BitwiseAnd(mantissa, Const(0x7f));
+            Operand roundBitsXor64 = context.BitwiseExclusiveOr(roundBits, Const(0x40));
+            mantissa = context.ShiftRightU32(context.IAdd(mantissa, Const(0x40)), Const(7));
+            mantissa = context.BitwiseAnd(mantissa, context.ConditionalSelect(roundBitsXor64, Const(~0), Const(~1)));
+
+            exp = context.ConditionalSelect(mantissa, exp, Const(0));
+            exp = context.ConditionalSelect(notNaNOrInf, exp, Const(0xff));
+
+            Operand result = context.IAdd(context.IAdd(mantissa, context.ShiftLeft(exp, Const(23))), resultSign);
+
+            context.Return(result);
+
+            return new Function(ControlFlowGraph.Create(context.GetOperations()).Blocks, "ConvertDoubleToFloat", true, 2, 0);
+        }
+
+        private Function GenerateConvertFloatToDoubleFunction()
+        {
+            EmitterContext context = new EmitterContext();
+
+            Operand value = Argument(0);
+
+            Operand mantissa = context.BitwiseAnd(value, Const(0x7fffff));
+            Operand exp = context.BitwiseAnd(context.ShiftRightU32(value, Const(23)), Const(0xff));
+            Operand sign = context.ShiftRightS32(value, Const(31));
+
+            Operand notNaNOrInf = context.ICompareNotEqual(exp, Const(0xff));
+            Operand expNotZero = context.ICompareNotEqual(exp, Const(0));
+            Operand notDenorm = context.BitwiseOr(expNotZero, context.ICompareEqual(mantissa, Const(0)));
+
+            exp = context.IAdd(exp, Const(0x380));
+
+            Operand shiftDist = context.ISubtract(Const(32), context.FindMSBU32(mantissa));
+            Operand normExp = context.ISubtract(context.ISubtract(Const(1), shiftDist), Const(1));
+            Operand normMant = context.ShiftLeft(mantissa, shiftDist);
+
+            exp = context.ConditionalSelect(notNaNOrInf, exp, Const(0x7ff));
+            exp = context.ConditionalSelect(notDenorm, exp, normExp);
+            mantissa = context.ConditionalSelect(expNotZero, mantissa, normMant);
+
+            Operand resultLow = context.ShiftLeft(mantissa, Const(29));
+            Operand resultHigh = context.ShiftRightU32(mantissa, Const(3));
+
+            resultHigh = context.IAdd(resultHigh, context.ShiftLeft(exp, Const(20)));
+            resultHigh = context.IAdd(resultHigh, context.ShiftLeft(sign, Const(31)));
+
+            context.Copy(Argument(1), resultLow);
+            context.Copy(Argument(2), resultHigh);
+            context.Return();
+
+            return new Function(ControlFlowGraph.Create(context.GetOperations()).Blocks, "ConvertFloatToDouble", false, 1, 2);
         }
 
         private Function GenerateTexelFetchScaleFunction()

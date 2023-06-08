@@ -26,6 +26,7 @@ namespace Ryujinx.Graphics.Vulkan
         public readonly bool SupportsFragmentShaderInterlock;
         public readonly bool SupportsGeometryShaderPassthrough;
         public readonly bool SupportsSubgroupSizeControl;
+        public readonly bool SupportsShaderFloat64;
         public readonly bool SupportsShaderInt8;
         public readonly bool SupportsShaderStencilExport;
         public readonly bool SupportsShaderStorageImageMultisample;
@@ -63,6 +64,7 @@ namespace Ryujinx.Graphics.Vulkan
             bool supportsFragmentShaderInterlock,
             bool supportsGeometryShaderPassthrough,
             bool supportsSubgroupSizeControl,
+            bool supportsShaderFloat64,
             bool supportsShaderInt8,
             bool supportsShaderStencilExport,
             bool supportsShaderStorageImageMultisample,
@@ -99,6 +101,7 @@ namespace Ryujinx.Graphics.Vulkan
             SupportsFragmentShaderInterlock = supportsFragmentShaderInterlock;
             SupportsGeometryShaderPassthrough = supportsGeometryShaderPassthrough;
             SupportsSubgroupSizeControl = supportsSubgroupSizeControl;
+            SupportsShaderFloat64 = supportsShaderFloat64;
             SupportsShaderInt8 = supportsShaderInt8;
             SupportsShaderStencilExport = supportsShaderStencilExport;
             SupportsShaderStorageImageMultisample = supportsShaderStorageImageMultisample;

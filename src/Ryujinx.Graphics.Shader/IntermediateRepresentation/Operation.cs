@@ -255,5 +255,35 @@ namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
 
             _sources = new Operand[] { source };
         }
+
+        public void TurnDoubleIntoFloat()
+        {
+            if ((Inst & ~Instruction.Mask) == Instruction.FP64)
+            {
+                Inst = (Inst & Instruction.Mask) | Instruction.FP32;
+            }
+            else
+            {
+                switch (Inst)
+                {
+                    case Instruction.ConvertFP32ToFP64:
+                    case Instruction.ConvertFP64ToFP32:
+                        Inst = Instruction.Copy;
+                        break;
+                    case Instruction.ConvertFP64ToS32:
+                        Inst = Instruction.ConvertFP32ToS32;
+                        break;
+                    case Instruction.ConvertFP64ToU32:
+                        Inst = Instruction.ConvertFP32ToU32;
+                        break;
+                    case Instruction.ConvertS32ToFP64:
+                        Inst = Instruction.ConvertS32ToFP32;
+                        break;
+                    case Instruction.ConvertU32ToFP64:
+                        Inst = Instruction.ConvertU32ToFP32;
+                        break;
+                }
+            }
+        }
     }
 }

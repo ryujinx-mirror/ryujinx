@@ -332,6 +332,15 @@ namespace Ryujinx.Graphics.Shader
         }
 
         /// <summary>
+        /// Queries host GPU support for 64-bit floating point (double precision) operations on the shader.
+        /// </summary>
+        /// <returns>True if the GPU and driver supports double operations, false otherwise</returns>
+        bool QueryHostSupportsShaderFloat64()
+        {
+            return true;
+        }
+
+        /// <summary>
         /// Queries host GPU support for signed normalized buffer texture formats.
         /// </summary>
         /// <returns>True if the GPU and driver supports the formats, false otherwise</returns>

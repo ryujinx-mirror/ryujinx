@@ -11,7 +11,11 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
         {
             RunOptimizationPasses(blocks, config);
 
+            // TODO: Some of those are not optimizations and shouldn't be here.
+
             GlobalToStorage.RunPass(hfm, blocks, config);
+
+            bool hostSupportsShaderFloat64 = config.GpuAccessor.QueryHostSupportsShaderFloat64();
 
             // Those passes are looking for specific patterns and only needs to run once.
             for (int blkIndex = 0; blkIndex < blocks.Length; blkIndex++)
@@ -23,6 +27,12 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
                 if (config.Stage == ShaderStage.Fragment)
                 {
                     EliminateMultiplyByFragmentCoordW(blocks[blkIndex]);
+                }
+
+                // If the host does not support double operations, we need to turn them into float operations.
+                if (!hostSupportsShaderFloat64)
+                {
+                    DoubleToFloat.RunPass(hfm, blocks[blkIndex]);
                 }
             }
 
