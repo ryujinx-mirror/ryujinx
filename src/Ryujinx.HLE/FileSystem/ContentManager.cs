@@ -181,7 +181,7 @@ namespace Ryujinx.HLE.FileSystem
                         }
                     }
 
-                    if (_locationEntries.ContainsKey(storageId) && _locationEntries[storageId]?.Count == 0)
+                    if (_locationEntries.TryGetValue(storageId, out var locationEntriesItem) && locationEntriesItem?.Count == 0)
                     {
                         _locationEntries.Remove(storageId);
                     }
@@ -347,9 +347,9 @@ namespace Ryujinx.HLE.FileSystem
         {
             lock (_lock)
             {
-                if (_contentDictionary.ContainsKey((titleId, contentType)))
+                if (_contentDictionary.TryGetValue((titleId, contentType), out var contentDictionaryItem))
                 {
-                    return UInt128Utils.FromHex(_contentDictionary[(titleId, contentType)]);
+                    return UInt128Utils.FromHex(contentDictionaryItem);
                 }
             }
 
@@ -719,9 +719,9 @@ namespace Ryujinx.HLE.FileSystem
 
                             Nca nca = new Nca(_virtualFileSystem.KeySet, storage);
 
-                            if (updateNcas.ContainsKey(nca.Header.TitleId))
+                            if (updateNcas.TryGetValue(nca.Header.TitleId, out var updateNcasItem))
                             {
-                                updateNcas[nca.Header.TitleId].Add((nca.Header.ContentType, entry.FullName));
+                                updateNcasItem.Add((nca.Header.ContentType, entry.FullName));
                             }
                             else
                             {
@@ -732,10 +732,8 @@ namespace Ryujinx.HLE.FileSystem
                     }
                 }
 
-                if (updateNcas.ContainsKey(SystemUpdateTitleId))
+                if (updateNcas.TryGetValue(SystemUpdateTitleId, out var ncaEntry))
                 {
-                    var ncaEntry = updateNcas[SystemUpdateTitleId];
-
                     string metaPath = ncaEntry.Find(x => x.type == NcaContentType.Meta).path;
 
                     CnmtContentMetaEntry[] metaEntries = null;
@@ -770,9 +768,9 @@ namespace Ryujinx.HLE.FileSystem
                         throw new FileNotFoundException("System update title was not found in the firmware package.");
                     }
 
-                    if (updateNcas.ContainsKey(SystemVersionTitleId))
+                    if (updateNcas.TryGetValue(SystemVersionTitleId, out var updateNcasItem))
                     {
-                        string versionEntry = updateNcas[SystemVersionTitleId].Find(x => x.type != NcaContentType.Meta).path;
+                        string versionEntry = updateNcasItem.Find(x => x.type != NcaContentType.Meta).path;
 
                         using (Stream ncaStream = GetZipStream(archive.GetEntry(versionEntry)))
                         {
@@ -916,9 +914,9 @@ namespace Ryujinx.HLE.FileSystem
                         }
                     }
 
-                    if (updateNcas.ContainsKey(nca.Header.TitleId))
+                    if (updateNcas.TryGetValue(nca.Header.TitleId, out var updateNcasItem))
                     {
-                        updateNcas[nca.Header.TitleId].Add((nca.Header.ContentType, entry.FullPath));
+                        updateNcasItem.Add((nca.Header.ContentType, entry.FullPath));
                     }
                     else
                     {

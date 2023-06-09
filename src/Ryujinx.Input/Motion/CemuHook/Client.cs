@@ -338,12 +338,10 @@ namespace Ryujinx.Input.Motion.CemuHook
                         {
                             int slot = inputData.Shared.Slot;
 
-                            if (_motionData.ContainsKey(clientId))
+                            if (_motionData.TryGetValue(clientId, out var motionDataItem))
                             {
-                                if (_motionData[clientId].ContainsKey(slot))
+                                if (motionDataItem.TryGetValue(slot, out var previousData))
                                 {
-                                    MotionInput previousData = _motionData[clientId][slot];
-
                                     previousData.Update(accelerometer, gyroscrope, timestamp, cemuHookConfig.Sensitivity, (float)cemuHookConfig.GyroDeadzone);
                                 }
                                 else
@@ -352,7 +350,7 @@ namespace Ryujinx.Input.Motion.CemuHook
 
                                     input.Update(accelerometer, gyroscrope, timestamp, cemuHookConfig.Sensitivity, (float)cemuHookConfig.GyroDeadzone);
 
-                                    _motionData[clientId].Add(slot, input);
+                                    motionDataItem.Add(slot, input);
                                 }
                             }
                             else
