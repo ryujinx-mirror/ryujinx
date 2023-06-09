@@ -146,7 +146,7 @@ namespace Ryujinx.Ava.UI.Controls
                 case KeyboardMode.Alphabet:
                     localeText = LocaleManager.Instance.UpdateAndGetDynamicValue(LocaleKeys.SoftwareKeyboardModeAlphabet);
                     validationInfoText = string.IsNullOrEmpty(validationInfoText) ? localeText : string.Join("\n", validationInfoText, localeText);
-                    _checkInput = text => text.All(char.IsAsciiLetter);
+                    _checkInput = text => text.All(value => !CJKCharacterValidation.IsCJK(value));
                     break;
                 case KeyboardMode.ASCII:
                     localeText = LocaleManager.Instance.UpdateAndGetDynamicValue(LocaleKeys.SoftwareKeyboardModeASCII);

@@ -93,8 +93,8 @@ namespace Ryujinx.Ui.Applet
                     _checkInput = text => text.All(char.IsDigit);
                     break;
                 case KeyboardMode.Alphabet:
-                    _validationInfoText += "<i>Must be alphabets only.</i>";
-                    _checkInput = text => text.All(char.IsAsciiLetter);
+                    _validationInfoText += "<i>Must be non CJK-characters only.</i>";
+                    _checkInput = text => text.All(value => !CJKCharacterValidation.IsCJK(value));
                     break;
                 case KeyboardMode.ASCII:
                     _validationInfoText += "<i>Must be ASCII text only.</i>";

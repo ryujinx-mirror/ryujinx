@@ -6,22 +6,30 @@
     public enum KeyboardMode : uint
     {
         /// <summary>
-        /// A full alpha-numeric keyboard.
+        /// All UTF-16 characters allowed.
         /// </summary>
         Default = 0,
 
         /// <summary>
-        /// Number pad.
+        /// Only numbers allowed.
         /// </summary>
         NumbersOnly = 1,
 
         /// <summary>
-        /// ASCII characters keyboard.
+        /// Only ASCII characters allowed.
         /// </summary>
         ASCII = 2,
 
-        FullLatin          = 3,
-        Alphabet           = 4,
+        /// <summary>
+        /// Synonymous with default.
+        /// </summary>
+        FullLatin = 3,
+        
+        /// <summary>
+        /// All UTF-16 characters except CJK characters allowed.
+        /// </summary>
+        Alphabet = 4,
+        
         SimplifiedChinese  = 5,
         TraditionalChinese = 6,
         Korean             = 7,
