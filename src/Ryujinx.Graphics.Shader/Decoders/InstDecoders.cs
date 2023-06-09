@@ -851,14 +851,14 @@ namespace Ryujinx.Graphics.Shader.Decoders
         public InstConditional(ulong opcode) => _opcode = opcode;
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
-        public Ccc Ccc => (Ccc)((_opcode >> 0) & 0x1F);
+        public Ccc Ccc => (Ccc)(_opcode & 0x1F);
     }
 
     struct InstAl2p
     {
         private ulong _opcode;
         public InstAl2p(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
@@ -872,7 +872,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstAld(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 39) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -889,7 +889,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
         private ulong _opcode;
         public InstAst(ulong opcode) => _opcode = opcode;
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
-        public int SrcB => (int)((_opcode >> 0) & 0xFF);
+        public int SrcB => (int)(_opcode & 0xFF);
         public int SrcC => (int)((_opcode >> 39) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
@@ -903,7 +903,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstAtom(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -918,7 +918,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstAtomCas(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -931,7 +931,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstAtoms(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -945,7 +945,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstAtomsCas(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -957,7 +957,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstB2r(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int DestPred => (int)((_opcode >> 45) & 0x7);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -985,7 +985,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstBfeR(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -999,7 +999,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstBfeI(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Imm20 => (int)((_opcode >> 37) & 0x80000) | (int)((_opcode >> 20) & 0x7FFFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -1013,7 +1013,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstBfeC(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int CbufSlot => (int)((_opcode >> 34) & 0x1F);
         public int CbufOffset => (int)((_opcode >> 20) & 0x3FFF);
@@ -1028,7 +1028,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstBfiR(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int SrcC => (int)((_opcode >> 39) & 0xFF);
@@ -1041,7 +1041,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstBfiI(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Imm20 => (int)((_opcode >> 37) & 0x80000) | (int)((_opcode >> 20) & 0x7FFFF);
         public int SrcC => (int)((_opcode >> 39) & 0xFF);
@@ -1054,7 +1054,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstBfiC(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int CbufSlot => (int)((_opcode >> 34) & 0x1F);
         public int CbufOffset => (int)((_opcode >> 20) & 0x3FFF);
@@ -1068,7 +1068,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstBfiRc(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcC => (int)((_opcode >> 39) & 0xFF);
         public int CbufSlot => (int)((_opcode >> 34) & 0x1F);
@@ -1092,7 +1092,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
         public InstBra(ulong opcode) => _opcode = opcode;
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
-        public Ccc Ccc => (Ccc)((_opcode >> 0) & 0x1F);
+        public Ccc Ccc => (Ccc)(_opcode & 0x1F);
         public int Imm24 => (int)((_opcode >> 20) & 0xFFFFFF);
         public bool Ca => (_opcode & 0x20) != 0;
         public bool Lmt => (_opcode & 0x40) != 0;
@@ -1105,7 +1105,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
         public InstBrk(ulong opcode) => _opcode = opcode;
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
-        public Ccc Ccc => (Ccc)((_opcode >> 0) & 0x1F);
+        public Ccc Ccc => (Ccc)(_opcode & 0x1F);
     }
 
     struct InstBrx
@@ -1115,7 +1115,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
-        public Ccc Ccc => (Ccc)((_opcode >> 0) & 0x1F);
+        public Ccc Ccc => (Ccc)(_opcode & 0x1F);
         public int Imm24 => (int)((_opcode >> 20) & 0xFFFFFF);
         public bool Ca => (_opcode & 0x20) != 0;
         public bool Lmt => (_opcode & 0x40) != 0;
@@ -1140,7 +1140,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
         public int Imm30 => (int)((_opcode >> 22) & 0x3FFFFFFF);
         public bool E => (_opcode & 0x10000000000000) != 0;
         public CacheType Cache => (CacheType)((_opcode >> 4) & 0x7);
-        public CctlOp CctlOp => (CctlOp)((_opcode >> 0) & 0xF);
+        public CctlOp CctlOp => (CctlOp)(_opcode & 0xF);
     }
 
     struct InstCctll
@@ -1152,7 +1152,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
         public bool PredInv => (_opcode & 0x80000) != 0;
         public int Imm22 => (int)((_opcode >> 22) & 0x3FFFFF);
         public int Cache => (int)((_opcode >> 4) & 0x3);
-        public CctlOp CctlOp => (CctlOp)((_opcode >> 0) & 0xF);
+        public CctlOp CctlOp => (CctlOp)(_opcode & 0xF);
     }
 
     struct InstCctlt
@@ -1162,7 +1162,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
         public int TsIdx13 => (int)((_opcode >> 36) & 0x1FFF);
-        public CctltOp CctltOp => (CctltOp)((_opcode >> 0) & 0x3);
+        public CctltOp CctltOp => (CctltOp)(_opcode & 0x3);
     }
 
     struct InstCctltR
@@ -1170,7 +1170,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
         private ulong _opcode;
         public InstCctltR(ulong opcode) => _opcode = opcode;
         public int SrcC => (int)((_opcode >> 39) & 0xFF);
-        public CctltOp CctltOp => (CctltOp)((_opcode >> 0) & 0x3);
+        public CctltOp CctltOp => (CctltOp)(_opcode & 0x3);
     }
 
     struct InstCont
@@ -1179,14 +1179,14 @@ namespace Ryujinx.Graphics.Shader.Decoders
         public InstCont(ulong opcode) => _opcode = opcode;
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
-        public Ccc Ccc => (Ccc)((_opcode >> 0) & 0x1F);
+        public Ccc Ccc => (Ccc)(_opcode & 0x1F);
     }
 
     struct InstCset
     {
         private ulong _opcode;
         public InstCset(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
         public bool WriteCC => (_opcode & 0x800000000000) != 0;
@@ -1206,7 +1206,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
         public bool WriteCC => (_opcode & 0x800000000000) != 0;
         public Ccc Ccc => (Ccc)((_opcode >> 8) & 0x1F);
         public int DestPred => (int)((_opcode >> 3) & 0x7);
-        public int DestPredInv => (int)((_opcode >> 0) & 0x7);
+        public int DestPredInv => (int)(_opcode & 0x7);
         public int SrcPred => (int)((_opcode >> 39) & 0x7);
         public bool SrcPredInv => (_opcode & 0x40000000000) != 0;
         public BoolOp Bop => (BoolOp)((_opcode >> 45) & 0x3);
@@ -1216,7 +1216,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstCs2r(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
         public SReg SReg => (SReg)((_opcode >> 20) & 0xFF);
@@ -1226,7 +1226,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstDaddR(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -1243,7 +1243,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstDaddI(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Imm20 => (int)((_opcode >> 37) & 0x80000) | (int)((_opcode >> 20) & 0x7FFFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -1260,7 +1260,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstDaddC(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int CbufSlot => (int)((_opcode >> 34) & 0x1F);
         public int CbufOffset => (int)((_opcode >> 20) & 0x3FFF);
@@ -1283,14 +1283,14 @@ namespace Ryujinx.Graphics.Shader.Decoders
         public bool Le => (_opcode & 0x20000000) != 0;
         public int Sbid => (int)((_opcode >> 26) & 0x7);
         public int PendCnt => (int)((_opcode >> 20) & 0x3F);
-        public int Imm6 => (int)((_opcode >> 0) & 0x3F);
+        public int Imm6 => (int)(_opcode & 0x3F);
     }
 
     struct InstDfmaR
     {
         private ulong _opcode;
         public InstDfmaR(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int SrcC => (int)((_opcode >> 39) & 0xFF);
@@ -1306,7 +1306,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstDfmaI(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Imm20 => (int)((_opcode >> 37) & 0x80000) | (int)((_opcode >> 20) & 0x7FFFF);
         public int SrcC => (int)((_opcode >> 39) & 0xFF);
@@ -1322,7 +1322,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstDfmaC(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int CbufSlot => (int)((_opcode >> 34) & 0x1F);
         public int CbufOffset => (int)((_opcode >> 20) & 0x3FFF);
@@ -1339,7 +1339,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstDfmaRc(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcC => (int)((_opcode >> 39) & 0xFF);
         public int CbufSlot => (int)((_opcode >> 34) & 0x1F);
@@ -1356,7 +1356,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstDmnmxR(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -1374,7 +1374,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstDmnmxI(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Imm20 => (int)((_opcode >> 37) & 0x80000) | (int)((_opcode >> 20) & 0x7FFFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -1392,7 +1392,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstDmnmxC(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int CbufSlot => (int)((_opcode >> 34) & 0x1F);
         public int CbufOffset => (int)((_opcode >> 20) & 0x3FFF);
@@ -1411,7 +1411,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstDmulR(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -1425,7 +1425,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstDmulI(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Imm20 => (int)((_opcode >> 37) & 0x80000) | (int)((_opcode >> 20) & 0x7FFFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -1439,7 +1439,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstDmulC(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int CbufSlot => (int)((_opcode >> 34) & 0x1F);
         public int CbufOffset => (int)((_opcode >> 20) & 0x3FFF);
@@ -1454,7 +1454,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstDsetR(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -1475,7 +1475,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstDsetI(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Imm20 => (int)((_opcode >> 37) & 0x80000) | (int)((_opcode >> 20) & 0x7FFFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -1496,7 +1496,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstDsetC(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int CbufSlot => (int)((_opcode >> 34) & 0x1F);
         public int CbufOffset => (int)((_opcode >> 20) & 0x3FFF);
@@ -1531,7 +1531,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
         public bool AbsA => (_opcode & 0x80) != 0;
         public bool NegB => (_opcode & 0x40) != 0;
         public int DestPred => (int)((_opcode >> 3) & 0x7);
-        public int DestPredInv => (int)((_opcode >> 0) & 0x7);
+        public int DestPredInv => (int)(_opcode & 0x7);
     }
 
     struct InstDsetpI
@@ -1551,7 +1551,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
         public bool AbsA => (_opcode & 0x80) != 0;
         public bool NegB => (_opcode & 0x40) != 0;
         public int DestPred => (int)((_opcode >> 3) & 0x7);
-        public int DestPredInv => (int)((_opcode >> 0) & 0x7);
+        public int DestPredInv => (int)(_opcode & 0x7);
     }
 
     struct InstDsetpC
@@ -1572,7 +1572,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
         public bool AbsA => (_opcode & 0x80) != 0;
         public bool NegB => (_opcode & 0x40) != 0;
         public int DestPred => (int)((_opcode >> 3) & 0x7);
-        public int DestPredInv => (int)((_opcode >> 0) & 0x7);
+        public int DestPredInv => (int)(_opcode & 0x7);
     }
 
     struct InstExit
@@ -1581,7 +1581,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
         public InstExit(ulong opcode) => _opcode = opcode;
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
-        public Ccc Ccc => (Ccc)((_opcode >> 0) & 0x1F);
+        public Ccc Ccc => (Ccc)(_opcode & 0x1F);
         public bool KeepRefCnt => (_opcode & 0x20) != 0;
     }
 
@@ -1589,7 +1589,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstF2fR(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
@@ -1608,7 +1608,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstF2fI(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int Imm20 => (int)((_opcode >> 37) & 0x80000) | (int)((_opcode >> 20) & 0x7FFFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
@@ -1627,7 +1627,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstF2fC(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int CbufSlot => (int)((_opcode >> 34) & 0x1F);
         public int CbufOffset => (int)((_opcode >> 20) & 0x3FFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -1647,7 +1647,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstF2iR(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
@@ -1665,7 +1665,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstF2iI(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int Imm20 => (int)((_opcode >> 37) & 0x80000) | (int)((_opcode >> 20) & 0x7FFFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
@@ -1683,7 +1683,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstF2iC(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int CbufSlot => (int)((_opcode >> 34) & 0x1F);
         public int CbufOffset => (int)((_opcode >> 20) & 0x3FFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -1702,7 +1702,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstFaddR(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -1721,7 +1721,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstFaddI(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Imm20 => (int)((_opcode >> 37) & 0x80000) | (int)((_opcode >> 20) & 0x7FFFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -1740,7 +1740,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstFaddC(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int CbufSlot => (int)((_opcode >> 34) & 0x1F);
         public int CbufOffset => (int)((_opcode >> 20) & 0x3FFF);
@@ -1760,7 +1760,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstFadd32i(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
@@ -1826,7 +1826,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstFcmpR(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int SrcC => (int)((_opcode >> 39) & 0xFF);
@@ -1840,7 +1840,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstFcmpI(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Imm20 => (int)((_opcode >> 37) & 0x80000) | (int)((_opcode >> 20) & 0x7FFFF);
         public int SrcC => (int)((_opcode >> 39) & 0xFF);
@@ -1854,7 +1854,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstFcmpC(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int CbufSlot => (int)((_opcode >> 34) & 0x1F);
         public int CbufOffset => (int)((_opcode >> 20) & 0x3FFF);
@@ -1869,7 +1869,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstFcmpRc(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcC => (int)((_opcode >> 39) & 0xFF);
         public int CbufSlot => (int)((_opcode >> 34) & 0x1F);
@@ -1884,7 +1884,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstFfmaR(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int SrcC => (int)((_opcode >> 39) & 0xFF);
@@ -1902,7 +1902,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstFfmaI(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Imm20 => (int)((_opcode >> 37) & 0x80000) | (int)((_opcode >> 20) & 0x7FFFF);
         public int SrcC => (int)((_opcode >> 39) & 0xFF);
@@ -1920,7 +1920,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstFfmaC(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int CbufSlot => (int)((_opcode >> 34) & 0x1F);
         public int CbufOffset => (int)((_opcode >> 20) & 0x3FFF);
@@ -1939,7 +1939,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstFfmaRc(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcC => (int)((_opcode >> 39) & 0xFF);
         public int CbufSlot => (int)((_opcode >> 34) & 0x1F);
@@ -1958,7 +1958,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstFfma32i(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Imm32 => (int)(_opcode >> 20);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -1974,7 +1974,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstFloR(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
@@ -1988,7 +1988,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstFloI(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int Imm20 => (int)((_opcode >> 37) & 0x80000) | (int)((_opcode >> 20) & 0x7FFFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
@@ -2002,7 +2002,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstFloC(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int CbufSlot => (int)((_opcode >> 34) & 0x1F);
         public int CbufOffset => (int)((_opcode >> 20) & 0x3FFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -2017,7 +2017,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstFmnmxR(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -2036,7 +2036,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstFmnmxI(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Imm20 => (int)((_opcode >> 37) & 0x80000) | (int)((_opcode >> 20) & 0x7FFFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -2055,7 +2055,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstFmnmxC(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int CbufSlot => (int)((_opcode >> 34) & 0x1F);
         public int CbufOffset => (int)((_opcode >> 20) & 0x3FFF);
@@ -2075,7 +2075,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstFmulR(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -2092,7 +2092,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstFmulI(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Imm20 => (int)((_opcode >> 37) & 0x80000) | (int)((_opcode >> 20) & 0x7FFFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -2109,7 +2109,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstFmulC(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int CbufSlot => (int)((_opcode >> 34) & 0x1F);
         public int CbufOffset => (int)((_opcode >> 20) & 0x3FFF);
@@ -2127,7 +2127,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstFmul32i(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
@@ -2141,7 +2141,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstFsetR(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -2163,7 +2163,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstFsetC(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int CbufSlot => (int)((_opcode >> 34) & 0x1F);
         public int CbufOffset => (int)((_opcode >> 20) & 0x3FFF);
@@ -2186,7 +2186,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstFsetI(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Imm20 => (int)((_opcode >> 37) & 0x80000) | (int)((_opcode >> 20) & 0x7FFFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -2209,7 +2209,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
         private ulong _opcode;
         public InstFsetpR(ulong opcode) => _opcode = opcode;
         public int DestPred => (int)((_opcode >> 3) & 0x7);
-        public int DestPredInv => (int)((_opcode >> 0) & 0x7);
+        public int DestPredInv => (int)(_opcode & 0x7);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -2231,7 +2231,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
         private ulong _opcode;
         public InstFsetpI(ulong opcode) => _opcode = opcode;
         public int DestPred => (int)((_opcode >> 3) & 0x7);
-        public int DestPredInv => (int)((_opcode >> 0) & 0x7);
+        public int DestPredInv => (int)(_opcode & 0x7);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Imm20 => (int)((_opcode >> 37) & 0x80000) | (int)((_opcode >> 20) & 0x7FFFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -2253,7 +2253,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
         private ulong _opcode;
         public InstFsetpC(ulong opcode) => _opcode = opcode;
         public int DestPred => (int)((_opcode >> 3) & 0x7);
-        public int DestPredInv => (int)((_opcode >> 0) & 0x7);
+        public int DestPredInv => (int)(_opcode & 0x7);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int CbufSlot => (int)((_opcode >> 34) & 0x1F);
         public int CbufOffset => (int)((_opcode >> 20) & 0x3FFF);
@@ -2275,7 +2275,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstFswzadd(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -2291,21 +2291,21 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstGetcrsptr(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
     }
 
     struct InstGetlmembase
     {
         private ulong _opcode;
         public InstGetlmembase(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
     }
 
     struct InstHadd2R
     {
         private ulong _opcode;
         public InstHadd2R(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public OFmt OFmt => (OFmt)((_opcode >> 49) & 0x3);
@@ -2325,7 +2325,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstHadd2I(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int BimmH0 => (int)((_opcode >> 20) & 0x3FF);
         public int BimmH1 => (int)((_opcode >> 47) & 0x200) | (int)((_opcode >> 30) & 0x1FF);
@@ -2343,7 +2343,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstHadd2C(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int CbufSlot => (int)((_opcode >> 34) & 0x1F);
         public int CbufOffset => (int)((_opcode >> 20) & 0x3FFF);
@@ -2363,7 +2363,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstHadd232i(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Imm => (int)(_opcode >> 20);
         public HalfSwizzle ASwizzle => (HalfSwizzle)((_opcode >> 53) & 0x3);
@@ -2378,7 +2378,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstHfma2R(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int SrcC => (int)((_opcode >> 39) & 0xFF);
@@ -2398,7 +2398,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstHfma2I(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int BimmH0 => (int)((_opcode >> 20) & 0x3FF);
         public int BimmH1 => (int)((_opcode >> 47) & 0x200) | (int)((_opcode >> 30) & 0x1FF);
@@ -2417,7 +2417,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstHfma2C(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int CbufSlot => (int)((_opcode >> 34) & 0x1F);
         public int CbufOffset => (int)((_opcode >> 20) & 0x3FFF);
@@ -2437,7 +2437,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstHfma2Rc(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int CbufSlot => (int)((_opcode >> 34) & 0x1F);
         public int CbufOffset => (int)((_opcode >> 20) & 0x3FFF);
@@ -2457,7 +2457,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstHfma232i(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Imm => (int)(_opcode >> 20);
         public HalfSwizzle ASwizzle => (HalfSwizzle)((_opcode >> 47) & 0x3);
@@ -2471,7 +2471,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstHmul2R(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public OFmt OFmt => (OFmt)((_opcode >> 49) & 0x3);
@@ -2490,7 +2490,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstHmul2I(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int BimmH0 => (int)((_opcode >> 20) & 0x3FF);
         public int BimmH1 => (int)((_opcode >> 47) & 0x200) | (int)((_opcode >> 30) & 0x1FF);
@@ -2508,7 +2508,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstHmul2C(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int CbufSlot => (int)((_opcode >> 34) & 0x1F);
         public int CbufOffset => (int)((_opcode >> 20) & 0x3FFF);
@@ -2527,7 +2527,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstHmul232i(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Imm32 => (int)(_opcode >> 20);
         public HalfSwizzle ASwizzle => (HalfSwizzle)((_opcode >> 53) & 0x3);
@@ -2541,7 +2541,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstHset2R(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public HalfSwizzle ASwizzle => (HalfSwizzle)((_opcode >> 47) & 0x3);
@@ -2564,7 +2564,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstHset2I(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int BimmH0 => (int)((_opcode >> 20) & 0x3FF);
         public int BimmH1 => (int)((_opcode >> 47) & 0x200) | (int)((_opcode >> 30) & 0x1FF);
@@ -2585,7 +2585,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstHset2C(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int CbufSlot => (int)((_opcode >> 34) & 0x1F);
         public int CbufOffset => (int)((_opcode >> 20) & 0x3FFF);
@@ -2608,7 +2608,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
         private ulong _opcode;
         public InstHsetp2R(ulong opcode) => _opcode = opcode;
         public int DestPred => (int)((_opcode >> 3) & 0x7);
-        public int DestPredInv => (int)((_opcode >> 0) & 0x7);
+        public int DestPredInv => (int)(_opcode & 0x7);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -2632,7 +2632,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
         private ulong _opcode;
         public InstHsetp2I(ulong opcode) => _opcode = opcode;
         public int DestPred => (int)((_opcode >> 3) & 0x7);
-        public int DestPredInv => (int)((_opcode >> 0) & 0x7);
+        public int DestPredInv => (int)(_opcode & 0x7);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
@@ -2654,7 +2654,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
         private ulong _opcode;
         public InstHsetp2C(ulong opcode) => _opcode = opcode;
         public int DestPred => (int)((_opcode >> 3) & 0x7);
-        public int DestPredInv => (int)((_opcode >> 0) & 0x7);
+        public int DestPredInv => (int)(_opcode & 0x7);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int CbufSlot => (int)((_opcode >> 34) & 0x1F);
         public int CbufOffset => (int)((_opcode >> 20) & 0x3FFF);
@@ -2677,7 +2677,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstI2fR(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
@@ -2694,7 +2694,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstI2fI(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int Imm20 => (int)((_opcode >> 37) & 0x80000) | (int)((_opcode >> 20) & 0x7FFFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
@@ -2711,7 +2711,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstI2fC(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int CbufSlot => (int)((_opcode >> 34) & 0x1F);
         public int CbufOffset => (int)((_opcode >> 20) & 0x3FFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -2729,7 +2729,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstI2iR(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
@@ -2746,7 +2746,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstI2iI(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int Imm20 => (int)((_opcode >> 37) & 0x80000) | (int)((_opcode >> 20) & 0x7FFFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
@@ -2763,7 +2763,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstI2iC(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int CbufSlot => (int)((_opcode >> 34) & 0x1F);
         public int CbufOffset => (int)((_opcode >> 20) & 0x3FFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -2781,7 +2781,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstIaddR(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -2796,7 +2796,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstIaddI(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Imm20 => (int)((_opcode >> 37) & 0x80000) | (int)((_opcode >> 20) & 0x7FFFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -2811,7 +2811,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstIaddC(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int CbufSlot => (int)((_opcode >> 34) & 0x1F);
         public int CbufOffset => (int)((_opcode >> 20) & 0x3FFF);
@@ -2827,7 +2827,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstIadd32i(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
@@ -2842,7 +2842,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstIadd3R(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int SrcC => (int)((_opcode >> 39) & 0xFF);
@@ -2863,7 +2863,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstIadd3I(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Imm20 => (int)((_opcode >> 37) & 0x80000) | (int)((_opcode >> 20) & 0x7FFFF);
         public int SrcC => (int)((_opcode >> 39) & 0xFF);
@@ -2880,7 +2880,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstIadd3C(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int CbufSlot => (int)((_opcode >> 34) & 0x1F);
         public int CbufOffset => (int)((_opcode >> 20) & 0x3FFF);
@@ -2898,7 +2898,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstIcmpR(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int SrcC => (int)((_opcode >> 39) & 0xFF);
@@ -2912,7 +2912,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstIcmpI(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Imm20 => (int)((_opcode >> 37) & 0x80000) | (int)((_opcode >> 20) & 0x7FFFF);
         public int SrcC => (int)((_opcode >> 39) & 0xFF);
@@ -2926,7 +2926,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstIcmpC(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int CbufSlot => (int)((_opcode >> 34) & 0x1F);
         public int CbufOffset => (int)((_opcode >> 20) & 0x3FFF);
@@ -2941,7 +2941,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstIcmpRc(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcC => (int)((_opcode >> 39) & 0xFF);
         public int CbufSlot => (int)((_opcode >> 34) & 0x1F);
@@ -2964,7 +2964,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstIdpR(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int SrcC => (int)((_opcode >> 39) & 0xFF);
@@ -2980,7 +2980,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstIdpC(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int CbufSlot => (int)((_opcode >> 34) & 0x1F);
         public int CbufOffset => (int)((_opcode >> 20) & 0x3FFF);
@@ -2997,7 +2997,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstImadR(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int SrcC => (int)((_opcode >> 39) & 0xFF);
@@ -3016,7 +3016,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstImadI(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Imm20 => (int)((_opcode >> 37) & 0x80000) | (int)((_opcode >> 20) & 0x7FFFF);
         public int SrcC => (int)((_opcode >> 39) & 0xFF);
@@ -3035,7 +3035,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstImadC(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int CbufSlot => (int)((_opcode >> 34) & 0x1F);
         public int CbufOffset => (int)((_opcode >> 20) & 0x3FFF);
@@ -3055,7 +3055,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstImadRc(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcC => (int)((_opcode >> 39) & 0xFF);
         public int CbufSlot => (int)((_opcode >> 34) & 0x1F);
@@ -3075,7 +3075,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstImad32i(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
@@ -3091,7 +3091,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstImadspR(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int SrcC => (int)((_opcode >> 39) & 0xFF);
@@ -3106,7 +3106,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstImadspI(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Imm20 => (int)((_opcode >> 37) & 0x80000) | (int)((_opcode >> 20) & 0x7FFFF);
         public int SrcC => (int)((_opcode >> 39) & 0xFF);
@@ -3121,7 +3121,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstImadspC(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int CbufSlot => (int)((_opcode >> 34) & 0x1F);
         public int CbufOffset => (int)((_opcode >> 20) & 0x3FFF);
@@ -3137,7 +3137,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstImadspRc(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcC => (int)((_opcode >> 39) & 0xFF);
         public int CbufSlot => (int)((_opcode >> 34) & 0x1F);
@@ -3153,7 +3153,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstImnmxR(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -3169,7 +3169,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstImnmxI(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Imm20 => (int)((_opcode >> 37) & 0x80000) | (int)((_opcode >> 20) & 0x7FFFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -3185,7 +3185,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstImnmxC(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int CbufSlot => (int)((_opcode >> 34) & 0x1F);
         public int CbufOffset => (int)((_opcode >> 20) & 0x3FFF);
@@ -3202,7 +3202,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstImulR(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -3217,7 +3217,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstImulI(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Imm20 => (int)((_opcode >> 37) & 0x80000) | (int)((_opcode >> 20) & 0x7FFFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -3232,7 +3232,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstImulC(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int CbufSlot => (int)((_opcode >> 34) & 0x1F);
         public int CbufOffset => (int)((_opcode >> 20) & 0x3FFF);
@@ -3248,7 +3248,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstImul32i(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
@@ -3263,7 +3263,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstIpa(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int SrcC => (int)((_opcode >> 39) & 0xFF);
@@ -3282,7 +3282,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstIsberd(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
@@ -3296,7 +3296,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstIscaddR(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -3310,7 +3310,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstIscaddI(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Imm20 => (int)((_opcode >> 37) & 0x80000) | (int)((_opcode >> 20) & 0x7FFFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -3324,7 +3324,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstIscaddC(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int CbufSlot => (int)((_opcode >> 34) & 0x1F);
         public int CbufOffset => (int)((_opcode >> 20) & 0x3FFF);
@@ -3339,7 +3339,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstIscadd32i(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
@@ -3352,7 +3352,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstIsetR(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -3371,7 +3371,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstIsetI(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Imm20 => (int)((_opcode >> 37) & 0x80000) | (int)((_opcode >> 20) & 0x7FFFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -3390,7 +3390,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstIsetC(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int CbufSlot => (int)((_opcode >> 34) & 0x1F);
         public int CbufOffset => (int)((_opcode >> 20) & 0x3FFF);
@@ -3421,7 +3421,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
         public int SrcPred => (int)((_opcode >> 39) & 0x7);
         public bool SrcPredInv => (_opcode & 0x40000000000) != 0;
         public int DestPred => (int)((_opcode >> 3) & 0x7);
-        public int DestPredInv => (int)((_opcode >> 0) & 0x7);
+        public int DestPredInv => (int)(_opcode & 0x7);
     }
 
     struct InstIsetpI
@@ -3439,7 +3439,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
         public int SrcPred => (int)((_opcode >> 39) & 0x7);
         public bool SrcPredInv => (_opcode & 0x40000000000) != 0;
         public int DestPred => (int)((_opcode >> 3) & 0x7);
-        public int DestPredInv => (int)((_opcode >> 0) & 0x7);
+        public int DestPredInv => (int)(_opcode & 0x7);
     }
 
     struct InstIsetpC
@@ -3458,7 +3458,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
         public int SrcPred => (int)((_opcode >> 39) & 0x7);
         public bool SrcPredInv => (_opcode & 0x40000000000) != 0;
         public int DestPred => (int)((_opcode >> 3) & 0x7);
-        public int DestPredInv => (int)((_opcode >> 0) & 0x7);
+        public int DestPredInv => (int)(_opcode & 0x7);
     }
 
     struct InstJcal
@@ -3477,7 +3477,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
-        public Ccc Ccc => (Ccc)((_opcode >> 0) & 0x1F);
+        public Ccc Ccc => (Ccc)(_opcode & 0x1F);
         public bool Ca => (_opcode & 0x20) != 0;
         public int Imm32 => (int)(_opcode >> 20);
         public bool Lmt => (_opcode & 0x40) != 0;
@@ -3491,7 +3491,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
-        public Ccc Ccc => (Ccc)((_opcode >> 0) & 0x1F);
+        public Ccc Ccc => (Ccc)(_opcode & 0x1F);
         public bool Ca => (_opcode & 0x20) != 0;
         public int Imm32 => (int)(_opcode >> 20);
         public bool Lmt => (_opcode & 0x40) != 0;
@@ -3503,14 +3503,14 @@ namespace Ryujinx.Graphics.Shader.Decoders
         public InstKil(ulong opcode) => _opcode = opcode;
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
-        public Ccc Ccc => (Ccc)((_opcode >> 0) & 0x1F);
+        public Ccc Ccc => (Ccc)(_opcode & 0x1F);
     }
 
     struct InstLd
     {
         private ulong _opcode;
         public InstLd(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
@@ -3525,7 +3525,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstLdc(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
@@ -3539,7 +3539,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstLdg(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
@@ -3553,7 +3553,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstLdl(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
@@ -3566,7 +3566,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstLds(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
@@ -3579,7 +3579,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstLeaR(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -3595,7 +3595,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstLeaI(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Imm20 => (int)((_opcode >> 37) & 0x80000) | (int)((_opcode >> 20) & 0x7FFFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -3611,7 +3611,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstLeaC(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int CbufSlot => (int)((_opcode >> 34) & 0x1F);
         public int CbufOffset => (int)((_opcode >> 20) & 0x3FFF);
@@ -3628,7 +3628,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstLeaHiR(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int SrcC => (int)((_opcode >> 39) & 0xFF);
@@ -3645,7 +3645,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstLeaHiC(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int CbufSlot => (int)((_opcode >> 34) & 0x1F);
         public int CbufOffset => (int)((_opcode >> 20) & 0x3FFF);
@@ -3669,14 +3669,14 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstLongjmp(ulong opcode) => _opcode = opcode;
-        public Ccc Ccc => (Ccc)((_opcode >> 0) & 0x1F);
+        public Ccc Ccc => (Ccc)(_opcode & 0x1F);
     }
 
     struct InstLopR
     {
         private ulong _opcode;
         public InstLopR(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -3694,7 +3694,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstLopI(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Imm20 => (int)((_opcode >> 37) & 0x80000) | (int)((_opcode >> 20) & 0x7FFFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -3712,7 +3712,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstLopC(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int CbufSlot => (int)((_opcode >> 34) & 0x1F);
         public int CbufOffset => (int)((_opcode >> 20) & 0x3FFF);
@@ -3731,7 +3731,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstLop3R(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int SrcC => (int)((_opcode >> 39) & 0xFF);
@@ -3748,7 +3748,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstLop3I(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Imm20 => (int)((_opcode >> 37) & 0x80000) | (int)((_opcode >> 20) & 0x7FFFF);
         public int SrcC => (int)((_opcode >> 39) & 0xFF);
@@ -3763,7 +3763,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstLop3C(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int CbufSlot => (int)((_opcode >> 34) & 0x1F);
         public int CbufOffset => (int)((_opcode >> 20) & 0x3FFF);
@@ -3779,7 +3779,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstLop32i(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
@@ -3798,14 +3798,14 @@ namespace Ryujinx.Graphics.Shader.Decoders
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
         public Membar Membar => (Membar)((_opcode >> 8) & 0x3);
-        public Ivall Ivall => (Ivall)((_opcode >> 0) & 0x3);
+        public Ivall Ivall => (Ivall)(_opcode & 0x3);
     }
 
     struct InstMovR
     {
         private ulong _opcode;
         public InstMovR(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 20) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
@@ -3816,7 +3816,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstMovI(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int Imm20 => (int)((_opcode >> 37) & 0x80000) | (int)((_opcode >> 20) & 0x7FFFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
@@ -3827,7 +3827,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstMovC(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int CbufSlot => (int)((_opcode >> 34) & 0x1F);
         public int CbufOffset => (int)((_opcode >> 20) & 0x3FFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -3839,7 +3839,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstMov32i(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int Imm32 => (int)(_opcode >> 20);
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
@@ -3850,7 +3850,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstMufu(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
@@ -3875,7 +3875,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstOutR(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -3887,7 +3887,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstOutI(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Imm20 => (int)((_opcode >> 37) & 0x80000) | (int)((_opcode >> 20) & 0x7FFFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -3899,7 +3899,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstOutC(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int CbufSlot => (int)((_opcode >> 34) & 0x1F);
         public int CbufOffset => (int)((_opcode >> 20) & 0x3FFF);
@@ -3912,7 +3912,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstP2rR(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -3925,7 +3925,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstP2rI(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Imm20 => (int)((_opcode >> 37) & 0x80000) | (int)((_opcode >> 20) & 0x7FFFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -3938,7 +3938,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstP2rC(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int CbufSlot => (int)((_opcode >> 34) & 0x1F);
         public int CbufOffset => (int)((_opcode >> 20) & 0x3FFF);
@@ -3975,7 +3975,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstPixld(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
@@ -3996,7 +3996,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstPopcR(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
@@ -4007,7 +4007,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstPopcI(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int Imm20 => (int)((_opcode >> 37) & 0x80000) | (int)((_opcode >> 20) & 0x7FFFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
@@ -4018,7 +4018,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstPopcC(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int CbufSlot => (int)((_opcode >> 34) & 0x1F);
         public int CbufOffset => (int)((_opcode >> 20) & 0x3FFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -4039,7 +4039,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstPrmtR(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int SrcC => (int)((_opcode >> 39) & 0xFF);
@@ -4052,7 +4052,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstPrmtI(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Imm20 => (int)((_opcode >> 37) & 0x80000) | (int)((_opcode >> 20) & 0x7FFFF);
         public int SrcC => (int)((_opcode >> 39) & 0xFF);
@@ -4065,7 +4065,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstPrmtC(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int CbufSlot => (int)((_opcode >> 34) & 0x1F);
         public int CbufOffset => (int)((_opcode >> 20) & 0x3FFF);
@@ -4079,7 +4079,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstPrmtRc(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcC => (int)((_opcode >> 39) & 0xFF);
         public int CbufSlot => (int)((_opcode >> 34) & 0x1F);
@@ -4093,7 +4093,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstPset(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
         public bool WriteCC => (_opcode & 0x800000000000) != 0;
@@ -4115,7 +4115,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
         public int DestPred => (int)((_opcode >> 3) & 0x7);
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
-        public int DestPredInv => (int)((_opcode >> 0) & 0x7);
+        public int DestPredInv => (int)(_opcode & 0x7);
         public int Src2Pred => (int)((_opcode >> 12) & 0x7);
         public bool Src2PredInv => (_opcode & 0x8000) != 0;
         public int Src1Pred => (int)((_opcode >> 29) & 0x7);
@@ -4185,7 +4185,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
         private ulong _opcode;
         public InstRed(ulong opcode) => _opcode = opcode;
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
-        public int SrcB => (int)((_opcode >> 0) & 0xFF);
+        public int SrcB => (int)(_opcode & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
         public int Imm20 => (int)((_opcode >> 28) & 0xFFFFF);
@@ -4200,14 +4200,14 @@ namespace Ryujinx.Graphics.Shader.Decoders
         public InstRet(ulong opcode) => _opcode = opcode;
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
-        public Ccc Ccc => (Ccc)((_opcode >> 0) & 0x1F);
+        public Ccc Ccc => (Ccc)(_opcode & 0x1F);
     }
 
     struct InstRroR
     {
         private ulong _opcode;
         public InstRroR(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
@@ -4220,7 +4220,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstRroI(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int Imm20 => (int)((_opcode >> 37) & 0x80000) | (int)((_opcode >> 20) & 0x7FFFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
@@ -4233,7 +4233,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstRroC(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int CbufSlot => (int)((_opcode >> 34) & 0x1F);
         public int CbufOffset => (int)((_opcode >> 20) & 0x3FFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -4253,7 +4253,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstS2r(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
         public SReg SReg => (SReg)((_opcode >> 20) & 0xFF);
@@ -4269,7 +4269,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstSelR(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -4282,7 +4282,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstSelI(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Imm20 => (int)((_opcode >> 37) & 0x80000) | (int)((_opcode >> 20) & 0x7FFFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -4295,7 +4295,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstSelC(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int CbufSlot => (int)((_opcode >> 34) & 0x1F);
         public int CbufOffset => (int)((_opcode >> 20) & 0x3FFF);
@@ -4323,7 +4323,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstShfLR(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int SrcC => (int)((_opcode >> 39) & 0xFF);
@@ -4339,7 +4339,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstShfRR(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int SrcC => (int)((_opcode >> 39) & 0xFF);
@@ -4355,7 +4355,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstShfLI(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcC => (int)((_opcode >> 39) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -4371,7 +4371,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstShfRI(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcC => (int)((_opcode >> 39) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -4387,7 +4387,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstShfl(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int SrcC => (int)((_opcode >> 39) & 0xFF);
@@ -4405,7 +4405,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstShlR(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -4419,7 +4419,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstShlI(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Imm20 => (int)((_opcode >> 37) & 0x80000) | (int)((_opcode >> 20) & 0x7FFFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -4433,7 +4433,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstShlC(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int CbufSlot => (int)((_opcode >> 34) & 0x1F);
         public int CbufOffset => (int)((_opcode >> 20) & 0x3FFF);
@@ -4448,7 +4448,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstShrR(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -4464,7 +4464,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstShrI(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Imm20 => (int)((_opcode >> 37) & 0x80000) | (int)((_opcode >> 20) & 0x7FFFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -4480,7 +4480,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstShrC(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int CbufSlot => (int)((_opcode >> 34) & 0x1F);
         public int CbufOffset => (int)((_opcode >> 20) & 0x3FFF);
@@ -4505,7 +4505,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstSt(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
@@ -4520,7 +4520,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstStg(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
@@ -4534,7 +4534,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstStl(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
@@ -4555,7 +4555,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstSts(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
@@ -4567,7 +4567,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstSuatomB(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int SrcC => (int)((_opcode >> 39) & 0xFF);
@@ -4584,7 +4584,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstSuatom(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -4601,7 +4601,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstSuatomB2(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int SrcC => (int)((_opcode >> 39) & 0xFF);
@@ -4619,7 +4619,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstSuatomCasB(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int SrcC => (int)((_opcode >> 39) & 0xFF);
@@ -4636,7 +4636,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstSuatomCas(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -4653,7 +4653,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstSuldDB(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcC => (int)((_opcode >> 39) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -4670,7 +4670,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstSuldD(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
@@ -4687,7 +4687,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstSuldB(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcC => (int)((_opcode >> 39) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -4703,7 +4703,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstSuld(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
@@ -4719,7 +4719,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstSuredB(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcC => (int)((_opcode >> 39) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -4735,7 +4735,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstSured(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
@@ -4751,7 +4751,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstSustDB(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcC => (int)((_opcode >> 39) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -4767,7 +4767,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstSustD(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
@@ -4783,7 +4783,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstSustB(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcC => (int)((_opcode >> 39) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -4798,7 +4798,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstSust(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
@@ -4815,14 +4815,14 @@ namespace Ryujinx.Graphics.Shader.Decoders
         public InstSync(ulong opcode) => _opcode = opcode;
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
-        public Ccc Ccc => (Ccc)((_opcode >> 0) & 0x1F);
+        public Ccc Ccc => (Ccc)(_opcode & 0x1F);
     }
 
     struct InstTex
     {
         private ulong _opcode;
         public InstTex(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -4843,7 +4843,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstTexB(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -4863,7 +4863,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstTexs(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -4879,7 +4879,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstTld(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -4899,7 +4899,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstTldB(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -4918,7 +4918,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstTlds(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -4934,7 +4934,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstTld4(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -4955,7 +4955,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstTld4B(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -4975,7 +4975,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstTld4s(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -4992,7 +4992,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstTmml(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -5008,7 +5008,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstTmmlB(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -5023,7 +5023,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstTxa(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
@@ -5037,7 +5037,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstTxd(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -5055,7 +5055,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstTxdB(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -5072,7 +5072,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstTxq(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
@@ -5086,7 +5086,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstTxqB(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
@@ -5099,7 +5099,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstVabsdiff(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int SrcC => (int)((_opcode >> 39) & 0xFF);
@@ -5118,7 +5118,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstVabsdiff4(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int SrcC => (int)((_opcode >> 39) & 0xFF);
@@ -5139,7 +5139,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstVadd(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int SrcC => (int)((_opcode >> 39) & 0xFF);
@@ -5160,7 +5160,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstVmad(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int SrcC => (int)((_opcode >> 39) & 0xFF);
@@ -5180,7 +5180,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstVmnmx(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int SrcC => (int)((_opcode >> 39) & 0xFF);
@@ -5201,7 +5201,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstVote(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
         public bool PredInv => (_opcode & 0x80000) != 0;
         public int SrcPred => (int)((_opcode >> 39) & 0x7);
@@ -5224,7 +5224,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstVset(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int SrcC => (int)((_opcode >> 39) & 0xFF);
@@ -5254,7 +5254,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
         public int SrcPred => (int)((_opcode >> 39) & 0x7);
         public bool SrcPredInv => (_opcode & 0x40000000000) != 0;
         public int DestPred => (int)((_opcode >> 3) & 0x7);
-        public int DestPredInv => (int)((_opcode >> 0) & 0x7);
+        public int DestPredInv => (int)(_opcode & 0x7);
         public bool BVideo => (_opcode & 0x4000000000000) != 0;
     }
 
@@ -5262,7 +5262,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstVshl(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int SrcC => (int)((_opcode >> 39) & 0xFF);
@@ -5282,7 +5282,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstVshr(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int SrcC => (int)((_opcode >> 39) & 0xFF);
@@ -5302,7 +5302,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstXmadR(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcB => (int)((_opcode >> 20) & 0xFF);
         public int SrcC => (int)((_opcode >> 39) & 0xFF);
@@ -5323,7 +5323,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstXmadI(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcC => (int)((_opcode >> 39) & 0xFF);
         public int Pred => (int)((_opcode >> 16) & 0x7);
@@ -5343,7 +5343,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstXmadC(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int CbufSlot => (int)((_opcode >> 34) & 0x1F);
         public int CbufOffset => (int)((_opcode >> 20) & 0x3FFF);
@@ -5365,7 +5365,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         private ulong _opcode;
         public InstXmadRc(ulong opcode) => _opcode = opcode;
-        public int Dest => (int)((_opcode >> 0) & 0xFF);
+        public int Dest => (int)(_opcode & 0xFF);
         public int SrcA => (int)((_opcode >> 8) & 0xFF);
         public int SrcC => (int)((_opcode >> 39) & 0xFF);
         public int CbufSlot => (int)((_opcode >> 34) & 0x1F);

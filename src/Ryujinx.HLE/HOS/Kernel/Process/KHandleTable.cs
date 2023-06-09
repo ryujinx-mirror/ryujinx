@@ -137,7 +137,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
         public void CancelHandleReservation(int handle)
         {
-            int index = (handle >> 0) & 0x7fff;
+            int index = handle & 0x7fff;
 
             lock (_table)
             {

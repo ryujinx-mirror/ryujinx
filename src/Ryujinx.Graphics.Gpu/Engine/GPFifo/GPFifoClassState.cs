@@ -153,7 +153,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
     {
 #pragma warning disable CS0649
         public uint SetObject;
-        public int SetObjectNvclass => (int)((SetObject >> 0) & 0xFFFF);
+        public int SetObjectNvclass => (int)(SetObject & 0xFFFF);
         public int SetObjectEngine => (int)((SetObject >> 16) & 0x1F);
         public uint Illegal;
         public int IllegalHandle => (int)(Illegal);
@@ -161,13 +161,13 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
         public int NopHandle => (int)(Nop);
         public uint Reserved0C;
         public uint Semaphorea;
-        public int SemaphoreaOffsetUpper => (int)((Semaphorea >> 0) & 0xFF);
+        public int SemaphoreaOffsetUpper => (int)(Semaphorea & 0xFF);
         public uint Semaphoreb;
         public int SemaphorebOffsetLower => (int)((Semaphoreb >> 2) & 0x3FFFFFFF);
         public uint Semaphorec;
         public int SemaphorecPayload => (int)(Semaphorec);
         public uint Semaphored;
-        public SemaphoredOperation SemaphoredOperation => (SemaphoredOperation)((Semaphored >> 0) & 0x1F);
+        public SemaphoredOperation SemaphoredOperation => (SemaphoredOperation)(Semaphored & 0x1F);
         public SemaphoredAcquireSwitch SemaphoredAcquireSwitch => (SemaphoredAcquireSwitch)((Semaphored >> 12) & 0x1);
         public SemaphoredReleaseWfi SemaphoredReleaseWfi => (SemaphoredReleaseWfi)((Semaphored >> 20) & 0x1);
         public SemaphoredReleaseSize SemaphoredReleaseSize => (SemaphoredReleaseSize)((Semaphored >> 24) & 0x1);
@@ -181,14 +181,14 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
         public uint Reserved2C;
         public uint MemOpC;
         public int MemOpCOperandLow => (int)((MemOpC >> 2) & 0x3FFFFFFF);
-        public MemOpCTlbInvalidatePdb MemOpCTlbInvalidatePdb => (MemOpCTlbInvalidatePdb)((MemOpC >> 0) & 0x1);
+        public MemOpCTlbInvalidatePdb MemOpCTlbInvalidatePdb => (MemOpCTlbInvalidatePdb)(MemOpC & 0x1);
         public MemOpCTlbInvalidateGpc MemOpCTlbInvalidateGpc => (MemOpCTlbInvalidateGpc)((MemOpC >> 1) & 0x1);
         public MemOpCTlbInvalidateTarget MemOpCTlbInvalidateTarget => (MemOpCTlbInvalidateTarget)((MemOpC >> 10) & 0x3);
         public int MemOpCTlbInvalidateAddrLo => (int)((MemOpC >> 12) & 0xFFFFF);
         public uint MemOpD;
-        public int MemOpDOperandHigh => (int)((MemOpD >> 0) & 0xFF);
+        public int MemOpDOperandHigh => (int)(MemOpD & 0xFF);
         public MemOpDOperation MemOpDOperation => (MemOpDOperation)((MemOpD >> 27) & 0x1F);
-        public int MemOpDTlbInvalidateAddrHi => (int)((MemOpD >> 0) & 0xFF);
+        public int MemOpDTlbInvalidateAddrHi => (int)(MemOpD & 0xFF);
         public uint Reserved38;
         public uint Reserved3C;
         public uint Reserved40;
@@ -207,15 +207,15 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
         public uint Syncpointa;
         public int SyncpointaPayload => (int)(Syncpointa);
         public uint Syncpointb;
-        public SyncpointbOperation SyncpointbOperation => (SyncpointbOperation)((Syncpointb >> 0) & 0x1);
+        public SyncpointbOperation SyncpointbOperation => (SyncpointbOperation)(Syncpointb & 0x1);
         public SyncpointbWaitSwitch SyncpointbWaitSwitch => (SyncpointbWaitSwitch)((Syncpointb >> 4) & 0x1);
         public int SyncpointbSyncptIndex => (int)((Syncpointb >> 8) & 0xFFF);
         public uint Wfi;
-        public WfiScope WfiScope => (WfiScope)((Wfi >> 0) & 0x1);
+        public WfiScope WfiScope => (WfiScope)(Wfi & 0x1);
         public uint CrcCheck;
         public int CrcCheckValue => (int)(CrcCheck);
         public uint Yield;
-        public YieldOp YieldOp => (YieldOp)((Yield >> 0) & 0x3);
+        public YieldOp YieldOp => (YieldOp)(Yield & 0x3);
         // TODO: Eventually move this to per-engine state.
         public Array31<uint> Reserved84;
         public uint NoOperation;

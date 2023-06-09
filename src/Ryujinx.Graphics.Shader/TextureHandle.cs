@@ -61,7 +61,7 @@ namespace Ryujinx.Graphics.Shader
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int UnpackTextureId(int packedId)
         {
-            return (packedId >> 0) & 0xfffff;
+            return packedId & 0xfffff;
         }
 
         /// <summary>

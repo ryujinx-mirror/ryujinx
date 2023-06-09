@@ -29,7 +29,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
         public uint Method;
 #pragma warning restore CS0649
         public int MethodAddressOld => (int)((Method >> 2) & 0x7FF);
-        public int MethodAddress => (int)((Method >> 0) & 0xFFF);
+        public int MethodAddress => (int)(Method & 0xFFF);
         public int SubdeviceMask => (int)((Method >> 4) & 0xFFF);
         public int MethodSubchannel => (int)((Method >> 13) & 0x7);
         public TertOp TertOp => (TertOp)((Method >> 16) & 0x3);

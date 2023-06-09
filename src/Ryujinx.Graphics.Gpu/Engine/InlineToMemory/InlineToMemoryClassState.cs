@@ -113,22 +113,22 @@ namespace Ryujinx.Graphics.Gpu.Engine.InlineToMemory
     {
 #pragma warning disable CS0649
         public uint SetObject;
-        public int SetObjectClassId => (int)((SetObject >> 0) & 0xFFFF);
+        public int SetObjectClassId => (int)(SetObject & 0xFFFF);
         public int SetObjectEngineId => (int)((SetObject >> 16) & 0x1F);
         public fixed uint Reserved04[63];
         public uint NoOperation;
         public uint SetNotifyA;
-        public int SetNotifyAAddressUpper => (int)((SetNotifyA >> 0) & 0xFF);
+        public int SetNotifyAAddressUpper => (int)(SetNotifyA & 0xFF);
         public uint SetNotifyB;
         public uint Notify;
         public NotifyType NotifyType => (NotifyType)(Notify);
         public uint WaitForIdle;
         public fixed uint Reserved114[7];
         public uint SetGlobalRenderEnableA;
-        public int SetGlobalRenderEnableAOffsetUpper => (int)((SetGlobalRenderEnableA >> 0) & 0xFF);
+        public int SetGlobalRenderEnableAOffsetUpper => (int)(SetGlobalRenderEnableA & 0xFF);
         public uint SetGlobalRenderEnableB;
         public uint SetGlobalRenderEnableC;
-        public int SetGlobalRenderEnableCMode => (int)((SetGlobalRenderEnableC >> 0) & 0x7);
+        public int SetGlobalRenderEnableCMode => (int)(SetGlobalRenderEnableC & 0x7);
         public uint SendGoIdle;
         public uint PmTrigger;
         public uint PmTriggerWfi;
@@ -139,11 +139,11 @@ namespace Ryujinx.Graphics.Gpu.Engine.InlineToMemory
         public uint LineLengthIn;
         public uint LineCount;
         public uint OffsetOutUpper;
-        public int OffsetOutUpperValue => (int)((OffsetOutUpper >> 0) & 0xFF);
+        public int OffsetOutUpperValue => (int)(OffsetOutUpper & 0xFF);
         public uint OffsetOut;
         public uint PitchOut;
         public uint SetDstBlockSize;
-        public SetDstBlockSizeWidth SetDstBlockSizeWidth => (SetDstBlockSizeWidth)((SetDstBlockSize >> 0) & 0xF);
+        public SetDstBlockSizeWidth SetDstBlockSizeWidth => (SetDstBlockSizeWidth)(SetDstBlockSize & 0xF);
         public SetDstBlockSizeHeight SetDstBlockSizeHeight => (SetDstBlockSizeHeight)((SetDstBlockSize >> 4) & 0xF);
         public SetDstBlockSizeDepth SetDstBlockSizeDepth => (SetDstBlockSizeDepth)((SetDstBlockSize >> 8) & 0xF);
         public uint SetDstWidth;
@@ -151,11 +151,11 @@ namespace Ryujinx.Graphics.Gpu.Engine.InlineToMemory
         public uint SetDstDepth;
         public uint SetDstLayer;
         public uint SetDstOriginBytesX;
-        public int SetDstOriginBytesXV => (int)((SetDstOriginBytesX >> 0) & 0xFFFFF);
+        public int SetDstOriginBytesXV => (int)(SetDstOriginBytesX & 0xFFFFF);
         public uint SetDstOriginSamplesY;
-        public int SetDstOriginSamplesYV => (int)((SetDstOriginSamplesY >> 0) & 0xFFFF);
+        public int SetDstOriginSamplesYV => (int)(SetDstOriginSamplesY & 0xFFFF);
         public uint LaunchDma;
-        public LaunchDmaDstMemoryLayout LaunchDmaDstMemoryLayout => (LaunchDmaDstMemoryLayout)((LaunchDma >> 0) & 0x1);
+        public LaunchDmaDstMemoryLayout LaunchDmaDstMemoryLayout => (LaunchDmaDstMemoryLayout)(LaunchDma & 0x1);
         public LaunchDmaCompletionType LaunchDmaCompletionType => (LaunchDmaCompletionType)((LaunchDma >> 4) & 0x3);
         public LaunchDmaInterruptType LaunchDmaInterruptType => (LaunchDmaInterruptType)((LaunchDma >> 8) & 0x3);
         public LaunchDmaSemaphoreStructSize LaunchDmaSemaphoreStructSize => (LaunchDmaSemaphoreStructSize)((LaunchDma >> 12) & 0x1);
@@ -166,7 +166,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.InlineToMemory
         public uint LoadInlineData;
         public fixed uint Reserved1B8[9];
         public uint SetI2mSemaphoreA;
-        public int SetI2mSemaphoreAOffsetUpper => (int)((SetI2mSemaphoreA >> 0) & 0xFF);
+        public int SetI2mSemaphoreAOffsetUpper => (int)(SetI2mSemaphoreA & 0xFF);
         public uint SetI2mSemaphoreB;
         public uint SetI2mSemaphoreC;
         public fixed uint Reserved1E8[2];

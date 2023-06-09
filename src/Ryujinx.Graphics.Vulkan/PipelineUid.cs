@@ -25,7 +25,7 @@ namespace Ryujinx.Graphics.Vulkan
         private uint VertexAttributeDescriptionsCount => (byte)((Id6 >> 38) & 0xFF);
         private uint VertexBindingDescriptionsCount => (byte)((Id6 >> 46) & 0xFF);
         private uint ViewportsCount => (byte)((Id6 >> 54) & 0xFF);
-        private uint ScissorsCount => (byte)((Id7 >> 0) & 0xFF);
+        private uint ScissorsCount => (byte)(Id7 & 0xFF);
         private uint ColorBlendAttachmentStateCount => (byte)((Id7 >> 8) & 0xFF);
         private bool HasDepthStencil => ((Id7 >> 63) & 0x1) != 0UL;
 
