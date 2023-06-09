@@ -96,7 +96,7 @@ namespace Ryujinx.Common.Configuration
             if (OperatingSystem.IsMacOS() && Mode == LaunchMode.UserProfile)
             {
                 string oldConfigPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), DefaultBaseDir);
-                if (Path.Exists(oldConfigPath) && !Path.Exists(BaseDirPath))
+                if (Path.Exists(oldConfigPath) && !IsPathSymlink(oldConfigPath) && !Path.Exists(BaseDirPath))
                 {
                     CopyDirectory(oldConfigPath, BaseDirPath);
                     Directory.Delete(oldConfigPath, true);
@@ -113,6 +113,14 @@ namespace Ryujinx.Common.Configuration
             Directory.CreateDirectory(GamesDirPath = Path.Combine(BaseDirPath, GamesDir));
             Directory.CreateDirectory(ProfilesDirPath = Path.Combine(BaseDirPath, ProfilesDir));
             Directory.CreateDirectory(KeysDirPath = Path.Combine(BaseDirPath, KeysDir));
+        }
+
+        // Check if existing old baseDirPath is a symlink, to prevent possible errors.
+        // Should be removed, when the existance of the old directory isn't checked anymore.
+        private static bool IsPathSymlink(string path)
+        {
+            FileAttributes attributes = File.GetAttributes(path);
+            return (attributes & FileAttributes.ReparsePoint) == FileAttributes.ReparsePoint;
         }
 
         private static void CopyDirectory(string sourceDir, string destinationDir)
