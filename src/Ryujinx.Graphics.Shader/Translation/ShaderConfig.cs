@@ -726,7 +726,7 @@ namespace Ryujinx.Graphics.Shader.Translation
             var descriptors = new TextureDescriptor[dict.Count];
 
             int i = 0;
-            foreach (var kv in dict.OrderBy(x => x.Key.Indexed).OrderBy(x => x.Key.Handle))
+            foreach (var kv in dict.OrderBy(x => x.Key.Indexed).ThenBy(x => x.Key.Handle))
             {
                 var info = kv.Key;
                 var meta = kv.Value;
