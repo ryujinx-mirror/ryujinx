@@ -1,5 +1,8 @@
+using System;
+
 namespace Ryujinx.Graphics.Shader.Decoders
 {
+    [Flags]
     enum InstProps : ushort
     {
         None = 0,

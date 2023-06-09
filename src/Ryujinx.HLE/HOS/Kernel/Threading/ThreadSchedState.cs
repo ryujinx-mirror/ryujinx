@@ -1,5 +1,8 @@
+using System;
+
 namespace Ryujinx.HLE.HOS.Kernel.Threading
 {
+    [Flags]
     enum ThreadSchedState : ushort
     {
         LowMask        = 0xf,

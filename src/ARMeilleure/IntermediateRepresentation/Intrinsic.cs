@@ -1,5 +1,8 @@
+using System;
+
 namespace ARMeilleure.IntermediateRepresentation
 {
+    [Flags]
     enum Intrinsic : ushort
     {
         // X86 (SSE and AVX)

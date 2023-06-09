@@ -1,3 +1,5 @@
+using System;
+
 namespace Ryujinx.Graphics.Shader.Decoders
 {
     enum AlSize
@@ -711,6 +713,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
         TexSamplerBorderColor = 22,
     }
 
+    [Flags]
     enum VectorSelect
     {
         U8B0 = 0,

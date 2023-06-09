@@ -1,5 +1,8 @@
-﻿namespace Ryujinx.Graphics.Shader.Translation
+﻿using System;
+
+namespace Ryujinx.Graphics.Shader.Translation
 {
+    [Flags]
     enum AggregateType
     {
         Invalid,
