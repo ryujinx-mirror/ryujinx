@@ -30,7 +30,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
             GpuContext context,
             GpuChannel channel,
             GpuAccessorState state,
-            int stageIndex) : base(context, state.ResourceCounts, stageIndex)
+            int stageIndex) : base(context, state.ResourceCounts, stageIndex, state.TransformFeedbackDescriptors != null)
         {
             _isVulkan = context.Capabilities.Api == TargetApi.Vulkan;
             _channel = channel;
@@ -44,7 +44,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// <param name="context">GPU context</param>
         /// <param name="channel">GPU channel</param>
         /// <param name="state">Current GPU state</param>
-        public GpuAccessor(GpuContext context, GpuChannel channel, GpuAccessorState state) : base(context, state.ResourceCounts, 0)
+        public GpuAccessor(GpuContext context, GpuChannel channel, GpuAccessorState state) : base(context, state.ResourceCounts, 0, false)
         {
             _channel = channel;
             _state = state;

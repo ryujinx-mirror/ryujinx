@@ -6,6 +6,7 @@ using Ryujinx.Graphics.Shader;
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace Ryujinx.Graphics.Gpu.Memory
 {
@@ -14,11 +15,16 @@ namespace Ryujinx.Graphics.Gpu.Memory
     /// </summary>
     class BufferManager
     {
+        private const int TfInfoVertexCountOffset = Constants.TotalTransformFeedbackBuffers * sizeof(int);
+        private const int TfInfoBufferSize = TfInfoVertexCountOffset + sizeof(int);
+
         private readonly GpuContext _context;
         private readonly GpuChannel _channel;
 
         private int _unalignedStorageBuffers;
         public bool HasUnalignedStorageBuffers => _unalignedStorageBuffers > 0;
+
+        public bool HasTransformFeedbackOutputs { get; set; }
 
         private IndexBuffer _indexBuffer;
         private readonly VertexBuffer[] _vertexBuffers;
@@ -98,6 +104,9 @@ namespace Ryujinx.Graphics.Gpu.Memory
         private readonly BuffersPerStage[] _gpStorageBuffers;
         private readonly BuffersPerStage[] _gpUniformBuffers;
 
+        private BufferHandle _tfInfoBuffer;
+        private int[] _tfInfoData;
+
         private bool _gpStorageBuffersDirty;
         private bool _gpUniformBuffersDirty;
 
@@ -137,6 +146,11 @@ namespace Ryujinx.Graphics.Gpu.Memory
             _bufferTextures = new List<BufferTextureBinding>();
 
             _ranges = new BufferAssignment[Constants.TotalGpUniformBuffers * Constants.ShaderStages];
+
+            if (!context.Capabilities.SupportsTransformFeedback)
+            {
+                _tfInfoData = new int[Constants.TotalTransformFeedbackBuffers];
+            }
         }
 
 
@@ -317,6 +331,31 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
             _gpUniformBuffers[stage].SetBounds(index, address, size);
             _gpUniformBuffersDirty = true;
+        }
+
+        /// <summary>
+        /// Sets the number of vertices per instance on a instanced draw. Used for transform feedback emulation.
+        /// </summary>
+        /// <param name="vertexCount">Vertex count per instance</param>
+        public void SetInstancedDrawVertexCount(int vertexCount)
+        {
+            if (!_context.Capabilities.SupportsTransformFeedback &&
+                HasTransformFeedbackOutputs &&
+                _tfInfoBuffer != BufferHandle.Null)
+            {
+                Span<byte> data = stackalloc byte[sizeof(int)];
+                MemoryMarshal.Cast<byte, int>(data)[0] = vertexCount;
+                _context.Renderer.SetBufferData(_tfInfoBuffer, TfInfoVertexCountOffset, data);
+            }
+        }
+
+        /// <summary>
+        /// Forces transform feedback and storage buffers to be updated on the next draw.
+        /// </summary>
+        public void ForceTransformFeedbackAndStorageBuffersDirty()
+        {
+            _transformFeedbackBuffersDirty = true;
+            _gpStorageBuffersDirty = true;
         }
 
         /// <summary>
@@ -537,22 +576,75 @@ namespace Ryujinx.Graphics.Gpu.Memory
             {
                 _transformFeedbackBuffersDirty = false;
 
-                Span<BufferRange> tfbs = stackalloc BufferRange[Constants.TotalTransformFeedbackBuffers];
-
-                for (int index = 0; index < Constants.TotalTransformFeedbackBuffers; index++)
+                if (_context.Capabilities.SupportsTransformFeedback)
                 {
-                    BufferBounds tfb = _transformFeedbackBuffers[index];
+                    Span<BufferRange> tfbs = stackalloc BufferRange[Constants.TotalTransformFeedbackBuffers];
 
-                    if (tfb.Address == 0)
+                    for (int index = 0; index < Constants.TotalTransformFeedbackBuffers; index++)
                     {
-                        tfbs[index] = BufferRange.Empty;
-                        continue;
+                        BufferBounds tfb = _transformFeedbackBuffers[index];
+
+                        if (tfb.Address == 0)
+                        {
+                            tfbs[index] = BufferRange.Empty;
+                            continue;
+                        }
+
+                        tfbs[index] = bufferCache.GetBufferRange(tfb.Address, tfb.Size, write: true);
                     }
 
-                    tfbs[index] = bufferCache.GetBufferRange(tfb.Address, tfb.Size, write: true);
+                    _context.Renderer.Pipeline.SetTransformFeedbackBuffers(tfbs);
                 }
+                else if (HasTransformFeedbackOutputs)
+                {
+                    Span<int> info = _tfInfoData.AsSpan();
+                    Span<BufferAssignment> buffers = stackalloc BufferAssignment[Constants.TotalTransformFeedbackBuffers + 1];
 
-                _context.Renderer.Pipeline.SetTransformFeedbackBuffers(tfbs);
+                    bool needsDataUpdate = false;
+
+                    if (_tfInfoBuffer == BufferHandle.Null)
+                    {
+                        _tfInfoBuffer = _context.Renderer.CreateBuffer(TfInfoBufferSize);
+                    }
+
+                    buffers[0] = new BufferAssignment(0, new BufferRange(_tfInfoBuffer, 0, TfInfoBufferSize));
+
+                    int alignment = _context.Capabilities.StorageBufferOffsetAlignment;
+
+                    for (int index = 0; index < Constants.TotalTransformFeedbackBuffers; index++)
+                    {
+                        BufferBounds tfb = _transformFeedbackBuffers[index];
+
+                        if (tfb.Address == 0)
+                        {
+                            buffers[1 + index] = new BufferAssignment(1 + index, BufferRange.Empty);
+                        }
+                        else
+                        {
+                            ulong endAddress = tfb.Address + tfb.Size;
+                            ulong address = BitUtils.AlignDown(tfb.Address, (ulong)alignment);
+                            ulong size = endAddress - address;
+
+                            int tfeOffset = ((int)tfb.Address & (alignment - 1)) / 4;
+
+                            if (info[index] != tfeOffset)
+                            {
+                                info[index] = tfeOffset;
+                                needsDataUpdate = true;
+                            }
+
+                            buffers[1 + index] = new BufferAssignment(1 + index, bufferCache.GetBufferRange(address, size, write: true));
+                        }
+                    }
+
+                    if (needsDataUpdate)
+                    {
+                        Span<byte> infoData = MemoryMarshal.Cast<int, byte>(info);
+                        _context.Renderer.SetBufferData(_tfInfoBuffer, 0, infoData);
+                    }
+
+                    _context.Renderer.Pipeline.SetStorageBuffers(buffers);
+                }
             }
             else
             {

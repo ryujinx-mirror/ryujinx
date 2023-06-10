@@ -368,6 +368,15 @@ namespace Ryujinx.Graphics.Shader
         }
 
         /// <summary>
+        /// Queries host GPU transform feedback support.
+        /// </summary>
+        /// <returns>True if the GPU and driver supports transform feedback, false otherwise</returns>
+        bool QueryHostSupportsTransformFeedback()
+        {
+            return true;
+        }
+
+        /// <summary>
         /// Queries host support for writes to the viewport index from vertex or tessellation shader stages.
         /// </summary>
         /// <returns>True if writes to the viewport index from vertex or tessellation are supported, false otherwise</returns>

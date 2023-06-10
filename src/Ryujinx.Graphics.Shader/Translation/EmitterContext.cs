@@ -234,6 +234,45 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         public void PrepareForVertexReturn()
         {
+            if (!Config.GpuAccessor.QueryHostSupportsTransformFeedback() && Config.GpuAccessor.QueryTransformFeedbackEnabled())
+            {
+                Operand vertexCount = this.Load(StorageKind.StorageBuffer, Constants.TfeInfoBinding, Const(1));
+
+                for (int tfbIndex = 0; tfbIndex < Constants.TfeBuffersCount; tfbIndex++)
+                {
+                    var locations = Config.GpuAccessor.QueryTransformFeedbackVaryingLocations(tfbIndex);
+                    var stride = Config.GpuAccessor.QueryTransformFeedbackStride(tfbIndex);
+
+                    Operand baseOffset = this.Load(StorageKind.StorageBuffer, Constants.TfeInfoBinding, Const(0), Const(tfbIndex));
+                    Operand baseVertex = this.Load(StorageKind.Input, IoVariable.BaseVertex);
+                    Operand baseInstance = this.Load(StorageKind.Input, IoVariable.BaseInstance);
+                    Operand vertexIndex = this.Load(StorageKind.Input, IoVariable.VertexIndex);
+                    Operand instanceIndex = this.Load(StorageKind.Input, IoVariable.InstanceIndex);
+
+                    Operand outputVertexOffset = this.ISubtract(vertexIndex, baseVertex);
+                    Operand outputInstanceOffset = this.ISubtract(instanceIndex, baseInstance);
+
+                    Operand outputBaseVertex = this.IMultiply(outputInstanceOffset, vertexCount);
+
+                    Operand vertexOffset = this.IMultiply(this.IAdd(outputBaseVertex, outputVertexOffset), Const(stride / 4));
+                    baseOffset = this.IAdd(baseOffset, vertexOffset);
+
+                    for (int j = 0; j < locations.Length; j++)
+                    {
+                        byte location = locations[j];
+                        if (location == 0xff)
+                        {
+                            continue;
+                        }
+
+                        Operand offset = this.IAdd(baseOffset, Const(j));
+                        Operand value = Instructions.AttributeMap.GenerateAttributeLoad(this, null, location * 4, isOutput: true, isPerPatch: false);
+
+                        this.Store(StorageKind.StorageBuffer, Constants.TfeBufferBaseBinding + tfbIndex, Const(0), offset, value);
+                    }
+                }
+            }
+
             if (Config.GpuAccessor.QueryViewportTransformDisable())
             {
                 Operand x = this.Load(StorageKind.Output, IoVariable.Position, null, Const(0));

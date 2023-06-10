@@ -539,6 +539,14 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
 
             engine.UpdateState();
 
+            if (instanceCount > 1)
+            {
+                // Must be called after UpdateState as it assumes the shader state
+                // has already been set, and that bindings have been updated already.
+
+                _channel.BufferManager.SetInstancedDrawVertexCount(count);
+            }
+
             if (indexed)
             {
                 _context.Renderer.Pipeline.DrawIndexed(count, instanceCount, firstIndex, firstVertex, firstInstance);
@@ -676,6 +684,8 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                         _channel.BufferManager.SetIndexBuffer(br, IndexType.UInt);
                     }
 
+                    _channel.BufferManager.SetInstancedDrawVertexCount(_instancedIndexCount);
+
                     _context.Renderer.Pipeline.DrawIndexed(
                         _instancedIndexCount,
                         _instanceIndex + 1,
@@ -685,6 +695,8 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                 }
                 else
                 {
+                    _channel.BufferManager.SetInstancedDrawVertexCount(_instancedDrawStateCount);
+
                     _context.Renderer.Pipeline.Draw(
                         _instancedDrawStateCount,
                         _instanceIndex + 1,

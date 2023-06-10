@@ -132,6 +132,11 @@ namespace Ryujinx.Graphics.Shader.Translation
 
             _transformFeedbackDefinitions = new Dictionary<TransformFeedbackVariable, TransformFeedbackOutput>();
 
+            TransformFeedbackEnabled =
+                stage != ShaderStage.Compute &&
+                gpuAccessor.QueryTransformFeedbackEnabled() &&
+                gpuAccessor.QueryHostSupportsTransformFeedback();
+
             UsedInputAttributesPerPatch  = new HashSet<int>();
             UsedOutputAttributesPerPatch = new HashSet<int>();
 
@@ -139,6 +144,31 @@ namespace Ryujinx.Graphics.Shader.Translation
             _usedImages   = new Dictionary<TextureInfo, TextureMeta>();
 
             ResourceManager = new ResourceManager(stage, gpuAccessor, new ShaderProperties());
+
+            if (!gpuAccessor.QueryHostSupportsTransformFeedback() && gpuAccessor.QueryTransformFeedbackEnabled())
+            {
+                StructureType tfeInfoStruct = new StructureType(new StructureField[]
+                {
+                    new StructureField(AggregateType.Array | AggregateType.U32, "base_offset", 4),
+                    new StructureField(AggregateType.U32, "vertex_count")
+                });
+
+                BufferDefinition tfeInfoBuffer = new BufferDefinition(BufferLayout.Std430, 1, Constants.TfeInfoBinding, "tfe_info", tfeInfoStruct);
+
+                Properties.AddStorageBuffer(Constants.TfeInfoBinding, tfeInfoBuffer);
+
+                StructureType tfeDataStruct = new StructureType(new StructureField[]
+                {
+                    new StructureField(AggregateType.Array | AggregateType.U32, "data", 0)
+                });
+
+                for (int i = 0; i < Constants.TfeBuffersCount; i++)
+                {
+                    int binding = Constants.TfeBufferBaseBinding + i;
+                    BufferDefinition tfeDataBuffer = new BufferDefinition(BufferLayout.Std430, 1, binding, $"tfe_data{i}", tfeDataStruct);
+                    Properties.AddStorageBuffer(binding, tfeDataBuffer);
+                }
+            }
         }
 
         public ShaderConfig(
@@ -151,7 +181,6 @@ namespace Ryujinx.Graphics.Shader.Translation
             ThreadsPerInputPrimitive = 1;
             OutputTopology           = outputTopology;
             MaxOutputVertices        = maxOutputVertices;
-            TransformFeedbackEnabled = gpuAccessor.QueryTransformFeedbackEnabled();
         }
 
         public ShaderConfig(ShaderHeader header, IGpuAccessor gpuAccessor, TranslationOptions options) : this(header.Stage, gpuAccessor, options)
@@ -165,7 +194,6 @@ namespace Ryujinx.Graphics.Shader.Translation
             OmapTargets              = header.OmapTargets;
             OmapSampleMask           = header.OmapSampleMask;
             OmapDepth                = header.OmapDepth;
-            TransformFeedbackEnabled = gpuAccessor.QueryTransformFeedbackEnabled();
             LastInVertexPipeline     = header.Stage < ShaderStage.Fragment;
         }
 

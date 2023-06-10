@@ -153,6 +153,7 @@ namespace Ryujinx.Graphics.OpenGL
                 supportsFragmentShaderOrderingIntel: HwCapabilities.SupportsFragmentShaderOrdering,
                 supportsGeometryShader: true,
                 supportsGeometryShaderPassthrough: HwCapabilities.SupportsGeometryShaderPassthrough,
+                supportsTransformFeedback: true,
                 supportsImageLoadFormatted: HwCapabilities.SupportsImageLoadFormatted,
                 supportsLayerVertexTessellation: HwCapabilities.SupportsShaderViewportLayerArray,
                 supportsMismatchingViewFormat: HwCapabilities.SupportsMismatchingViewFormat,

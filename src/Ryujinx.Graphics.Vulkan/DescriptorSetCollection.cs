@@ -16,9 +16,9 @@ namespace Ryujinx.Graphics.Vulkan
             _descriptorSets = descriptorSets;
         }
 
-        public void InitializeBuffers(int setIndex, int baseBinding, int countPerUnit, DescriptorType type, VkBuffer dummyBuffer)
+        public void InitializeBuffers(int setIndex, int baseBinding, int count, DescriptorType type, VkBuffer dummyBuffer)
         {
-            Span<DescriptorBufferInfo> infos = stackalloc DescriptorBufferInfo[countPerUnit];
+            Span<DescriptorBufferInfo> infos = stackalloc DescriptorBufferInfo[count];
 
             infos.Fill(new DescriptorBufferInfo()
             {

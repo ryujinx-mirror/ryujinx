@@ -596,36 +596,19 @@ namespace Ryujinx.Graphics.Vulkan
             }
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void Initialize(CommandBufferScoped cbs, int setIndex, DescriptorSetCollection dsc)
         {
+            // We don't support clearing texture descriptors currently.
+            if (setIndex != PipelineBase.UniformSetIndex && setIndex != PipelineBase.StorageSetIndex)
+            {
+                return;
+            }
+
             var dummyBuffer = _dummyBuffer?.GetBuffer().Get(cbs).Value ?? default;
 
-            uint stages = _program.Stages;
-
-            while (stages != 0)
+            foreach (ResourceBindingSegment segment in _program.ClearSegments[setIndex])
             {
-                int stage = BitOperations.TrailingZeroCount(stages);
-                stages &= ~(1u << stage);
-
-                if (setIndex == PipelineBase.UniformSetIndex)
-                {
-                    dsc.InitializeBuffers(
-                        0,
-                        1 + stage * Constants.MaxUniformBuffersPerStage,
-                        Constants.MaxUniformBuffersPerStage,
-                        DescriptorType.UniformBuffer,
-                        dummyBuffer);
-                }
-                else if (setIndex == PipelineBase.StorageSetIndex)
-                {
-                    dsc.InitializeBuffers(
-                        0,
-                        stage * Constants.MaxStorageBuffersPerStage,
-                        Constants.MaxStorageBuffersPerStage,
-                        DescriptorType.StorageBuffer,
-                        dummyBuffer);
-                }
+                dsc.InitializeBuffers(0, segment.Binding, segment.Count, segment.Type.Convert(), dummyBuffer);
             }
         }
 

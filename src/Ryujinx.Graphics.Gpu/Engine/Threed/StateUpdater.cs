@@ -269,7 +269,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                 _prevFirstVertex = _state.State.FirstVertex;
             }
 
-            bool tfEnable = _state.State.TfEnable;
+            bool tfEnable = _state.State.TfEnable && _context.Capabilities.SupportsTransformFeedback;
 
             if (!tfEnable && _prevTfEnable)
             {
@@ -1366,6 +1366,22 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             _drawState.VsUsesInstanceId = gs.Shaders[1]?.Info.UsesInstanceId ?? false;
             _vsUsesDrawParameters = gs.Shaders[1]?.Info.UsesDrawParameters ?? false;
             _vsClipDistancesWritten = gs.Shaders[1]?.Info.ClipDistancesWritten ?? 0;
+
+            bool hasTransformFeedback = gs.SpecializationState.TransformFeedbackDescriptors != null;
+            if (hasTransformFeedback != _channel.BufferManager.HasTransformFeedbackOutputs)
+            {
+                if (!_context.Capabilities.SupportsTransformFeedback)
+                {
+                    // If host does not support transform feedback, and the shader changed,
+                    // we might need to update bindings as transform feedback emulation
+                    // uses storage buffer bindings that might have been used for something
+                    // else in a previous draw.
+
+                    _channel.BufferManager.ForceTransformFeedbackAndStorageBuffersDirty();
+                }
+
+                _channel.BufferManager.HasTransformFeedbackOutputs = hasTransformFeedback;
+            }
 
             if (oldVsClipDistancesWritten != _vsClipDistancesWritten)
             {

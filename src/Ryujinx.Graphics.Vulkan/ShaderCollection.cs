@@ -24,6 +24,7 @@ namespace Ryujinx.Graphics.Vulkan
 
         public uint Stages { get; }
 
+        public ResourceBindingSegment[][] ClearSegments { get; }
         public ResourceBindingSegment[][] BindingSegments { get; }
 
         public ProgramLinkStatus LinkStatus { get; private set; }
@@ -115,6 +116,7 @@ namespace Ryujinx.Graphics.Vulkan
 
             Stages = stages;
 
+            ClearSegments = BuildClearSegments(resourceLayout.Sets);
             BindingSegments = BuildBindingSegments(resourceLayout.SetUsages);
 
             _compileTask = Task.CompletedTask;
@@ -133,6 +135,60 @@ namespace Ryujinx.Graphics.Vulkan
 
             _compileTask = BackgroundCompilation();
             _firstBackgroundUse = !fromCache;
+        }
+
+        private static ResourceBindingSegment[][] BuildClearSegments(ReadOnlyCollection<ResourceDescriptorCollection> sets)
+        {
+            ResourceBindingSegment[][] segments = new ResourceBindingSegment[sets.Count][];
+
+            for (int setIndex = 0; setIndex < sets.Count; setIndex++)
+            {
+                List<ResourceBindingSegment> currentSegments = new List<ResourceBindingSegment>();
+
+                ResourceDescriptor currentDescriptor = default;
+                int currentCount = 0;
+
+                for (int index = 0; index < sets[setIndex].Descriptors.Count; index++)
+                {
+                    ResourceDescriptor descriptor = sets[setIndex].Descriptors[index];
+
+                    if (currentDescriptor.Binding + currentCount != descriptor.Binding ||
+                        currentDescriptor.Type != descriptor.Type ||
+                        currentDescriptor.Stages != descriptor.Stages)
+                    {
+                        if (currentCount != 0)
+                        {
+                            currentSegments.Add(new ResourceBindingSegment(
+                                currentDescriptor.Binding,
+                                currentCount,
+                                currentDescriptor.Type,
+                                currentDescriptor.Stages,
+                                ResourceAccess.ReadWrite));
+                        }
+
+                        currentDescriptor = descriptor;
+                        currentCount = descriptor.Count;
+                    }
+                    else
+                    {
+                        currentCount += descriptor.Count;
+                    }
+                }
+
+                if (currentCount != 0)
+                {
+                    currentSegments.Add(new ResourceBindingSegment(
+                        currentDescriptor.Binding,
+                        currentCount,
+                        currentDescriptor.Type,
+                        currentDescriptor.Stages,
+                        ResourceAccess.ReadWrite));
+                }
+
+                segments[setIndex] = currentSegments.ToArray();
+            }
+
+            return segments;
         }
 
         private static ResourceBindingSegment[][] BuildBindingSegments(ReadOnlyCollection<ResourceUsageCollection> setUsages)

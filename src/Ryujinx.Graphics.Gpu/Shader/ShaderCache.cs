@@ -362,7 +362,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
 
             TranslatorContext previousStage = null;
 
-            ShaderInfoBuilder infoBuilder = new ShaderInfoBuilder(_context);
+            ShaderInfoBuilder infoBuilder = new ShaderInfoBuilder(_context, transformFeedbackDescriptors != null);
 
             for (int stageIndex = 0; stageIndex < Constants.ShaderStages; stageIndex++)
             {
