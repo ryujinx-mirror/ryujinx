@@ -123,7 +123,7 @@ namespace Ryujinx.Ava.UI.Renderer
             }
             else
             {
-                X11Window = PlatformHelper.CreateOpenGLWindow(FramebufferFormat.Default, 0, 0, 100, 100) as GLXWindow;
+                X11Window = PlatformHelper.CreateOpenGLWindow(new FramebufferFormat(new ColorFormat(8, 8, 8, 0), 16, 0, ColorFormat.Zero, 0, 2, false), 0, 0, 100, 100) as GLXWindow;
             }
 
             WindowHandle = X11Window.WindowHandle.RawHandle;

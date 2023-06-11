@@ -1,8 +1,10 @@
 ﻿using OpenTK.Graphics.OpenGL;
 using Ryujinx.Common.Configuration;
+using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.OpenGL;
 using Ryujinx.Input.HLE;
 using SPB.Graphics;
+using SPB.Graphics.Exceptions;
 using SPB.Graphics.OpenGL;
 using SPB.Platform;
 using SPB.Platform.GLX;
@@ -112,22 +114,28 @@ namespace Ryujinx.Ui
 
         protected override void Dispose(bool disposing)
         {
-            // Try to bind the OpenGL context before calling the shutdown event
+            // Try to bind the OpenGL context before calling the shutdown event.
             try
             {
                 _openGLContext?.MakeCurrent(_nativeWindow);
             }
-            catch (Exception) { }
+            catch (ContextException e)
+            {
+                Logger.Warning?.Print(LogClass.Ui, $"Failed to bind OpenGL context: {e}");
+            }
 
             Device?.DisposeGpu();
             NpadManager.Dispose();
 
-            // Unbind context and destroy everything
+            // Unbind context and destroy everything.
             try
             {
                 _openGLContext?.MakeCurrent(null);
             }
-            catch (Exception) { }
+            catch (ContextException e)
+            {
+                Logger.Warning?.Print(LogClass.Ui, $"Failed to unbind OpenGL context: {e}");
+            }
 
             _openGLContext?.Dispose();
         }

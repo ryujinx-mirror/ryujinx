@@ -1,9 +1,11 @@
 using OpenTK.Graphics.OpenGL;
 using Ryujinx.Common.Configuration;
+using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.OpenGL;
 using Ryujinx.Ui.Common.Configuration;
 using SPB.Graphics;
+using SPB.Graphics.Exceptions;
 using SPB.Graphics.OpenGL;
 using SPB.Platform;
 using SPB.Platform.WGL;
@@ -17,8 +19,6 @@ namespace Ryujinx.Ava.UI.Renderer
         private SwappableNativeWindowBase _window;
 
         public OpenGLContextBase Context { get; set; }
-
-        public EmbeddedWindowOpenGL() { }
 
         protected override void OnWindowDestroying()
         {
@@ -62,14 +62,21 @@ namespace Ryujinx.Ava.UI.Renderer
             Context.MakeCurrent(null);
         }
 
-        public void MakeCurrent()
+        public void MakeCurrent(bool unbind = false, bool shouldThrow = true)
         {
-            Context?.MakeCurrent(_window);
-        }
+            try
+            {
+                Context?.MakeCurrent(!unbind ? _window : null);
+            }
+            catch (ContextException e)
+            {
+                if (shouldThrow)
+                {
+                    throw;
+                }
 
-        public void MakeCurrent(NativeWindowBase window)
-        {
-            Context?.MakeCurrent(window);
+                Logger.Warning?.Print(LogClass.Ui, $"Failed to {(!unbind ? "bind" : "unbind")} OpenGL context: {e}");
+            }
         }
 
         public void SwapBuffers()
