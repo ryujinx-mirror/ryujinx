@@ -17,7 +17,11 @@ namespace ARMeilleure.Instructions
 
             Operand res;
 
-            if (Optimizations.UseAesni)
+            if (Optimizations.UseArm64Aes)
+            {
+                res = context.AddIntrinsic(Intrinsic.Arm64AesdV, d, n);
+            }
+            else if (Optimizations.UseAesni)
             {
                 res = context.AddIntrinsic(Intrinsic.X86Aesdeclast, context.AddIntrinsic(Intrinsic.X86Xorpd, d, n), context.VectorZero());
             }
@@ -38,7 +42,11 @@ namespace ARMeilleure.Instructions
 
             Operand res;
 
-            if (Optimizations.UseAesni)
+            if (Optimizations.UseArm64Aes)
+            {
+                res = context.AddIntrinsic(Intrinsic.Arm64AeseV, d, n);
+            }
+            else if (Optimizations.UseAesni)
             {
                 res = context.AddIntrinsic(Intrinsic.X86Aesenclast, context.AddIntrinsic(Intrinsic.X86Xorpd, d, n), context.VectorZero());
             }
@@ -58,7 +66,11 @@ namespace ARMeilleure.Instructions
 
             Operand res;
 
-            if (Optimizations.UseAesni)
+            if (Optimizations.UseArm64Aes)
+            {
+                res = context.AddIntrinsic(Intrinsic.Arm64AesimcV, n);
+            }
+            else if (Optimizations.UseAesni)
             {
                 res = context.AddIntrinsic(Intrinsic.X86Aesimc, n);
             }
@@ -78,7 +90,11 @@ namespace ARMeilleure.Instructions
 
             Operand res;
 
-            if (Optimizations.UseAesni)
+            if (Optimizations.UseArm64Aes)
+            {
+                res = context.AddIntrinsic(Intrinsic.Arm64AesmcV, n);
+            }
+            else if (Optimizations.UseAesni)
             {
                 Operand roundKey = context.VectorZero();
 

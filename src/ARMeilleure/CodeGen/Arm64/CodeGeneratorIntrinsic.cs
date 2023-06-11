@@ -179,6 +179,35 @@ namespace ARMeilleure.CodeGen.Arm64
                         (uint)operation.GetSource(2).AsInt32());
                     break;
 
+                case IntrinsicType.Vector128Unary:
+                    GenerateVectorUnary(
+                        context,
+                        1,
+                        0,
+                        info.Inst,
+                        operation.Destination,
+                        operation.GetSource(0));
+                    break;
+                case IntrinsicType.Vector128Binary:
+                    GenerateVectorBinary(
+                        context,
+                        1,
+                        0,
+                        info.Inst,
+                        operation.Destination,
+                        operation.GetSource(0),
+                        operation.GetSource(1));
+                    break;
+                case IntrinsicType.Vector128BinaryRd:
+                    GenerateVectorUnary(
+                        context,
+                        1,
+                        0,
+                        info.Inst,
+                        operation.Destination,
+                        operation.GetSource(1));
+                    break;
+
                 case IntrinsicType.VectorUnary:
                     GenerateVectorUnary(
                         context,

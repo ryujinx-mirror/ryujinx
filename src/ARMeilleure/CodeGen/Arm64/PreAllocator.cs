@@ -746,6 +746,7 @@ namespace ARMeilleure.CodeGen.Arm64
                    info.Type == IntrinsicType.ScalarTernaryFPRdByElem ||
                    info.Type == IntrinsicType.ScalarTernaryShlRd ||
                    info.Type == IntrinsicType.ScalarTernaryShrRd ||
+                   info.Type == IntrinsicType.Vector128BinaryRd ||
                    info.Type == IntrinsicType.VectorBinaryRd ||
                    info.Type == IntrinsicType.VectorInsertByElem ||
                    info.Type == IntrinsicType.VectorTernaryRd ||

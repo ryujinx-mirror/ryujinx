@@ -13,6 +13,7 @@ namespace ARMeilleure
         public static bool UseUnmanagedDispatchLoop { get; set; } = true;
 
         public static bool UseAdvSimdIfAvailable    { get; set; } = true;
+        public static bool UseArm64AesIfAvailable   { get; set; } = true;
         public static bool UseArm64PmullIfAvailable { get; set; } = true;
 
         public static bool UseSseIfAvailable       { get; set; } = true;
@@ -41,6 +42,7 @@ namespace ARMeilleure
         }
 
         internal static bool UseAdvSimd    => UseAdvSimdIfAvailable    && Arm64HardwareCapabilities.SupportsAdvSimd;
+        internal static bool UseArm64Aes   => UseArm64AesIfAvailable   && Arm64HardwareCapabilities.SupportsAes;
         internal static bool UseArm64Pmull => UseArm64PmullIfAvailable && Arm64HardwareCapabilities.SupportsPmull;
 
         internal static bool UseSse       => UseSseIfAvailable       && X86HardwareCapabilities.SupportsSse;

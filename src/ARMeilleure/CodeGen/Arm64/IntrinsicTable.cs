@@ -19,8 +19,8 @@ namespace ARMeilleure.CodeGen.Arm64
             Add(Intrinsic.Arm64AddvV,         new IntrinsicInfo(0x0e31b800u, IntrinsicType.VectorUnary));
             Add(Intrinsic.Arm64AddS,          new IntrinsicInfo(0x5e208400u, IntrinsicType.ScalarBinary));
             Add(Intrinsic.Arm64AddV,          new IntrinsicInfo(0x0e208400u, IntrinsicType.VectorBinary));
-            Add(Intrinsic.Arm64AesdV,         new IntrinsicInfo(0x4e285800u, IntrinsicType.Vector128Unary));
-            Add(Intrinsic.Arm64AeseV,         new IntrinsicInfo(0x4e284800u, IntrinsicType.Vector128Unary));
+            Add(Intrinsic.Arm64AesdV,         new IntrinsicInfo(0x4e285800u, IntrinsicType.Vector128BinaryRd));
+            Add(Intrinsic.Arm64AeseV,         new IntrinsicInfo(0x4e284800u, IntrinsicType.Vector128BinaryRd));
             Add(Intrinsic.Arm64AesimcV,       new IntrinsicInfo(0x4e287800u, IntrinsicType.Vector128Unary));
             Add(Intrinsic.Arm64AesmcV,        new IntrinsicInfo(0x4e286800u, IntrinsicType.Vector128Unary));
             Add(Intrinsic.Arm64AndV,          new IntrinsicInfo(0x0e201c00u, IntrinsicType.VectorBinaryBitwise));

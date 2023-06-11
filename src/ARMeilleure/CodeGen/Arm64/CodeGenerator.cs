@@ -168,8 +168,6 @@ namespace ARMeilleure.CodeGen.Arm64
 
             Logger.StartPass(PassName.CodeGeneration);
 
-            //Console.Error.WriteLine(IRDumper.GetDump(cfg));
-
             bool relocatable = (cctx.Options & CompilerOptions.Relocatable) != 0;
 
             CodeGenContext context = new(allocResult, maxCallArgs, cfg.Blocks.Count, relocatable);
