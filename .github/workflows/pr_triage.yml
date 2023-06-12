@@ -16,43 +16,43 @@ jobs:
           dot: true
 
       - name: Auto Assign [Audio]
-        uses: kentaro-m/auto-assign-action@v1
+        uses: kentaro-m/auto-assign-action@v1.2.5
         with:
           configuration-path: '.github/assign/audio.yml'
         if: github.event.action == 'opened'
 
       - name: Auto Assign [CPU]
-        uses: kentaro-m/auto-assign-action@v1
+        uses: kentaro-m/auto-assign-action@v1.2.5
         with:
           configuration-path: '.github/assign/cpu.yml'
         if: github.event.action == 'opened'
 
       - name: Auto Assign [GPU]
-        uses: kentaro-m/auto-assign-action@v1
+        uses: kentaro-m/auto-assign-action@v1.2.5
         with:
           configuration-path: '.github/assign/gpu.yml'
         if: github.event.action == 'opened'
 
       - name: Auto Assign [GUI]
-        uses: kentaro-m/auto-assign-action@v1
+        uses: kentaro-m/auto-assign-action@v1.2.5
         with:
           configuration-path: '.github/assign/gui.yml'
         if: github.event.action == 'opened'
 
       - name: Auto Assign [Horizon]
-        uses: kentaro-m/auto-assign-action@v1
+        uses: kentaro-m/auto-assign-action@v1.2.5
         with:
           configuration-path: '.github/assign/horizon.yml'
         if: github.event.action == 'opened'
 
       - name: Auto Assign [Infra]
-        uses: kentaro-m/auto-assign-action@v1
+        uses: kentaro-m/auto-assign-action@v1.2.5
         with:
           configuration-path: '.github/assign/infra.yml'
         if: github.event.action == 'opened'
 
       - name: Auto Assign [Global]
-        uses: kentaro-m/auto-assign-action@v1
+        uses: kentaro-m/auto-assign-action@v1.2.5
         with:
           configuration-path: '.github/assign/global.yml'
         if: github.event.action == 'opened'
