@@ -3,20 +3,15 @@ name: Build job
 on:
   workflow_dispatch:
     inputs: {}
-  #push:
-  #  branches: [ master ]
-  #  paths-ignore:
-  #    - '.github/*'
-  #    - '.github/ISSUE_TEMPLATE/**'
-  #    - '*.yml'
-  #    - 'README.md'
   pull_request:
     branches: [ master ]
-    paths-ignore:
-      - '.github/*'
-      - '.github/ISSUE_TEMPLATE/**'
-      - '*.yml'
-      - 'README.md'
+    paths:
+      - '!.github/**'
+      - '!*.yml'
+      - '!*.json'
+      - '!*.config'
+      - '!README.md'
+      - '.github/workflows/*.yml'
 
 concurrency:
   group: pr-checks-${{ github.event.number }}

@@ -6,9 +6,10 @@ on:
   push:
     branches: [ master ]
     paths-ignore:
-      - '.github/*'
-      - '.github/ISSUE_TEMPLATE/**'
+      - '.github/**'
       - '*.yml'
+      - '*.json'
+      - '*.config'
       - 'README.md'
 
 concurrency: release
