@@ -1,0 +1,11 @@
+addReviewers: true
+
+reviewers:
+  - Ack77
+  - emmauss
+  - TSRBerry
+  - marysaka
+
+filterLabels:
+  include:
+    - gui

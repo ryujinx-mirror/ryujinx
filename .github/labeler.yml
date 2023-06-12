@@ -1,0 +1,33 @@
+audio: 'src/Ryujinx.Audio*'
+
+cpu:
+  - 'src/ARMeilleure//*'
+  - 'src/Ryujinx.Cpu/*'
+  - 'src/Ryujinx.Memory/*'
+
+gpu:
+  - 'src/Ryujinx.Graphics.*'
+  - 'src/Spv.Generator/*'
+  - 'src/Ryujinx.ShaderTools/*'
+
+'graphics-backend:opengl': 'src/Ryujinx.Graphics.OpenGL/*'
+'graphics-backend:vulkan':
+  - 'src/Ryujinx.Graphics.Vulkan/*'
+  - 'src/Spv.Generator/*'
+
+gui:
+  - 'src/Ryujinx/*'
+  - 'src/Ryujinx.Ui.Common/*'
+  - 'src/Ryujinx.Ui.LocaleGenerator/*'
+  - 'src/Ryujinx.Ava/*'
+
+horizon:
+  - 'src/Ryujinx.HLE/*'
+  - 'src/Ryujinx.Horizon*'
+
+kernel: 'src/Ryujinx.HLE/HOS/Kernel/*'
+
+infra:
+  - '.github/*'
+  - 'distribution/*'
+  - 'Directory.Packages.props'

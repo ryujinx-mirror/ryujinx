@@ -1,0 +1,51 @@
+name: "Pull Request Triage"
+on:
+- pull_request_target
+
+jobs:
+  triage:
+    permissions:
+      contents: read
+      pull-requests: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update labels based on changes
+        uses: actions/labeler@v4
+        with:
+          sync-labels: true
+          dot: true
+
+      - uses: kentaro-m/auto-assign-action@v1.2.5
+        with:
+          configuration-path: '.github/assign/audio.yml'
+        if: github.event.action == 'opened'
+
+      - uses: kentaro-m/auto-assign-action@v1.2.5
+        with:
+          configuration-path: '.github/assign/cpu.yml'
+        if: github.event.action == 'opened'
+
+      - uses: kentaro-m/auto-assign-action@v1.2.5
+        with:
+          configuration-path: '.github/assign/gpu.yml'
+        if: github.event.action == 'opened'
+
+      - uses: kentaro-m/auto-assign-action@v1.2.5
+        with:
+          configuration-path: '.github/assign/gui.yml'
+        if: github.event.action == 'opened'
+
+      - uses: kentaro-m/auto-assign-action@v1.2.5
+        with:
+          configuration-path: '.github/assign/horizon.yml'
+        if: github.event.action == 'opened'
+
+      - uses: kentaro-m/auto-assign-action@v1.2.5
+        with:
+          configuration-path: '.github/assign/infra.yml'
+        if: github.event.action == 'opened'
+
+      - uses: kentaro-m/auto-assign-action@v1.2.5
+        with:
+          configuration-path: '.github/assign/global.yml'
+        if: github.event.action == 'opened'

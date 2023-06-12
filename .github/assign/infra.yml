@@ -1,0 +1,9 @@
+addReviewers: true
+
+reviewers:
+  - marysaka
+  - TSRBerry
+
+filterLabels:
+  include:
+    - infra

@@ -1,0 +1,10 @@
+addReviewers: true
+
+reviewers:
+  - gdkchan
+  - riperiperi
+  - marysaka
+
+filterLabels:
+  include:
+    - gpu
