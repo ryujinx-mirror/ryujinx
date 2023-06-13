@@ -24,6 +24,24 @@ namespace Ryujinx.Common.Memory
             return value;
         }
 
+        public bool TryRead<T>(out T value) where T : unmanaged
+        {
+            int valueSize = Unsafe.SizeOf<T>();
+
+            if (valueSize > _input.Length)
+            {
+                value = default;
+
+                return false;
+            }
+
+            value = MemoryMarshal.Cast<byte, T>(_input)[0];
+
+            _input = _input.Slice(valueSize);
+
+            return true;
+        }
+
         public ReadOnlySpan<byte> GetSpan(int size)
         {
             ReadOnlySpan<byte> data = _input.Slice(0, size);
