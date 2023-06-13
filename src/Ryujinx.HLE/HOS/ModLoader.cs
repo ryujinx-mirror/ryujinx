@@ -154,7 +154,7 @@ namespace Ryujinx.HLE.HOS
         }
 
         private static DirectoryInfo FindTitleDir(DirectoryInfo contentsDir, string titleId)
-            => contentsDir.EnumerateDirectories($"{titleId}*", DirEnumOptions).FirstOrDefault();
+            => contentsDir.EnumerateDirectories(titleId, DirEnumOptions).FirstOrDefault();
 
         private static void AddModsFromDirectory(ModCache mods, DirectoryInfo dir, string titleId)
         {
