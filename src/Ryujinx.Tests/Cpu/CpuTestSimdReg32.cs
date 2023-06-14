@@ -3,6 +3,7 @@
 using ARMeilleure.State;
 using NUnit.Framework;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 namespace Ryujinx.Tests.Cpu
 {
@@ -703,6 +704,11 @@ namespace Ryujinx.Tests.Cpu
                          [Values] bool q,
                          [Values] bool u)
         {
+            if (RuntimeInformation.ProcessArchitecture == Architecture.Arm64)
+            {
+                Assert.Ignore("Unicorn on ARM64 crash while executing this test");
+            }
+
             uint opcode = 0xf2000400u; // VSHL.S8 D0, D0, D0
             if (q)
             {

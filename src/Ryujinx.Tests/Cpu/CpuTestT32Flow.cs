@@ -109,7 +109,7 @@ namespace Ryujinx.Tests.Cpu
 
             ExecuteOpcodes(runUnicorn: false);
 
-            Assert.That(GetContext().GetX(0), Is.EqualTo(0x1005));
+            Assert.That(GetContext().GetX(0), Is.EqualTo(CodeBaseAddress + 0x5));
         }
 
         [Test]
@@ -133,7 +133,7 @@ namespace Ryujinx.Tests.Cpu
 
             ExecuteOpcodes(runUnicorn: false);
 
-            Assert.That(GetContext().GetX(0), Is.EqualTo(0x1005));
+            Assert.That(GetContext().GetX(0), Is.EqualTo(CodeBaseAddress + 0x5));
             Assert.That(GetContext().GetPstateFlag(PState.TFlag), Is.EqualTo(false));
         }
 
@@ -160,7 +160,7 @@ namespace Ryujinx.Tests.Cpu
 
             ExecuteOpcodes(runUnicorn: false);
 
-            Assert.That(GetContext().GetX(0), Is.EqualTo(0x1007));
+            Assert.That(GetContext().GetX(0), Is.EqualTo(CodeBaseAddress + 0x7));
             Assert.That(GetContext().GetPstateFlag(PState.TFlag), Is.EqualTo(false));
         }
     }

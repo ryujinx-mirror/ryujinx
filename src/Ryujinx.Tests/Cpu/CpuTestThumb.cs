@@ -268,6 +268,12 @@ namespace Ryujinx.Tests.Cpu
         [Test]
         public void TestRandomTestCases([ValueSource(nameof(RandomTestCases))] PrecomputedThumbTestCase test)
         {
+            if (Size != 0x1000)
+            {
+                // TODO: Change it to depend on DataBaseAddress instead.
+                Assert.Ignore("This test currently only support 4KiB page size");
+            }
+
             RunPrecomputedTestCase(test);
         }
 

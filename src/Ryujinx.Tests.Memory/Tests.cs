@@ -7,7 +7,7 @@ namespace Ryujinx.Tests.Memory
 {
     public class Tests
     {
-        private const ulong MemorySize = 0x8000;
+        private static readonly ulong MemorySize = MemoryBlock.GetPageSize() * 8;
 
         private MemoryBlock _memoryBlock;
 
@@ -44,14 +44,17 @@ namespace Ryujinx.Tests.Memory
         [Platform(Exclude = "MacOsX")]
         public void Test_Alias()
         {
-            using MemoryBlock backing = new MemoryBlock(0x10000, MemoryAllocationFlags.Mirrorable);
-            using MemoryBlock toAlias = new MemoryBlock(0x10000, MemoryAllocationFlags.Reserve | MemoryAllocationFlags.ViewCompatible);
+            ulong pageSize = MemoryBlock.GetPageSize();
+            ulong blockSize = MemoryBlock.GetPageSize() * 16;
 
-            toAlias.MapView(backing, 0x1000, 0, 0x4000);
-            toAlias.UnmapView(backing, 0x3000, 0x1000);
+            using MemoryBlock backing = new MemoryBlock(blockSize, MemoryAllocationFlags.Mirrorable);
+            using MemoryBlock toAlias = new MemoryBlock(blockSize, MemoryAllocationFlags.Reserve | MemoryAllocationFlags.ViewCompatible);
+
+            toAlias.MapView(backing, pageSize, 0, pageSize * 4);
+            toAlias.UnmapView(backing, pageSize * 3, pageSize);
 
             toAlias.Write(0, 0xbadc0de);
-            Assert.AreEqual(Marshal.ReadInt32(backing.Pointer, 0x1000), 0xbadc0de);
+            Assert.AreEqual(Marshal.ReadInt32(backing.Pointer, (int)pageSize), 0xbadc0de);
         }
 
         [Test]
@@ -59,8 +62,12 @@ namespace Ryujinx.Tests.Memory
         [Platform(Exclude = "MacOsX")]
         public void Test_AliasRandom()
         {
-            using MemoryBlock backing = new MemoryBlock(0x80000, MemoryAllocationFlags.Mirrorable);
-            using MemoryBlock toAlias = new MemoryBlock(0x80000, MemoryAllocationFlags.Reserve | MemoryAllocationFlags.ViewCompatible);
+            ulong pageSize = MemoryBlock.GetPageSize();
+            int pageBits = (int)ulong.Log2(pageSize);
+            ulong blockSize = MemoryBlock.GetPageSize() * 128;
+
+            using MemoryBlock backing = new MemoryBlock(blockSize, MemoryAllocationFlags.Mirrorable);
+            using MemoryBlock toAlias = new MemoryBlock(blockSize, MemoryAllocationFlags.Reserve | MemoryAllocationFlags.ViewCompatible);
 
             Random rng = new Random(123);
 
@@ -72,16 +79,16 @@ namespace Ryujinx.Tests.Memory
 
                 if ((rng.Next() & 1) != 0)
                 {
-                    toAlias.MapView(backing, (ulong)srcPage << 12, (ulong)dstPage << 12, (ulong)pages << 12);
+                    toAlias.MapView(backing, (ulong)srcPage << pageBits, (ulong)dstPage << pageBits, (ulong)pages << pageBits);
 
-                    int offset = rng.Next(0, 0x1000 - sizeof(int));
+                    int offset = rng.Next(0, (int)pageSize - sizeof(int));
 
-                    toAlias.Write((ulong)((dstPage << 12) + offset), 0xbadc0de);
-                    Assert.AreEqual(Marshal.ReadInt32(backing.Pointer, (srcPage << 12) + offset), 0xbadc0de);
+                    toAlias.Write((ulong)((dstPage << pageBits) + offset), 0xbadc0de);
+                    Assert.AreEqual(Marshal.ReadInt32(backing.Pointer, (srcPage << pageBits) + offset), 0xbadc0de);
                 }
                 else
                 {
-                    toAlias.UnmapView(backing, (ulong)dstPage << 12, (ulong)pages << 12);
+                    toAlias.UnmapView(backing, (ulong)dstPage << pageBits, (ulong)pages << pageBits);
                 }
             }
         }
@@ -91,7 +98,7 @@ namespace Ryujinx.Tests.Memory
         [Platform(Exclude = "MacOsX")]
         public void Test_AliasMapLeak()
         {
-            ulong pageSize = 4096;
+            ulong pageSize = MemoryBlock.GetPageSize();
             ulong size = 100000 * pageSize; // The mappings limit on Linux is usually around 65K, so let's make sure we are above that.
 
             using MemoryBlock backing = new MemoryBlock(pageSize, MemoryAllocationFlags.Mirrorable);

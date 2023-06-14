@@ -13,9 +13,9 @@ namespace Ryujinx.Tests.Cpu
     [TestFixture]
     public class CpuTest32
     {
-        protected const uint Size = 0x1000;
-        protected const uint CodeBaseAddress = 0x1000;
-        protected const uint DataBaseAddress = CodeBaseAddress + Size;
+        protected static readonly uint Size = (uint)MemoryBlock.GetPageSize();
+        protected static uint CodeBaseAddress = Size;
+        protected static uint DataBaseAddress = CodeBaseAddress + Size;
 
         private uint _currAddress;
 
@@ -33,12 +33,24 @@ namespace Ryujinx.Tests.Cpu
         [SetUp]
         public void Setup()
         {
-            _currAddress = CodeBaseAddress;
+            int pageBits = (int)ulong.Log2(Size);
 
             _ram = new MemoryBlock(Size * 2);
-            _memory = new MemoryManager(_ram, 1ul << 16);
+            _memory = new MemoryManager(_ram, 1ul << (pageBits + 4));
             _memory.IncrementReferenceCount();
-            _memory.Map(CodeBaseAddress, 0, Size * 2, MemoryMapFlags.Private);
+
+            // Some tests depends on hardcoded address that were computed for 4KiB.
+            // We change the layout on non 4KiB platforms to keep compat here.
+            if (Size > 0x1000)
+            {
+                DataBaseAddress = 0;
+                CodeBaseAddress = Size;
+            }
+
+            _currAddress = CodeBaseAddress;
+
+            _memory.Map(CodeBaseAddress, 0, Size, MemoryMapFlags.Private);
+            _memory.Map(DataBaseAddress, Size, Size, MemoryMapFlags.Private);
 
             _context = CpuContext.CreateExecutionContext();
             _context.IsAarch32 = true;
