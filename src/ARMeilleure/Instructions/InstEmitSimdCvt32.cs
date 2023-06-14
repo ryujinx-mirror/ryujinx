@@ -165,7 +165,7 @@ namespace ARMeilleure.Instructions
                     {
                         Operand m = GetVecA32(op.Vm >> 1);
 
-                        Operand toConvert = InstEmitSimdHelper32Arm64.EmitExtractScalar(context, m, op.Vm, doubleSize);
+                        Operand toConvert = InstEmitSimdHelper32Arm64.EmitExtractScalar(context, m, op.Vm, true);
 
                         Intrinsic inst = (unsigned ? Intrinsic.Arm64FcvtzuGp : Intrinsic.Arm64FcvtzsGp) | Intrinsic.Arm64VDouble;
 
@@ -175,7 +175,7 @@ namespace ARMeilleure.Instructions
                     }
                     else
                     {
-                        InstEmitSimdHelper32Arm64.EmitScalarUnaryOpF32(context, unsigned ? Intrinsic.Arm64FcvtzuS : Intrinsic.Arm64FcvtzsS);
+                        InstEmitSimdHelper32Arm64.EmitScalarUnaryOpF32(context, unsigned ? Intrinsic.Arm64FcvtzuS : Intrinsic.Arm64FcvtzsS, false);
                     }
                 }
                 else if (!roundWithFpscr && Optimizations.UseSse41)
@@ -260,28 +260,64 @@ namespace ARMeilleure.Instructions
 
             if (Optimizations.UseAdvSimd)
             {
-                if (unsigned)
+                bool doubleSize = floatSize == OperandType.FP64;
+
+                if (doubleSize)
                 {
-                    inst = rm switch {
-                        0b00 => Intrinsic.Arm64FcvtauS,
-                        0b01 => Intrinsic.Arm64FcvtnuS,
-                        0b10 => Intrinsic.Arm64FcvtpuS,
-                        0b11 => Intrinsic.Arm64FcvtmuS,
-                        _ => throw new ArgumentOutOfRangeException(nameof(rm))
-                    };
+                    Operand m = GetVecA32(op.Vm >> 1);
+
+                    Operand toConvert = InstEmitSimdHelper32Arm64.EmitExtractScalar(context, m, op.Vm, true);
+
+                    if (unsigned)
+                    {
+                        inst = rm switch {
+                            0b00 => Intrinsic.Arm64FcvtauGp,
+                            0b01 => Intrinsic.Arm64FcvtnuGp,
+                            0b10 => Intrinsic.Arm64FcvtpuGp,
+                            0b11 => Intrinsic.Arm64FcvtmuGp,
+                            _ => throw new ArgumentOutOfRangeException(nameof(rm))
+                        };
+                    }
+                    else
+                    {
+                        inst = rm switch {
+                            0b00 => Intrinsic.Arm64FcvtasGp,
+                            0b01 => Intrinsic.Arm64FcvtnsGp,
+                            0b10 => Intrinsic.Arm64FcvtpsGp,
+                            0b11 => Intrinsic.Arm64FcvtmsGp,
+                            _ => throw new ArgumentOutOfRangeException(nameof(rm))
+                        };
+                    }
+
+                    Operand asInteger = context.AddIntrinsicInt(inst | Intrinsic.Arm64VDouble, toConvert);
+
+                    InsertScalar(context, op.Vd, asInteger);
                 }
                 else
                 {
-                    inst = rm switch {
-                        0b00 => Intrinsic.Arm64FcvtasS,
-                        0b01 => Intrinsic.Arm64FcvtnsS,
-                        0b10 => Intrinsic.Arm64FcvtpsS,
-                        0b11 => Intrinsic.Arm64FcvtmsS,
-                        _ => throw new ArgumentOutOfRangeException(nameof(rm))
-                    };
-                }
+                    if (unsigned)
+                    {
+                        inst = rm switch {
+                            0b00 => Intrinsic.Arm64FcvtauS,
+                            0b01 => Intrinsic.Arm64FcvtnuS,
+                            0b10 => Intrinsic.Arm64FcvtpuS,
+                            0b11 => Intrinsic.Arm64FcvtmuS,
+                            _ => throw new ArgumentOutOfRangeException(nameof(rm))
+                        };
+                    }
+                    else
+                    {
+                        inst = rm switch {
+                            0b00 => Intrinsic.Arm64FcvtasS,
+                            0b01 => Intrinsic.Arm64FcvtnsS,
+                            0b10 => Intrinsic.Arm64FcvtpsS,
+                            0b11 => Intrinsic.Arm64FcvtmsS,
+                            _ => throw new ArgumentOutOfRangeException(nameof(rm))
+                        };
+                    }
 
-                InstEmitSimdHelper32Arm64.EmitScalarUnaryOpF32(context, inst);
+                    InstEmitSimdHelper32Arm64.EmitScalarUnaryOpF32(context, inst);
+                }
             }
             else if (Optimizations.UseSse41)
             {
