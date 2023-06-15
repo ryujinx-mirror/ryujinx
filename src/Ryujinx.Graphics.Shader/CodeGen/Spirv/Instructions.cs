@@ -97,8 +97,6 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             Add(Instruction.ImageStore,               GenerateImageStore);
             Add(Instruction.IsNan,                    GenerateIsNan);
             Add(Instruction.Load,                     GenerateLoad);
-            Add(Instruction.LoadLocal,                GenerateLoadLocal);
-            Add(Instruction.LoadShared,               GenerateLoadShared);
             Add(Instruction.Lod,                      GenerateLod);
             Add(Instruction.LogarithmB2,              GenerateLogarithmB2);
             Add(Instruction.LogicalAnd,               GenerateLogicalAnd);
@@ -132,10 +130,6 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             Add(Instruction.Sine,                     GenerateSine);
             Add(Instruction.SquareRoot,               GenerateSquareRoot);
             Add(Instruction.Store,                    GenerateStore);
-            Add(Instruction.StoreLocal,               GenerateStoreLocal);
-            Add(Instruction.StoreShared,              GenerateStoreShared);
-            Add(Instruction.StoreShared16,            GenerateStoreShared16);
-            Add(Instruction.StoreShared8,             GenerateStoreShared8);
             Add(Instruction.Subtract,                 GenerateSubtract);
             Add(Instruction.SwizzleAdd,               GenerateSwizzleAdd);
             Add(Instruction.TextureSample,            GenerateTextureSample);
@@ -871,30 +865,6 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             return GenerateLoadOrStore(context, operation, isStore: false);
         }
 
-        private static OperationResult GenerateLoadLocal(CodeGenContext context, AstOperation operation)
-        {
-            return GenerateLoadLocalOrShared(context, operation, StorageClass.Private, context.LocalMemory);
-        }
-
-        private static OperationResult GenerateLoadShared(CodeGenContext context, AstOperation operation)
-        {
-            return GenerateLoadLocalOrShared(context, operation, StorageClass.Workgroup, context.SharedMemory);
-        }
-
-        private static OperationResult GenerateLoadLocalOrShared(
-            CodeGenContext context,
-            AstOperation operation,
-            StorageClass storageClass,
-            SpvInstruction memory)
-        {
-            var offset = context.Get(AggregateType.S32, operation.GetSource(0));
-
-            var elemPointer = context.AccessChain(context.TypePointer(storageClass, context.TypeU32()), memory, offset);
-            var value = context.Load(context.TypeU32(), elemPointer);
-
-            return new OperationResult(AggregateType.U32, value);
-        }
-
         private static OperationResult GenerateLod(CodeGenContext context, AstOperation operation)
         {
             AstTextureOperation texOp = (AstTextureOperation)operation;
@@ -1266,45 +1236,6 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
         private static OperationResult GenerateStore(CodeGenContext context, AstOperation operation)
         {
             return GenerateLoadOrStore(context, operation, isStore: true);
-        }
-
-        private static OperationResult GenerateStoreLocal(CodeGenContext context, AstOperation operation)
-        {
-            return GenerateStoreLocalOrShared(context, operation, StorageClass.Private, context.LocalMemory);
-        }
-
-        private static OperationResult GenerateStoreShared(CodeGenContext context, AstOperation operation)
-        {
-            return GenerateStoreLocalOrShared(context, operation, StorageClass.Workgroup, context.SharedMemory);
-        }
-
-        private static OperationResult GenerateStoreLocalOrShared(
-            CodeGenContext context,
-            AstOperation operation,
-            StorageClass storageClass,
-            SpvInstruction memory)
-        {
-            var offset = context.Get(AggregateType.S32, operation.GetSource(0));
-            var value = context.Get(AggregateType.U32, operation.GetSource(1));
-
-            var elemPointer = context.AccessChain(context.TypePointer(storageClass, context.TypeU32()), memory, offset);
-            context.Store(elemPointer, value);
-
-            return OperationResult.Invalid;
-        }
-
-        private static OperationResult GenerateStoreShared16(CodeGenContext context, AstOperation operation)
-        {
-            GenerateStoreSharedSmallInt(context, operation, 16);
-
-            return OperationResult.Invalid;
-        }
-
-        private static OperationResult GenerateStoreShared8(CodeGenContext context, AstOperation operation)
-        {
-            GenerateStoreSharedSmallInt(context, operation, 8);
-
-            return OperationResult.Invalid;
         }
 
         private static OperationResult GenerateSubtract(CodeGenContext context, AstOperation operation)
@@ -1827,55 +1758,27 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             AstOperation operation,
             Func<SpvInstruction, SpvInstruction, SpvInstruction, SpvInstruction, SpvInstruction, SpvInstruction> emitU)
         {
-            var value = context.GetU32(operation.GetSource(operation.SourcesCount - 1));
+            SpvInstruction elemPointer = GetStoragePointer(context, operation, out AggregateType varType);
 
-            SpvInstruction elemPointer;
-
-            if (operation.StorageKind == StorageKind.StorageBuffer)
-            {
-                elemPointer = GetStoragePointer(context, operation, out _);
-            }
-            else if (operation.StorageKind == StorageKind.SharedMemory)
-            {
-                var offset = context.GetU32(operation.GetSource(0));
-                elemPointer = context.AccessChain(context.TypePointer(StorageClass.Workgroup, context.TypeU32()), context.SharedMemory, offset);
-            }
-            else
-            {
-                throw new InvalidOperationException($"Invalid storage kind \"{operation.StorageKind}\".");
-            }
+            var value = context.Get(varType, operation.GetSource(operation.SourcesCount - 1));
 
             var one = context.Constant(context.TypeU32(), 1);
             var zero = context.Constant(context.TypeU32(), 0);
 
-            return new OperationResult(AggregateType.U32, emitU(context.TypeU32(), elemPointer, one, zero, value));
+            return new OperationResult(varType, emitU(context.GetType(varType), elemPointer, one, zero, value));
         }
 
         private static OperationResult GenerateAtomicMemoryCas(CodeGenContext context, AstOperation operation)
         {
-            var value0 = context.GetU32(operation.GetSource(operation.SourcesCount - 2));
-            var value1 = context.GetU32(operation.GetSource(operation.SourcesCount - 1));
+            SpvInstruction elemPointer = GetStoragePointer(context, operation, out AggregateType varType);
 
-            SpvInstruction elemPointer;
-
-            if (operation.StorageKind == StorageKind.StorageBuffer)
-            {
-                elemPointer = GetStoragePointer(context, operation, out _);
-            }
-            else if (operation.StorageKind == StorageKind.SharedMemory)
-            {
-                var offset = context.GetU32(operation.GetSource(0));
-                elemPointer = context.AccessChain(context.TypePointer(StorageClass.Workgroup, context.TypeU32()), context.SharedMemory, offset);
-            }
-            else
-            {
-                throw new InvalidOperationException($"Invalid storage kind \"{operation.StorageKind}\".");
-            }
+            var value0 = context.Get(varType, operation.GetSource(operation.SourcesCount - 2));
+            var value1 = context.Get(varType, operation.GetSource(operation.SourcesCount - 1));
 
             var one = context.Constant(context.TypeU32(), 1);
             var zero = context.Constant(context.TypeU32(), 0);
 
-            return new OperationResult(AggregateType.U32, context.AtomicCompareExchange(context.TypeU32(), elemPointer, one, zero, zero, value1, value0));
+            return new OperationResult(varType, context.AtomicCompareExchange(context.GetType(varType), elemPointer, one, zero, zero, value1, value0));
         }
 
         private static OperationResult GenerateLoadOrStore(CodeGenContext context, AstOperation operation, bool isStore)
@@ -1926,6 +1829,27 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                     baseObj = storageKind == StorageKind.ConstantBuffer
                         ? context.ConstantBuffers[bindingIndex.Value]
                         : context.StorageBuffers[bindingIndex.Value];
+                    break;
+
+                case StorageKind.LocalMemory:
+                case StorageKind.SharedMemory:
+                    if (!(operation.GetSource(srcIndex++) is AstOperand bindingId) || bindingId.Type != OperandType.Constant)
+                    {
+                        throw new InvalidOperationException($"First input of {operation.Inst} with {storageKind} storage must be a constant operand.");
+                    }
+
+                    if (storageKind == StorageKind.LocalMemory)
+                    {
+                        storageClass = StorageClass.Private;
+                        varType = context.Config.Properties.LocalMemories[bindingId.Value].Type & AggregateType.ElementTypeMask;
+                        baseObj = context.LocalMemories[bindingId.Value];
+                    }
+                    else
+                    {
+                        storageClass = StorageClass.Workgroup;
+                        varType = context.Config.Properties.SharedMemories[bindingId.Value].Type & AggregateType.ElementTypeMask;
+                        baseObj = context.SharedMemories[bindingId.Value];
+                    }
                     break;
 
                 case StorageKind.Input:
@@ -2046,50 +1970,6 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             var ioDefinition = new IoDefinition(StorageKind.Input, ioVariable);
 
             return context.Load(context.GetType(varType), context.Inputs[ioDefinition]);
-        }
-
-        private static void GenerateStoreSharedSmallInt(CodeGenContext context, AstOperation operation, int bitSize)
-        {
-            var offset = context.Get(AggregateType.U32, operation.GetSource(0));
-            var value = context.Get(AggregateType.U32, operation.GetSource(1));
-
-            var wordOffset = context.ShiftRightLogical(context.TypeU32(), offset, context.Constant(context.TypeU32(), 2));
-            var bitOffset = context.BitwiseAnd(context.TypeU32(), offset, context.Constant(context.TypeU32(), 3));
-            bitOffset = context.ShiftLeftLogical(context.TypeU32(), bitOffset, context.Constant(context.TypeU32(), 3));
-
-            var memory = context.SharedMemory;
-
-            var elemPointer = context.AccessChain(context.TypePointer(StorageClass.Workgroup, context.TypeU32()), memory, wordOffset);
-
-            GenerateStoreSmallInt(context, elemPointer, bitOffset, value, bitSize);
-        }
-
-        private static void GenerateStoreSmallInt(
-            CodeGenContext context,
-            SpvInstruction elemPointer,
-            SpvInstruction bitOffset,
-            SpvInstruction value,
-            int bitSize)
-        {
-            var loopStart = context.Label();
-            var loopEnd = context.Label();
-
-            context.Branch(loopStart);
-            context.AddLabel(loopStart);
-
-            var oldValue = context.Load(context.TypeU32(), elemPointer);
-            var newValue = context.BitFieldInsert(context.TypeU32(), oldValue, value, bitOffset, context.Constant(context.TypeU32(), bitSize));
-
-            var one = context.Constant(context.TypeU32(), 1);
-            var zero = context.Constant(context.TypeU32(), 0);
-
-            var result = context.AtomicCompareExchange(context.TypeU32(), elemPointer, one, zero, zero, newValue, oldValue);
-            var failed = context.INotEqual(context.TypeBool(), result, oldValue);
-
-            context.LoopMerge(loopEnd, loopStart, LoopControlMask.MaskNone);
-            context.BranchConditional(failed, loopStart, loopEnd);
-
-            context.AddLabel(loopEnd);
         }
 
         private static OperationResult GetZeroOperationResult(

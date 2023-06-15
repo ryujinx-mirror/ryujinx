@@ -113,7 +113,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
             if (node is AstOperation operation)
             {
-                if (operation.Inst == Instruction.Load)
+                if (operation.Inst == Instruction.Load || operation.Inst.IsAtomic())
                 {
                     switch (operation.StorageKind)
                     {
@@ -135,6 +135,19 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                             StructureField field = buffer.Type.Fields[fieldIndex.Value];
 
                             return field.Type & AggregateType.ElementTypeMask;
+
+                        case StorageKind.LocalMemory:
+                        case StorageKind.SharedMemory:
+                            if (!(operation.GetSource(0) is AstOperand bindingId) || bindingId.Type != OperandType.Constant)
+                            {
+                                throw new InvalidOperationException($"First input of {operation.Inst} with {operation.StorageKind} storage must be a constant operand.");
+                            }
+
+                            MemoryDefinition memory = operation.StorageKind == StorageKind.LocalMemory
+                                ? context.Config.Properties.LocalMemories[bindingId.Value]
+                                : context.Config.Properties.SharedMemories[bindingId.Value];
+
+                            return memory.Type & AggregateType.ElementTypeMask;
 
                         case StorageKind.Input:
                         case StorageKind.InputPerPatch:

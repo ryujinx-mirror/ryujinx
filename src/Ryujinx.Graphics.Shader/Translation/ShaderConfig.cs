@@ -124,7 +124,7 @@ namespace Ryujinx.Graphics.Shader.Translation
         private TextureDescriptor[] _cachedTextureDescriptors;
         private TextureDescriptor[] _cachedImageDescriptors;
 
-        public ShaderConfig(ShaderStage stage, IGpuAccessor gpuAccessor, TranslationOptions options)
+        public ShaderConfig(ShaderStage stage, IGpuAccessor gpuAccessor, TranslationOptions options, int localMemorySize)
         {
             Stage       = stage;
             GpuAccessor = gpuAccessor;
@@ -143,7 +143,7 @@ namespace Ryujinx.Graphics.Shader.Translation
             _usedTextures = new Dictionary<TextureInfo, TextureMeta>();
             _usedImages   = new Dictionary<TextureInfo, TextureMeta>();
 
-            ResourceManager = new ResourceManager(stage, gpuAccessor, new ShaderProperties());
+            ResourceManager = new ResourceManager(stage, gpuAccessor, new ShaderProperties(), localMemorySize);
 
             if (!gpuAccessor.QueryHostSupportsTransformFeedback() && gpuAccessor.QueryTransformFeedbackEnabled())
             {
@@ -176,14 +176,17 @@ namespace Ryujinx.Graphics.Shader.Translation
             OutputTopology outputTopology,
             int maxOutputVertices,
             IGpuAccessor gpuAccessor,
-            TranslationOptions options) : this(stage, gpuAccessor, options)
+            TranslationOptions options) : this(stage, gpuAccessor, options, 0)
         {
             ThreadsPerInputPrimitive = 1;
             OutputTopology           = outputTopology;
             MaxOutputVertices        = maxOutputVertices;
         }
 
-        public ShaderConfig(ShaderHeader header, IGpuAccessor gpuAccessor, TranslationOptions options) : this(header.Stage, gpuAccessor, options)
+        public ShaderConfig(
+            ShaderHeader header,
+            IGpuAccessor gpuAccessor,
+            TranslationOptions options) : this(header.Stage, gpuAccessor, options, GetLocalMemorySize(header))
         {
             GpPassthrough            = header.Stage == ShaderStage.Geometry && header.GpPassthrough;
             ThreadsPerInputPrimitive = header.ThreadsPerInputPrimitive;
@@ -195,6 +198,11 @@ namespace Ryujinx.Graphics.Shader.Translation
             OmapSampleMask           = header.OmapSampleMask;
             OmapDepth                = header.OmapDepth;
             LastInVertexPipeline     = header.Stage < ShaderStage.Fragment;
+        }
+
+        private static int GetLocalMemorySize(ShaderHeader header)
+        {
+            return header.ShaderLocalMemoryLowSize + header.ShaderLocalMemoryHighSize + (header.ShaderLocalMemoryCrsSize / ThreadsPerWarp);
         }
 
         private void EnsureTransformFeedbackInitialized()

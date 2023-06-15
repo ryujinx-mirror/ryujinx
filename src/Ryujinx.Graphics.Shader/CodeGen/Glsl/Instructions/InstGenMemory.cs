@@ -191,25 +191,6 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             return GenerateLoadOrStore(context, operation, isStore: false);
         }
 
-        public static string LoadLocal(CodeGenContext context, AstOperation operation)
-        {
-            return LoadLocalOrShared(context, operation, DefaultNames.LocalMemoryName);
-        }
-
-        public static string LoadShared(CodeGenContext context, AstOperation operation)
-        {
-            return LoadLocalOrShared(context, operation, DefaultNames.SharedMemoryName);
-        }
-
-        private static string LoadLocalOrShared(CodeGenContext context, AstOperation operation, string arrayName)
-        {
-            IAstNode src1 = operation.GetSource(0);
-
-            string offsetExpr = GetSoureExpr(context, src1, GetSrcVarType(operation.Inst, 0));
-
-            return $"{arrayName}[{offsetExpr}]";
-        }
-
         public static string Lod(CodeGenContext context, AstOperation operation)
         {
             AstTextureOperation texOp = (AstTextureOperation)operation;
@@ -261,58 +242,6 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
         public static string Store(CodeGenContext context, AstOperation operation)
         {
             return GenerateLoadOrStore(context, operation, isStore: true);
-        }
-
-        public static string StoreLocal(CodeGenContext context, AstOperation operation)
-        {
-            return StoreLocalOrShared(context, operation, DefaultNames.LocalMemoryName);
-        }
-
-        public static string StoreShared(CodeGenContext context, AstOperation operation)
-        {
-            return StoreLocalOrShared(context, operation, DefaultNames.SharedMemoryName);
-        }
-
-        private static string StoreLocalOrShared(CodeGenContext context, AstOperation operation, string arrayName)
-        {
-            IAstNode src1 = operation.GetSource(0);
-            IAstNode src2 = operation.GetSource(1);
-
-            string offsetExpr = GetSoureExpr(context, src1, GetSrcVarType(operation.Inst, 0));
-
-            AggregateType srcType = OperandManager.GetNodeDestType(context, src2);
-
-            string src = TypeConversion.ReinterpretCast(context, src2, srcType, AggregateType.U32);
-
-            return $"{arrayName}[{offsetExpr}] = {src}";
-        }
-
-        public static string StoreShared16(CodeGenContext context, AstOperation operation)
-        {
-            IAstNode src1 = operation.GetSource(0);
-            IAstNode src2 = operation.GetSource(1);
-
-            string offsetExpr = GetSoureExpr(context, src1, GetSrcVarType(operation.Inst, 0));
-
-            AggregateType srcType = OperandManager.GetNodeDestType(context, src2);
-
-            string src = TypeConversion.ReinterpretCast(context, src2, srcType, AggregateType.U32);
-
-            return $"{HelperFunctionNames.StoreShared16}({offsetExpr}, {src})";
-        }
-
-        public static string StoreShared8(CodeGenContext context, AstOperation operation)
-        {
-            IAstNode src1 = operation.GetSource(0);
-            IAstNode src2 = operation.GetSource(1);
-
-            string offsetExpr = GetSoureExpr(context, src1, GetSrcVarType(operation.Inst, 0));
-
-            AggregateType srcType = OperandManager.GetNodeDestType(context, src2);
-
-            string src = TypeConversion.ReinterpretCast(context, src2, srcType, AggregateType.U32);
-
-            return $"{HelperFunctionNames.StoreShared8}({offsetExpr}, {src})";
         }
 
         public static string TextureSample(CodeGenContext context, AstOperation operation)
@@ -673,6 +602,21 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
                     StructureField field = buffer.Type.Fields[fieldIndex.Value];
                     varName = $"{buffer.Name}.{field.Name}";
                     varType = field.Type;
+                    break;
+
+                case StorageKind.LocalMemory:
+                case StorageKind.SharedMemory:
+                    if (!(operation.GetSource(srcIndex++) is AstOperand bindingId) || bindingId.Type != OperandType.Constant)
+                    {
+                        throw new InvalidOperationException($"First input of {operation.Inst} with {storageKind} storage must be a constant operand.");
+                    }
+
+                    MemoryDefinition memory = storageKind == StorageKind.LocalMemory
+                        ? context.Config.Properties.LocalMemories[bindingId.Value]
+                        : context.Config.Properties.SharedMemories[bindingId.Value];
+
+                    varName = memory.Name;
+                    varType = memory.Type;
                     break;
 
                 case StorageKind.Input:

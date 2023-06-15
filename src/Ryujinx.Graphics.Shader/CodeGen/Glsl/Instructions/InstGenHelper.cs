@@ -17,9 +17,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             Add(Instruction.AtomicAdd,                InstType.AtomicBinary,   "atomicAdd");
             Add(Instruction.AtomicAnd,                InstType.AtomicBinary,   "atomicAnd");
             Add(Instruction.AtomicCompareAndSwap,     InstType.AtomicTernary,  "atomicCompSwap");
-            Add(Instruction.AtomicMaxS32,             InstType.CallTernary,    HelperFunctionNames.AtomicMaxS32);
             Add(Instruction.AtomicMaxU32,             InstType.AtomicBinary,   "atomicMax");
-            Add(Instruction.AtomicMinS32,             InstType.CallTernary,    HelperFunctionNames.AtomicMinS32);
             Add(Instruction.AtomicMinU32,             InstType.AtomicBinary,   "atomicMin");
             Add(Instruction.AtomicOr,                 InstType.AtomicBinary,   "atomicOr");
             Add(Instruction.AtomicSwap,               InstType.AtomicBinary,   "atomicExchange");
@@ -83,8 +81,6 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             Add(Instruction.ImageAtomic,              InstType.Special);
             Add(Instruction.IsNan,                    InstType.CallUnary,      "isnan");
             Add(Instruction.Load,                     InstType.Special);
-            Add(Instruction.LoadLocal,                InstType.Special);
-            Add(Instruction.LoadShared,               InstType.Special);
             Add(Instruction.Lod,                      InstType.Special);
             Add(Instruction.LogarithmB2,              InstType.CallUnary,      "log2");
             Add(Instruction.LogicalAnd,               InstType.OpBinaryCom,    "&&",              9);
@@ -118,10 +114,6 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             Add(Instruction.Sine,                     InstType.CallUnary,      "sin");
             Add(Instruction.SquareRoot,               InstType.CallUnary,      "sqrt");
             Add(Instruction.Store,                    InstType.Special);
-            Add(Instruction.StoreLocal,               InstType.Special);
-            Add(Instruction.StoreShared,              InstType.Special);
-            Add(Instruction.StoreShared16,            InstType.Special);
-            Add(Instruction.StoreShared8,             InstType.Special);
             Add(Instruction.Subtract,                 InstType.OpBinary,       "-",               2);
             Add(Instruction.SwizzleAdd,               InstType.CallTernary,    HelperFunctionNames.SwizzleAdd);
             Add(Instruction.TextureSample,            InstType.Special);

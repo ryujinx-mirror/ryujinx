@@ -107,7 +107,7 @@ namespace Ryujinx.Graphics.Shader.Translation
 
             if (options.Flags.HasFlag(TranslationFlags.Compute))
             {
-                config = new ShaderConfig(ShaderStage.Compute, gpuAccessor, options);
+                config = new ShaderConfig(ShaderStage.Compute, gpuAccessor, options, gpuAccessor.QueryComputeLocalMemorySize());
 
                 program = Decoder.Decode(config, address);
             }

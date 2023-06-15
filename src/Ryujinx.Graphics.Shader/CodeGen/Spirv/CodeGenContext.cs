@@ -25,8 +25,8 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
 
         public Dictionary<int, Instruction> ConstantBuffers { get; } = new Dictionary<int, Instruction>();
         public Dictionary<int, Instruction> StorageBuffers { get; } = new Dictionary<int, Instruction>();
-        public Instruction LocalMemory { get; set; }
-        public Instruction SharedMemory { get; set; }
+        public Dictionary<int, Instruction> LocalMemories { get; } = new Dictionary<int, Instruction>();
+        public Dictionary<int, Instruction> SharedMemories { get; } = new Dictionary<int, Instruction>();
         public Dictionary<TextureMeta, SamplerType> SamplersTypes { get; } = new Dictionary<TextureMeta, SamplerType>();
         public Dictionary<TextureMeta, (Instruction, Instruction, Instruction)> Samplers { get; } = new Dictionary<TextureMeta, (Instruction, Instruction, Instruction)>();
         public Dictionary<TextureMeta, (Instruction, Instruction)> Images { get; } = new Dictionary<TextureMeta, (Instruction, Instruction)>();
@@ -35,7 +35,6 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
         public Dictionary<IoDefinition, Instruction> InputsPerPatch { get; } = new Dictionary<IoDefinition, Instruction>();
         public Dictionary<IoDefinition, Instruction> OutputsPerPatch { get; } = new Dictionary<IoDefinition, Instruction>();
 
-        public Instruction CoordTemp { get; set; }
         public StructuredFunction CurrentFunction { get; set; }
         private readonly Dictionary<AstOperand, Instruction> _locals = new Dictionary<AstOperand, Instruction>();
         private readonly Dictionary<int, Instruction[]> _localForArgs = new Dictionary<int, Instruction[]>();

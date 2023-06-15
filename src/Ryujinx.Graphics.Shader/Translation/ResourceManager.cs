@@ -1,3 +1,4 @@
+using Ryujinx.Common;
 using Ryujinx.Graphics.Shader.StructuredIr;
 using System;
 using System.Collections.Generic;
@@ -22,9 +23,12 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         private readonly HashSet<int> _usedConstantBufferBindings;
 
+        public int LocalMemoryId { get; }
+        public int SharedMemoryId { get; }
+
         public ShaderProperties Properties => _properties;
 
-        public ResourceManager(ShaderStage stage, IGpuAccessor gpuAccessor, ShaderProperties properties)
+        public ResourceManager(ShaderStage stage, IGpuAccessor gpuAccessor, ShaderProperties properties, int localMemorySize)
         {
             _gpuAccessor = gpuAccessor;
             _properties = properties;
@@ -41,6 +45,25 @@ namespace Ryujinx.Graphics.Shader.Translation
             _usedConstantBufferBindings = new HashSet<int>();
 
             properties.AddConstantBuffer(0, new BufferDefinition(BufferLayout.Std140, 0, 0, "support_buffer", SupportBuffer.GetStructureType()));
+
+            LocalMemoryId = -1;
+            SharedMemoryId = -1;
+
+            if (localMemorySize != 0)
+            {
+                var lmem = new MemoryDefinition("local_memory", AggregateType.Array | AggregateType.U32, BitUtils.DivRoundUp(localMemorySize, sizeof(uint)));
+
+                LocalMemoryId = properties.AddLocalMemory(lmem);
+            }
+
+            int sharedMemorySize = stage == ShaderStage.Compute ? gpuAccessor.QueryComputeSharedMemorySize() : 0;
+
+            if (sharedMemorySize != 0)
+            {
+                var smem = new MemoryDefinition("shared_memory", AggregateType.Array | AggregateType.U32,  BitUtils.DivRoundUp(sharedMemorySize, sizeof(uint)));
+
+                SharedMemoryId = properties.AddSharedMemory(smem);
+            }
         }
 
         public int GetConstantBufferBinding(int slot)

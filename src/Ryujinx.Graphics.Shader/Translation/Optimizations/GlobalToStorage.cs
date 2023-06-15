@@ -244,7 +244,9 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
                             node = nextNode;
                         }
                     }
-                    else if (operation.Inst == Instruction.StoreShared || operation.Inst == Instruction.StoreLocal)
+                    else if (operation.Inst == Instruction.Store &&
+                        (operation.StorageKind == StorageKind.SharedMemory ||
+                        operation.StorageKind == StorageKind.LocalMemory))
                     {
                         // The NVIDIA compiler can sometimes use shared or local memory as temporary
                         // storage to place the base address and size on, so we need
@@ -874,7 +876,7 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
 
                 if (bitSize < 32)
                 {
-                    Operand bitOffset = GetBitOffset(context, offset);
+                    Operand bitOffset = HelperFunctionManager.GetBitOffset(context, offset);
 
                     GenerateAtomicCasLoop(context, wordOffset, binding, (memValue) =>
                     {
@@ -892,7 +894,7 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
 
                 if (IsSmallInt(storageKind))
                 {
-                    Operand bitOffset = GetBitOffset(context, offset);
+                    Operand bitOffset = HelperFunctionManager.GetBitOffset(context, offset);
 
                     switch (storageKind)
                     {
@@ -919,11 +921,6 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
             }
 
             return true;
-        }
-
-        private static Operand GetBitOffset(EmitterContext context, Operand offset)
-        {
-            return context.ShiftLeft(context.BitwiseAnd(offset, Const(3)), Const(3));
         }
 
         private static Operand GenerateAtomicCasLoop(EmitterContext context, Operand wordOffset, int binding, Func<Operand, Operand> opCallback)
@@ -1070,15 +1067,18 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
         {
             baseOffset = null;
 
-            if (operation.Inst == Instruction.LoadShared || operation.Inst == Instruction.StoreShared)
+            if (operation.Inst == Instruction.Load || operation.Inst == Instruction.Store)
             {
-                type = LsMemoryType.Shared;
-                return TryGetSharedMemoryOffsets(operation, out baseOffset, out constOffset);
-            }
-            else if (operation.Inst == Instruction.LoadLocal || operation.Inst == Instruction.StoreLocal)
-            {
-                type = LsMemoryType.Local;
-                return TryGetLocalMemoryOffset(operation, out constOffset);
+                if (operation.StorageKind == StorageKind.SharedMemory)
+                {
+                    type = LsMemoryType.Shared;
+                    return TryGetSharedMemoryOffsets(operation, out baseOffset, out constOffset);
+                }
+                else if (operation.StorageKind == StorageKind.LocalMemory)
+                {
+                    type = LsMemoryType.Local;
+                    return TryGetLocalMemoryOffset(operation, out constOffset);
+                }
             }
 
             type = default;

@@ -6,7 +6,6 @@ using Spv.Generator;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Numerics;
 using static Spv.Specification;
 using SpvInstruction = Spv.Generator.Instruction;
@@ -44,13 +43,6 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                 context.AddLocalVariable(spvLocal);
                 context.DeclareLocal(local, spvLocal);
             }
-
-            var ivector2Type = context.TypeVector(context.TypeS32(), 2);
-            var coordTempPointerType = context.TypePointer(StorageClass.Function, ivector2Type);
-            var coordTemp = context.Variable(coordTempPointerType, StorageClass.Function);
-
-            context.AddLocalVariable(coordTemp);
-            context.CoordTemp = coordTemp;
         }
 
         public static void DeclareLocalForArgs(CodeGenContext context, List<StructuredFunction> functions)
@@ -77,54 +69,30 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
 
         public static void DeclareAll(CodeGenContext context, StructuredProgramInfo info)
         {
-            if (context.Config.Stage == ShaderStage.Compute)
-            {
-                int localMemorySize = BitUtils.DivRoundUp(context.Config.GpuAccessor.QueryComputeLocalMemorySize(), 4);
-
-                if (localMemorySize != 0)
-                {
-                    DeclareLocalMemory(context, localMemorySize);
-                }
-
-                int sharedMemorySize = BitUtils.DivRoundUp(context.Config.GpuAccessor.QueryComputeSharedMemorySize(), 4);
-
-                if (sharedMemorySize != 0)
-                {
-                    DeclareSharedMemory(context, sharedMemorySize);
-                }
-            }
-            else if (context.Config.LocalMemorySize != 0)
-            {
-                int localMemorySize = BitUtils.DivRoundUp(context.Config.LocalMemorySize, 4);
-                DeclareLocalMemory(context, localMemorySize);
-            }
-
             DeclareConstantBuffers(context, context.Config.Properties.ConstantBuffers.Values);
             DeclareStorageBuffers(context, context.Config.Properties.StorageBuffers.Values);
+            DeclareMemories(context, context.Config.Properties.LocalMemories, context.LocalMemories, StorageClass.Private);
+            DeclareMemories(context, context.Config.Properties.SharedMemories, context.SharedMemories, StorageClass.Workgroup);
             DeclareSamplers(context, context.Config.GetTextureDescriptors());
             DeclareImages(context, context.Config.GetImageDescriptors());
             DeclareInputsAndOutputs(context, info);
         }
 
-        private static void DeclareLocalMemory(CodeGenContext context, int size)
+        private static void DeclareMemories(
+            CodeGenContext context,
+            IReadOnlyDictionary<int, MemoryDefinition> memories,
+            Dictionary<int, SpvInstruction> dict,
+            StorageClass storage)
         {
-            context.LocalMemory = DeclareMemory(context, StorageClass.Private, size);
-        }
+            foreach ((int id, MemoryDefinition memory) in memories)
+            {
+                var pointerType = context.TypePointer(storage, context.GetType(memory.Type, memory.ArrayLength));
+                var variable = context.Variable(pointerType, storage);
 
-        private static void DeclareSharedMemory(CodeGenContext context, int size)
-        {
-            context.SharedMemory = DeclareMemory(context, StorageClass.Workgroup, size);
-        }
+                context.AddGlobalVariable(variable);
 
-        private static SpvInstruction DeclareMemory(CodeGenContext context, StorageClass storage, int size)
-        {
-            var arrayType = context.TypeArray(context.TypeU32(), context.Constant(context.TypeU32(), size));
-            var pointerType = context.TypePointer(storage, arrayType);
-            var variable = context.Variable(pointerType, storage);
-
-            context.AddGlobalVariable(variable);
-
-            return variable;
+                dict.Add(id, variable);
+            }
         }
 
         private static void DeclareConstantBuffers(CodeGenContext context, IEnumerable<BufferDefinition> buffers)

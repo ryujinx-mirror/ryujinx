@@ -274,13 +274,6 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             // decide which helper functions are needed on the final generated code.
             switch (operation.Inst)
             {
-                case Instruction.AtomicMaxS32:
-                case Instruction.AtomicMinS32:
-                    if (operation.StorageKind == StorageKind.SharedMemory)
-                    {
-                        context.Info.HelperFunctionsMask |= HelperFunctionsMask.AtomicMinMaxS32Shared;
-                    }
-                    break;
                 case Instruction.MultiplyHighS32:
                     context.Info.HelperFunctionsMask |= HelperFunctionsMask.MultiplyHighS32;
                     break;
@@ -298,10 +291,6 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
                     break;
                 case Instruction.ShuffleXor:
                     context.Info.HelperFunctionsMask |= HelperFunctionsMask.ShuffleXor;
-                    break;
-                case Instruction.StoreShared16:
-                case Instruction.StoreShared8:
-                    context.Info.HelperFunctionsMask |= HelperFunctionsMask.StoreSharedSmallInt;
                     break;
                 case Instruction.SwizzleAdd:
                     context.Info.HelperFunctionsMask |= HelperFunctionsMask.SwizzleAdd;

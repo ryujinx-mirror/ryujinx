@@ -1,6 +1,8 @@
 using Ryujinx.Graphics.Shader.IntermediateRepresentation;
 using Ryujinx.Graphics.Shader.StructuredIr;
+using Ryujinx.Graphics.Shader.Translation.Optimizations;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 using static Ryujinx.Graphics.Shader.IntermediateRepresentation.OperandHelper;
@@ -68,6 +70,15 @@ namespace Ryujinx.Graphics.Shader.Translation
                             {
                                 node = InsertSnormNormalization(node, config);
                             }
+                        }
+                    }
+                    else
+                    {
+                        node = InsertSharedStoreSmallInt(hfm, node);
+
+                        if (config.Options.TargetLanguage != TargetLanguage.Spirv)
+                        {
+                            node = InsertSharedAtomicSigned(hfm, node);
                         }
                     }
                 }
@@ -169,6 +180,87 @@ namespace Ryujinx.Graphics.Shader.Translation
             }
 
             operation.TurnIntoCopy(result);
+        }
+
+        private static LinkedListNode<INode> InsertSharedStoreSmallInt(HelperFunctionManager hfm, LinkedListNode<INode> node)
+        {
+            Operation operation = (Operation)node.Value;
+            HelperFunctionName name;
+
+            if (operation.StorageKind == StorageKind.SharedMemory8)
+            {
+                name = HelperFunctionName.SharedStore8;
+            }
+            else if (operation.StorageKind == StorageKind.SharedMemory16)
+            {
+                name = HelperFunctionName.SharedStore16;
+            }
+            else
+            {
+                return node;
+            }
+
+            if (operation.Inst != Instruction.Store)
+            {
+                return node;
+            }
+
+            Operand memoryId = operation.GetSource(0);
+            Operand byteOffset = operation.GetSource(1);
+            Operand value = operation.GetSource(2);
+
+            Debug.Assert(memoryId.Type == OperandType.Constant);
+
+            int functionId = hfm.GetOrCreateFunctionId(name, memoryId.Value);
+
+            Operand[] callArgs = new Operand[] { Const(functionId), byteOffset, value };
+
+            LinkedListNode<INode> newNode = node.List.AddBefore(node, new Operation(Instruction.Call, 0, (Operand)null, callArgs));
+
+            Utils.DeleteNode(node, operation);
+
+            return newNode;
+        }
+
+        private static LinkedListNode<INode> InsertSharedAtomicSigned(HelperFunctionManager hfm, LinkedListNode<INode> node)
+        {
+            Operation operation = (Operation)node.Value;
+            HelperFunctionName name;
+
+            if (operation.Inst == Instruction.AtomicMaxS32)
+            {
+                name = HelperFunctionName.SharedAtomicMaxS32;
+            }
+            else if (operation.Inst == Instruction.AtomicMinS32)
+            {
+                name = HelperFunctionName.SharedAtomicMinS32;
+            }
+            else
+            {
+                return node;
+            }
+
+            if (operation.StorageKind != StorageKind.SharedMemory)
+            {
+                return node;
+            }
+
+            Operand result = operation.Dest;
+            Operand memoryId = operation.GetSource(0);
+            Operand byteOffset = operation.GetSource(1);
+            Operand value = operation.GetSource(2);
+
+            Debug.Assert(memoryId.Type == OperandType.Constant);
+
+            int functionId = hfm.GetOrCreateFunctionId(name, memoryId.Value);
+
+            Operand[] callArgs = new Operand[] { Const(functionId), byteOffset, value };
+
+            LinkedListNode<INode> newNode = node.List.AddBefore(node, new Operation(Instruction.Call, 0, result, callArgs));
+
+            Utils.DeleteNode(node, operation);
+
+            return newNode;
         }
 
         private static LinkedListNode<INode> InsertTexelFetchScale(HelperFunctionManager hfm, LinkedListNode<INode> node, ShaderConfig config)
