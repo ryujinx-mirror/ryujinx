@@ -775,7 +775,7 @@ namespace Ryujinx.HLE.HOS.Services.Mii.Types
 
         private static ReadOnlySpan<ElementInfo> ElementInfos => MemoryMarshal.Cast<byte, ElementInfo>(ElementInfoArray);
 
-        private enum ElementInfoIndex : int
+        private enum ElementInfoIndex
         {
             HairType,
             Height,

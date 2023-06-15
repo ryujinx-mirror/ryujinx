@@ -21,7 +21,7 @@ namespace Ryujinx.HLE.HOS.Services.Mii.Types
         };
 
         [Flags]
-        public enum BeardAndMustacheFlag : int
+        public enum BeardAndMustacheFlag
         {
             Beard = 1,
             Mustache

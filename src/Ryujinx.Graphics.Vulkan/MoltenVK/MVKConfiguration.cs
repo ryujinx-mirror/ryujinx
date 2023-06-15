@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace Ryujinx.Graphics.Vulkan.MoltenVK
 {
-    enum MVKConfigLogLevel : int
+    enum MVKConfigLogLevel
     {
         None = 0,
         Error = 1,
@@ -12,7 +12,7 @@ namespace Ryujinx.Graphics.Vulkan.MoltenVK
         Debug = 4
     }
 
-    enum MVKConfigTraceVulkanCalls : int
+    enum MVKConfigTraceVulkanCalls
     {
         None = 0,
         Enter = 1,
@@ -20,7 +20,7 @@ namespace Ryujinx.Graphics.Vulkan.MoltenVK
         Duration = 3
     }
 
-    enum MVKConfigAutoGPUCaptureScope : int
+    enum MVKConfigAutoGPUCaptureScope
     {
         None = 0,
         Device = 1,
@@ -28,7 +28,7 @@ namespace Ryujinx.Graphics.Vulkan.MoltenVK
     }
 
     [Flags]
-    enum MVKConfigAdvertiseExtensions : int
+    enum MVKConfigAdvertiseExtensions
     {
         All = 0x00000001,
         MoltenVK = 0x00000002,
@@ -36,7 +36,7 @@ namespace Ryujinx.Graphics.Vulkan.MoltenVK
         Portability = 0x00000008
     }
 
-    enum MVKVkSemaphoreSupportStyle : int
+    enum MVKVkSemaphoreSupportStyle
     {
         MVK_CONFIG_VK_SEMAPHORE_SUPPORT_STYLE_SINGLE_QUEUE = 0,
         MVK_CONFIG_VK_SEMAPHORE_SUPPORT_STYLE_METAL_EVENTS_WHERE_SAFE = 1,

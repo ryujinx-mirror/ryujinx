@@ -1,6 +1,6 @@
 namespace Ryujinx.HLE.HOS.Services.Hid
 {
-    public enum PlayerIndex : int
+    public enum PlayerIndex
     {
         Player1  = 0,
         Player2  = 1,

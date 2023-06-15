@@ -1,6 +1,6 @@
 ﻿namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices
 {
-    enum NvInternalResult : int
+    enum NvInternalResult
     {
         Success               = 0,
         OperationNotPermitted = -1,

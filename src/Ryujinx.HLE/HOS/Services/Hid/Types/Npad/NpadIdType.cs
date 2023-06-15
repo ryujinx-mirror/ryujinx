@@ -1,6 +1,6 @@
 ﻿namespace Ryujinx.HLE.HOS.Services.Hid
 {
-    public enum NpadIdType : int
+    public enum NpadIdType
     {
         Player1  = 0,
         Player2  = 1,

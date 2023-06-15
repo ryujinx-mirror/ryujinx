@@ -1,6 +1,6 @@
 ﻿namespace Ryujinx.Audio.Backends.SoundIo.Native
 {
-    public enum SoundIoBackend : int
+    public enum SoundIoBackend
     {
         None = 0,
         Jack = 1,

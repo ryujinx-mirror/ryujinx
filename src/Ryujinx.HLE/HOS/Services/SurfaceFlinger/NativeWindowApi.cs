@@ -1,6 +1,6 @@
 ﻿namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 {
-    enum NativeWindowApi : int
+    enum NativeWindowApi
     {
         NoApi  = 0,
         NVN    = 1,

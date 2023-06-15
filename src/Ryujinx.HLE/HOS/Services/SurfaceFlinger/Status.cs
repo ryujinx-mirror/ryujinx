@@ -1,6 +1,6 @@
 ﻿namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 {
-    enum Status : int
+    enum Status
     {
         Success          = 0,
         WouldBlock       = -11,

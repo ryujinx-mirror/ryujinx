@@ -3,7 +3,7 @@
 namespace Ryujinx.HLE.HOS.Services.Hid.Types.SharedMemory.Npad
 {
     [Flags]
-    enum DeviceType : int
+    enum DeviceType
     {
         None = 0,
 
