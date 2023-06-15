@@ -10,7 +10,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
     {
         private static ConcurrentDictionary<ulong, BsdContext> _registry = new ConcurrentDictionary<ulong, BsdContext>();
 
-        private readonly object _lock = new object();
+        private readonly object _lock = new();
 
         private List<IFileDescriptor> _fds;
 

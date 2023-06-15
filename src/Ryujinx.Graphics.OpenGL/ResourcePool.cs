@@ -20,7 +20,7 @@ namespace Ryujinx.Graphics.OpenGL
     {
         private const int DisposedLiveFrames = 2;
 
-        private readonly object _lock = new object();
+        private readonly object _lock = new();
         private readonly Dictionary<TextureCreateInfo, List<DisposedTexture>> _textures = new Dictionary<TextureCreateInfo, List<DisposedTexture>>();
 
         /// <summary>

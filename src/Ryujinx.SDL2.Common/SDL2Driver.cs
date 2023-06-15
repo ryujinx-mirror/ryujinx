@@ -41,7 +41,7 @@ namespace Ryujinx.SDL2.Common
 
         private ConcurrentDictionary<uint, Action<SDL_Event>> _registeredWindowHandlers;
 
-        private object _lock = new object();
+        private readonly object _lock = new();
 
         private SDL2Driver() {}
 

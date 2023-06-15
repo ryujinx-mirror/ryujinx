@@ -19,12 +19,12 @@ namespace Ryujinx.Audio.Renderer.Server
         /// <summary>
         /// Lock used for session allocation.
         /// </summary>
-        private object _sessionLock = new object();
+        private readonly object _sessionLock = new();
 
         /// <summary>
         /// Lock used to control the <see cref="AudioProcessor"/> running state.
         /// </summary>
-        private object _audioProcessorLock = new object();
+        private readonly object _audioProcessorLock = new();
 
         /// <summary>
         /// The session ids allocation table.

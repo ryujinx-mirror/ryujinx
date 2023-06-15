@@ -13,14 +13,13 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
         private UInt128              _timeZoneRuleVersion;
         private uint                 _totalLocationNameCount;
         private SteadyClockTimePoint _timeZoneUpdateTimePoint;
-        private object               _lock;
+        private readonly object      _lock = new();
 
         public TimeZoneManager()
         {
             _isInitialized       = false;
             _deviceLocationName  = "UTC";
             _timeZoneRuleVersion = new UInt128();
-            _lock                = new object();
             _myRules             = new Box<TimeZoneRule>();
 
             _timeZoneUpdateTimePoint = SteadyClockTimePoint.GetRandom();

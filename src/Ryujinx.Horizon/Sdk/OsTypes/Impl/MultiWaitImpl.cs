@@ -13,7 +13,7 @@ namespace Ryujinx.Horizon.Sdk.OsTypes.Impl
 
         private readonly List<MultiWaitHolderBase> _multiWaits;
 
-        private object _lock;
+        private readonly object _lock = new();
 
         private int _waitingThreadHandle;
 
@@ -24,8 +24,6 @@ namespace Ryujinx.Horizon.Sdk.OsTypes.Impl
         public MultiWaitImpl()
         {
             _multiWaits = new List<MultiWaitHolderBase>();
-
-            _lock = new object();
         }
 
         public void LinkMultiWaitHolder(MultiWaitHolderBase multiWaitHolder)

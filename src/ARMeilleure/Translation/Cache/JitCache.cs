@@ -26,7 +26,7 @@ namespace ARMeilleure.Translation.Cache
 
         private static readonly List<CacheEntry> _cacheEntries = new List<CacheEntry>();
 
-        private static readonly object _lock = new object();
+        private static readonly object _lock = new();
         private static bool _initialized;
 
         [SupportedOSPlatform("windows")]

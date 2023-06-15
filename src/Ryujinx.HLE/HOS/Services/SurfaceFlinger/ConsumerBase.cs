@@ -23,7 +23,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 
         protected BufferQueueConsumer Consumer;
 
-        protected readonly object Lock = new object();
+        protected readonly object Lock = new();
 
         private IConsumerListener _listener;
 
@@ -168,7 +168,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 
             Slot slot = Slots[slotIndex];
 
-            // TODO: Check this. On Android, this checks the "handle". I assume NvMapHandle is the handle, but it might not be. 
+            // TODO: Check this. On Android, this checks the "handle". I assume NvMapHandle is the handle, but it might not be.
             return !slot.GraphicBuffer.IsNull && slot.GraphicBuffer.Object.Buffer.Surfaces[0].NvMapHandle == graphicBuffer.Object.Buffer.Surfaces[0].NvMapHandle;
         }
     }

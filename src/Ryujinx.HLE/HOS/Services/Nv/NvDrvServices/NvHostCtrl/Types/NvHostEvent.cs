@@ -24,7 +24,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostCtrl
         private NvFence _previousFailingFence;
         private uint    _failingCount;
 
-        public readonly object Lock = new object();
+        public readonly object Lock = new();
 
         /// <summary>
         /// Max failing count until waiting on CPU.

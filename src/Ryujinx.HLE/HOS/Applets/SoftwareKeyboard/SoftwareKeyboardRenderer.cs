@@ -13,7 +13,7 @@ namespace Ryujinx.HLE.HOS.Applets.SoftwareKeyboard
         private const int TextBoxBlinkSleepMilliseconds   = 100;
         private const int RendererWaitTimeoutMilliseconds = 100;
 
-        private readonly object _stateLock  = new object();
+        private readonly object _stateLock  = new();
 
         private SoftwareKeyboardUiState      _state = new SoftwareKeyboardUiState();
         private SoftwareKeyboardRendererBase _renderer;

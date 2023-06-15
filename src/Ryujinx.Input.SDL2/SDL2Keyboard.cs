@@ -24,7 +24,7 @@ namespace Ryujinx.Input.SDL2
             }
         }
 
-        private object _userMappingLock = new object();
+        private readonly object _userMappingLock = new();
 
         private readonly SDL2KeyboardDriver _driver;
         private StandardKeyboardInputConfig _configuration;

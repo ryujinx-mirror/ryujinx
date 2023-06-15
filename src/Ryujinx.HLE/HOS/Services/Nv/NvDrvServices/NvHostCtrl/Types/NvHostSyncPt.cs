@@ -17,7 +17,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostCtrl
 
         private Switch _device;
 
-        private object _syncpointAllocatorLock = new object();
+        private readonly object _syncpointAllocatorLock = new();
 
         public NvHostSyncpt(Switch device)
         {

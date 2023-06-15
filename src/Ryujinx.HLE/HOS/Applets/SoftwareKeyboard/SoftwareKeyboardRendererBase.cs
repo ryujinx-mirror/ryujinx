@@ -26,7 +26,7 @@ namespace Ryujinx.HLE.HOS.Applets.SoftwareKeyboard
         const string CancelText           = "Cancel";
         const string ControllerToggleText = "Toggle input";
 
-        private readonly object _bufferLock = new object();
+        private readonly object _bufferLock = new();
 
         private RenderingSurfaceInfo _surfaceInfo = null;
         private Image<Argb32>        _surface     = null;
@@ -311,7 +311,7 @@ namespace Ryujinx.HLE.HOS.Applets.SoftwareKeyboard
         private static RectangleF MeasureString(ReadOnlySpan<char> text, Font font)
         {
             RendererOptions options = new RendererOptions(font);
-            
+
             if (text == "")
             {
                 FontRectangle emptyRectangle = TextMeasurer.Measure(" ", options);

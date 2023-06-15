@@ -17,7 +17,7 @@ namespace Ryujinx.Audio.Backends.OpenAL
         private Queue<OpenALAudioBuffer> _queuedBuffers;
         private ulong _playedSampleCount;
 
-        private object _lock = new object();
+        private readonly object _lock = new();
 
         public OpenALHardwareDeviceSession(OpenALHardwareDeviceDriver driver, IVirtualMemoryManager memoryManager, SampleFormat requestedSampleFormat, uint requestedSampleRate, uint requestedChannelCount, float requestedVolume) : base(memoryManager, requestedSampleFormat, requestedSampleRate, requestedChannelCount)
         {

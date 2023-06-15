@@ -16,7 +16,7 @@ namespace Ryujinx.Audio.Renderer.Server.Upsampler
         /// <summary>
         /// Global lock of the object.
         /// </summary>
-        private object Lock = new object();
+        private readonly object Lock = new();
 
         /// <summary>
         /// The upsamplers instances.

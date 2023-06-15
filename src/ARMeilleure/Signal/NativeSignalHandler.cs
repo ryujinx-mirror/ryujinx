@@ -78,7 +78,7 @@ namespace ARMeilleure.Signal
         private static IntPtr _signalHandlerPtr;
         private static IntPtr _signalHandlerHandle;
 
-        private static readonly object _lock = new object();
+        private static readonly object _lock = new();
         private static bool _initialized;
 
         static NativeSignalHandler()

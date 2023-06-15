@@ -21,7 +21,7 @@ namespace Ryujinx.Input.GTK3
             }
         }
 
-        private object _userMappingLock = new object();
+        private readonly object _userMappingLock = new();
 
         private readonly GTK3KeyboardDriver _driver;
         private StandardKeyboardInputConfig _configuration;

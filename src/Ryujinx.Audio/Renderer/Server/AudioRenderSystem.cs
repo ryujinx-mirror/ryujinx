@@ -26,7 +26,7 @@ namespace Ryujinx.Audio.Renderer.Server
 {
     public class AudioRenderSystem : IDisposable
     {
-        private object _lock = new object();
+        private readonly object _lock = new();
 
         private AudioRendererRenderingDevice _renderingDevice;
         private AudioRendererExecutionMode _executionMode;

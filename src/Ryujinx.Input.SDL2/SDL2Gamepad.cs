@@ -46,7 +46,7 @@ namespace Ryujinx.Input.SDL2
             SDL_GameControllerButton.SDL_CONTROLLER_BUTTON_PADDLE2,
             SDL_GameControllerButton.SDL_CONTROLLER_BUTTON_PADDLE3,
             SDL_GameControllerButton.SDL_CONTROLLER_BUTTON_PADDLE4,
-            SDL_GameControllerButton.SDL_CONTROLLER_BUTTON_TOUCHPAD,            
+            SDL_GameControllerButton.SDL_CONTROLLER_BUTTON_TOUCHPAD,
 
             // Virtual buttons are invalid, ignored.
             SDL_GameControllerButton.SDL_CONTROLLER_BUTTON_INVALID,
@@ -55,7 +55,7 @@ namespace Ryujinx.Input.SDL2
             SDL_GameControllerButton.SDL_CONTROLLER_BUTTON_INVALID,
         };
 
-        private object _userMappingLock = new object();
+        private readonly object _userMappingLock = new();
 
         private List<ButtonMappingEntry> _buttonsUserMapping;
 

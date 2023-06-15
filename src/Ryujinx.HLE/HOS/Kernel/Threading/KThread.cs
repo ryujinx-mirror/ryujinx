@@ -112,7 +112,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
         public bool WaitingInArbitration { get; set; }
 
-        private object _activityOperationLock;
+        private readonly object _activityOperationLock = new();
 
         public KThread(KernelContext context) : base(context)
         {
@@ -123,8 +123,6 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
             _mutexWaiters = new LinkedList<KThread>();
             _pinnedWaiters = new LinkedList<KThread>();
-
-            _activityOperationLock = new object();
         }
 
         public Result Initialize(

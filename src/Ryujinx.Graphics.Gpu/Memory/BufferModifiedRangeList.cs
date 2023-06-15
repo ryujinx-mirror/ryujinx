@@ -78,7 +78,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
         private List<BufferMigration> _sources;
         private BufferMigration _migrationTarget;
 
-        private object _lock = new object();
+        private readonly object _lock = new();
 
         /// <summary>
         /// Whether the modified range list has any entries or not.
@@ -125,7 +125,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
                 for (int i = 0; i < count; i++)
                 {
                     BufferModifiedRange overlap = overlaps[i];
-                    
+
                     if (overlap.Address > address)
                     {
                         // The start of the remaining region is uncovered by this overlap. Call the action for it.

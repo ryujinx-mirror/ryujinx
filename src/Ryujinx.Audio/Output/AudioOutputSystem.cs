@@ -48,7 +48,7 @@ namespace Ryujinx.Audio.Output
         /// <summary>
         /// THe lock of the parent.
         /// </summary>
-        private object _parentLock;
+        private readonly object _parentLock;
 
         /// <summary>
         /// The dispose state.

@@ -34,7 +34,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
         public bool                  EnableExternalEvent;
         public int                   MaxBufferCountCached;
 
-        public readonly object Lock = new object();
+        public readonly object Lock = new();
 
         private KEvent _waitBufferFreeEvent;
         private KEvent _frameAvailableEvent;

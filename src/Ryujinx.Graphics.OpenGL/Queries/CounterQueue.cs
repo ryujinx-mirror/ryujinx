@@ -21,7 +21,7 @@ namespace Ryujinx.Graphics.OpenGL.Queries
         private ulong _accumulatedCounter;
         private int _waiterCount;
 
-        private object _lock = new object();
+        private readonly object _lock = new();
 
         private Queue<BufferedQuery> _queryPool;
         private AutoResetEvent _queuedEvent = new AutoResetEvent(false);

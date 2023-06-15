@@ -14,7 +14,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator
         private readonly UserId                       _userId;
         private readonly FriendServicePermissionLevel _permissionLevel;
 
-        private readonly object _lock = new object();
+        private readonly object _lock = new();
 
         private KEvent _notificationEvent;
         private int    _notificationEventHandle = 0;
