@@ -27,6 +27,12 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
         public static void Atoms(EmitterContext context)
         {
+            if (context.Config.Stage != ShaderStage.Compute)
+            {
+                context.Config.GpuAccessor.Log($"Atoms instruction is not valid on \"{context.Config.Stage}\" stage.");
+                return;
+            }
+
             InstAtoms op = context.GetOp<InstAtoms>();
 
             Operand offset = context.ShiftRightU32(GetSrcReg(context, op.SrcA), Const(2));
@@ -114,6 +120,12 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
         public static void Lds(EmitterContext context)
         {
+            if (context.Config.Stage != ShaderStage.Compute)
+            {
+                context.Config.GpuAccessor.Log($"Lds instruction is not valid on \"{context.Config.Stage}\" stage.");
+                return;
+            }
+
             InstLds op = context.GetOp<InstLds>();
 
             EmitLoad(context, StorageKind.SharedMemory, op.LsSize, GetSrcReg(context, op.SrcA), op.Dest, Imm24ToSInt(op.Imm24));
@@ -144,6 +156,12 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
         public static void Sts(EmitterContext context)
         {
+            if (context.Config.Stage != ShaderStage.Compute)
+            {
+                context.Config.GpuAccessor.Log($"Sts instruction is not valid on \"{context.Config.Stage}\" stage.");
+                return;
+            }
+
             InstSts op = context.GetOp<InstSts>();
 
             EmitStore(context, StorageKind.SharedMemory, op.LsSize, GetSrcReg(context, op.SrcA), op.Dest, Imm24ToSInt(op.Imm24));

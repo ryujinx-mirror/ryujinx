@@ -126,9 +126,10 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         public ShaderConfig(ShaderStage stage, IGpuAccessor gpuAccessor, TranslationOptions options, int localMemorySize)
         {
-            Stage       = stage;
-            GpuAccessor = gpuAccessor;
-            Options     = options;
+            Stage           = stage;
+            GpuAccessor     = gpuAccessor;
+            Options         = options;
+            LocalMemorySize = localMemorySize;
 
             _transformFeedbackDefinitions = new Dictionary<TransformFeedbackVariable, TransformFeedbackOutput>();
 
@@ -143,7 +144,7 @@ namespace Ryujinx.Graphics.Shader.Translation
             _usedTextures = new Dictionary<TextureInfo, TextureMeta>();
             _usedImages   = new Dictionary<TextureInfo, TextureMeta>();
 
-            ResourceManager = new ResourceManager(stage, gpuAccessor, new ShaderProperties(), localMemorySize);
+            ResourceManager = new ResourceManager(stage, gpuAccessor, new ShaderProperties());
 
             if (!gpuAccessor.QueryHostSupportsTransformFeedback() && gpuAccessor.QueryTransformFeedbackEnabled())
             {
@@ -192,7 +193,6 @@ namespace Ryujinx.Graphics.Shader.Translation
             ThreadsPerInputPrimitive = header.ThreadsPerInputPrimitive;
             OutputTopology           = header.OutputTopology;
             MaxOutputVertices        = header.MaxOutputVertexCount;
-            LocalMemorySize          = header.ShaderLocalMemoryLowSize + header.ShaderLocalMemoryHighSize + (header.ShaderLocalMemoryCrsSize / ThreadsPerWarp);
             ImapTypes                = header.ImapTypes;
             OmapTargets              = header.OmapTargets;
             OmapSampleMask           = header.OmapSampleMask;

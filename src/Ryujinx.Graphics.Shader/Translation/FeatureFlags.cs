@@ -21,6 +21,8 @@ namespace Ryujinx.Graphics.Shader.Translation
         RtLayer = 1 << 5,
         IaIndexing = 1 << 7,
         OaIndexing = 1 << 8,
-        FixedFuncAttr = 1 << 9
+        FixedFuncAttr = 1 << 9,
+        LocalMemory = 1 << 10,
+        SharedMemory = 1 << 11
     }
 }

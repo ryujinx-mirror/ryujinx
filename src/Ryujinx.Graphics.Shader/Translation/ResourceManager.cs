@@ -8,6 +8,11 @@ namespace Ryujinx.Graphics.Shader.Translation
 {
     class ResourceManager
     {
+        // Those values are used if the shader as local or shared memory access,
+        // but for some reason the supplied size was 0.
+        private const int DefaultLocalMemorySize = 128;
+        private const int DefaultSharedMemorySize = 4096;
+
         private static readonly string[] _stagePrefixes = new string[] { "cp", "vp", "tcp", "tep", "gp", "fp" };
 
         private readonly IGpuAccessor _gpuAccessor;
@@ -23,12 +28,12 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         private readonly HashSet<int> _usedConstantBufferBindings;
 
-        public int LocalMemoryId { get; }
-        public int SharedMemoryId { get; }
+        public int LocalMemoryId { get; private set; }
+        public int SharedMemoryId { get; private set; }
 
         public ShaderProperties Properties => _properties;
 
-        public ResourceManager(ShaderStage stage, IGpuAccessor gpuAccessor, ShaderProperties properties, int localMemorySize)
+        public ResourceManager(ShaderStage stage, IGpuAccessor gpuAccessor, ShaderProperties properties)
         {
             _gpuAccessor = gpuAccessor;
             _properties = properties;
@@ -48,21 +53,43 @@ namespace Ryujinx.Graphics.Shader.Translation
 
             LocalMemoryId = -1;
             SharedMemoryId = -1;
+        }
 
-            if (localMemorySize != 0)
+        public void SetCurrentLocalMemory(int size, bool isUsed)
+        {
+            if (isUsed)
             {
-                var lmem = new MemoryDefinition("local_memory", AggregateType.Array | AggregateType.U32, BitUtils.DivRoundUp(localMemorySize, sizeof(uint)));
+                if (size <= 0)
+                {
+                    size = DefaultLocalMemorySize;
+                }
 
-                LocalMemoryId = properties.AddLocalMemory(lmem);
+                var lmem = new MemoryDefinition("local_memory", AggregateType.Array | AggregateType.U32, BitUtils.DivRoundUp(size, sizeof(uint)));
+
+                LocalMemoryId = Properties.AddLocalMemory(lmem);
             }
-
-            int sharedMemorySize = stage == ShaderStage.Compute ? gpuAccessor.QueryComputeSharedMemorySize() : 0;
-
-            if (sharedMemorySize != 0)
+            else
             {
-                var smem = new MemoryDefinition("shared_memory", AggregateType.Array | AggregateType.U32,  BitUtils.DivRoundUp(sharedMemorySize, sizeof(uint)));
+                LocalMemoryId = -1;
+            }
+        }
 
-                SharedMemoryId = properties.AddSharedMemory(smem);
+        public void SetCurrentSharedMemory(int size, bool isUsed)
+        {
+            if (isUsed)
+            {
+                if (size <= 0)
+                {
+                    size = DefaultSharedMemorySize;
+                }
+
+                var smem = new MemoryDefinition("shared_memory", AggregateType.Array | AggregateType.U32,  BitUtils.DivRoundUp(size, sizeof(uint)));
+
+                SharedMemoryId = Properties.AddSharedMemory(smem);
+            }
+            else
+            {
+                SharedMemoryId = -1;
             }
         }
 

@@ -247,6 +247,17 @@ namespace Ryujinx.Graphics.Shader.Decoders
                 {
                     block.AddPushOp(op);
                 }
+                else if (op.Name == InstName.Ldl || op.Name == InstName.Stl)
+                {
+                    config.SetUsedFeature(FeatureFlags.LocalMemory);
+                }
+                else if (op.Name == InstName.Atoms ||
+                         op.Name == InstName.AtomsCas ||
+                         op.Name == InstName.Lds ||
+                         op.Name == InstName.Sts)
+                {
+                    config.SetUsedFeature(FeatureFlags.SharedMemory);
+                }
 
                 block.OpCodes.Add(op);
 
