@@ -25,7 +25,15 @@ namespace Ryujinx.HLE.HOS
 
         public IVirtualMemoryManager AddressSpace => _memoryManager;
 
-        public ArmProcessContext(ulong pid, ICpuEngine cpuEngine, GpuContext gpuContext, T memoryManager, bool for64Bit)
+        public ulong AddressSpaceSize { get; }
+
+        public ArmProcessContext(
+            ulong pid,
+            ICpuEngine cpuEngine,
+            GpuContext gpuContext,
+            T memoryManager,
+            ulong addressSpaceSize,
+            bool for64Bit)
         {
             if (memoryManager is IRefCounted rc)
             {
@@ -38,6 +46,8 @@ namespace Ryujinx.HLE.HOS
             _gpuContext = gpuContext;
             _cpuContext = cpuEngine.CreateCpuContext(memoryManager, for64Bit);
             _memoryManager = memoryManager;
+
+            AddressSpaceSize = addressSpaceSize;
         }
 
         public IExecutionContext CreateExecutionContext(ExceptionCallbacks exceptionCallbacks)

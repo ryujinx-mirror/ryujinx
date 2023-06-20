@@ -22,6 +22,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             0x40000000
         };
 
+        private const ulong RegionAlignment = 0x200000;
+
         public const int PageSize = 0x1000;
 
         private const int KMemoryBlockSize = 0x40;
@@ -53,6 +55,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
         public ulong TlsIoRegionStart { get; private set; }
         public ulong TlsIoRegionEnd { get; private set; }
 
+        public ulong AslrRegionStart { get; private set; }
+        public ulong AslrRegionEnd { get; private set; }
+
         private ulong _heapCapacity;
 
         public ulong PhysicalMemoryUsage { get; private set; }
@@ -61,10 +66,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
         private MemoryRegion _memRegion;
 
-        private bool _aslrDisabled;
-
-        public int AddrSpaceWidth { get; private set; }
-
+        private bool _allocateFromBack;
         private bool _isKernel;
 
         private bool _aslrEnabled;
@@ -78,7 +80,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
         private MemoryFillValue _heapFillValue;
         private MemoryFillValue _ipcFillValue;
 
-        public KPageTableBase(KernelContext context)
+        private ulong _reservedAddressSpaceSize;
+
+        public KPageTableBase(KernelContext context, ulong reservedAddressSpaceSize)
         {
             Context = context;
 
@@ -88,6 +92,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
             _heapFillValue = MemoryFillValue.Zero;
             _ipcFillValue = MemoryFillValue.Zero;
+
+            _reservedAddressSpaceSize = reservedAddressSpaceSize;
         }
 
         private static readonly int[] AddrSpaceSizes = new int[] { 32, 36, 32, 39 };
@@ -95,7 +101,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
         public Result InitializeForProcess(
             AddressSpaceType addrSpaceType,
             bool aslrEnabled,
-            bool aslrDisabled,
+            bool fromBack,
             MemoryRegion memRegion,
             ulong address,
             ulong size,
@@ -114,7 +120,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             Result result = CreateUserAddressSpace(
                 addrSpaceType,
                 aslrEnabled,
-                aslrDisabled,
+                fromBack,
                 addrSpaceBase,
                 addrSpaceSize,
                 memRegion,
@@ -130,7 +136,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             return result;
         }
 
-        private class Region
+        private struct Region
         {
             public ulong Start;
             public ulong End;
@@ -141,7 +147,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
         private Result CreateUserAddressSpace(
             AddressSpaceType addrSpaceType,
             bool aslrEnabled,
-            bool aslrDisabled,
+            bool fromBack,
             ulong addrSpaceStart,
             ulong addrSpaceEnd,
             MemoryRegion memRegion,
@@ -159,7 +165,6 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             ulong codeRegionSize;
             ulong stackAndTlsIoStart;
             ulong stackAndTlsIoEnd;
-            ulong baseAddress;
 
             switch (addrSpaceType)
             {
@@ -170,10 +175,10 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                     tlsIoRegion.Size = 0;
                     CodeRegionStart = 0x200000;
                     codeRegionSize = 0x3fe00000;
+                    AslrRegionStart = 0x200000;
+                    AslrRegionEnd = AslrRegionStart + 0xffe00000;
                     stackAndTlsIoStart = 0x200000;
                     stackAndTlsIoEnd = 0x40000000;
-                    baseAddress = 0x200000;
-                    AddrSpaceWidth = 32;
                     break;
 
                 case AddressSpaceType.Addr36Bits:
@@ -183,10 +188,10 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                     tlsIoRegion.Size = 0;
                     CodeRegionStart = 0x8000000;
                     codeRegionSize = 0x78000000;
+                    AslrRegionStart = 0x8000000;
+                    AslrRegionEnd = AslrRegionStart + 0xff8000000;
                     stackAndTlsIoStart = 0x8000000;
                     stackAndTlsIoEnd = 0x80000000;
-                    baseAddress = 0x8000000;
-                    AddrSpaceWidth = 36;
                     break;
 
                 case AddressSpaceType.Addr32BitsNoMap:
@@ -196,23 +201,42 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                     tlsIoRegion.Size = 0;
                     CodeRegionStart = 0x200000;
                     codeRegionSize = 0x3fe00000;
+                    AslrRegionStart = 0x200000;
+                    AslrRegionEnd = AslrRegionStart + 0xffe00000;
                     stackAndTlsIoStart = 0x200000;
                     stackAndTlsIoEnd = 0x40000000;
-                    baseAddress = 0x200000;
-                    AddrSpaceWidth = 32;
                     break;
 
                 case AddressSpaceType.Addr39Bits:
-                    aliasRegion.Size = 0x1000000000;
-                    heapRegion.Size = 0x180000000;
-                    stackRegion.Size = 0x80000000;
-                    tlsIoRegion.Size = 0x1000000000;
-                    CodeRegionStart = BitUtils.AlignDown<ulong>(address, 0x200000);
-                    codeRegionSize = BitUtils.AlignUp<ulong>(endAddr, 0x200000) - CodeRegionStart;
-                    stackAndTlsIoStart = 0;
-                    stackAndTlsIoEnd = 0;
-                    baseAddress = 0x8000000;
-                    AddrSpaceWidth = 39;
+                    if (_reservedAddressSpaceSize < addrSpaceEnd)
+                    {
+                        int addressSpaceWidth = (int)ulong.Log2(_reservedAddressSpaceSize);
+
+                        aliasRegion.Size = 1UL << (addressSpaceWidth - 3);
+                        heapRegion.Size = 0x180000000;
+                        stackRegion.Size = 1UL << (addressSpaceWidth - 8);
+                        tlsIoRegion.Size = 1UL << (addressSpaceWidth - 3);
+                        CodeRegionStart = BitUtils.AlignDown<ulong>(address, RegionAlignment);
+                        codeRegionSize = BitUtils.AlignUp<ulong>(endAddr, RegionAlignment) - CodeRegionStart;
+                        stackAndTlsIoStart = 0;
+                        stackAndTlsIoEnd = 0;
+                        AslrRegionStart = 0x8000000;
+                        addrSpaceEnd = 1UL << addressSpaceWidth;
+                        AslrRegionEnd = addrSpaceEnd;
+                    }
+                    else
+                    {
+                        aliasRegion.Size = 0x1000000000;
+                        heapRegion.Size = 0x180000000;
+                        stackRegion.Size = 0x80000000;
+                        tlsIoRegion.Size = 0x1000000000;
+                        CodeRegionStart = BitUtils.AlignDown(address, RegionAlignment);
+                        codeRegionSize = BitUtils.AlignUp(endAddr, RegionAlignment) - CodeRegionStart;
+                        AslrRegionStart = 0x8000000;
+                        AslrRegionEnd = AslrRegionStart + 0x7ff8000000;
+                        stackAndTlsIoStart = 0;
+                        stackAndTlsIoEnd = 0;
+                    }
                     break;
 
                 default: throw new ArgumentException(nameof(addrSpaceType));
@@ -223,11 +247,11 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             ulong mapBaseAddress;
             ulong mapAvailableSize;
 
-            if (CodeRegionStart - baseAddress >= addrSpaceEnd - CodeRegionEnd)
+            if (CodeRegionStart - AslrRegionStart >= addrSpaceEnd - CodeRegionEnd)
             {
                 // Has more space before the start of the code region.
-                mapBaseAddress = baseAddress;
-                mapAvailableSize = CodeRegionStart - baseAddress;
+                mapBaseAddress = AslrRegionStart;
+                mapAvailableSize = CodeRegionStart - AslrRegionStart;
             }
             else
             {
@@ -254,14 +278,14 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
             if (aslrEnabled)
             {
-                aliasRegion.AslrOffset = GetRandomValue(0, aslrMaxOffset >> 21) << 21;
-                heapRegion.AslrOffset = GetRandomValue(0, aslrMaxOffset >> 21) << 21;
-                stackRegion.AslrOffset = GetRandomValue(0, aslrMaxOffset >> 21) << 21;
-                tlsIoRegion.AslrOffset = GetRandomValue(0, aslrMaxOffset >> 21) << 21;
+                aliasRegion.AslrOffset = GetRandomValue(0, aslrMaxOffset / RegionAlignment) * RegionAlignment;
+                heapRegion.AslrOffset = GetRandomValue(0, aslrMaxOffset / RegionAlignment) * RegionAlignment;
+                stackRegion.AslrOffset = GetRandomValue(0, aslrMaxOffset / RegionAlignment) * RegionAlignment;
+                tlsIoRegion.AslrOffset = GetRandomValue(0, aslrMaxOffset / RegionAlignment) * RegionAlignment;
             }
 
             // Regions are sorted based on ASLR offset.
-            // When ASLR is disabled, the order is Map, Heap, NewMap and TlsIo.
+            // When ASLR is disabled, the order is Alias, Heap, Stack and TlsIo.
             aliasRegion.Start = mapBaseAddress + aliasRegion.AslrOffset;
             aliasRegion.End = aliasRegion.Start + aliasRegion.Size;
             heapRegion.Start = mapBaseAddress + heapRegion.AslrOffset;
@@ -271,12 +295,15 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             tlsIoRegion.Start = mapBaseAddress + tlsIoRegion.AslrOffset;
             tlsIoRegion.End = tlsIoRegion.Start + tlsIoRegion.Size;
 
-            SortRegion(heapRegion, aliasRegion);
+            SortRegion(ref aliasRegion, ref heapRegion, true);
 
             if (stackRegion.Size != 0)
             {
-                SortRegion(stackRegion, aliasRegion);
-                SortRegion(stackRegion, heapRegion);
+                stackRegion.Start = mapBaseAddress + stackRegion.AslrOffset;
+                stackRegion.End = stackRegion.Start + stackRegion.Size;
+
+                SortRegion(ref aliasRegion, ref stackRegion);
+                SortRegion(ref heapRegion, ref stackRegion);
             }
             else
             {
@@ -286,9 +313,16 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
             if (tlsIoRegion.Size != 0)
             {
-                SortRegion(tlsIoRegion, aliasRegion);
-                SortRegion(tlsIoRegion, heapRegion);
-                SortRegion(tlsIoRegion, stackRegion);
+                tlsIoRegion.Start = mapBaseAddress + tlsIoRegion.AslrOffset;
+                tlsIoRegion.End = tlsIoRegion.Start + tlsIoRegion.Size;
+
+                SortRegion(ref aliasRegion, ref tlsIoRegion);
+                SortRegion(ref heapRegion, ref tlsIoRegion);
+
+                if (stackRegion.Size != 0)
+                {
+                    SortRegion(ref stackRegion, ref tlsIoRegion);
+                }
             }
             else
             {
@@ -312,9 +346,25 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             PhysicalMemoryUsage = 0;
 
             _memRegion = memRegion;
-            _aslrDisabled = aslrDisabled;
+            _allocateFromBack = fromBack;
 
             return _blockManager.Initialize(addrSpaceStart, addrSpaceEnd, slabManager);
+        }
+
+        private static void SortRegion(ref Region lhs, ref Region rhs, bool checkForEquality = false)
+        {
+            bool res = checkForEquality ? lhs.AslrOffset <= rhs.AslrOffset : lhs.AslrOffset < rhs.AslrOffset;
+
+            if (res)
+            {
+                rhs.Start += lhs.Size;
+                rhs.End += lhs.Size;
+            }
+            else
+            {
+                lhs.Start += rhs.Size;
+                lhs.End += rhs.Size;
+            }
         }
 
         private ulong GetRandomValue(ulong min, ulong max)
@@ -330,20 +380,6 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             }
 
             return _randomNumberGenerator.GenRandomNumber(min, max);
-        }
-
-        private static void SortRegion(Region lhs, Region rhs)
-        {
-            if (lhs.AslrOffset < rhs.AslrOffset)
-            {
-                rhs.Start += lhs.Size;
-                rhs.End += lhs.Size;
-            }
-            else
-            {
-                lhs.Start += rhs.Size;
-                lhs.End += rhs.Size;
-            }
         }
 
         public Result MapPages(ulong address, KPageList pageList, MemoryState state, KMemoryPermission permission)
@@ -1827,7 +1863,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             // If not, allocate a new page and copy the unaligned chunck.
             if (addressTruncated < addressRounded)
             {
-                dstFirstPagePa = GetMemoryRegionManager().AllocatePagesContiguous(Context, 1, _aslrDisabled);
+                dstFirstPagePa = GetMemoryRegionManager().AllocatePagesContiguous(Context, 1, _allocateFromBack);
 
                 if (dstFirstPagePa == 0)
                 {
@@ -1841,7 +1877,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             // If not, allocate a new page and copy the unaligned chunck.
             if (endAddrTruncated < endAddrRounded && (addressTruncated == addressRounded || addressTruncated < endAddrTruncated))
             {
-                dstLastPagePa = GetMemoryRegionManager().AllocatePagesContiguous(Context, 1, _aslrDisabled);
+                dstLastPagePa = GetMemoryRegionManager().AllocatePagesContiguous(Context, 1, _allocateFromBack);
 
                 if (dstLastPagePa == 0)
                 {
@@ -2799,38 +2835,12 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
         public ulong GetAddrSpaceBaseAddr()
         {
-            if (AddrSpaceWidth == 36 || AddrSpaceWidth == 39)
-            {
-                return 0x8000000;
-            }
-            else if (AddrSpaceWidth == 32)
-            {
-                return 0x200000;
-            }
-            else
-            {
-                throw new InvalidOperationException("Invalid address space width!");
-            }
+            return AslrRegionStart;
         }
 
         public ulong GetAddrSpaceSize()
         {
-            if (AddrSpaceWidth == 36)
-            {
-                return 0xff8000000;
-            }
-            else if (AddrSpaceWidth == 39)
-            {
-                return 0x7ff8000000;
-            }
-            else if (AddrSpaceWidth == 32)
-            {
-                return 0xffe00000;
-            }
-            else
-            {
-                throw new InvalidOperationException("Invalid address space width!");
-            }
+            return AslrRegionEnd - AslrRegionStart;
         }
 
         private static ulong GetDramAddressFromPa(ulong pa)

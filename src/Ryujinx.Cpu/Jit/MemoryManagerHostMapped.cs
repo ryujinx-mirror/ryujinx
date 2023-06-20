@@ -38,7 +38,8 @@ namespace Ryujinx.Cpu.Jit
         private readonly bool _unsafeMode;
 
         private readonly AddressSpace _addressSpace;
-        private readonly ulong _addressSpaceSize;
+
+        public ulong AddressSpaceSize { get; }
 
         private readonly PageTable<ulong> _pageTable;
 
@@ -62,21 +63,21 @@ namespace Ryujinx.Cpu.Jit
         /// <summary>
         /// Creates a new instance of the host mapped memory manager.
         /// </summary>
-        /// <param name="backingMemory">Physical backing memory where virtual memory will be mapped to</param>
-        /// <param name="addressSpaceSize">Size of the address space</param>
+        /// <param name="addressSpace">Address space instance to use</param>
         /// <param name="unsafeMode">True if unmanaged access should not be masked (unsafe), false otherwise.</param>
         /// <param name="invalidAccessHandler">Optional function to handle invalid memory accesses</param>
-        public MemoryManagerHostMapped(MemoryBlock backingMemory, ulong addressSpaceSize, bool unsafeMode, InvalidAccessHandler invalidAccessHandler = null)
+        public MemoryManagerHostMapped(AddressSpace addressSpace, bool unsafeMode, InvalidAccessHandler invalidAccessHandler)
         {
+            _addressSpace = addressSpace;
             _pageTable = new PageTable<ulong>();
             _invalidAccessHandler = invalidAccessHandler;
             _unsafeMode = unsafeMode;
-            _addressSpaceSize = addressSpaceSize;
+            AddressSpaceSize = addressSpace.AddressSpaceSize;
 
             ulong asSize = PageSize;
             int asBits = PageBits;
 
-            while (asSize < addressSpaceSize)
+            while (asSize < AddressSpaceSize)
             {
                 asSize <<= 1;
                 asBits++;
@@ -85,8 +86,6 @@ namespace Ryujinx.Cpu.Jit
             AddressSpaceBits = asBits;
 
             _pageBitmap = new ulong[1 << (AddressSpaceBits - (PageBits + PageToPteShift))];
-
-            _addressSpace = new AddressSpace(backingMemory, asSize, Supports4KBPages);
 
             Tracking = new MemoryTracking(this, (int)MemoryBlock.GetPageSize(), invalidAccessHandler);
             _memoryEh = new MemoryEhMeilleure(_addressSpace.Base, _addressSpace.Mirror, Tracking);
@@ -99,7 +98,7 @@ namespace Ryujinx.Cpu.Jit
         /// <returns>True if the virtual address is part of the addressable space</returns>
         private bool ValidateAddress(ulong va)
         {
-            return va < _addressSpaceSize;
+            return va < AddressSpaceSize;
         }
 
         /// <summary>
@@ -111,7 +110,7 @@ namespace Ryujinx.Cpu.Jit
         private bool ValidateAddressAndSize(ulong va, ulong size)
         {
             ulong endVa = va + size;
-            return endVa >= va && endVa >= size && endVa <= _addressSpaceSize;
+            return endVa >= va && endVa >= size && endVa <= AddressSpaceSize;
         }
 
         /// <summary>

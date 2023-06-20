@@ -8,9 +8,12 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
     {
         public IVirtualMemoryManager AddressSpace { get; }
 
-        public ProcessContext(IVirtualMemoryManager asManager)
+        public ulong AddressSpaceSize { get; }
+
+        public ProcessContext(IVirtualMemoryManager asManager, ulong addressSpaceSize)
         {
             AddressSpace = asManager;
+            AddressSpaceSize = addressSpaceSize;
         }
 
         public IExecutionContext CreateExecutionContext(ExceptionCallbacks exceptionCallbacks)
