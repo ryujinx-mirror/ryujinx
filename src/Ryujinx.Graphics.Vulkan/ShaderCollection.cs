@@ -256,7 +256,7 @@ namespace Ryujinx.Graphics.Vulkan
         {
             await Task.WhenAll(_shaders.Select(shader => shader.CompileTask));
 
-            if (_shaders.Any(shader => shader.CompileStatus == ProgramLinkStatus.Failure))
+            if (Array.Exists(_shaders, shader => shader.CompileStatus == ProgramLinkStatus.Failure))
             {
                 LinkStatus = ProgramLinkStatus.Failure;
 

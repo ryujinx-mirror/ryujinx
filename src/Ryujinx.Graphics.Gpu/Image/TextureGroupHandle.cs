@@ -512,7 +512,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <returns>True if at least one of the handles is dirty</returns>
         private bool CheckDirty()
         {
-            return Handles.Any(handle => handle.Dirty);
+            return Array.Exists(Handles, handle => handle.Dirty);
         }
 
         /// <summary>
