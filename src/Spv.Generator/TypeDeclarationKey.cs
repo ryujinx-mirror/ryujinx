@@ -5,7 +5,7 @@ namespace Spv.Generator
 {
     internal struct TypeDeclarationKey : IEquatable<TypeDeclarationKey>
     {
-        private Instruction _typeDeclaration;
+        private readonly Instruction _typeDeclaration;
 
         public TypeDeclarationKey(Instruction typeDeclaration)
         {

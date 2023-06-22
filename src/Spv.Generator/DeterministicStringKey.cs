@@ -5,7 +5,7 @@ namespace Spv.Generator
 {
     internal class DeterministicStringKey : IEquatable<DeterministicStringKey>
     {
-        private string _value;
+        private readonly string _value;
 
         public DeterministicStringKey(string value)
         {

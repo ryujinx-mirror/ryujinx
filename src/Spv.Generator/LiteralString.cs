@@ -8,7 +8,7 @@ namespace Spv.Generator
     {
         public OperandType Type => OperandType.String;
 
-        private string _value;
+        private readonly string _value;
 
         public LiteralString(string value)
         {

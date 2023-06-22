@@ -4,8 +4,8 @@ namespace Ryujinx.Tests.Unicorn
 {
     public struct SimdValue : IEquatable<SimdValue>
     {
-        private ulong _e0;
-        private ulong _e1;
+        private readonly ulong _e0;
+        private readonly ulong _e1;
 
         public SimdValue(ulong e0, ulong e1)
         {

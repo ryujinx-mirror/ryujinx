@@ -13,8 +13,8 @@ namespace ARMeilleure.State
         // _e0 & _e1 could be marked as readonly, however they are not readonly because we modify them through the Unsafe
         // APIs. This also means that one should be careful when changing the layout of this struct.
 
-        private ulong _e0;
-        private ulong _e1;
+        private readonly ulong _e0;
+        private readonly ulong _e1;
 
         /// <summary>
         /// Gets a new <see cref="V128"/> with all bits set to zero.
