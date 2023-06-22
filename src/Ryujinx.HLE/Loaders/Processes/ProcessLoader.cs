@@ -9,6 +9,7 @@ using LibHac.Tools.FsSystem.NcaUtils;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.Loaders.Executables;
 using Ryujinx.HLE.Loaders.Processes.Extensions;
+using System;
 using System.Collections.Concurrent;
 using System.IO;
 using System.Linq;
@@ -176,7 +177,7 @@ namespace Ryujinx.HLE.Loaders.Processes
 
                     if (string.IsNullOrWhiteSpace(programName))
                     {
-                        programName = nacpData.Value.Title.ItemsRo.ToArray().FirstOrDefault(x => x.Name[0] != 0).NameString.ToString();
+                        programName = Array.Find(nacpData.Value.Title.ItemsRo.ToArray(), x => x.Name[0] != 0).NameString.ToString();
                     }
 
                     if (nacpData.Value.PresenceGroupId != 0)

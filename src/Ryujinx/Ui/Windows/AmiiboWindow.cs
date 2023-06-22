@@ -163,7 +163,7 @@ namespace Ryujinx.Ui.Windows
 
         private void SelectLastScannedAmiibo()
         {
-            bool isSet = _amiiboSeriesComboBox.SetActiveId(_amiiboList.FirstOrDefault(amiibo => amiibo.Head + amiibo.Tail == LastScannedAmiiboId).AmiiboSeries);
+            bool isSet = _amiiboSeriesComboBox.SetActiveId(_amiiboList.Find(amiibo => amiibo.Head + amiibo.Tail == LastScannedAmiiboId).AmiiboSeries);
             isSet = _amiiboCharsComboBox.SetActiveId(LastScannedAmiiboId);
 
             if (isSet == false)
@@ -305,7 +305,7 @@ namespace Ryujinx.Ui.Windows
 
             _amiiboImage.Pixbuf = new Gdk.Pixbuf(_amiiboLogoBytes);
 
-            string imageUrl = _amiiboList.FirstOrDefault(amiibo => amiibo.Head + amiibo.Tail == _amiiboCharsComboBox.ActiveId).Image;
+            string imageUrl = _amiiboList.Find(amiibo => amiibo.Head + amiibo.Tail == _amiiboCharsComboBox.ActiveId).Image;
 
             var usageStringBuilder = new StringBuilder();
 
