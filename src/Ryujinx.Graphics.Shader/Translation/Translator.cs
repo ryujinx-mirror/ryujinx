@@ -140,7 +140,7 @@ namespace Ryujinx.Graphics.Shader.Translation
 
             FunctionMatch.RunPass(program);
 
-            foreach (DecodedFunction function in program.OrderBy(x => x.Address).Where(x => !x.IsCompilerGenerated))
+            foreach (DecodedFunction function in program.Where(x => !x.IsCompilerGenerated).OrderBy(x => x.Address))
             {
                 program.AddFunctionAndSetId(function);
             }
