@@ -39,7 +39,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres.Proxy
                     }
 
                     // Ignore comments and empty lines
-                    if (line.StartsWith("#") || line.Trim().Length == 0)
+                    if (line.StartsWith('#') || line.Trim().Length == 0)
                     {
                         continue;
                     }

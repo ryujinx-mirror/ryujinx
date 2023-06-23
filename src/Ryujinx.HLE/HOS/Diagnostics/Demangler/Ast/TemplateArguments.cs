@@ -15,7 +15,7 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
 
             writer.Write(Params);
 
-            if (Params.EndsWith(">"))
+            if (Params.EndsWith('>'))
             {
                 writer.Write(" ");
             }
