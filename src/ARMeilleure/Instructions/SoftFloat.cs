@@ -228,7 +228,6 @@ namespace ARMeilleure.Instructions
 
             switch (context.Fpcr.GetRoundingMode())
             {
-                default:
                 case FPRoundingMode.ToNearest:
                     roundUp       = (error > 0.5d || (error == 0.5d && (intMant & 1u) == 1u));
                     overflowToInf = true;
@@ -248,6 +247,9 @@ namespace ARMeilleure.Instructions
                     roundUp       = false;
                     overflowToInf = false;
                     break;
+
+                default:
+                    throw new ArgumentException($"Invalid rounding mode \"{context.Fpcr.GetRoundingMode()}\".");
             }
 
             if (roundUp)
@@ -412,7 +414,6 @@ namespace ARMeilleure.Instructions
 
             switch (context.Fpcr.GetRoundingMode())
             {
-                default:
                 case FPRoundingMode.ToNearest:
                     roundUp       = (error > 0.5d || (error == 0.5d && (intMant & 1u) == 1u));
                     overflowToInf = true;
@@ -432,6 +433,9 @@ namespace ARMeilleure.Instructions
                     roundUp       = false;
                     overflowToInf = false;
                     break;
+
+                default:
+                    throw new ArgumentException($"Invalid rounding mode \"{context.Fpcr.GetRoundingMode()}\".");
             }
 
             if (roundUp)
@@ -585,7 +589,6 @@ namespace ARMeilleure.Instructions
 
             switch (context.Fpcr.GetRoundingMode())
             {
-                default:
                 case FPRoundingMode.ToNearest:
                     roundUp       = (error > 0.5d || (error == 0.5d && (intMant & 1u) == 1u));
                     overflowToInf = true;
@@ -605,6 +608,9 @@ namespace ARMeilleure.Instructions
                     roundUp       = false;
                     overflowToInf = false;
                     break;
+
+                default:
+                    throw new ArgumentException($"Invalid rounding mode \"{context.Fpcr.GetRoundingMode()}\".");
             }
 
             if (roundUp)
@@ -1433,11 +1439,24 @@ namespace ARMeilleure.Instructions
 
                 switch (fpcr.GetRoundingMode())
                 {
+                    case FPRoundingMode.ToNearest:
+                        overflowToInf = true;
+                        break;
+
+                    case FPRoundingMode.TowardsPlusInfinity:
+                        overflowToInf = !sign;
+                        break;
+
+                    case FPRoundingMode.TowardsMinusInfinity:
+                        overflowToInf = sign;
+                        break;
+
+                    case FPRoundingMode.TowardsZero:
+                        overflowToInf = false;
+                        break;
+
                     default:
-                    case FPRoundingMode.ToNearest:            overflowToInf = true;  break;
-                    case FPRoundingMode.TowardsPlusInfinity:  overflowToInf = !sign; break;
-                    case FPRoundingMode.TowardsMinusInfinity: overflowToInf = sign;  break;
-                    case FPRoundingMode.TowardsZero:          overflowToInf = false; break;
+                        throw new ArgumentException($"Invalid rounding mode \"{fpcr.GetRoundingMode()}\".");
                 }
 
                 result = overflowToInf ? FPInfinity(sign) : FPMaxNormal(sign);
@@ -2845,11 +2864,24 @@ namespace ARMeilleure.Instructions
 
                 switch (fpcr.GetRoundingMode())
                 {
+                    case FPRoundingMode.ToNearest:
+                        overflowToInf = true;
+                        break;
+
+                    case FPRoundingMode.TowardsPlusInfinity:
+                        overflowToInf = !sign;
+                        break;
+
+                    case FPRoundingMode.TowardsMinusInfinity:
+                        overflowToInf = sign;
+                        break;
+
+                    case FPRoundingMode.TowardsZero:
+                        overflowToInf = false;
+                        break;
+
                     default:
-                    case FPRoundingMode.ToNearest:            overflowToInf = true;  break;
-                    case FPRoundingMode.TowardsPlusInfinity:  overflowToInf = !sign; break;
-                    case FPRoundingMode.TowardsMinusInfinity: overflowToInf = sign;  break;
-                    case FPRoundingMode.TowardsZero:          overflowToInf = false; break;
+                        throw new ArgumentException($"Invalid rounding mode \"{fpcr.GetRoundingMode()}\".");
                 }
 
                 result = overflowToInf ? FPInfinity(sign) : FPMaxNormal(sign);
