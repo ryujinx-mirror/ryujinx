@@ -18,7 +18,7 @@ namespace Ryujinx.Audio.Backends.OpenAL
         private readonly ManualResetEvent _pauseEvent;
         private readonly ConcurrentDictionary<OpenALHardwareDeviceSession, byte> _sessions;
         private bool _stillRunning;
-        private Thread _updaterThread;
+        private readonly Thread _updaterThread;
 
         public OpenALHardwareDeviceDriver()
         {
@@ -73,7 +73,7 @@ namespace Ryujinx.Audio.Backends.OpenAL
                 throw new ArgumentException($"{channelCount}");
             }
 
-            OpenALHardwareDeviceSession session = new OpenALHardwareDeviceSession(this, memoryManager, sampleFormat, sampleRate, channelCount, volume);
+            OpenALHardwareDeviceSession session = new(this, memoryManager, sampleFormat, sampleRate, channelCount, volume);
 
             _sessions.TryAdd(session, 0);
 
@@ -123,6 +123,7 @@ namespace Ryujinx.Audio.Backends.OpenAL
 
         public void Dispose()
         {
+            GC.SuppressFinalize(this);
             Dispose(true);
         }
 
