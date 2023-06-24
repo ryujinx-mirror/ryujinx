@@ -36,15 +36,15 @@ namespace Ryujinx.Memory
             }
         }
 
-        public static bool Commit(IntPtr address, ulong size, bool forJit)
+        public static void Commit(IntPtr address, ulong size, bool forJit)
         {
             if (OperatingSystem.IsWindows())
             {
-                return MemoryManagementWindows.Commit(address, (IntPtr)size);
+                MemoryManagementWindows.Commit(address, (IntPtr)size);
             }
             else if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
             {
-                return MemoryManagementUnix.Commit(address, size, forJit);
+                MemoryManagementUnix.Commit(address, size, forJit);
             }
             else
             {
@@ -52,15 +52,15 @@ namespace Ryujinx.Memory
             }
         }
 
-        public static bool Decommit(IntPtr address, ulong size)
+        public static void Decommit(IntPtr address, ulong size)
         {
             if (OperatingSystem.IsWindows())
             {
-                return MemoryManagementWindows.Decommit(address, (IntPtr)size);
+                MemoryManagementWindows.Decommit(address, (IntPtr)size);
             }
             else if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
             {
-                return MemoryManagementUnix.Decommit(address, size);
+                MemoryManagementUnix.Decommit(address, size);
             }
             else
             {

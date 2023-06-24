@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Threading;
 
 namespace Ryujinx.Memory
@@ -101,12 +100,12 @@ namespace Ryujinx.Memory
         /// </summary>
         /// <param name="offset">Starting offset of the range to be committed</param>
         /// <param name="size">Size of the range to be committed</param>
-        /// <returns>True if the operation was successful, false otherwise</returns>
+        /// <exception cref="SystemException">Throw when the operation was not successful</exception>
         /// <exception cref="ObjectDisposedException">Throw when the memory block has already been disposed</exception>
         /// <exception cref="InvalidMemoryRegionException">Throw when either <paramref name="offset"/> or <paramref name="size"/> are out of range</exception>
-        public bool Commit(ulong offset, ulong size)
+        public void Commit(ulong offset, ulong size)
         {
-            return MemoryManagement.Commit(GetPointerInternal(offset, size), size, _forJit);
+            MemoryManagement.Commit(GetPointerInternal(offset, size), size, _forJit);
         }
 
         /// <summary>
@@ -115,12 +114,12 @@ namespace Ryujinx.Memory
         /// </summary>
         /// <param name="offset">Starting offset of the range to be decommitted</param>
         /// <param name="size">Size of the range to be decommitted</param>
-        /// <returns>True if the operation was successful, false otherwise</returns>
+        /// <exception cref="SystemException">Throw when the operation was not successful</exception>
         /// <exception cref="ObjectDisposedException">Throw when the memory block has already been disposed</exception>
         /// <exception cref="InvalidMemoryRegionException">Throw when either <paramref name="offset"/> or <paramref name="size"/> are out of range</exception>
-        public bool Decommit(ulong offset, ulong size)
+        public void Decommit(ulong offset, ulong size)
         {
-            return MemoryManagement.Decommit(GetPointerInternal(offset, size), size);
+            MemoryManagement.Decommit(GetPointerInternal(offset, size), size);
         }
 
         /// <summary>

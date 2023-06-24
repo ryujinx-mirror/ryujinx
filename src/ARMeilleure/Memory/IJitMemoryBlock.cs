@@ -6,7 +6,7 @@ namespace ARMeilleure.Memory
     {
         IntPtr Pointer { get; }
 
-        bool Commit(ulong offset, ulong size);
+        void Commit(ulong offset, ulong size);
 
         void MapAsRx(ulong offset, ulong size);
         void MapAsRwx(ulong offset, ulong size);
