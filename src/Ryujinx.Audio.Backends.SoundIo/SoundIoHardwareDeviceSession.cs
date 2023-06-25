@@ -12,12 +12,12 @@ namespace Ryujinx.Audio.Backends.SoundIo
 {
     class SoundIoHardwareDeviceSession : HardwareDeviceSessionOutputBase
     {
-        private SoundIoHardwareDeviceDriver _driver;
-        private ConcurrentQueue<SoundIoAudioBuffer> _queuedBuffers;
+        private readonly SoundIoHardwareDeviceDriver _driver;
+        private readonly ConcurrentQueue<SoundIoAudioBuffer> _queuedBuffers;
         private SoundIoOutStreamContext _outputStream;
-        private DynamicRingBuffer _ringBuffer;
+        private readonly DynamicRingBuffer _ringBuffer;
         private ulong _playedSampleCount;
-        private ManualResetEvent _updateRequiredEvent;
+        private readonly ManualResetEvent _updateRequiredEvent;
         private int _disposeState;
 
         public SoundIoHardwareDeviceSession(SoundIoHardwareDeviceDriver driver, IVirtualMemoryManager memoryManager, SampleFormat requestedSampleFormat, uint requestedSampleRate, uint requestedChannelCount, float requestedVolume) : base(memoryManager, requestedSampleFormat, requestedSampleRate, requestedChannelCount)
@@ -54,7 +54,7 @@ namespace Ryujinx.Audio.Backends.SoundIo
 
         public override void QueueBuffer(AudioBuffer buffer)
         {
-            SoundIoAudioBuffer driverBuffer = new SoundIoAudioBuffer(buffer.DataPointer, GetSampleCount(buffer));
+            SoundIoAudioBuffer driverBuffer = new(buffer.DataPointer, GetSampleCount(buffer));
 
             _ringBuffer.Write(buffer.Data, 0, buffer.Data.Length);
 
@@ -81,7 +81,7 @@ namespace Ryujinx.Audio.Backends.SoundIo
             _driver.FlushContextEvents();
         }
 
-        public override void UnregisterBuffer(AudioBuffer buffer) {}
+        public override void UnregisterBuffer(AudioBuffer buffer) { }
 
         public override bool WasBufferFullyConsumed(AudioBuffer buffer)
         {

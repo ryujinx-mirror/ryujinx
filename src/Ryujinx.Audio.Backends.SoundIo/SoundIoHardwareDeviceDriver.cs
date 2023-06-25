@@ -141,7 +141,7 @@ namespace Ryujinx.Audio.Backends.SoundIo
                 throw new NotImplementedException("Input direction is currently not implemented on SoundIO backend!");
             }
 
-            SoundIoHardwareDeviceSession session = new SoundIoHardwareDeviceSession(this, memoryManager, sampleFormat, sampleRate, channelCount, volume);
+            SoundIoHardwareDeviceSession session = new(this, memoryManager, sampleFormat, sampleRate, channelCount, volume);
 
             _sessions.TryAdd(session, 0);
 
@@ -162,7 +162,7 @@ namespace Ryujinx.Audio.Backends.SoundIo
                 SampleFormat.PcmInt24 => SoundIoFormat.S24LE,
                 SampleFormat.PcmInt32 => SoundIoFormat.S32LE,
                 SampleFormat.PcmFloat => SoundIoFormat.Float32LE,
-                _ => throw new ArgumentException ($"Unsupported sample format {format}"),
+                _ => throw new ArgumentException($"Unsupported sample format {format}"),
             };
         }
 
@@ -202,6 +202,8 @@ namespace Ryujinx.Audio.Backends.SoundIo
 
         public void Dispose()
         {
+            GC.SuppressFinalize(this);
+
             if (Interlocked.CompareExchange(ref _disposeState, 1, 0) == 0)
             {
                 Dispose(true);
