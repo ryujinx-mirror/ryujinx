@@ -2,7 +2,7 @@ using System;
 
 namespace Ryujinx.Tests.Unicorn
 {
-    public struct SimdValue : IEquatable<SimdValue>
+    public readonly struct SimdValue : IEquatable<SimdValue>
     {
         private readonly ulong _e0;
         private readonly ulong _e1;
@@ -39,31 +39,29 @@ namespace Ryujinx.Tests.Unicorn
             return BitConverter.Int64BitsToDouble(GetInt64(index));
         }
 
-        public int  GetInt32(int index) => (int)GetUInt32(index);
+        public int GetInt32(int index) => (int)GetUInt32(index);
         public long GetInt64(int index) => (long)GetUInt64(index);
 
         public uint GetUInt32(int index)
         {
-            switch (index)
+            return index switch
             {
-                case 0: return (uint)(_e0 >> 0);
-                case 1: return (uint)(_e0 >> 32);
-                case 2: return (uint)(_e1 >> 0);
-                case 3: return (uint)(_e1 >> 32);
-            }
-
-            throw new ArgumentOutOfRangeException(nameof(index));
+                0 => (uint)(_e0 >> 0),
+                1 => (uint)(_e0 >> 32),
+                2 => (uint)(_e1 >> 0),
+                3 => (uint)(_e1 >> 32),
+                _ => throw new ArgumentOutOfRangeException(nameof(index)),
+            };
         }
 
         public ulong GetUInt64(int index)
         {
-            switch (index)
+            return index switch
             {
-                case 0: return _e0;
-                case 1: return _e1;
-            }
-
-            throw new ArgumentOutOfRangeException(nameof(index));
+                0 => _e0,
+                1 => _e1,
+                _ => throw new ArgumentOutOfRangeException(nameof(index)),
+            };
         }
 
         public byte[] ToArray()

@@ -5,7 +5,7 @@ namespace Ryujinx.Tests.Unicorn
 {
     public class UnicornAArch64 : IDisposable
     {
-        internal readonly UnicornEngine.Unicorn uc;
+        internal readonly UnicornEngine.Unicorn Uc;
         private bool _isDisposed;
 
         public IndexedProperty<int, ulong> X => new(GetX, SetX);
@@ -33,48 +33,48 @@ namespace Ryujinx.Tests.Unicorn
         public uint Pstate
         {
             get => (uint)GetRegister(Arm64.UC_ARM64_REG_PSTATE);
-            set =>       SetRegister(Arm64.UC_ARM64_REG_PSTATE, value);
+            set => SetRegister(Arm64.UC_ARM64_REG_PSTATE, value);
         }
 
         public int Fpcr
         {
             get => (int)GetRegister(Arm64.UC_ARM64_REG_FPCR);
-            set =>      SetRegister(Arm64.UC_ARM64_REG_FPCR, (uint)value);
+            set => SetRegister(Arm64.UC_ARM64_REG_FPCR, (uint)value);
         }
 
         public int Fpsr
         {
             get => (int)GetRegister(Arm64.UC_ARM64_REG_FPSR);
-            set =>      SetRegister(Arm64.UC_ARM64_REG_FPSR, (uint)value);
+            set => SetRegister(Arm64.UC_ARM64_REG_FPSR, (uint)value);
         }
 
         public bool OverflowFlag
         {
-            get =>          (Pstate &  0x10000000u) != 0;
+            get => (Pstate & 0x10000000u) != 0;
             set => Pstate = (Pstate & ~0x10000000u) | (value ? 0x10000000u : 0u);
         }
 
         public bool CarryFlag
         {
-            get =>          (Pstate &  0x20000000u) != 0;
+            get => (Pstate & 0x20000000u) != 0;
             set => Pstate = (Pstate & ~0x20000000u) | (value ? 0x20000000u : 0u);
         }
 
         public bool ZeroFlag
         {
-            get =>          (Pstate &  0x40000000u) != 0;
+            get => (Pstate & 0x40000000u) != 0;
             set => Pstate = (Pstate & ~0x40000000u) | (value ? 0x40000000u : 0u);
         }
 
         public bool NegativeFlag
         {
-            get =>          (Pstate &  0x80000000u) != 0;
+            get => (Pstate & 0x80000000u) != 0;
             set => Pstate = (Pstate & ~0x80000000u) | (value ? 0x80000000u : 0u);
         }
 
         public UnicornAArch64()
         {
-            uc = new UnicornEngine.Unicorn(Common.UC_ARCH_ARM64, Common.UC_MODE_LITTLE_ENDIAN);
+            Uc = new UnicornEngine.Unicorn(Common.UC_ARCH_ARM64, Common.UC_MODE_LITTLE_ENDIAN);
 
             SetRegister(Arm64.UC_ARM64_REG_CPACR_EL1, 0x00300000);
         }
@@ -94,7 +94,7 @@ namespace Ryujinx.Tests.Unicorn
         {
             if (!_isDisposed)
             {
-                uc.Close();
+                Uc.Close();
                 _isDisposed = true;
             }
         }
@@ -102,7 +102,7 @@ namespace Ryujinx.Tests.Unicorn
         public void RunForCount(ulong count)
         {
             // FIXME: untilAddr should be 0xFFFFFFFFFFFFFFFFul
-            uc.EmuStart((long)this.PC, -1, 0, (long)count);
+            Uc.EmuStart((long)this.PC, -1, 0, (long)count);
         }
 
         public void Step()
@@ -110,7 +110,7 @@ namespace Ryujinx.Tests.Unicorn
             RunForCount(1);
         }
 
-        private static int[] XRegisters =
+        private static readonly int[] _xRegisters =
         {
             Arm64.UC_ARM64_REG_X0,
             Arm64.UC_ARM64_REG_X1,
@@ -145,7 +145,7 @@ namespace Ryujinx.Tests.Unicorn
             Arm64.UC_ARM64_REG_X30,
         };
 
-        private static int[] QRegisters =
+        private static readonly int[] _qRegisters =
         {
             Arm64.UC_ARM64_REG_Q0,
             Arm64.UC_ARM64_REG_Q1,
@@ -188,7 +188,7 @@ namespace Ryujinx.Tests.Unicorn
                 throw new ArgumentOutOfRangeException(nameof(index));
             }
 
-            return GetRegister(XRegisters[index]);
+            return GetRegister(_xRegisters[index]);
         }
 
         public void SetX(int index, ulong value)
@@ -198,7 +198,7 @@ namespace Ryujinx.Tests.Unicorn
                 throw new ArgumentOutOfRangeException(nameof(index));
             }
 
-            SetRegister(XRegisters[index], value);
+            SetRegister(_xRegisters[index], value);
         }
 
         public SimdValue GetQ(int index)
@@ -208,7 +208,7 @@ namespace Ryujinx.Tests.Unicorn
                 throw new ArgumentOutOfRangeException(nameof(index));
             }
 
-            return GetVector(QRegisters[index]);
+            return GetVector(_qRegisters[index]);
         }
 
         public void SetQ(int index, SimdValue value)
@@ -218,14 +218,14 @@ namespace Ryujinx.Tests.Unicorn
                 throw new ArgumentOutOfRangeException(nameof(index));
             }
 
-            SetVector(QRegisters[index], value);
+            SetVector(_qRegisters[index], value);
         }
 
         private ulong GetRegister(int register)
         {
             byte[] data = new byte[8];
 
-            uc.RegRead(register, data);
+            Uc.RegRead(register, data);
 
             return BitConverter.ToUInt64(data, 0);
         }
@@ -234,14 +234,14 @@ namespace Ryujinx.Tests.Unicorn
         {
             byte[] data = BitConverter.GetBytes(value);
 
-            uc.RegWrite(register, data);
+            Uc.RegWrite(register, data);
         }
 
         private SimdValue GetVector(int register)
         {
             byte[] data = new byte[16];
 
-            uc.RegRead(register, data);
+            Uc.RegRead(register, data);
 
             return new SimdValue(data);
         }
@@ -250,49 +250,49 @@ namespace Ryujinx.Tests.Unicorn
         {
             byte[] data = value.ToArray();
 
-            uc.RegWrite(register, data);
+            Uc.RegWrite(register, data);
         }
 
         public byte[] MemoryRead(ulong address, ulong size)
         {
             byte[] value = new byte[size];
 
-            uc.MemRead((long)address, value);
+            Uc.MemRead((long)address, value);
 
             return value;
         }
 
-        public byte   MemoryRead8 (ulong address) => MemoryRead(address, 1)[0];
+        public byte MemoryRead8(ulong address) => MemoryRead(address, 1)[0];
         public ushort MemoryRead16(ulong address) => BitConverter.ToUInt16(MemoryRead(address, 2), 0);
-        public uint   MemoryRead32(ulong address) => BitConverter.ToUInt32(MemoryRead(address, 4), 0);
-        public ulong  MemoryRead64(ulong address) => BitConverter.ToUInt64(MemoryRead(address, 8), 0);
+        public uint MemoryRead32(ulong address) => BitConverter.ToUInt32(MemoryRead(address, 4), 0);
+        public ulong MemoryRead64(ulong address) => BitConverter.ToUInt64(MemoryRead(address, 8), 0);
 
         public void MemoryWrite(ulong address, byte[] value)
         {
-            uc.MemWrite((long)address, value);
+            Uc.MemWrite((long)address, value);
         }
 
-        public void MemoryWrite8 (ulong address, byte value)   => MemoryWrite(address, new[]{ value });
-        public void MemoryWrite16(ulong address, short value)  => MemoryWrite(address, BitConverter.GetBytes(value));
+        public void MemoryWrite8(ulong address, byte value) => MemoryWrite(address, new[] { value });
+        public void MemoryWrite16(ulong address, short value) => MemoryWrite(address, BitConverter.GetBytes(value));
         public void MemoryWrite16(ulong address, ushort value) => MemoryWrite(address, BitConverter.GetBytes(value));
-        public void MemoryWrite32(ulong address, int value)  => MemoryWrite(address, BitConverter.GetBytes(value));
+        public void MemoryWrite32(ulong address, int value) => MemoryWrite(address, BitConverter.GetBytes(value));
         public void MemoryWrite32(ulong address, uint value) => MemoryWrite(address, BitConverter.GetBytes(value));
-        public void MemoryWrite64(ulong address, long value)  => MemoryWrite(address, BitConverter.GetBytes(value));
+        public void MemoryWrite64(ulong address, long value) => MemoryWrite(address, BitConverter.GetBytes(value));
         public void MemoryWrite64(ulong address, ulong value) => MemoryWrite(address, BitConverter.GetBytes(value));
 
         public void MemoryMap(ulong address, ulong size, MemoryPermission permissions)
         {
-            uc.MemMap((long)address, (long)size, (int)permissions);
+            Uc.MemMap((long)address, (long)size, (int)permissions);
         }
 
         public void MemoryUnmap(ulong address, ulong size)
         {
-            uc.MemUnmap((long)address, (long)size);
+            Uc.MemUnmap((long)address, (long)size);
         }
 
         public void MemoryProtect(ulong address, ulong size, MemoryPermission permissions)
         {
-            uc.MemProtect((long)address, (long)size, (int)permissions);
+            Uc.MemProtect((long)address, (long)size, (int)permissions);
         }
     }
 }
