@@ -20,7 +20,7 @@ namespace Ryujinx.ShaderTools
 
             public ReadOnlySpan<ulong> GetCode(ulong address, int minimumSize)
             {
-                return MemoryMarshal.Cast<byte, ulong>(new ReadOnlySpan<byte>(_data).Slice((int)address));
+                return MemoryMarshal.Cast<byte, ulong>(new ReadOnlySpan<byte>(_data)[(int)address..]);
             }
         }
 
@@ -53,7 +53,7 @@ namespace Ryujinx.ShaderTools
 
             byte[] data = File.ReadAllBytes(options.InputPath);
 
-            TranslationOptions translationOptions = new TranslationOptions(options.TargetLanguage, options.TargetApi, flags);
+            TranslationOptions translationOptions = new(options.TargetLanguage, options.TargetApi, flags);
 
             ShaderProgram program = Translator.CreateContext(0, new GpuAccessor(data), translationOptions).Translate();
 
