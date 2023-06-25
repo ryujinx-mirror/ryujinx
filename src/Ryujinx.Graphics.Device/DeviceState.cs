@@ -13,7 +13,7 @@ namespace Ryujinx.Graphics.Device
 
         public TState State;
 
-        private uint Size => (uint)(Unsafe.SizeOf<TState>() + RegisterSize - 1) / RegisterSize;
+        private static uint Size => (uint)(Unsafe.SizeOf<TState>() + RegisterSize - 1) / RegisterSize;
 
         private readonly Func<int>[] _readCallbacks;
         private readonly Action<int>[] _writeCallbacks;
