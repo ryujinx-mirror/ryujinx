@@ -8,7 +8,7 @@ namespace Ryujinx.Graphics.Nvdec.FFmpeg.Vp8
     {
         public bool IsHardwareAccelerated => false;
 
-        private readonly FFmpegContext _context = new FFmpegContext(AVCodecID.AV_CODEC_ID_VP8);
+        private readonly FFmpegContext _context = new(AVCodecID.AV_CODEC_ID_VP8);
 
         public ISurface CreateSurface(int width, int height)
         {
@@ -43,7 +43,7 @@ namespace Ryujinx.Graphics.Nvdec.FFmpeg.Vp8
                 frame[9] = (byte)((pictureInfo.FrameHeight >> 8) & 0x3F);
             }
 
-            bitstream.CopyTo(new Span<byte>(frame).Slice(uncompHeaderSize));
+            bitstream.CopyTo(new Span<byte>(frame)[uncompHeaderSize..]);
 
             return _context.DecodeFrame(outSurf, frame) == 0;
         }

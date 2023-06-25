@@ -84,9 +84,9 @@ namespace Ryujinx.Graphics.Nvdec.FFmpeg.H264
             Flush();
         }
 
-        public Span<byte> AsSpan()
+        public readonly Span<byte> AsSpan()
         {
-            return new Span<byte>(_workBuffer).Slice(0, _offset);
+            return new Span<byte>(_workBuffer)[.._offset];
         }
 
         public void WriteU(uint value, int valueSize) => WriteBits((int)value, valueSize);

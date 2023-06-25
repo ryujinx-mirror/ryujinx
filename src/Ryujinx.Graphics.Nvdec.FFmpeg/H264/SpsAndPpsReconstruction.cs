@@ -8,7 +8,7 @@ namespace Ryujinx.Graphics.Nvdec.FFmpeg.H264
     {
         public static Span<byte> Reconstruct(ref H264PictureInfo pictureInfo, byte[] workBuffer)
         {
-            H264BitStreamWriter writer = new H264BitStreamWriter(workBuffer);
+            H264BitStreamWriter writer = new(workBuffer);
 
             // Sequence Parameter Set.
             writer.WriteU(1, 24);

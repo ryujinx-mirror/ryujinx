@@ -5,7 +5,7 @@ namespace Ryujinx.Graphics.Nvdec.FFmpeg.Native
 {
     struct AVFrame
     {
-#pragma warning disable CS0649
+#pragma warning disable CS0649 // Field is never assigned to
         public Array8<IntPtr> Data;
         public Array8<int> LineSize;
         public IntPtr ExtendedData;
