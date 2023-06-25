@@ -9,8 +9,6 @@ namespace Ryujinx.Tests.Memory
 {
     public class MultiRegionTrackingTests
     {
-        private const int RndCnt = 3;
-
         private const ulong MemorySize = 0x8000;
         private const int PageSize = 4096;
 
@@ -39,7 +37,7 @@ namespace Ryujinx.Tests.Memory
                 (IMultiRegionHandle)_tracking.BeginGranularTracking(address, size, null, granularity, 0);
         }
 
-        private void RandomOrder(Random random, List<int> indices, Action<int> action)
+        private static void RandomOrder(Random random, List<int> indices, Action<int> action)
         {
             List<int> choices = indices.ToList();
 
@@ -51,7 +49,7 @@ namespace Ryujinx.Tests.Memory
             }
         }
 
-        private int ExpectQueryInOrder(IMultiRegionHandle handle, ulong startAddress, ulong size, Func<ulong, bool> addressPredicate)
+        private static int ExpectQueryInOrder(IMultiRegionHandle handle, ulong startAddress, ulong size, Func<ulong, bool> addressPredicate)
         {
             int regionCount = 0;
             ulong lastAddress = startAddress;
@@ -67,7 +65,7 @@ namespace Ryujinx.Tests.Memory
             return regionCount;
         }
 
-        private int ExpectQueryInOrder(IMultiRegionHandle handle, ulong startAddress, ulong size, Func<ulong, bool> addressPredicate, int sequenceNumber)
+        private static int ExpectQueryInOrder(IMultiRegionHandle handle, ulong startAddress, ulong size, Func<ulong, bool> addressPredicate, int sequenceNumber)
         {
             int regionCount = 0;
             ulong lastAddress = startAddress;
@@ -83,9 +81,9 @@ namespace Ryujinx.Tests.Memory
             return regionCount;
         }
 
-        private void PreparePages(IMultiRegionHandle handle, int pageCount, ulong address = 0)
+        private static void PreparePages(IMultiRegionHandle handle, int pageCount, ulong address = 0)
         {
-            Random random = new Random();
+            Random random = new();
 
             // Make sure the list has minimum granularity (smart region changes granularity based on requested ranges)
             RandomOrder(random, Enumerable.Range(0, pageCount).ToList(), (i) =>
@@ -105,7 +103,7 @@ namespace Ryujinx.Tests.Memory
             const int pageCount = 32;
             IMultiRegionHandle handle = GetGranular(smart, 0, PageSize * pageCount, PageSize);
 
-            Random random = new Random();
+            Random random = new();
 
             PreparePages(handle, pageCount);
 
@@ -149,7 +147,7 @@ namespace Ryujinx.Tests.Memory
 
             PreparePages(handle, pageCount);
 
-            Random random = new Random();
+            Random random = new();
 
             IEnumerable<int> halfRange = Enumerable.Range(0, pageCount / 2);
             List<int> odd = halfRange.Select(x => x * 2 + 1).ToList();
@@ -240,7 +238,8 @@ namespace Ryujinx.Tests.Memory
             ulong expectedAddress = 0;
 
             // Expect each region to trigger in its entirety, in address ascending order.
-            handle.QueryModified((address, size) => {
+            handle.QueryModified((address, size) =>
+            {
                 int region = regionSizes[regionInd++];
 
                 Assert.AreEqual(address, expectedAddress);

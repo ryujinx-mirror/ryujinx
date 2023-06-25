@@ -7,14 +7,14 @@ namespace Ryujinx.Tests.Memory
 {
     public class Tests
     {
-        private static readonly ulong MemorySize = MemoryBlock.GetPageSize() * 8;
+        private static readonly ulong _memorySize = MemoryBlock.GetPageSize() * 8;
 
         private MemoryBlock _memoryBlock;
 
         [SetUp]
         public void Setup()
         {
-            _memoryBlock = new MemoryBlock(MemorySize);
+            _memoryBlock = new MemoryBlock(_memorySize);
         }
 
         [TearDown]
@@ -47,8 +47,8 @@ namespace Ryujinx.Tests.Memory
             ulong pageSize = MemoryBlock.GetPageSize();
             ulong blockSize = MemoryBlock.GetPageSize() * 16;
 
-            using MemoryBlock backing = new MemoryBlock(blockSize, MemoryAllocationFlags.Mirrorable);
-            using MemoryBlock toAlias = new MemoryBlock(blockSize, MemoryAllocationFlags.Reserve | MemoryAllocationFlags.ViewCompatible);
+            using MemoryBlock backing = new(blockSize, MemoryAllocationFlags.Mirrorable);
+            using MemoryBlock toAlias = new(blockSize, MemoryAllocationFlags.Reserve | MemoryAllocationFlags.ViewCompatible);
 
             toAlias.MapView(backing, pageSize, 0, pageSize * 4);
             toAlias.UnmapView(backing, pageSize * 3, pageSize);
@@ -66,10 +66,10 @@ namespace Ryujinx.Tests.Memory
             int pageBits = (int)ulong.Log2(pageSize);
             ulong blockSize = MemoryBlock.GetPageSize() * 128;
 
-            using MemoryBlock backing = new MemoryBlock(blockSize, MemoryAllocationFlags.Mirrorable);
-            using MemoryBlock toAlias = new MemoryBlock(blockSize, MemoryAllocationFlags.Reserve | MemoryAllocationFlags.ViewCompatible);
+            using MemoryBlock backing = new(blockSize, MemoryAllocationFlags.Mirrorable);
+            using MemoryBlock toAlias = new(blockSize, MemoryAllocationFlags.Reserve | MemoryAllocationFlags.ViewCompatible);
 
-            Random rng = new Random(123);
+            Random rng = new(123);
 
             for (int i = 0; i < 20000; i++)
             {
@@ -101,8 +101,8 @@ namespace Ryujinx.Tests.Memory
             ulong pageSize = MemoryBlock.GetPageSize();
             ulong size = 100000 * pageSize; // The mappings limit on Linux is usually around 65K, so let's make sure we are above that.
 
-            using MemoryBlock backing = new MemoryBlock(pageSize, MemoryAllocationFlags.Mirrorable);
-            using MemoryBlock toAlias = new MemoryBlock(size, MemoryAllocationFlags.Reserve | MemoryAllocationFlags.ViewCompatible);
+            using MemoryBlock backing = new(pageSize, MemoryAllocationFlags.Mirrorable);
+            using MemoryBlock toAlias = new(size, MemoryAllocationFlags.Reserve | MemoryAllocationFlags.ViewCompatible);
 
             for (ulong offset = 0; offset < size; offset += pageSize)
             {
