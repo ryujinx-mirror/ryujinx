@@ -13,13 +13,13 @@ namespace Ryujinx.Horizon.Common
 
         public int ErrorCode { get; }
 
-        public bool IsSuccess => ErrorCode == 0;
-        public bool IsFailure => ErrorCode != 0;
+        public readonly bool IsSuccess => ErrorCode == 0;
+        public readonly bool IsFailure => ErrorCode != 0;
 
-        public int Module => ErrorCode & (ModuleMax - 1);
-        public int Description => (ErrorCode >> ModuleBits) & (DescriptionMax - 1);
+        public readonly int Module => ErrorCode & (ModuleMax - 1);
+        public readonly int Description => (ErrorCode >> ModuleBits) & (DescriptionMax - 1);
 
-        public string PrintableResult => $"{2000 + Module:D4}-{Description:D4}";
+        public readonly string PrintableResult => $"{2000 + Module:D4}-{Description:D4}";
 
         public Result(int module, int description)
         {
@@ -36,17 +36,17 @@ namespace Ryujinx.Horizon.Common
             ErrorCode = module | (description << ModuleBits);
         }
 
-        public override bool Equals(object obj)
+        public readonly override bool Equals(object obj)
         {
             return obj is Result result && result.Equals(this);
         }
 
-        public bool Equals(Result other)
+        public readonly bool Equals(Result other)
         {
             return other.ErrorCode == ErrorCode;
         }
 
-        public override int GetHashCode()
+        public readonly override int GetHashCode()
         {
             return ErrorCode;
         }
@@ -61,7 +61,7 @@ namespace Ryujinx.Horizon.Common
             return !lhs.Equals(rhs);
         }
 
-        public bool InRange(int minInclusive, int maxInclusive)
+        public readonly bool InRange(int minInclusive, int maxInclusive)
         {
             return (uint)(Description - minInclusive) <= (uint)(maxInclusive - minInclusive);
         }
@@ -105,7 +105,7 @@ namespace Ryujinx.Horizon.Common
             throw new InvalidResultException(this);
         }
 
-        public override string ToString()
+        public readonly override string ToString()
         {
             if (ResultNames.TryGet(ErrorCode, out string name))
             {
