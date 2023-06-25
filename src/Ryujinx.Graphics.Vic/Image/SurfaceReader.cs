@@ -21,7 +21,8 @@ namespace Ryujinx.Graphics.Vic.Image
         {
             switch (surfaceConfig.SlotPixelFormat)
             {
-                case PixelFormat.Y8___V8U8_N420: return ReadNv12(rm, ref config, ref surfaceConfig, ref offsets);
+                case PixelFormat.Y8___V8U8_N420:
+                    return ReadNv12(rm, ref config, ref surfaceConfig, ref offsets);
             }
 
             Logger.Error?.Print(LogClass.Vic, $"Unsupported pixel format \"{surfaceConfig.SlotPixelFormat}\".");
@@ -46,7 +47,7 @@ namespace Ryujinx.Graphics.Vic.Image
             int yStride = GetPitch(width, 1);
             int uvStride = GetPitch(input.UvWidth, 2);
 
-            Surface output = new Surface(rm.SurfacePool, width, height);
+            Surface output = new(rm.SurfacePool, width, height);
 
             if (Sse41.IsSupported)
             {
@@ -276,7 +277,7 @@ namespace Ryujinx.Graphics.Vic.Image
             int bytesPerPixel,
             int planes)
         {
-            InputSurface surface = new InputSurface();
+            InputSurface surface = new();
 
             surface.Initialize();
 
@@ -458,7 +459,7 @@ namespace Ryujinx.Graphics.Vic.Image
             int outSize = dstStride * height;
             int bufferIndex = rm.BufferPool.RentMinimum(outSize, out byte[] buffer);
             Span<byte> dst = buffer;
-            dst = dst.Slice(0, outSize);
+            dst = dst[..outSize];
 
             for (int y = 0; y < height; y++)
             {
@@ -485,9 +486,9 @@ namespace Ryujinx.Graphics.Vic.Image
             int outSize = dstStride * height;
             int bufferIndex = rm.BufferPool.RentMinimum(outSize, out byte[] buffer);
             Span<byte> dst = buffer;
-            dst = dst.Slice(0, outSize);
+            dst = dst[..outSize];
 
-            LayoutConverter.ConvertBlockLinearToLinear(dst.Slice(dstStart), width, height, dstStride, bytesPerPixel, gobBlocksInY, src);
+            LayoutConverter.ConvertBlockLinearToLinear(dst[dstStart..], width, height, dstStride, bytesPerPixel, gobBlocksInY, src);
 
             return new RentedBuffer(dst, bufferIndex);
         }

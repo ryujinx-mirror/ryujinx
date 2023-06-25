@@ -4,7 +4,7 @@ namespace Ryujinx.Graphics.Vic
 {
     struct PlaneOffsets
     {
-#pragma warning disable CS0649
+#pragma warning disable CS0649 // Field is never assigned to
         public uint LumaOffset;
         public uint ChromaUOffset;
         public uint ChromaVOffset;
@@ -13,7 +13,7 @@ namespace Ryujinx.Graphics.Vic
 
     struct VicRegisters
     {
-#pragma warning disable CS0649
+#pragma warning disable CS0649 // Field is never assigned to
         public Array64<uint> Reserved0;
         public uint Nop;
         public Array15<uint> Reserved104;

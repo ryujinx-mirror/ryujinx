@@ -30,7 +30,7 @@ namespace Ryujinx.Graphics.Vic
         {
             ConfigStruct config = ReadIndirect<ConfigStruct>(_state.State.SetConfigStructOffset);
 
-            using Surface output = new Surface(
+            using Surface output = new(
                 _rm.SurfacePool,
                 config.OutputSurfaceConfig.OutSurfaceWidth + 1,
                 config.OutputSurfaceConfig.OutSurfaceHeight + 1);
@@ -58,7 +58,7 @@ namespace Ryujinx.Graphics.Vic
                 int targetW = Math.Min(output.Width - targetX, Math.Abs(x2 - x1));
                 int targetH = Math.Min(output.Height - targetY, Math.Abs(y2 - y1));
 
-                Rectangle targetRect = new Rectangle(targetX, targetY, targetW, targetH);
+                Rectangle targetRect = new(targetX, targetY, targetW, targetH);
 
                 Blender.BlendOne(output, src, ref slot, targetRect);
             }

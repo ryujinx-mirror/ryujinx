@@ -2,12 +2,12 @@
 
 namespace Ryujinx.Graphics.Vic.Types
 {
-    struct MatrixStruct
+    readonly struct MatrixStruct
     {
-        private long _word0;
-        private long _word1;
-        private long _word2;
-        private long _word3;
+        private readonly long _word0;
+        private readonly long _word1;
+        private readonly long _word2;
+        private readonly long _word3;
 
         public int MatrixCoeff00 => (int)_word0.ExtractSx(0, 20);
         public int MatrixCoeff10 => (int)_word0.ExtractSx(20, 20);

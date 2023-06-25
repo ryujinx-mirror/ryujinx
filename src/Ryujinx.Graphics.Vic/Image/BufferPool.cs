@@ -34,7 +34,7 @@ namespace Ryujinx.Graphics.Vic.Image
         {
             int index = RentMinimum(length, out T[] bufferArray);
 
-            buffer = new Span<T>(bufferArray).Slice(0, length);
+            buffer = new Span<T>(bufferArray)[..length];
 
             return index;
         }
