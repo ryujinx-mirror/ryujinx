@@ -4,7 +4,7 @@ namespace Ryujinx.Graphics.Nvdec.Types.Vp9
 {
     struct Segmentation
     {
-#pragma warning disable CS0649
+#pragma warning disable CS0649 // Field is never assigned to
         public byte Enabled;
         public byte UpdateMap;
         public byte TemporalUpdate;

@@ -13,7 +13,7 @@ namespace Ryujinx.Graphics.Nvdec
 {
     static class Vp9Decoder
     {
-        private static Decoder _decoder = new Decoder();
+        private static readonly Decoder _decoder = new();
 
         public unsafe static void Decode(ResourceManager rm, ref NvdecRegisters state)
         {
@@ -25,9 +25,9 @@ namespace Ryujinx.Graphics.Nvdec
                 return rm.Cache.Get(_decoder, lumaOffset, chromaOffset, size.Width, size.Height);
             }
 
-            ISurface lastSurface    = Rent(state.SetPictureLumaOffset[0], state.SetPictureChromaOffset[0], pictureInfo.LastFrameSize);
-            ISurface goldenSurface  = Rent(state.SetPictureLumaOffset[1], state.SetPictureChromaOffset[1], pictureInfo.GoldenFrameSize);
-            ISurface altSurface     = Rent(state.SetPictureLumaOffset[2], state.SetPictureChromaOffset[2], pictureInfo.AltFrameSize);
+            ISurface lastSurface = Rent(state.SetPictureLumaOffset[0], state.SetPictureChromaOffset[0], pictureInfo.LastFrameSize);
+            ISurface goldenSurface = Rent(state.SetPictureLumaOffset[1], state.SetPictureChromaOffset[1], pictureInfo.GoldenFrameSize);
+            ISurface altSurface = Rent(state.SetPictureLumaOffset[2], state.SetPictureChromaOffset[2], pictureInfo.AltFrameSize);
             ISurface currentSurface = Rent(state.SetPictureLumaOffset[3], state.SetPictureChromaOffset[3], pictureInfo.CurrentFrameSize);
 
             Vp9PictureInfo info = pictureInfo.Convert();
@@ -54,7 +54,7 @@ namespace Ryujinx.Graphics.Nvdec
 
             Span<Vp9MvRef> mvsOut = MemoryMarshal.Cast<byte, Vp9MvRef>(mvsRegion.Memory.Span);
 
-            uint lumaOffset   = state.SetPictureLumaOffset[3];
+            uint lumaOffset = state.SetPictureLumaOffset[3];
             uint chromaOffset = state.SetPictureChromaOffset[3];
 
             if (_decoder.Decode(ref info, currentSurface, bitstream, mvsIn, mvsOut))

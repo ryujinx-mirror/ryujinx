@@ -4,7 +4,7 @@ namespace Ryujinx.Graphics.Nvdec
 {
     struct NvdecStatus
     {
-#pragma warning disable CS0649
+#pragma warning disable CS0649 // Field is never assigned to
         public uint MbsCorrectlyDecoded;
         public uint MbsInError;
         public uint Reserved;

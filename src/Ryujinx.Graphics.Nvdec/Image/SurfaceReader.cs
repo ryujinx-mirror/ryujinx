@@ -43,7 +43,7 @@ namespace Ryujinx.Graphics.Nvdec.Image
             int width,
             int height)
         {
-            OffsetCalculator calc = new OffsetCalculator(width, height, 0, false, 2, 2);
+            OffsetCalculator calc = new(width, height, 0, false, 2, 2);
 
             if (Sse2.IsSupported)
             {

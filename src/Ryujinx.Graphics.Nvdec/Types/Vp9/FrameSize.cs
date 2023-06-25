@@ -2,7 +2,7 @@
 {
     struct FrameSize
     {
-#pragma warning disable CS0649
+#pragma warning disable CS0649 // Field is never assigned to
         public ushort Width;
         public ushort Height;
         public ushort LumaPitch;

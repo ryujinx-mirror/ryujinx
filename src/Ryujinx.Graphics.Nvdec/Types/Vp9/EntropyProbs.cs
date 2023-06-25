@@ -5,7 +5,7 @@ namespace Ryujinx.Graphics.Nvdec.Types.Vp9
 {
     struct EntropyProbs
     {
-#pragma warning disable CS0649
+#pragma warning disable CS0649 // Field is never assigned to
         public Array10<Array10<Array8<byte>>> KfYModeProbE0ToE7;
         public Array10<Array10<byte>> KfYModeProbE8;
         public Array3<byte> Padding384;

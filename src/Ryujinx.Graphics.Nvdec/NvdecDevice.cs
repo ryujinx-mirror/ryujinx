@@ -14,7 +14,7 @@ namespace Ryujinx.Graphics.Nvdec
         private readonly DeviceState<NvdecRegisters> _state;
 
         private long _currentId;
-        private ConcurrentDictionary<long, NvdecDecoderContext> _contexts;
+        private readonly ConcurrentDictionary<long, NvdecDecoderContext> _contexts;
         private NvdecDecoderContext _currentContext;
 
         public NvdecDevice(MemoryManager gmm)

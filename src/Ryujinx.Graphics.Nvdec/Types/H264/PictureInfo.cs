@@ -5,8 +5,9 @@ namespace Ryujinx.Graphics.Nvdec.Types.H264
 {
     struct PictureInfo
     {
-#pragma warning disable CS0169, CS0649
+#pragma warning disable IDE0051, CS0169, CS0649 // Remove unused private member
         Array18<uint> Unknown0;
+#pragma warning restore IDE0051
         public uint BitstreamSize;
         public uint NumSlices;
         public uint Unknown50;
@@ -50,24 +51,24 @@ namespace Ryujinx.Graphics.Nvdec.Types.H264
         public Array10<uint> Unknown2D4;
 #pragma warning restore CS0169, CS0649
 
-        public bool MbAdaptiveFrameFieldFlag => (Flags & (1 << 0)) != 0;
-        public bool Direct8x8InferenceFlag => (Flags & (1 << 1)) != 0;
-        public bool WeightedPredFlag => (Flags & (1 << 2)) != 0;
-        public bool ConstrainedIntraPredFlag => (Flags & (1 << 3)) != 0;
-        public bool IsReference => (Flags & (1 << 4)) != 0;
-        public bool FieldPicFlag => (Flags & (1 << 5)) != 0;
-        public bool BottomFieldFlag => (Flags & (1 << 6)) != 0;
-        public uint Log2MaxFrameNumMinus4 => (uint)(Flags >> 8) & 0xf;
-        public ushort ChromaFormatIdc => (ushort)((Flags >> 12) & 3);
-        public uint PicOrderCntType => (uint)(Flags >> 14) & 3;
-        public int PicInitQpMinus26 => ExtractSx(Flags, 16, 6);
-        public int ChromaQpIndexOffset => ExtractSx(Flags, 22, 5);
-        public int SecondChromaQpIndexOffset => ExtractSx(Flags, 27, 5);
-        public uint WeightedBipredIdc => (uint)(Flags >> 32) & 3;
-        public uint OutputSurfaceIndex => (uint)(Flags >> 34) & 0x7f;
-        public uint ColIndex => (uint)(Flags >> 41) & 0x1f;
-        public ushort FrameNum => (ushort)(Flags >> 46);
-        public bool QpprimeYZeroTransformBypassFlag => (Flags2 & (1 << 1)) != 0;
+        public readonly bool MbAdaptiveFrameFieldFlag => (Flags & (1 << 0)) != 0;
+        public readonly bool Direct8x8InferenceFlag => (Flags & (1 << 1)) != 0;
+        public readonly bool WeightedPredFlag => (Flags & (1 << 2)) != 0;
+        public readonly bool ConstrainedIntraPredFlag => (Flags & (1 << 3)) != 0;
+        public readonly bool IsReference => (Flags & (1 << 4)) != 0;
+        public readonly bool FieldPicFlag => (Flags & (1 << 5)) != 0;
+        public readonly bool BottomFieldFlag => (Flags & (1 << 6)) != 0;
+        public readonly uint Log2MaxFrameNumMinus4 => (uint)(Flags >> 8) & 0xf;
+        public readonly ushort ChromaFormatIdc => (ushort)((Flags >> 12) & 3);
+        public readonly uint PicOrderCntType => (uint)(Flags >> 14) & 3;
+        public readonly int PicInitQpMinus26 => ExtractSx(Flags, 16, 6);
+        public readonly int ChromaQpIndexOffset => ExtractSx(Flags, 22, 5);
+        public readonly int SecondChromaQpIndexOffset => ExtractSx(Flags, 27, 5);
+        public readonly uint WeightedBipredIdc => (uint)(Flags >> 32) & 3;
+        public readonly uint OutputSurfaceIndex => (uint)(Flags >> 34) & 0x7f;
+        public readonly uint ColIndex => (uint)(Flags >> 41) & 0x1f;
+        public readonly ushort FrameNum => (ushort)(Flags >> 46);
+        public readonly bool QpprimeYZeroTransformBypassFlag => (Flags2 & (1 << 1)) != 0;
 
         private static int ExtractSx(ulong packed, int lsb, int length)
         {

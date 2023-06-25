@@ -60,7 +60,7 @@ namespace Ryujinx.Graphics.Nvdec.Image
 
             WriteLuma(
                 lumaBottom.Memory.Span,
-                surface.YPlane.AsSpan().Slice(surface.Stride),
+                surface.YPlane.AsSpan()[surface.Stride..],
                 surface.Stride * 2,
                 surface.Width,
                 surface.Height / 2);
@@ -80,8 +80,8 @@ namespace Ryujinx.Graphics.Nvdec.Image
 
             WriteChroma(
                 chromaBottom.Memory.Span,
-                surface.UPlane.AsSpan().Slice(surface.UvStride),
-                surface.VPlane.AsSpan().Slice(surface.UvStride),
+                surface.UPlane.AsSpan()[surface.UvStride..],
+                surface.VPlane.AsSpan()[surface.UvStride..],
                 surface.UvStride * 2,
                 surface.UvWidth,
                 surface.UvHeight / 2);
@@ -100,7 +100,7 @@ namespace Ryujinx.Graphics.Nvdec.Image
             int width,
             int height)
         {
-            OffsetCalculator calc = new OffsetCalculator(width, height, 0, false, 2, 2);
+            OffsetCalculator calc = new(width, height, 0, false, 2, 2);
 
             if (Sse2.IsSupported)
             {
