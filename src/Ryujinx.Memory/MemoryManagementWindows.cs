@@ -114,7 +114,7 @@ namespace Ryujinx.Memory
 
             if (handle == IntPtr.Zero)
             {
-                throw new OutOfMemoryException();
+                throw new SystemException(Marshal.GetLastPInvokeErrorMessage());
             }
 
             return handle;
@@ -134,7 +134,7 @@ namespace Ryujinx.Memory
 
             if (ptr == IntPtr.Zero)
             {
-                throw new OutOfMemoryException();
+                throw new SystemException(Marshal.GetLastPInvokeErrorMessage());
             }
 
             return ptr;

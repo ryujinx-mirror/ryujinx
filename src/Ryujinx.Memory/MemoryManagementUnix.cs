@@ -147,12 +147,12 @@ namespace Ryujinx.Memory
                     fd = shm_open((IntPtr)pMemName, 0x2 | 0x200 | 0x800 | 0x400, 384); // O_RDWR | O_CREAT | O_EXCL | O_TRUNC, 0600
                     if (fd == -1)
                     {
-                        throw new OutOfMemoryException();
+                        throw new SystemException(Marshal.GetLastPInvokeErrorMessage());
                     }
 
                     if (shm_unlink((IntPtr)pMemName) != 0)
                     {
-                        throw new OutOfMemoryException();
+                        throw new SystemException(Marshal.GetLastPInvokeErrorMessage());
                     }
                 }
             }
@@ -165,22 +165,22 @@ namespace Ryujinx.Memory
                     fd = mkstemp((IntPtr)pFileName);
                     if (fd == -1)
                     {
-                        throw new OutOfMemoryException();
+                        throw new SystemException(Marshal.GetLastPInvokeErrorMessage());
                     }
 
                     if (unlink((IntPtr)pFileName) != 0)
                     {
-                        throw new OutOfMemoryException();
+                        throw new SystemException(Marshal.GetLastPInvokeErrorMessage());
                     }
                 }
             }
 
             if (ftruncate(fd, (IntPtr)size) != 0)
             {
-                throw new OutOfMemoryException();
+                throw new SystemException(Marshal.GetLastPInvokeErrorMessage());
             }
 
-            return (IntPtr)fd;
+            return fd;
         }
 
         public static void DestroySharedMemory(IntPtr handle)

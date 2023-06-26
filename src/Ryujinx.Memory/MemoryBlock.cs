@@ -31,7 +31,7 @@ namespace Ryujinx.Memory
         /// </summary>
         /// <param name="size">Size of the memory block in bytes</param>
         /// <param name="flags">Flags that controls memory block memory allocation</param>
-        /// <exception cref="OutOfMemoryException">Throw when there's no enough memory to allocate the requested size</exception>
+        /// <exception cref="SystemException">Throw when there's an error while allocating the requested size</exception>
         /// <exception cref="PlatformNotSupportedException">Throw when the current platform is not supported</exception>
         public MemoryBlock(ulong size, MemoryAllocationFlags flags = MemoryAllocationFlags.None)
         {
@@ -66,7 +66,7 @@ namespace Ryujinx.Memory
         /// </summary>
         /// <param name="size">Size of the memory block in bytes</param>
         /// <param name="sharedMemory">Shared memory to use as backing storage for this block</param>
-        /// <exception cref="OutOfMemoryException">Throw when there's no enough address space left to map the shared memory</exception>
+        /// <exception cref="SystemException">Throw when there's an error while mapping the shared memory</exception>
         /// <exception cref="PlatformNotSupportedException">Throw when the current platform is not supported</exception>
         private MemoryBlock(ulong size, IntPtr sharedMemory)
         {
@@ -82,7 +82,7 @@ namespace Ryujinx.Memory
         /// </summary>
         /// <returns>A new memory block that shares storage with this one</returns>
         /// <exception cref="NotSupportedException">Throw when the current memory block does not support mirroring</exception>
-        /// <exception cref="OutOfMemoryException">Throw when there's no enough address space left to map the shared memory</exception>
+        /// <exception cref="SystemException">Throw when there's an error while mapping the shared memory</exception>
         /// <exception cref="PlatformNotSupportedException">Throw when the current platform is not supported</exception>
         public MemoryBlock CreateMirror()
         {

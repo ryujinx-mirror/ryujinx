@@ -199,7 +199,7 @@ namespace Ryujinx.Cpu
 
                     break;
                 }
-                catch (OutOfMemoryException)
+                catch (SystemException)
                 {
                     baseMemory?.Dispose();
                     mirrorMemory?.Dispose();
