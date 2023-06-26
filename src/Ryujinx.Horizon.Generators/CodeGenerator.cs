@@ -40,7 +40,7 @@ namespace Ryujinx.Horizon.Generators
         {
             if (_currentIndentCount - 1 >= 0)
             {
-                _currentIndentCount--;   
+                _currentIndentCount--;
             }
         }
 

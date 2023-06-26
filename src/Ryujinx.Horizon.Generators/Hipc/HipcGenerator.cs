@@ -39,7 +39,7 @@ namespace Ryujinx.Horizon.Generators.Hipc
             In
         }
 
-        private struct OutParameter
+        private readonly struct OutParameter
         {
             public readonly string Name;
             public readonly string TypeName;
@@ -341,7 +341,7 @@ namespace Ryujinx.Horizon.Generators.Hipc
                         generator.AppendLine($"using var {argName} = {value};");
 
                         string spanGenericTypeName = GetCanonicalTypeNameOfGenericArgument(compilation, parameter.Type, 0);
-                        argName = GenerateSpanCast(spanGenericTypeName, $"{argName}.Memory.Span"); ;
+                        argName = GenerateSpanCast(spanGenericTypeName, $"{argName}.Memory.Span");
                     }
                     else if (isNonSpanBuffer)
                     {
@@ -604,7 +604,7 @@ namespace Ryujinx.Horizon.Generators.Hipc
             return type;
         }
 
-        private static bool IsArgument(Compilation compilation,ParameterSyntax parameter)
+        private static bool IsArgument(Compilation compilation, ParameterSyntax parameter)
         {
             return !IsBuffer(compilation, parameter) &&
                    !IsHandle(compilation, parameter) &&
