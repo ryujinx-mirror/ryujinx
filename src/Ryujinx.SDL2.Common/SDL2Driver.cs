@@ -19,10 +19,7 @@ namespace Ryujinx.SDL2.Common
         {
             get
             {
-                if (_instance == null)
-                {
-                    _instance = new SDL2Driver();
-                }
+                _instance ??= new SDL2Driver();
 
                 return _instance;
             }
@@ -43,7 +40,7 @@ namespace Ryujinx.SDL2.Common
 
         private readonly object _lock = new();
 
-        private SDL2Driver() {}
+        private SDL2Driver() { }
 
         private const string SDL_HINT_JOYSTICK_HIDAPI_COMBINE_JOY_CONS = "SDL_JOYSTICK_HIDAPI_COMBINE_JOY_CONS";
 
@@ -80,8 +77,15 @@ namespace Ryujinx.SDL2.Common
                 }
 
                 // First ensure that we only enable joystick events (for connected/disconnected).
-                SDL_GameControllerEventState(SDL_DISABLE);
-                SDL_JoystickEventState(SDL_ENABLE);
+                if (SDL_GameControllerEventState(SDL_IGNORE) != SDL_IGNORE)
+                {
+                    Logger.Error?.PrintMsg(LogClass.Application, "Couldn't change the state of game controller events.");
+                }
+
+                if (SDL_JoystickEventState(SDL_ENABLE) < 0)
+                {
+                    Logger.Error?.PrintMsg(LogClass.Application, $"Failed to enable joystick event polling: {SDL_GetError()}");
+                }
 
                 // Disable all joysticks information, we don't need them no need to flood the event queue for that.
                 SDL_EventState(SDL_EventType.SDL_JOYAXISMOTION, SDL_DISABLE);
@@ -153,7 +157,7 @@ namespace Ryujinx.SDL2.Common
         {
             const int WaitTimeMs = 10;
 
-            using ManualResetEventSlim waitHandle = new ManualResetEventSlim(false);
+            using ManualResetEventSlim waitHandle = new(false);
 
             while (_isRunning)
             {
@@ -199,6 +203,7 @@ namespace Ryujinx.SDL2.Common
 
         public void Dispose()
         {
+            GC.SuppressFinalize(this);
             Dispose(true);
         }
     }
