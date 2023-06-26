@@ -26,9 +26,11 @@ namespace Ryujinx.Input.SDL2
 
         private readonly object _userMappingLock = new();
 
+#pragma warning disable IDE0052 // Remove unread private member
         private readonly SDL2KeyboardDriver _driver;
+#pragma warning restore IDE0052
         private StandardKeyboardInputConfig _configuration;
-        private List<ButtonMappingEntry> _buttonsUserMapping;
+        private readonly List<ButtonMappingEntry> _buttonsUserMapping;
 
         private static readonly SDL_Keycode[] _keysDriverMapping = new SDL_Keycode[(int)Key.Count]
         {
@@ -208,29 +210,19 @@ namespace Ryujinx.Input.SDL2
 
         private static SDL_Keymod GetKeyboardModifierMask(Key key)
         {
-            switch (key)
+            return key switch
             {
-                case Key.ShiftLeft:
-                    return SDL_Keymod.KMOD_LSHIFT;
-                case Key.ShiftRight:
-                    return SDL_Keymod.KMOD_RSHIFT;
-                case Key.ControlLeft:
-                    return SDL_Keymod.KMOD_LCTRL;
-                case Key.ControlRight:
-                    return SDL_Keymod.KMOD_RCTRL;
-                case Key.AltLeft:
-                    return SDL_Keymod.KMOD_LALT;
-                case Key.AltRight:
-                    return SDL_Keymod.KMOD_RALT;
-                case Key.WinLeft:
-                    return SDL_Keymod.KMOD_LGUI;
-                case Key.WinRight:
-                    return SDL_Keymod.KMOD_RGUI;
+                Key.ShiftLeft => SDL_Keymod.KMOD_LSHIFT,
+                Key.ShiftRight => SDL_Keymod.KMOD_RSHIFT,
+                Key.ControlLeft => SDL_Keymod.KMOD_LCTRL,
+                Key.ControlRight => SDL_Keymod.KMOD_RCTRL,
+                Key.AltLeft => SDL_Keymod.KMOD_LALT,
+                Key.AltRight => SDL_Keymod.KMOD_RALT,
+                Key.WinLeft => SDL_Keymod.KMOD_LGUI,
+                Key.WinRight => SDL_Keymod.KMOD_RGUI,
                 // NOTE: Menu key isn't supported by SDL2.
-                case Key.Menu:
-                default:
-                    return SDL_Keymod.KMOD_NONE;
-            }
+                _ => SDL_Keymod.KMOD_NONE,
+            };
         }
 
         public KeyboardStateSnapshot GetKeyboardStateSnapshot()

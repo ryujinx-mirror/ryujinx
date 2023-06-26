@@ -7,8 +7,8 @@ namespace Ryujinx.Input.SDL2
 {
     public class SDL2GamepadDriver : IGamepadDriver
     {
-        private Dictionary<int, string> _gamepadsInstanceIdsMapping;
-        private List<string> _gamepadsIds;
+        private readonly Dictionary<int, string> _gamepadsInstanceIdsMapping;
+        private readonly List<string> _gamepadsIds;
 
         public ReadOnlySpan<string> GamepadsIds => _gamepadsIds.ToArray();
 
@@ -35,7 +35,7 @@ namespace Ryujinx.Input.SDL2
             }
         }
 
-        private string GenerateGamepadId(int joystickIndex)
+        private static string GenerateGamepadId(int joystickIndex)
         {
             Guid guid = SDL_JoystickGetDeviceGUID(joystickIndex);
 
@@ -44,10 +44,10 @@ namespace Ryujinx.Input.SDL2
                 return null;
             }
 
-            return joystickIndex + "-" + guid.ToString();
+            return joystickIndex + "-" + guid;
         }
 
-        private int GetJoystickIndexByGamepadId(string id)
+        private static int GetJoystickIndexByGamepadId(string id)
         {
             string[] data = id.Split("-");
 
@@ -118,6 +118,7 @@ namespace Ryujinx.Input.SDL2
 
         public void Dispose()
         {
+            GC.SuppressFinalize(this);
             Dispose(true);
         }
 
