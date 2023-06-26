@@ -3,7 +3,6 @@ using ARMeilleure.IntermediateRepresentation;
 using ARMeilleure.State;
 using ARMeilleure.Translation;
 using System;
-
 using static ARMeilleure.Instructions.InstEmitHelper;
 using static ARMeilleure.Instructions.InstEmitMemoryHelper;
 using static ARMeilleure.IntermediateRepresentation.Operand.Factory;
@@ -12,18 +11,18 @@ namespace ARMeilleure.Instructions
 {
     static partial class InstEmit32
     {
-        private const int ByteSizeLog2  = 0;
+        private const int ByteSizeLog2 = 0;
         private const int HWordSizeLog2 = 1;
-        private const int WordSizeLog2  = 2;
+        private const int WordSizeLog2 = 2;
         private const int DWordSizeLog2 = 3;
 
         [Flags]
         enum AccessType
         {
-            Store     = 0,
-            Signed    = 1,
-            Load      = 2,
-            Ordered   = 4,
+            Store = 0,
+            Signed = 1,
+            Load = 2,
+            Ordered = 4,
             Exclusive = 8,
 
             LoadZx = Load,
@@ -47,7 +46,7 @@ namespace ARMeilleure.Instructions
                 SetIntA32(context, op.Rn, context.Add(n, Const(op.PostOffset)));
             }
 
-            int mask   = op.RegisterMask;
+            int mask = op.RegisterMask;
             int offset = 0;
 
             for (int register = 0; mask != 0; mask >>= 1, register++)
@@ -101,7 +100,7 @@ namespace ARMeilleure.Instructions
 
             Operand baseAddress = context.Add(n, Const(op.Offset));
 
-            int mask   = op.RegisterMask;
+            int mask = op.RegisterMask;
             int offset = 0;
 
             for (int register = 0; mask != 0; mask >>= 1, register++)
@@ -161,7 +160,7 @@ namespace ARMeilleure.Instructions
             if (op.Index || op.WBack)
             {
                 temp = op.Add
-                    ? context.Add     (n, m)
+                    ? context.Add(n, m)
                     : context.Subtract(n, m);
             }
 
@@ -200,7 +199,7 @@ namespace ARMeilleure.Instructions
                 if (size == DWordSizeLog2)
                 {
                     Operand lblBigEndian = Label();
-                    Operand lblEnd       = Label();
+                    Operand lblEnd = Label();
 
                     context.BranchIfTrue(lblBigEndian, GetFlag(PState.EFlag));
 
@@ -233,7 +232,7 @@ namespace ARMeilleure.Instructions
                 if (size == DWordSizeLog2)
                 {
                     Operand lblBigEndian = Label();
-                    Operand lblEnd       = Label();
+                    Operand lblEnd = Label();
 
                     context.BranchIfTrue(lblBigEndian, GetFlag(PState.EFlag));
 

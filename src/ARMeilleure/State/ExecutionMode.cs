@@ -4,6 +4,6 @@ namespace ARMeilleure.State
     {
         Aarch32Arm = 0,
         Aarch32Thumb = 1,
-        Aarch64 = 2
+        Aarch64 = 2,
     }
 }

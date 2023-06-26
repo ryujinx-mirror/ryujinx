@@ -180,7 +180,7 @@ namespace ARMeilleure.Translation
                 }
 
                 previous = current;
-                current  = current.ImmediateDominator;
+                current = current.ImmediateDominator;
             }
             while (previous != current);
 

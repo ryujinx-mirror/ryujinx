@@ -55,7 +55,7 @@ namespace ARMeilleure.Translation
         public Aarch32Mode Mode { get; }
 
         private int _ifThenBlockStateIndex = 0;
-        private Condition[] _ifThenBlockState = { };
+        private Condition[] _ifThenBlockState = Array.Empty<Condition>();
         public bool IsInIfThenBlock => _ifThenBlockStateIndex < _ifThenBlockState.Length;
         public Condition CurrentIfThenBlockCond => _ifThenBlockState[_ifThenBlockStateIndex];
 
@@ -96,7 +96,7 @@ namespace ARMeilleure.Translation
 
                 OperandType returnType = GetOperandType(info.ReturnType);
 
-                Symbol symbol = new Symbol(SymbolType.DelegateTable, (ulong)index);
+                Symbol symbol = new(SymbolType.DelegateTable, (ulong)index);
 
                 Symbols.Add((ulong)funcPtr.ToInt64(), info.Name);
 
@@ -219,6 +219,7 @@ namespace ARMeilleure.Translation
             {
                 switch (condition)
                 {
+#pragma warning disable IDE0055 // Disable formatting
                     case Condition.Eq:   return ICompareEqual           (n, m);
                     case Condition.Ne:   return ICompareNotEqual        (n, m);
                     case Condition.GeUn: return ICompareGreaterOrEqualUI(n, m);
@@ -229,6 +230,7 @@ namespace ARMeilleure.Translation
                     case Condition.Lt:   return ICompareLess            (n, m);
                     case Condition.Gt:   return ICompareGreater         (n, m);
                     case Condition.Le:   return ICompareLessOrEqual     (n, m);
+#pragma warning restore IDE0055
                 }
             }
             else if (cmpName == InstName.Adds && _optOpLastCompare is IOpCodeAluImm op)
@@ -253,12 +255,14 @@ namespace ARMeilleure.Translation
 
                 switch (condition)
                 {
+#pragma warning disable IDE0055 // Disable formatting
                     case Condition.Eq: return ICompareEqual         (n, m);
                     case Condition.Ne: return ICompareNotEqual      (n, m);
                     case Condition.Ge: return ICompareGreaterOrEqual(n, m);
                     case Condition.Lt: return ICompareLess          (n, m);
                     case Condition.Gt: return ICompareGreater       (n, m);
                     case Condition.Le: return ICompareLessOrEqual   (n, m);
+#pragma warning restore IDE0055
                 }
             }
 

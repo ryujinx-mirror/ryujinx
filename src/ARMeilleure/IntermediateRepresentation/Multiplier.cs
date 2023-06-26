@@ -6,6 +6,6 @@ namespace ARMeilleure.IntermediateRepresentation
         x2 = 1,
         x4 = 2,
         x8 = 3,
-        x16 = 4
+        x16 = 4,
     }
 }

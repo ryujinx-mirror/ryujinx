@@ -5,7 +5,7 @@ namespace ARMeilleure.Instructions
 {
     static class SoftFallback
     {
-#region "ShrImm64"
+        #region "ShrImm64"
         public static long SignedShrImm64(long value, long roundConst, int shift)
         {
             if (roundConst == 0L)
@@ -89,12 +89,15 @@ namespace ARMeilleure.Instructions
                 }
             }
         }
-#endregion
+        #endregion
 
-#region "Saturation"
+        #region "Saturation"
         public static int SatF32ToS32(float value)
         {
-            if (float.IsNaN(value)) return 0;
+            if (float.IsNaN(value))
+            {
+                return 0;
+            }
 
             return value >= int.MaxValue ? int.MaxValue :
                    value <= int.MinValue ? int.MinValue : (int)value;
@@ -102,7 +105,10 @@ namespace ARMeilleure.Instructions
 
         public static long SatF32ToS64(float value)
         {
-            if (float.IsNaN(value)) return 0;
+            if (float.IsNaN(value))
+            {
+                return 0;
+            }
 
             return value >= long.MaxValue ? long.MaxValue :
                    value <= long.MinValue ? long.MinValue : (long)value;
@@ -110,7 +116,10 @@ namespace ARMeilleure.Instructions
 
         public static uint SatF32ToU32(float value)
         {
-            if (float.IsNaN(value)) return 0;
+            if (float.IsNaN(value))
+            {
+                return 0;
+            }
 
             return value >= uint.MaxValue ? uint.MaxValue :
                    value <= uint.MinValue ? uint.MinValue : (uint)value;
@@ -118,7 +127,10 @@ namespace ARMeilleure.Instructions
 
         public static ulong SatF32ToU64(float value)
         {
-            if (float.IsNaN(value)) return 0;
+            if (float.IsNaN(value))
+            {
+                return 0;
+            }
 
             return value >= ulong.MaxValue ? ulong.MaxValue :
                    value <= ulong.MinValue ? ulong.MinValue : (ulong)value;
@@ -126,7 +138,10 @@ namespace ARMeilleure.Instructions
 
         public static int SatF64ToS32(double value)
         {
-            if (double.IsNaN(value)) return 0;
+            if (double.IsNaN(value))
+            {
+                return 0;
+            }
 
             return value >= int.MaxValue ? int.MaxValue :
                    value <= int.MinValue ? int.MinValue : (int)value;
@@ -134,7 +149,10 @@ namespace ARMeilleure.Instructions
 
         public static long SatF64ToS64(double value)
         {
-            if (double.IsNaN(value)) return 0;
+            if (double.IsNaN(value))
+            {
+                return 0;
+            }
 
             return value >= long.MaxValue ? long.MaxValue :
                    value <= long.MinValue ? long.MinValue : (long)value;
@@ -142,7 +160,10 @@ namespace ARMeilleure.Instructions
 
         public static uint SatF64ToU32(double value)
         {
-            if (double.IsNaN(value)) return 0;
+            if (double.IsNaN(value))
+            {
+                return 0;
+            }
 
             return value >= uint.MaxValue ? uint.MaxValue :
                    value <= uint.MinValue ? uint.MinValue : (uint)value;
@@ -150,14 +171,17 @@ namespace ARMeilleure.Instructions
 
         public static ulong SatF64ToU64(double value)
         {
-            if (double.IsNaN(value)) return 0;
+            if (double.IsNaN(value))
+            {
+                return 0;
+            }
 
             return value >= ulong.MaxValue ? ulong.MaxValue :
                    value <= ulong.MinValue ? ulong.MinValue : (ulong)value;
         }
-#endregion
+        #endregion
 
-#region "Count"
+        #region "Count"
         public static ulong CountLeadingSigns(ulong value, int size) // size is 8, 16, 32 or 64 (SIMD&FP or Base Inst.).
         {
             value ^= value >> 1;
@@ -197,9 +221,9 @@ namespace ARMeilleure.Instructions
 
             return (ulong)count;
         }
-#endregion
+        #endregion
 
-#region "Table"
+        #region "Table"
         public static V128 Tbl1(V128 vector, int bytes, V128 tb0)
         {
             return TblOrTbx(default, vector, bytes, tb0);
@@ -270,21 +294,21 @@ namespace ARMeilleure.Instructions
 
             return new V128(res);
         }
-#endregion
+        #endregion
 
-#region "Crc32"
-        private const uint Crc32RevPoly  = 0xedb88320;
+        #region "Crc32"
+        private const uint Crc32RevPoly = 0xedb88320;
         private const uint Crc32cRevPoly = 0x82f63b78;
 
-        public static uint Crc32b(uint crc, byte   value) => Crc32 (crc, Crc32RevPoly, value);
+        public static uint Crc32b(uint crc, byte value) => Crc32(crc, Crc32RevPoly, value);
         public static uint Crc32h(uint crc, ushort value) => Crc32h(crc, Crc32RevPoly, value);
-        public static uint Crc32w(uint crc, uint   value) => Crc32w(crc, Crc32RevPoly, value);
-        public static uint Crc32x(uint crc, ulong  value) => Crc32x(crc, Crc32RevPoly, value);
+        public static uint Crc32w(uint crc, uint value) => Crc32w(crc, Crc32RevPoly, value);
+        public static uint Crc32x(uint crc, ulong value) => Crc32x(crc, Crc32RevPoly, value);
 
-        public static uint Crc32cb(uint crc, byte   value) => Crc32 (crc, Crc32cRevPoly, value);
+        public static uint Crc32cb(uint crc, byte value) => Crc32(crc, Crc32cRevPoly, value);
         public static uint Crc32ch(uint crc, ushort value) => Crc32h(crc, Crc32cRevPoly, value);
-        public static uint Crc32cw(uint crc, uint   value) => Crc32w(crc, Crc32cRevPoly, value);
-        public static uint Crc32cx(uint crc, ulong  value) => Crc32x(crc, Crc32cRevPoly, value);
+        public static uint Crc32cw(uint crc, uint value) => Crc32w(crc, Crc32cRevPoly, value);
+        public static uint Crc32cx(uint crc, ulong value) => Crc32x(crc, Crc32cRevPoly, value);
 
         private static uint Crc32h(uint crc, uint poly, ushort val)
         {
@@ -331,9 +355,9 @@ namespace ARMeilleure.Instructions
 
             return crc;
         }
-#endregion
+        #endregion
 
-#region "Aes"
+        #region "Aes"
         public static V128 Decrypt(V128 value, V128 roundKey)
         {
             return CryptoHelper.AesInvSubBytes(CryptoHelper.AesInvShiftRows(value ^ roundKey));
@@ -353,9 +377,9 @@ namespace ARMeilleure.Instructions
         {
             return CryptoHelper.AesMixColumns(value);
         }
-#endregion
+        #endregion
 
-#region "Sha1"
+        #region "Sha1"
         public static V128 HashChoose(V128 hash_abcd, uint hash_e, V128 wk)
         {
             for (int e = 0; e <= 3; e++)
@@ -426,7 +450,7 @@ namespace ARMeilleure.Instructions
             ulong t2 = w4_7.Extract<ulong>(0);
             ulong t1 = w0_3.Extract<ulong>(1);
 
-            V128 result = new V128(t1, t2);
+            V128 result = new(t1, t2);
 
             return result ^ (w0_3 ^ w8_11);
         }
@@ -472,9 +496,9 @@ namespace ARMeilleure.Instructions
         {
             return (value << count) | (value >> (32 - count));
         }
-#endregion
+        #endregion
 
-#region "Sha256"
+        #region "Sha256"
         public static V128 HashLower(V128 hash_abcd, V128 hash_efgh, V128 wk)
         {
             return Sha256Hash(hash_abcd, hash_efgh, wk, part1: true);
@@ -487,7 +511,7 @@ namespace ARMeilleure.Instructions
 
         public static V128 Sha256SchedulePart1(V128 w0_3, V128 w4_7)
         {
-            V128 result = new V128();
+            V128 result = new();
 
             for (int e = 0; e <= 3; e++)
             {
@@ -505,7 +529,7 @@ namespace ARMeilleure.Instructions
 
         public static V128 Sha256SchedulePart2(V128 w0_3, V128 w8_11, V128 w12_15)
         {
-            V128 result = new V128();
+            V128 result = new();
 
             ulong t1 = w12_15.Extract<ulong>(1);
 
@@ -602,13 +626,13 @@ namespace ARMeilleure.Instructions
                 ? (uint)(value & 0xFFFFFFFFUL)
                 : (uint)(value >> 32);
         }
-#endregion
+        #endregion
 
         public static V128 PolynomialMult64_128(ulong op1, ulong op2)
         {
             V128 result = V128.Zero;
 
-            V128 op2_128 = new V128(op2, 0);
+            V128 op2_128 = new(op2, 0);
 
             for (int i = 0; i < 64; i++)
             {

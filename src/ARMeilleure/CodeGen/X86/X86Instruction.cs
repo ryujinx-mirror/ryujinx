@@ -226,6 +226,6 @@ namespace ARMeilleure.CodeGen.X86
         Xorpd,
         Xorps,
 
-        Count
+        Count,
     }
 }

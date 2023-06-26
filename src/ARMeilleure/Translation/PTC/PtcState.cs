@@ -5,6 +5,6 @@ namespace ARMeilleure.Translation.PTC
         Enabled,
         Continuing,
         Closing,
-        Disabled
+        Disabled,
     }
 }

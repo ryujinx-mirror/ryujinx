@@ -10,7 +10,7 @@ namespace ARMeilleure.Decoders
 
         public OpCodeSimdFcond(InstDescriptor inst, ulong address, int opCode) : base(inst, address, opCode)
         {
-            Nzcv =             (opCode >>  0) & 0xf;
+            Nzcv = (opCode >> 0) & 0xf;
             Cond = (Condition)((opCode >> 12) & 0xf);
         }
     }

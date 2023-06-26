@@ -7,8 +7,8 @@ namespace ARMeilleure.Decoders
         public int Rn { get; }
 
         public int RegisterMask { get; }
-        public int Offset       { get; }
-        public int PostOffset   { get; }
+        public int Offset { get; }
+        public int PostOffset { get; }
 
         public bool IsLoad { get; }
 
@@ -19,9 +19,9 @@ namespace ARMeilleure.Decoders
             Rn = (opCode >> 16) & 0xf;
 
             bool isLoad = (opCode & (1 << 20)) != 0;
-            bool w      = (opCode & (1 << 21)) != 0;
-            bool u      = (opCode & (1 << 23)) != 0;
-            bool p      = (opCode & (1 << 24)) != 0;
+            bool w = (opCode & (1 << 21)) != 0;
+            bool u = (opCode & (1 << 23)) != 0;
+            bool p = (opCode & (1 << 24)) != 0;
 
             RegisterMask = opCode & 0xffff;
 

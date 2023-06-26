@@ -8,7 +8,7 @@ namespace ARMeilleure.Instructions
 {
     static partial class InstEmit
     {
-#region "Sha1"
+        #region "Sha1"
         public static void Sha1c_V(ArmEmitterContext context)
         {
             OpCodeSimdReg op = (OpCodeSimdReg)context.CurrOp;
@@ -89,9 +89,9 @@ namespace ARMeilleure.Instructions
 
             context.Copy(GetVec(op.Rd), res);
         }
-#endregion
+        #endregion
 
-#region "Sha256"
+        #region "Sha256"
         public static void Sha256h_V(ArmEmitterContext context)
         {
             OpCodeSimdReg op = (OpCodeSimdReg)context.CurrOp;
@@ -142,6 +142,6 @@ namespace ARMeilleure.Instructions
 
             context.Copy(GetVec(op.Rd), res);
         }
-#endregion
+        #endregion
     }
 }

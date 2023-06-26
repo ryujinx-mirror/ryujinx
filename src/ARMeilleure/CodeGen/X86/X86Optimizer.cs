@@ -215,7 +215,7 @@ namespace ARMeilleure.CodeGen.X86
                         1 => Multiplier.x2,
                         2 => Multiplier.x4,
                         3 => Multiplier.x8,
-                        _ => Multiplier.x1
+                        _ => Multiplier.x1,
                     };
 
                     baseOp = indexOnSrc2 ? src1 : src2;

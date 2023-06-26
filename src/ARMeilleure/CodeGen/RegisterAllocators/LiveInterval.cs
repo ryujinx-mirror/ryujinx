@@ -240,8 +240,10 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
 
         public LiveInterval Split(int position)
         {
-            LiveInterval result = new(Local, Parent);
-            result.End = End;
+            LiveInterval result = new(Local, Parent)
+            {
+                End = End,
+            };
 
             LiveRange prev = PrevRange;
             LiveRange curr = CurrRange;

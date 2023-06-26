@@ -11,10 +11,10 @@ namespace ARMeilleure.Translation
     {
         public static CompiledFunction Compile(
             ControlFlowGraph cfg,
-            OperandType[]    argTypes,
-            OperandType      retType,
-            CompilerOptions  options,
-            Architecture     target)
+            OperandType[] argTypes,
+            OperandType retType,
+            CompilerOptions options,
+            Architecture target)
         {
             CompilerContext cctx = new(cfg, argTypes, retType, options);
 

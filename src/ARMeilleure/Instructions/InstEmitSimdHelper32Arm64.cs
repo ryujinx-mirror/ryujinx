@@ -1,11 +1,9 @@
-
 using ARMeilleure.Decoders;
 using ARMeilleure.IntermediateRepresentation;
 using ARMeilleure.State;
 using ARMeilleure.Translation;
 using System;
 using System.Diagnostics;
-
 using static ARMeilleure.Instructions.InstEmitHelper;
 using static ARMeilleure.Instructions.InstEmitSimdHelper;
 using static ARMeilleure.IntermediateRepresentation.Operand.Factory;
@@ -74,7 +72,10 @@ namespace ARMeilleure.Instructions
         public static Operand EmitExtractScalar(ArmEmitterContext context, Operand target, int reg, bool doubleWidth)
         {
             int index = reg & (doubleWidth ? 1 : 3);
-            if (index == 0) return target; // Element is already at index 0, so just return the vector directly.
+            if (index == 0)
+            {
+                return target; // Element is already at index 0, so just return the vector directly.
+            }
 
             if (doubleWidth)
             {
@@ -249,7 +250,7 @@ namespace ARMeilleure.Instructions
             OpCode32SimdRegS op = (OpCode32SimdRegS)context.CurrOp;
 
             inst |= ((op.Size & 1) != 0 ? Intrinsic.Arm64VDouble : Intrinsic.Arm64VFloat) | Intrinsic.Arm64V128;
-            EmitScalarBinaryOpSimd32(context, (n, m) =>  context.AddIntrinsic(inst, n, m));
+            EmitScalarBinaryOpSimd32(context, (n, m) => context.AddIntrinsic(inst, n, m));
         }
 
         public static void EmitScalarTernaryOpSimd32(ArmEmitterContext context, Func3I scalarFunc)
@@ -336,16 +337,17 @@ namespace ARMeilleure.Instructions
                     CmpCondition.GreaterThanOrEqual => Intrinsic.Arm64FcmgeVz,
                     CmpCondition.LessThan => Intrinsic.Arm64FcmltVz,
                     CmpCondition.LessThanOrEqual => Intrinsic.Arm64FcmleVz,
-                    _ => throw new InvalidOperationException()
+                    _ => throw new InvalidOperationException(),
                 };
             }
-            else {
+            else
+            {
                 inst = cond switch
                 {
                     CmpCondition.Equal => Intrinsic.Arm64FcmeqV,
                     CmpCondition.GreaterThan => Intrinsic.Arm64FcmgtV,
                     CmpCondition.GreaterThanOrEqual => Intrinsic.Arm64FcmgeV,
-                    _ => throw new InvalidOperationException()
+                    _ => throw new InvalidOperationException(),
                 };
             }
 

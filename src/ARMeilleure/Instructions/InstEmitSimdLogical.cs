@@ -3,7 +3,6 @@ using ARMeilleure.IntermediateRepresentation;
 using ARMeilleure.Translation;
 using System;
 using System.Diagnostics;
-
 using static ARMeilleure.Instructions.InstEmitHelper;
 using static ARMeilleure.Instructions.InstEmitSimdHelper;
 using static ARMeilleure.IntermediateRepresentation.Operand.Factory;
@@ -80,10 +79,11 @@ namespace ARMeilleure.Instructions
                 int eSize = 8 << op.Size;
 
                 Operand d = GetVec(op.Rd);
-                Operand imm = eSize switch {
+                Operand imm = eSize switch
+                {
                     16 => X86GetAllElements(context, (short)~op.Immediate),
                     32 => X86GetAllElements(context, (int)~op.Immediate),
-                    _ => throw new InvalidOperationException($"Invalid element size {eSize}.")
+                    _ => throw new InvalidOperationException($"Invalid element size {eSize}."),
                 };
 
                 Operand res = context.AddIntrinsic(Intrinsic.X86Pand, d, imm);
@@ -380,10 +380,11 @@ namespace ARMeilleure.Instructions
                 int eSize = 8 << op.Size;
 
                 Operand d = GetVec(op.Rd);
-                Operand imm = eSize switch {
+                Operand imm = eSize switch
+                {
                     16 => X86GetAllElements(context, (short)op.Immediate),
                     32 => X86GetAllElements(context, (int)op.Immediate),
-                    _ => throw new InvalidOperationException($"Invalid element size {eSize}.")
+                    _ => throw new InvalidOperationException($"Invalid element size {eSize}."),
                 };
 
                 Operand res = context.AddIntrinsic(Intrinsic.X86Por, d, imm);
@@ -414,8 +415,8 @@ namespace ARMeilleure.Instructions
                     (0b00010000L << 32) |
                     (0b00001000L << 24) |
                     (0b00000100L << 16) |
-                    (0b00000010L <<  8) |
-                    (0b00000001L <<  0);
+                    (0b00000010L << 8) |
+                    (0b00000001L << 0);
 
                 Operand vBitMatrix = X86GetAllElements(context, bitMatrix);
 
@@ -451,13 +452,13 @@ namespace ARMeilleure.Instructions
             Debug.Assert(op.Type == OperandType.I64);
 
             Operand val = context.BitwiseOr(context.ShiftRightUI(context.BitwiseAnd(op, Const(0xaaul)), Const(1)),
-                                            context.ShiftLeft   (context.BitwiseAnd(op, Const(0x55ul)), Const(1)));
+                                            context.ShiftLeft(context.BitwiseAnd(op, Const(0x55ul)), Const(1)));
 
             val = context.BitwiseOr(context.ShiftRightUI(context.BitwiseAnd(val, Const(0xccul)), Const(2)),
-                                    context.ShiftLeft   (context.BitwiseAnd(val, Const(0x33ul)), Const(2)));
+                                    context.ShiftLeft(context.BitwiseAnd(val, Const(0x33ul)), Const(2)));
 
             return context.BitwiseOr(context.ShiftRightUI(val, Const(4)),
-                                     context.ShiftLeft   (context.BitwiseAnd(val, Const(0x0ful)), Const(4)));
+                                     context.ShiftLeft(context.BitwiseAnd(val, Const(0x0ful)), Const(4)));
         }
 
         public static void Rev16_V(ArmEmitterContext context)

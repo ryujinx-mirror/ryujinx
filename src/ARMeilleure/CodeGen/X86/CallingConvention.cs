@@ -20,6 +20,7 @@ namespace ARMeilleure.CodeGen.X86
         {
             if (GetCurrentCallConv() == CallConvName.Windows)
             {
+#pragma warning disable IDE0055 // Disable formatting
                 return (1 << (int)X86Register.Rax) |
                        (1 << (int)X86Register.Rcx) |
                        (1 << (int)X86Register.Rdx) |
@@ -39,6 +40,7 @@ namespace ARMeilleure.CodeGen.X86
                        (1 << (int)X86Register.R9)  |
                        (1 << (int)X86Register.R10) |
                        (1 << (int)X86Register.R11);
+#pragma warning restore IDE0055
             }
         }
 
@@ -90,22 +92,32 @@ namespace ARMeilleure.CodeGen.X86
             {
                 switch (index)
                 {
-                    case 0: return X86Register.Rcx;
-                    case 1: return X86Register.Rdx;
-                    case 2: return X86Register.R8;
-                    case 3: return X86Register.R9;
+                    case 0:
+                        return X86Register.Rcx;
+                    case 1:
+                        return X86Register.Rdx;
+                    case 2:
+                        return X86Register.R8;
+                    case 3:
+                        return X86Register.R9;
                 }
             }
             else /* if (GetCurrentCallConv() == CallConvName.SystemV) */
             {
                 switch (index)
                 {
-                    case 0: return X86Register.Rdi;
-                    case 1: return X86Register.Rsi;
-                    case 2: return X86Register.Rdx;
-                    case 3: return X86Register.Rcx;
-                    case 4: return X86Register.R8;
-                    case 5: return X86Register.R9;
+                    case 0:
+                        return X86Register.Rdi;
+                    case 1:
+                        return X86Register.Rsi;
+                    case 2:
+                        return X86Register.Rdx;
+                    case 3:
+                        return X86Register.Rcx;
+                    case 4:
+                        return X86Register.R8;
+                    case 5:
+                        return X86Register.R9;
                 }
             }
 

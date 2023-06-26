@@ -14,7 +14,7 @@ namespace ARMeilleure.CodeGen.Arm64
         private const int CbnzInstLength = 4;
         private const int LdrLitInstLength = 4;
 
-        private Stream _stream;
+        private readonly Stream _stream;
 
         public int StreamOffset => (int)_stream.Length;
 
@@ -32,7 +32,7 @@ namespace ARMeilleure.CodeGen.Arm64
         private readonly Dictionary<BasicBlock, long> _visitedBlocks;
         private readonly Dictionary<BasicBlock, List<(ArmCondition Condition, long BranchPos)>> _pendingBranches;
 
-        private struct ConstantPoolEntry
+        private readonly struct ConstantPoolEntry
         {
             public readonly int Offset;
             public readonly Symbol Symbol;
@@ -58,7 +58,7 @@ namespace ARMeilleure.CodeGen.Arm64
 
         private readonly bool _relocatable;
 
-        public CodeGenContext(AllocationResult allocResult, int maxCallArgs, int blocksCount, bool relocatable)
+        public CodeGenContext(AllocationResult allocResult, int maxCallArgs, bool relocatable)
         {
             _stream = MemoryStreamManager.Shared.GetStream();
 
@@ -93,10 +93,10 @@ namespace ARMeilleure.CodeGen.Arm64
 
             if (_pendingBranches.TryGetValue(block, out var list))
             {
-                foreach (var tuple in list)
+                foreach ((ArmCondition condition, long branchPos) in list)
                 {
-                    _stream.Seek(tuple.BranchPos, SeekOrigin.Begin);
-                    WriteBranch(tuple.Condition, target);
+                    _stream.Seek(branchPos, SeekOrigin.Begin);
+                    WriteBranch(condition, target);
                 }
 
                 _stream.Seek(target, SeekOrigin.Begin);

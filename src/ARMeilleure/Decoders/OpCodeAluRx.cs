@@ -3,7 +3,7 @@ namespace ARMeilleure.Decoders
     class OpCodeAluRx : OpCodeAlu, IOpCodeAluRx
     {
         public int Shift { get; }
-        public int Rm    { get; }
+        public int Rm { get; }
 
         public IntType IntType { get; }
 
@@ -11,9 +11,9 @@ namespace ARMeilleure.Decoders
 
         public OpCodeAluRx(InstDescriptor inst, ulong address, int opCode) : base(inst, address, opCode)
         {
-            Shift   =           (opCode >> 10) & 0x7;
+            Shift = (opCode >> 10) & 0x7;
             IntType = (IntType)((opCode >> 13) & 0x7);
-            Rm      =           (opCode >> 16) & 0x1f;
+            Rm = (opCode >> 16) & 0x1f;
         }
     }
 }

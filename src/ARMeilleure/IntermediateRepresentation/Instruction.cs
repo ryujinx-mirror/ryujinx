@@ -67,6 +67,6 @@ namespace ARMeilleure.IntermediateRepresentation
         Phi,
         Spill,
         SpillArg,
-        StoreToContext
+        StoreToContext,
     }
 }

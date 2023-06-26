@@ -1,7 +1,6 @@
 using ARMeilleure.Decoders;
 using ARMeilleure.IntermediateRepresentation;
 using ARMeilleure.Translation;
-
 using static ARMeilleure.Instructions.InstEmitFlowHelper;
 using static ARMeilleure.Instructions.InstEmitHelper;
 using static ARMeilleure.IntermediateRepresentation.Operand.Factory;
@@ -15,10 +14,10 @@ namespace ARMeilleure.Instructions
             None,
             Increment,
             Invert,
-            Negate
+            Negate,
         }
 
-        public static void Csel(ArmEmitterContext context)  => EmitCsel(context, CselOperation.None);
+        public static void Csel(ArmEmitterContext context) => EmitCsel(context, CselOperation.None);
         public static void Csinc(ArmEmitterContext context) => EmitCsel(context, CselOperation.Increment);
         public static void Csinv(ArmEmitterContext context) => EmitCsel(context, CselOperation.Invert);
         public static void Csneg(ArmEmitterContext context) => EmitCsel(context, CselOperation.Negate);

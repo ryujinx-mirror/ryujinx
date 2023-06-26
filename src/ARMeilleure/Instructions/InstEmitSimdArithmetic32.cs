@@ -2,7 +2,6 @@
 using ARMeilleure.IntermediateRepresentation;
 using ARMeilleure.Translation;
 using System;
-
 using static ARMeilleure.Instructions.InstEmitFlowHelper;
 using static ARMeilleure.Instructions.InstEmitHelper;
 using static ARMeilleure.Instructions.InstEmitSimdHelper;
@@ -190,7 +189,7 @@ namespace ARMeilleure.Instructions
                 2 => context.Multiply(context.ZeroExtend32(OperandType.I64, insert), Const(0x0000000100000001u)),
                 1 => context.Multiply(context.ZeroExtend16(OperandType.I64, insert), Const(0x0001000100010001u)),
                 0 => context.Multiply(context.ZeroExtend8(OperandType.I64, insert), Const(0x0101010101010101u)),
-                _ => throw new InvalidOperationException($"Invalid Vdup size \"{op.Size}\".")
+                _ => throw new InvalidOperationException($"Invalid Vdup size \"{op.Size}\"."),
             };
 
             InsertScalar(context, op.Vd, insert);
@@ -212,7 +211,7 @@ namespace ARMeilleure.Instructions
                 2 => context.Multiply(context.ZeroExtend32(OperandType.I64, insert), Const(0x0000000100000001u)),
                 1 => context.Multiply(context.ZeroExtend16(OperandType.I64, insert), Const(0x0001000100010001u)),
                 0 => context.Multiply(context.ZeroExtend8(OperandType.I64, insert), Const(0x0101010101010101u)),
-                _ => throw new InvalidOperationException($"Invalid Vdup size \"{op.Size}\".")
+                _ => throw new InvalidOperationException($"Invalid Vdup size \"{op.Size}\"."),
             };
 
             InsertScalar(context, op.Vd, insert);
@@ -1654,7 +1653,7 @@ namespace ARMeilleure.Instructions
         {
             IOpCode32Simd op = (IOpCode32Simd)context.CurrOp;
 
-            Func<Operand, Operand, Operand> genericEmit = (n, m) =>
+            Operand genericEmit(Operand n, Operand m)
             {
                 Operand nNum = context.Copy(n);
                 Operand mNum = context.Copy(m);
@@ -1688,7 +1687,7 @@ namespace ARMeilleure.Instructions
 
                     return context.AddIntrinsic(isMaxNum ? Intrinsic.X86Maxpd : Intrinsic.X86Minpd, nNum, mNum);
                 }
-            };
+            }
 
             if (scalar)
             {

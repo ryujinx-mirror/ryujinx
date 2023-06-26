@@ -24,27 +24,21 @@ namespace ARMeilleure.Decoders
 
         protected int GetQuadwordIndex(int index)
         {
-            switch (RegisterSize)
+            return RegisterSize switch
             {
-                case RegisterSize.Simd128:
-                case RegisterSize.Simd64:
-                    return index >> 1;
-            }
-
-            throw new InvalidOperationException();
+                RegisterSize.Simd128 or RegisterSize.Simd64 => index >> 1,
+                _ => throw new InvalidOperationException(),
+            };
         }
 
         protected int GetQuadwordSubindex(int index)
         {
-            switch (RegisterSize)
+            return RegisterSize switch
             {
-                case RegisterSize.Simd128:
-                    return 0;
-                case RegisterSize.Simd64:
-                    return index & 1;
-            }
-
-            throw new InvalidOperationException();
+                RegisterSize.Simd128 => 0,
+                RegisterSize.Simd64 => index & 1,
+                _ => throw new InvalidOperationException(),
+            };
         }
 
         protected OpCode32SimdBase(InstDescriptor inst, ulong address, int opCode, bool isThumb) : base(inst, address, opCode)

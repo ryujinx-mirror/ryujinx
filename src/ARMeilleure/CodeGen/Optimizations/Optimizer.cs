@@ -182,7 +182,7 @@ namespace ARMeilleure.CodeGen.Optimizations
         private static void PropagateCopy(ref Span<Operation> buffer, Operation copyOp)
         {
             // Propagate copy source operand to all uses of the destination operand.
-            Operand dest   = copyOp.Destination;
+            Operand dest = copyOp.Destination;
             Operand source = copyOp.GetSource(0);
 
             Span<Operation> uses = dest.GetUses(ref buffer);

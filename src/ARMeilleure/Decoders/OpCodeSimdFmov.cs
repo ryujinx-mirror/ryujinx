@@ -2,9 +2,9 @@ namespace ARMeilleure.Decoders
 {
     class OpCodeSimdFmov : OpCode, IOpCodeSimd
     {
-        public int  Rd        { get; }
+        public int Rd { get; }
         public long Immediate { get; }
-        public int  Size      { get; }
+        public int Size { get; }
 
         public new static OpCode Create(InstDescriptor inst, ulong address, int opCode) => new OpCodeSimdFmov(inst, address, opCode);
 
@@ -16,7 +16,7 @@ namespace ARMeilleure.Decoders
 
             long imm;
 
-            Rd  = (opCode >>  0) & 0x1f;
+            Rd = (opCode >> 0) & 0x1f;
             imm = (opCode >> 13) & 0xff;
 
             if (type == 0)

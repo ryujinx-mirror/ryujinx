@@ -29,15 +29,15 @@ namespace ARMeilleure.Translation.Cache
 
         private enum UnwindOp
         {
-            PushNonvol    = 0,
-            AllocLarge    = 1,
-            AllocSmall    = 2,
-            SetFpreg      = 3,
-            SaveNonvol    = 4,
+            PushNonvol = 0,
+            AllocLarge = 1,
+            AllocSmall = 2,
+            SetFpreg = 3,
+            SaveNonvol = 4,
             SaveNonvolFar = 5,
-            SaveXmm128    = 8,
+            SaveXmm128 = 8,
             SaveXmm128Far = 9,
-            PushMachframe = 10
+            PushMachframe = 10,
         }
 
         private unsafe delegate RuntimeFunction* GetRuntimeFunctionCallback(ulong controlPc, IntPtr context);
@@ -111,72 +111,73 @@ namespace ARMeilleure.Translation.Cache
                 switch (entry.PseudoOp)
                 {
                     case UnwindPseudoOp.SaveXmm128:
-                    {
-                        int stackOffset = entry.StackOffsetOrAllocSize;
-
-                        Debug.Assert(stackOffset % 16 == 0);
-
-                        if (stackOffset <= 0xFFFF0)
                         {
-                            _unwindInfo->UnwindCodes[codeIndex++] = PackUnwindOp(UnwindOp.SaveXmm128, entry.PrologOffset, entry.RegIndex);
-                            _unwindInfo->UnwindCodes[codeIndex++] = (ushort)(stackOffset / 16);
-                        }
-                        else
-                        {
-                            _unwindInfo->UnwindCodes[codeIndex++] = PackUnwindOp(UnwindOp.SaveXmm128Far, entry.PrologOffset, entry.RegIndex);
-                            _unwindInfo->UnwindCodes[codeIndex++] = (ushort)(stackOffset >> 0);
-                            _unwindInfo->UnwindCodes[codeIndex++] = (ushort)(stackOffset >> 16);
-                        }
+                            int stackOffset = entry.StackOffsetOrAllocSize;
 
-                        break;
-                    }
+                            Debug.Assert(stackOffset % 16 == 0);
+
+                            if (stackOffset <= 0xFFFF0)
+                            {
+                                _unwindInfo->UnwindCodes[codeIndex++] = PackUnwindOp(UnwindOp.SaveXmm128, entry.PrologOffset, entry.RegIndex);
+                                _unwindInfo->UnwindCodes[codeIndex++] = (ushort)(stackOffset / 16);
+                            }
+                            else
+                            {
+                                _unwindInfo->UnwindCodes[codeIndex++] = PackUnwindOp(UnwindOp.SaveXmm128Far, entry.PrologOffset, entry.RegIndex);
+                                _unwindInfo->UnwindCodes[codeIndex++] = (ushort)(stackOffset >> 0);
+                                _unwindInfo->UnwindCodes[codeIndex++] = (ushort)(stackOffset >> 16);
+                            }
+
+                            break;
+                        }
 
                     case UnwindPseudoOp.AllocStack:
-                    {
-                        int allocSize = entry.StackOffsetOrAllocSize;
-
-                        Debug.Assert(allocSize % 8 == 0);
-
-                        if (allocSize <= 128)
                         {
-                            _unwindInfo->UnwindCodes[codeIndex++] = PackUnwindOp(UnwindOp.AllocSmall, entry.PrologOffset, (allocSize / 8) - 1);
-                        }
-                        else if (allocSize <= 0x7FFF8)
-                        {
-                            _unwindInfo->UnwindCodes[codeIndex++] = PackUnwindOp(UnwindOp.AllocLarge, entry.PrologOffset, 0);
-                            _unwindInfo->UnwindCodes[codeIndex++] = (ushort)(allocSize / 8);
-                        }
-                        else
-                        {
-                            _unwindInfo->UnwindCodes[codeIndex++] = PackUnwindOp(UnwindOp.AllocLarge, entry.PrologOffset, 1);
-                            _unwindInfo->UnwindCodes[codeIndex++] = (ushort)(allocSize >> 0);
-                            _unwindInfo->UnwindCodes[codeIndex++] = (ushort)(allocSize >> 16);
-                        }
+                            int allocSize = entry.StackOffsetOrAllocSize;
 
-                        break;
-                    }
+                            Debug.Assert(allocSize % 8 == 0);
+
+                            if (allocSize <= 128)
+                            {
+                                _unwindInfo->UnwindCodes[codeIndex++] = PackUnwindOp(UnwindOp.AllocSmall, entry.PrologOffset, (allocSize / 8) - 1);
+                            }
+                            else if (allocSize <= 0x7FFF8)
+                            {
+                                _unwindInfo->UnwindCodes[codeIndex++] = PackUnwindOp(UnwindOp.AllocLarge, entry.PrologOffset, 0);
+                                _unwindInfo->UnwindCodes[codeIndex++] = (ushort)(allocSize / 8);
+                            }
+                            else
+                            {
+                                _unwindInfo->UnwindCodes[codeIndex++] = PackUnwindOp(UnwindOp.AllocLarge, entry.PrologOffset, 1);
+                                _unwindInfo->UnwindCodes[codeIndex++] = (ushort)(allocSize >> 0);
+                                _unwindInfo->UnwindCodes[codeIndex++] = (ushort)(allocSize >> 16);
+                            }
+
+                            break;
+                        }
 
                     case UnwindPseudoOp.PushReg:
-                    {
-                        _unwindInfo->UnwindCodes[codeIndex++] = PackUnwindOp(UnwindOp.PushNonvol, entry.PrologOffset, entry.RegIndex);
+                        {
+                            _unwindInfo->UnwindCodes[codeIndex++] = PackUnwindOp(UnwindOp.PushNonvol, entry.PrologOffset, entry.RegIndex);
 
-                        break;
-                    }
+                            break;
+                        }
 
-                    default: throw new NotImplementedException($"({nameof(entry.PseudoOp)} = {entry.PseudoOp})");
+                    default:
+                        throw new NotImplementedException($"({nameof(entry.PseudoOp)} = {entry.PseudoOp})");
                 }
             }
 
             Debug.Assert(codeIndex <= MaxUnwindCodesArraySize);
 
-            _unwindInfo->VersionAndFlags    = 1; // Flags: The function has no handler.
-            _unwindInfo->SizeOfProlog       = (byte)unwindInfo.PrologSize;
+            _unwindInfo->VersionAndFlags = 1; // Flags: The function has no handler.
+            _unwindInfo->SizeOfProlog = (byte)unwindInfo.PrologSize;
             _unwindInfo->CountOfUnwindCodes = (byte)codeIndex;
-            _unwindInfo->FrameRegister      = 0;
+            _unwindInfo->FrameRegister = 0;
 
             _runtimeFunction->BeginAddress = (uint)funcEntry.Offset;
-            _runtimeFunction->EndAddress   = (uint)(funcEntry.Offset + funcEntry.Size);
-            _runtimeFunction->UnwindData   = (uint)_sizeOfRuntimeFunction;
+            _runtimeFunction->EndAddress = (uint)(funcEntry.Offset + funcEntry.Size);
+            _runtimeFunction->UnwindData = (uint)_sizeOfRuntimeFunction;
 
             return _runtimeFunction;
         }

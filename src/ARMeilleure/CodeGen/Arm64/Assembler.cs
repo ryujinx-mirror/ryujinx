@@ -188,7 +188,7 @@ namespace ARMeilleure.CodeGen.Arm64
 
             uint rmode = topHalf ? 1u << 19 : 0u;
             uint ftype = rd.Type == OperandType.FP64 || rn.Type == OperandType.FP64 ? 1u << 22 : 0u;
-            uint sf    = rd.Type == OperandType.I64  || rn.Type == OperandType.I64  ? SfFlag   : 0u;
+            uint sf = rd.Type == OperandType.I64 || rn.Type == OperandType.I64 ? SfFlag : 0u;
 
             WriteUInt32(0x1e260000u | (opcode << 16) | rmode | ftype | sf | EncodeReg(rd) | (EncodeReg(rn) << 5));
         }
@@ -992,7 +992,7 @@ namespace ARMeilleure.CodeGen.Arm64
                 {
                     OperandType.FP32 => 0,
                     OperandType.FP64 => 1,
-                    _ => 2
+                    _ => 2,
                 };
 
                 instruction = vecInst | ((uint)opc << 30);
@@ -1124,10 +1124,11 @@ namespace ARMeilleure.CodeGen.Arm64
                 OperandType.FP32 => 2,
                 OperandType.FP64 => 3,
                 OperandType.V128 => 4,
-                _ => throw new ArgumentException($"Invalid type {type}.")
+                _ => throw new ArgumentException($"Invalid type {type}."),
             };
         }
 
+#pragma warning disable IDE0051 // Remove unused private member
         private void WriteInt16(short value)
         {
             WriteUInt16((ushort)value);
@@ -1142,6 +1143,7 @@ namespace ARMeilleure.CodeGen.Arm64
         {
             _stream.WriteByte(value);
         }
+#pragma warning restore IDE0051
 
         private void WriteUInt16(ushort value)
         {

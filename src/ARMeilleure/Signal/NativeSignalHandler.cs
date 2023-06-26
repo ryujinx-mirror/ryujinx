@@ -74,7 +74,7 @@ namespace ARMeilleure.Signal
         private static ulong _pageSize;
         private static ulong _pageMask;
 
-        private static IntPtr _handlerConfig;
+        private static readonly IntPtr _handlerConfig;
         private static IntPtr _signalHandlerPtr;
         private static IntPtr _signalHandlerHandle;
 
@@ -96,11 +96,17 @@ namespace ARMeilleure.Signal
 
         public static void InitializeSignalHandler(ulong pageSize, Func<IntPtr, IntPtr, IntPtr> customSignalHandlerFactory = null)
         {
-            if (_initialized) return;
+            if (_initialized)
+            {
+                return;
+            }
 
             lock (_lock)
             {
-                if (_initialized) return;
+                if (_initialized)
+                {
+                    return;
+                }
 
                 _pageSize = pageSize;
                 _pageMask = pageSize - 1;
@@ -284,7 +290,7 @@ namespace ARMeilleure.Signal
                     const ulong auxOffset = 464; // uc_mcontext.__reserved
                     const uint esrMagic = 0x45535201;
 
-                    context.Copy(auxPtr,  context.Add(ucontextPtr, Const(auxOffset)));
+                    context.Copy(auxPtr, context.Add(ucontextPtr, Const(auxOffset)));
 
                     context.MarkLabel(loopLabel);
 
@@ -319,7 +325,7 @@ namespace ARMeilleure.Signal
 
         private static UnixExceptionHandler GenerateUnixSignalHandler(IntPtr signalStructPtr)
         {
-            EmitterContext context = new EmitterContext();
+            EmitterContext context = new();
 
             // (int sig, SigInfo* sigInfo, void* ucontext)
             Operand sigInfoPtr = context.LoadArgument(OperandType.I64, 1);
@@ -367,7 +373,7 @@ namespace ARMeilleure.Signal
 
         private static VectoredExceptionHandler GenerateWindowsSignalHandler(IntPtr signalStructPtr)
         {
-            EmitterContext context = new EmitterContext();
+            EmitterContext context = new();
 
             // (ExceptionPointers* exceptionInfo)
             Operand exceptionInfoPtr = context.LoadArgument(OperandType.I64, 0);

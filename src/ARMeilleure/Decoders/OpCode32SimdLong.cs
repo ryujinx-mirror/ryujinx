@@ -14,9 +14,15 @@
             // The value must be a power of 2, otherwise it is the encoding of another instruction.
             switch (imm3h)
             {
-                case 1: Size = 0; break;
-                case 2: Size = 1; break;
-                case 4: Size = 2; break;
+                case 1:
+                    Size = 0;
+                    break;
+                case 2:
+                    Size = 1;
+                    break;
+                case 4:
+                    Size = 2;
+                    break;
             }
 
             U = ((opCode >> (isThumb ? 28 : 24)) & 0x1) != 0;

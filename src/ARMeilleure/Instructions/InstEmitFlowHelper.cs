@@ -75,66 +75,66 @@ namespace ARMeilleure.Instructions
                     break;
 
                 case Condition.GtUn:
-                {
-                    Operand c = GetFlag(PState.CFlag);
-                    Operand z = GetFlag(PState.ZFlag);
+                    {
+                        Operand c = GetFlag(PState.CFlag);
+                        Operand z = GetFlag(PState.ZFlag);
 
-                    value = context.BitwiseAnd(c, Inverse(z));
+                        value = context.BitwiseAnd(c, Inverse(z));
 
-                    break;
-                }
+                        break;
+                    }
 
                 case Condition.LeUn:
-                {
-                    Operand c = GetFlag(PState.CFlag);
-                    Operand z = GetFlag(PState.ZFlag);
+                    {
+                        Operand c = GetFlag(PState.CFlag);
+                        Operand z = GetFlag(PState.ZFlag);
 
-                    value = context.BitwiseOr(Inverse(c), z);
+                        value = context.BitwiseOr(Inverse(c), z);
 
-                    break;
-                }
+                        break;
+                    }
 
                 case Condition.Ge:
-                {
-                    Operand n = GetFlag(PState.NFlag);
-                    Operand v = GetFlag(PState.VFlag);
+                    {
+                        Operand n = GetFlag(PState.NFlag);
+                        Operand v = GetFlag(PState.VFlag);
 
-                    value = context.ICompareEqual(n, v);
+                        value = context.ICompareEqual(n, v);
 
-                    break;
-                }
+                        break;
+                    }
 
                 case Condition.Lt:
-                {
-                    Operand n = GetFlag(PState.NFlag);
-                    Operand v = GetFlag(PState.VFlag);
+                    {
+                        Operand n = GetFlag(PState.NFlag);
+                        Operand v = GetFlag(PState.VFlag);
 
-                    value = context.ICompareNotEqual(n, v);
+                        value = context.ICompareNotEqual(n, v);
 
-                    break;
-                }
+                        break;
+                    }
 
                 case Condition.Gt:
-                {
-                    Operand n = GetFlag(PState.NFlag);
-                    Operand z = GetFlag(PState.ZFlag);
-                    Operand v = GetFlag(PState.VFlag);
+                    {
+                        Operand n = GetFlag(PState.NFlag);
+                        Operand z = GetFlag(PState.ZFlag);
+                        Operand v = GetFlag(PState.VFlag);
 
-                    value = context.BitwiseAnd(Inverse(z), context.ICompareEqual(n, v));
+                        value = context.BitwiseAnd(Inverse(z), context.ICompareEqual(n, v));
 
-                    break;
-                }
+                        break;
+                    }
 
                 case Condition.Le:
-                {
-                    Operand n = GetFlag(PState.NFlag);
-                    Operand z = GetFlag(PState.ZFlag);
-                    Operand v = GetFlag(PState.VFlag);
+                    {
+                        Operand n = GetFlag(PState.NFlag);
+                        Operand z = GetFlag(PState.ZFlag);
+                        Operand v = GetFlag(PState.VFlag);
 
-                    value = context.BitwiseOr(z, context.ICompareNotEqual(n, v));
+                        value = context.BitwiseOr(z, context.ICompareNotEqual(n, v));
 
-                    break;
-                }
+                        break;
+                    }
             }
 
             return value;

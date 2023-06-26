@@ -5,8 +5,8 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
 {
     readonly struct RegisterMasks
     {
-        public int IntAvailableRegisters   { get; }
-        public int VecAvailableRegisters   { get; }
+        public int IntAvailableRegisters { get; }
+        public int VecAvailableRegisters { get; }
         public int IntCallerSavedRegisters { get; }
         public int VecCallerSavedRegisters { get; }
         public int IntCalleeSavedRegisters { get; }
@@ -22,13 +22,13 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
             int vecCalleeSavedRegisters,
             int registersCount)
         {
-            IntAvailableRegisters   = intAvailableRegisters;
-            VecAvailableRegisters   = vecAvailableRegisters;
+            IntAvailableRegisters = intAvailableRegisters;
+            VecAvailableRegisters = vecAvailableRegisters;
             IntCallerSavedRegisters = intCallerSavedRegisters;
             VecCallerSavedRegisters = vecCallerSavedRegisters;
             IntCalleeSavedRegisters = intCalleeSavedRegisters;
             VecCalleeSavedRegisters = vecCalleeSavedRegisters;
-            RegistersCount          = registersCount;
+            RegistersCount = registersCount;
         }
 
         public int GetAvailableRegisters(RegisterType type)

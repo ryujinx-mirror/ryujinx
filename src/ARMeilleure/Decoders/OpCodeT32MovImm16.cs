@@ -4,8 +4,6 @@ namespace ARMeilleure.Decoders
     {
         public int Immediate { get; }
 
-        public bool IsRotated => false;
-
         public new static OpCode Create(InstDescriptor inst, ulong address, int opCode) => new OpCodeT32MovImm16(inst, address, opCode);
 
         public OpCodeT32MovImm16(InstDescriptor inst, ulong address, int opCode) : base(inst, address, opCode)

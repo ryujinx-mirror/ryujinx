@@ -23,7 +23,7 @@ namespace ARMeilleure.Translation.Cache
             }
         }
 
-        private readonly List<MemoryBlock> _blocks = new List<MemoryBlock>();
+        private readonly List<MemoryBlock> _blocks = new();
 
         public CacheMemoryAllocator(int capacity)
         {

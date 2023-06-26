@@ -2,8 +2,8 @@ namespace ARMeilleure.Decoders
 {
     class OpCode32Mrs : OpCode32
     {
-        public bool R  { get; }
-        public int  Rd { get; }
+        public bool R { get; }
+        public int Rd { get; }
 
         public new static OpCode Create(InstDescriptor inst, ulong address, int opCode) => new OpCode32Mrs(inst, address, opCode);
 

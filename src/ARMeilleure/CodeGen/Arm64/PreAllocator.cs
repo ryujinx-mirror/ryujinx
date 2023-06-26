@@ -1,4 +1,3 @@
-using ARMeilleure.CodeGen.RegisterAllocators;
 using ARMeilleure.IntermediateRepresentation;
 using ARMeilleure.Translation;
 using System;
@@ -31,7 +30,7 @@ namespace ARMeilleure.CodeGen.Arm64
             }
         }
 
-        public static void RunPass(CompilerContext cctx, StackAllocator stackAlloc, out int maxCallArgs)
+        public static void RunPass(CompilerContext cctx, out int maxCallArgs)
         {
             maxCallArgs = -1;
 
@@ -41,7 +40,7 @@ namespace ARMeilleure.CodeGen.Arm64
 
             for (BasicBlock block = cctx.Cfg.Blocks.First; block != null; block = block.ListNext)
             {
-                ConstantDict constants = new ConstantDict();
+                ConstantDict constants = new();
 
                 Operation nextNode;
 
@@ -92,7 +91,7 @@ namespace ARMeilleure.CodeGen.Arm64
                             InsertReturnCopy(block.Operations, node);
                             break;
                         case Instruction.Tailcall:
-                            InsertTailcallCopies(constants, block.Operations, stackAlloc, node, node);
+                            InsertTailcallCopies(constants, block.Operations, node, node);
                             break;
                     }
                 }
@@ -138,10 +137,7 @@ namespace ARMeilleure.CodeGen.Arm64
                     {
                         src2 = node.GetSource(1);
 
-                        Operand temp = src1;
-
-                        src1 = src2;
-                        src2 = temp;
+                        (src2, src1) = (src1, src2);
 
                         node.SetSource(0, src1);
                         node.SetSource(1, src2);
@@ -265,9 +261,9 @@ namespace ARMeilleure.CodeGen.Arm64
 
             Operand dest = operation.Destination;
 
-            List<Operand> sources = new List<Operand>
+            List<Operand> sources = new()
             {
-                operation.GetSource(0)
+                operation.GetSource(0),
             };
 
             int argsCount = operation.SourcesCount - 1;
@@ -302,10 +298,10 @@ namespace ARMeilleure.CodeGen.Arm64
                 if (source.Type == OperandType.V128 && passOnReg)
                 {
                     // V128 is a struct, we pass each half on a GPR if possible.
-                    Operand argReg  = Gpr(CallingConvention.GetIntArgumentRegister(intCount++), OperandType.I64);
+                    Operand argReg = Gpr(CallingConvention.GetIntArgumentRegister(intCount++), OperandType.I64);
                     Operand argReg2 = Gpr(CallingConvention.GetIntArgumentRegister(intCount++), OperandType.I64);
 
-                    nodes.AddBefore(node, Operation(Instruction.VectorExtract, argReg,  source, Const(0)));
+                    nodes.AddBefore(node, Operation(Instruction.VectorExtract, argReg, source, Const(0)));
                     nodes.AddBefore(node, Operation(Instruction.VectorExtract, argReg2, source, Const(1)));
 
                     continue;
@@ -339,7 +335,7 @@ namespace ARMeilleure.CodeGen.Arm64
             {
                 if (dest.Type == OperandType.V128)
                 {
-                    Operand retLReg = Gpr(CallingConvention.GetIntReturnRegister(),     OperandType.I64);
+                    Operand retLReg = Gpr(CallingConvention.GetIntReturnRegister(), OperandType.I64);
                     Operand retHReg = Gpr(CallingConvention.GetIntReturnRegisterHigh(), OperandType.I64);
 
                     node = nodes.AddAfter(node, Operation(Instruction.VectorCreateScalar, dest, retLReg));
@@ -364,16 +360,14 @@ namespace ARMeilleure.CodeGen.Arm64
             operation.SetSources(sources.ToArray());
         }
 
-        private static void InsertTailcallCopies(
-            ConstantDict constants,
+        private static void InsertTailcallCopies(ConstantDict constants,
             IntrusiveList<Operation> nodes,
-            StackAllocator stackAlloc,
             Operation node,
             Operation operation)
         {
-            List<Operand> sources = new List<Operand>
+            List<Operand> sources = new()
             {
-                operation.GetSource(0)
+                operation.GetSource(0),
             };
 
             int argsCount = operation.SourcesCount - 1;
@@ -403,7 +397,7 @@ namespace ARMeilleure.CodeGen.Arm64
                 if (source.Type == OperandType.V128 && passOnReg)
                 {
                     // V128 is a struct, we pass each half on a GPR if possible.
-                    Operand argReg  = Gpr(CallingConvention.GetIntArgumentRegister(intCount++), OperandType.I64);
+                    Operand argReg = Gpr(CallingConvention.GetIntArgumentRegister(intCount++), OperandType.I64);
                     Operand argReg2 = Gpr(CallingConvention.GetIntArgumentRegister(intCount++), OperandType.I64);
 
                     nodes.AddBefore(node, Operation(Instruction.VectorExtract, argReg, source, Const(0)));
@@ -519,7 +513,7 @@ namespace ARMeilleure.CodeGen.Arm64
 
             if (source.Type == OperandType.V128)
             {
-                Operand retLReg = Gpr(CallingConvention.GetIntReturnRegister(),     OperandType.I64);
+                Operand retLReg = Gpr(CallingConvention.GetIntReturnRegister(), OperandType.I64);
                 Operand retHReg = Gpr(CallingConvention.GetIntReturnRegisterHigh(), OperandType.I64);
 
                 nodes.AddBefore(node, Operation(Instruction.VectorExtract, retLReg, source, Const(0)));

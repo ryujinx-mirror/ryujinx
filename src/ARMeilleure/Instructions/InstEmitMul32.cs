@@ -3,7 +3,6 @@ using ARMeilleure.IntermediateRepresentation;
 using ARMeilleure.State;
 using ARMeilleure.Translation;
 using System;
-
 using static ARMeilleure.Instructions.InstEmitAluHelper;
 using static ARMeilleure.Instructions.InstEmitHelper;
 using static ARMeilleure.IntermediateRepresentation.Operand.Factory;
@@ -20,7 +19,7 @@ namespace ARMeilleure.Instructions
             Signed = 1 << 2,
 
             SignedAdd = Signed | Add,
-            SignedSubtract = Signed | Subtract
+            SignedSubtract = Signed | Subtract,
         }
 
         public static void Mla(ArmEmitterContext context)
@@ -287,14 +286,14 @@ namespace ARMeilleure.Instructions
         {
             IOpCode32AluUmull op = (IOpCode32AluUmull)context.CurrOp;
 
-            Operand n   = context.ZeroExtend32(OperandType.I64, GetIntA32(context, op.Rn));
-            Operand m   = context.ZeroExtend32(OperandType.I64, GetIntA32(context, op.Rm));
+            Operand n = context.ZeroExtend32(OperandType.I64, GetIntA32(context, op.Rn));
+            Operand m = context.ZeroExtend32(OperandType.I64, GetIntA32(context, op.Rm));
             Operand dHi = context.ZeroExtend32(OperandType.I64, GetIntA32(context, op.RdHi));
             Operand dLo = context.ZeroExtend32(OperandType.I64, GetIntA32(context, op.RdLo));
 
             Operand res = context.Multiply(n, m);
-                    res = context.Add(res, dHi);
-                    res = context.Add(res, dLo);
+            res = context.Add(res, dHi);
+            res = context.Add(res, dLo);
 
             Operand hi = context.ConvertI64ToI32(context.ShiftRightUI(res, Const(32)));
             Operand lo = context.ConvertI64ToI32(res);

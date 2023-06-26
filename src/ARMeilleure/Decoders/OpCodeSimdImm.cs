@@ -2,9 +2,9 @@ namespace ARMeilleure.Decoders
 {
     class OpCodeSimdImm : OpCode, IOpCodeSimd
     {
-        public int  Rd        { get; }
+        public int Rd { get; }
         public long Immediate { get; }
-        public int  Size      { get; }
+        public int Size { get; }
 
         public new static OpCode Create(InstDescriptor inst, ulong address, int opCode) => new OpCodeSimdImm(inst, address, opCode);
 
@@ -13,14 +13,14 @@ namespace ARMeilleure.Decoders
             Rd = opCode & 0x1f;
 
             int cMode = (opCode >> 12) & 0xf;
-            int op    = (opCode >> 29) & 0x1;
+            int op = (opCode >> 29) & 0x1;
 
-            int modeLow  = cMode &  1;
+            int modeLow = cMode & 1;
             int modeHigh = cMode >> 1;
 
             long imm;
 
-            imm  = ((uint)opCode >>  5) & 0x1f;
+            imm = ((uint)opCode >> 5) & 0x1f;
             imm |= ((uint)opCode >> 11) & 0xe0;
 
             if (modeHigh == 0b111)
@@ -67,17 +67,20 @@ namespace ARMeilleure.Decoders
             else if ((modeHigh & 0b110) == 0b100)
             {
                 // 16-bits shifted Immediate.
-                Size = 1; imm <<= (modeHigh & 1) << 3;
+                Size = 1;
+                imm <<= (modeHigh & 1) << 3;
             }
             else if ((modeHigh & 0b100) == 0b000)
             {
                 // 32-bits shifted Immediate.
-                Size = 2; imm <<= modeHigh << 3;
+                Size = 2;
+                imm <<= modeHigh << 3;
             }
             else if ((modeHigh & 0b111) == 0b110)
             {
                 // 32-bits shifted Immediate (fill with ones).
-                Size = 2; imm = ShlOnes(imm, 8 << modeLow);
+                Size = 2;
+                imm = ShlOnes(imm, 8 << modeLow);
             }
             else
             {

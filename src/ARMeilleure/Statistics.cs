@@ -1,4 +1,6 @@
+#if M_PROFILE
 using System;
+#endif
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -11,12 +13,12 @@ namespace ARMeilleure
     {
         private const int ReportMaxFunctions = 100;
 
-#pragma warning disable CS0169
+#if M_PROFILE
         [ThreadStatic]
         private static Stopwatch _executionTimer;
-#pragma warning restore CS0169
+#endif
 
-        private static ConcurrentDictionary<ulong, long> _ticksPerFunction;
+        private static readonly ConcurrentDictionary<ulong, long> _ticksPerFunction;
 
         static Statistics()
         {
@@ -47,7 +49,7 @@ namespace ARMeilleure
 
             long ticks = _executionTimer.ElapsedTicks;
 
-            _ticksPerFunction.AddOrUpdate(funcAddr, ticks, (key, oldTicks) => oldTicks + ticks);
+            TicksPerFunction.AddOrUpdate(funcAddr, ticks, (key, oldTicks) => oldTicks + ticks);
 #endif
         }
 
@@ -69,7 +71,7 @@ namespace ARMeilleure
         {
             int count = 0;
 
-            StringBuilder sb = new StringBuilder();
+            StringBuilder sb = new();
 
             sb.AppendLine(" Function address   | Time");
             sb.AppendLine("--------------------------");

@@ -7,7 +7,7 @@ namespace ARMeilleure.State
     {
         private const int MinCountForCheck = 4000;
 
-        private NativeContext _nativeContext;
+        private readonly NativeContext _nativeContext;
 
         internal IntPtr NativeContextPtr => _nativeContext.BasePtr;
 
@@ -17,8 +17,10 @@ namespace ARMeilleure.State
 
         public ulong Pc => _nativeContext.GetPc();
 
+#pragma warning disable CA1822 // Mark member as static
         public uint CtrEl0 => 0x8444c004;
         public uint DczidEl0 => 0x00000004;
+#pragma warning restore CA1822
 
         public ulong CntfrqEl0 => _counter.Frequency;
         public ulong CntpctEl0 => _counter.Counter;

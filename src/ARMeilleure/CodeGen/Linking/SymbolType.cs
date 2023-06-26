@@ -23,6 +23,6 @@
         /// <summary>
         /// Refers to a special symbol which is handled by <see cref="Translation.PTC.Ptc.PatchCode"/>.
         /// </summary>
-        Special
+        Special,
     }
 }

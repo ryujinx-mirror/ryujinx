@@ -10,7 +10,7 @@ namespace ARMeilleure.IntermediateRepresentation
 
         private int _succCount;
         private BasicBlock _succ0;
-        private BasicBlock _succ1;
+        private readonly BasicBlock _succ1;
         private HashSet<BasicBlock> _domFrontiers;
 
         public int Index { get; set; }
@@ -27,10 +27,7 @@ namespace ARMeilleure.IntermediateRepresentation
         {
             get
             {
-                if (_domFrontiers == null)
-                {
-                    _domFrontiers = new HashSet<BasicBlock>();
-                }
+                _domFrontiers ??= new HashSet<BasicBlock>();
 
                 return _domFrontiers;
             }
@@ -108,7 +105,7 @@ namespace ARMeilleure.IntermediateRepresentation
 
             oldBlock.Predecessors.Remove(this);
             block.Predecessors.Add(this);
-            
+
             oldBlock = block;
         }
 

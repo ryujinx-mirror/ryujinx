@@ -2,7 +2,7 @@ namespace ARMeilleure.Decoders
 {
     class OpCodeBImmTest : OpCodeBImm
     {
-        public int Rt  { get; }
+        public int Rt { get; }
         public int Bit { get; }
 
         public new static OpCode Create(InstDescriptor inst, ulong address, int opCode) => new OpCodeBImmTest(inst, address, opCode);
@@ -13,7 +13,7 @@ namespace ARMeilleure.Decoders
 
             Immediate = (long)address + DecoderHelper.DecodeImmS14_2(opCode);
 
-            Bit  = (opCode >> 19) & 0x1f;
+            Bit = (opCode >> 19) & 0x1f;
             Bit |= (opCode >> 26) & 0x20;
         }
     }

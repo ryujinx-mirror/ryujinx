@@ -14,7 +14,7 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
     // http://www.christianwimmer.at/Publications/Wimmer04a/Wimmer04a.pdf
     class LinearScanAllocator : IRegisterAllocator
     {
-        private const int InstructionGap     = 2;
+        private const int InstructionGap = 2;
         private const int InstructionGapMask = InstructionGap - 1;
 
         private HashSet<int> _blockEdges;
@@ -33,7 +33,7 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
 
             public StackAllocator StackAlloc { get; }
 
-            public BitMap Active   { get; }
+            public BitMap Active { get; }
             public BitMap Inactive { get; }
 
             public int IntUsedRegisters { get; set; }
@@ -47,9 +47,9 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
             public AllocationContext(StackAllocator stackAlloc, RegisterMasks masks, int intervalsCount)
             {
                 StackAlloc = stackAlloc;
-                Masks      = masks;
+                Masks = masks;
 
-                Active   = new BitMap(Allocators.Default, intervalsCount);
+                Active = new BitMap(Allocators.Default, intervalsCount);
                 Inactive = new BitMap(Allocators.Default, intervalsCount);
 
                 PopulateFreePositions(RegisterType.Integer, out _intFreePositions, out _intFreePositionsCount);
@@ -443,7 +443,7 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
 
                 if (highest < current)
                 {
-                    highest  = current;
+                    highest = current;
                     selected = index;
 
                     if (current == int.MaxValue)
@@ -485,9 +485,9 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
 
         private void SplitAndSpillOverlappingInterval(
             AllocationContext context,
-            LiveInterval      current,
-            LiveInterval      interval,
-            int               registersCount)
+            LiveInterval current,
+            LiveInterval interval,
+            int registersCount)
         {
             // If there's a next use after the start of the current interval,
             // we need to split the spilled interval twice, and re-insert it
@@ -530,8 +530,8 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
         private void InsertInterval(LiveInterval interval, int registersCount)
         {
             Debug.Assert(interval.UsesCount != 0, "Trying to insert a interval without uses.");
-            Debug.Assert(!interval.IsEmpty,       "Trying to insert a empty interval.");
-            Debug.Assert(!interval.IsSpilled,     "Trying to insert a spilled interval.");
+            Debug.Assert(!interval.IsEmpty, "Trying to insert a empty interval.");
+            Debug.Assert(!interval.IsSpilled, "Trying to insert a spilled interval.");
 
             int startIndex = registersCount * 2;
 
@@ -545,9 +545,9 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
             _intervals.Insert(insertIndex, interval);
         }
 
-        private void Spill(AllocationContext context, LiveInterval interval)
+        private static void Spill(AllocationContext context, LiveInterval interval)
         {
-            Debug.Assert(!interval.IsFixed,       "Trying to spill a fixed interval.");
+            Debug.Assert(!interval.IsFixed, "Trying to spill a fixed interval.");
             Debug.Assert(interval.UsesCount == 0, "Trying to spill a interval with uses.");
 
             // We first check if any of the siblings were spilled, if so we can reuse
@@ -561,7 +561,7 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
 
         private void InsertSplitCopies()
         {
-            Dictionary<int, CopyResolver> copyResolvers = new Dictionary<int, CopyResolver>();
+            Dictionary<int, CopyResolver> copyResolvers = new();
 
             CopyResolver GetCopyResolver(int position)
             {
@@ -668,18 +668,15 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
                             continue;
                         }
 
-                        int lEnd   = _blockRanges[block.Index].End - 1;
+                        int lEnd = _blockRanges[block.Index].End - 1;
                         int rStart = _blockRanges[succIndex].Start;
 
-                        LiveInterval left  = interval.GetSplitChild(lEnd);
+                        LiveInterval left = interval.GetSplitChild(lEnd);
                         LiveInterval right = interval.GetSplitChild(rStart);
 
                         if (left != default && right != default && left != right)
                         {
-                            if (copyResolver == null)
-                            {
-                                copyResolver = new CopyResolver();
-                            }
+                            copyResolver ??= new CopyResolver();
 
                             copyResolver.AddSplit(left, right);
                         }
@@ -856,14 +853,14 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
 
             int mapSize = _intervals.Count;
 
-            BitMap[] blkLiveGen  = new BitMap[cfg.Blocks.Count];
+            BitMap[] blkLiveGen = new BitMap[cfg.Blocks.Count];
             BitMap[] blkLiveKill = new BitMap[cfg.Blocks.Count];
 
             // Compute local live sets.
             for (BasicBlock block = cfg.Blocks.First; block != null; block = block.ListNext)
             {
-                BitMap liveGen  = new BitMap(Allocators.Default, mapSize);
-                BitMap liveKill = new BitMap(Allocators.Default, mapSize);
+                BitMap liveGen = new(Allocators.Default, mapSize);
+                BitMap liveKill = new(Allocators.Default, mapSize);
 
                 for (Operation node = block.Operations.First; node != default; node = node.ListNext)
                 {
@@ -910,17 +907,17 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
                     }
                 }
 
-                blkLiveGen [block.Index] = liveGen;
+                blkLiveGen[block.Index] = liveGen;
                 blkLiveKill[block.Index] = liveKill;
             }
 
             // Compute global live sets.
-            BitMap[] blkLiveIn  = new BitMap[cfg.Blocks.Count];
+            BitMap[] blkLiveIn = new BitMap[cfg.Blocks.Count];
             BitMap[] blkLiveOut = new BitMap[cfg.Blocks.Count];
 
             for (int index = 0; index < cfg.Blocks.Count; index++)
             {
-                blkLiveIn [index] = new BitMap(Allocators.Default, mapSize);
+                blkLiveIn[index] = new BitMap(Allocators.Default, mapSize);
                 blkLiveOut[index] = new BitMap(Allocators.Default, mapSize);
             }
 
@@ -945,9 +942,9 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
 
                     BitMap liveIn = blkLiveIn[block.Index];
 
-                    liveIn.Set  (liveOut);
+                    liveIn.Set(liveOut);
                     liveIn.Clear(blkLiveKill[block.Index]);
-                    liveIn.Set  (blkLiveGen [block.Index]);
+                    liveIn.Set(blkLiveGen[block.Index]);
                 }
             }
             while (modified);
@@ -969,7 +966,7 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
                 int instCount = Math.Max(block.Operations.Count, 1);
 
                 int blockStart = operationPos - instCount * InstructionGap;
-                int blockEnd   = operationPos;
+                int blockEnd = operationPos;
 
                 _blockRanges[block.Index] = new LiveRange(blockStart, blockEnd);
 
@@ -1061,7 +1058,7 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
             {
                 int regIndex = BitOperations.TrailingZeroCount(mask);
 
-                Register callerSavedReg = new Register(regIndex, regType);
+                Register callerSavedReg = new(regIndex, regType);
 
                 LiveInterval interval = _intervals[GetRegisterId(callerSavedReg)];
 

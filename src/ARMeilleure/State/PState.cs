@@ -12,6 +12,6 @@ namespace ARMeilleure.State
         VFlag = 28,
         CFlag = 29,
         ZFlag = 30,
-        NFlag = 31
+        NFlag = 31,
     }
 }

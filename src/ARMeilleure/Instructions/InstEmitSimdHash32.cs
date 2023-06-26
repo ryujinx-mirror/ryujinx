@@ -8,7 +8,7 @@ namespace ARMeilleure.Instructions
 {
     static partial class InstEmit32
     {
-#region "Sha256"
+        #region "Sha256"
         public static void Sha256h_V(ArmEmitterContext context)
         {
             OpCode32SimdReg op = (OpCode32SimdReg)context.CurrOp;
@@ -59,6 +59,6 @@ namespace ARMeilleure.Instructions
 
             context.Copy(GetVecA32(op.Qd), res);
         }
-#endregion
+        #endregion
     }
 }

@@ -130,7 +130,7 @@ namespace ARMeilleure.Translation
 
         public BasicBlock SplitEdge(BasicBlock predecessor, BasicBlock successor)
         {
-            BasicBlock splitBlock = new BasicBlock(Blocks.Count);
+            BasicBlock splitBlock = new(Blocks.Count);
 
             for (int i = 0; i < predecessor.SuccessorsCount; i++)
             {

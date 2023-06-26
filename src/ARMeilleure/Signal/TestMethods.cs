@@ -20,7 +20,7 @@ namespace ARMeilleure.Signal
 
         public static DebugPartialUnmap GenerateDebugPartialUnmap()
         {
-            EmitterContext context = new EmitterContext();
+            EmitterContext context = new();
 
             var result = WindowsPartialUnmapHandler.EmitRetryFromAccessViolation(context);
 
@@ -37,7 +37,7 @@ namespace ARMeilleure.Signal
 
         public static DebugThreadLocalMapGetOrReserve GenerateDebugThreadLocalMapGetOrReserve(IntPtr structPtr)
         {
-            EmitterContext context = new EmitterContext();
+            EmitterContext context = new();
 
             var result = WindowsPartialUnmapHandler.EmitThreadLocalMapIntGetOrReserve(context, structPtr, context.LoadArgument(OperandType.I32, 0), context.LoadArgument(OperandType.I32, 1));
 
@@ -54,7 +54,7 @@ namespace ARMeilleure.Signal
 
         public static DebugNativeWriteLoop GenerateDebugNativeWriteLoop()
         {
-            EmitterContext context = new EmitterContext();
+            EmitterContext context = new();
 
             // Loop a write to the target address until "running" is false.
 

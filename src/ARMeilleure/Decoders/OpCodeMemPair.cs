@@ -8,11 +8,11 @@ namespace ARMeilleure.Decoders
 
         public OpCodeMemPair(InstDescriptor inst, ulong address, int opCode) : base(inst, address, opCode)
         {
-            Rt2      =  (opCode >> 10) & 0x1f;
-            WBack    = ((opCode >> 23) & 0x1) != 0;
-            PostIdx  = ((opCode >> 23) & 0x3) == 1;
+            Rt2 = (opCode >> 10) & 0x1f;
+            WBack = ((opCode >> 23) & 0x1) != 0;
+            PostIdx = ((opCode >> 23) & 0x3) == 1;
             Extend64 = ((opCode >> 30) & 0x3) == 1;
-            Size     = ((opCode >> 31) & 0x1) | 2;
+            Size = ((opCode >> 31) & 0x1) | 2;
 
             DecodeImm(opCode);
         }

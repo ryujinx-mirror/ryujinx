@@ -36,23 +36,13 @@ namespace ARMeilleure.Decoders
                     break;
             }
 
-            switch (inst.Name)
+            Immediate = inst.Name switch
             {
-                case InstName.Str:
-                case InstName.Ldr:
-                    Immediate = ((opCode >> 6) & 0x1f) << 2;
-                    break;
-                case InstName.Strb:
-                case InstName.Ldrb:
-                    Immediate = ((opCode >> 6) & 0x1f);
-                    break;
-                case InstName.Strh:
-                case InstName.Ldrh:
-                    Immediate = ((opCode >> 6) & 0x1f) << 1;
-                    break;
-                default:
-                    throw new InvalidOperationException();
-            }
+                InstName.Str or InstName.Ldr => ((opCode >> 6) & 0x1f) << 2,
+                InstName.Strb or InstName.Ldrb => ((opCode >> 6) & 0x1f),
+                InstName.Strh or InstName.Ldrh => ((opCode >> 6) & 0x1f) << 1,
+                _ => throw new InvalidOperationException(),
+            };
         }
     }
 }

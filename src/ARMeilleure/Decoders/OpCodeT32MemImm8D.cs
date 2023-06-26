@@ -20,7 +20,7 @@ namespace ARMeilleure.Decoders
             Rn = (opCode >> 16) & 0xf;
 
             Index = ((opCode >> 24) & 1) != 0;
-            Add   = ((opCode >> 23) & 1) != 0;
+            Add = ((opCode >> 23) & 1) != 0;
             WBack = ((opCode >> 21) & 1) != 0;
 
             Immediate = (opCode & 0xff) << 2;

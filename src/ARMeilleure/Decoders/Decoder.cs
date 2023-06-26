@@ -20,11 +20,11 @@ namespace ARMeilleure.Decoders
 
         public static Block[] Decode(IMemoryManager memory, ulong address, ExecutionMode mode, bool highCq, DecoderMode dMode)
         {
-            List<Block> blocks = new List<Block>();
+            List<Block> blocks = new();
 
-            Queue<Block> workQueue = new Queue<Block>();
+            Queue<Block> workQueue = new();
 
-            Dictionary<ulong, Block> visited = new Dictionary<ulong, Block>();
+            Dictionary<ulong, Block> visited = new();
 
             Debug.Assert(MaxInstsPerFunctionLowCq <= MaxInstsPerFunction);
 
@@ -163,7 +163,7 @@ namespace ARMeilleure.Decoders
         {
             index = 0;
 
-            int left  = 0;
+            int left = 0;
             int right = blocks.Count - 1;
 
             while (left <= right)
@@ -196,9 +196,9 @@ namespace ARMeilleure.Decoders
 
         private static void FillBlock(
             IMemoryManager memory,
-            ExecutionMode  mode,
-            Block          block,
-            ulong          limitAddress)
+            ExecutionMode mode,
+            Block block,
+            ulong limitAddress)
         {
             ulong address = block.Address;
             int itBlockSize = 0;
@@ -241,12 +241,12 @@ namespace ARMeilleure.Decoders
         private static bool IsUnconditionalBranch(OpCode opCode)
         {
             return opCode is OpCodeBImmAl ||
-                   opCode is OpCodeBReg   || IsAarch32UnconditionalBranch(opCode);
+                   opCode is OpCodeBReg || IsAarch32UnconditionalBranch(opCode);
         }
 
         private static bool IsAarch32UnconditionalBranch(OpCode opCode)
         {
-            if (!(opCode is OpCode32 op))
+            if (opCode is not OpCode32 op)
             {
                 return false;
             }
@@ -290,9 +290,9 @@ namespace ARMeilleure.Decoders
 
                 if (opCode is IOpCode32Mem opMem)
                 {
-                    rt     = opMem.Rt;
-                    rn     = opMem.Rn;
-                    wBack  = opMem.WBack;
+                    rt = opMem.Rt;
+                    rn = opMem.Rn;
+                    wBack = opMem.WBack;
                     isLoad = opMem.IsLoad;
 
                     // For the dual load, we also need to take into account the
@@ -306,10 +306,10 @@ namespace ARMeilleure.Decoders
                 {
                     const int pcMask = 1 << RegisterAlias.Aarch32Pc;
 
-                    rt     = (opMemMult.RegisterMask & pcMask) != 0 ? RegisterAlias.Aarch32Pc : 0;
-                    rn     =  opMemMult.Rn;
-                    wBack  =  opMemMult.PostOffset != 0;
-                    isLoad =  opMemMult.IsLoad;
+                    rt = (opMemMult.RegisterMask & pcMask) != 0 ? RegisterAlias.Aarch32Pc : 0;
+                    rn = opMemMult.Rn;
+                    wBack = opMemMult.PostOffset != 0;
+                    isLoad = opMemMult.IsLoad;
                 }
                 else
                 {

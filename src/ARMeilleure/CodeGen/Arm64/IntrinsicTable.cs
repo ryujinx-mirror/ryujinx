@@ -5,12 +5,13 @@ namespace ARMeilleure.CodeGen.Arm64
 {
     static class IntrinsicTable
     {
-        private static IntrinsicInfo[] _intrinTable;
+        private static readonly IntrinsicInfo[] _intrinTable;
 
         static IntrinsicTable()
         {
             _intrinTable = new IntrinsicInfo[EnumUtils.GetCount(typeof(Intrinsic))];
 
+#pragma warning disable IDE0055 // Disable formatting
             Add(Intrinsic.Arm64AbsS,          new IntrinsicInfo(0x5e20b800u, IntrinsicType.ScalarUnary));
             Add(Intrinsic.Arm64AbsV,          new IntrinsicInfo(0x0e20b800u, IntrinsicType.VectorUnary));
             Add(Intrinsic.Arm64AddhnV,        new IntrinsicInfo(0x0e204000u, IntrinsicType.VectorTernaryRd));
@@ -448,6 +449,7 @@ namespace ARMeilleure.CodeGen.Arm64
             Add(Intrinsic.Arm64XtnV,          new IntrinsicInfo(0x0e212800u, IntrinsicType.VectorUnary));
             Add(Intrinsic.Arm64Zip1V,         new IntrinsicInfo(0x0e003800u, IntrinsicType.VectorBinary));
             Add(Intrinsic.Arm64Zip2V,         new IntrinsicInfo(0x0e007800u, IntrinsicType.VectorBinary));
+#pragma warning restore IDE0055
         }
 
         private static void Add(Intrinsic intrin, IntrinsicInfo info)

@@ -138,7 +138,7 @@ namespace ARMeilleure.Common
                 var newSpan = new Span<long>(_masks, _count);
 
                 oldSpan.CopyTo(newSpan);
-                newSpan.Slice(oldSpan.Length).Clear();
+                newSpan[oldSpan.Length..].Clear();
 
                 _allocator.Free(oldMask);
             }
@@ -176,8 +176,8 @@ namespace ARMeilleure.Common
             private int _bit;
             private readonly BitMap _map;
 
-            public int Current => (int)_index * IntSize + _bit;
-            object IEnumerator.Current => Current;
+            public readonly int Current => (int)_index * IntSize + _bit;
+            readonly object IEnumerator.Current => Current;
 
             public Enumerator(BitMap map)
             {
@@ -214,9 +214,9 @@ namespace ARMeilleure.Common
                 return true;
             }
 
-            public void Reset() { }
+            public readonly void Reset() { }
 
-            public void Dispose() { }
+            public readonly void Dispose() { }
         }
     }
 }

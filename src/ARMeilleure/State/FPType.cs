@@ -6,6 +6,6 @@ namespace ARMeilleure.State
         Zero,
         Infinity,
         QNaN,
-        SNaN
+        SNaN,
     }
 }

@@ -5,6 +5,6 @@ namespace ARMeilleure.IntermediateRepresentation
         Integer,
         Vector,
         Flag,
-        FpFlag
+        FpFlag,
     }
 }

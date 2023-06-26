@@ -22,10 +22,10 @@ namespace ARMeilleure.Decoders.Optimizations
             Block entryBlock = blocks[entryBlockId];
 
             Block startBlock = entryBlock;
-            Block endBlock   = entryBlock;
+            Block endBlock = entryBlock;
 
             int startBlockIndex = entryBlockId;
-            int endBlockIndex   = entryBlockId;
+            int endBlockIndex = entryBlockId;
 
             for (int i = entryBlockId + 1; i < blocks.Count; i++) // Search forwards.
             {
@@ -36,7 +36,7 @@ namespace ARMeilleure.Decoders.Optimizations
                     break; // End of contiguous function.
                 }
 
-                endBlock      = block;
+                endBlock = block;
                 endBlockIndex = i;
             }
 
@@ -49,7 +49,7 @@ namespace ARMeilleure.Decoders.Optimizations
                     break; // End of contiguous function.
                 }
 
-                startBlock      = block;
+                startBlock = block;
                 startBlockIndex = i;
             }
 
@@ -57,7 +57,7 @@ namespace ARMeilleure.Decoders.Optimizations
             {
                 return blocks.ToArray(); // Nothing to do here.
             }
-            
+
             // Mark branches whose target is outside of the contiguous region as an exit block.
             for (int i = startBlockIndex; i <= endBlockIndex; i++)
             {
@@ -69,7 +69,7 @@ namespace ARMeilleure.Decoders.Optimizations
                 }
             }
 
-           var newBlocks = new List<Block>(blocks.Count);
+            var newBlocks = new List<Block>(blocks.Count);
 
             // Finally, rebuild decoded block list, ignoring blocks outside the contiguous range.
             for (int i = 0; i < blocks.Count; i++)

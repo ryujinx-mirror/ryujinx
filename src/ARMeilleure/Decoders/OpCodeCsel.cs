@@ -10,7 +10,7 @@ namespace ARMeilleure.Decoders
 
         public OpCodeCsel(InstDescriptor inst, ulong address, int opCode) : base(inst, address, opCode)
         {
-            Rm   =             (opCode >> 16) & 0x1f;
+            Rm = (opCode >> 16) & 0x1f;
             Cond = (Condition)((opCode >> 12) & 0xf);
         }
     }

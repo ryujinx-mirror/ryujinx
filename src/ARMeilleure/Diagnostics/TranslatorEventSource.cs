@@ -19,19 +19,19 @@ namespace ARMeilleure.Diagnostics
         {
             _rejitQueueCounter = new PollingCounter("rejit-queue-length", this, () => _rejitQueue)
             {
-                DisplayName = "Rejit Queue Length"
+                DisplayName = "Rejit Queue Length",
             };
 
             _funcTabSizeCounter = new PollingCounter("addr-tab-alloc", this, () => _funcTabSize / 1024d / 1024d)
             {
                 DisplayName = "AddressTable Total Bytes Allocated",
-                DisplayUnits = "MiB"
+                DisplayUnits = "MiB",
             };
 
             _funcTabLeafSizeCounter = new PollingCounter("addr-tab-leaf-alloc", this, () => _funcTabLeafSize / 1024d / 1024d)
             {
                 DisplayName = "AddressTable Total Leaf Bytes Allocated",
-                DisplayUnits = "MiB"
+                DisplayUnits = "MiB",
             };
         }
 

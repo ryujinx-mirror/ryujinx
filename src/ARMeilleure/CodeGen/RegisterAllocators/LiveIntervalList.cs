@@ -8,8 +8,8 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
         private int _count;
         private int _capacity;
 
-        public int Count => _count;
-        public Span<LiveInterval> Span => new(_items, _count);
+        public readonly int Count => _count;
+        public readonly Span<LiveInterval> Span => new(_items, _count);
 
         public void Add(LiveInterval interval)
         {

@@ -12,7 +12,7 @@ namespace ARMeilleure.Decoders
             {
                 case 1:
                     Index = (opCode >> 20) & 3 |
-                            (opCode >>  9) & 4;
+                            (opCode >> 9) & 4;
 
                     Rm &= 0xf;
 
@@ -24,7 +24,9 @@ namespace ARMeilleure.Decoders
 
                     break;
 
-                default: Instruction = InstDescriptor.Undefined; break;
+                default:
+                    Instruction = InstDescriptor.Undefined;
+                    break;
             }
         }
     }

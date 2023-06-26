@@ -23,10 +23,7 @@ namespace ARMeilleure
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static ArenaAllocator GetAllocator(ref ArenaAllocator alloc, uint pageSize, uint pageCount)
         {
-            if (alloc == null)
-            {
-                alloc = new ArenaAllocator(pageSize, pageCount);
-            }
+            alloc ??= new ArenaAllocator(pageSize, pageCount);
 
             return alloc;
         }

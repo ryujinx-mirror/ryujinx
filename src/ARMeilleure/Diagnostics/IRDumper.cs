@@ -34,7 +34,9 @@ namespace ARMeilleure.Diagnostics
 
             for (int index = 0; index < _indentLevel; index++)
             {
+#pragma warning disable CA1834 // Use StringBuilder.Append(char) for single character strings
                 _builder.Append(Indentation);
+#pragma warning restore CA1834
             }
         }
 
@@ -110,10 +112,18 @@ namespace ARMeilleure.Diagnostics
 
                     switch (reg.Type)
                     {
-                        case RegisterType.Flag:    _builder.Append('b'); break;
-                        case RegisterType.FpFlag:  _builder.Append('f'); break;
-                        case RegisterType.Integer: _builder.Append('r'); break;
-                        case RegisterType.Vector:  _builder.Append('v'); break;
+                        case RegisterType.Flag:
+                            _builder.Append('b');
+                            break;
+                        case RegisterType.FpFlag:
+                            _builder.Append('f');
+                            break;
+                        case RegisterType.Integer:
+                            _builder.Append('r');
+                            break;
+                        case RegisterType.Vector:
+                            _builder.Append('v');
+                            break;
                     }
 
                     _builder.Append(reg.Index);
@@ -145,9 +155,15 @@ namespace ARMeilleure.Diagnostics
 
                         switch (memOp.Scale)
                         {
-                            case Multiplier.x2: _builder.Append("*2"); break;
-                            case Multiplier.x4: _builder.Append("*4"); break;
-                            case Multiplier.x8: _builder.Append("*8"); break;
+                            case Multiplier.x2:
+                                _builder.Append("*2");
+                                break;
+                            case Multiplier.x4:
+                                _builder.Append("*4");
+                                break;
+                            case Multiplier.x8:
+                                _builder.Append("*8");
+                                break;
                         }
                     }
 

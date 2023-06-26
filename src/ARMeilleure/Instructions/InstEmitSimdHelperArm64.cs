@@ -50,7 +50,7 @@ namespace ARMeilleure.Instructions
             }
 
             SetIntOrZR(context, op.Rd, op.RegisterSize == RegisterSize.Int32
-                ? context.AddIntrinsicInt (inst, n)
+                ? context.AddIntrinsicInt(inst, n)
                 : context.AddIntrinsicLong(inst, n));
         }
 
@@ -288,7 +288,7 @@ namespace ARMeilleure.Instructions
             }
 
             SetIntOrZR(context, op.Rd, op.RegisterSize == RegisterSize.Int32
-                ? context.AddIntrinsicInt (inst, n, Const(fBits))
+                ? context.AddIntrinsicInt(inst, n, Const(fBits))
                 : context.AddIntrinsicLong(inst, n, Const(fBits)));
         }
 
@@ -695,7 +695,7 @@ namespace ARMeilleure.Instructions
         {
             OpCodeSimdReg op = (OpCodeSimdReg)context.CurrOp;
 
-            bool cmpWithZero = !(op is OpCodeSimdFcond) ? op.Bit3 : false;
+            bool cmpWithZero = op is not OpCodeSimdFcond && op.Bit3;
 
             Intrinsic inst = signalNaNs ? Intrinsic.Arm64FcmpeS : Intrinsic.Arm64FcmpS;
 

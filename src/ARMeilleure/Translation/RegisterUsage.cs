@@ -12,7 +12,7 @@ namespace ARMeilleure.Translation
     static class RegisterUsage
     {
         private const int RegsCount = 32;
-        private const int RegsMask  = RegsCount - 1;
+        private const int RegsMask = RegsCount - 1;
 
         private readonly struct RegisterMask : IEquatable<RegisterMask>
         {
@@ -90,7 +90,7 @@ namespace ARMeilleure.Translation
         public static void RunPass(ControlFlowGraph cfg, ExecutionMode mode)
         {
             // Compute local register inputs and outputs used inside blocks.
-            RegisterMask[] localInputs  = new RegisterMask[cfg.Blocks.Count];
+            RegisterMask[] localInputs = new RegisterMask[cfg.Blocks.Count];
             RegisterMask[] localOutputs = new RegisterMask[cfg.Blocks.Count];
 
             for (BasicBlock block = cfg.Blocks.First; block != null; block = block.ListNext)
@@ -119,7 +119,7 @@ namespace ARMeilleure.Translation
             // Compute global register inputs and outputs used across blocks.
             RegisterMask[] globalCmnOutputs = new RegisterMask[cfg.Blocks.Count];
 
-            RegisterMask[] globalInputs  = new RegisterMask[cfg.Blocks.Count];
+            RegisterMask[] globalInputs = new RegisterMask[cfg.Blocks.Count];
             RegisterMask[] globalOutputs = new RegisterMask[cfg.Blocks.Count];
 
             bool modified;
@@ -286,10 +286,12 @@ namespace ARMeilleure.Translation
 
             switch (register.Type)
             {
+#pragma warning disable IDE0055 // Disable formatting
                 case RegisterType.Flag:    intMask = (1L << RegsCount) << register.Index; break;
                 case RegisterType.Integer: intMask =  1L               << register.Index; break;
                 case RegisterType.FpFlag:  vecMask = (1L << RegsCount) << register.Index; break;
                 case RegisterType.Vector:  vecMask =  1L               << register.Index; break;
+#pragma warning restore IDE0055
             }
 
             return new RegisterMask(intMask, vecMask);
@@ -373,15 +375,14 @@ namespace ARMeilleure.Translation
 
         private static OperandType GetOperandType(RegisterType type, ExecutionMode mode)
         {
-            switch (type)
+            return type switch
             {
-                case RegisterType.Flag:    return OperandType.I32;
-                case RegisterType.FpFlag:  return OperandType.I32;
-                case RegisterType.Integer: return (mode == ExecutionMode.Aarch64) ? OperandType.I64 : OperandType.I32;
-                case RegisterType.Vector:  return OperandType.V128;
-            }
-
-            throw new ArgumentException($"Invalid register type \"{type}\".");
+                RegisterType.Flag => OperandType.I32,
+                RegisterType.FpFlag => OperandType.I32,
+                RegisterType.Integer => (mode == ExecutionMode.Aarch64) ? OperandType.I64 : OperandType.I32,
+                RegisterType.Vector => OperandType.V128,
+                _ => throw new ArgumentException($"Invalid register type \"{type}\"."),
+            };
         }
 
         private static bool EndsWithReturn(BasicBlock block)

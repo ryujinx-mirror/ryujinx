@@ -10,7 +10,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Numerics;
-
 using static ARMeilleure.IntermediateRepresentation.Operand;
 using static ARMeilleure.IntermediateRepresentation.Operand.Factory;
 
@@ -31,15 +30,16 @@ namespace ARMeilleure.CodeGen.Arm64
         {
             Byte,
             Hword,
-            Auto
+            Auto,
         }
 
-        private static Action<CodeGenContext, Operation>[] _instTable;
+        private static readonly Action<CodeGenContext, Operation>[] _instTable;
 
         static CodeGenerator()
         {
             _instTable = new Action<CodeGenContext, Operation>[EnumUtils.GetCount(typeof(Instruction))];
 
+#pragma warning disable IDE0055 // Disable formatting
             Add(Instruction.Add,                     GenerateAdd);
             Add(Instruction.BitwiseAnd,              GenerateBitwiseAnd);
             Add(Instruction.BitwiseExclusiveOr,      GenerateBitwiseExclusiveOr);
@@ -48,7 +48,7 @@ namespace ARMeilleure.CodeGen.Arm64
             Add(Instruction.BranchIf,                GenerateBranchIf);
             Add(Instruction.ByteSwap,                GenerateByteSwap);
             Add(Instruction.Call,                    GenerateCall);
-            //Add(Instruction.Clobber,                 GenerateClobber);
+            // Add(Instruction.Clobber,                 GenerateClobber);
             Add(Instruction.Compare,                 GenerateCompare);
             Add(Instruction.CompareAndSwap,          GenerateCompareAndSwap);
             Add(Instruction.CompareAndSwap16,        GenerateCompareAndSwap16);
@@ -100,6 +100,7 @@ namespace ARMeilleure.CodeGen.Arm64
             Add(Instruction.ZeroExtend16,            GenerateZeroExtend16);
             Add(Instruction.ZeroExtend32,            GenerateZeroExtend32);
             Add(Instruction.ZeroExtend8,             GenerateZeroExtend8);
+#pragma warning restore IDE0055
 
             static void Add(Instruction inst, Action<CodeGenContext, Operation> func)
             {
@@ -131,7 +132,7 @@ namespace ARMeilleure.CodeGen.Arm64
 
             StackAllocator stackAlloc = new();
 
-            PreAllocator.RunPass(cctx, stackAlloc, out int maxCallArgs);
+            PreAllocator.RunPass(cctx, out int maxCallArgs);
 
             Logger.EndPass(PassName.PreAllocation, cfg);
 
@@ -170,7 +171,7 @@ namespace ARMeilleure.CodeGen.Arm64
 
             bool relocatable = (cctx.Options & CompilerOptions.Relocatable) != 0;
 
-            CodeGenContext context = new(allocResult, maxCallArgs, cfg.Blocks.Count, relocatable);
+            CodeGenContext context = new(allocResult, maxCallArgs, relocatable);
 
             UnwindInfo unwindInfo = WritePrologue(context);
 
@@ -292,7 +293,7 @@ namespace ARMeilleure.CodeGen.Arm64
 
         private static void GenerateBitwiseNot(CodeGenContext context, Operation operation)
         {
-            Operand dest   = operation.Destination;
+            Operand dest = operation.Destination;
             Operand source = operation.GetSource(0);
 
             ValidateUnOp(dest, source);
@@ -330,7 +331,7 @@ namespace ARMeilleure.CodeGen.Arm64
 
         private static void GenerateByteSwap(CodeGenContext context, Operation operation)
         {
-            Operand dest   = operation.Destination;
+            Operand dest = operation.Destination;
             Operand source = operation.GetSource(0);
 
             ValidateUnOp(dest, source);
@@ -364,15 +365,15 @@ namespace ARMeilleure.CodeGen.Arm64
         {
             if (operation.SourcesCount == 5) // CompareAndSwap128 has 5 sources, compared to CompareAndSwap64/32's 3.
             {
-                Operand actualLow    = operation.GetDestination(0);
-                Operand actualHigh   = operation.GetDestination(1);
-                Operand temp0        = operation.GetDestination(2);
-                Operand temp1        = operation.GetDestination(3);
-                Operand address      = operation.GetSource(0);
-                Operand expectedLow  = operation.GetSource(1);
+                Operand actualLow = operation.GetDestination(0);
+                Operand actualHigh = operation.GetDestination(1);
+                Operand temp0 = operation.GetDestination(2);
+                Operand temp1 = operation.GetDestination(3);
+                Operand address = operation.GetSource(0);
+                Operand expectedLow = operation.GetSource(1);
                 Operand expectedHigh = operation.GetSource(2);
-                Operand desiredLow   = operation.GetSource(3);
-                Operand desiredHigh  = operation.GetSource(4);
+                Operand desiredLow = operation.GetSource(3);
+                Operand desiredHigh = operation.GetSource(4);
 
                 GenerateAtomicDcas(
                     context,
@@ -388,11 +389,11 @@ namespace ARMeilleure.CodeGen.Arm64
             }
             else
             {
-                Operand actual   = operation.GetDestination(0);
-                Operand result   = operation.GetDestination(1);
-                Operand address  = operation.GetSource(0);
+                Operand actual = operation.GetDestination(0);
+                Operand result = operation.GetDestination(1);
+                Operand address = operation.GetSource(0);
                 Operand expected = operation.GetSource(1);
-                Operand desired  = operation.GetSource(2);
+                Operand desired = operation.GetSource(2);
 
                 GenerateAtomicCas(context, address, expected, desired, actual, result, AccessSize.Auto);
             }
@@ -400,22 +401,22 @@ namespace ARMeilleure.CodeGen.Arm64
 
         private static void GenerateCompareAndSwap16(CodeGenContext context, Operation operation)
         {
-            Operand actual   = operation.GetDestination(0);
-            Operand result   = operation.GetDestination(1);
-            Operand address  = operation.GetSource(0);
+            Operand actual = operation.GetDestination(0);
+            Operand result = operation.GetDestination(1);
+            Operand address = operation.GetSource(0);
             Operand expected = operation.GetSource(1);
-            Operand desired  = operation.GetSource(2);
+            Operand desired = operation.GetSource(2);
 
             GenerateAtomicCas(context, address, expected, desired, actual, result, AccessSize.Hword);
         }
 
         private static void GenerateCompareAndSwap8(CodeGenContext context, Operation operation)
         {
-            Operand actual   = operation.GetDestination(0);
-            Operand result   = operation.GetDestination(1);
-            Operand address  = operation.GetSource(0);
+            Operand actual = operation.GetDestination(0);
+            Operand result = operation.GetDestination(1);
+            Operand address = operation.GetSource(0);
             Operand expected = operation.GetSource(1);
-            Operand desired  = operation.GetSource(2);
+            Operand desired = operation.GetSource(2);
 
             GenerateAtomicCas(context, address, expected, desired, actual, result, AccessSize.Byte);
         }
@@ -444,13 +445,13 @@ namespace ARMeilleure.CodeGen.Arm64
             Debug.Assert(dest.Type.IsInteger());
             Debug.Assert(src1.Type == OperandType.I32);
 
-            context.Assembler.Cmp (src1, Const(src1.Type, 0));
+            context.Assembler.Cmp(src1, Const(src1.Type, 0));
             context.Assembler.Csel(dest, src2, src3, ArmCondition.Ne);
         }
 
         private static void GenerateConvertI64ToI32(CodeGenContext context, Operation operation)
         {
-            Operand dest   = operation.Destination;
+            Operand dest = operation.Destination;
             Operand source = operation.GetSource(0);
 
             Debug.Assert(dest.Type == OperandType.I32 && source.Type == OperandType.I64);
@@ -460,7 +461,7 @@ namespace ARMeilleure.CodeGen.Arm64
 
         private static void GenerateConvertToFP(CodeGenContext context, Operation operation)
         {
-            Operand dest   = operation.Destination;
+            Operand dest = operation.Destination;
             Operand source = operation.GetSource(0);
 
             Debug.Assert(dest.Type == OperandType.FP32 || dest.Type == OperandType.FP64);
@@ -479,7 +480,7 @@ namespace ARMeilleure.CodeGen.Arm64
 
         private static void GenerateConvertToFPUI(CodeGenContext context, Operation operation)
         {
-            Operand dest   = operation.Destination;
+            Operand dest = operation.Destination;
             Operand source = operation.GetSource(0);
 
             Debug.Assert(dest.Type == OperandType.FP32 || dest.Type == OperandType.FP64);
@@ -491,7 +492,7 @@ namespace ARMeilleure.CodeGen.Arm64
 
         private static void GenerateCopy(CodeGenContext context, Operation operation)
         {
-            Operand dest   = operation.Destination;
+            Operand dest = operation.Destination;
             Operand source = operation.GetSource(0);
 
             EnsureSameType(dest, source);
@@ -523,7 +524,7 @@ namespace ARMeilleure.CodeGen.Arm64
 
         private static void GenerateCountLeadingZeros(CodeGenContext context, Operation operation)
         {
-            Operand dest   = operation.Destination;
+            Operand dest = operation.Destination;
             Operand source = operation.GetSource(0);
 
             EnsureSameType(dest, source);
@@ -535,9 +536,9 @@ namespace ARMeilleure.CodeGen.Arm64
 
         private static void GenerateDivide(CodeGenContext context, Operation operation)
         {
-            Operand dest     = operation.Destination;
+            Operand dest = operation.Destination;
             Operand dividend = operation.GetSource(0);
-            Operand divisor  = operation.GetSource(1);
+            Operand divisor = operation.GetSource(1);
 
             ValidateBinOp(dest, dividend, divisor);
 
@@ -553,9 +554,9 @@ namespace ARMeilleure.CodeGen.Arm64
 
         private static void GenerateDivideUI(CodeGenContext context, Operation operation)
         {
-            Operand dest     = operation.Destination;
+            Operand dest = operation.Destination;
             Operand dividend = operation.GetSource(0);
-            Operand divisor  = operation.GetSource(1);
+            Operand divisor = operation.GetSource(1);
 
             ValidateBinOp(dest, dividend, divisor);
 
@@ -564,7 +565,7 @@ namespace ARMeilleure.CodeGen.Arm64
 
         private static void GenerateLoad(CodeGenContext context, Operation operation)
         {
-            Operand value   = operation.Destination;
+            Operand value = operation.Destination;
             Operand address = operation.GetSource(0);
 
             context.Assembler.Ldr(value, address);
@@ -572,7 +573,7 @@ namespace ARMeilleure.CodeGen.Arm64
 
         private static void GenerateLoad16(CodeGenContext context, Operation operation)
         {
-            Operand value   = operation.Destination;
+            Operand value = operation.Destination;
             Operand address = operation.GetSource(0);
 
             Debug.Assert(value.Type.IsInteger());
@@ -582,7 +583,7 @@ namespace ARMeilleure.CodeGen.Arm64
 
         private static void GenerateLoad8(CodeGenContext context, Operation operation)
         {
-            Operand value   = operation.Destination;
+            Operand value = operation.Destination;
             Operand address = operation.GetSource(0);
 
             Debug.Assert(value.Type.IsInteger());
@@ -641,7 +642,7 @@ namespace ARMeilleure.CodeGen.Arm64
 
         private static void GenerateNegate(CodeGenContext context, Operation operation)
         {
-            Operand dest   = operation.Destination;
+            Operand dest = operation.Destination;
             Operand source = operation.GetSource(0);
 
             ValidateUnOp(dest, source);
@@ -728,7 +729,7 @@ namespace ARMeilleure.CodeGen.Arm64
 
         private static void GenerateSignExtend16(CodeGenContext context, Operation operation)
         {
-            Operand dest   = operation.Destination;
+            Operand dest = operation.Destination;
             Operand source = operation.GetSource(0);
 
             Debug.Assert(dest.Type.IsInteger() && source.Type.IsInteger());
@@ -738,7 +739,7 @@ namespace ARMeilleure.CodeGen.Arm64
 
         private static void GenerateSignExtend32(CodeGenContext context, Operation operation)
         {
-            Operand dest   = operation.Destination;
+            Operand dest = operation.Destination;
             Operand source = operation.GetSource(0);
 
             Debug.Assert(dest.Type.IsInteger() && source.Type.IsInteger());
@@ -748,7 +749,7 @@ namespace ARMeilleure.CodeGen.Arm64
 
         private static void GenerateSignExtend8(CodeGenContext context, Operation operation)
         {
-            Operand dest   = operation.Destination;
+            Operand dest = operation.Destination;
             Operand source = operation.GetSource(0);
 
             Debug.Assert(dest.Type.IsInteger() && source.Type.IsInteger());
@@ -758,7 +759,7 @@ namespace ARMeilleure.CodeGen.Arm64
 
         private static void GenerateFill(CodeGenContext context, Operation operation)
         {
-            Operand dest   = operation.Destination;
+            Operand dest = operation.Destination;
             Operand offset = operation.GetSource(0);
 
             Debug.Assert(offset.Kind == OperandKind.Constant);
@@ -799,7 +800,7 @@ namespace ARMeilleure.CodeGen.Arm64
 
         private static void GenerateStackAlloc(CodeGenContext context, Operation operation)
         {
-            Operand dest   = operation.Destination;
+            Operand dest = operation.Destination;
             Operand offset = operation.GetSource(0);
 
             Debug.Assert(offset.Kind == OperandKind.Constant);
@@ -811,7 +812,7 @@ namespace ARMeilleure.CodeGen.Arm64
 
         private static void GenerateStore(CodeGenContext context, Operation operation)
         {
-            Operand value   = operation.GetSource(1);
+            Operand value = operation.GetSource(1);
             Operand address = operation.GetSource(0);
 
             context.Assembler.Str(value, address);
@@ -819,7 +820,7 @@ namespace ARMeilleure.CodeGen.Arm64
 
         private static void GenerateStore16(CodeGenContext context, Operation operation)
         {
-            Operand value   = operation.GetSource(1);
+            Operand value = operation.GetSource(1);
             Operand address = operation.GetSource(0);
 
             Debug.Assert(value.Type.IsInteger());
@@ -829,7 +830,7 @@ namespace ARMeilleure.CodeGen.Arm64
 
         private static void GenerateStore8(CodeGenContext context, Operation operation)
         {
-            Operand value   = operation.GetSource(1);
+            Operand value = operation.GetSource(1);
             Operand address = operation.GetSource(0);
 
             Debug.Assert(value.Type.IsInteger());
@@ -876,7 +877,7 @@ namespace ARMeilleure.CodeGen.Arm64
 
         private static void GenerateVectorCreateScalar(CodeGenContext context, Operation operation)
         {
-            Operand dest   = operation.Destination;
+            Operand dest = operation.Destination;
             Operand source = operation.GetSource(0);
 
             if (dest != default)
@@ -1022,7 +1023,7 @@ namespace ARMeilleure.CodeGen.Arm64
 
         private static void GenerateVectorZeroUpper64(CodeGenContext context, Operation operation)
         {
-            Operand dest   = operation.Destination;
+            Operand dest = operation.Destination;
             Operand source = operation.GetSource(0);
 
             Debug.Assert(dest.Type == OperandType.V128 && source.Type == OperandType.V128);
@@ -1032,7 +1033,7 @@ namespace ARMeilleure.CodeGen.Arm64
 
         private static void GenerateVectorZeroUpper96(CodeGenContext context, Operation operation)
         {
-            Operand dest   = operation.Destination;
+            Operand dest = operation.Destination;
             Operand source = operation.GetSource(0);
 
             Debug.Assert(dest.Type == OperandType.V128 && source.Type == OperandType.V128);
@@ -1042,7 +1043,7 @@ namespace ARMeilleure.CodeGen.Arm64
 
         private static void GenerateZeroExtend16(CodeGenContext context, Operation operation)
         {
-            Operand dest   = operation.Destination;
+            Operand dest = operation.Destination;
             Operand source = operation.GetSource(0);
 
             Debug.Assert(dest.Type.IsInteger() && source.Type.IsInteger());
@@ -1052,7 +1053,7 @@ namespace ARMeilleure.CodeGen.Arm64
 
         private static void GenerateZeroExtend32(CodeGenContext context, Operation operation)
         {
-            Operand dest   = operation.Destination;
+            Operand dest = operation.Destination;
             Operand source = operation.GetSource(0);
 
             Debug.Assert(dest.Type.IsInteger() && source.Type.IsInteger());
@@ -1068,7 +1069,7 @@ namespace ARMeilleure.CodeGen.Arm64
 
         private static void GenerateZeroExtend8(CodeGenContext context, Operation operation)
         {
-            Operand dest   = operation.Destination;
+            Operand dest = operation.Destination;
             Operand source = operation.GetSource(0);
 
             Debug.Assert(dest.Type.IsInteger() && source.Type.IsInteger());
@@ -1078,7 +1079,7 @@ namespace ARMeilleure.CodeGen.Arm64
 
         private static UnwindInfo WritePrologue(CodeGenContext context)
         {
-            List<UnwindPushEntry> pushEntries = new List<UnwindPushEntry>();
+            List<UnwindPushEntry> pushEntries = new();
 
             Operand rsp = Register(SpRegister);
 
@@ -1568,11 +1569,13 @@ namespace ARMeilleure.CodeGen.Arm64
             Debug.Assert(op1.Type == op3.Type);
         }
 
+#pragma warning disable IDE0051 // Remove unused private member
         private static void EnsureSameType(Operand op1, Operand op2, Operand op3, Operand op4)
         {
             Debug.Assert(op1.Type == op2.Type);
             Debug.Assert(op1.Type == op3.Type);
             Debug.Assert(op1.Type == op4.Type);
         }
+#pragma warning restore IDE0051
     }
 }

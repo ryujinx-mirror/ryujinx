@@ -82,8 +82,10 @@ namespace ARMeilleure.Common
             }
             else
             {
-                _page = new PageInfo();
-                _page.Pointer = (byte*)NativeAllocator.Instance.Allocate(_pageSize);
+                _page = new PageInfo
+                {
+                    Pointer = (byte*)NativeAllocator.Instance.Allocate(_pageSize),
+                };
 
                 _pages.Add(_page);
             }
@@ -106,7 +108,7 @@ namespace ARMeilleure.Common
             // Free excess pages that was allocated.
             while (_pages.Count > _pageCount)
             {
-                NativeAllocator.Instance.Free(_pages[_pages.Count - 1].Pointer);
+                NativeAllocator.Instance.Free(_pages[^1].Pointer);
 
                 _pages.RemoveAt(_pages.Count - 1);
             }
@@ -125,12 +127,13 @@ namespace ARMeilleure.Common
 
             // If arena is used frequently, keep pages for longer. Otherwise keep pages for a shorter amount of time.
             int now = Environment.TickCount;
-            int count = (now - _lastReset) switch {
+            int count = (now - _lastReset) switch
+            {
                 >= 5000 => 0,
                 >= 2500 => 50,
                 >= 1000 => 100,
-                >= 10   => 1500,
-                _       => 5000
+                >= 10 => 1500,
+                _ => 5000,
             };
 
             for (int i = _pages.Count - 1; i >= 0; i--)

@@ -171,13 +171,12 @@ namespace ARMeilleure.CodeGen.Optimizations
 
         private static ulong AllOnes(OperandType type)
         {
-            switch (type)
+            return type switch
             {
-                case OperandType.I32: return ~0U;
-                case OperandType.I64: return ~0UL;
-            }
-
-            throw new ArgumentException("Invalid operand type \"" + type + "\".");
+                OperandType.I32 => ~0U,
+                OperandType.I64 => ~0UL,
+                _ => throw new ArgumentException("Invalid operand type \"" + type + "\"."),
+            };
         }
     }
 }

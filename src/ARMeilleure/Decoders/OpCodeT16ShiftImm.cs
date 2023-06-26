@@ -15,8 +15,8 @@
 
         public OpCodeT16ShiftImm(InstDescriptor inst, ulong address, int opCode) : base(inst, address, opCode)
         {
-            Rd        = (opCode >> 0) & 0x7;
-            Rm        = (opCode >> 3) & 0x7;
+            Rd = (opCode >> 0) & 0x7;
+            Rm = (opCode >> 3) & 0x7;
             Immediate = (opCode >> 6) & 0x1F;
             ShiftType = (ShiftType)((opCode >> 11) & 3);
         }

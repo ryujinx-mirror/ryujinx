@@ -28,7 +28,7 @@
         /// Same as the host mapped memory manager type, but without masking the address within the address space.
         /// Allows invalid access from JIT code to the rest of the program, but is faster.
         /// </summary>
-        HostMappedUnsafe
+        HostMappedUnsafe,
     }
 
     static class MemoryManagerTypeExtensions

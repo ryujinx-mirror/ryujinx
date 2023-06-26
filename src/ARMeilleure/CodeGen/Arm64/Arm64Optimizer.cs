@@ -221,7 +221,7 @@ namespace ARMeilleure.CodeGen.Arm64
                         2 => Multiplier.x4,
                         3 => Multiplier.x8,
                         4 => Multiplier.x16,
-                        _ => Multiplier.x1
+                        _ => Multiplier.x1,
                     };
 
                     baseOp = indexOnSrc2 ? src1 : src2;

@@ -5,7 +5,6 @@ using ARMeilleure.Translation;
 using System;
 using System.Diagnostics;
 using System.Reflection;
-
 using static ARMeilleure.Instructions.InstEmitHelper;
 using static ARMeilleure.Instructions.InstEmitSimdHelper;
 using static ARMeilleure.Instructions.InstEmitSimdHelper32;
@@ -291,7 +290,7 @@ namespace ARMeilleure.Instructions
 
             VectorSxSx = SignedSrc | SignedDst,
             VectorSxZx = SignedSrc,
-            VectorZxZx = 0
+            VectorZxZx = 0,
         }
 
         private static void EmitRoundShrImmSaturatingNarrowOp(ArmEmitterContext context, ShrImmSaturatingNarrowFlags flags)
@@ -303,10 +302,10 @@ namespace ARMeilleure.Instructions
         {
             OpCode32SimdShImm op = (OpCode32SimdShImm)context.CurrOp;
 
-            bool scalar    = (flags & ShrImmSaturatingNarrowFlags.Scalar)    != 0;
+            bool scalar = (flags & ShrImmSaturatingNarrowFlags.Scalar) != 0;
             bool signedSrc = (flags & ShrImmSaturatingNarrowFlags.SignedSrc) != 0;
             bool signedDst = (flags & ShrImmSaturatingNarrowFlags.SignedDst) != 0;
-            bool round     = (flags & ShrImmSaturatingNarrowFlags.Round)     != 0;
+            bool round = (flags & ShrImmSaturatingNarrowFlags.Round) != 0;
 
             if (scalar)
             {

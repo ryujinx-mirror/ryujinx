@@ -3,6 +3,6 @@
     enum BasicBlockFrequency
     {
         Default,
-        Cold
+        Cold,
     }
 }

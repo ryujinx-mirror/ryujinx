@@ -224,7 +224,7 @@ namespace ARMeilleure.Translation
         /// <param name="context">Emitter context for the method</param>
         /// <param name="nativeContext">Pointer to the native context</param>
         /// <param name="enter">True if entering guest code, false otherwise</param>
-        private void EmitSyncFpContext(EmitterContext context, Operand nativeContext, bool enter)
+        private static void EmitSyncFpContext(EmitterContext context, Operand nativeContext, bool enter)
         {
             if (enter)
             {

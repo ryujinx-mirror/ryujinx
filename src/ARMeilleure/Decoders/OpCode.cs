@@ -5,8 +5,8 @@ namespace ARMeilleure.Decoders
 {
     class OpCode : IOpCode
     {
-        public ulong Address   { get; }
-        public int   RawOpCode { get; }
+        public ulong Address { get; }
+        public int RawOpCode { get; }
 
         public int OpCodeSizeInBytes { get; protected set; } = 4;
 
@@ -14,13 +14,13 @@ namespace ARMeilleure.Decoders
 
         public RegisterSize RegisterSize { get; protected set; }
 
-        public static OpCode Create(InstDescriptor inst, ulong address, int opCode) => new OpCode(inst, address, opCode);
+        public static OpCode Create(InstDescriptor inst, ulong address, int opCode) => new(inst, address, opCode);
 
         public OpCode(InstDescriptor inst, ulong address, int opCode)
         {
             Instruction = inst;
-            Address     = address;
-            RawOpCode   = opCode;
+            Address = address;
+            RawOpCode = opCode;
 
             RegisterSize = RegisterSize.Int64;
         }
@@ -30,15 +30,14 @@ namespace ARMeilleure.Decoders
 
         public int GetBitsCount()
         {
-            switch (RegisterSize)
+            return RegisterSize switch
             {
-                case RegisterSize.Int32:   return 32;
-                case RegisterSize.Int64:   return 64;
-                case RegisterSize.Simd64:  return 64;
-                case RegisterSize.Simd128: return 128;
-            }
-
-            throw new InvalidOperationException();
+                RegisterSize.Int32 => 32,
+                RegisterSize.Int64 => 64,
+                RegisterSize.Simd64 => 64,
+                RegisterSize.Simd128 => 128,
+                _ => throw new InvalidOperationException(),
+            };
         }
 
         public OperandType GetOperandType()

@@ -16,13 +16,25 @@ namespace ARMeilleure.Instructions
 
             switch (type)
             {
-                case IntType.UInt8:  value = context.ZeroExtend8 (value.Type, value); break;
-                case IntType.UInt16: value = context.ZeroExtend16(value.Type, value); break;
-                case IntType.UInt32: value = context.ZeroExtend32(value.Type, value); break;
+                case IntType.UInt8:
+                    value = context.ZeroExtend8(value.Type, value);
+                    break;
+                case IntType.UInt16:
+                    value = context.ZeroExtend16(value.Type, value);
+                    break;
+                case IntType.UInt32:
+                    value = context.ZeroExtend32(value.Type, value);
+                    break;
 
-                case IntType.Int8:  value = context.SignExtend8 (value.Type, value); break;
-                case IntType.Int16: value = context.SignExtend16(value.Type, value); break;
-                case IntType.Int32: value = context.SignExtend32(value.Type, value); break;
+                case IntType.Int8:
+                    value = context.SignExtend8(value.Type, value);
+                    break;
+                case IntType.Int16:
+                    value = context.SignExtend16(value.Type, value);
+                    break;
+                case IntType.Int32:
+                    value = context.SignExtend32(value.Type, value);
+                    break;
             }
 
             return value;
@@ -100,78 +112,51 @@ namespace ARMeilleure.Instructions
 
         public static int GetBankedRegisterAlias(Aarch32Mode mode, int regIndex)
         {
-            switch (regIndex)
+            return regIndex switch
             {
-                case 8: return mode == Aarch32Mode.Fiq
-                    ? RegisterAlias.R8Fiq
-                    : RegisterAlias.R8Usr;
-
-                case 9: return mode == Aarch32Mode.Fiq
-                    ? RegisterAlias.R9Fiq
-                    : RegisterAlias.R9Usr;
-
-                case 10: return mode == Aarch32Mode.Fiq
-                    ? RegisterAlias.R10Fiq
-                    : RegisterAlias.R10Usr;
-
-                case 11: return mode == Aarch32Mode.Fiq
-                    ? RegisterAlias.R11Fiq
-                    : RegisterAlias.R11Usr;
-
-                case 12: return mode == Aarch32Mode.Fiq
-                    ? RegisterAlias.R12Fiq
-                    : RegisterAlias.R12Usr;
-
-                case 13:
-                    switch (mode)
-                    {
-                        case Aarch32Mode.User:
-                        case Aarch32Mode.System:     return RegisterAlias.SpUsr;
-                        case Aarch32Mode.Fiq:        return RegisterAlias.SpFiq;
-                        case Aarch32Mode.Irq:        return RegisterAlias.SpIrq;
-                        case Aarch32Mode.Supervisor: return RegisterAlias.SpSvc;
-                        case Aarch32Mode.Abort:      return RegisterAlias.SpAbt;
-                        case Aarch32Mode.Hypervisor: return RegisterAlias.SpHyp;
-                        case Aarch32Mode.Undefined:  return RegisterAlias.SpUnd;
-
-                        default: throw new ArgumentException(nameof(mode));
-                    }
-
-                case 14:
-                    switch (mode)
-                    {
-                        case Aarch32Mode.User:
-                        case Aarch32Mode.Hypervisor:
-                        case Aarch32Mode.System:     return RegisterAlias.LrUsr;
-                        case Aarch32Mode.Fiq:        return RegisterAlias.LrFiq;
-                        case Aarch32Mode.Irq:        return RegisterAlias.LrIrq;
-                        case Aarch32Mode.Supervisor: return RegisterAlias.LrSvc;
-                        case Aarch32Mode.Abort:      return RegisterAlias.LrAbt;
-                        case Aarch32Mode.Undefined:  return RegisterAlias.LrUnd;
-
-                        default: throw new ArgumentException(nameof(mode));
-                    }
-
-                default: throw new ArgumentOutOfRangeException(nameof(regIndex));
-            }
+#pragma warning disable IDE0055 // Disable formatting
+                8  => mode == Aarch32Mode.Fiq ? RegisterAlias.R8Fiq  : RegisterAlias.R8Usr,
+                9  => mode == Aarch32Mode.Fiq ? RegisterAlias.R9Fiq  : RegisterAlias.R9Usr,
+                10 => mode == Aarch32Mode.Fiq ? RegisterAlias.R10Fiq : RegisterAlias.R10Usr,
+                11 => mode == Aarch32Mode.Fiq ? RegisterAlias.R11Fiq : RegisterAlias.R11Usr,
+                12 => mode == Aarch32Mode.Fiq ? RegisterAlias.R12Fiq : RegisterAlias.R12Usr,
+                13 => mode switch
+                {
+                    Aarch32Mode.User or Aarch32Mode.System => RegisterAlias.SpUsr,
+                    Aarch32Mode.Fiq => RegisterAlias.SpFiq,
+                    Aarch32Mode.Irq => RegisterAlias.SpIrq,
+                    Aarch32Mode.Supervisor => RegisterAlias.SpSvc,
+                    Aarch32Mode.Abort => RegisterAlias.SpAbt,
+                    Aarch32Mode.Hypervisor => RegisterAlias.SpHyp,
+                    Aarch32Mode.Undefined => RegisterAlias.SpUnd,
+                    _ => throw new ArgumentException($"No such AArch32Mode: {mode}", nameof(mode)),
+                },
+                14 => mode switch
+                {
+                    Aarch32Mode.User or Aarch32Mode.Hypervisor or Aarch32Mode.System => RegisterAlias.LrUsr,
+                    Aarch32Mode.Fiq => RegisterAlias.LrFiq,
+                    Aarch32Mode.Irq => RegisterAlias.LrIrq,
+                    Aarch32Mode.Supervisor => RegisterAlias.LrSvc,
+                    Aarch32Mode.Abort => RegisterAlias.LrAbt,
+                    Aarch32Mode.Undefined => RegisterAlias.LrUnd,
+                    _ => throw new ArgumentException($"No such AArch32Mode: {mode}", nameof(mode)),
+                },
+                _ => throw new ArgumentOutOfRangeException(nameof(regIndex), regIndex, null),
+#pragma warning restore IDE0055
+            };
         }
 
         public static bool IsA32Return(ArmEmitterContext context)
         {
-            switch (context.CurrOp)
+            return context.CurrOp switch
             {
-                case IOpCode32MemMult op:
-                    return true; // Setting PC using LDM is nearly always a return.
-                case OpCode32AluRsImm op:
-                    return op.Rm == RegisterAlias.Aarch32Lr;
-                case OpCode32AluRsReg op:
-                    return op.Rm == RegisterAlias.Aarch32Lr;
-                case OpCode32AluReg op:
-                    return op.Rm == RegisterAlias.Aarch32Lr;
-                case OpCode32Mem op:
-                    return op.Rn == RegisterAlias.Aarch32Sp && op.WBack && !op.Index; // Setting PC to an address stored on the stack is nearly always a return.
-            }
-            return false;
+                IOpCode32MemMult => true, // Setting PC using LDM is nearly always a return.
+                OpCode32AluRsImm op => op.Rm == RegisterAlias.Aarch32Lr,
+                OpCode32AluRsReg op => op.Rm == RegisterAlias.Aarch32Lr,
+                OpCode32AluReg op => op.Rm == RegisterAlias.Aarch32Lr,
+                OpCode32Mem op => op.Rn == RegisterAlias.Aarch32Sp && op.WBack && !op.Index, // Setting PC to an address stored on the stack is nearly always a return.
+                _ => false,
+            };
         }
 
         public static void EmitBxWritePc(ArmEmitterContext context, Operand pc, int sourceRegister = 0)

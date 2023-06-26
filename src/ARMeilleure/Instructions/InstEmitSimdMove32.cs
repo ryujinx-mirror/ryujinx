@@ -2,7 +2,6 @@
 using ARMeilleure.IntermediateRepresentation;
 using ARMeilleure.Translation;
 using System;
-
 using static ARMeilleure.Instructions.InstEmitHelper;
 using static ARMeilleure.Instructions.InstEmitSimdHelper;
 using static ARMeilleure.Instructions.InstEmitSimdHelper32;
@@ -17,13 +16,13 @@ namespace ARMeilleure.Instructions
         private static readonly long[] _masksE0_Uzp = new long[]
         {
             13L << 56 | 09L << 48 | 05L << 40 | 01L << 32 | 12L << 24 | 08L << 16 | 04L << 8 | 00L << 0,
-            11L << 56 | 10L << 48 | 03L << 40 | 02L << 32 | 09L << 24 | 08L << 16 | 01L << 8 | 00L << 0
+            11L << 56 | 10L << 48 | 03L << 40 | 02L << 32 | 09L << 24 | 08L << 16 | 01L << 8 | 00L << 0,
         };
 
         private static readonly long[] _masksE1_Uzp = new long[]
         {
             15L << 56 | 11L << 48 | 07L << 40 | 03L << 32 | 14L << 24 | 10L << 16 | 06L << 8 | 02L << 0,
-            15L << 56 | 14L << 48 | 07L << 40 | 06L << 32 | 13L << 24 | 12L << 16 | 05L << 8 | 04L << 0
+            15L << 56 | 14L << 48 | 07L << 40 | 06L << 32 | 13L << 24 | 12L << 16 | 05L << 8 | 04L << 0,
         };
         #endregion
 
@@ -220,7 +219,7 @@ namespace ARMeilleure.Instructions
                 for (int index = 1; index < length; index++)
                 {
                     int newVn = (op.Vn + index) & 0x1F;
-                    (int qn, int ind) = GetQuadwordAndSubindex(newVn, op.RegisterSize);
+                    (int qn, _) = GetQuadwordAndSubindex(newVn, op.RegisterSize);
                     Operand ni = EmitMoveDoubleWordToSide(context, GetVecA32(qn), newVn, 0);
 
                     Operand idxMask = X86GetAllElements(context, 0x0808080808080808L * index);

@@ -47,7 +47,7 @@ namespace ARMeilleure.CodeGen.X86
                 0xc3, // ret
             };
 
-            using MemoryBlock memGetXcr0 = new MemoryBlock((ulong)asmGetXcr0.Length);
+            using MemoryBlock memGetXcr0 = new((ulong)asmGetXcr0.Length);
 
             memGetXcr0.Write(0, asmGetXcr0);
 
@@ -62,7 +62,7 @@ namespace ARMeilleure.CodeGen.X86
         public enum FeatureFlags1Edx
         {
             Sse = 1 << 25,
-            Sse2 = 1 << 26
+            Sse2 = 1 << 26,
         }
 
         [Flags]
@@ -79,7 +79,7 @@ namespace ARMeilleure.CodeGen.X86
             Xsave = 1 << 26,
             Osxsave = 1 << 27,
             Avx = 1 << 28,
-            F16c = 1 << 29
+            F16c = 1 << 29,
         }
 
         [Flags]
@@ -90,7 +90,7 @@ namespace ARMeilleure.CodeGen.X86
             Avx512dq = 1 << 17,
             Sha = 1 << 29,
             Avx512bw = 1 << 30,
-            Avx512vl = 1 << 31
+            Avx512vl = 1 << 31,
         }
 
         [Flags]
@@ -106,7 +106,7 @@ namespace ARMeilleure.CodeGen.X86
             YmmHi128 = 1 << 2,
             Opmask = 1 << 5,
             ZmmHi256 = 1 << 6,
-            Hi16Zmm = 1 << 7
+            Hi16Zmm = 1 << 7,
         }
 
         public static FeatureFlags1Edx FeatureInfo1Edx { get; }

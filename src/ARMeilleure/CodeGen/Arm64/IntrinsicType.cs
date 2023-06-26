@@ -55,6 +55,6 @@ namespace ARMeilleure.CodeGen.Arm64
         VectorTernaryShrRd,
 
         GetRegister,
-        SetRegister
+        SetRegister,
     }
 }

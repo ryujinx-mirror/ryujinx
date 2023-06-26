@@ -164,7 +164,7 @@ namespace ARMeilleure.CodeGen.Optimizations
                     }
                     break;
 
-                 case Instruction.Multiply:
+                case Instruction.Multiply:
                     if (type == OperandType.I32)
                     {
                         EvaluateBinaryI32(operation, (x, y) => x * y);

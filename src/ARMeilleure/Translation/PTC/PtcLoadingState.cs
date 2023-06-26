@@ -4,6 +4,6 @@ namespace ARMeilleure.Translation.PTC
     {
         Start,
         Loading,
-        Loaded
+        Loaded,
     }
 }

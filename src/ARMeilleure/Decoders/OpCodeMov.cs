@@ -22,9 +22,9 @@ namespace ARMeilleure.Decoders
                 return;
             }
 
-            Rd        = (opCode >>  0) & 0x1f;
-            Immediate = (opCode >>  5) & 0xffff;
-            Bit       = (opCode >> 21) & 0x3;
+            Rd = (opCode >> 0) & 0x1f;
+            Immediate = (opCode >> 5) & 0xffff;
+            Bit = (opCode >> 21) & 0x3;
 
             Bit <<= 4;
 

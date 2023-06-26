@@ -18,9 +18,9 @@ namespace ARMeilleure.Instructions
 
                 Operand round2 = context.AddIntrinsic(Intrinsic.X86Sha256Rnds2, src1, src2, w);
                 Operand round4 = context.AddIntrinsic(Intrinsic.X86Sha256Rnds2, src2, round2, w2);
-                
+
                 Operand res = context.AddIntrinsic(Intrinsic.X86Shufps, round4, round2, Const(part2 ? 0x11 : 0xbb));
-                
+
                 return res;
             }
 

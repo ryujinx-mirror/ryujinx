@@ -84,9 +84,9 @@ namespace ARMeilleure.Instructions
             {
                 Operand res = GetIntOrZR(context, op.Rn);
 
-                res = context.ShiftLeft   (res, Const(bitsCount - 1 - op.Pos));
+                res = context.ShiftLeft(res, Const(bitsCount - 1 - op.Pos));
                 res = context.ShiftRightSI(res, Const(bitsCount - 1));
-                res = context.BitwiseAnd  (res, Const(res.Type, ~op.TMask));
+                res = context.BitwiseAnd(res, Const(res.Type, ~op.TMask));
 
                 Operand n2 = GetBfmN(context);
 

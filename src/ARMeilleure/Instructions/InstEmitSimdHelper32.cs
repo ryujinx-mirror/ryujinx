@@ -4,7 +4,6 @@ using ARMeilleure.Translation;
 using System;
 using System.Diagnostics;
 using System.Reflection;
-
 using static ARMeilleure.Instructions.InstEmitHelper;
 using static ARMeilleure.Instructions.InstEmitSimdHelper;
 using static ARMeilleure.IntermediateRepresentation.Operand.Factory;
@@ -19,18 +18,13 @@ namespace ARMeilleure.Instructions
     {
         public static (int, int) GetQuadwordAndSubindex(int index, RegisterSize size)
         {
-            switch (size)
+            return size switch
             {
-                case RegisterSize.Simd128:
-                    return (index >> 1, 0);
-                case RegisterSize.Simd64:
-                case RegisterSize.Int64:
-                    return (index >> 1, index & 1);
-                case RegisterSize.Int32:
-                    return (index >> 2, index & 3);
-            }
-
-            throw new ArgumentException("Unrecognized Vector Register Size.");
+                RegisterSize.Simd128 => (index >> 1, 0),
+                RegisterSize.Simd64 or RegisterSize.Int64 => (index >> 1, index & 1),
+                RegisterSize.Int32 => (index >> 2, index & 3),
+                _ => throw new ArgumentException("Unrecognized Vector Register Size."),
+            };
         }
 
         public static Operand ExtractScalar(ArmEmitterContext context, OperandType type, int reg)
@@ -327,7 +321,7 @@ namespace ARMeilleure.Instructions
             for (int index = 0; index < elems; index++)
             {
                 Operand ne = EmitVectorExtract32(context, op.Qn, op.In + index, op.Size + 1, signed);
-                Operand me = EmitVectorExtract32(context, op.Qm, op.Im + index, op.Size,     signed);
+                Operand me = EmitVectorExtract32(context, op.Qm, op.Im + index, op.Size, signed);
 
                 if (op.Size == 2)
                 {
@@ -380,8 +374,8 @@ namespace ARMeilleure.Instructions
             for (int index = 0; index < elems; index++)
             {
                 Operand de = EmitVectorExtract32(context, op.Qd, op.Id + index, op.Size + 1, signed);
-                Operand ne = EmitVectorExtract32(context, op.Qn, op.In + index, op.Size,     signed);
-                Operand me = EmitVectorExtract32(context, op.Qm, op.Im + index, op.Size,     signed);
+                Operand ne = EmitVectorExtract32(context, op.Qn, op.In + index, op.Size, signed);
+                Operand me = EmitVectorExtract32(context, op.Qm, op.Im + index, op.Size, signed);
 
                 if (op.Size == 2)
                 {
@@ -778,7 +772,10 @@ namespace ARMeilleure.Instructions
         {
             // Index into 0, 0 into index. This swap happens at the start of an A32 scalar op if required.
             int index = reg & (doubleWidth ? 1 : 3);
-            if (index == 0) return target;
+            if (index == 0)
+            {
+                return target;
+            }
 
             if (doubleWidth)
             {
@@ -974,7 +971,7 @@ namespace ARMeilleure.Instructions
 
             Intrinsic inst = (op.Size & 1) != 0 ? inst64 : inst32;
 
-            EmitScalarBinaryOpSimd32(context, (n, m) =>  context.AddIntrinsic(inst, n, m));
+            EmitScalarBinaryOpSimd32(context, (n, m) => context.AddIntrinsic(inst, n, m));
         }
 
         public static void EmitScalarTernaryOpSimd32(ArmEmitterContext context, Func3I scalarFunc)
@@ -1195,7 +1192,7 @@ namespace ARMeilleure.Instructions
                 : typeof(SoftFloat64).GetMethod(name);
 
             Array.Resize(ref callArgs, callArgs.Length + 1);
-            callArgs[callArgs.Length - 1] = Const(1);
+            callArgs[^1] = Const(1);
 
             context.ExitArmFpMode();
             context.StoreToContext();
@@ -1245,16 +1242,24 @@ namespace ARMeilleure.Instructions
             {
                 switch (size)
                 {
-                    case 0: res = context.SignExtend8(OperandType.I32, res); break;
-                    case 1: res = context.SignExtend16(OperandType.I32, res); break;
+                    case 0:
+                        res = context.SignExtend8(OperandType.I32, res);
+                        break;
+                    case 1:
+                        res = context.SignExtend16(OperandType.I32, res);
+                        break;
                 }
             }
             else
             {
                 switch (size)
                 {
-                    case 0: res = context.ZeroExtend8(OperandType.I32, res); break;
-                    case 1: res = context.ZeroExtend16(OperandType.I32, res); break;
+                    case 0:
+                        res = context.ZeroExtend8(OperandType.I32, res);
+                        break;
+                    case 1:
+                        res = context.ZeroExtend16(OperandType.I32, res);
+                        break;
                 }
             }
 

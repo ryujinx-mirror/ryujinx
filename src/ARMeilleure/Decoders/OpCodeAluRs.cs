@@ -3,7 +3,7 @@ namespace ARMeilleure.Decoders
     class OpCodeAluRs : OpCodeAlu, IOpCodeAluRs
     {
         public int Shift { get; }
-        public int Rm    { get; }
+        public int Rm { get; }
 
         public ShiftType ShiftType { get; }
 
@@ -22,7 +22,7 @@ namespace ARMeilleure.Decoders
 
             Shift = shift;
 
-            Rm        =             (opCode >> 16) & 0x1f;
+            Rm = (opCode >> 16) & 0x1f;
             ShiftType = (ShiftType)((opCode >> 22) & 0x3);
         }
     }

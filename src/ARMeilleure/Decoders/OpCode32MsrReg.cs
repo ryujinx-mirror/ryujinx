@@ -4,11 +4,11 @@ namespace ARMeilleure.Decoders
 {
     class OpCode32MsrReg : OpCode32
     {
-        public bool R      { get; }
-        public int  Mask   { get; }
-        public int  Rd     { get; }
+        public bool R { get; }
+        public int Mask { get; }
+        public int Rd { get; }
         public bool Banked { get; }
-        public int  Rn     { get; }
+        public int Rn { get; }
 
         public new static OpCode Create(InstDescriptor inst, ulong address, int opCode) => new OpCode32MsrReg(inst, address, opCode);
 

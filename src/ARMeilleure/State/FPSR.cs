@@ -13,6 +13,6 @@ namespace ARMeilleure.State
         Idc = 1u << 7,
         Qc = 1u << 27,
 
-        Mask = Qc | Idc | Ixc | Ufc | Ofc | Dzc | Ioc // 0x0800009Fu
+        Mask = Qc | Idc | Ixc | Ufc | Ofc | Dzc | Ioc, // 0x0800009Fu
     }
 }

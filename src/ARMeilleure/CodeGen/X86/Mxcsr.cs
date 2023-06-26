@@ -10,6 +10,6 @@ namespace ARMeilleure.CodeGen.X86
         Rlo = 1 << 13, // Round Mode low bit.
         Um = 1 << 11,  // Underflow Mask.
         Dm = 1 << 8,   // Denormal Mask.
-        Daz = 1 << 6   // Denormals Are Zero.
+        Daz = 1 << 6, // Denormals Are Zero.
     }
 }

@@ -30,7 +30,7 @@ namespace ARMeilleure.CodeGen.X86
             Assembler = new Assembler(_stream, relocatable);
 
             CallArgsRegionSize = GetCallArgsRegionSize(allocResult, maxCallArgs, out int xmmSaveRegionSize);
-            XmmSaveRegionSize  = xmmSaveRegionSize;
+            XmmSaveRegionSize = xmmSaveRegionSize;
         }
 
         private static int GetCallArgsRegionSize(AllocationResult allocResult, int maxCallArgs, out int xmmSaveRegionSize)

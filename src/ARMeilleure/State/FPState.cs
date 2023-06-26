@@ -26,6 +26,6 @@
         RMode1Flag = 23,
         FzFlag = 24,
         DnFlag = 25,
-        AhpFlag = 26
+        AhpFlag = 26,
     }
 }

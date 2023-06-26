@@ -8,7 +8,7 @@ namespace ARMeilleure.Diagnostics
     {
         private static long _startTime;
 
-        private static long[] _accumulatedTime;
+        private static readonly long[] _accumulatedTime;
 
         static Logger()
         {

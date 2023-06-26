@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace ARMeilleure.CodeGen.X86
 {
@@ -12,47 +13,48 @@ namespace ARMeilleure.CodeGen.X86
         private const int BadOp = 0;
 
         [Flags]
+        [SuppressMessage("Design", "CA1069: Enums values should not be duplicated")]
         private enum InstructionFlags
         {
-            None     = 0,
-            RegOnly  = 1 << 0,
-            Reg8Src  = 1 << 1,
+            None = 0,
+            RegOnly = 1 << 0,
+            Reg8Src = 1 << 1,
             Reg8Dest = 1 << 2,
-            RexW     = 1 << 3,
-            Vex      = 1 << 4,
-            Evex     = 1 << 5,
+            RexW = 1 << 3,
+            Vex = 1 << 4,
+            Evex = 1 << 5,
 
-            PrefixBit  = 16,
+            PrefixBit = 16,
             PrefixMask = 7 << PrefixBit,
-            Prefix66   = 1 << PrefixBit,
-            PrefixF3   = 2 << PrefixBit,
-            PrefixF2   = 4 << PrefixBit
+            Prefix66 = 1 << PrefixBit,
+            PrefixF3 = 2 << PrefixBit,
+            PrefixF2 = 4 << PrefixBit,
         }
 
         private readonly struct InstructionInfo
         {
-            public int OpRMR     { get; }
-            public int OpRMImm8  { get; }
+            public int OpRMR { get; }
+            public int OpRMImm8 { get; }
             public int OpRMImm32 { get; }
-            public int OpRImm64  { get; }
-            public int OpRRM     { get; }
+            public int OpRImm64 { get; }
+            public int OpRRM { get; }
 
             public InstructionFlags Flags { get; }
 
             public InstructionInfo(
-                int              opRMR,
-                int              opRMImm8,
-                int              opRMImm32,
-                int              opRImm64,
-                int              opRRM,
+                int opRMR,
+                int opRMImm8,
+                int opRMImm32,
+                int opRImm64,
+                int opRRM,
                 InstructionFlags flags)
             {
-                OpRMR     = opRMR;
-                OpRMImm8  = opRMImm8;
+                OpRMR = opRMR;
+                OpRMImm8 = opRMImm8;
                 OpRMImm32 = opRMImm32;
-                OpRImm64  = opRImm64;
-                OpRRM     = opRRM;
-                Flags     = flags;
+                OpRImm64 = opRImm64;
+                OpRRM = opRRM;
+                Flags = flags;
             }
         }
 
@@ -62,6 +64,7 @@ namespace ARMeilleure.CodeGen.X86
         {
             _instTable = new InstructionInfo[(int)X86Instruction.Count];
 
+#pragma warning disable IDE0055 // Disable formatting
             //  Name                                             RM/R        RM/I8       RM/I32      R/I64       R/RM        Flags
             Add(X86Instruction.Add,           new InstructionInfo(0x00000001, 0x00000083, 0x00000081, BadOp,      0x00000003, InstructionFlags.None));
             Add(X86Instruction.Addpd,         new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x00000f58, InstructionFlags.Vex | InstructionFlags.Prefix66));
@@ -285,6 +288,7 @@ namespace ARMeilleure.CodeGen.X86
             Add(X86Instruction.Xor,           new InstructionInfo(0x00000031, 0x06000083, 0x06000081, BadOp,      0x00000033, InstructionFlags.None));
             Add(X86Instruction.Xorpd,         new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x00000f57, InstructionFlags.Vex | InstructionFlags.Prefix66));
             Add(X86Instruction.Xorps,         new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x00000f57, InstructionFlags.Vex));
+#pragma warning restore IDE0055
 
             static void Add(X86Instruction inst, in InstructionInfo info)
             {

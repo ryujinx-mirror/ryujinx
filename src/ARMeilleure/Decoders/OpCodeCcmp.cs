@@ -4,7 +4,7 @@ namespace ARMeilleure.Decoders
 {
     class OpCodeCcmp : OpCodeAlu, IOpCodeCond
     {
-        public    int Nzcv { get; }
+        public int Nzcv { get; }
         protected int RmImm;
 
         public Condition Cond { get; }
@@ -22,9 +22,9 @@ namespace ARMeilleure.Decoders
                 return;
             }
 
-            Nzcv  =             (opCode >>  0) & 0xf;
-            Cond  = (Condition)((opCode >> 12) & 0xf);
-            RmImm =             (opCode >> 16) & 0x1f;
+            Nzcv = (opCode >> 0) & 0xf;
+            Cond = (Condition)((opCode >> 12) & 0xf);
+            RmImm = (opCode >> 16) & 0x1f;
 
             Rd = RegisterAlias.Zr;
         }

@@ -1,7 +1,6 @@
 using ARMeilleure.IntermediateRepresentation;
 using System;
 using System.Collections.Generic;
-
 using static ARMeilleure.IntermediateRepresentation.Operand.Factory;
 using static ARMeilleure.IntermediateRepresentation.Operation.Factory;
 
@@ -13,16 +12,16 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
         {
             private readonly struct Copy
             {
-                public Register Dest   { get; }
+                public Register Dest { get; }
                 public Register Source { get; }
 
                 public OperandType Type { get; }
 
                 public Copy(Register dest, Register source, OperandType type)
                 {
-                    Dest   = dest;
+                    Dest = dest;
                     Source = source;
-                    Type   = type;
+                    Type = type;
                 }
             }
 
@@ -42,19 +41,19 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
 
             public void Sequence(List<Operation> sequence)
             {
-                Dictionary<Register, Register> locations = new Dictionary<Register, Register>();
-                Dictionary<Register, Register> sources   = new Dictionary<Register, Register>();
+                Dictionary<Register, Register> locations = new();
+                Dictionary<Register, Register> sources = new();
 
-                Dictionary<Register, OperandType> types = new Dictionary<Register, OperandType>();
+                Dictionary<Register, OperandType> types = new();
 
-                Queue<Register> pendingQueue = new Queue<Register>();
-                Queue<Register> readyQueue   = new Queue<Register>();
+                Queue<Register> pendingQueue = new();
+                Queue<Register> readyQueue = new();
 
                 foreach (Copy copy in _copies)
                 {
                     locations[copy.Source] = copy.Source;
-                    sources[copy.Dest]     = copy.Source;
-                    types[copy.Dest]       = copy.Type;
+                    sources[copy.Dest] = copy.Source;
+                    types[copy.Dest] = copy.Type;
 
                     pendingQueue.Enqueue(copy.Dest);
                 }
@@ -91,7 +90,7 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
                         }
                     }
 
-                    copyDest   = current;
+                    copyDest = current;
                     origSource = sources[copyDest];
                     copySource = locations[origSource];
 
@@ -186,10 +185,7 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
 
         private void AddSplitFill(LiveInterval left, LiveInterval right, OperandType type)
         {
-            if (_fillQueue == null)
-            {
-                _fillQueue = new Queue<Operation>();
-            }
+            _fillQueue ??= new Queue<Operation>();
 
             Operand register = GetRegister(right.Register, type);
             Operand offset = Const(left.SpillOffset);
@@ -201,10 +197,7 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
 
         private void AddSplitSpill(LiveInterval left, LiveInterval right, OperandType type)
         {
-            if (_spillQueue == null)
-            {
-                _spillQueue = new Queue<Operation>();
-            }
+            _spillQueue ??= new Queue<Operation>();
 
             Operand offset = Const(right.SpillOffset);
             Operand register = GetRegister(left.Register, type);
@@ -216,10 +209,7 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
 
         private void AddSplitCopy(LiveInterval left, LiveInterval right, OperandType type)
         {
-            if (_parallelCopy == null)
-            {
-                _parallelCopy = new ParallelCopy();
-            }
+            _parallelCopy ??= new ParallelCopy();
 
             _parallelCopy.AddCopy(right.Register, left.Register, type);
 
@@ -228,7 +218,7 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
 
         public Operation[] Sequence()
         {
-            List<Operation> sequence = new List<Operation>();
+            List<Operation> sequence = new();
 
             if (_spillQueue != null)
             {

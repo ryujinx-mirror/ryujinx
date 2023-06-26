@@ -12,7 +12,6 @@ using System.IO.Compression;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
-
 using static ARMeilleure.Translation.PTC.PtcFormatter;
 
 namespace ARMeilleure.Translation.PTC
@@ -46,7 +45,7 @@ namespace ARMeilleure.Translation.PTC
         public bool Enabled { get; private set; }
 
         public ulong StaticCodeStart { get; set; }
-        public ulong StaticCodeSize  { get; set; }
+        public ulong StaticCodeSize { get; set; }
 
         public PtcProfiler(Ptc ptc)
         {
@@ -129,8 +128,8 @@ namespace ARMeilleure.Translation.PTC
             string fileNameActual = $"{_ptc.CachePathActual}.info";
             string fileNameBackup = $"{_ptc.CachePathBackup}.info";
 
-            FileInfo fileInfoActual = new FileInfo(fileNameActual);
-            FileInfo fileInfoBackup = new FileInfo(fileNameBackup);
+            FileInfo fileInfoActual = new(fileNameActual);
+            FileInfo fileInfoBackup = new(fileNameBackup);
 
             if (fileInfoActual.Exists && fileInfoActual.Length != 0L)
             {
@@ -183,42 +182,40 @@ namespace ARMeilleure.Translation.PTC
                     return false;
                 }
 
-                using (MemoryStream stream = MemoryStreamManager.Shared.GetStream())
+                using MemoryStream stream = MemoryStreamManager.Shared.GetStream();
+                Debug.Assert(stream.Seek(0L, SeekOrigin.Begin) == 0L && stream.Length == 0L);
+
+                try
                 {
-                    Debug.Assert(stream.Seek(0L, SeekOrigin.Begin) == 0L && stream.Length == 0L);
-
-                    try
-                    {
-                        deflateStream.CopyTo(stream);
-                    }
-                    catch
-                    {
-                        InvalidateCompressedStream(compressedStream);
-
-                        return false;
-                    }
-
-                    Debug.Assert(stream.Position == stream.Length);
-
-                    stream.Seek(0L, SeekOrigin.Begin);
-
-                    Hash128 expectedHash = DeserializeStructure<Hash128>(stream);
-
-                    Hash128 actualHash = XXHash128.ComputeHash(GetReadOnlySpan(stream));
-
-                    if (actualHash != expectedHash)
-                    {
-                        InvalidateCompressedStream(compressedStream);
-
-                        return false;
-                    }
-
-                    ProfiledFuncs = Deserialize(stream);
-
-                    Debug.Assert(stream.Position == stream.Length);
-
-                    _lastHash = actualHash;
+                    deflateStream.CopyTo(stream);
                 }
+                catch
+                {
+                    InvalidateCompressedStream(compressedStream);
+
+                    return false;
+                }
+
+                Debug.Assert(stream.Position == stream.Length);
+
+                stream.Seek(0L, SeekOrigin.Begin);
+
+                Hash128 expectedHash = DeserializeStructure<Hash128>(stream);
+
+                Hash128 actualHash = XXHash128.ComputeHash(GetReadOnlySpan(stream));
+
+                if (actualHash != expectedHash)
+                {
+                    InvalidateCompressedStream(compressedStream);
+
+                    return false;
+                }
+
+                ProfiledFuncs = Deserialize(stream);
+
+                Debug.Assert(stream.Position == stream.Length);
+
+                _lastHash = actualHash;
             }
 
             long fileSize = new FileInfo(fileName).Length;
@@ -233,12 +230,12 @@ namespace ARMeilleure.Translation.PTC
             return DeserializeDictionary<ulong, FuncProfile>(stream, (stream) => DeserializeStructure<FuncProfile>(stream));
         }
 
-        private ReadOnlySpan<byte> GetReadOnlySpan(MemoryStream memoryStream)
+        private static ReadOnlySpan<byte> GetReadOnlySpan(MemoryStream memoryStream)
         {
             return new(memoryStream.GetBuffer(), (int)memoryStream.Position, (int)memoryStream.Length - (int)memoryStream.Position);
         }
 
-        private void InvalidateCompressedStream(FileStream compressedStream)
+        private static void InvalidateCompressedStream(FileStream compressedStream)
         {
             compressedStream.SetLength(0L);
         }
@@ -250,7 +247,7 @@ namespace ARMeilleure.Translation.PTC
             string fileNameActual = $"{_ptc.CachePathActual}.info";
             string fileNameBackup = $"{_ptc.CachePathBackup}.info";
 
-            FileInfo fileInfoActual = new FileInfo(fileNameActual);
+            FileInfo fileInfoActual = new(fileNameActual);
 
             if (fileInfoActual.Exists && fileInfoActual.Length != 0L)
             {
@@ -266,12 +263,13 @@ namespace ARMeilleure.Translation.PTC
         {
             int profiledFuncsCount;
 
-            OuterHeader outerHeader = new OuterHeader();
+            OuterHeader outerHeader = new()
+            {
+                Magic = _outerHeaderMagic,
 
-            outerHeader.Magic = _outerHeaderMagic;
-
-            outerHeader.InfoFileVersion = InternalVersion;
-            outerHeader.Endianness = Ptc.GetEndianness();
+                InfoFileVersion = InternalVersion,
+                Endianness = Ptc.GetEndianness(),
+            };
 
             outerHeader.SetHeaderHash();
 
@@ -301,28 +299,26 @@ namespace ARMeilleure.Translation.PTC
                     return;
                 }
 
-                using (FileStream compressedStream = new(fileName, FileMode.OpenOrCreate))
-                using (DeflateStream deflateStream = new(compressedStream, SaveCompressionLevel, true))
+                using FileStream compressedStream = new(fileName, FileMode.OpenOrCreate);
+                using DeflateStream deflateStream = new(compressedStream, SaveCompressionLevel, true);
+                try
                 {
-                    try
-                    {
-                        SerializeStructure(compressedStream, outerHeader);
+                    SerializeStructure(compressedStream, outerHeader);
 
-                        stream.WriteTo(deflateStream);
+                    stream.WriteTo(deflateStream);
 
-                        _lastHash = hash;
-                    }
-                    catch
-                    {
-                        compressedStream.Position = 0L;
+                    _lastHash = hash;
+                }
+                catch
+                {
+                    compressedStream.Position = 0L;
 
-                        _lastHash = default;
-                    }
+                    _lastHash = default;
+                }
 
-                    if (compressedStream.Position < compressedStream.Length)
-                    {
-                        compressedStream.SetLength(compressedStream.Position);
-                    }
+                if (compressedStream.Position < compressedStream.Length)
+                {
+                    compressedStream.SetLength(compressedStream.Position);
                 }
             }
 
@@ -334,7 +330,7 @@ namespace ARMeilleure.Translation.PTC
             }
         }
 
-        private void Serialize(Stream stream, Dictionary<ulong, FuncProfile> profiledFuncs)
+        private static void Serialize(Stream stream, Dictionary<ulong, FuncProfile> profiledFuncs)
         {
             SerializeDictionary(stream, profiledFuncs, (stream, structure) => SerializeStructure(stream, structure));
         }
@@ -354,14 +350,14 @@ namespace ARMeilleure.Translation.PTC
             {
                 Span<OuterHeader> spanHeader = MemoryMarshal.CreateSpan(ref this, 1);
 
-                HeaderHash = XXHash128.ComputeHash(MemoryMarshal.AsBytes(spanHeader).Slice(0, Unsafe.SizeOf<OuterHeader>() - Unsafe.SizeOf<Hash128>()));
+                HeaderHash = XXHash128.ComputeHash(MemoryMarshal.AsBytes(spanHeader)[..(Unsafe.SizeOf<OuterHeader>() - Unsafe.SizeOf<Hash128>())]);
             }
 
             public bool IsHeaderValid()
             {
                 Span<OuterHeader> spanHeader = MemoryMarshal.CreateSpan(ref this, 1);
 
-                return XXHash128.ComputeHash(MemoryMarshal.AsBytes(spanHeader).Slice(0, Unsafe.SizeOf<OuterHeader>() - Unsafe.SizeOf<Hash128>())) == HeaderHash;
+                return XXHash128.ComputeHash(MemoryMarshal.AsBytes(spanHeader)[..(Unsafe.SizeOf<OuterHeader>() - Unsafe.SizeOf<Hash128>())]) == HeaderHash;
             }
         }
 

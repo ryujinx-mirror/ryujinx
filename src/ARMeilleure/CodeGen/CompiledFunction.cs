@@ -35,9 +35,9 @@ namespace ARMeilleure.CodeGen
         /// <param name="relocInfo">Relocation info</param>
         internal CompiledFunction(byte[] code, UnwindInfo unwindInfo, RelocInfo relocInfo)
         {
-            Code       = code;
+            Code = code;
             UnwindInfo = unwindInfo;
-            RelocInfo  = relocInfo;
+            RelocInfo = relocInfo;
         }
 
         /// <summary>

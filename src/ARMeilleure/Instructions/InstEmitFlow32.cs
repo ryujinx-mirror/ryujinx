@@ -82,7 +82,7 @@ namespace ARMeilleure.Instructions
         }
 
         public static void Cbnz(ArmEmitterContext context) => EmitCb(context, onNotZero: true);
-        public static void Cbz(ArmEmitterContext context)  => EmitCb(context, onNotZero: false);
+        public static void Cbz(ArmEmitterContext context) => EmitCb(context, onNotZero: false);
 
         private static void EmitCb(ArmEmitterContext context, bool onNotZero)
         {
@@ -109,7 +109,7 @@ namespace ARMeilleure.Instructions
         }
 
         public static void Tbb(ArmEmitterContext context) => EmitTb(context, halfword: false);
-        public static void Tbh(ArmEmitterContext context)  => EmitTb(context, halfword: true);
+        public static void Tbh(ArmEmitterContext context) => EmitTb(context, halfword: true);
 
         private static void EmitTb(ArmEmitterContext context, bool halfword)
         {

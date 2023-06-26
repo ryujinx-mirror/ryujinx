@@ -2,13 +2,14 @@ using ARMeilleure.Decoders;
 using ARMeilleure.IntermediateRepresentation;
 using ARMeilleure.State;
 using ARMeilleure.Translation;
-
+using System.Diagnostics.CodeAnalysis;
 using static ARMeilleure.Instructions.InstEmitAluHelper;
 using static ARMeilleure.Instructions.InstEmitHelper;
 using static ARMeilleure.IntermediateRepresentation.Operand.Factory;
 
 namespace ARMeilleure.Instructions
 {
+    [SuppressMessage("Style", "IDE0059: Remove unnecessary value assignment")]
     static partial class InstEmit32
     {
         public static void Add(ArmEmitterContext context)

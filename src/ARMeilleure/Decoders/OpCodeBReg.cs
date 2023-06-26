@@ -8,7 +8,7 @@ namespace ARMeilleure.Decoders
 
         public OpCodeBReg(InstDescriptor inst, ulong address, int opCode) : base(inst, address, opCode)
         {
-            int op4 = (opCode >>  0) & 0x1f;
+            int op4 = (opCode >> 0) & 0x1f;
             int op2 = (opCode >> 16) & 0x1f;
 
             if (op2 != 0b11111 || op4 != 0b00000)

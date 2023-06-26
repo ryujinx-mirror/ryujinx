@@ -22,24 +22,24 @@ namespace ARMeilleure.Translation
 {
     public class Translator
     {
-        private static readonly AddressTable<ulong>.Level[] Levels64Bit =
+        private static readonly AddressTable<ulong>.Level[] _levels64Bit =
             new AddressTable<ulong>.Level[]
             {
                 new(31, 17),
                 new(23,  8),
                 new(15,  8),
                 new( 7,  8),
-                new( 2,  5)
+                new( 2,  5),
             };
 
-        private static readonly AddressTable<ulong>.Level[] Levels32Bit =
+        private static readonly AddressTable<ulong>.Level[] _levels32Bit =
             new AddressTable<ulong>.Level[]
             {
                 new(31, 17),
                 new(23,  8),
                 new(15,  8),
                 new( 7,  8),
-                new( 1,  6)
+                new( 1,  6),
             };
 
         private readonly IJitMemoryAllocator _allocator;
@@ -75,7 +75,7 @@ namespace ARMeilleure.Translation
 
             CountTable = new EntryTable<uint>();
             Functions = new TranslatorCache<TranslatedFunction>();
-            FunctionTable = new AddressTable<ulong>(for64Bits ? Levels64Bit : Levels32Bit);
+            FunctionTable = new AddressTable<ulong>(for64Bits ? _levels64Bit : _levels32Bit);
             Stubs = new TranslatorStubs(this);
 
             FunctionTable.Fill = (ulong)Stubs.SlowDispatchStub;
@@ -126,7 +126,7 @@ namespace ARMeilleure.Translation
                 // TODO: Use physical cores rather than logical. This only really makes sense for processors with
                 // hyperthreading. Requires OS specific code.
                 int unboundedThreadCount = Math.Max(1, (Environment.ProcessorCount - 6) / 3);
-                int threadCount          = Math.Min(4, unboundedThreadCount);
+                int threadCount = Math.Min(4, unboundedThreadCount);
 
                 Thread[] backgroundTranslationThreads = new Thread[threadCount];
 
@@ -134,10 +134,10 @@ namespace ARMeilleure.Translation
                 {
                     bool last = i != 0 && i == unboundedThreadCount - 1;
 
-                    backgroundTranslationThreads[i] = new Thread(BackgroundTranslate)
+                    backgroundTranslationThreads[i] = new(BackgroundTranslate)
                     {
                         Name = "CPU.BackgroundTranslatorThread." + i,
-                        Priority = last ? ThreadPriority.Lowest : ThreadPriority.Normal
+                        Priority = last ? ThreadPriority.Lowest : ThreadPriority.Normal,
                     };
 
                     backgroundTranslationThreads[i].Start();

@@ -29,7 +29,7 @@ namespace ARMeilleure.Translation
 
             cfg.Entry.ImmediateDominator = cfg.Entry;
 
-            Debug.Assert(cfg.Entry == cfg.PostOrderBlocks[cfg.PostOrderBlocks.Length - 1]);
+            Debug.Assert(cfg.Entry == cfg.PostOrderBlocks[^1]);
 
             bool modified;
 

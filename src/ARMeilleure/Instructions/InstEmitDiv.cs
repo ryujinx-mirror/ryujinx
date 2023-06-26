@@ -1,7 +1,6 @@
 using ARMeilleure.Decoders;
 using ARMeilleure.IntermediateRepresentation;
 using ARMeilleure.Translation;
-
 using static ARMeilleure.Instructions.InstEmitHelper;
 using static ARMeilleure.IntermediateRepresentation.Operand.Factory;
 
@@ -23,7 +22,7 @@ namespace ARMeilleure.Instructions
             Operand divisorIsZero = context.ICompareEqual(m, Const(m.Type, 0));
 
             Operand lblBadDiv = Label();
-            Operand lblEnd    = Label();
+            Operand lblEnd = Label();
 
             context.BranchIfTrue(lblBadDiv, divisorIsZero);
 
@@ -33,7 +32,7 @@ namespace ARMeilleure.Instructions
                 bool is32Bits = op.RegisterSize == RegisterSize.Int32;
 
                 Operand intMin = is32Bits ? Const(int.MinValue) : Const(long.MinValue);
-                Operand minus1 = is32Bits ? Const(-1)           : Const(-1L);
+                Operand minus1 = is32Bits ? Const(-1) : Const(-1L);
 
                 Operand nIsIntMin = context.ICompareEqual(n, intMin);
                 Operand mIsMinus1 = context.ICompareEqual(m, minus1);
@@ -51,7 +50,7 @@ namespace ARMeilleure.Instructions
 
             Operand d = unsigned
                 ? context.DivideUI(n, m)
-                : context.Divide  (n, m);
+                : context.Divide(n, m);
 
             SetAluDOrZR(context, d);
 

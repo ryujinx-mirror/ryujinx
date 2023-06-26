@@ -5,10 +5,10 @@ namespace ARMeilleure.Decoders
 {
     class Block
     {
-        public ulong Address    { get; set; }
+        public ulong Address { get; set; }
         public ulong EndAddress { get; set; }
 
-        public Block Next   { get; set; }
+        public Block Next { get; set; }
         public Block Branch { get; set; }
 
         public bool Exit { get; set; }
@@ -43,14 +43,14 @@ namespace ARMeilleure.Decoders
 
             rightBlock.EndAddress = EndAddress;
 
-            rightBlock.Next   = Next;
+            rightBlock.Next = Next;
             rightBlock.Branch = Branch;
 
             rightBlock.OpCodes.AddRange(OpCodes.GetRange(splitIndex, splitCount));
 
             EndAddress = rightBlock.Address;
 
-            Next   = rightBlock;
+            Next = rightBlock;
             Branch = null;
 
             OpCodes.RemoveRange(splitIndex, splitCount);
@@ -58,9 +58,9 @@ namespace ARMeilleure.Decoders
 
         private static int BinarySearch(List<OpCode> opCodes, ulong address)
         {
-            int left   = 0;
+            int left = 0;
             int middle = 0;
-            int right  = opCodes.Count - 1;
+            int right = opCodes.Count - 1;
 
             while (left <= right)
             {
@@ -92,7 +92,7 @@ namespace ARMeilleure.Decoders
         {
             if (OpCodes.Count > 0)
             {
-                return OpCodes[OpCodes.Count - 1];
+                return OpCodes[^1];
             }
 
             return null;

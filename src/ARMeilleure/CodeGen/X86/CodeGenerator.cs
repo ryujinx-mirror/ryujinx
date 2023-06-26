@@ -17,7 +17,7 @@ namespace ARMeilleure.CodeGen.X86
     static class CodeGenerator
     {
         private const int RegistersCount = 16;
-        private const int PageSize       = 0x1000;
+        private const int PageSize = 0x1000;
         private const int StackGuardSize = 0x2000;
 
         private static readonly Action<CodeGenContext, Operation>[] _instTable;
@@ -26,6 +26,7 @@ namespace ARMeilleure.CodeGen.X86
         {
             _instTable = new Action<CodeGenContext, Operation>[EnumUtils.GetCount(typeof(Instruction))];
 
+#pragma warning disable IDE0055 // Disable formatting
             Add(Instruction.Add,                     GenerateAdd);
             Add(Instruction.BitwiseAnd,              GenerateBitwiseAnd);
             Add(Instruction.BitwiseExclusiveOr,      GenerateBitwiseExclusiveOr);
@@ -85,6 +86,7 @@ namespace ARMeilleure.CodeGen.X86
             Add(Instruction.ZeroExtend16,            GenerateZeroExtend16);
             Add(Instruction.ZeroExtend32,            GenerateZeroExtend32);
             Add(Instruction.ZeroExtend8,             GenerateZeroExtend8);
+#pragma warning restore IDE0055
 
             static void Add(Instruction inst, Action<CodeGenContext, Operation> func)
             {
@@ -203,290 +205,290 @@ namespace ARMeilleure.CodeGen.X86
                 switch (info.Type)
                 {
                     case IntrinsicType.Comis_:
-                    {
-                        Operand dest = operation.Destination;
-                        Operand src1 = operation.GetSource(0);
-                        Operand src2 = operation.GetSource(1);
-
-                        switch (operation.Intrinsic)
-                        {
-                            case Intrinsic.X86Comisdeq:
-                                context.Assembler.Comisd(src1, src2);
-                                context.Assembler.Setcc(dest, X86Condition.Equal);
-                                break;
-
-                            case Intrinsic.X86Comisdge:
-                                context.Assembler.Comisd(src1, src2);
-                                context.Assembler.Setcc(dest, X86Condition.AboveOrEqual);
-                                break;
-
-                            case Intrinsic.X86Comisdlt:
-                                context.Assembler.Comisd(src1, src2);
-                                context.Assembler.Setcc(dest, X86Condition.Below);
-                                break;
-
-                            case Intrinsic.X86Comisseq:
-                                context.Assembler.Comiss(src1, src2);
-                                context.Assembler.Setcc(dest, X86Condition.Equal);
-                                break;
-
-                            case Intrinsic.X86Comissge:
-                                context.Assembler.Comiss(src1, src2);
-                                context.Assembler.Setcc(dest, X86Condition.AboveOrEqual);
-                                break;
-
-                            case Intrinsic.X86Comisslt:
-                                context.Assembler.Comiss(src1, src2);
-                                context.Assembler.Setcc(dest, X86Condition.Below);
-                                break;
-                        }
-
-                        context.Assembler.Movzx8(dest, dest, OperandType.I32);
-
-                        break;
-                    }
-
-                    case IntrinsicType.Mxcsr:
-                    {
-                        Operand offset = operation.GetSource(0);
-
-                        Debug.Assert(offset.Kind == OperandKind.Constant);
-                        Debug.Assert(offset.Type == OperandType.I32);
-
-                        int offs = offset.AsInt32() + context.CallArgsRegionSize;
-
-                        Operand rsp = Register(X86Register.Rsp);
-                        Operand memOp = MemoryOp(OperandType.I32, rsp, default, Multiplier.x1, offs);
-
-                        Debug.Assert(HardwareCapabilities.SupportsSse || HardwareCapabilities.SupportsVexEncoding);
-
-                        if (operation.Intrinsic == Intrinsic.X86Ldmxcsr)
-                        {
-                            Operand bits = operation.GetSource(1);
-                            Debug.Assert(bits.Type == OperandType.I32);
-
-                            context.Assembler.Mov(memOp, bits, OperandType.I32);
-                            context.Assembler.Ldmxcsr(memOp);
-                        }
-                        else if (operation.Intrinsic == Intrinsic.X86Stmxcsr)
                         {
                             Operand dest = operation.Destination;
-                            Debug.Assert(dest.Type == OperandType.I32);
+                            Operand src1 = operation.GetSource(0);
+                            Operand src2 = operation.GetSource(1);
 
-                            context.Assembler.Stmxcsr(memOp);
-                            context.Assembler.Mov(dest, memOp, OperandType.I32);
+                            switch (operation.Intrinsic)
+                            {
+                                case Intrinsic.X86Comisdeq:
+                                    context.Assembler.Comisd(src1, src2);
+                                    context.Assembler.Setcc(dest, X86Condition.Equal);
+                                    break;
+
+                                case Intrinsic.X86Comisdge:
+                                    context.Assembler.Comisd(src1, src2);
+                                    context.Assembler.Setcc(dest, X86Condition.AboveOrEqual);
+                                    break;
+
+                                case Intrinsic.X86Comisdlt:
+                                    context.Assembler.Comisd(src1, src2);
+                                    context.Assembler.Setcc(dest, X86Condition.Below);
+                                    break;
+
+                                case Intrinsic.X86Comisseq:
+                                    context.Assembler.Comiss(src1, src2);
+                                    context.Assembler.Setcc(dest, X86Condition.Equal);
+                                    break;
+
+                                case Intrinsic.X86Comissge:
+                                    context.Assembler.Comiss(src1, src2);
+                                    context.Assembler.Setcc(dest, X86Condition.AboveOrEqual);
+                                    break;
+
+                                case Intrinsic.X86Comisslt:
+                                    context.Assembler.Comiss(src1, src2);
+                                    context.Assembler.Setcc(dest, X86Condition.Below);
+                                    break;
+                            }
+
+                            context.Assembler.Movzx8(dest, dest, OperandType.I32);
+
+                            break;
                         }
 
-                        break;
-                    }
+                    case IntrinsicType.Mxcsr:
+                        {
+                            Operand offset = operation.GetSource(0);
+
+                            Debug.Assert(offset.Kind == OperandKind.Constant);
+                            Debug.Assert(offset.Type == OperandType.I32);
+
+                            int offs = offset.AsInt32() + context.CallArgsRegionSize;
+
+                            Operand rsp = Register(X86Register.Rsp);
+                            Operand memOp = MemoryOp(OperandType.I32, rsp, default, Multiplier.x1, offs);
+
+                            Debug.Assert(HardwareCapabilities.SupportsSse || HardwareCapabilities.SupportsVexEncoding);
+
+                            if (operation.Intrinsic == Intrinsic.X86Ldmxcsr)
+                            {
+                                Operand bits = operation.GetSource(1);
+                                Debug.Assert(bits.Type == OperandType.I32);
+
+                                context.Assembler.Mov(memOp, bits, OperandType.I32);
+                                context.Assembler.Ldmxcsr(memOp);
+                            }
+                            else if (operation.Intrinsic == Intrinsic.X86Stmxcsr)
+                            {
+                                Operand dest = operation.Destination;
+                                Debug.Assert(dest.Type == OperandType.I32);
+
+                                context.Assembler.Stmxcsr(memOp);
+                                context.Assembler.Mov(dest, memOp, OperandType.I32);
+                            }
+
+                            break;
+                        }
 
                     case IntrinsicType.PopCount:
-                    {
-                        Operand dest   = operation.Destination;
-                        Operand source = operation.GetSource(0);
+                        {
+                            Operand dest = operation.Destination;
+                            Operand source = operation.GetSource(0);
 
-                        EnsureSameType(dest, source);
+                            EnsureSameType(dest, source);
 
-                        Debug.Assert(dest.Type.IsInteger());
+                            Debug.Assert(dest.Type.IsInteger());
 
-                        context.Assembler.Popcnt(dest, source, dest.Type);
+                            context.Assembler.Popcnt(dest, source, dest.Type);
 
-                        break;
-                    }
+                            break;
+                        }
 
                     case IntrinsicType.Unary:
-                    {
-                        Operand dest   = operation.Destination;
-                        Operand source = operation.GetSource(0);
+                        {
+                            Operand dest = operation.Destination;
+                            Operand source = operation.GetSource(0);
 
-                        EnsureSameType(dest, source);
+                            EnsureSameType(dest, source);
 
-                        Debug.Assert(!dest.Type.IsInteger());
+                            Debug.Assert(!dest.Type.IsInteger());
 
-                        context.Assembler.WriteInstruction(info.Inst, dest, source);
+                            context.Assembler.WriteInstruction(info.Inst, dest, source);
 
-                        break;
-                    }
+                            break;
+                        }
 
                     case IntrinsicType.UnaryToGpr:
-                    {
-                        Operand dest   = operation.Destination;
-                        Operand source = operation.GetSource(0);
-
-                        Debug.Assert(dest.Type.IsInteger() && !source.Type.IsInteger());
-
-                        if (operation.Intrinsic == Intrinsic.X86Cvtsi2si)
                         {
-                            if (dest.Type == OperandType.I32)
-                            {
-                                context.Assembler.Movd(dest, source); // int _mm_cvtsi128_si32(__m128i a)
-                            }
-                            else /* if (dest.Type == OperandType.I64) */
-                            {
-                                context.Assembler.Movq(dest, source); // __int64 _mm_cvtsi128_si64(__m128i a)
-                            }
-                        }
-                        else
-                        {
-                            context.Assembler.WriteInstruction(info.Inst, dest, source, dest.Type);
-                        }
+                            Operand dest = operation.Destination;
+                            Operand source = operation.GetSource(0);
 
-                        break;
-                    }
+                            Debug.Assert(dest.Type.IsInteger() && !source.Type.IsInteger());
+
+                            if (operation.Intrinsic == Intrinsic.X86Cvtsi2si)
+                            {
+                                if (dest.Type == OperandType.I32)
+                                {
+                                    context.Assembler.Movd(dest, source); // int _mm_cvtsi128_si32(__m128i a)
+                                }
+                                else /* if (dest.Type == OperandType.I64) */
+                                {
+                                    context.Assembler.Movq(dest, source); // __int64 _mm_cvtsi128_si64(__m128i a)
+                                }
+                            }
+                            else
+                            {
+                                context.Assembler.WriteInstruction(info.Inst, dest, source, dest.Type);
+                            }
+
+                            break;
+                        }
 
                     case IntrinsicType.Binary:
-                    {
-                        Operand dest = operation.Destination;
-                        Operand src1 = operation.GetSource(0);
-                        Operand src2 = operation.GetSource(1);
-
-                        EnsureSameType(dest, src1);
-
-                        if (!HardwareCapabilities.SupportsVexEncoding)
                         {
-                            EnsureSameReg(dest, src1);
-                        }
+                            Operand dest = operation.Destination;
+                            Operand src1 = operation.GetSource(0);
+                            Operand src2 = operation.GetSource(1);
 
-                        Debug.Assert(!dest.Type.IsInteger());
-                        Debug.Assert(!src2.Type.IsInteger() || src2.Kind == OperandKind.Constant);
+                            EnsureSameType(dest, src1);
 
-                        context.Assembler.WriteInstruction(info.Inst, dest, src1, src2);
+                            if (!HardwareCapabilities.SupportsVexEncoding)
+                            {
+                                EnsureSameReg(dest, src1);
+                            }
 
-                        break;
-                    }
-
-                    case IntrinsicType.BinaryGpr:
-                    {
-                        Operand dest = operation.Destination;
-                        Operand src1 = operation.GetSource(0);
-                        Operand src2 = operation.GetSource(1);
-
-                        EnsureSameType(dest, src1);
-
-                        if (!HardwareCapabilities.SupportsVexEncoding)
-                        {
-                            EnsureSameReg(dest, src1);
-                        }
-
-                        Debug.Assert(!dest.Type.IsInteger() && src2.Type.IsInteger());
-
-                        context.Assembler.WriteInstruction(info.Inst, dest, src1, src2, src2.Type);
-
-                        break;
-                    }
-
-                    case IntrinsicType.Crc32:
-                    {
-                        Operand dest = operation.Destination;
-                        Operand src1 = operation.GetSource(0);
-                        Operand src2 = operation.GetSource(1);
-
-                        EnsureSameReg(dest, src1);
-
-                        Debug.Assert(dest.Type.IsInteger() && src1.Type.IsInteger() && src2.Type.IsInteger());
-
-                        context.Assembler.WriteInstruction(info.Inst, dest, src2, dest.Type);
-
-                        break;
-                    }
-
-                    case IntrinsicType.BinaryImm:
-                    {
-                        Operand dest = operation.Destination;
-                        Operand src1 = operation.GetSource(0);
-                        Operand src2 = operation.GetSource(1);
-
-                        EnsureSameType(dest, src1);
-
-                        if (!HardwareCapabilities.SupportsVexEncoding)
-                        {
-                            EnsureSameReg(dest, src1);
-                        }
-
-                        Debug.Assert(!dest.Type.IsInteger() && src2.Kind == OperandKind.Constant);
-
-                        context.Assembler.WriteInstruction(info.Inst, dest, src1, src2.AsByte());
-
-                        break;
-                    }
-
-                    case IntrinsicType.Ternary:
-                    {
-                        Operand dest = operation.Destination;
-                        Operand src1 = operation.GetSource(0);
-                        Operand src2 = operation.GetSource(1);
-                        Operand src3 = operation.GetSource(2);
-
-                        EnsureSameType(dest, src1, src2, src3);
-
-                        Debug.Assert(!dest.Type.IsInteger());
-
-                        if (info.Inst == X86Instruction.Blendvpd && HardwareCapabilities.SupportsVexEncoding)
-                        {
-                            context.Assembler.WriteInstruction(X86Instruction.Vblendvpd, dest, src1, src2, src3);
-                        }
-                        else if (info.Inst == X86Instruction.Blendvps && HardwareCapabilities.SupportsVexEncoding)
-                        {
-                            context.Assembler.WriteInstruction(X86Instruction.Vblendvps, dest, src1, src2, src3);
-                        }
-                        else if (info.Inst == X86Instruction.Pblendvb && HardwareCapabilities.SupportsVexEncoding)
-                        {
-                            context.Assembler.WriteInstruction(X86Instruction.Vpblendvb, dest, src1, src2, src3);
-                        }
-                        else
-                        {
-                            EnsureSameReg(dest, src1);
-
-                            Debug.Assert(src3.GetRegister().Index == 0);
+                            Debug.Assert(!dest.Type.IsInteger());
+                            Debug.Assert(!src2.Type.IsInteger() || src2.Kind == OperandKind.Constant);
 
                             context.Assembler.WriteInstruction(info.Inst, dest, src1, src2);
+
+                            break;
                         }
 
-                        break;
-                    }
+                    case IntrinsicType.BinaryGpr:
+                        {
+                            Operand dest = operation.Destination;
+                            Operand src1 = operation.GetSource(0);
+                            Operand src2 = operation.GetSource(1);
+
+                            EnsureSameType(dest, src1);
+
+                            if (!HardwareCapabilities.SupportsVexEncoding)
+                            {
+                                EnsureSameReg(dest, src1);
+                            }
+
+                            Debug.Assert(!dest.Type.IsInteger() && src2.Type.IsInteger());
+
+                            context.Assembler.WriteInstruction(info.Inst, dest, src1, src2, src2.Type);
+
+                            break;
+                        }
+
+                    case IntrinsicType.Crc32:
+                        {
+                            Operand dest = operation.Destination;
+                            Operand src1 = operation.GetSource(0);
+                            Operand src2 = operation.GetSource(1);
+
+                            EnsureSameReg(dest, src1);
+
+                            Debug.Assert(dest.Type.IsInteger() && src1.Type.IsInteger() && src2.Type.IsInteger());
+
+                            context.Assembler.WriteInstruction(info.Inst, dest, src2, dest.Type);
+
+                            break;
+                        }
+
+                    case IntrinsicType.BinaryImm:
+                        {
+                            Operand dest = operation.Destination;
+                            Operand src1 = operation.GetSource(0);
+                            Operand src2 = operation.GetSource(1);
+
+                            EnsureSameType(dest, src1);
+
+                            if (!HardwareCapabilities.SupportsVexEncoding)
+                            {
+                                EnsureSameReg(dest, src1);
+                            }
+
+                            Debug.Assert(!dest.Type.IsInteger() && src2.Kind == OperandKind.Constant);
+
+                            context.Assembler.WriteInstruction(info.Inst, dest, src1, src2.AsByte());
+
+                            break;
+                        }
+
+                    case IntrinsicType.Ternary:
+                        {
+                            Operand dest = operation.Destination;
+                            Operand src1 = operation.GetSource(0);
+                            Operand src2 = operation.GetSource(1);
+                            Operand src3 = operation.GetSource(2);
+
+                            EnsureSameType(dest, src1, src2, src3);
+
+                            Debug.Assert(!dest.Type.IsInteger());
+
+                            if (info.Inst == X86Instruction.Blendvpd && HardwareCapabilities.SupportsVexEncoding)
+                            {
+                                context.Assembler.WriteInstruction(X86Instruction.Vblendvpd, dest, src1, src2, src3);
+                            }
+                            else if (info.Inst == X86Instruction.Blendvps && HardwareCapabilities.SupportsVexEncoding)
+                            {
+                                context.Assembler.WriteInstruction(X86Instruction.Vblendvps, dest, src1, src2, src3);
+                            }
+                            else if (info.Inst == X86Instruction.Pblendvb && HardwareCapabilities.SupportsVexEncoding)
+                            {
+                                context.Assembler.WriteInstruction(X86Instruction.Vpblendvb, dest, src1, src2, src3);
+                            }
+                            else
+                            {
+                                EnsureSameReg(dest, src1);
+
+                                Debug.Assert(src3.GetRegister().Index == 0);
+
+                                context.Assembler.WriteInstruction(info.Inst, dest, src1, src2);
+                            }
+
+                            break;
+                        }
 
                     case IntrinsicType.TernaryImm:
-                    {
-                        Operand dest = operation.Destination;
-                        Operand src1 = operation.GetSource(0);
-                        Operand src2 = operation.GetSource(1);
-                        Operand src3 = operation.GetSource(2);
-
-                        EnsureSameType(dest, src1, src2);
-
-                        if (!HardwareCapabilities.SupportsVexEncoding)
                         {
-                            EnsureSameReg(dest, src1);
+                            Operand dest = operation.Destination;
+                            Operand src1 = operation.GetSource(0);
+                            Operand src2 = operation.GetSource(1);
+                            Operand src3 = operation.GetSource(2);
+
+                            EnsureSameType(dest, src1, src2);
+
+                            if (!HardwareCapabilities.SupportsVexEncoding)
+                            {
+                                EnsureSameReg(dest, src1);
+                            }
+
+                            Debug.Assert(!dest.Type.IsInteger() && src3.Kind == OperandKind.Constant);
+
+                            context.Assembler.WriteInstruction(info.Inst, dest, src1, src2, src3.AsByte());
+
+                            break;
                         }
 
-                        Debug.Assert(!dest.Type.IsInteger() && src3.Kind == OperandKind.Constant);
-
-                        context.Assembler.WriteInstruction(info.Inst, dest, src1, src2, src3.AsByte());
-
-                        break;
-                    }
-
                     case IntrinsicType.Fma:
-                    {
-                        Operand dest = operation.Destination;
-                        Operand src1 = operation.GetSource(0);
-                        Operand src2 = operation.GetSource(1);
-                        Operand src3 = operation.GetSource(2);
+                        {
+                            Operand dest = operation.Destination;
+                            Operand src1 = operation.GetSource(0);
+                            Operand src2 = operation.GetSource(1);
+                            Operand src3 = operation.GetSource(2);
 
-                        Debug.Assert(HardwareCapabilities.SupportsVexEncoding);
+                            Debug.Assert(HardwareCapabilities.SupportsVexEncoding);
 
-                        Debug.Assert(dest.Kind == OperandKind.Register && src1.Kind == OperandKind.Register && src2.Kind == OperandKind.Register);
-                        Debug.Assert(src3.Kind == OperandKind.Register || src3.Kind == OperandKind.Memory);
+                            Debug.Assert(dest.Kind == OperandKind.Register && src1.Kind == OperandKind.Register && src2.Kind == OperandKind.Register);
+                            Debug.Assert(src3.Kind == OperandKind.Register || src3.Kind == OperandKind.Memory);
 
-                        EnsureSameType(dest, src1, src2, src3);
-                        Debug.Assert(dest.Type == OperandType.V128);
+                            EnsureSameType(dest, src1, src2, src3);
+                            Debug.Assert(dest.Type == OperandType.V128);
 
-                        Debug.Assert(dest.Value == src1.Value);
+                            Debug.Assert(dest.Value == src1.Value);
 
-                        context.Assembler.WriteInstruction(info.Inst, dest, src2, src3);
+                            context.Assembler.WriteInstruction(info.Inst, dest, src2, src3);
 
-                        break;
-                    }
+                            break;
+                        }
                 }
             }
             else
@@ -592,7 +594,7 @@ namespace ARMeilleure.CodeGen.X86
 
         private static void GenerateBitwiseNot(CodeGenContext context, Operation operation)
         {
-            Operand dest   = operation.Destination;
+            Operand dest = operation.Destination;
             Operand source = operation.GetSource(0);
 
             ValidateUnOp(dest, source);
@@ -630,7 +632,7 @@ namespace ARMeilleure.CodeGen.X86
 
         private static void GenerateByteSwap(CodeGenContext context, Operation operation)
         {
-            Operand dest   = operation.Destination;
+            Operand dest = operation.Destination;
             Operand source = operation.GetSource(0);
 
             ValidateUnOp(dest, source);
@@ -761,19 +763,19 @@ namespace ARMeilleure.CodeGen.X86
             Operand src2 = operation.GetSource(1);
             Operand src3 = operation.GetSource(2);
 
-            EnsureSameReg (dest, src3);
+            EnsureSameReg(dest, src3);
             EnsureSameType(dest, src2, src3);
 
             Debug.Assert(dest.Type.IsInteger());
             Debug.Assert(src1.Type == OperandType.I32);
 
-            context.Assembler.Test  (src1, src1, src1.Type);
+            context.Assembler.Test(src1, src1, src1.Type);
             context.Assembler.Cmovcc(dest, src2, dest.Type, X86Condition.NotEqual);
         }
 
         private static void GenerateConvertI64ToI32(CodeGenContext context, Operation operation)
         {
-            Operand dest   = operation.Destination;
+            Operand dest = operation.Destination;
             Operand source = operation.GetSource(0);
 
             Debug.Assert(dest.Type == OperandType.I32 && source.Type == OperandType.I64);
@@ -783,7 +785,7 @@ namespace ARMeilleure.CodeGen.X86
 
         private static void GenerateConvertToFP(CodeGenContext context, Operation operation)
         {
-            Operand dest   = operation.Destination;
+            Operand dest = operation.Destination;
             Operand source = operation.GetSource(0);
 
             Debug.Assert(dest.Type == OperandType.FP32 || dest.Type == OperandType.FP64);
@@ -794,7 +796,7 @@ namespace ARMeilleure.CodeGen.X86
 
                 if (source.Type.IsInteger())
                 {
-                    context.Assembler.Xorps   (dest, dest, dest);
+                    context.Assembler.Xorps(dest, dest, dest);
                     context.Assembler.Cvtsi2ss(dest, dest, source, source.Type);
                 }
                 else /* if (source.Type == OperandType.FP64) */
@@ -810,7 +812,7 @@ namespace ARMeilleure.CodeGen.X86
 
                 if (source.Type.IsInteger())
                 {
-                    context.Assembler.Xorps   (dest, dest, dest);
+                    context.Assembler.Xorps(dest, dest, dest);
                     context.Assembler.Cvtsi2sd(dest, dest, source, source.Type);
                 }
                 else /* if (source.Type == OperandType.FP32) */
@@ -824,7 +826,7 @@ namespace ARMeilleure.CodeGen.X86
 
         private static void GenerateCopy(CodeGenContext context, Operation operation)
         {
-            Operand dest   = operation.Destination;
+            Operand dest = operation.Destination;
             Operand source = operation.GetSource(0);
 
             EnsureSameType(dest, source);
@@ -837,7 +839,7 @@ namespace ARMeilleure.CodeGen.X86
                 return;
             }
 
-            if (dest.Kind   == OperandKind.Register &&
+            if (dest.Kind == OperandKind.Register &&
                 source.Kind == OperandKind.Constant && source.Value == 0)
             {
                 // Assemble "mov reg, 0" as "xor reg, reg" as the later is more efficient.
@@ -855,7 +857,7 @@ namespace ARMeilleure.CodeGen.X86
 
         private static void GenerateCountLeadingZeros(CodeGenContext context, Operation operation)
         {
-            Operand dest   = operation.Destination;
+            Operand dest = operation.Destination;
             Operand source = operation.GetSource(0);
 
             EnsureSameType(dest, source);
@@ -888,9 +890,9 @@ namespace ARMeilleure.CodeGen.X86
 
         private static void GenerateDivide(CodeGenContext context, Operation operation)
         {
-            Operand dest     = operation.Destination;
+            Operand dest = operation.Destination;
             Operand dividend = operation.GetSource(0);
-            Operand divisor  = operation.GetSource(1);
+            Operand divisor = operation.GetSource(1);
 
             if (!dest.Type.IsInteger())
             {
@@ -938,7 +940,7 @@ namespace ARMeilleure.CodeGen.X86
 
         private static void GenerateFill(CodeGenContext context, Operation operation)
         {
-            Operand dest   = operation.Destination;
+            Operand dest = operation.Destination;
             Operand offset = operation.GetSource(0);
 
             Debug.Assert(offset.Kind == OperandKind.Constant);
@@ -954,7 +956,7 @@ namespace ARMeilleure.CodeGen.X86
 
         private static void GenerateLoad(CodeGenContext context, Operation operation)
         {
-            Operand value   =        operation.Destination;
+            Operand value = operation.Destination;
             Operand address = Memory(operation.GetSource(0), value.Type);
 
             GenerateLoad(context, address, value);
@@ -962,7 +964,7 @@ namespace ARMeilleure.CodeGen.X86
 
         private static void GenerateLoad16(CodeGenContext context, Operation operation)
         {
-            Operand value   =        operation.Destination;
+            Operand value = operation.Destination;
             Operand address = Memory(operation.GetSource(0), value.Type);
 
             Debug.Assert(value.Type.IsInteger());
@@ -972,7 +974,7 @@ namespace ARMeilleure.CodeGen.X86
 
         private static void GenerateLoad8(CodeGenContext context, Operation operation)
         {
-            Operand value   =        operation.Destination;
+            Operand value = operation.Destination;
             Operand address = Memory(operation.GetSource(0), value.Type);
 
             Debug.Assert(value.Type.IsInteger());
@@ -1039,7 +1041,7 @@ namespace ARMeilleure.CodeGen.X86
 
         private static void GenerateNegate(CodeGenContext context, Operation operation)
         {
-            Operand dest   = operation.Destination;
+            Operand dest = operation.Destination;
             Operand source = operation.GetSource(0);
 
             ValidateUnOp(dest, source);
@@ -1102,7 +1104,7 @@ namespace ARMeilleure.CodeGen.X86
 
         private static void GenerateSignExtend16(CodeGenContext context, Operation operation)
         {
-            Operand dest   = operation.Destination;
+            Operand dest = operation.Destination;
             Operand source = operation.GetSource(0);
 
             Debug.Assert(dest.Type.IsInteger() && source.Type.IsInteger());
@@ -1112,7 +1114,7 @@ namespace ARMeilleure.CodeGen.X86
 
         private static void GenerateSignExtend32(CodeGenContext context, Operation operation)
         {
-            Operand dest   = operation.Destination;
+            Operand dest = operation.Destination;
             Operand source = operation.GetSource(0);
 
             Debug.Assert(dest.Type.IsInteger() && source.Type.IsInteger());
@@ -1122,7 +1124,7 @@ namespace ARMeilleure.CodeGen.X86
 
         private static void GenerateSignExtend8(CodeGenContext context, Operation operation)
         {
-            Operand dest   = operation.Destination;
+            Operand dest = operation.Destination;
             Operand source = operation.GetSource(0);
 
             Debug.Assert(dest.Type.IsInteger() && source.Type.IsInteger());
@@ -1158,7 +1160,7 @@ namespace ARMeilleure.CodeGen.X86
 
         private static void GenerateStackAlloc(CodeGenContext context, Operation operation)
         {
-            Operand dest   = operation.Destination;
+            Operand dest = operation.Destination;
             Operand offset = operation.GetSource(0);
 
             Debug.Assert(offset.Kind == OperandKind.Constant);
@@ -1174,7 +1176,7 @@ namespace ARMeilleure.CodeGen.X86
 
         private static void GenerateStore(CodeGenContext context, Operation operation)
         {
-            Operand value   =        operation.GetSource(1);
+            Operand value = operation.GetSource(1);
             Operand address = Memory(operation.GetSource(0), value.Type);
 
             GenerateStore(context, address, value);
@@ -1182,7 +1184,7 @@ namespace ARMeilleure.CodeGen.X86
 
         private static void GenerateStore16(CodeGenContext context, Operation operation)
         {
-            Operand value   =        operation.GetSource(1);
+            Operand value = operation.GetSource(1);
             Operand address = Memory(operation.GetSource(0), value.Type);
 
             Debug.Assert(value.Type.IsInteger());
@@ -1192,7 +1194,7 @@ namespace ARMeilleure.CodeGen.X86
 
         private static void GenerateStore8(CodeGenContext context, Operation operation)
         {
-            Operand value   =        operation.GetSource(1);
+            Operand value = operation.GetSource(1);
             Operand address = Memory(operation.GetSource(0), value.Type);
 
             Debug.Assert(value.Type.IsInteger());
@@ -1231,7 +1233,7 @@ namespace ARMeilleure.CodeGen.X86
 
         private static void GenerateVectorCreateScalar(CodeGenContext context, Operation operation)
         {
-            Operand dest   = operation.Destination;
+            Operand dest = operation.Destination;
             Operand source = operation.GetSource(0);
 
             Debug.Assert(!dest.Type.IsInteger() && source.Type.IsInteger());
@@ -1278,7 +1280,7 @@ namespace ARMeilleure.CodeGen.X86
                     mask1 = BitUtils.RotateRight(mask1, 8 - index * 2, 8);
 
                     context.Assembler.Pshufd(src1, src1, (byte)mask0);
-                    context.Assembler.Movd  (dest, src1);
+                    context.Assembler.Movd(dest, src1);
                     context.Assembler.Pshufd(src1, src1, (byte)mask1);
                 }
             }
@@ -1297,7 +1299,7 @@ namespace ARMeilleure.CodeGen.X86
                     const byte mask = 0b01_00_11_10;
 
                     context.Assembler.Pshufd(src1, src1, mask);
-                    context.Assembler.Movq  (dest, src1);
+                    context.Assembler.Movq(dest, src1);
                     context.Assembler.Pshufd(src1, src1, mask);
                 }
             }
@@ -1308,7 +1310,7 @@ namespace ARMeilleure.CodeGen.X86
                     (index == 1 && dest.Type == OperandType.FP64))
                 {
                     context.Assembler.Movhlps(dest, dest, src1);
-                    context.Assembler.Movq   (dest, dest);
+                    context.Assembler.Movq(dest, dest);
                 }
                 else
                 {
@@ -1455,11 +1457,11 @@ namespace ARMeilleure.CodeGen.X86
                             int mask0 = 0b11_10_01_00;
                             int mask1 = 0b11_10_01_00;
 
-                            mask0 = BitUtils.RotateRight(mask0,     index * 2, 8);
+                            mask0 = BitUtils.RotateRight(mask0, index * 2, 8);
                             mask1 = BitUtils.RotateRight(mask1, 8 - index * 2, 8);
 
                             context.Assembler.Pshufd(src1, src1, (byte)mask0); // Lane to be inserted in position 0.
-                            context.Assembler.Movss (dest, src1, src2);        // dest[127:0] = src1[127:32] | src2[31:0]
+                            context.Assembler.Movss(dest, src1, src2);         // dest[127:0] = src1[127:32] | src2[31:0]
                             context.Assembler.Pshufd(dest, dest, (byte)mask1); // Inserted lane in original position.
 
                             if (dest.GetRegister() != src1.GetRegister())
@@ -1555,7 +1557,7 @@ namespace ARMeilleure.CodeGen.X86
 
         private static void GenerateVectorZeroUpper64(CodeGenContext context, Operation operation)
         {
-            Operand dest   = operation.Destination;
+            Operand dest = operation.Destination;
             Operand source = operation.GetSource(0);
 
             Debug.Assert(dest.Type == OperandType.V128 && source.Type == OperandType.V128);
@@ -1565,7 +1567,7 @@ namespace ARMeilleure.CodeGen.X86
 
         private static void GenerateVectorZeroUpper96(CodeGenContext context, Operation operation)
         {
-            Operand dest   = operation.Destination;
+            Operand dest = operation.Destination;
             Operand source = operation.GetSource(0);
 
             Debug.Assert(dest.Type == OperandType.V128 && source.Type == OperandType.V128);
@@ -1575,7 +1577,7 @@ namespace ARMeilleure.CodeGen.X86
 
         private static void GenerateZeroExtend16(CodeGenContext context, Operation operation)
         {
-            Operand dest   = operation.Destination;
+            Operand dest = operation.Destination;
             Operand source = operation.GetSource(0);
 
             Debug.Assert(dest.Type.IsInteger() && source.Type.IsInteger());
@@ -1585,7 +1587,7 @@ namespace ARMeilleure.CodeGen.X86
 
         private static void GenerateZeroExtend32(CodeGenContext context, Operation operation)
         {
-            Operand dest   = operation.Destination;
+            Operand dest = operation.Destination;
             Operand source = operation.GetSource(0);
 
             Debug.Assert(dest.Type.IsInteger() && source.Type.IsInteger());
@@ -1601,7 +1603,7 @@ namespace ARMeilleure.CodeGen.X86
 
         private static void GenerateZeroExtend8(CodeGenContext context, Operation operation)
         {
-            Operand dest   = operation.Destination;
+            Operand dest = operation.Destination;
             Operand source = operation.GetSource(0);
 
             Debug.Assert(dest.Type.IsInteger() && source.Type.IsInteger());
@@ -1613,13 +1615,25 @@ namespace ARMeilleure.CodeGen.X86
         {
             switch (value.Type)
             {
-                case OperandType.I32:  context.Assembler.Mov   (value, address, OperandType.I32); break;
-                case OperandType.I64:  context.Assembler.Mov   (value, address, OperandType.I64); break;
-                case OperandType.FP32: context.Assembler.Movd  (value, address);                  break;
-                case OperandType.FP64: context.Assembler.Movq  (value, address);                  break;
-                case OperandType.V128: context.Assembler.Movdqu(value, address);                  break;
+                case OperandType.I32:
+                    context.Assembler.Mov(value, address, OperandType.I32);
+                    break;
+                case OperandType.I64:
+                    context.Assembler.Mov(value, address, OperandType.I64);
+                    break;
+                case OperandType.FP32:
+                    context.Assembler.Movd(value, address);
+                    break;
+                case OperandType.FP64:
+                    context.Assembler.Movq(value, address);
+                    break;
+                case OperandType.V128:
+                    context.Assembler.Movdqu(value, address);
+                    break;
 
-                default: Debug.Assert(false); break;
+                default:
+                    Debug.Assert(false);
+                    break;
             }
         }
 
@@ -1627,13 +1641,25 @@ namespace ARMeilleure.CodeGen.X86
         {
             switch (value.Type)
             {
-                case OperandType.I32:  context.Assembler.Mov   (address, value, OperandType.I32); break;
-                case OperandType.I64:  context.Assembler.Mov   (address, value, OperandType.I64); break;
-                case OperandType.FP32: context.Assembler.Movd  (address, value);                  break;
-                case OperandType.FP64: context.Assembler.Movq  (address, value);                  break;
-                case OperandType.V128: context.Assembler.Movdqu(address, value);                  break;
+                case OperandType.I32:
+                    context.Assembler.Mov(address, value, OperandType.I32);
+                    break;
+                case OperandType.I64:
+                    context.Assembler.Mov(address, value, OperandType.I64);
+                    break;
+                case OperandType.FP32:
+                    context.Assembler.Movd(address, value);
+                    break;
+                case OperandType.FP64:
+                    context.Assembler.Movq(address, value);
+                    break;
+                case OperandType.V128:
+                    context.Assembler.Movdqu(address, value);
+                    break;
 
-                default: Debug.Assert(false); break;
+                default:
+                    Debug.Assert(false);
+                    break;
             }
         }
 
@@ -1670,21 +1696,21 @@ namespace ARMeilleure.CodeGen.X86
         [Conditional("DEBUG")]
         private static void ValidateUnOp(Operand dest, Operand source)
         {
-            EnsureSameReg (dest, source);
+            EnsureSameReg(dest, source);
             EnsureSameType(dest, source);
         }
 
         [Conditional("DEBUG")]
         private static void ValidateBinOp(Operand dest, Operand src1, Operand src2)
         {
-            EnsureSameReg (dest, src1);
+            EnsureSameReg(dest, src1);
             EnsureSameType(dest, src1, src2);
         }
 
         [Conditional("DEBUG")]
         private static void ValidateShift(Operand dest, Operand src1, Operand src2)
         {
-            EnsureSameReg (dest, src1);
+            EnsureSameReg(dest, src1);
             EnsureSameType(dest, src1);
 
             Debug.Assert(dest.Type.IsInteger() && src2.Type == OperandType.I32);
@@ -1722,7 +1748,7 @@ namespace ARMeilleure.CodeGen.X86
 
         private static UnwindInfo WritePrologue(CodeGenContext context)
         {
-            List<UnwindPushEntry> pushEntries = new List<UnwindPushEntry>();
+            List<UnwindPushEntry> pushEntries = new();
 
             Operand rsp = Register(X86Register.Rsp);
 
@@ -1831,7 +1857,7 @@ namespace ARMeilleure.CodeGen.X86
 
             size = (size + pageMask) & ~pageMask;
 
-            Operand rsp  = Register(X86Register.Rsp);
+            Operand rsp = Register(X86Register.Rsp);
             Operand temp = Register(CallingConvention.GetIntReturnRegister());
 
             for (int offset = PageSize; offset < size; offset += PageSize)

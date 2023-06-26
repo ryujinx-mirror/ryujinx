@@ -2,7 +2,6 @@ using ARMeilleure.Decoders;
 using ARMeilleure.IntermediateRepresentation;
 using ARMeilleure.State;
 using ARMeilleure.Translation;
-
 using static ARMeilleure.Instructions.InstEmitAluHelper;
 using static ARMeilleure.Instructions.InstEmitFlowHelper;
 using static ARMeilleure.Instructions.InstEmitHelper;
@@ -20,7 +19,7 @@ namespace ARMeilleure.Instructions
             OpCodeCcmp op = (OpCodeCcmp)context.CurrOp;
 
             Operand lblTrue = Label();
-            Operand lblEnd  = Label();
+            Operand lblEnd = Label();
 
             EmitCondBranch(context, lblTrue, op.Cond);
 

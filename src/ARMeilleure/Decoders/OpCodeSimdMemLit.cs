@@ -2,10 +2,10 @@ namespace ARMeilleure.Decoders
 {
     class OpCodeSimdMemLit : OpCode, IOpCodeSimd, IOpCodeLit
     {
-        public int  Rt        { get; }
+        public int Rt { get; }
         public long Immediate { get; }
-        public int  Size      { get; }
-        public bool Signed   => false;
+        public int Size { get; }
+        public bool Signed => false;
         public bool Prefetch => false;
 
         public new static OpCode Create(InstDescriptor inst, ulong address, int opCode) => new OpCodeSimdMemLit(inst, address, opCode);

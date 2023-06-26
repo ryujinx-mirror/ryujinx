@@ -20,60 +20,60 @@ namespace ARMeilleure.IntermediateRepresentation
 
         private Data* _data;
 
-        public Instruction Instruction
+        public readonly Instruction Instruction
         {
             get => (Instruction)_data->Instruction;
             private set => _data->Instruction = (ushort)value;
         }
 
-        public Intrinsic Intrinsic
+        public readonly Intrinsic Intrinsic
         {
             get => (Intrinsic)_data->Intrinsic;
             private set => _data->Intrinsic = (ushort)value;
         }
 
-        public Operation ListPrevious
+        public readonly Operation ListPrevious
         {
             get => _data->ListPrevious;
             set => _data->ListPrevious = value;
         }
 
-        public Operation ListNext
+        public readonly Operation ListNext
         {
             get => _data->ListNext;
             set => _data->ListNext = value;
         }
 
-        public Operand Destination
+        public readonly Operand Destination
         {
             get => _data->DestinationsCount != 0 ? GetDestination(0) : default;
             set => SetDestination(value);
         }
 
-        public int DestinationsCount => _data->DestinationsCount;
-        public int SourcesCount => _data->SourcesCount;
+        public readonly int DestinationsCount => _data->DestinationsCount;
+        public readonly int SourcesCount => _data->SourcesCount;
 
-        internal Span<Operand> DestinationsUnsafe => new(_data->Destinations, _data->DestinationsCount);
-        internal Span<Operand> SourcesUnsafe => new(_data->Sources, _data->SourcesCount);
+        internal readonly Span<Operand> DestinationsUnsafe => new(_data->Destinations, _data->DestinationsCount);
+        internal readonly Span<Operand> SourcesUnsafe => new(_data->Sources, _data->SourcesCount);
 
-        public PhiOperation AsPhi()
+        public readonly PhiOperation AsPhi()
         {
             Debug.Assert(Instruction == Instruction.Phi);
 
             return new PhiOperation(this);
         }
 
-        public Operand GetDestination(int index)
+        public readonly Operand GetDestination(int index)
         {
             return DestinationsUnsafe[index];
         }
 
-        public Operand GetSource(int index)
+        public readonly Operand GetSource(int index)
         {
             return SourcesUnsafe[index];
         }
 
-        public void SetDestination(int index, Operand dest)
+        public readonly void SetDestination(int index, Operand dest)
         {
             ref Operand curDest = ref DestinationsUnsafe[index];
 
@@ -83,7 +83,7 @@ namespace ARMeilleure.IntermediateRepresentation
             curDest = dest;
         }
 
-        public void SetSource(int index, Operand src)
+        public readonly void SetSource(int index, Operand src)
         {
             ref Operand curSrc = ref SourcesUnsafe[index];
 
@@ -93,7 +93,7 @@ namespace ARMeilleure.IntermediateRepresentation
             curSrc = src;
         }
 
-        private void RemoveOldDestinations()
+        private readonly void RemoveOldDestinations()
         {
             for (int i = 0; i < _data->DestinationsCount; i++)
             {
@@ -101,7 +101,7 @@ namespace ARMeilleure.IntermediateRepresentation
             }
         }
 
-        public void SetDestination(Operand dest)
+        public readonly void SetDestination(Operand dest)
         {
             RemoveOldDestinations();
 
@@ -119,7 +119,7 @@ namespace ARMeilleure.IntermediateRepresentation
             }
         }
 
-        public void SetDestinations(Operand[] dests)
+        public readonly void SetDestinations(Operand[] dests)
         {
             RemoveOldDestinations();
 
@@ -135,7 +135,7 @@ namespace ARMeilleure.IntermediateRepresentation
             }
         }
 
-        private void RemoveOldSources()
+        private readonly void RemoveOldSources()
         {
             for (int index = 0; index < _data->SourcesCount; index++)
             {
@@ -143,7 +143,7 @@ namespace ARMeilleure.IntermediateRepresentation
             }
         }
 
-        public void SetSource(Operand src)
+        public readonly void SetSource(Operand src)
         {
             RemoveOldSources();
 
@@ -161,7 +161,7 @@ namespace ARMeilleure.IntermediateRepresentation
             }
         }
 
-        public void SetSources(Operand[] srcs)
+        public readonly void SetSources(Operand[] srcs)
         {
             RemoveOldSources();
 
@@ -184,7 +184,7 @@ namespace ARMeilleure.IntermediateRepresentation
             SetSource(source);
         }
 
-        private void AddAssignment(Operand op)
+        private readonly void AddAssignment(Operand op)
         {
             if (op != default)
             {
@@ -192,7 +192,7 @@ namespace ARMeilleure.IntermediateRepresentation
             }
         }
 
-        private void RemoveAssignment(Operand op)
+        private readonly void RemoveAssignment(Operand op)
         {
             if (op != default)
             {
@@ -200,7 +200,7 @@ namespace ARMeilleure.IntermediateRepresentation
             }
         }
 
-        private void AddUse(Operand op)
+        private readonly void AddUse(Operand op)
         {
             if (op != default)
             {
@@ -208,7 +208,7 @@ namespace ARMeilleure.IntermediateRepresentation
             }
         }
 
-        private void RemoveUse(Operand op)
+        private readonly void RemoveUse(Operand op)
         {
             if (op != default)
             {
@@ -216,17 +216,17 @@ namespace ARMeilleure.IntermediateRepresentation
             }
         }
 
-        public bool Equals(Operation operation)
+        public readonly bool Equals(Operation operation)
         {
             return operation._data == _data;
         }
 
-        public override bool Equals(object obj)
+        public readonly override bool Equals(object obj)
         {
             return obj is Operation operation && Equals(operation);
         }
 
-        public override int GetHashCode()
+        public readonly override int GetHashCode()
         {
             return HashCode.Combine((IntPtr)_data);
         }
@@ -267,9 +267,11 @@ namespace ARMeilleure.IntermediateRepresentation
                 Data* data = Allocators.Operations.Allocate<Data>();
                 *data = default;
 
-                Operation result = new();
-                result._data = data;
-                result.Instruction = inst;
+                Operation result = new()
+                {
+                    _data = data,
+                    Instruction = inst,
+                };
 
                 EnsureCapacity(ref result._data->Destinations, ref result._data->DestinationsCount, destCount);
                 EnsureCapacity(ref result._data->Sources, ref result._data->SourcesCount, srcCount);

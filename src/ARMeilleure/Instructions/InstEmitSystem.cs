@@ -28,18 +28,39 @@ namespace ARMeilleure.Instructions
 
             switch (GetPackedId(op))
             {
-                case 0b11_011_0000_0000_001: info = typeof(NativeInterface).GetMethod(nameof(NativeInterface.GetCtrEl0)); break;
-                case 0b11_011_0000_0000_111: info = typeof(NativeInterface).GetMethod(nameof(NativeInterface.GetDczidEl0)); break;
-                case 0b11_011_0100_0010_000: EmitGetNzcv(context); return;
-                case 0b11_011_0100_0100_000: EmitGetFpcr(context); return;
-                case 0b11_011_0100_0100_001: EmitGetFpsr(context); return;
-                case 0b11_011_1101_0000_010: EmitGetTpidrEl0(context); return;
-                case 0b11_011_1101_0000_011: EmitGetTpidrroEl0(context); return;
-                case 0b11_011_1110_0000_000: info = typeof(NativeInterface).GetMethod(nameof(NativeInterface.GetCntfrqEl0)); break;
-                case 0b11_011_1110_0000_001: info = typeof(NativeInterface).GetMethod(nameof(NativeInterface.GetCntpctEl0)); break;
-                case 0b11_011_1110_0000_010: info = typeof(NativeInterface).GetMethod(nameof(NativeInterface.GetCntvctEl0)); break;
+                case 0b11_011_0000_0000_001:
+                    info = typeof(NativeInterface).GetMethod(nameof(NativeInterface.GetCtrEl0));
+                    break;
+                case 0b11_011_0000_0000_111:
+                    info = typeof(NativeInterface).GetMethod(nameof(NativeInterface.GetDczidEl0));
+                    break;
+                case 0b11_011_0100_0010_000:
+                    EmitGetNzcv(context);
+                    return;
+                case 0b11_011_0100_0100_000:
+                    EmitGetFpcr(context);
+                    return;
+                case 0b11_011_0100_0100_001:
+                    EmitGetFpsr(context);
+                    return;
+                case 0b11_011_1101_0000_010:
+                    EmitGetTpidrEl0(context);
+                    return;
+                case 0b11_011_1101_0000_011:
+                    EmitGetTpidrroEl0(context);
+                    return;
+                case 0b11_011_1110_0000_000:
+                    info = typeof(NativeInterface).GetMethod(nameof(NativeInterface.GetCntfrqEl0));
+                    break;
+                case 0b11_011_1110_0000_001:
+                    info = typeof(NativeInterface).GetMethod(nameof(NativeInterface.GetCntpctEl0));
+                    break;
+                case 0b11_011_1110_0000_010:
+                    info = typeof(NativeInterface).GetMethod(nameof(NativeInterface.GetCntvctEl0));
+                    break;
 
-                default: throw new NotImplementedException($"Unknown MRS 0x{op.RawOpCode:X8} at 0x{op.Address:X16}.");
+                default:
+                    throw new NotImplementedException($"Unknown MRS 0x{op.RawOpCode:X8} at 0x{op.Address:X16}.");
             }
 
             SetIntOrZR(context, op.Rt, context.Call(info));
@@ -51,12 +72,21 @@ namespace ARMeilleure.Instructions
 
             switch (GetPackedId(op))
             {
-                case 0b11_011_0100_0010_000: EmitSetNzcv(context); return;
-                case 0b11_011_0100_0100_000: EmitSetFpcr(context); return;
-                case 0b11_011_0100_0100_001: EmitSetFpsr(context); return;
-                case 0b11_011_1101_0000_010: EmitSetTpidrEl0(context); return;
+                case 0b11_011_0100_0010_000:
+                    EmitSetNzcv(context);
+                    return;
+                case 0b11_011_0100_0100_000:
+                    EmitSetFpcr(context);
+                    return;
+                case 0b11_011_0100_0100_001:
+                    EmitSetFpsr(context);
+                    return;
+                case 0b11_011_1101_0000_010:
+                    EmitSetTpidrEl0(context);
+                    return;
 
-                default: throw new NotImplementedException($"Unknown MSR 0x{op.RawOpCode:X8} at 0x{op.Address:X16}.");
+                default:
+                    throw new NotImplementedException($"Unknown MSR 0x{op.RawOpCode:X8} at 0x{op.Address:X16}.");
             }
         }
 
@@ -75,19 +105,19 @@ namespace ARMeilleure.Instructions
             switch (GetPackedId(op))
             {
                 case 0b11_011_0111_0100_001:
-                {
-                    // DC ZVA
-                    Operand t = GetIntOrZR(context, op.Rt);
-
-                    for (long offset = 0; offset < DczSizeInBytes; offset += 8)
                     {
-                        Operand address = context.Add(t, Const(offset));
+                        // DC ZVA
+                        Operand t = GetIntOrZR(context, op.Rt);
 
-                        InstEmitMemoryHelper.EmitStore(context, address, RegisterConsts.ZeroIndex, 3);
+                        for (long offset = 0; offset < DczSizeInBytes; offset += 8)
+                        {
+                            Operand address = context.Add(t, Const(offset));
+
+                            InstEmitMemoryHelper.EmitStore(context, address, RegisterConsts.ZeroIndex, 3);
+                        }
+
+                        break;
                     }
-
-                    break;
-                }
 
                 // No-op
                 case 0b11_011_0111_1110_001: // DC CIVAC
@@ -104,7 +134,7 @@ namespace ARMeilleure.Instructions
         {
             int id;
 
-            id  = op.Op2 << 0;
+            id = op.Op2 << 0;
             id |= op.CRm << 3;
             id |= op.CRn << 7;
             id |= op.Op1 << 11;
@@ -188,7 +218,7 @@ namespace ARMeilleure.Instructions
             OpCodeSystem op = (OpCodeSystem)context.CurrOp;
 
             Operand nzcv = GetIntOrZR(context, op.Rt);
-                    nzcv = context.ConvertI64ToI32(nzcv);
+            nzcv = context.ConvertI64ToI32(nzcv);
 
             SetFlag(context, PState.VFlag, context.BitwiseAnd(context.ShiftRightUI(nzcv, Const((int)PState.VFlag)), Const(1)));
             SetFlag(context, PState.CFlag, context.BitwiseAnd(context.ShiftRightUI(nzcv, Const((int)PState.CFlag)), Const(1)));
@@ -201,7 +231,7 @@ namespace ARMeilleure.Instructions
             OpCodeSystem op = (OpCodeSystem)context.CurrOp;
 
             Operand fpcr = GetIntOrZR(context, op.Rt);
-                    fpcr = context.ConvertI64ToI32(fpcr);
+            fpcr = context.ConvertI64ToI32(fpcr);
 
             for (int flag = 0; flag < RegisterConsts.FpFlagsCount; flag++)
             {
@@ -221,7 +251,7 @@ namespace ARMeilleure.Instructions
             context.ClearQcFlagIfModified();
 
             Operand fpsr = GetIntOrZR(context, op.Rt);
-                    fpsr = context.ConvertI64ToI32(fpsr);
+            fpsr = context.ConvertI64ToI32(fpsr);
 
             for (int flag = 0; flag < RegisterConsts.FpFlagsCount; flag++)
             {

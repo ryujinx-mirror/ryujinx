@@ -52,17 +52,20 @@
             else if ((modeHigh & 0b110) == 0b100)
             {
                 // 16-bits shifted Immediate.
-                size = 1; imm <<= (modeHigh & 1) << 3;
+                size = 1;
+                imm <<= (modeHigh & 1) << 3;
             }
             else if ((modeHigh & 0b100) == 0b000)
             {
                 // 32-bits shifted Immediate.
-                size = 2; imm <<= modeHigh << 3;
+                size = 2;
+                imm <<= modeHigh << 3;
             }
             else if ((modeHigh & 0b111) == 0b110)
             {
                 // 32-bits shifted Immediate (fill with ones).
-                size = 2; imm = ShlOnes(imm, 8 << modeLow);
+                size = 2;
+                imm = ShlOnes(imm, 8 << modeLow);
             }
             else
             {

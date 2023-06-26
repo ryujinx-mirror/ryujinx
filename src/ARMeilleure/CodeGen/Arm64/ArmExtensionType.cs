@@ -9,6 +9,6 @@ namespace ARMeilleure.CodeGen.Arm64
         Sxtb = 4,
         Sxth = 5,
         Sxtw = 6,
-        Sxtx = 7
+        Sxtx = 7,
     }
 }

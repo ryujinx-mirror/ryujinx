@@ -64,12 +64,12 @@ namespace ARMeilleure.Instructions
         #region "System registers"
         public static ulong GetCtrEl0()
         {
-            return (ulong)GetContext().CtrEl0;
+            return GetContext().CtrEl0;
         }
 
         public static ulong GetDczidEl0()
         {
-            return (ulong)GetContext().DczidEl0;
+            return GetContext().DczidEl0;
         }
 
         public static ulong GetCntfrqEl0()

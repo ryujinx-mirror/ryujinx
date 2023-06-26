@@ -14,6 +14,6 @@ namespace ARMeilleure.Diagnostics
         RegisterAllocation,
         CodeGeneration,
 
-        Count
+        Count,
     }
 }

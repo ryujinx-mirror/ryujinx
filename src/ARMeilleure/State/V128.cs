@@ -19,7 +19,7 @@ namespace ARMeilleure.State
         /// <summary>
         /// Gets a new <see cref="V128"/> with all bits set to zero.
         /// </summary>
-        public static V128 Zero => new V128(0, 0);
+        public static V128 Zero => new(0, 0);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="V128"/> struct with the specified <see cref="double"/> value
@@ -55,9 +55,9 @@ namespace ARMeilleure.State
         /// <param name="e3">Element 3</param>
         public V128(float e0, float e1, float e2, float e3)
         {
-            _e0  = (ulong)(uint)BitConverter.SingleToInt32Bits(e0) << 0;
+            _e0 = (ulong)(uint)BitConverter.SingleToInt32Bits(e0) << 0;
             _e0 |= (ulong)(uint)BitConverter.SingleToInt32Bits(e1) << 32;
-            _e1  = (ulong)(uint)BitConverter.SingleToInt32Bits(e2) << 0;
+            _e1 = (ulong)(uint)BitConverter.SingleToInt32Bits(e2) << 0;
             _e1 |= (ulong)(uint)BitConverter.SingleToInt32Bits(e3) << 32;
         }
 
@@ -98,9 +98,9 @@ namespace ARMeilleure.State
         /// <param name="e3">Element 3</param>
         public V128(uint e0, uint e1, uint e2, uint e3)
         {
-            _e0  = (ulong)e0 << 0;
+            _e0 = (ulong)e0 << 0;
             _e0 |= (ulong)e1 << 32;
-            _e1  = (ulong)e2 << 0;
+            _e1 = (ulong)e2 << 0;
             _e1 |= (ulong)e3 << 32;
         }
 
@@ -137,7 +137,9 @@ namespace ARMeilleure.State
         public T Extract<T>(int index) where T : unmanaged
         {
             if ((uint)index >= GetElementCount<T>())
+            {
                 ThrowIndexOutOfRange();
+            }
 
             // Performs:
             //  return *((*T)this + index);
@@ -156,7 +158,9 @@ namespace ARMeilleure.State
         public void Insert<T>(int index, T value) where T : unmanaged
         {
             if ((uint)index >= GetElementCount<T>())
+            {
                 ThrowIndexOutOfRange();
+            }
 
             // Performs:
             //  *((*T)this + index) = value;
@@ -167,13 +171,13 @@ namespace ARMeilleure.State
         /// Returns a new <see cref="byte"/> array which represents the <see cref="V128"/>.
         /// </summary>
         /// <returns>A new <see cref="byte"/> array which represents the <see cref="V128"/></returns>
-        public byte[] ToArray()
+        public readonly byte[] ToArray()
         {
-            byte[]     data = new byte[16];
+            byte[] data = new byte[16];
             Span<byte> span = data;
 
             BitConverter.TryWriteBytes(span, _e0);
-            BitConverter.TryWriteBytes(span.Slice(8), _e1);
+            BitConverter.TryWriteBytes(span[8..], _e1);
 
             return data;
         }
@@ -225,7 +229,7 @@ namespace ARMeilleure.State
         /// </summary>
         /// <param name="x">Target <see cref="V128"/></param>
         /// <returns>Result of not operation</returns>
-        public static V128 operator ~(V128 x) => new V128(~x._e0, ~x._e1);
+        public static V128 operator ~(V128 x) => new(~x._e0, ~x._e1);
 
         /// <summary>
         /// Performs a bitwise and on the specified <see cref="V128"/> instances.
@@ -233,7 +237,7 @@ namespace ARMeilleure.State
         /// <param name="x">First instance</param>
         /// <param name="y">Second instance</param>
         /// <returns>Result of and operation</returns>
-        public static V128 operator &(V128 x, V128 y) => new V128(x._e0 & y._e0, x._e1 & y._e1);
+        public static V128 operator &(V128 x, V128 y) => new(x._e0 & y._e0, x._e1 & y._e1);
 
         /// <summary>
         /// Performs a bitwise or on the specified <see cref="V128"/> instances.
@@ -241,7 +245,7 @@ namespace ARMeilleure.State
         /// <param name="x">First instance</param>
         /// <param name="y">Second instance</param>
         /// <returns>Result of or operation</returns>
-        public static V128 operator |(V128 x, V128 y) => new V128(x._e0 | y._e0, x._e1 | y._e1);
+        public static V128 operator |(V128 x, V128 y) => new(x._e0 | y._e0, x._e1 | y._e1);
 
         /// <summary>
         /// Performs a bitwise exlusive or on the specified <see cref="V128"/> instances.
@@ -249,7 +253,7 @@ namespace ARMeilleure.State
         /// <param name="x">First instance</param>
         /// <param name="y">Second instance</param>
         /// <returns>Result of exclusive or operation</returns>
-        public static V128 operator ^(V128 x, V128 y) => new V128(x._e0 ^ y._e0, x._e1 ^ y._e1);
+        public static V128 operator ^(V128 x, V128 y) => new(x._e0 ^ y._e0, x._e1 ^ y._e1);
 
         /// <summary>
         /// Determines if the specified <see cref="V128"/> instances are equal.
@@ -272,7 +276,7 @@ namespace ARMeilleure.State
         /// </summary>
         /// <param name="other">Other <see cref="V128"/> instance</param>
         /// <returns>true if equal; otherwise false</returns>
-        public bool Equals(V128 other)
+        public readonly bool Equals(V128 other)
         {
             return other._e0 == _e0 && other._e1 == _e1;
         }
@@ -282,24 +286,24 @@ namespace ARMeilleure.State
         /// </summary>
         /// <param name="obj">Other <see cref="object"/> instance</param>
         /// <returns>true if equal; otherwise false</returns>
-        public override bool Equals(object obj)
+        public readonly override bool Equals(object obj)
         {
             return obj is V128 vector && Equals(vector);
         }
 
         /// <inheritdoc/>
-        public override int GetHashCode()
+        public readonly override int GetHashCode()
         {
             return HashCode.Combine(_e0, _e1);
         }
 
         /// <inheritdoc/>
-        public override string ToString()
+        public readonly override string ToString()
         {
             return $"0x{_e1:X16}{_e0:X16}";
         }
 
-        private uint GetElementCount<T>() where T : unmanaged
+        private static uint GetElementCount<T>() where T : unmanaged
         {
             return (uint)(Unsafe.SizeOf<V128>() / Unsafe.SizeOf<T>());
         }

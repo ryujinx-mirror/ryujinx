@@ -155,7 +155,7 @@ namespace ARMeilleure.CodeGen.X86
             node.SetSources(sources);
         }
 
-        public static void InsertTailcallCopies(IntrusiveList<Operation> nodes, StackAllocator stackAlloc, Operation node)
+        public static void InsertTailcallCopies(IntrusiveList<Operation> nodes, Operation node)
         {
             int argsCount = node.SourcesCount - 1;
             int maxArgs = CallingConvention.GetArgumentsOnRegsCount();

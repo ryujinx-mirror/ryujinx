@@ -6,15 +6,15 @@ namespace ARMeilleure.Translation
     /// <summary>
     /// An Augmented Interval Tree based off of the "TreeDictionary"'s Red-Black Tree. Allows fast overlap checking of ranges.
     /// </summary>
-    /// <typeparam name="K">Key</typeparam>
-    /// <typeparam name="V">Value</typeparam>
-    class IntervalTree<K, V> where K : IComparable<K>
+    /// <typeparam name="TK">Key</typeparam>
+    /// <typeparam name="TV">Value</typeparam>
+    class IntervalTree<TK, TV> where TK : IComparable<TK>
     {
         private const int ArrayGrowthSize = 32;
 
         private const bool Black = true;
         private const bool Red = false;
-        private IntervalTreeNode<K, V> _root = null;
+        private IntervalTreeNode<TK, TV> _root = null;
         private int _count = 0;
 
         public int Count => _count;
@@ -27,9 +27,9 @@ namespace ARMeilleure.Translation
         /// <param name="key">Key of the node value to get</param>
         /// <param name="value">Value with the given <paramref name="key"/></param>
         /// <returns>True if the key is on the dictionary, false otherwise</returns>
-        public bool TryGet(K key, out V value)
+        public bool TryGet(TK key, out TV value)
         {
-            IntervalTreeNode<K, V> node = GetNode(key);
+            IntervalTreeNode<TK, TV> node = GetNode(key);
 
             if (node == null)
             {
@@ -49,7 +49,7 @@ namespace ARMeilleure.Translation
         /// <param name="overlaps">Overlaps array to place results in</param>
         /// <param name="overlapCount">Index to start writing results into the array. Defaults to 0</param>
         /// <returns>Number of intervals found</returns>
-        public int Get(K start, K end, ref K[] overlaps, int overlapCount = 0)
+        public int Get(TK start, TK end, ref TK[] overlaps, int overlapCount = 0)
         {
             GetKeys(_root, start, end, ref overlaps, ref overlapCount);
 
@@ -65,11 +65,11 @@ namespace ARMeilleure.Translation
         /// <param name="updateFactoryCallback">Optional factory used to create a new value if <paramref name="start"/> is already on the tree</param>
         /// <exception cref="ArgumentNullException"><paramref name="value"/> is null</exception>
         /// <returns>True if the value was added, false if the start key was already in the dictionary</returns>
-        public bool AddOrUpdate(K start, K end, V value, Func<K, V, V> updateFactoryCallback)
+        public bool AddOrUpdate(TK start, TK end, TV value, Func<TK, TV, TV> updateFactoryCallback)
         {
             ArgumentNullException.ThrowIfNull(value);
 
-            return BSTInsert(start, end, value, updateFactoryCallback, out IntervalTreeNode<K, V> node);
+            return BSTInsert(start, end, value, updateFactoryCallback, out _);
         }
 
         /// <summary>
@@ -80,11 +80,11 @@ namespace ARMeilleure.Translation
         /// <param name="value">Value to add</param>
         /// <exception cref="ArgumentNullException"><paramref name="value"/> is null</exception>
         /// <returns><paramref name="value"/> if <paramref name="start"/> is not yet on the tree, or the existing value otherwise</returns>
-        public V GetOrAdd(K start, K end, V value)
+        public TV GetOrAdd(TK start, TK end, TV value)
         {
             ArgumentNullException.ThrowIfNull(value);
 
-            BSTInsert(start, end, value, null, out IntervalTreeNode<K, V> node);
+            BSTInsert(start, end, value, null, out IntervalTreeNode<TK, TV> node);
             return node.Value;
         }
 
@@ -93,7 +93,7 @@ namespace ARMeilleure.Translation
         /// </summary>
         /// <param name="key">Key of the node to remove</param>
         /// <returns>Number of deleted values</returns>
-        public int Remove(K key)
+        public int Remove(TK key)
         {
             int removed = Delete(key);
 
@@ -106,9 +106,9 @@ namespace ARMeilleure.Translation
         /// Adds all the nodes in the dictionary into <paramref name="list"/>.
         /// </summary>
         /// <returns>A list of all values sorted by Key Order</returns>
-        public List<V> AsList()
+        public List<TV> AsList()
         {
-            List<V> list = new List<V>();
+            List<TV> list = new();
 
             AddToList(_root, list);
 
@@ -124,7 +124,7 @@ namespace ARMeilleure.Translation
         /// </summary>
         /// <param name="node">The node to search for values within</param>
         /// <param name="list">The list to add values to</param>
-        private void AddToList(IntervalTreeNode<K, V> node, List<V> list)
+        private void AddToList(IntervalTreeNode<TK, TV> node, List<TV> list)
         {
             if (node == null)
             {
@@ -144,11 +144,11 @@ namespace ARMeilleure.Translation
         /// <param name="key">Key of the node to get</param>
         /// <exception cref="ArgumentNullException"><paramref name="key"/> is null</exception>
         /// <returns>Node reference in the tree</returns>
-        private IntervalTreeNode<K, V> GetNode(K key)
+        private IntervalTreeNode<TK, TV> GetNode(TK key)
         {
             ArgumentNullException.ThrowIfNull(key);
 
-            IntervalTreeNode<K, V> node = _root;
+            IntervalTreeNode<TK, TV> node = _root;
             while (node != null)
             {
                 int cmp = key.CompareTo(node.Start);
@@ -175,7 +175,7 @@ namespace ARMeilleure.Translation
         /// <param name="end">End of the range</param>
         /// <param name="overlaps">Overlaps array to place results in</param>
         /// <param name="overlapCount">Overlaps count to update</param>
-        private void GetKeys(IntervalTreeNode<K, V> node, K start, K end, ref K[] overlaps, ref int overlapCount)
+        private void GetKeys(IntervalTreeNode<TK, TV> node, TK start, TK end, ref TK[] overlaps, ref int overlapCount)
         {
             if (node == null || start.CompareTo(node.Max) >= 0)
             {
@@ -206,10 +206,10 @@ namespace ARMeilleure.Translation
         /// This should only be called if the max increases - not for rebalancing or removals.
         /// </summary>
         /// <param name="node">The node to start propagating from</param>
-        private void PropagateIncrease(IntervalTreeNode<K, V> node)
+        private static void PropagateIncrease(IntervalTreeNode<TK, TV> node)
         {
-            K max = node.Max;
-            IntervalTreeNode<K, V> ptr = node;
+            TK max = node.Max;
+            IntervalTreeNode<TK, TV> ptr = node;
 
             while ((ptr = ptr.Parent) != null)
             {
@@ -229,13 +229,13 @@ namespace ARMeilleure.Translation
         /// This fully recalculates the max value from all children when there is potential for it to decrease.
         /// </summary>
         /// <param name="node">The node to start propagating from</param>
-        private void PropagateFull(IntervalTreeNode<K, V> node)
+        private static void PropagateFull(IntervalTreeNode<TK, TV> node)
         {
-            IntervalTreeNode<K, V> ptr = node;
+            IntervalTreeNode<TK, TV> ptr = node;
 
             do
             {
-                K max = ptr.End;
+                TK max = ptr.End;
 
                 if (ptr.Left != null && ptr.Left.Max.CompareTo(max) > 0)
                 {
@@ -263,10 +263,10 @@ namespace ARMeilleure.Translation
         /// <param name="updateFactoryCallback">Optional factory used to create a new value if <paramref name="start"/> is already on the tree</param>
         /// <param name="outNode">Node that was inserted or modified</param>
         /// <returns>True if <paramref name="start"/> was not yet on the tree, false otherwise</returns>
-        private bool BSTInsert(K start, K end, V value, Func<K, V, V> updateFactoryCallback, out IntervalTreeNode<K, V> outNode)
+        private bool BSTInsert(TK start, TK end, TV value, Func<TK, TV, TV> updateFactoryCallback, out IntervalTreeNode<TK, TV> outNode)
         {
-            IntervalTreeNode<K, V> parent = null;
-            IntervalTreeNode<K, V> node = _root;
+            IntervalTreeNode<TK, TV> parent = null;
+            IntervalTreeNode<TK, TV> node = _root;
 
             while (node != null)
             {
@@ -311,7 +311,7 @@ namespace ARMeilleure.Translation
                     return false;
                 }
             }
-            IntervalTreeNode<K, V> newNode = new IntervalTreeNode<K, V>(start, end, value, parent);
+            IntervalTreeNode<TK, TV> newNode = new(start, end, value, parent);
             if (newNode.Parent == null)
             {
                 _root = newNode;
@@ -337,16 +337,16 @@ namespace ARMeilleure.Translation
         /// </summary>
         /// <param name="key">Key to search for</param>
         /// <returns>Number of deleted values</returns>
-        private int Delete(K key)
+        private int Delete(TK key)
         {
-            IntervalTreeNode<K, V> nodeToDelete = GetNode(key);
+            IntervalTreeNode<TK, TV> nodeToDelete = GetNode(key);
 
             if (nodeToDelete == null)
             {
                 return 0;
             }
 
-            IntervalTreeNode<K, V> replacementNode;
+            IntervalTreeNode<TK, TV> replacementNode;
 
             if (LeftOf(nodeToDelete) == null || RightOf(nodeToDelete) == null)
             {
@@ -357,7 +357,7 @@ namespace ARMeilleure.Translation
                 replacementNode = PredecessorOf(nodeToDelete);
             }
 
-            IntervalTreeNode<K, V> tmp = LeftOf(replacementNode) ?? RightOf(replacementNode);
+            IntervalTreeNode<TK, TV> tmp = LeftOf(replacementNode) ?? RightOf(replacementNode);
 
             if (tmp != null)
             {
@@ -400,9 +400,9 @@ namespace ARMeilleure.Translation
         /// </summary>
         /// <param name="node">Root Node</param>
         /// <returns>Node with the maximum key in the tree of <paramref name="node"/></returns>
-        private static IntervalTreeNode<K, V> Maximum(IntervalTreeNode<K, V> node)
+        private static IntervalTreeNode<TK, TV> Maximum(IntervalTreeNode<TK, TV> node)
         {
-            IntervalTreeNode<K, V> tmp = node;
+            IntervalTreeNode<TK, TV> tmp = node;
             while (tmp.Right != null)
             {
                 tmp = tmp.Right;
@@ -416,13 +416,13 @@ namespace ARMeilleure.Translation
         /// </summary>
         /// <param name="node">Node to find the predecessor of</param>
         /// <returns>Predecessor of <paramref name="node"/></returns>
-        private static IntervalTreeNode<K, V> PredecessorOf(IntervalTreeNode<K, V> node)
+        private static IntervalTreeNode<TK, TV> PredecessorOf(IntervalTreeNode<TK, TV> node)
         {
             if (node.Left != null)
             {
                 return Maximum(node.Left);
             }
-            IntervalTreeNode<K, V> parent = node.Parent;
+            IntervalTreeNode<TK, TV> parent = node.Parent;
             while (parent != null && node == parent.Left)
             {
                 node = parent;
@@ -435,15 +435,15 @@ namespace ARMeilleure.Translation
 
         #region Private Methods (RBL)
 
-        private void RestoreBalanceAfterRemoval(IntervalTreeNode<K, V> balanceNode)
+        private void RestoreBalanceAfterRemoval(IntervalTreeNode<TK, TV> balanceNode)
         {
-            IntervalTreeNode<K, V> ptr = balanceNode;
+            IntervalTreeNode<TK, TV> ptr = balanceNode;
 
             while (ptr != _root && ColorOf(ptr) == Black)
             {
                 if (ptr == LeftOf(ParentOf(ptr)))
                 {
-                    IntervalTreeNode<K, V> sibling = RightOf(ParentOf(ptr));
+                    IntervalTreeNode<TK, TV> sibling = RightOf(ParentOf(ptr));
 
                     if (ColorOf(sibling) == Red)
                     {
@@ -475,7 +475,7 @@ namespace ARMeilleure.Translation
                 }
                 else
                 {
-                    IntervalTreeNode<K, V> sibling = LeftOf(ParentOf(ptr));
+                    IntervalTreeNode<TK, TV> sibling = LeftOf(ParentOf(ptr));
 
                     if (ColorOf(sibling) == Red)
                     {
@@ -509,14 +509,14 @@ namespace ARMeilleure.Translation
             SetColor(ptr, Black);
         }
 
-        private void RestoreBalanceAfterInsertion(IntervalTreeNode<K, V> balanceNode)
+        private void RestoreBalanceAfterInsertion(IntervalTreeNode<TK, TV> balanceNode)
         {
             SetColor(balanceNode, Red);
             while (balanceNode != null && balanceNode != _root && ColorOf(ParentOf(balanceNode)) == Red)
             {
                 if (ParentOf(balanceNode) == LeftOf(ParentOf(ParentOf(balanceNode))))
                 {
-                    IntervalTreeNode<K, V> sibling = RightOf(ParentOf(ParentOf(balanceNode)));
+                    IntervalTreeNode<TK, TV> sibling = RightOf(ParentOf(ParentOf(balanceNode)));
 
                     if (ColorOf(sibling) == Red)
                     {
@@ -539,7 +539,7 @@ namespace ARMeilleure.Translation
                 }
                 else
                 {
-                    IntervalTreeNode<K, V> sibling = LeftOf(ParentOf(ParentOf(balanceNode)));
+                    IntervalTreeNode<TK, TV> sibling = LeftOf(ParentOf(ParentOf(balanceNode)));
 
                     if (ColorOf(sibling) == Red)
                     {
@@ -564,17 +564,17 @@ namespace ARMeilleure.Translation
             SetColor(_root, Black);
         }
 
-        private void RotateLeft(IntervalTreeNode<K, V> node)
+        private void RotateLeft(IntervalTreeNode<TK, TV> node)
         {
             if (node != null)
             {
-                IntervalTreeNode<K, V> right = RightOf(node);
+                IntervalTreeNode<TK, TV> right = RightOf(node);
                 node.Right = LeftOf(right);
                 if (node.Right != null)
                 {
                     node.Right.Parent = node;
                 }
-                IntervalTreeNode<K, V> nodeParent = ParentOf(node);
+                IntervalTreeNode<TK, TV> nodeParent = ParentOf(node);
                 right.Parent = nodeParent;
                 if (nodeParent == null)
                 {
@@ -595,17 +595,17 @@ namespace ARMeilleure.Translation
             }
         }
 
-        private void RotateRight(IntervalTreeNode<K, V> node)
+        private void RotateRight(IntervalTreeNode<TK, TV> node)
         {
             if (node != null)
             {
-                IntervalTreeNode<K, V> left = LeftOf(node);
+                IntervalTreeNode<TK, TV> left = LeftOf(node);
                 node.Left = RightOf(left);
                 if (node.Left != null)
                 {
                     node.Left.Parent = node;
                 }
-                IntervalTreeNode<K, V> nodeParent = ParentOf(node);
+                IntervalTreeNode<TK, TV> nodeParent = ParentOf(node);
                 left.Parent = nodeParent;
                 if (nodeParent == null)
                 {
@@ -637,7 +637,7 @@ namespace ARMeilleure.Translation
         /// </summary>
         /// <param name="node">Node</param>
         /// <returns>The boolean color of <paramref name="node"/>, or black if null</returns>
-        private static bool ColorOf(IntervalTreeNode<K, V> node)
+        private static bool ColorOf(IntervalTreeNode<TK, TV> node)
         {
             return node == null || node.Color;
         }
@@ -649,7 +649,7 @@ namespace ARMeilleure.Translation
         /// </summary>
         /// <param name="node">Node to set the color of</param>
         /// <param name="color">Color (Boolean)</param>
-        private static void SetColor(IntervalTreeNode<K, V> node, bool color)
+        private static void SetColor(IntervalTreeNode<TK, TV> node, bool color)
         {
             if (node != null)
             {
@@ -662,7 +662,7 @@ namespace ARMeilleure.Translation
         /// </summary>
         /// <param name="node">Node to retrieve the left child from</param>
         /// <returns>Left child of <paramref name="node"/></returns>
-        private static IntervalTreeNode<K, V> LeftOf(IntervalTreeNode<K, V> node)
+        private static IntervalTreeNode<TK, TV> LeftOf(IntervalTreeNode<TK, TV> node)
         {
             return node?.Left;
         }
@@ -672,7 +672,7 @@ namespace ARMeilleure.Translation
         /// </summary>
         /// <param name="node">Node to retrieve the right child from</param>
         /// <returns>Right child of <paramref name="node"/></returns>
-        private static IntervalTreeNode<K, V> RightOf(IntervalTreeNode<K, V> node)
+        private static IntervalTreeNode<TK, TV> RightOf(IntervalTreeNode<TK, TV> node)
         {
             return node?.Right;
         }
@@ -682,14 +682,14 @@ namespace ARMeilleure.Translation
         /// </summary>
         /// <param name="node">Node to retrieve the parent from</param>
         /// <returns>Parent of <paramref name="node"/></returns>
-        private static IntervalTreeNode<K, V> ParentOf(IntervalTreeNode<K, V> node)
+        private static IntervalTreeNode<TK, TV> ParentOf(IntervalTreeNode<TK, TV> node)
         {
             return node?.Parent;
         }
 
         #endregion
 
-        public bool ContainsKey(K key)
+        public bool ContainsKey(TK key)
         {
             return GetNode(key) != null;
         }
@@ -704,36 +704,36 @@ namespace ARMeilleure.Translation
     /// <summary>
     /// Represents a node in the IntervalTree which contains start and end keys of type K, and a value of generic type V.
     /// </summary>
-    /// <typeparam name="K">Key type of the node</typeparam>
-    /// <typeparam name="V">Value type of the node</typeparam>
-    class IntervalTreeNode<K, V>
+    /// <typeparam name="TK">Key type of the node</typeparam>
+    /// <typeparam name="TV">Value type of the node</typeparam>
+    class IntervalTreeNode<TK, TV>
     {
         public bool Color = true;
-        public IntervalTreeNode<K, V> Left = null;
-        public IntervalTreeNode<K, V> Right = null;
-        public IntervalTreeNode<K, V> Parent = null;
+        public IntervalTreeNode<TK, TV> Left = null;
+        public IntervalTreeNode<TK, TV> Right = null;
+        public IntervalTreeNode<TK, TV> Parent = null;
 
         /// <summary>
         /// The start of the range.
         /// </summary>
-        public K Start;
+        public TK Start;
 
         /// <summary>
         /// The end of the range.
         /// </summary>
-        public K End;
+        public TK End;
 
         /// <summary>
         /// The maximum end value of this node and all its children.
         /// </summary>
-        public K Max;
+        public TK Max;
 
         /// <summary>
         /// Value stored on this node.
         /// </summary>
-        public V Value;
+        public TV Value;
 
-        public IntervalTreeNode(K start, K end, V value, IntervalTreeNode<K, V> parent)
+        public IntervalTreeNode(TK start, TK end, TV value, IntervalTreeNode<TK, TV> parent)
         {
             Start = start;
             End = end;

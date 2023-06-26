@@ -23,7 +23,7 @@ namespace ARMeilleure.State
             public int Running;
         }
 
-        private static NativeCtxStorage _dummyStorage = new NativeCtxStorage();
+        private static NativeCtxStorage _dummyStorage = new();
 
         private readonly IJitMemoryBlock _block;
 

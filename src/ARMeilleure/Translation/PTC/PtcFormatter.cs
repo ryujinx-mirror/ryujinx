@@ -47,7 +47,7 @@ namespace ARMeilleure.Translation.PTC
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T DeserializeStructure<T>(Stream stream) where T : struct
         {
-            T structure = default(T);
+            T structure = default;
 
             Span<T> spanT = MemoryMarshal.CreateSpan(ref structure, 1);
             int bytesCount = stream.Read(MemoryMarshal.AsBytes(spanT));

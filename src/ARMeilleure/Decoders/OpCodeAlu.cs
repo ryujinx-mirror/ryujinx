@@ -11,8 +11,8 @@ namespace ARMeilleure.Decoders
 
         public OpCodeAlu(InstDescriptor inst, ulong address, int opCode) : base(inst, address, opCode)
         {
-            Rd     =          (opCode >>  0) & 0x1f;
-            Rn     =          (opCode >>  5) & 0x1f;
+            Rd = (opCode >> 0) & 0x1f;
+            Rn = (opCode >> 5) & 0x1f;
             DataOp = (DataOp)((opCode >> 24) & 0x3);
 
             RegisterSize = (opCode >> 31) != 0

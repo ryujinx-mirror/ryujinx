@@ -26,7 +26,9 @@ namespace ARMeilleure.Decoders
 
                     break;
 
-                default: Instruction = InstDescriptor.Undefined; break;
+                default:
+                    Instruction = InstDescriptor.Undefined;
+                    break;
             }
         }
     }

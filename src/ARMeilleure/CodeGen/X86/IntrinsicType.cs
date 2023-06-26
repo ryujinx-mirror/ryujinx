@@ -13,6 +13,6 @@ namespace ARMeilleure.CodeGen.X86
         Crc32,
         Ternary,
         TernaryImm,
-        Fma
+        Fma,
     }
 }

@@ -40,6 +40,7 @@ namespace ARMeilleure.Instructions
 
             long offset = 0;
 
+#pragma warning disable IDE0055 // Disable formatting
             for (int rep   = 0; rep   < op.Reps;   rep++)
             for (int elem  = 0; elem  < op.Elems;  elem++)
             for (int sElem = 0; sElem < op.SElems; sElem++)
@@ -66,6 +67,7 @@ namespace ARMeilleure.Instructions
 
                 offset += 1 << op.Size;
             }
+#pragma warning restore IDE0055
 
             if (op.WBack)
             {
