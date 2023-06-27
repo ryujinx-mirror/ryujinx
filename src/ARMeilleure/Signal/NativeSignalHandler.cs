@@ -5,7 +5,6 @@ using ARMeilleure.Translation.Cache;
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-
 using static ARMeilleure.IntermediateRepresentation.Operand.Factory;
 
 namespace ARMeilleure.Signal
@@ -261,20 +260,20 @@ namespace ARMeilleure.Signal
         {
             if (OperatingSystem.IsMacOS())
             {
-                const ulong mcontextOffset = 48; // uc_mcontext
-                Operand ctxPtr = context.Load(OperandType.I64, context.Add(ucontextPtr, Const(mcontextOffset)));
+                const ulong McontextOffset = 48; // uc_mcontext
+                Operand ctxPtr = context.Load(OperandType.I64, context.Add(ucontextPtr, Const(McontextOffset)));
 
                 if (RuntimeInformation.ProcessArchitecture == Architecture.Arm64)
                 {
-                    const ulong esrOffset = 8; // __es.__esr
-                    Operand esr = context.Load(OperandType.I64, context.Add(ctxPtr, Const(esrOffset)));
+                    const ulong EsrOffset = 8; // __es.__esr
+                    Operand esr = context.Load(OperandType.I64, context.Add(ctxPtr, Const(EsrOffset)));
                     return context.BitwiseAnd(esr, Const(0x40ul));
                 }
 
                 if (RuntimeInformation.ProcessArchitecture == Architecture.X64)
                 {
-                    const ulong errOffset = 4; // __es.__err
-                    Operand err = context.Load(OperandType.I64, context.Add(ctxPtr, Const(errOffset)));
+                    const ulong ErrOffset = 4; // __es.__err
+                    Operand err = context.Load(OperandType.I64, context.Add(ctxPtr, Const(ErrOffset)));
                     return context.BitwiseAnd(err, Const(2ul));
                 }
             }
@@ -287,10 +286,10 @@ namespace ARMeilleure.Signal
                     Operand loopLabel = Label();
                     Operand successLabel = Label();
 
-                    const ulong auxOffset = 464; // uc_mcontext.__reserved
-                    const uint esrMagic = 0x45535201;
+                    const ulong AuxOffset = 464; // uc_mcontext.__reserved
+                    const uint EsrMagic = 0x45535201;
 
-                    context.Copy(auxPtr, context.Add(ucontextPtr, Const(auxOffset)));
+                    context.Copy(auxPtr, context.Add(ucontextPtr, Const(AuxOffset)));
 
                     context.MarkLabel(loopLabel);
 
@@ -299,7 +298,7 @@ namespace ARMeilleure.Signal
                     // _aarch64_ctx::size
                     Operand size = context.Load(OperandType.I32, context.Add(auxPtr, Const(4ul)));
 
-                    context.BranchIf(successLabel, magic, Const(esrMagic), Comparison.Equal);
+                    context.BranchIf(successLabel, magic, Const(EsrMagic), Comparison.Equal);
 
                     context.Copy(auxPtr, context.Add(auxPtr, context.ZeroExtend32(OperandType.I64, size)));
 
@@ -314,8 +313,8 @@ namespace ARMeilleure.Signal
 
                 if (RuntimeInformation.ProcessArchitecture == Architecture.X64)
                 {
-                    const int errOffset = 192; // uc_mcontext.gregs[REG_ERR]
-                    Operand err = context.Load(OperandType.I64, context.Add(ucontextPtr, Const(errOffset)));
+                    const int ErrOffset = 192; // uc_mcontext.gregs[REG_ERR]
+                    Operand err = context.Load(OperandType.I64, context.Add(ucontextPtr, Const(ErrOffset)));
                     return context.BitwiseAnd(err, Const(2ul));
                 }
             }

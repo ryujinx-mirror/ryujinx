@@ -43,43 +43,43 @@ namespace Ryujinx.HLE.HOS.Services.Settings
                 return ResultCode.Success;
             }
 
-            const byte majorFwVersion = 0x03;
-            const byte minorFwVersion = 0x00;
-            const byte microFwVersion = 0x00;
-            const byte unknown        = 0x00; //Build?
+            const byte MajorFwVersion = 0x03;
+            const byte MinorFwVersion = 0x00;
+            const byte MicroFwVersion = 0x00;
+            const byte Unknown        = 0x00; //Build?
 
-            const int revisionNumber = 0x0A;
+            const int RevisionNumber = 0x0A;
 
-            const string platform   = "NX";
-            const string unknownHex = "7fbde2b0bba4d14107bf836e4643043d9f6c8e47";
-            const string version    = "3.0.0";
-            const string build      = "NintendoSDK Firmware for NX 3.0.0-10.0";
+            const string Platform   = "NX";
+            const string UnknownHex = "7fbde2b0bba4d14107bf836e4643043d9f6c8e47";
+            const string Version    = "3.0.0";
+            const string Build      = "NintendoSDK Firmware for NX 3.0.0-10.0";
 
             // http://switchbrew.org/index.php?title=System_Version_Title
             using (MemoryStream ms = new MemoryStream(0x100))
             {
                 BinaryWriter writer = new BinaryWriter(ms);
 
-                writer.Write(majorFwVersion);
-                writer.Write(minorFwVersion);
-                writer.Write(microFwVersion);
-                writer.Write(unknown);
+                writer.Write(MajorFwVersion);
+                writer.Write(MinorFwVersion);
+                writer.Write(MicroFwVersion);
+                writer.Write(Unknown);
 
-                writer.Write(revisionNumber);
+                writer.Write(RevisionNumber);
 
-                writer.Write(Encoding.ASCII.GetBytes(platform));
+                writer.Write(Encoding.ASCII.GetBytes(Platform));
 
                 ms.Seek(0x28, SeekOrigin.Begin);
 
-                writer.Write(Encoding.ASCII.GetBytes(unknownHex));
+                writer.Write(Encoding.ASCII.GetBytes(UnknownHex));
 
                 ms.Seek(0x68, SeekOrigin.Begin);
 
-                writer.Write(Encoding.ASCII.GetBytes(version));
+                writer.Write(Encoding.ASCII.GetBytes(Version));
 
                 ms.Seek(0x80, SeekOrigin.Begin);
 
-                writer.Write(Encoding.ASCII.GetBytes(build));
+                writer.Write(Encoding.ASCII.GetBytes(Build));
 
                 context.Memory.Write(replyPos, ms.ToArray());
             }

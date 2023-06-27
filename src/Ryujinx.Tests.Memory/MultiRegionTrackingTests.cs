@@ -100,14 +100,14 @@ namespace Ryujinx.Tests.Memory
         [Test]
         public void DirtyRegionOrdering([Values] bool smart)
         {
-            const int pageCount = 32;
-            IMultiRegionHandle handle = GetGranular(smart, 0, PageSize * pageCount, PageSize);
+            const int PageCount = 32;
+            IMultiRegionHandle handle = GetGranular(smart, 0, PageSize * PageCount, PageSize);
 
             Random random = new();
 
-            PreparePages(handle, pageCount);
+            PreparePages(handle, PageCount);
 
-            IEnumerable<int> halfRange = Enumerable.Range(0, pageCount / 2);
+            IEnumerable<int> halfRange = Enumerable.Range(0, PageCount / 2);
             List<int> odd = halfRange.Select(x => x * 2 + 1).ToList();
             List<int> even = halfRange.Select(x => x * 2).ToList();
 
@@ -117,9 +117,9 @@ namespace Ryujinx.Tests.Memory
                 _tracking.VirtualMemoryEvent((ulong)i * PageSize, PageSize, true);
             });
 
-            int oddRegionCount = ExpectQueryInOrder(handle, 0, PageSize * pageCount, (address) => (address / PageSize) % 2 == 1);
+            int oddRegionCount = ExpectQueryInOrder(handle, 0, PageSize * PageCount, (address) => (address / PageSize) % 2 == 1);
 
-            Assert.AreEqual(oddRegionCount, pageCount / 2); // Must have written to all odd pages.
+            Assert.AreEqual(oddRegionCount, PageCount / 2); // Must have written to all odd pages.
 
             // Write to all the even pages.
             RandomOrder(random, even, (i) =>
@@ -127,9 +127,9 @@ namespace Ryujinx.Tests.Memory
                 _tracking.VirtualMemoryEvent((ulong)i * PageSize, PageSize, true);
             });
 
-            int evenRegionCount = ExpectQueryInOrder(handle, 0, PageSize * pageCount, (address) => (address / PageSize) % 2 == 0);
+            int evenRegionCount = ExpectQueryInOrder(handle, 0, PageSize * PageCount, (address) => (address / PageSize) % 2 == 0);
 
-            Assert.AreEqual(evenRegionCount, pageCount / 2);
+            Assert.AreEqual(evenRegionCount, PageCount / 2);
         }
 
         [Test]
@@ -142,14 +142,14 @@ namespace Ryujinx.Tests.Memory
             // This is useful for situations where we know that the data was complete when the sequence number was set.
             // ...essentially, when that data can only be updated on a future sequence number.
 
-            const int pageCount = 32;
-            IMultiRegionHandle handle = GetGranular(smart, 0, PageSize * pageCount, PageSize);
+            const int PageCount = 32;
+            IMultiRegionHandle handle = GetGranular(smart, 0, PageSize * PageCount, PageSize);
 
-            PreparePages(handle, pageCount);
+            PreparePages(handle, PageCount);
 
             Random random = new();
 
-            IEnumerable<int> halfRange = Enumerable.Range(0, pageCount / 2);
+            IEnumerable<int> halfRange = Enumerable.Range(0, PageCount / 2);
             List<int> odd = halfRange.Select(x => x * 2 + 1).ToList();
             List<int> even = halfRange.Select(x => x * 2).ToList();
 
@@ -172,29 +172,29 @@ namespace Ryujinx.Tests.Memory
                 }, 1);
             }
 
-            Assert.AreEqual(oddRegionCount, pageCount / 2); // Must have written to all odd pages.
+            Assert.AreEqual(oddRegionCount, PageCount / 2); // Must have written to all odd pages.
 
             // Write to all pages.
 
-            _tracking.VirtualMemoryEvent(0, PageSize * pageCount, true);
+            _tracking.VirtualMemoryEvent(0, PageSize * PageCount, true);
 
             // Only the even regions should be reported for sequence number 1.
 
-            int evenRegionCount = ExpectQueryInOrder(handle, 0, PageSize * pageCount, (address) => (address / PageSize) % 2 == 0, 1);
+            int evenRegionCount = ExpectQueryInOrder(handle, 0, PageSize * PageCount, (address) => (address / PageSize) % 2 == 0, 1);
 
-            Assert.AreEqual(evenRegionCount, pageCount / 2); // Must have written to all even pages.
+            Assert.AreEqual(evenRegionCount, PageCount / 2); // Must have written to all even pages.
 
             oddRegionCount = 0;
 
-            handle.QueryModified(0, PageSize * pageCount, (address, range) => { oddRegionCount++; }, 1);
+            handle.QueryModified(0, PageSize * PageCount, (address, range) => { oddRegionCount++; }, 1);
 
             Assert.AreEqual(oddRegionCount, 0); // Sequence number has not changed, so found no dirty subregions.
 
             // With sequence number 2, all all pages should be reported as modified.
 
-            oddRegionCount = ExpectQueryInOrder(handle, 0, PageSize * pageCount, (address) => (address / PageSize) % 2 == 1, 2);
+            oddRegionCount = ExpectQueryInOrder(handle, 0, PageSize * PageCount, (address) => (address / PageSize) % 2 == 1, 2);
 
-            Assert.AreEqual(oddRegionCount, pageCount / 2); // Must have written to all odd pages.
+            Assert.AreEqual(oddRegionCount, PageCount / 2); // Must have written to all odd pages.
         }
 
         [Test]
@@ -203,8 +203,8 @@ namespace Ryujinx.Tests.Memory
             // Smart multi region handles dynamically change their tracking granularity based on QueryMemory calls.
             // This can save on reprotects on larger resources.
 
-            const int pageCount = 32;
-            IMultiRegionHandle handle = GetGranular(true, 0, PageSize * pageCount, PageSize);
+            const int PageCount = 32;
+            IMultiRegionHandle handle = GetGranular(true, 0, PageSize * PageCount, PageSize);
 
             // Query some large regions to prep the subdivision of the tracking region.
 
@@ -253,27 +253,27 @@ namespace Ryujinx.Tests.Memory
         public void DisposeMultiHandles([Values] bool smart)
         {
             // Create and initialize two overlapping Multi Region Handles, with PageSize granularity.
-            const int pageCount = 32;
-            const int overlapStart = 16;
+            const int PageCount = 32;
+            const int OverlapStart = 16;
 
             Assert.AreEqual(0, _tracking.GetRegionCount());
 
-            IMultiRegionHandle handleLow = GetGranular(smart, 0, PageSize * pageCount, PageSize);
-            PreparePages(handleLow, pageCount);
+            IMultiRegionHandle handleLow = GetGranular(smart, 0, PageSize * PageCount, PageSize);
+            PreparePages(handleLow, PageCount);
 
-            Assert.AreEqual(pageCount, _tracking.GetRegionCount());
+            Assert.AreEqual(PageCount, _tracking.GetRegionCount());
 
-            IMultiRegionHandle handleHigh = GetGranular(smart, PageSize * overlapStart, PageSize * pageCount, PageSize);
-            PreparePages(handleHigh, pageCount, PageSize * overlapStart);
+            IMultiRegionHandle handleHigh = GetGranular(smart, PageSize * OverlapStart, PageSize * PageCount, PageSize);
+            PreparePages(handleHigh, PageCount, PageSize * OverlapStart);
 
             // Combined pages (and assuming overlapStart <= pageCount) should be pageCount after overlapStart.
-            int totalPages = overlapStart + pageCount;
+            int totalPages = OverlapStart + PageCount;
 
             Assert.AreEqual(totalPages, _tracking.GetRegionCount());
 
             handleLow.Dispose(); // After disposing one, the pages for the other remain.
 
-            Assert.AreEqual(pageCount, _tracking.GetRegionCount());
+            Assert.AreEqual(PageCount, _tracking.GetRegionCount());
 
             handleHigh.Dispose(); // After disposing the other, there are no pages left.
 

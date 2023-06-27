@@ -359,7 +359,7 @@ namespace Ryujinx.Tests.Cpu
         [Test]
         public void MiscR()
         {
-            const ulong result = 5;
+            const ulong Result = 5;
 
             /*
             0x0000000000001000: MOV X0, #2
@@ -374,7 +374,7 @@ namespace Ryujinx.Tests.Cpu
             Opcode(0xD65F03C0);
             ExecuteOpcodes();
 
-            Assert.That(GetContext().GetX(0), Is.EqualTo(result));
+            Assert.That(GetContext().GetX(0), Is.EqualTo(Result));
 
             Reset();
 
@@ -391,7 +391,7 @@ namespace Ryujinx.Tests.Cpu
             Opcode(0xD65F03C0);
             ExecuteOpcodes();
 
-            Assert.That(GetContext().GetX(0), Is.EqualTo(result));
+            Assert.That(GetContext().GetX(0), Is.EqualTo(Result));
         }
 
         [Explicit]

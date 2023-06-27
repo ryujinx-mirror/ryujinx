@@ -354,16 +354,16 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
 
         private ulong GetA8B8G8R8LayerSize(int width, int height, out int pitch, out int alignment)
         {
-            const int   defaultAlignment = 0x1000;
-            const ulong defaultSize      = 0x20000;
+            const int   DefaultAlignment = 0x1000;
+            const ulong DefaultSize      = 0x20000;
 
-            alignment = defaultAlignment;
+            alignment = DefaultAlignment;
             pitch     = BitUtils.AlignUp(BitUtils.DivRoundUp(width * 32, 8), 64);
 
             int   memorySize         = pitch * BitUtils.AlignUp(height, 64);
             ulong requiredMemorySize = (ulong)BitUtils.AlignUp(memorySize, alignment);
 
-            return (requiredMemorySize + defaultSize - 1) / defaultSize * defaultSize;
+            return (requiredMemorySize + DefaultSize - 1) / DefaultSize * DefaultSize;
         }
 
         [CommandCmif(2450)]

@@ -389,12 +389,12 @@ namespace Ryujinx.Ui.Widgets
 
                 using (destHandle)
                 {
-                    const int maxBufferSize = 1024 * 1024;
+                    const int MaxBufferSize = 1024 * 1024;
 
                     rc = fs.GetFileSize(out long fileSize, sourceHandle);
                     if (rc.IsFailure()) return rc;
 
-                    int bufferSize = (int)Math.Min(maxBufferSize, fileSize);
+                    int bufferSize = (int)Math.Min(MaxBufferSize, fileSize);
 
                     byte[] buffer = ArrayPool<byte>.Shared.Rent(bufferSize);
                     try

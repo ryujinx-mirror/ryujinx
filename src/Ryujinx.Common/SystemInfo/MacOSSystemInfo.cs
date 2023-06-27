@@ -44,10 +44,10 @@ namespace Ryujinx.Common.SystemInfo
                 return 0;
             }
 
-            const int flavor = 4; // HOST_VM_INFO64
+            const int Flavor = 4; // HOST_VM_INFO64
             uint count = (uint)(Marshal.SizeOf<VMStatistics64>() / sizeof(int)); // HOST_VM_INFO64_COUNT
             VMStatistics64 stats = new();
-            result = host_statistics64(port, flavor, ref stats, ref count);
+            result = host_statistics64(port, Flavor, ref stats, ref count);
 
             if (result != 0)
             {

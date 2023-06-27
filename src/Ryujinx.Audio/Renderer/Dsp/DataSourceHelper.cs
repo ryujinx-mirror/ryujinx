@@ -44,9 +44,9 @@ namespace Ryujinx.Audio.Renderer.Dsp
 
         public static void ProcessWaveBuffers(IVirtualMemoryManager memoryManager, Span<float> outputBuffer, ref WaveBufferInformation info, Span<WaveBuffer> wavebuffers, ref VoiceUpdateState voiceState, uint targetSampleRate, int sampleCount)
         {
-            const int tempBufferSize = 0x3F00;
+            const int TempBufferSize = 0x3F00;
 
-            Span<short> tempBuffer = stackalloc short[tempBufferSize];
+            Span<short> tempBuffer = stackalloc short[TempBufferSize];
 
             float sampleRateRatio = (float)info.SourceSampleRate / targetSampleRate * info.Pitch;
 
@@ -60,11 +60,11 @@ namespace Ryujinx.Audio.Renderer.Dsp
 
             int totalNeededSize = (int)MathF.Truncate(fraction + sampleRateRatio * sampleCount);
 
-            if (totalNeededSize + pitchMaxLength <= tempBufferSize && totalNeededSize >= 0)
+            if (totalNeededSize + pitchMaxLength <= TempBufferSize && totalNeededSize >= 0)
             {
                 int sourceSampleCountToProcess = sampleCount;
 
-                int maxSampleCountPerIteration = Math.Min((int)MathF.Truncate((tempBufferSize - fraction) / sampleRateRatio), sampleCount);
+                int maxSampleCountPerIteration = Math.Min((int)MathF.Truncate((TempBufferSize - fraction) / sampleRateRatio), sampleCount);
 
                 bool isStarving = false;
 

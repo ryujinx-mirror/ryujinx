@@ -201,11 +201,11 @@ namespace Ryujinx.Tests.Memory
 
             // This test should not throw or deadlock due to invalid state.
 
-            const int threadCount = 1;
-            const int handlesPerThread = 16;
+            const int ThreadCount = 1;
+            const int HandlesPerThread = 16;
             long finishedTime = 0;
 
-            RegionHandle[] handles = new RegionHandle[threadCount * handlesPerThread];
+            RegionHandle[] handles = new RegionHandle[ThreadCount * HandlesPerThread];
             Random globalRand = new();
 
             for (int i = 0; i < handles.Length; i++)
@@ -218,16 +218,16 @@ namespace Ryujinx.Tests.Memory
 
             // Dirty flag consumer threads
             int dirtyFlagReprotects = 0;
-            for (int i = 0; i < threadCount; i++)
+            for (int i = 0; i < ThreadCount; i++)
             {
                 int randSeed = i;
                 testThreads.Add(new Thread(() =>
                 {
-                    int handleBase = randSeed * handlesPerThread;
+                    int handleBase = randSeed * HandlesPerThread;
                     while (Stopwatch.GetTimestamp() < finishedTime)
                     {
                         Random random = new(randSeed);
-                        RegionHandle handle = handles[handleBase + random.Next(handlesPerThread)];
+                        RegionHandle handle = handles[handleBase + random.Next(HandlesPerThread)];
 
                         if (handle.Dirty)
                         {
@@ -240,16 +240,16 @@ namespace Ryujinx.Tests.Memory
 
             // Write trigger threads
             int writeTriggers = 0;
-            for (int i = 0; i < threadCount; i++)
+            for (int i = 0; i < ThreadCount; i++)
             {
                 int randSeed = i;
                 testThreads.Add(new Thread(() =>
                 {
                     Random random = new(randSeed);
-                    ulong handleBase = (ulong)(randSeed * handlesPerThread * PageSize);
+                    ulong handleBase = (ulong)(randSeed * HandlesPerThread * PageSize);
                     while (Stopwatch.GetTimestamp() < finishedTime)
                     {
-                        _tracking.VirtualMemoryEvent(handleBase + (ulong)random.Next(PageSize * handlesPerThread), PageSize / 2, true);
+                        _tracking.VirtualMemoryEvent(handleBase + (ulong)random.Next(PageSize * HandlesPerThread), PageSize / 2, true);
                         Interlocked.Increment(ref writeTriggers);
                     }
                 }));
@@ -257,12 +257,12 @@ namespace Ryujinx.Tests.Memory
 
             // Handle create/delete threads
             int handleLifecycles = 0;
-            for (int i = 0; i < threadCount; i++)
+            for (int i = 0; i < ThreadCount; i++)
             {
                 int randSeed = i;
                 testThreads.Add(new Thread(() =>
                 {
-                    int maxAddress = threadCount * handlesPerThread * PageSize;
+                    int maxAddress = ThreadCount * HandlesPerThread * PageSize;
                     Random random = new(randSeed + 512);
                     while (Stopwatch.GetTimestamp() < finishedTime)
                     {
@@ -315,17 +315,17 @@ namespace Ryujinx.Tests.Memory
                 });
             }
 
-            const int threadCount = 16;
-            const int iterationCount = 10000;
-            Thread[] signalThreads = new Thread[threadCount];
+            const int ThreadCount = 16;
+            const int IterationCount = 10000;
+            Thread[] signalThreads = new Thread[ThreadCount];
 
-            for (int i = 0; i < threadCount; i++)
+            for (int i = 0; i < ThreadCount; i++)
             {
                 int randSeed = i;
                 signalThreads[i] = new Thread(() =>
                 {
                     Random random = new(randSeed);
-                    for (int j = 0; j < iterationCount; j++)
+                    for (int j = 0; j < IterationCount; j++)
                     {
                         _tracking.VirtualMemoryEvent((ulong)random.Next(PageSize), 4, false);
                     }
@@ -333,14 +333,14 @@ namespace Ryujinx.Tests.Memory
                 });
             }
 
-            for (int i = 0; i < threadCount; i++)
+            for (int i = 0; i < ThreadCount; i++)
             {
                 signalThreads[i].Start();
             }
 
             while (signalThreadsDone != -1)
             {
-                if (signalThreadsDone == threadCount)
+                if (signalThreadsDone == ThreadCount)
                 {
                     signalThreadsDone = -1;
                 }

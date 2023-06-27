@@ -256,19 +256,19 @@ namespace Ryujinx.Audio.Renderer.Server.MemoryPool
 
             MemoryPoolUserState outputState;
 
-            const uint pageSize = 0x1000;
+            const uint PageSize = 0x1000;
 
             if (inputState != MemoryPoolUserState.RequestAttach && inputState != MemoryPoolUserState.RequestDetach)
             {
                 return UpdateResult.Success;
             }
 
-            if (inParameter.CpuAddress == 0 || (inParameter.CpuAddress % pageSize) != 0)
+            if (inParameter.CpuAddress == 0 || (inParameter.CpuAddress % PageSize) != 0)
             {
                 return UpdateResult.InvalidParameter;
             }
 
-            if (inParameter.Size == 0 || (inParameter.Size % pageSize) != 0)
+            if (inParameter.Size == 0 || (inParameter.Size % PageSize) != 0)
             {
                 return UpdateResult.InvalidParameter;
             }

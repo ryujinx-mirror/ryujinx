@@ -43,7 +43,7 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
 
         public void Process(CommandList context)
         {
-            const int targetChannelCount = 2;
+            const int TargetChannelCount = 2;
 
             ulong currentOffset = CurrentOffset;
 
@@ -59,10 +59,10 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
 
                         for (int y = 0; y < context.SampleCount; y++)
                         {
-                            context.MemoryManager.Write(targetOffset + (ulong)y * targetChannelCount, PcmHelper.Saturate(inputBuffer[y]));
+                            context.MemoryManager.Write(targetOffset + (ulong)y * TargetChannelCount, PcmHelper.Saturate(inputBuffer[y]));
                         }
 
-                        currentOffset += context.SampleCount * targetChannelCount;
+                        currentOffset += context.SampleCount * TargetChannelCount;
 
                         if (currentOffset >= CircularBufferSize)
                         {

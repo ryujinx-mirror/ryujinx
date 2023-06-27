@@ -354,8 +354,8 @@ namespace Ryujinx.HLE.FileSystem
             if (info.SpaceId != SaveDataSpaceId.User && info.SpaceId != SaveDataSpaceId.System)
                 return Result.Success;
 
-            const string mountName = "SaveDir";
-            var mountNameU8 = mountName.ToU8Span();
+            const string MountName = "SaveDir";
+            var mountNameU8 = MountName.ToU8Span();
 
             BisPartitionId partitionId = info.SpaceId switch
             {
@@ -368,7 +368,7 @@ namespace Ryujinx.HLE.FileSystem
             if (rc.IsFailure()) return rc;
             try
             {
-                var path = $"{mountName}:/save/{info.SaveDataId:x16}".ToU8Span();
+                var path = $"{MountName}:/save/{info.SaveDataId:x16}".ToU8Span();
 
                 rc = hos.Fs.GetEntryType(out _, path);
 

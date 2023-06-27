@@ -110,9 +110,9 @@ namespace Ryujinx.Tests.Cpu
         public void Dup_S_B([ValueSource(nameof(_8B_))] ulong a,
                             [Values(0u, 15u)] uint index)
         {
-            const int size = 0;
+            const int TestSize = 0;
 
-            uint imm5 = (index << (size + 1) | 1u << size) & 0x1Fu;
+            uint imm5 = (index << (TestSize + 1) | 1u << TestSize) & 0x1Fu;
 
             uint opcode = 0x5E000420; // RESERVED
             opcode |= (imm5 << 16);
@@ -130,9 +130,9 @@ namespace Ryujinx.Tests.Cpu
         public void Dup_S_H([ValueSource(nameof(_4H_))] ulong a,
                             [Values(0u, 7u)] uint index)
         {
-            const int size = 1;
+            const int TestSize = 1;
 
-            uint imm5 = (index << (size + 1) | 1u << size) & 0x1Fu;
+            uint imm5 = (index << (TestSize + 1) | 1u << TestSize) & 0x1Fu;
 
             uint opcode = 0x5E000420; // RESERVED
             opcode |= (imm5 << 16);
@@ -150,9 +150,9 @@ namespace Ryujinx.Tests.Cpu
         public void Dup_S_S([ValueSource(nameof(_2S_))] ulong a,
                             [Values(0u, 1u, 2u, 3u)] uint index)
         {
-            const int size = 2;
+            const int TestSize = 2;
 
-            uint imm5 = (index << (size + 1) | 1u << size) & 0x1Fu;
+            uint imm5 = (index << (TestSize + 1) | 1u << TestSize) & 0x1Fu;
 
             uint opcode = 0x5E000420; // RESERVED
             opcode |= (imm5 << 16);
@@ -170,9 +170,9 @@ namespace Ryujinx.Tests.Cpu
         public void Dup_S_D([ValueSource(nameof(_1D_))] ulong a,
                             [Values(0u, 1u)] uint index)
         {
-            const int size = 3;
+            const int TestSize = 3;
 
-            uint imm5 = (index << (size + 1) | 1u << size) & 0x1Fu;
+            uint imm5 = (index << (TestSize + 1) | 1u << TestSize) & 0x1Fu;
 
             uint opcode = 0x5E000420; // RESERVED
             opcode |= (imm5 << 16);
@@ -194,9 +194,9 @@ namespace Ryujinx.Tests.Cpu
                                  [Values(0u, 15u)] uint index,
                                  [Values(0b0u, 0b1u)] uint q) // <8B, 16B>
         {
-            const int size = 0;
+            const int TestSize = 0;
 
-            uint imm5 = (index << (size + 1) | 1u << size) & 0x1Fu;
+            uint imm5 = (index << (TestSize + 1) | 1u << TestSize) & 0x1Fu;
 
             uint opcode = 0x0E000400; // RESERVED
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
@@ -219,9 +219,9 @@ namespace Ryujinx.Tests.Cpu
                                 [Values(0u, 7u)] uint index,
                                 [Values(0b0u, 0b1u)] uint q) // <4H, 8H>
         {
-            const int size = 1;
+            const int TestSize = 1;
 
-            uint imm5 = (index << (size + 1) | 1u << size) & 0x1Fu;
+            uint imm5 = (index << (TestSize + 1) | 1u << TestSize) & 0x1Fu;
 
             uint opcode = 0x0E000400; // RESERVED
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
@@ -244,9 +244,9 @@ namespace Ryujinx.Tests.Cpu
                                 [Values(0u, 1u, 2u, 3u)] uint index,
                                 [Values(0b0u, 0b1u)] uint q) // <2S, 4S>
         {
-            const int size = 2;
+            const int TestSize = 2;
 
-            uint imm5 = (index << (size + 1) | 1u << size) & 0x1Fu;
+            uint imm5 = (index << (TestSize + 1) | 1u << TestSize) & 0x1Fu;
 
             uint opcode = 0x0E000400; // RESERVED
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
@@ -269,9 +269,9 @@ namespace Ryujinx.Tests.Cpu
                              [Values(0u, 1u)] uint index,
                              [Values(0b1u)] uint q) // <2D>
         {
-            const int size = 3;
+            const int TestSize = 3;
 
-            uint imm5 = (index << (size + 1) | 1u << size) & 0x1Fu;
+            uint imm5 = (index << (TestSize + 1) | 1u << TestSize) & 0x1Fu;
 
             uint opcode = 0x0E000400; // RESERVED
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
@@ -293,9 +293,9 @@ namespace Ryujinx.Tests.Cpu
                               [ValueSource(nameof(_W_))] uint wn,
                               [Values(0u, 15u)] uint index)
         {
-            const int size = 0;
+            const int TestSize = 0;
 
-            uint imm5 = (index << (size + 1) | 1u << size) & 0x1Fu;
+            uint imm5 = (index << (TestSize + 1) | 1u << TestSize) & 0x1Fu;
 
             uint opcode = 0x4E001C00; // RESERVED
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
@@ -316,9 +316,9 @@ namespace Ryujinx.Tests.Cpu
                               [ValueSource(nameof(_W_))] uint wn,
                               [Values(0u, 7u)] uint index)
         {
-            const int size = 1;
+            const int TestSize = 1;
 
-            uint imm5 = (index << (size + 1) | 1u << size) & 0x1Fu;
+            uint imm5 = (index << (TestSize + 1) | 1u << TestSize) & 0x1Fu;
 
             uint opcode = 0x4E001C00; // RESERVED
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
@@ -339,9 +339,9 @@ namespace Ryujinx.Tests.Cpu
                               [ValueSource(nameof(_W_))] uint wn,
                               [Values(0u, 1u, 2u, 3u)] uint index)
         {
-            const int size = 2;
+            const int TestSize = 2;
 
-            uint imm5 = (index << (size + 1) | 1u << size) & 0x1Fu;
+            uint imm5 = (index << (TestSize + 1) | 1u << TestSize) & 0x1Fu;
 
             uint opcode = 0x4E001C00; // RESERVED
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
@@ -362,9 +362,9 @@ namespace Ryujinx.Tests.Cpu
                               [ValueSource(nameof(_X_))] ulong xn,
                               [Values(0u, 1u)] uint index)
         {
-            const int size = 3;
+            const int TestSize = 3;
 
-            uint imm5 = (index << (size + 1) | 1u << size) & 0x1Fu;
+            uint imm5 = (index << (TestSize + 1) | 1u << TestSize) & 0x1Fu;
 
             uint opcode = 0x4E001C00; // RESERVED
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
@@ -386,10 +386,10 @@ namespace Ryujinx.Tests.Cpu
                              [Values(0u, 15u)] uint dstIndex,
                              [Values(0u, 15u)] uint srcIndex)
         {
-            const int size = 0;
+            const int TestSize = 0;
 
-            uint imm5 = (dstIndex << (size + 1) | 1u << size) & 0x1Fu;
-            uint imm4 = (srcIndex << size) & 0xFu;
+            uint imm5 = (dstIndex << (TestSize + 1) | 1u << TestSize) & 0x1Fu;
+            uint imm4 = (srcIndex << TestSize) & 0xFu;
 
             uint opcode = 0x6E000400; // RESERVED
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
@@ -412,10 +412,10 @@ namespace Ryujinx.Tests.Cpu
                              [Values(0u, 7u)] uint dstIndex,
                              [Values(0u, 7u)] uint srcIndex)
         {
-            const int size = 1;
+            const int TestSize = 1;
 
-            uint imm5 = (dstIndex << (size + 1) | 1u << size) & 0x1Fu;
-            uint imm4 = (srcIndex << size) & 0xFu;
+            uint imm5 = (dstIndex << (TestSize + 1) | 1u << TestSize) & 0x1Fu;
+            uint imm4 = (srcIndex << TestSize) & 0xFu;
 
             uint opcode = 0x6E000400; // RESERVED
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
@@ -438,10 +438,10 @@ namespace Ryujinx.Tests.Cpu
                              [Values(0u, 1u, 2u, 3u)] uint dstIndex,
                              [Values(0u, 1u, 2u, 3u)] uint srcIndex)
         {
-            const int size = 2;
+            const int TestSize = 2;
 
-            uint imm5 = (dstIndex << (size + 1) | 1u << size) & 0x1Fu;
-            uint imm4 = (srcIndex << size) & 0xFu;
+            uint imm5 = (dstIndex << (TestSize + 1) | 1u << TestSize) & 0x1Fu;
+            uint imm4 = (srcIndex << TestSize) & 0xFu;
 
             uint opcode = 0x6E000400; // RESERVED
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
@@ -464,10 +464,10 @@ namespace Ryujinx.Tests.Cpu
                              [Values(0u, 1u)] uint dstIndex,
                              [Values(0u, 1u)] uint srcIndex)
         {
-            const int size = 3;
+            const int TestSize = 3;
 
-            uint imm5 = (dstIndex << (size + 1) | 1u << size) & 0x1Fu;
-            uint imm4 = (srcIndex << size) & 0xFu;
+            uint imm5 = (dstIndex << (TestSize + 1) | 1u << TestSize) & 0x1Fu;
+            uint imm4 = (srcIndex << TestSize) & 0xFu;
 
             uint opcode = 0x6E000400; // RESERVED
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
@@ -488,9 +488,9 @@ namespace Ryujinx.Tests.Cpu
                               [ValueSource(nameof(_8B_))] ulong a,
                               [Values(0u, 15u)] uint index)
         {
-            const int size = 0;
+            const int TestSize = 0;
 
-            uint imm5 = (index << (size + 1) | 1u << size) & 0x1Fu;
+            uint imm5 = (index << (TestSize + 1) | 1u << TestSize) & 0x1Fu;
 
             uint opcode = 0x0E002C00; // RESERVED
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
@@ -511,9 +511,9 @@ namespace Ryujinx.Tests.Cpu
                               [ValueSource(nameof(_4H_))] ulong a,
                               [Values(0u, 7u)] uint index)
         {
-            const int size = 1;
+            const int TestSize = 1;
 
-            uint imm5 = (index << (size + 1) | 1u << size) & 0x1Fu;
+            uint imm5 = (index << (TestSize + 1) | 1u << TestSize) & 0x1Fu;
 
             uint opcode = 0x0E002C00; // RESERVED
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
@@ -534,9 +534,9 @@ namespace Ryujinx.Tests.Cpu
                               [ValueSource(nameof(_8B_))] ulong a,
                               [Values(0u, 15u)] uint index)
         {
-            const int size = 0;
+            const int TestSize = 0;
 
-            uint imm5 = (index << (size + 1) | 1u << size) & 0x1Fu;
+            uint imm5 = (index << (TestSize + 1) | 1u << TestSize) & 0x1Fu;
 
             uint opcode = 0x4E002C00; // RESERVED
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
@@ -556,9 +556,9 @@ namespace Ryujinx.Tests.Cpu
                               [ValueSource(nameof(_4H_))] ulong a,
                               [Values(0u, 7u)] uint index)
         {
-            const int size = 1;
+            const int TestSize = 1;
 
-            uint imm5 = (index << (size + 1) | 1u << size) & 0x1Fu;
+            uint imm5 = (index << (TestSize + 1) | 1u << TestSize) & 0x1Fu;
 
             uint opcode = 0x4E002C00; // RESERVED
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
@@ -578,9 +578,9 @@ namespace Ryujinx.Tests.Cpu
                               [ValueSource(nameof(_2S_))] ulong a,
                               [Values(0u, 1u, 2u, 3u)] uint index)
         {
-            const int size = 2;
+            const int TestSize = 2;
 
-            uint imm5 = (index << (size + 1) | 1u << size) & 0x1Fu;
+            uint imm5 = (index << (TestSize + 1) | 1u << TestSize) & 0x1Fu;
 
             uint opcode = 0x4E002C00; // RESERVED
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
@@ -600,9 +600,9 @@ namespace Ryujinx.Tests.Cpu
                               [ValueSource(nameof(_8B_))] ulong a,
                               [Values(0u, 15u)] uint index)
         {
-            const int size = 0;
+            const int TestSize = 0;
 
-            uint imm5 = (index << (size + 1) | 1u << size) & 0x1Fu;
+            uint imm5 = (index << (TestSize + 1) | 1u << TestSize) & 0x1Fu;
 
             uint opcode = 0x0E003C00; // RESERVED
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
@@ -623,9 +623,9 @@ namespace Ryujinx.Tests.Cpu
                               [ValueSource(nameof(_4H_))] ulong a,
                               [Values(0u, 7u)] uint index)
         {
-            const int size = 1;
+            const int TestSize = 1;
 
-            uint imm5 = (index << (size + 1) | 1u << size) & 0x1Fu;
+            uint imm5 = (index << (TestSize + 1) | 1u << TestSize) & 0x1Fu;
 
             uint opcode = 0x0E003C00; // RESERVED
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
@@ -646,9 +646,9 @@ namespace Ryujinx.Tests.Cpu
                               [ValueSource(nameof(_2S_))] ulong a,
                               [Values(0u, 1u, 2u, 3u)] uint index)
         {
-            const int size = 2;
+            const int TestSize = 2;
 
-            uint imm5 = (index << (size + 1) | 1u << size) & 0x1Fu;
+            uint imm5 = (index << (TestSize + 1) | 1u << TestSize) & 0x1Fu;
 
             uint opcode = 0x0E003C00; // RESERVED
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
@@ -669,9 +669,9 @@ namespace Ryujinx.Tests.Cpu
                               [ValueSource(nameof(_1D_))] ulong a,
                               [Values(0u, 1u)] uint index)
         {
-            const int size = 3;
+            const int TestSize = 3;
 
-            uint imm5 = (index << (size + 1) | 1u << size) & 0x1Fu;
+            uint imm5 = (index << (TestSize + 1) | 1u << TestSize) & 0x1Fu;
 
             uint opcode = 0x4E003C00; // RESERVED
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);

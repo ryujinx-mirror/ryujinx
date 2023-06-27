@@ -14,17 +14,17 @@ namespace Ryujinx.Tests.Cpu
 #region "Helper methods"
         private static ulong GenIdxsForTbls(int regs)
         {
-            const byte idxInRngMin = 0;
+            const byte IdxInRngMin = 0;
             byte idxInRngMax  = (byte)((16 * regs) - 1);
             byte idxOutRngMin = (byte) (16 * regs);
-            const byte idxOutRngMax = 255;
+            const byte IdxOutRngMax = 255;
 
             ulong idxs = 0ul;
 
             for (int cnt = 1; cnt <= 8; cnt++)
             {
-                ulong idxInRng  = TestContext.CurrentContext.Random.NextByte(idxInRngMin,  idxInRngMax);
-                ulong idxOutRng = TestContext.CurrentContext.Random.NextByte(idxOutRngMin, idxOutRngMax);
+                ulong idxInRng  = TestContext.CurrentContext.Random.NextByte(IdxInRngMin,  idxInRngMax);
+                ulong idxOutRng = TestContext.CurrentContext.Random.NextByte(idxOutRngMin, IdxOutRngMax);
 
                 ulong idx = TestContext.CurrentContext.Random.NextBool() ? idxInRng : idxOutRng;
 

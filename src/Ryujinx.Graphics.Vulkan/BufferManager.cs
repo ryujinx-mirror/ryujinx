@@ -4,8 +4,8 @@ using Silk.NET.Vulkan;
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using VkFormat = Silk.NET.Vulkan.Format;
 using VkBuffer = Silk.NET.Vulkan.Buffer;
+using VkFormat = Silk.NET.Vulkan.Format;
 
 namespace Ryujinx.Graphics.Vulkan
 {

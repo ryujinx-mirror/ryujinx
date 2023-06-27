@@ -304,9 +304,9 @@ namespace ARMeilleure.Decoders
                 }
                 else if (opCode is IOpCode32MemMult opMemMult)
                 {
-                    const int pcMask = 1 << RegisterAlias.Aarch32Pc;
+                    const int PCMask = 1 << RegisterAlias.Aarch32Pc;
 
-                    rt = (opMemMult.RegisterMask & pcMask) != 0 ? RegisterAlias.Aarch32Pc : 0;
+                    rt = (opMemMult.RegisterMask & PCMask) != 0 ? RegisterAlias.Aarch32Pc : 0;
                     rn = opMemMult.Rn;
                     wBack = opMemMult.PostOffset != 0;
                     isLoad = opMemMult.IsLoad;

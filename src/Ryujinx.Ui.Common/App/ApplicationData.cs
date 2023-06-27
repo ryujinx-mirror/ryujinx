@@ -1,9 +1,9 @@
 ﻿using LibHac.Common;
-using LibHac.Ns;
 using LibHac.Fs;
 using LibHac.Fs.Fsa;
 using LibHac.FsSystem;
 using LibHac.Loader;
+using LibHac.Ns;
 using LibHac.Tools.Fs;
 using LibHac.Tools.FsSystem;
 using LibHac.Tools.FsSystem.NcaUtils;
@@ -146,9 +146,9 @@ namespace Ryujinx.Ui.App.Common
                 return string.Empty;
             }
 
-            const string mainExeFs = "main";
+            const string MainExeFs = "main";
 
-            if (!codeFs.FileExists($"/{mainExeFs}"))
+            if (!codeFs.FileExists($"/{MainExeFs}"))
             {
                 Logger.Error?.Print(LogClass.Loader, "No main binary ExeFS found in ExeFS");
 
@@ -157,11 +157,11 @@ namespace Ryujinx.Ui.App.Common
 
             using var nsoFile = new UniqueRef<IFile>();
 
-            codeFs.OpenFile(ref nsoFile.Ref, $"/{mainExeFs}".ToU8Span(), OpenMode.Read).ThrowIfFailure();
+            codeFs.OpenFile(ref nsoFile.Ref, $"/{MainExeFs}".ToU8Span(), OpenMode.Read).ThrowIfFailure();
 
             NsoReader reader = new NsoReader();
             reader.Initialize(nsoFile.Release().AsStorage().AsFile(OpenMode.Read)).ThrowIfFailure();
-            
+
             return BitConverter.ToString(reader.Header.ModuleId.ItemsRo.ToArray()).Replace("-", "").ToUpper()[..16];
         }
     }

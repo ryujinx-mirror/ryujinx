@@ -40,9 +40,9 @@ namespace Ryujinx.Ava.UI.Models
 
         private string GetSizeString()
         {
-            const int scale = 1024;
+            const int Scale = 1024;
             string[] orders = { "GiB", "MiB", "KiB" };
-            long max = (long)Math.Pow(scale, orders.Length);
+            long max = (long)Math.Pow(Scale, orders.Length);
 
             foreach (string order in orders)
             {
@@ -51,7 +51,7 @@ namespace Ryujinx.Ava.UI.Models
                     return $"{decimal.Divide(Size, max):##.##} {order}";
                 }
 
-                max /= scale;
+                max /= Scale;
             }
 
             return "0 KiB";

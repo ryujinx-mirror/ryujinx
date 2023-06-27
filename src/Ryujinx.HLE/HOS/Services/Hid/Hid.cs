@@ -83,18 +83,18 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
         public ControllerKeys UpdateStickButtons(JoystickPosition leftStick, JoystickPosition rightStick)
         {
-            const int stickButtonThreshold = short.MaxValue / 2;
+            const int StickButtonThreshold = short.MaxValue / 2;
             ControllerKeys result = 0;
 
-            result |= (leftStick.Dx < -stickButtonThreshold) ? ControllerKeys.LStickLeft  : result;
-            result |= (leftStick.Dx > stickButtonThreshold)  ? ControllerKeys.LStickRight : result;
-            result |= (leftStick.Dy < -stickButtonThreshold) ? ControllerKeys.LStickDown  : result;
-            result |= (leftStick.Dy > stickButtonThreshold)  ? ControllerKeys.LStickUp    : result;
+            result |= (leftStick.Dx < -StickButtonThreshold) ? ControllerKeys.LStickLeft  : result;
+            result |= (leftStick.Dx > StickButtonThreshold)  ? ControllerKeys.LStickRight : result;
+            result |= (leftStick.Dy < -StickButtonThreshold) ? ControllerKeys.LStickDown  : result;
+            result |= (leftStick.Dy > StickButtonThreshold)  ? ControllerKeys.LStickUp    : result;
 
-            result |= (rightStick.Dx < -stickButtonThreshold) ? ControllerKeys.RStickLeft  : result;
-            result |= (rightStick.Dx > stickButtonThreshold)  ? ControllerKeys.RStickRight : result;
-            result |= (rightStick.Dy < -stickButtonThreshold) ? ControllerKeys.RStickDown  : result;
-            result |= (rightStick.Dy > stickButtonThreshold)  ? ControllerKeys.RStickUp    : result;
+            result |= (rightStick.Dx < -StickButtonThreshold) ? ControllerKeys.RStickLeft  : result;
+            result |= (rightStick.Dx > StickButtonThreshold)  ? ControllerKeys.RStickRight : result;
+            result |= (rightStick.Dy < -StickButtonThreshold) ? ControllerKeys.RStickDown  : result;
+            result |= (rightStick.Dy > StickButtonThreshold)  ? ControllerKeys.RStickUp    : result;
 
             return result;
         }

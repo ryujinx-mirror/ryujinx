@@ -60,7 +60,7 @@ namespace Ryujinx.Audio.Renderer.Server
 
         public uint Estimate(MixRampGroupedCommand command)
         {
-            const float costPerSample = 7.245f;
+            const float CostPerSample = 7.245f;
 
             Debug.Assert(_sampleCount == 160 || _sampleCount == 240);
 
@@ -74,7 +74,7 @@ namespace Ryujinx.Audio.Renderer.Server
                 }
             }
 
-            return (uint)(_sampleCount * costPerSample * volumeCount);
+            return (uint)(_sampleCount * CostPerSample * volumeCount);
         }
 
         public uint Estimate(MixRampCommand command)

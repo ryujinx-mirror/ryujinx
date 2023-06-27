@@ -29,10 +29,10 @@ namespace Ryujinx.Common.SystemInterop
         [SupportedOSPlatform("macos")]
         private void RegisterPosix()
         {
-            const int stdErrFileno = 2;
+            const int StdErrFileno = 2;
 
             (int readFd, int writeFd) = MakePipe();
-            dup2(writeFd, stdErrFileno);
+            dup2(writeFd, StdErrFileno);
 
             _pipeReader = CreateFileDescriptorStream(readFd);
             _pipeWriter = CreateFileDescriptorStream(writeFd);

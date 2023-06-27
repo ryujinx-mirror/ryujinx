@@ -1,8 +1,8 @@
 ﻿#define SimdMemory32
 
 using ARMeilleure.State;
-using Ryujinx.Memory;
 using NUnit.Framework;
+using Ryujinx.Memory;
 using System;
 
 namespace Ryujinx.Tests.Cpu

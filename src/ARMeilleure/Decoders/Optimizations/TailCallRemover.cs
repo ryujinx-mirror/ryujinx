@@ -17,7 +17,7 @@ namespace ARMeilleure.Decoders.Optimizations
                 throw new InvalidOperationException("Function entry point is not contained in a block.");
             }
 
-            const ulong allowance = 4;
+            const ulong Allowance = 4;
 
             Block entryBlock = blocks[entryBlockId];
 
@@ -31,7 +31,7 @@ namespace ARMeilleure.Decoders.Optimizations
             {
                 Block block = blocks[i];
 
-                if (endBlock.EndAddress < block.Address - allowance)
+                if (endBlock.EndAddress < block.Address - Allowance)
                 {
                     break; // End of contiguous function.
                 }
@@ -44,7 +44,7 @@ namespace ARMeilleure.Decoders.Optimizations
             {
                 Block block = blocks[i];
 
-                if (startBlock.Address > block.EndAddress + allowance)
+                if (startBlock.Address > block.EndAddress + Allowance)
                 {
                     break; // End of contiguous function.
                 }

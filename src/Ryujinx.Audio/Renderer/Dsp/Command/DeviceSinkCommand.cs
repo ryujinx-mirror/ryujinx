@@ -65,7 +65,7 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
                 int channelCount = (int)device.GetChannelCount();
                 uint bufferCount = Math.Min(device.GetChannelCount(), InputCount);
 
-                const int sampleCount = Constants.TargetSampleCount;
+                const int SampleCount = Constants.TargetSampleCount;
 
                 uint inputCount;
 
@@ -79,13 +79,13 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
                     inputCount = bufferCount;
                 }
 
-                short[] outputBuffer = new short[inputCount * sampleCount];
+                short[] outputBuffer = new short[inputCount * SampleCount];
 
                 for (int i = 0; i < bufferCount; i++)
                 {
-                    ReadOnlySpan<float> inputBuffer = GetBuffer(InputBufferIndices[i], sampleCount);
+                    ReadOnlySpan<float> inputBuffer = GetBuffer(InputBufferIndices[i], SampleCount);
 
-                    for (int j = 0; j < sampleCount; j++)
+                    for (int j = 0; j < SampleCount; j++)
                     {
                         outputBuffer[i + j * channelCount] = PcmHelper.Saturate(inputBuffer[j]);
                     }

@@ -1299,17 +1299,17 @@ namespace ARMeilleure.Instructions
 
             Debug.Assert((op.Size & 1) == 0 && op.RegisterSize == RegisterSize.Simd128);
 
-            const int sm0 = 0 << 6 | 0 << 4 | 0 << 2 | 0 << 0;
-            const int sm1 = 1 << 6 | 1 << 4 | 1 << 2 | 1 << 0;
-            const int sm2 = 2 << 6 | 2 << 4 | 2 << 2 | 2 << 0;
-            const int sm3 = 3 << 6 | 3 << 4 | 3 << 2 | 3 << 0;
+            const int SM0 = 0 << 6 | 0 << 4 | 0 << 2 | 0 << 0;
+            const int SM1 = 1 << 6 | 1 << 4 | 1 << 2 | 1 << 0;
+            const int SM2 = 2 << 6 | 2 << 4 | 2 << 2 | 2 << 0;
+            const int SM3 = 3 << 6 | 3 << 4 | 3 << 2 | 3 << 0;
 
             Operand nCopy = context.Copy(GetVec(op.Rn));
 
-            Operand part0 = context.AddIntrinsic(Intrinsic.X86Shufps, nCopy, nCopy, Const(sm0));
-            Operand part1 = context.AddIntrinsic(Intrinsic.X86Shufps, nCopy, nCopy, Const(sm1));
-            Operand part2 = context.AddIntrinsic(Intrinsic.X86Shufps, nCopy, nCopy, Const(sm2));
-            Operand part3 = context.AddIntrinsic(Intrinsic.X86Shufps, nCopy, nCopy, Const(sm3));
+            Operand part0 = context.AddIntrinsic(Intrinsic.X86Shufps, nCopy, nCopy, Const(SM0));
+            Operand part1 = context.AddIntrinsic(Intrinsic.X86Shufps, nCopy, nCopy, Const(SM1));
+            Operand part2 = context.AddIntrinsic(Intrinsic.X86Shufps, nCopy, nCopy, Const(SM2));
+            Operand part3 = context.AddIntrinsic(Intrinsic.X86Shufps, nCopy, nCopy, Const(SM3));
 
             Operand res = emit(emit(part0, part1), emit(part2, part3));
 
@@ -1340,13 +1340,13 @@ namespace ARMeilleure.Instructions
 
             if ((op.Size & 1) == 0)
             {
-                const int sm0 = 2 << 6 | 2 << 4 | 2 << 2 | 0 << 0;
-                const int sm1 = 2 << 6 | 2 << 4 | 2 << 2 | 1 << 0;
+                const int SM0 = 2 << 6 | 2 << 4 | 2 << 2 | 0 << 0;
+                const int SM1 = 2 << 6 | 2 << 4 | 2 << 2 | 1 << 0;
 
                 Operand zeroN = context.VectorZeroUpper64(n);
 
-                op0 = context.AddIntrinsic(Intrinsic.X86Pshufd, zeroN, Const(sm0));
-                op1 = context.AddIntrinsic(Intrinsic.X86Pshufd, zeroN, Const(sm1));
+                op0 = context.AddIntrinsic(Intrinsic.X86Pshufd, zeroN, Const(SM0));
+                op1 = context.AddIntrinsic(Intrinsic.X86Pshufd, zeroN, Const(SM1));
             }
             else /* if ((op.Size & 1) == 1) */
             {
@@ -1412,11 +1412,11 @@ namespace ARMeilleure.Instructions
                 }
                 else /* if (op.RegisterSize == RegisterSize.Simd128) */
                 {
-                    const int sm0 = 2 << 6 | 0 << 4 | 2 << 2 | 0 << 0;
-                    const int sm1 = 3 << 6 | 1 << 4 | 3 << 2 | 1 << 0;
+                    const int SM0 = 2 << 6 | 0 << 4 | 2 << 2 | 0 << 0;
+                    const int SM1 = 3 << 6 | 1 << 4 | 3 << 2 | 1 << 0;
 
-                    Operand part0 = context.AddIntrinsic(Intrinsic.X86Shufps, nCopy, mCopy, Const(sm0));
-                    Operand part1 = context.AddIntrinsic(Intrinsic.X86Shufps, nCopy, mCopy, Const(sm1));
+                    Operand part0 = context.AddIntrinsic(Intrinsic.X86Shufps, nCopy, mCopy, Const(SM0));
+                    Operand part1 = context.AddIntrinsic(Intrinsic.X86Shufps, nCopy, mCopy, Const(SM1));
 
                     context.Copy(GetVec(op.Rd), emit(part0, part1));
                 }

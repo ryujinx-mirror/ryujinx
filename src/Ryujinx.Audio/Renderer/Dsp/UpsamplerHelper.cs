@@ -32,13 +32,13 @@ namespace Ryujinx.Audio.Renderer.Dsp
 
             float BlackmanWindow(float x)
             {
-                const float a = 0.18f;
-                const float a0 = 0.5f - 0.5f * a;
-                const float a1 = -0.5f;
-                const float a2 = 0.5f * a;
-                return a0 + a1 * MathF.Cos(2 * MathF.PI * x) + a2 * MathF.Cos(4 * MathF.PI * x);
+                const float A = 0.18f;
+                const float A0 = 0.5f - 0.5f * A;
+                const float A1 = -0.5f;
+                const float A2 = 0.5f * A;
+                return A0 + A1 * MathF.Cos(2 * MathF.PI * x) + A2 * MathF.Cos(4 * MathF.PI * x);
             }
-            
+
             Array20<float> result = new Array20<float>();
 
             for (int i = 0; i < FilterBankLength; i++)
@@ -112,7 +112,7 @@ namespace Ryujinx.Audio.Renderer.Dsp
             int inputBufferIndex = 0;
 
             switch (state.Scale)
-            { 
+            {
                 case 6.0f:
                     for (int i = 0; i < outputSampleCount; i++)
                     {

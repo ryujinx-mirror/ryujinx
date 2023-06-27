@@ -1296,11 +1296,11 @@ namespace ARMeilleure.CodeGen.X86
                 }
                 else
                 {
-                    const byte mask = 0b01_00_11_10;
+                    const byte Mask = 0b01_00_11_10;
 
-                    context.Assembler.Pshufd(src1, src1, mask);
+                    context.Assembler.Pshufd(src1, src1, Mask);
                     context.Assembler.Movq(dest, src1);
-                    context.Assembler.Pshufd(src1, src1, mask);
+                    context.Assembler.Pshufd(src1, src1, Mask);
                 }
             }
             else
@@ -1853,9 +1853,9 @@ namespace ARMeilleure.CodeGen.X86
             // that the OS will map all pages that we'll use. We do that by
             // doing a dummy read on those pages, forcing a page fault and
             // the OS to map them. If they are already mapped, nothing happens.
-            const int pageMask = PageSize - 1;
+            const int PageMask = PageSize - 1;
 
-            size = (size + pageMask) & ~pageMask;
+            size = (size + PageMask) & ~PageMask;
 
             Operand rsp = Register(X86Register.Rsp);
             Operand temp = Register(CallingConvention.GetIntReturnRegister());

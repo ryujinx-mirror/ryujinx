@@ -134,9 +134,9 @@ namespace Ryujinx.HLE.HOS.Services.Sdb.Pl
 
         private void WriteMagicAndSize(ulong offset, int size)
         {
-            const int key = 0x49621806;
+            const int Key = 0x49621806;
 
-            int encryptedSize = BinaryPrimitives.ReverseEndianness(size ^ key);
+            int encryptedSize = BinaryPrimitives.ReverseEndianness(size ^ Key);
 
             _storage.GetRef<int>(offset + 0) = (int)BFTTFMagic;
             _storage.GetRef<int>(offset + 4) = encryptedSize;

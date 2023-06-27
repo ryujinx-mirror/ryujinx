@@ -175,10 +175,10 @@ namespace ARMeilleure.Instructions
 
         public static ushort FPRoundCv(double real, ExecutionContext context)
         {
-            const int minimumExp = -14;
+            const int MinimumExp = -14;
 
-            const int e = 5;
-            const int f = 10;
+            const int E = 5;
+            const int F = 10;
 
             bool sign;
             double mantissa;
@@ -208,15 +208,15 @@ namespace ARMeilleure.Instructions
                 exponent++;
             }
 
-            uint biasedExp = (uint)Math.Max(exponent - minimumExp + 1, 0);
+            uint biasedExp = (uint)Math.Max(exponent - MinimumExp + 1, 0);
 
             if (biasedExp == 0u)
             {
-                mantissa /= Math.Pow(2d, minimumExp - exponent);
+                mantissa /= Math.Pow(2d, MinimumExp - exponent);
             }
 
-            uint intMant = (uint)Math.Floor(mantissa * Math.Pow(2d, f));
-            double error = mantissa * Math.Pow(2d, f) - (double)intMant;
+            uint intMant = (uint)Math.Floor(mantissa * Math.Pow(2d, F));
+            double error = mantissa * Math.Pow(2d, F) - (double)intMant;
 
             if (biasedExp == 0u && (error != 0d || (context.Fpcr & FPCR.Ufe) != 0))
             {
@@ -256,12 +256,12 @@ namespace ARMeilleure.Instructions
             {
                 intMant++;
 
-                if (intMant == 1u << f)
+                if (intMant == 1u << F)
                 {
                     biasedExp = 1u;
                 }
 
-                if (intMant == 1u << (f + 1))
+                if (intMant == 1u << (F + 1))
                 {
                     biasedExp++;
                     intMant >>= 1;
@@ -272,7 +272,7 @@ namespace ARMeilleure.Instructions
 
             if ((context.Fpcr & FPCR.Ahp) == 0)
             {
-                if (biasedExp >= (1u << e) - 1u)
+                if (biasedExp >= (1u << E) - 1u)
                 {
                     resultBits = overflowToInf ? FPInfinity(sign) : FPMaxNormal(sign);
 
@@ -287,7 +287,7 @@ namespace ARMeilleure.Instructions
             }
             else
             {
-                if (biasedExp >= 1u << e)
+                if (biasedExp >= 1u << E)
                 {
                     resultBits = (ushort)((sign ? 1u : 0u) << 15 | 0x7FFFu);
 
@@ -354,10 +354,10 @@ namespace ARMeilleure.Instructions
 
         private static float FPRoundCv(double real, ExecutionContext context)
         {
-            const int minimumExp = -126;
+            const int MinimumExp = -126;
 
-            const int e = 8;
-            const int f = 23;
+            const int E = 8;
+            const int F = 23;
 
             bool sign;
             double mantissa;
@@ -387,22 +387,22 @@ namespace ARMeilleure.Instructions
                 exponent++;
             }
 
-            if ((context.Fpcr & FPCR.Fz) != 0 && exponent < minimumExp)
+            if ((context.Fpcr & FPCR.Fz) != 0 && exponent < MinimumExp)
             {
                 context.Fpsr |= FPSR.Ufc;
 
                 return SoftFloat32.FPZero(sign);
             }
 
-            uint biasedExp = (uint)Math.Max(exponent - minimumExp + 1, 0);
+            uint biasedExp = (uint)Math.Max(exponent - MinimumExp + 1, 0);
 
             if (biasedExp == 0u)
             {
-                mantissa /= Math.Pow(2d, minimumExp - exponent);
+                mantissa /= Math.Pow(2d, MinimumExp - exponent);
             }
 
-            uint intMant = (uint)Math.Floor(mantissa * Math.Pow(2d, f));
-            double error = mantissa * Math.Pow(2d, f) - (double)intMant;
+            uint intMant = (uint)Math.Floor(mantissa * Math.Pow(2d, F));
+            double error = mantissa * Math.Pow(2d, F) - (double)intMant;
 
             if (biasedExp == 0u && (error != 0d || (context.Fpcr & FPCR.Ufe) != 0))
             {
@@ -442,12 +442,12 @@ namespace ARMeilleure.Instructions
             {
                 intMant++;
 
-                if (intMant == 1u << f)
+                if (intMant == 1u << F)
                 {
                     biasedExp = 1u;
                 }
 
-                if (intMant == 1u << (f + 1))
+                if (intMant == 1u << (F + 1))
                 {
                     biasedExp++;
                     intMant >>= 1;
@@ -456,7 +456,7 @@ namespace ARMeilleure.Instructions
 
             float result;
 
-            if (biasedExp >= (1u << e) - 1u)
+            if (biasedExp >= (1u << E) - 1u)
             {
                 result = overflowToInf ? SoftFloat32.FPInfinity(sign) : SoftFloat32.FPMaxNormal(sign);
 
@@ -529,10 +529,10 @@ namespace ARMeilleure.Instructions
 
         private static double FPRoundCv(double real, ExecutionContext context)
         {
-            const int minimumExp = -1022;
+            const int MinimumExp = -1022;
 
-            const int e = 11;
-            const int f = 52;
+            const int E = 11;
+            const int F = 52;
 
             bool sign;
             double mantissa;
@@ -562,22 +562,22 @@ namespace ARMeilleure.Instructions
                 exponent++;
             }
 
-            if ((context.Fpcr & FPCR.Fz) != 0 && exponent < minimumExp)
+            if ((context.Fpcr & FPCR.Fz) != 0 && exponent < MinimumExp)
             {
                 context.Fpsr |= FPSR.Ufc;
 
                 return SoftFloat64.FPZero(sign);
             }
 
-            uint biasedExp = (uint)Math.Max(exponent - minimumExp + 1, 0);
+            uint biasedExp = (uint)Math.Max(exponent - MinimumExp + 1, 0);
 
             if (biasedExp == 0u)
             {
-                mantissa /= Math.Pow(2d, minimumExp - exponent);
+                mantissa /= Math.Pow(2d, MinimumExp - exponent);
             }
 
-            ulong intMant = (ulong)Math.Floor(mantissa * Math.Pow(2d, f));
-            double error = mantissa * Math.Pow(2d, f) - (double)intMant;
+            ulong intMant = (ulong)Math.Floor(mantissa * Math.Pow(2d, F));
+            double error = mantissa * Math.Pow(2d, F) - (double)intMant;
 
             if (biasedExp == 0u && (error != 0d || (context.Fpcr & FPCR.Ufe) != 0))
             {
@@ -617,12 +617,12 @@ namespace ARMeilleure.Instructions
             {
                 intMant++;
 
-                if (intMant == 1ul << f)
+                if (intMant == 1ul << F)
                 {
                     biasedExp = 1u;
                 }
 
-                if (intMant == 1ul << (f + 1))
+                if (intMant == 1ul << (F + 1))
                 {
                     biasedExp++;
                     intMant >>= 1;
@@ -631,7 +631,7 @@ namespace ARMeilleure.Instructions
 
             double result;
 
-            if (biasedExp >= (1u << e) - 1u)
+            if (biasedExp >= (1u << E) - 1u)
             {
                 result = overflowToInf ? SoftFloat64.FPInfinity(sign) : SoftFloat64.FPMaxNormal(sign);
 

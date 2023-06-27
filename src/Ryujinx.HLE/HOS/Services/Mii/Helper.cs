@@ -8,7 +8,7 @@ namespace Ryujinx.HLE.HOS.Services.Mii
     {
         public static ushort CalculateCrc16(ReadOnlySpan<byte> data, int crc, bool reverseEndianess)
         {
-            const ushort poly = 0x1021;
+            const ushort Poly = 0x1021;
 
             for (int i = 0; i < data.Length; i++)
             {
@@ -20,7 +20,7 @@ namespace Ryujinx.HLE.HOS.Services.Mii
 
                     if ((crc & 0x10000) != 0)
                     {
-                        crc = (crc ^ poly) & 0xFFFF;
+                        crc = (crc ^ Poly) & 0xFFFF;
                     }
                 }
             }

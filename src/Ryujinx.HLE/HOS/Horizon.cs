@@ -332,13 +332,13 @@ namespace Ryujinx.HLE.HOS
 
             foreach (var service in services)
             {
-                const ProcessCreationFlags flags =
+                const ProcessCreationFlags Flags =
                     ProcessCreationFlags.EnableAslr |
                     ProcessCreationFlags.AddressSpace64Bit |
                     ProcessCreationFlags.Is64Bit |
                     ProcessCreationFlags.PoolPartitionSystem;
 
-                ProcessCreationInfo creationInfo = new ProcessCreationInfo("Service", 1, 0, 0x8000000, 1, flags, 0, 0);
+                ProcessCreationInfo creationInfo = new ProcessCreationInfo("Service", 1, 0, 0x8000000, 1, Flags, 0, 0);
 
                 uint[] defaultCapabilities = new uint[]
                 {

@@ -880,7 +880,7 @@ namespace ARMeilleure.Translation.PTC
 
         private void ReportProgress(object state)
         {
-            const int refreshRate = 50; // ms.
+            const int RefreshRate = 50; // ms.
 
             AutoResetEvent endEvent = (AutoResetEvent)state;
 
@@ -896,7 +896,7 @@ namespace ARMeilleure.Translation.PTC
                     count = newCount;
                 }
             }
-            while (!endEvent.WaitOne(refreshRate));
+            while (!endEvent.WaitOne(RefreshRate));
         }
 
         public static Hash128 ComputeHash(IMemoryManager memory, ulong address, ulong guestSize)

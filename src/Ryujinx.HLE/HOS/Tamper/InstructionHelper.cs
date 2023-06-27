@@ -96,14 +96,14 @@ namespace Ryujinx.HLE.HOS.Tamper
 
         public static byte[] ParseRawInstruction(string rawInstruction)
         {
-            const int wordSize = 2 * sizeof(uint);
+            const int WordSize = 2 * sizeof(uint);
 
             // Instructions are multi-word, with 32bit words. Split the raw instruction
             // and parse each word into individual nybbles of bits.
 
             var words = rawInstruction.Split((char[])null, StringSplitOptions.RemoveEmptyEntries);
 
-            byte[] instruction = new byte[wordSize * words.Length];
+            byte[] instruction = new byte[WordSize * words.Length];
 
             if (words.Length == 0)
             {
@@ -114,14 +114,14 @@ namespace Ryujinx.HLE.HOS.Tamper
             {
                 string word = words[wordIndex];
 
-                if (word.Length != wordSize)
+                if (word.Length != WordSize)
                 {
                     throw new TamperCompilationException($"Invalid word length for {word} in Atmosphere cheat");
                 }
 
-                for (int nybbleIndex = 0; nybbleIndex < wordSize; nybbleIndex++)
+                for (int nybbleIndex = 0; nybbleIndex < WordSize; nybbleIndex++)
                 {
-                    int index = wordIndex * wordSize + nybbleIndex;
+                    int index = wordIndex * WordSize + nybbleIndex;
 
                     instruction[index] = byte.Parse(word.AsSpan(nybbleIndex, 1), NumberStyles.HexNumber, CultureInfo.InvariantCulture);
                 }

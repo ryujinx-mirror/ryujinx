@@ -96,7 +96,7 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
 
         private unsafe void ProcessReverb3dGeneric(ref Reverb3dState state, ReadOnlySpan<IntPtr> outputBuffers, ReadOnlySpan<IntPtr> inputBuffers, uint sampleCount, ReadOnlySpan<int> outputEarlyIndicesTable, ReadOnlySpan<int> targetEarlyDelayLineIndicesTable, ReadOnlySpan<int> targetOutputFeedbackIndicesTable)
         {
-            const int delayLineSampleIndexOffset = 1;
+            const int DelayLineSampleIndexOffset = 1;
 
             bool isMono = Parameter.ChannelCount == 1;
             bool isSurround = Parameter.ChannelCount == 6;
@@ -111,14 +111,14 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
             {
                 outputValues.Fill(0);
 
-                float tapOut = state.PreDelayLine.TapUnsafe(state.ReflectionDelayTime, delayLineSampleIndexOffset);
+                float tapOut = state.PreDelayLine.TapUnsafe(state.ReflectionDelayTime, DelayLineSampleIndexOffset);
 
                 for (int i = 0; i < targetEarlyDelayLineIndicesTable.Length; i++)
                 {
                     int earlyDelayIndex = targetEarlyDelayLineIndicesTable[i];
                     int outputIndex = outputEarlyIndicesTable[earlyDelayIndex];
 
-                    float tempTapOut = state.PreDelayLine.TapUnsafe(state.EarlyDelayTime[earlyDelayIndex], delayLineSampleIndexOffset);
+                    float tempTapOut = state.PreDelayLine.TapUnsafe(state.EarlyDelayTime[earlyDelayIndex], DelayLineSampleIndexOffset);
 
                     outputValues[outputIndex] += tempTapOut * state.EarlyGain[earlyDelayIndex];
                 }
