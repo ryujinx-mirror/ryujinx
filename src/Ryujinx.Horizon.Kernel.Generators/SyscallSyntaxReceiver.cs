@@ -3,7 +3,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Ryujinx.Horizon.Generators.Kernel
+namespace Ryujinx.Horizon.Kernel.Generators
 {
     class SyscallSyntaxReceiver : ISyntaxReceiver
     {

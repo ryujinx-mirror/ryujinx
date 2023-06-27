@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
-namespace Ryujinx.Horizon.Generators.Kernel
+namespace Ryujinx.Horizon.Kernel.Generators
 {
     [Generator]
     class SyscallGenerator : ISourceGenerator
@@ -157,10 +157,10 @@ namespace Ryujinx.Horizon.Generators.Kernel
                                  GetCanonicalTypeName(context.Compilation, attribute) == TypeSvcAttribute)))
                 {
                     syscalls.AddRange(from attributeArg in attribute.ArgumentList.Arguments
-                        where attributeArg.Expression.Kind() == SyntaxKind.NumericLiteralExpression
-                        select (LiteralExpressionSyntax)attributeArg.Expression
-                        into numericLiteral
-                        select new SyscallIdAndName((int)numericLiteral.Token.Value, method.Identifier.Text));
+                                      where attributeArg.Expression.Kind() == SyntaxKind.NumericLiteralExpression
+                                      select (LiteralExpressionSyntax)attributeArg.Expression
+                                      into numericLiteral
+                                      select new SyscallIdAndName((int)numericLiteral.Token.Value, method.Identifier.Text));
                 }
             }
 
@@ -369,7 +369,7 @@ namespace Ryujinx.Horizon.Generators.Kernel
                 {
                     generator.AppendLine($"context.SetX({returnRegisterIndex++}, (ulong){ResultVariableName});");
                 }
-  
+
                 result = GetFormattedLogValue(ResultVariableName, canonicalReturnTypeName);
             }
             else

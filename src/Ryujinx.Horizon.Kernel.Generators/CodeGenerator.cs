@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace Ryujinx.Horizon.Generators
+namespace Ryujinx.Horizon.Kernel.Generators
 {
     class CodeGenerator
     {
