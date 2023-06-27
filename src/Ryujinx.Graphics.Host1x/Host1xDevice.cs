@@ -24,7 +24,7 @@ namespace Ryujinx.Graphics.Host1x
         private readonly SyncptIncrManager _syncptIncrMgr;
         private readonly AsyncWorkQueue<Command> _commandQueue;
 
-        private readonly Devices _devices = new Devices();
+        private readonly Devices _devices = new();
 
         public Host1xClass Class { get; }
 
