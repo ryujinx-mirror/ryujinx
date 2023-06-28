@@ -6,8 +6,8 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Types
 {
     internal struct Segmentation
     {
-        private static readonly int[] SegFeatureDataSigned = new int[] { 1, 1, 0, 0 };
-        private static readonly int[] SegFeatureDataMax = new int[] { QuantCommon.MaxQ, Vp9.LoopFilter.MaxLoopFilter, 3, 0 };
+        private static readonly int[] _segFeatureDataSigned = { 1, 1, 0, 0 };
+        private static readonly int[] _segFeatureDataMax = { QuantCommon.MaxQ, Vp9.LoopFilter.MaxLoopFilter, 3, 0 };
 
         public bool Enabled;
         public bool UpdateMap;
@@ -26,8 +26,8 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Types
 
         public void ClearAllSegFeatures()
         {
-            MemoryMarshal.CreateSpan(ref FeatureData[0][0], 8 * 4).Fill(0);
-            MemoryMarshal.CreateSpan(ref FeatureMask[0], 8).Fill(0);
+            MemoryMarshal.CreateSpan(ref FeatureData[0][0], 8 * 4).Clear();
+            MemoryMarshal.CreateSpan(ref FeatureMask[0], 8).Clear();
             AqAvOffset = 0;
         }
 
@@ -38,21 +38,21 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Types
 
         internal static int FeatureDataMax(SegLvlFeatures featureId)
         {
-            return SegFeatureDataMax[(int)featureId];
+            return _segFeatureDataMax[(int)featureId];
         }
 
         internal static int IsSegFeatureSigned(SegLvlFeatures featureId)
         {
-            return SegFeatureDataSigned[(int)featureId];
+            return _segFeatureDataSigned[(int)featureId];
         }
 
         internal void SetSegData(int segmentId, SegLvlFeatures featureId, int segData)
         {
-            Debug.Assert(segData <= SegFeatureDataMax[(int)featureId]);
+            Debug.Assert(segData <= _segFeatureDataMax[(int)featureId]);
             if (segData < 0)
             {
-                Debug.Assert(SegFeatureDataSigned[(int)featureId] != 0);
-                Debug.Assert(-segData <= SegFeatureDataMax[(int)featureId]);
+                Debug.Assert(_segFeatureDataSigned[(int)featureId] != 0);
+                Debug.Assert(-segData <= _segFeatureDataMax[(int)featureId]);
             }
 
             FeatureData[segmentId][(int)featureId] = (short)segData;

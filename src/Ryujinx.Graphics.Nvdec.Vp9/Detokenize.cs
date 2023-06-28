@@ -17,9 +17,9 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
 
         private static int GetCoefContext(ReadOnlySpan<short> neighbors, ReadOnlySpan<byte> tokenCache, int c)
         {
-            const int maxNeighbors = 2;
+            const int MaxNeighbors = 2;
 
-            return (1 + tokenCache[neighbors[maxNeighbors * c + 0]] + tokenCache[neighbors[maxNeighbors * c + 1]]) >> 1;
+            return (1 + tokenCache[neighbors[MaxNeighbors * c + 0]] + tokenCache[neighbors[MaxNeighbors * c + 1]]) >> 1;
         }
 
         private static int ReadCoeff(
@@ -57,13 +57,13 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
             int band, c = 0;
             ref Array6<Array6<Array3<byte>>> coefProbs = ref fc.CoefProbs[(int)txSize][(int)type][refr];
             Span<byte> tokenCache = stackalloc byte[32 * 32];
-            ReadOnlySpan<byte> bandTranslate = Luts.get_band_translate(txSize);
+            ReadOnlySpan<byte> bandTranslate = Luts.GetBandTranslate(txSize);
             int dqShift = (txSize == TxSize.Tx32x32) ? 1 : 0;
             int v;
             short dqv = dq[0];
             ReadOnlySpan<byte> cat6Prob = (xd.Bd == 12)
                 ? Luts.Vp9Cat6ProbHigh12
-                : (xd.Bd == 10) ? Luts.Vp9Cat6ProbHigh12.Slice(2) : Luts.Vp9Cat6Prob;
+                : (xd.Bd == 10) ? Luts.Vp9Cat6ProbHigh12[2..] : Luts.Vp9Cat6Prob;
             int cat6Bits = (xd.Bd == 12) ? 18 : (xd.Bd == 10) ? 16 : 14;
             // Keep value, range, and count as locals.  The compiler produces better
             // results with the locals than using r directly.
@@ -75,7 +75,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
             {
                 int val = -1;
                 band = bandTranslate[0];
-                bandTranslate = bandTranslate.Slice(1);
+                bandTranslate = bandTranslate[1..];
                 ref Array3<byte> prob = ref coefProbs[band][ctx];
                 if (!xd.Counts.IsNull)
                 {
@@ -107,11 +107,12 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
                         r.Value = value;
                         r.Range = range;
                         r.Count = count;
-                        return c;  // Zero tokens at the end (no eob token)
+
+                        return c; // Zero tokens at the end (no eob token)
                     }
                     ctx = GetCoefContext(nb, tokenCache, c);
                     band = bandTranslate[0];
-                    bandTranslate = bandTranslate.Slice(1);
+                    bandTranslate = bandTranslate[1..];
                     prob = ref coefProbs[band][ctx];
                 }
 
@@ -196,6 +197,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
             r.Value = value;
             r.Range = range;
             r.Count = count;
+
             return c;
         }
 
@@ -236,8 +238,8 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
             ref MacroBlockDPlane pd = ref xd.Plane[plane];
             ref Array2<short> dequant = ref pd.SegDequant[segId];
             int eob;
-            Span<sbyte> a = pd.AboveContext.AsSpan().Slice(x);
-            Span<sbyte> l = pd.LeftContext.AsSpan().Slice(y);
+            Span<sbyte> a = pd.AboveContext.AsSpan()[x..];
+            Span<sbyte> l = pd.LeftContext.AsSpan()[y..];
             int ctx;
             int ctxShiftA = 0;
             int ctxShiftL = 0;

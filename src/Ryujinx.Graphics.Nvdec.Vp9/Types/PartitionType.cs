@@ -7,6 +7,6 @@
         PartitionVert,
         PartitionSplit,
         PartitionTypes,
-        PartitionInvalid = PartitionTypes
+        PartitionInvalid = PartitionTypes,
     }
 }

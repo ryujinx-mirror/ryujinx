@@ -227,7 +227,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
         private static unsafe void D135Predictor(byte* dst, int stride, int bs, byte* above, byte* left)
         {
             int i;
-            byte* border = stackalloc byte[32 + 32 - 1];  // outer border from bottom-left to top-right
+            byte* border = stackalloc byte[32 + 32 - 1]; // outer border from bottom-left to top-right
 
             // Dst(dst, stride, bs, bs - 2)[0], i.e., border starting at bottom-left
             for (i = 0; i < bs - 2; ++i)
@@ -607,13 +607,13 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
             Dst(dst, stride, 1, 0) = Dst(dst, stride, 0, 2) = Avg2(b, c);
             Dst(dst, stride, 2, 0) = Dst(dst, stride, 1, 2) = Avg2(c, d);
             Dst(dst, stride, 3, 0) = Dst(dst, stride, 2, 2) = Avg2(d, e);
-            Dst(dst, stride, 3, 2) = Avg2(e, f);  // Differs from vp8
+            Dst(dst, stride, 3, 2) = Avg2(e, f); // Differs from vp8
 
             Dst(dst, stride, 0, 1) = Avg3(a, b, c);
             Dst(dst, stride, 1, 1) = Dst(dst, stride, 0, 3) = Avg3(b, c, d);
             Dst(dst, stride, 2, 1) = Dst(dst, stride, 1, 3) = Avg3(c, d, e);
             Dst(dst, stride, 3, 1) = Dst(dst, stride, 2, 3) = Avg3(d, e, f);
-            Dst(dst, stride, 3, 3) = Avg3(e, f, g);  // Differs from vp8
+            Dst(dst, stride, 3, 3) = Avg3(e, f, g); // Differs from vp8
         }
 
         public static unsafe void D63ePredictor4x4(byte* dst, int stride, byte* above, byte* left)
@@ -655,7 +655,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
             Dst(dst, stride, 3, 0) = Dst(dst, stride, 2, 1) = Dst(dst, stride, 1, 2) = Dst(dst, stride, 0, 3) = Avg3(d, e, f);
             Dst(dst, stride, 3, 1) = Dst(dst, stride, 2, 2) = Dst(dst, stride, 1, 3) = Avg3(e, f, g);
             Dst(dst, stride, 3, 2) = Dst(dst, stride, 2, 3) = Avg3(f, g, h);
-            Dst(dst, stride, 3, 3) = h;  // differs from vp8
+            Dst(dst, stride, 3, 3) = h; // differs from vp8
         }
 
         public static unsafe void D45ePredictor4x4(byte* dst, int stride, byte* above, byte* left)
@@ -935,7 +935,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
         private static unsafe void HighbdD135Predictor(ushort* dst, int stride, int bs, ushort* above, ushort* left, int bd)
         {
             int i;
-            ushort* border = stackalloc ushort[32 + 32 - 1];  // Outer border from bottom-left to top-right
+            ushort* border = stackalloc ushort[32 + 32 - 1]; // Outer border from bottom-left to top-right
 
             // Dst(dst, stride, bs, bs - 2)[0], i.e., border starting at bottom-left
             for (i = 0; i < bs - 2; ++i)
@@ -1281,13 +1281,13 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
             Dst(dst, stride, 1, 0) = Dst(dst, stride, 0, 2) = Avg2(b, c);
             Dst(dst, stride, 2, 0) = Dst(dst, stride, 1, 2) = Avg2(c, d);
             Dst(dst, stride, 3, 0) = Dst(dst, stride, 2, 2) = Avg2(d, e);
-            Dst(dst, stride, 3, 2) = Avg2(e, f);  // Differs from vp8
+            Dst(dst, stride, 3, 2) = Avg2(e, f); // Differs from vp8
 
             Dst(dst, stride, 0, 1) = Avg3(a, b, c);
             Dst(dst, stride, 1, 1) = Dst(dst, stride, 0, 3) = Avg3(b, c, d);
             Dst(dst, stride, 2, 1) = Dst(dst, stride, 1, 3) = Avg3(c, d, e);
             Dst(dst, stride, 3, 1) = Dst(dst, stride, 2, 3) = Avg3(d, e, f);
-            Dst(dst, stride, 3, 3) = Avg3(e, f, g);  // Differs from vp8
+            Dst(dst, stride, 3, 3) = Avg3(e, f, g); // Differs from vp8
         }
 
         public static unsafe void HighbdD45Predictor4x4(ushort* dst, int stride, ushort* above, ushort* left, int bd)
@@ -1306,7 +1306,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
             Dst(dst, stride, 3, 0) = Dst(dst, stride, 2, 1) = Dst(dst, stride, 1, 2) = Dst(dst, stride, 0, 3) = Avg3(d, e, f);
             Dst(dst, stride, 3, 1) = Dst(dst, stride, 2, 2) = Dst(dst, stride, 1, 3) = Avg3(e, f, g);
             Dst(dst, stride, 3, 2) = Dst(dst, stride, 2, 3) = Avg3(f, g, h);
-            Dst(dst, stride, 3, 3) = h;  // Differs from vp8
+            Dst(dst, stride, 3, 3) = h; // Differs from vp8
         }
 
         public static unsafe void HighbdD117Predictor4x4(ushort* dst, int stride, ushort* above, ushort* left, int bd)

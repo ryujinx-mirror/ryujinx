@@ -4,6 +4,6 @@
     {
         Y = 0,
         Uv = 1,
-        PlaneTypes
+        PlaneTypes,
     }
 }

@@ -84,16 +84,15 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
 
         private static Mv MiMvPredQ4(ref ModeInfo mi, int idx)
         {
-            Mv res = new Mv()
+            return new Mv
             {
                 Row = (short)RoundMvCompQ4(
                     mi.Bmi[0].Mv[idx].Row + mi.Bmi[1].Mv[idx].Row +
                     mi.Bmi[2].Mv[idx].Row + mi.Bmi[3].Mv[idx].Row),
                 Col = (short)RoundMvCompQ4(
                     mi.Bmi[0].Mv[idx].Col + mi.Bmi[1].Mv[idx].Col +
-                    mi.Bmi[2].Mv[idx].Col + mi.Bmi[3].Mv[idx].Col)
+                    mi.Bmi[2].Mv[idx].Col + mi.Bmi[3].Mv[idx].Col),
             };
-            return res;
         }
 
         private static int RoundMvCompQ2(int value)
@@ -103,16 +102,15 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
 
         private static Mv MiMvPredQ2(ref ModeInfo mi, int idx, int block0, int block1)
         {
-            Mv res = new Mv()
+            return new Mv
             {
                 Row = (short)RoundMvCompQ2(
                     mi.Bmi[block0].Mv[idx].Row +
                     mi.Bmi[block1].Mv[idx].Row),
                 Col = (short)RoundMvCompQ2(
                     mi.Bmi[block0].Mv[idx].Col +
-                    mi.Bmi[block1].Mv[idx].Col)
+                    mi.Bmi[block1].Mv[idx].Col),
             };
-            return res;
         }
 
         public static Mv ClampMvToUmvBorderSb(ref MacroBlockD xd, ref Mv srcMv, int bw, int bh, int ssX, int ssY)
@@ -124,10 +122,10 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
             int spelRight = spelLeft - SubpelShifts;
             int spelTop = (Constants.Vp9InterpExtend + bh) << SubpelBits;
             int spelBottom = spelTop - SubpelShifts;
-            Mv clampedMv = new Mv()
+            Mv clampedMv = new()
             {
                 Row = (short)(srcMv.Row * (1 << (1 - ssY))),
-                Col = (short)(srcMv.Col * (1 << (1 - ssX)))
+                Col = (short)(srcMv.Col * (1 << (1 - ssX))),
             };
 
             Debug.Assert(ssX <= 1);
@@ -145,14 +143,24 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
         public static Mv AverageSplitMvs(ref MacroBlockDPlane pd, ref ModeInfo mi, int refr, int block)
         {
             int ssIdx = ((pd.SubsamplingX > 0 ? 1 : 0) << 1) | (pd.SubsamplingY > 0 ? 1 : 0);
-            Mv res = new Mv();
+            Mv res = new();
             switch (ssIdx)
             {
-                case 0: res = mi.Bmi[block].Mv[refr]; break;
-                case 1: res = MiMvPredQ2(ref mi, refr, block, block + 2); break;
-                case 2: res = MiMvPredQ2(ref mi, refr, block, block + 1); break;
-                case 3: res = MiMvPredQ4(ref mi, refr); break;
-                default: Debug.Assert(ssIdx <= 3 && ssIdx >= 0); break;
+                case 0:
+                    res = mi.Bmi[block].Mv[refr];
+                    break;
+                case 1:
+                    res = MiMvPredQ2(ref mi, refr, block, block + 2);
+                    break;
+                case 2:
+                    res = MiMvPredQ2(ref mi, refr, block, block + 1);
+                    break;
+                case 3:
+                    res = MiMvPredQ4(ref mi, refr);
+                    break;
+                default:
+                    Debug.Assert(ssIdx <= 3 && ssIdx >= 0);
+                    break;
             }
             return res;
         }
@@ -161,6 +169,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
         {
             int x = !sf.IsNull ? sf.Value.ScaleValueX(xOffset) : xOffset;
             int y = !sf.IsNull ? sf.Value.ScaleValueY(yOffset) : yOffset;
+
             return y * stride + x;
         }
 

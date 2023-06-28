@@ -13,7 +13,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
             // left of the entries corresponding to real macroblocks.
             // The prediction flags in these dummy entries are initialized to 0.
             if (!xd.AboveMi.IsNull && !xd.LeftMi.IsNull)
-            {  // both edges available
+            { // both edges available
                 if (!xd.AboveMi.Value.HasSecondRef() && !xd.LeftMi.Value.HasSecondRef())
                 {
                     // Neither edge uses comp pred (0/1)
@@ -30,13 +30,13 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
                     // One of two edges uses comp pred (2/3)
                     ctx = 2 + (xd.LeftMi.Value.RefFrame[0] == cm.CompFixedRef || !xd.LeftMi.Value.IsInterBlock() ? 1 : 0);
                 }
-                else  // Both edges use comp pred (4)
+                else // Both edges use comp pred (4)
                 {
                     ctx = 4;
                 }
             }
             else if (!xd.AboveMi.IsNull || !xd.LeftMi.IsNull)
-            {  // One edge available
+            { // One edge available
                 ref ModeInfo edgeMi = ref !xd.AboveMi.IsNull ? ref xd.AboveMi.Value : ref xd.LeftMi.Value;
 
                 if (!edgeMi.HasSecondRef())
@@ -51,10 +51,11 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
                 }
             }
             else
-            {  // No edges available (1)
+            { // No edges available (1)
                 ctx = 1;
             }
             Debug.Assert(ctx >= 0 && ctx < Constants.CompInterContexts);
+
             return ctx;
         }
 
@@ -70,29 +71,29 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
             int varRefIdx = fixRefIdx == 0 ? 1 : 0;
 
             if (!xd.AboveMi.IsNull && !xd.LeftMi.IsNull)
-            {  // Both edges available
+            { // Both edges available
                 bool aboveIntra = !xd.AboveMi.Value.IsInterBlock();
                 bool leftIntra = !xd.LeftMi.Value.IsInterBlock();
 
                 if (aboveIntra && leftIntra)
-                {  // Intra/Intra (2)
+                { // Intra/Intra (2)
                     predContext = 2;
                 }
                 else if (aboveIntra || leftIntra)
-                {  // Intra/Inter
+                { // Intra/Inter
                     ref ModeInfo edgeMi = ref aboveIntra ? ref xd.LeftMi.Value : ref xd.AboveMi.Value;
 
-                    if (!edgeMi.HasSecondRef())  // single pred (1/3)
+                    if (!edgeMi.HasSecondRef()) // single pred (1/3)
                     {
                         predContext = 1 + 2 * (edgeMi.RefFrame[0] != cm.CompVarRef[1] ? 1 : 0);
                     }
-                    else  // Comp pred (1/3)
+                    else // Comp pred (1/3)
                     {
                         predContext = 1 + 2 * (edgeMi.RefFrame[varRefIdx] != cm.CompVarRef[1] ? 1 : 0);
                     }
                 }
                 else
-                {  // Inter/Inter
+                { // Inter/Inter
                     bool lSg = !xd.LeftMi.Value.HasSecondRef();
                     bool aSg = !xd.AboveMi.Value.HasSecondRef();
                     sbyte vrfa = aSg ? xd.AboveMi.Value.RefFrame[0] : xd.AboveMi.Value.RefFrame[varRefIdx];
@@ -103,7 +104,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
                         predContext = 0;
                     }
                     else if (lSg && aSg)
-                    {  // Single/Single
+                    { // Single/Single
                         if ((vrfa == cm.CompFixedRef && vrfl == cm.CompVarRef[0]) ||
                             (vrfl == cm.CompFixedRef && vrfa == cm.CompVarRef[0]))
                         {
@@ -119,7 +120,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
                         }
                     }
                     else if (lSg || aSg)
-                    {  // Single/Comp
+                    { // Single/Comp
                         sbyte vrfc = lSg ? vrfa : vrfl;
                         sbyte rfs = aSg ? vrfa : vrfl;
                         if (vrfc == cm.CompVarRef[1] && rfs != cm.CompVarRef[1])
@@ -136,7 +137,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
                         }
                     }
                     else if (vrfa == vrfl)
-                    {  // Comp/Comp
+                    { // Comp/Comp
                         predContext = 4;
                     }
                     else
@@ -146,7 +147,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
                 }
             }
             else if (!xd.AboveMi.IsNull || !xd.LeftMi.IsNull)
-            {  // One edge available
+            { // One edge available
                 ref ModeInfo edgeMi = ref !xd.AboveMi.IsNull ? ref xd.AboveMi.Value : ref xd.LeftMi.Value;
 
                 if (!edgeMi.IsInterBlock())
@@ -166,10 +167,11 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
                 }
             }
             else
-            {  // No edges available (2)
+            { // No edges available (2)
                 predContext = 2;
             }
             Debug.Assert(predContext >= 0 && predContext < Constants.RefContexts);
+
             return predContext;
         }
 
@@ -181,16 +183,16 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
             // left of the entries corresponding to real macroblocks.
             // The prediction flags in these dummy entries are initialized to 0.
             if (!xd.AboveMi.IsNull && !xd.LeftMi.IsNull)
-            {  // Both edges available
+            { // Both edges available
                 bool aboveIntra = !xd.AboveMi.Value.IsInterBlock();
                 bool leftIntra = !xd.LeftMi.Value.IsInterBlock();
 
                 if (aboveIntra && leftIntra)
-                {  // Intra/Intra
+                { // Intra/Intra
                     predContext = 2;
                 }
                 else if (aboveIntra || leftIntra)
-                {  // Intra/Inter or Inter/Intra
+                { // Intra/Inter or Inter/Intra
                     ref ModeInfo edgeMi = ref aboveIntra ? ref xd.LeftMi.Value : ref xd.AboveMi.Value;
                     if (!edgeMi.HasSecondRef())
                     {
@@ -203,7 +205,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
                     }
                 }
                 else
-                {  // Inter/Inter
+                { // Inter/Inter
                     bool aboveHasSecond = xd.AboveMi.Value.HasSecondRef();
                     bool leftHasSecond = xd.LeftMi.Value.HasSecondRef();
                     sbyte above0 = xd.AboveMi.Value.RefFrame[0];
@@ -238,14 +240,14 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
                 }
             }
             else if (!xd.AboveMi.IsNull || !xd.LeftMi.IsNull)
-            {  // One edge available
+            { // One edge available
                 ref ModeInfo edgeMi = ref !xd.AboveMi.IsNull ? ref xd.AboveMi.Value : ref xd.LeftMi.Value;
                 if (!edgeMi.IsInterBlock())
-                {  // Intra
+                { // Intra
                     predContext = 2;
                 }
                 else
-                {  // Inter
+                { // Inter
                     if (!edgeMi.HasSecondRef())
                     {
                         predContext = 4 * (edgeMi.RefFrame[0] == Constants.LastFrame ? 1 : 0);
@@ -258,10 +260,11 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
                 }
             }
             else
-            {  // No edges available
+            { // No edges available
                 predContext = 2;
             }
             Debug.Assert(predContext >= 0 && predContext < Constants.RefContexts);
+
             return predContext;
         }
 
@@ -274,16 +277,16 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
             // left of the entries corresponding to real macroblocks.
             // The prediction flags in these dummy entries are initialized to 0.
             if (!xd.AboveMi.IsNull && !xd.LeftMi.IsNull)
-            {  // Both edges available
+            { // Both edges available
                 bool aboveIntra = !xd.AboveMi.Value.IsInterBlock();
                 bool leftIntra = !xd.LeftMi.Value.IsInterBlock();
 
                 if (aboveIntra && leftIntra)
-                {  // Intra/Intra
+                { // Intra/Intra
                     predContext = 2;
                 }
                 else if (aboveIntra || leftIntra)
-                {  // Intra/Inter or Inter/Intra
+                { // Intra/Inter or Inter/Intra
                     ref ModeInfo edgeMi = ref aboveIntra ? ref xd.LeftMi.Value : ref xd.AboveMi.Value;
                     if (!edgeMi.HasSecondRef())
                     {
@@ -303,7 +306,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
                     }
                 }
                 else
-                {  // Inter/Inter
+                { // Inter/Inter
                     bool aboveHasSecond = xd.AboveMi.Value.HasSecondRef();
                     bool leftHasSecond = xd.LeftMi.Value.HasSecondRef();
                     sbyte above0 = xd.AboveMi.Value.RefFrame[0];
@@ -361,7 +364,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
                 }
             }
             else if (!xd.AboveMi.IsNull || !xd.LeftMi.IsNull)
-            {  // One edge available
+            { // One edge available
                 ref ModeInfo edgeMi = ref !xd.AboveMi.IsNull ? ref xd.AboveMi.Value : ref xd.LeftMi.Value;
 
                 if (!edgeMi.IsInterBlock() || (edgeMi.RefFrame[0] == Constants.LastFrame && !edgeMi.HasSecondRef()))
@@ -379,10 +382,11 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
                 }
             }
             else
-            {  // No edges available (2)
+            { // No edges available (2)
                 predContext = 2;
             }
             Debug.Assert(predContext >= 0 && predContext < Constants.RefContexts);
+
             return predContext;
         }
     }

@@ -51,6 +51,6 @@
         /*!\brief An iterator reached the end of list.
          *
          */
-        CodecListEnd
+        CodecListEnd,
     }
 }

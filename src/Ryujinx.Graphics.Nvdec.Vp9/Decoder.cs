@@ -3,7 +3,6 @@ using Ryujinx.Graphics.Nvdec.Vp9.Common;
 using Ryujinx.Graphics.Nvdec.Vp9.Types;
 using Ryujinx.Graphics.Video;
 using System;
-using Vp9MvRef = Ryujinx.Graphics.Video.Vp9MvRef;
 
 namespace Ryujinx.Graphics.Nvdec.Vp9
 {
@@ -11,7 +10,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
     {
         public bool IsHardwareAccelerated => false;
 
-        private readonly MemoryAllocator _allocator = new MemoryAllocator();
+        private readonly MemoryAllocator _allocator = new();
 
         public ISurface CreateSurface(int width, int height) => new Surface(width, height);
 
@@ -20,7 +19,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
             Constants.EightTapSmooth,
             Constants.EightTap,
             Constants.EightTapSharp,
-            Constants.Bilinear
+            Constants.Bilinear,
         };
 
         public unsafe bool Decode(
@@ -30,24 +29,25 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
             ReadOnlySpan<Vp9MvRef> mvsIn,
             Span<Vp9MvRef> mvsOut)
         {
-            Vp9Common cm = new Vp9Common();
+            Vp9Common cm = new()
+            {
+                FrameType = pictureInfo.IsKeyFrame ? FrameType.KeyFrame : FrameType.InterFrame,
+                IntraOnly = pictureInfo.IntraOnly,
 
-            cm.FrameType = pictureInfo.IsKeyFrame ? FrameType.KeyFrame : FrameType.InterFrame;
-            cm.IntraOnly = pictureInfo.IntraOnly;
+                Width = output.Width,
+                Height = output.Height,
+                SubsamplingX = 1,
+                SubsamplingY = 1,
 
-            cm.Width = output.Width;
-            cm.Height = output.Height;
-            cm.SubsamplingX = 1;
-            cm.SubsamplingY = 1;
+                UsePrevFrameMvs = pictureInfo.UsePrevInFindMvRefs,
 
-            cm.UsePrevFrameMvs = pictureInfo.UsePrevInFindMvRefs;
+                RefFrameSignBias = pictureInfo.RefFrameSignBias,
 
-            cm.RefFrameSignBias = pictureInfo.RefFrameSignBias;
-
-            cm.BaseQindex = pictureInfo.BaseQIndex;
-            cm.YDcDeltaQ = pictureInfo.YDcDeltaQ;
-            cm.UvAcDeltaQ = pictureInfo.UvAcDeltaQ;
-            cm.UvDcDeltaQ = pictureInfo.UvDcDeltaQ;
+                BaseQindex = pictureInfo.BaseQIndex,
+                YDcDeltaQ = pictureInfo.YDcDeltaQ,
+                UvAcDeltaQ = pictureInfo.UvAcDeltaQ,
+                UvDcDeltaQ = pictureInfo.UvDcDeltaQ,
+            };
 
             cm.Mb.Lossless = pictureInfo.Lossless;
             cm.Mb.Bd = 8;

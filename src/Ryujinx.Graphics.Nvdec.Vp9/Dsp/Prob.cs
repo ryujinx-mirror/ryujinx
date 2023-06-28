@@ -15,6 +15,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
                 int p = (int)(((ulong)num * 256 + (den >> 1)) / den);
                 // (p > 255) ? 255 : (p < 1) ? 1 : p;
                 int clippedProb = p | ((255 - p) >> 23) | (p == 0 ? 1 : 0);
+
                 return (byte)clippedProb;
             }
         }
@@ -26,10 +27,9 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
         }
 
         // MODE_MV_MAX_UPDATE_FACTOR (128) * count / MODE_MV_COUNT_SAT;
-        private static readonly uint[] CountToUpdateFactor = new uint[]
-        {
+        private static readonly uint[] _countToUpdateFactor = {
             0,  6,  12, 19, 25, 32,  38,  44,  51,  57, 64,
-            70, 76, 83, 89, 96, 102, 108, 115, 121, 128
+            70, 76, 83, 89, 96, 102, 108, 115, 121, 128,
         };
 
         private const int ModeMvCountSat = 20;
@@ -44,8 +44,9 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
             else
             {
                 uint count = Math.Min(den, ModeMvCountSat);
-                uint factor = CountToUpdateFactor[(int)count];
+                uint factor = _countToUpdateFactor[(int)count];
                 byte prob = GetProb(ct0, den);
+
                 return WeightedProb(preProb, prob, (int)factor);
             }
         }
@@ -62,6 +63,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
             int r = tree[i + 1];
             uint rightCount = (r <= 0) ? counts[-r] : TreeMergeProbsImpl((uint)r, tree, preProbs, counts, probs);
             probs[(int)(i >> 1)] = ModeMvMergeProbs(preProbs[(int)(i >> 1)], leftCount, rightCount);
+
             return leftCount + rightCount;
         }
 

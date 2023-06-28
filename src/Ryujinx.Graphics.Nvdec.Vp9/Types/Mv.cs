@@ -51,13 +51,13 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Types
             9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
             9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
             9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
-            9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 10
+            9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 10,
         };
 
-        public bool UseMvHp()
+        public readonly bool UseMvHp()
         {
-            const int kMvRefThresh = 64;  // Threshold for use of high-precision 1/8 mv
-            return Math.Abs(Row) < kMvRefThresh && Math.Abs(Col) < kMvRefThresh;
+            const int KMvRefThresh = 64; // Threshold for use of high-precision 1/8 mv
+            return Math.Abs(Row) < KMvRefThresh && Math.Abs(Col) < KMvRefThresh;
         }
 
         public static bool MvJointVertical(MvJointType type)
@@ -110,7 +110,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Types
             else
             {
                 int i;
-                int b = c + Constants.Class0Bits - 1;  // Number of bits
+                int b = c + Constants.Class0Bits - 1; // Number of bits
                 for (i = 0; i < b; ++i)
                 {
                     counts.Bits[comp][i][((d >> i) & 1)] += (uint)incr;
@@ -121,19 +121,17 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Types
             }
         }
 
-        private MvJointType GetMvJoint()
+        private readonly MvJointType GetMvJoint()
         {
             if (Row == 0)
             {
                 return Col == 0 ? MvJointType.MvJointZero : MvJointType.MvJointHnzvz;
             }
-            else
-            {
-                return Col == 0 ? MvJointType.MvJointHzvnz : MvJointType.MvJointHnzvnz;
-            }
+
+            return Col == 0 ? MvJointType.MvJointHzvnz : MvJointType.MvJointHnzvnz;
         }
 
-        internal void IncMv(Ptr<Vp9BackwardUpdates> counts)
+        internal readonly void IncMv(Ptr<Vp9BackwardUpdates> counts)
         {
             if (!counts.IsNull)
             {
@@ -158,7 +156,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Types
             Row = (short)Math.Clamp(Row, minRow, maxRow);
         }
 
-        private const int MvBorder = (16 << 3);  // Allow 16 pels in 1/8th pel units
+        private const int MvBorder = (16 << 3); // Allow 16 pels in 1/8th pel units
 
         public void ClampMvRef(ref MacroBlockD xd)
         {

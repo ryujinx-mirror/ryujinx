@@ -5,6 +5,6 @@
         SingleReference = 0,
         CompoundReference = 1,
         ReferenceModeSelect = 2,
-        ReferenceModes = 3
+        ReferenceModes = 3,
     }
 }

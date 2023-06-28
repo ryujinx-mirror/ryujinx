@@ -9,6 +9,6 @@
         BothNew = 4,
         IntraPlusNonIntra = 5,
         BothIntra = 6,
-        InvalidCase = 9
+        InvalidCase = 9,
     }
 }

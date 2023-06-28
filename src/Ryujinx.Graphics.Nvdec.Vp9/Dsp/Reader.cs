@@ -6,8 +6,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
 {
     internal struct Reader
     {
-        private static readonly byte[] Norm = new byte[]
-        {
+        private static readonly byte[] _norm = {
             0, 7, 6, 6, 5, 5, 5, 5, 4, 4, 4, 4, 4, 4, 4, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
             3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
             2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
@@ -17,7 +16,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         };
         private const int BdValueSize = sizeof(ulong) * 8;
 
@@ -44,7 +43,8 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
                 Count = -8;
                 Range = 255;
                 Fill();
-                return ReadBit() != 0;  // Marker bit
+
+                return ReadBit() != 0; // Marker bit
             }
         }
 
@@ -65,7 +65,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
                 ulong bigEndianValues = BinaryPrimitives.ReadUInt64BigEndian(buffer);
                 nv = bigEndianValues >> (BdValueSize - bits);
                 count += bits;
-                buffer = buffer.Slice(bits >> 3);
+                buffer = buffer[(bits >> 3)..];
                 value = Value | (nv << (shift & 0x7));
             }
             else
@@ -84,7 +84,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
                     {
                         count += 8;
                         value |= (ulong)buffer[0] << shift;
-                        buffer = buffer.Slice(1);
+                        buffer = buffer[1..];
                         shift -= 8;
                     }
                 }
@@ -98,7 +98,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
             Count = count;
         }
 
-        public bool HasError()
+        public readonly bool HasError()
         {
             // Check if we have reached the end of the buffer.
             //
@@ -146,7 +146,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
             }
 
             {
-                int shift = Norm[range];
+                int shift = _norm[range];
                 range <<= shift;
                 value <<= shift;
                 count -= shift;
@@ -160,7 +160,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
 
         public int ReadBit()
         {
-            return Read(128);  // vpx_prob_half
+            return Read(128); // vpx_prob_half
         }
 
         public int ReadLiteral(int bits)
@@ -181,7 +181,6 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
 
             while ((i = tree[i + Read(probs[i >> 1])]) > 0)
             {
-                continue;
             }
 
             return -i;
@@ -203,10 +202,10 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
 
             if (value >= bigsplit)
             {
-                range = range - split;
-                value = value - bigsplit;
+                range -= split;
+                value -= bigsplit;
                 {
-                    int shift = Norm[range];
+                    int shift = _norm[range];
                     range <<= shift;
                     value <<= shift;
                     count -= shift;
@@ -215,7 +214,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
             }
             range = split;
             {
-                int shift = Norm[range];
+                int shift = _norm[range];
                 range <<= shift;
                 value <<= shift;
                 count -= shift;

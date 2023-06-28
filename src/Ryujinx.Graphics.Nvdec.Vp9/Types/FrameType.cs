@@ -3,6 +3,6 @@
     internal enum FrameType
     {
         KeyFrame = 0,
-        InterFrame = 1
+        InterFrame = 1,
     }
 }

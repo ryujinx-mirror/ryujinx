@@ -9,7 +9,6 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
-using Mv = Ryujinx.Graphics.Nvdec.Vp9.Types.Mv;
 
 namespace Ryujinx.Graphics.Nvdec.Vp9
 {
@@ -48,7 +47,9 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
                         case TxSize.Tx32x32:
                             Idct.HighbdIdct32x32Add(dqcoeff.AsSpan(), dst16, stride, eob, xd.Bd);
                             break;
-                        default: Debug.Assert(false, "Invalid transform size"); break;
+                        default:
+                            Debug.Assert(false, "Invalid transform size");
+                            break;
                     }
                 }
             }
@@ -62,11 +63,21 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
                 {
                     switch (txSize)
                     {
-                        case TxSize.Tx4x4: Idct.Idct4x4Add(dqcoeff.AsSpan(), dst, stride, eob); break;
-                        case TxSize.Tx8x8: Idct.Idct8x8Add(dqcoeff.AsSpan(), dst, stride, eob); break;
-                        case TxSize.Tx16x16: Idct.Idct16x16Add(dqcoeff.AsSpan(), dst, stride, eob); break;
-                        case TxSize.Tx32x32: Idct.Idct32x32Add(dqcoeff.AsSpan(), dst, stride, eob); break;
-                        default: Debug.Assert(false, "Invalid transform size"); return;
+                        case TxSize.Tx4x4:
+                            Idct.Idct4x4Add(dqcoeff.AsSpan(), dst, stride, eob);
+                            break;
+                        case TxSize.Tx8x8:
+                            Idct.Idct8x8Add(dqcoeff.AsSpan(), dst, stride, eob);
+                            break;
+                        case TxSize.Tx16x16:
+                            Idct.Idct16x16Add(dqcoeff.AsSpan(), dst, stride, eob);
+                            break;
+                        case TxSize.Tx32x32:
+                            Idct.Idct32x32Add(dqcoeff.AsSpan(), dst, stride, eob);
+                            break;
+                        default:
+                            Debug.Assert(false, "Invalid transform size");
+                            return;
                     }
                 }
             }
@@ -79,15 +90,15 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
             {
                 if (txSize <= TxSize.Tx16x16 && eob <= 10)
                 {
-                    dqcoeff.AsSpan().Slice(0, 4 * (4 << (int)txSize)).Fill(0);
+                    dqcoeff.AsSpan()[..(4 * (4 << (int)txSize))].Clear();
                 }
                 else if (txSize == TxSize.Tx32x32 && eob <= 34)
                 {
-                    dqcoeff.AsSpan().Slice(0, 256).Fill(0);
+                    dqcoeff.AsSpan()[..256].Clear();
                 }
                 else
                 {
-                    dqcoeff.AsSpan().Slice(0, 16 << ((int)txSize << 1)).Fill(0);
+                    dqcoeff.AsSpan()[..(16 << ((int)txSize << 1))].Clear();
                 }
             }
         }
@@ -127,7 +138,9 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
                         case TxSize.Tx32x32:
                             Idct.HighbdIdct32x32Add(dqcoeff.AsSpan(), dst16, stride, eob, xd.Bd);
                             break;
-                        default: Debug.Assert(false, "Invalid transform size"); break;
+                        default:
+                            Debug.Assert(false, "Invalid transform size");
+                            break;
                     }
                 }
             }
@@ -141,11 +154,21 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
                 {
                     switch (txSize)
                     {
-                        case TxSize.Tx4x4: Idct.Iht4x4Add(txType, dqcoeff.AsSpan(), dst, stride, eob); break;
-                        case TxSize.Tx8x8: Idct.Iht8x8Add(txType, dqcoeff.AsSpan(), dst, stride, eob); break;
-                        case TxSize.Tx16x16: Idct.Iht16x16Add(txType, dqcoeff.AsSpan(), dst, stride, eob); break;
-                        case TxSize.Tx32x32: Idct.Idct32x32Add(dqcoeff.AsSpan(), dst, stride, eob); break;
-                        default: Debug.Assert(false, "Invalid transform size"); return;
+                        case TxSize.Tx4x4:
+                            Idct.Iht4x4Add(txType, dqcoeff.AsSpan(), dst, stride, eob);
+                            break;
+                        case TxSize.Tx8x8:
+                            Idct.Iht8x8Add(txType, dqcoeff.AsSpan(), dst, stride, eob);
+                            break;
+                        case TxSize.Tx16x16:
+                            Idct.Iht16x16Add(txType, dqcoeff.AsSpan(), dst, stride, eob);
+                            break;
+                        case TxSize.Tx32x32:
+                            Idct.Idct32x32Add(dqcoeff.AsSpan(), dst, stride, eob);
+                            break;
+                        default:
+                            Debug.Assert(false, "Invalid transform size");
+                            return;
                     }
                 }
             }
@@ -158,15 +181,15 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
             {
                 if (txType == TxType.DctDct && txSize <= TxSize.Tx16x16 && eob <= 10)
                 {
-                    dqcoeff.AsSpan().Slice(0, 4 * (4 << (int)txSize)).Fill(0);
+                    dqcoeff.AsSpan()[..(4 * (4 << (int)txSize))].Clear();
                 }
                 else if (txSize == TxSize.Tx32x32 && eob <= 34)
                 {
-                    dqcoeff.AsSpan().Slice(0, 256).Fill(0);
+                    dqcoeff.AsSpan()[..256].Clear();
                 }
                 else
                 {
-                    dqcoeff.AsSpan().Slice(0, 16 << ((int)txSize << 1)).Fill(0);
+                    dqcoeff.AsSpan()[..(16 << ((int)txSize << 1))].Clear();
                 }
             }
         }
@@ -184,7 +207,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
             PredictionMode mode = (plane == 0) ? mi.Mode : mi.UvMode;
             int dstOffset = 4 * row * pd.Dst.Stride + 4 * col;
             byte* dst = &pd.Dst.Buf.ToPointer()[dstOffset];
-            Span<byte> dstSpan = pd.Dst.Buf.AsSpan().Slice(dstOffset);
+            Span<byte> dstSpan = pd.Dst.Buf.AsSpan()[dstOffset..];
 
             if (mi.SbType < BlockSize.Block8x8)
             {
@@ -223,7 +246,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
             ref MacroBlockDPlane pd = ref xd.Plane[plane];
             var sc = Luts.Vp9DefaultScanOrders[(int)txSize];
             int eob = Detokenize.DecodeBlockTokens(ref twd, plane, sc, col, row, txSize, mi.SegmentId);
-            Span<byte> dst = pd.Dst.Buf.AsSpan().Slice(4 * row * pd.Dst.Stride + 4 * col);
+            Span<byte> dst = pd.Dst.Buf.AsSpan()[(4 * row * pd.Dst.Stride + 4 * col)..];
 
             if (eob > 0)
             {
@@ -589,9 +612,11 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
                         refr,
                         xs,
                         ys);
+
                     return;
                 }
             }
+
             if (xd.CurBuf.HighBd)
             {
                 ReconInter.HighbdInterPredictor(
@@ -793,6 +818,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
             xd.SetMiRowCol(ref tile, miRow, bh, miCol, bw, cm.MiRows, cm.MiCols);
 
             ReconInter.SetupDstPlanes(ref xd.Plane, ref xd.CurBuf, miRow, miCol);
+
             return ref xd.Mi[0].Value;
         }
 
@@ -893,7 +919,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
 
                     if (!less8x8 && eobtotal == 0)
                     {
-                        mi.Skip = 1;  // Skip loopfilter
+                        mi.Skip = 1; // Skip loopfilter
                     }
                 }
             }
@@ -928,8 +954,8 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
             // Update the partition context at the end notes. Set partition bits
             // of block sizes larger than the current one to be one, and partition
             // bits of smaller block sizes to be zero.
-            aboveCtx.Slice(0, bw).Fill(Luts.PartitionContextLookup[(int)subsize].Above);
-            leftCtx.Slice(0, bw).Fill(Luts.PartitionContextLookup[(int)subsize].Left);
+            aboveCtx[..bw].Fill(Luts.PartitionContextLookup[(int)subsize].Above);
+            leftCtx[..bw].Fill(Luts.PartitionContextLookup[(int)subsize].Left);
         }
 
         private static PartitionType ReadPartition(
@@ -1030,7 +1056,9 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
                         DecodePartition(ref twd, ref cm, miRow + hbs, miCol, subsize, n8x8L2);
                         DecodePartition(ref twd, ref cm, miRow + hbs, miCol + hbs, subsize, n8x8L2);
                         break;
-                    default: Debug.Assert(false, "Invalid partition type"); break;
+                    default:
+                        Debug.Assert(false, "Invalid partition type");
+                        break;
                 }
             }
 
@@ -1134,7 +1162,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
             int alignedCols = TileInfo.MiColsAlignedToSb(cm.MiCols);
             int tileCols = 1 << cm.Log2TileCols;
             int tileRows = 1 << cm.Log2TileRows;
-            Array4<Array64<TileBuffer>> tileBuffers = new Array4<Array64<TileBuffer>>();
+            Array4<Array64<TileBuffer>> tileBuffers = new();
             int tileRow, tileCol;
             int miRow, miCol;
 
@@ -1168,7 +1196,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
 
             for (tileRow = 0; tileRow < tileRows; ++tileRow)
             {
-                TileInfo tile = new TileInfo();
+                TileInfo tile = new();
                 tile.SetRow(ref cm, tileRow);
                 for (miRow = tile.MiRowStart; miRow < tile.MiRowEnd; miRow += Constants.MiBlockSize)
                 {
@@ -1234,10 +1262,11 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
             } while (!tileData.Xd.Corrupted && ++n <= tileData.BufEnd);
 
             tileData.DataEnd = bitReaderEnd;
+
             return !tileData.Xd.Corrupted;
         }
 
-        public static unsafe ArrayPtr<byte> DecodeTilesMt(ref Vp9Common cm, ArrayPtr<byte> data, int maxThreads)
+        public static ArrayPtr<byte> DecodeTilesMt(ref Vp9Common cm, ArrayPtr<byte> data, int maxThreads)
         {
             ArrayPtr<byte> bitReaderEnd = ArrayPtr<byte>.Null;
 
@@ -1250,8 +1279,8 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
             Debug.Assert(tileCols <= (1 << 6));
             Debug.Assert(tileRows == 1);
 
-            cm.AboveContext.AsSpan().Fill(0);
-            cm.AboveSegContext.AsSpan().Fill(0);
+            cm.AboveContext.AsSpan().Clear();
+            cm.AboveSegContext.AsSpan().Clear();
 
             for (n = 0; n < numWorkers; ++n)
             {
@@ -1262,17 +1291,17 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
                 tileData.Counts = new Vp9BackwardUpdates();
             }
 
-            Array64<TileBuffer> tileBuffers = new Array64<TileBuffer>();
+            Array64<TileBuffer> tileBuffers = new();
 
             GetTileBuffers(ref cm, data, tileCols, ref tileBuffers);
 
-            tileBuffers.AsSpan().Slice(0, tileCols).Sort(CompareTileBuffers);
+            tileBuffers.AsSpan()[..tileCols].Sort(CompareTileBuffers);
 
             if (numWorkers == tileCols)
             {
                 TileBuffer largest = tileBuffers[0];
                 Span<TileBuffer> buffers = tileBuffers.AsSpan();
-                buffers.Slice(1).CopyTo(buffers.Slice(0, tileBuffers.Length - 1));
+                buffers[1..].CopyTo(buffers[..(tileBuffers.Length - 1)]);
                 tileBuffers[tileCols - 1] = largest;
             }
             else
@@ -1307,9 +1336,9 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
                 bufStart += count;
             }
 
-            Ptr<Vp9Common> cmPtr = new Ptr<Vp9Common>(ref cm);
+            Ptr<Vp9Common> cmPtr = new(ref cm);
 
-            Parallel.For(0, numWorkers, (n) =>
+            Parallel.For(0, numWorkers, n =>
             {
                 ref TileWorkerData tileData = ref cmPtr.Value.TileWorkerData[n + totalTiles];
 
@@ -1335,6 +1364,7 @@ namespace Ryujinx.Graphics.Nvdec.Vp9
             }
 
             Debug.Assert(!bitReaderEnd.IsNull || cm.Mb.Corrupted);
+
             return bitReaderEnd;
         }
 

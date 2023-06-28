@@ -16,6 +16,6 @@
         Block64x32 = 11,
         Block64x64 = 12,
         BlockSizes = 13,
-        BlockInvalid = BlockSizes
+        BlockInvalid = BlockSizes,
     }
 }
