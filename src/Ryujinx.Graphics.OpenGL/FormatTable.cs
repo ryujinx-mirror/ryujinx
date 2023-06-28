@@ -4,10 +4,10 @@ using System;
 
 namespace Ryujinx.Graphics.OpenGL
 {
-    struct FormatTable
+    readonly struct FormatTable
     {
-        private static FormatInfo[] _table;
-        private static SizedInternalFormat[] _tableImage;
+        private static readonly FormatInfo[] _table;
+        private static readonly SizedInternalFormat[] _tableImage;
 
         static FormatTable()
         {
@@ -16,6 +16,7 @@ namespace Ryujinx.Graphics.OpenGL
             _table = new FormatInfo[tableSize];
             _tableImage = new SizedInternalFormat[tableSize];
 
+#pragma warning disable IDE0055 // Disable formatting
             Add(Format.R8Unorm,             new FormatInfo(1, true,  false, All.R8,                PixelFormat.Red,            PixelType.UnsignedByte));
             Add(Format.R8Snorm,             new FormatInfo(1, true,  false, All.R8Snorm,           PixelFormat.Red,            PixelType.Byte));
             Add(Format.R8Uint,              new FormatInfo(1, false, false, All.R8ui,              PixelFormat.RedInteger,     PixelType.UnsignedByte));
@@ -200,6 +201,7 @@ namespace Ryujinx.Graphics.OpenGL
             Add(Format.R10G10B10A2Unorm,  (SizedInternalFormat)All.Rgb10A2);
             Add(Format.R10G10B10A2Uint,   (SizedInternalFormat)All.Rgb10A2ui);
             Add(Format.R11G11B10Float,    (SizedInternalFormat)All.R11fG11fB10f);
+#pragma warning restore IDE0055
         }
 
         private static void Add(Format format, FormatInfo info)

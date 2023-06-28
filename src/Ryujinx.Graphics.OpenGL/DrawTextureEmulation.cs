@@ -65,16 +65,12 @@ void main()
 
             if (x0 > x1)
             {
-                float temp = s0;
-                s0 = s1;
-                s1 = temp;
+                (s1, s0) = (s0, s1);
             }
 
             if (y0 > y1)
             {
-                float temp = t0;
-                t0 = t1;
-                t1 = temp;
+                (t1, t0) = (t0, t1);
             }
 
             GL.Uniform1(_uniformSrcX0Location, s0);

@@ -21,7 +21,7 @@ namespace Ryujinx.Graphics.OpenGL.Image
         public TextureStorage(OpenGLRenderer renderer, TextureCreateInfo info, float scaleFactor)
         {
             _renderer = renderer;
-            Info      = info;
+            Info = info;
 
             Handle = GL.GenTexture();
             ScaleFactor = scaleFactor;

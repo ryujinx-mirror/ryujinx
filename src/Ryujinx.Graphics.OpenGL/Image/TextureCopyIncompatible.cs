@@ -1,5 +1,4 @@
 using OpenTK.Graphics.OpenGL;
-using Ryujinx.Graphics.GAL;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -81,9 +80,6 @@ void main()
 
         public void CopyIncompatibleFormats(ITextureInfo src, ITextureInfo dst, int srcLayer, int dstLayer, int srcLevel, int dstLevel, int depth, int levels)
         {
-            TextureCreateInfo srcInfo = src.Info;
-            TextureCreateInfo dstInfo = dst.Info;
-
             int srcBpp = src.Info.BytesPerPixel;
             int dstBpp = dst.Info.BytesPerPixel;
 
@@ -176,7 +172,7 @@ void main()
             return GetShader(ComputeShaderWidening, _wideningProgramHandles, componentSize, srcComponentsCount, dstComponentsCount);
         }
 
-        private int GetShader(
+        private static int GetShader(
             string code,
             Dictionary<int, int> programHandles,
             int componentSize,

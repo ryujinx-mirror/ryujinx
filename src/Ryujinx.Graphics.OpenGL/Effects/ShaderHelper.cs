@@ -1,5 +1,4 @@
 ﻿using OpenTK.Graphics.OpenGL;
-using System;
 
 namespace Ryujinx.Graphics.OpenGL.Effects
 {

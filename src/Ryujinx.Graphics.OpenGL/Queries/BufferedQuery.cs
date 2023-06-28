@@ -14,9 +14,9 @@ namespace Ryujinx.Graphics.OpenGL.Queries
 
         public int Query { get; }
 
-        private int _buffer;
-        private IntPtr _bufferMap;
-        private QueryTarget _type;
+        private readonly int _buffer;
+        private readonly IntPtr _bufferMap;
+        private readonly QueryTarget _type;
 
         public BufferedQuery(QueryTarget type)
         {
@@ -64,7 +64,7 @@ namespace Ryujinx.Graphics.OpenGL.Queries
             }
         }
 
-        private bool WaitingForValue(long data)
+        private static bool WaitingForValue(long data)
         {
             return data == DefaultValue ||
                 ((ulong)data & HighMask) == (unchecked((ulong)DefaultValue) & HighMask);

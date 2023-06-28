@@ -37,7 +37,7 @@ namespace Ryujinx.Graphics.OpenGL.Effects
             }
         }
 
-        public FsrScalingFilter(OpenGLRenderer renderer, IPostProcessingEffect filter)
+        public FsrScalingFilter(OpenGLRenderer renderer)
         {
             Initialize();
 

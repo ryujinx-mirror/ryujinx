@@ -21,7 +21,7 @@ namespace Ryujinx.Graphics.OpenGL
         private const int DisposedLiveFrames = 2;
 
         private readonly object _lock = new();
-        private readonly Dictionary<TextureCreateInfo, List<DisposedTexture>> _textures = new Dictionary<TextureCreateInfo, List<DisposedTexture>>();
+        private readonly Dictionary<TextureCreateInfo, List<DisposedTexture>> _textures = new();
 
         /// <summary>
         /// Add a texture that is not being used anymore to the resource pool to be used later.
@@ -32,8 +32,7 @@ namespace Ryujinx.Graphics.OpenGL
         {
             lock (_lock)
             {
-                List<DisposedTexture> list;
-                if (!_textures.TryGetValue(view.Info, out list))
+                if (!_textures.TryGetValue(view.Info, out List<DisposedTexture> list))
                 {
                     list = new List<DisposedTexture>();
                     _textures.Add(view.Info, list);
@@ -59,8 +58,7 @@ namespace Ryujinx.Graphics.OpenGL
         {
             lock (_lock)
             {
-                List<DisposedTexture> list;
-                if (!_textures.TryGetValue(info, out list))
+                if (!_textures.TryGetValue(info, out List<DisposedTexture> list))
                 {
                     return null;
                 }

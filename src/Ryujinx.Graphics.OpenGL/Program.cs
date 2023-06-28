@@ -123,7 +123,7 @@ namespace Ryujinx.Graphics.OpenGL
 
                 if (log.Length > MaxShaderLogLength)
                 {
-                    log = log.Substring(0, MaxShaderLogLength) + "...";
+                    log = log[..MaxShaderLogLength] + "...";
                 }
 
                 Logger.Warning?.Print(LogClass.Gpu, $"Shader linking failed: \n{log}");

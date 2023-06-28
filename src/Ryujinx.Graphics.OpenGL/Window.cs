@@ -375,7 +375,7 @@ namespace Ryujinx.Graphics.OpenGL
                         if (_scalingFilter is not FsrScalingFilter)
                         {
                             _scalingFilter?.Dispose();
-                            _scalingFilter = new FsrScalingFilter(_renderer, _antiAliasing);
+                            _scalingFilter = new FsrScalingFilter(_renderer);
                         }
                         _isLinear = false;
                         _scalingFilter.Level = _scalingFilterLevel;

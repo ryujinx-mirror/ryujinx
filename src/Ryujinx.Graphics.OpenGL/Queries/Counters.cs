@@ -5,7 +5,7 @@ namespace Ryujinx.Graphics.OpenGL.Queries
 {
     class Counters : IDisposable
     {
-        private CounterQueue[] _counterQueues;
+        private readonly CounterQueue[] _counterQueues;
 
         public Counters()
         {

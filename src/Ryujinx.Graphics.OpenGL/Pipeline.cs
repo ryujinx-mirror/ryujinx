@@ -44,11 +44,11 @@ namespace Ryujinx.Graphics.OpenGL
 
         private CounterQueueEvent _activeConditionalRender;
 
-        private Vector4<int>[] _fpIsBgra = new Vector4<int>[SupportBuffer.FragmentIsBgraCount];
-        private Vector4<float>[] _renderScale = new Vector4<float>[73];
+        private readonly Vector4<int>[] _fpIsBgra = new Vector4<int>[SupportBuffer.FragmentIsBgraCount];
+        private readonly Vector4<float>[] _renderScale = new Vector4<float>[73];
         private int _fragmentScaleCount;
 
-        private (TextureBase, Format)[] _images;
+        private readonly (TextureBase, Format)[] _images;
         private TextureBase _unit0Texture;
         private Sampler _unit0Sampler;
 
@@ -260,7 +260,7 @@ namespace Ryujinx.Graphics.OpenGL
             PostDraw();
         }
 
-        private void DrawQuadsImpl(
+        private static void DrawQuadsImpl(
             int vertexCount,
             int instanceCount,
             int firstVertex,
@@ -285,7 +285,7 @@ namespace Ryujinx.Graphics.OpenGL
                 quadsCount);
         }
 
-        private void DrawQuadStripImpl(
+        private static void DrawQuadStripImpl(
             int vertexCount,
             int instanceCount,
             int firstVertex,
@@ -366,8 +366,12 @@ namespace Ryujinx.Graphics.OpenGL
 
             switch (_elementsType)
             {
-                case DrawElementsType.UnsignedShort: indexElemSize = 2; break;
-                case DrawElementsType.UnsignedInt: indexElemSize = 4; break;
+                case DrawElementsType.UnsignedShort:
+                    indexElemSize = 2;
+                    break;
+                case DrawElementsType.UnsignedInt:
+                    indexElemSize = 4;
+                    break;
             }
 
             IntPtr indexBaseOffset = _indexBaseOffset + firstIndex * indexElemSize;
@@ -1471,7 +1475,7 @@ namespace Ryujinx.Graphics.OpenGL
             GL.MemoryBarrier(MemoryBarrierFlags.TextureFetchBarrierBit);
         }
 
-        private void SetBuffers(ReadOnlySpan<BufferAssignment> buffers, bool isStorage)
+        private static void SetBuffers(ReadOnlySpan<BufferAssignment> buffers, bool isStorage)
         {
             BufferRangeTarget target = isStorage ? BufferRangeTarget.ShaderStorageBuffer : BufferRangeTarget.UniformBuffer;
 
@@ -1701,11 +1705,9 @@ namespace Ryujinx.Graphics.OpenGL
 
         public bool TryHostConditionalRendering(ICounterEvent value, ulong compare, bool isEqual)
         {
-            if (value is CounterQueueEvent)
+            // Compare an event and a constant value.
+            if (value is CounterQueueEvent evt)
             {
-                // Compare an event and a constant value.
-                CounterQueueEvent evt = (CounterQueueEvent)value;
-
                 // Easy host conditional rendering when the check matches what GL can do:
                 //  - Event is of type samples passed.
                 //  - Result is not a combination of multiple queries.

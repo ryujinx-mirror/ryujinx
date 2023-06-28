@@ -22,7 +22,7 @@ namespace Ryujinx.Graphics.OpenGL.Effects.Smaa
         private int[] _neighbourShaderPrograms;
         private TextureStorage _edgeOutputTexture;
         private TextureStorage _blendOutputTexture;
-        private string[] _qualities;
+        private readonly string[] _qualities;
         private int _inputUniform;
         private int _outputUniform;
         private int _samplerAreaUniform;

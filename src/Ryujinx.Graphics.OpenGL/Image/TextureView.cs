@@ -88,9 +88,7 @@ namespace Ryujinx.Graphics.OpenGL.Image
             {
                 // Swap B <-> R for BGRA formats, as OpenGL has no support for them
                 // and we need to manually swap the components on read/write on the GPU.
-                int temp = swizzleRgba[0];
-                swizzleRgba[0] = swizzleRgba[2];
-                swizzleRgba[2] = temp;
+                (swizzleRgba[2], swizzleRgba[0]) = (swizzleRgba[0], swizzleRgba[2]);
             }
 
             GL.TexParameter(target, TextureParameterName.TextureSwizzleRgba, swizzleRgba);
@@ -186,8 +184,8 @@ namespace Ryujinx.Graphics.OpenGL.Image
             // This approach uses blit, which causes a resolution loss since some samples will be lost
             // in the process.
 
-            Extents2D srcRegion = new Extents2D(0, 0, Width, Height);
-            Extents2D dstRegion = new Extents2D(0, 0, destinationView.Width, destinationView.Height);
+            Extents2D srcRegion = new(0, 0, Width, Height);
+            Extents2D dstRegion = new(0, 0, destinationView.Width, destinationView.Height);
 
             if (destinationView.Target.IsMultisample())
             {

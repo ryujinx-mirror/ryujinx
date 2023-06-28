@@ -105,7 +105,7 @@ namespace Ryujinx.Graphics.OpenGL
             _colorsCount = colorsCount;
         }
 
-        private void SetDrawBuffersImpl(int colorsCount)
+        private static void SetDrawBuffersImpl(int colorsCount)
         {
             DrawBuffersEnum[] drawBuffers = new DrawBuffersEnum[colorsCount];
 

@@ -63,10 +63,18 @@ namespace Ryujinx.Graphics.OpenGL
 
             switch (type)
             {
-                case DebugType.DebugTypeError      : Logger.Error?.Print(LogClass.Gpu, $"{severity}: {msg}\nCallStack={Environment.StackTrace}", "GLERROR"); break;
-                case DebugType.DebugTypePerformance: Logger.Warning?.Print(LogClass.Gpu, $"{severity}: {msg}", "GLPERF"); break;
-                case DebugType.DebugTypePushGroup  : Logger.Info?.Print(LogClass.Gpu, $"{{ ({id}) {severity}: {msg}", "GLINFO"); break;
-                case DebugType.DebugTypePopGroup   : Logger.Info?.Print(LogClass.Gpu, $"}} ({id}) {severity}: {msg}", "GLINFO"); break;
+                case DebugType.DebugTypeError:
+                    Logger.Error?.Print(LogClass.Gpu, $"{severity}: {msg}\nCallStack={Environment.StackTrace}", "GLERROR");
+                    break;
+                case DebugType.DebugTypePerformance:
+                    Logger.Warning?.Print(LogClass.Gpu, $"{severity}: {msg}", "GLPERF");
+                    break;
+                case DebugType.DebugTypePushGroup:
+                    Logger.Info?.Print(LogClass.Gpu, $"{{ ({id}) {severity}: {msg}", "GLINFO");
+                    break;
+                case DebugType.DebugTypePopGroup:
+                    Logger.Info?.Print(LogClass.Gpu, $"}} ({id}) {severity}: {msg}", "GLINFO");
+                    break;
                 default:
                     if (source == DebugSource.DebugSourceApplication)
                     {
