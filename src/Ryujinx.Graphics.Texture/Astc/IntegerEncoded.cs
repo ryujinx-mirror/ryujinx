@@ -6,7 +6,7 @@ namespace Ryujinx.Graphics.Texture.Astc
     internal struct IntegerEncoded
     {
         internal const int StructSize = 8;
-        private static readonly IntegerEncoded[] Encodings;
+        private static readonly IntegerEncoded[] _encodings;
 
         public enum EIntegerEncoding : byte
         {
@@ -15,7 +15,7 @@ namespace Ryujinx.Graphics.Texture.Astc
             Trit
         }
 
-        EIntegerEncoding _encoding;
+        readonly EIntegerEncoding _encoding;
         public byte NumberBits { get; private set; }
         public byte TritValue { get; private set; }
         public byte QuintValue { get; private set; }
@@ -23,11 +23,11 @@ namespace Ryujinx.Graphics.Texture.Astc
 
         static IntegerEncoded()
         {
-            Encodings = new IntegerEncoded[0x100];
+            _encodings = new IntegerEncoded[0x100];
 
-            for (int i = 0; i < Encodings.Length; i++)
+            for (int i = 0; i < _encodings.Length; i++)
             {
-                Encodings[i] = CreateEncodingCalc(i);
+                _encodings[i] = CreateEncodingCalc(i);
             }
         }
 
@@ -40,17 +40,17 @@ namespace Ryujinx.Graphics.Texture.Astc
             QuintValue = 0;
         }
 
-        public bool MatchesEncoding(IntegerEncoded other)
+        public readonly bool MatchesEncoding(IntegerEncoded other)
         {
             return _encoding == other._encoding && NumberBits == other.NumberBits;
         }
 
-        public EIntegerEncoding GetEncoding()
+        public readonly EIntegerEncoding GetEncoding()
         {
             return _encoding;
         }
 
-        public int GetBitLength(int numberVals)
+        public readonly int GetBitLength(int numberVals)
         {
             int totalBits = NumberBits * numberVals;
             if (_encoding == EIntegerEncoding.Trit)
@@ -66,7 +66,7 @@ namespace Ryujinx.Graphics.Texture.Astc
 
         public static IntegerEncoded CreateEncoding(int maxVal)
         {
-            return Encodings[maxVal];
+            return _encodings[maxVal];
         }
 
         private static IntegerEncoded CreateEncodingCalc(int maxVal)
@@ -122,7 +122,7 @@ namespace Ryujinx.Graphics.Texture.Astc
 
             ReadOnlySpan<byte> encodings = GetTritEncoding(encoded);
 
-            IntegerEncoded intEncoded = new IntegerEncoded(EIntegerEncoding.Trit, numberBitsPerValue);
+            IntegerEncoded intEncoded = new(EIntegerEncoding.Trit, numberBitsPerValue);
 
             for (int i = 0; i < 5; i++)
             {
@@ -159,7 +159,7 @@ namespace Ryujinx.Graphics.Texture.Astc
 
             for (int i = 0; i < 3; i++)
             {
-                IntegerEncoded intEncoded = new IntegerEncoded(EIntegerEncoding.Quint, numberBitsPerValue)
+                IntegerEncoded intEncoded = new(EIntegerEncoding.Quint, numberBitsPerValue)
                 {
                     BitValue = m[i],
                     QuintValue = encodings[i]
@@ -185,29 +185,29 @@ namespace Ryujinx.Graphics.Texture.Astc
                 switch (intEncoded.GetEncoding())
                 {
                     case EIntegerEncoding.Quint:
-                    {
-                        DecodeQuintBlock(ref bitStream, ref decodeIntegerSequence, intEncoded.NumberBits);
-                        numberValuesDecoded += 3;
+                        {
+                            DecodeQuintBlock(ref bitStream, ref decodeIntegerSequence, intEncoded.NumberBits);
+                            numberValuesDecoded += 3;
 
-                        break;
-                    }
+                            break;
+                        }
 
                     case EIntegerEncoding.Trit:
-                    {
-                        DecodeTritBlock(ref bitStream, ref decodeIntegerSequence, intEncoded.NumberBits);
-                        numberValuesDecoded += 5;
+                        {
+                            DecodeTritBlock(ref bitStream, ref decodeIntegerSequence, intEncoded.NumberBits);
+                            numberValuesDecoded += 5;
 
-                        break;
-                    }
+                            break;
+                        }
 
                     case EIntegerEncoding.JustBits:
-                    {
-                        intEncoded.BitValue = bitStream.ReadBits(intEncoded.NumberBits);
-                        decodeIntegerSequence.Add(ref intEncoded);
-                        numberValuesDecoded++;
+                        {
+                            intEncoded.BitValue = bitStream.ReadBits(intEncoded.NumberBits);
+                            decodeIntegerSequence.Add(ref intEncoded);
+                            numberValuesDecoded++;
 
-                        break;
-                    }
+                            break;
+                        }
                 }
             }
         }

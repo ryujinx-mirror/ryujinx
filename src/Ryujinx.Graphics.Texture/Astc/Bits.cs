@@ -29,8 +29,15 @@
 
         public static int Replicate(int value, int numberBits, int toBit)
         {
-            if (numberBits == 0) return 0;
-            if (toBit == 0) return 0;
+            if (numberBits == 0)
+            {
+                return 0;
+            }
+
+            if (toBit == 0)
+            {
+                return 0;
+            }
 
             int tempValue = value & ((1 << numberBits) - 1);
             int retValue = tempValue;
@@ -60,7 +67,10 @@
             b |= a & 0x80;
             a >>= 1;
             a &= 0x3F;
-            if ((a & 0x20) != 0) a -= 0x40;
+            if ((a & 0x20) != 0)
+            {
+                a -= 0x40;
+            }
         }
     }
 }

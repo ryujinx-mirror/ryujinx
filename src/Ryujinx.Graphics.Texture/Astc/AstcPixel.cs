@@ -47,7 +47,7 @@ namespace Ryujinx.Graphics.Texture.Astc
             Components[index] = (short)value;
         }
 
-        public int Pack()
+        public readonly int Pack()
         {
             return A << 24 |
                    B << 16 |

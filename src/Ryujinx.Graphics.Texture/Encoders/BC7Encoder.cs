@@ -119,12 +119,12 @@ namespace Ryujinx.Graphics.Texture.Encoders
                         {
                             uint c = tile[i];
 
-                            if (!uniqueRGB.Slice(0, uniqueRGBCount).Contains(c & rgbMask))
+                            if (!uniqueRGB[..uniqueRGBCount].Contains(c & rgbMask))
                             {
                                 uniqueRGB[uniqueRGBCount++] = c & rgbMask;
                             }
 
-                            if (!uniqueAlpha.Slice(0, uniqueAlphaCount).Contains(c & alphaMask))
+                            if (!uniqueAlpha[..uniqueAlphaCount].Contains(c & alphaMask))
                             {
                                 uniqueAlpha[uniqueAlphaCount++] = c & alphaMask;
                             }
@@ -356,7 +356,7 @@ namespace Ryujinx.Graphics.Texture.Encoders
 
             bool alphaSwapSubset = alphaIndices[0] >= (alphaIndexCount >> 1);
 
-            Block block = new Block();
+            Block block = new();
 
             int offset = 0;
 
@@ -591,7 +591,7 @@ namespace Ryujinx.Graphics.Texture.Encoders
                     RgbaColor32 e132 = RgbaColor8.FromUInt32(c1).GetColor32();
 
                     palette[0] = e032;
-                    palette[palette.Length - 1] = e132;
+                    palette[^1] = e132;
 
                     for (int i = 1; i < palette.Length - 1; i++)
                     {
@@ -888,7 +888,7 @@ namespace Ryujinx.Graphics.Texture.Encoders
 
             int distRange = Math.Max(1, maxDist - minDist);
 
-            RgbaColor32 nV = new RgbaColor32(n);
+            RgbaColor32 nV = new(n);
 
             int bestErrorSum = int.MaxValue;
             RgbaColor8 bestE0 = default;
@@ -922,8 +922,8 @@ namespace Ryujinx.Graphics.Texture.Encoders
 
                 for (int start = 0; start < numInterpolatedColors - maxIndex; start++)
                 {
-                    RgbaColor32 sumY = new RgbaColor32(0);
-                    RgbaColor32 sumXY = new RgbaColor32(0);
+                    RgbaColor32 sumY = new(0);
+                    RgbaColor32 sumXY = new(0);
 
                     for (int i = 0; i < indices.Length; i++)
                     {
@@ -933,8 +933,8 @@ namespace Ryujinx.Graphics.Texture.Encoders
                         sumXY += new RgbaColor32(start + indices[i]) * y;
                     }
 
-                    RgbaColor32 sumXV = new RgbaColor32(sumX);
-                    RgbaColor32 sumXXV = new RgbaColor32(sumXX);
+                    RgbaColor32 sumXV = new(sumX);
+                    RgbaColor32 sumXXV = new(sumXX);
                     RgbaColor32 m = RgbaColor32.DivideGuarded((nV * sumXY - sumXV * sumY) << 6, nV * sumXXV - sumXV * sumXV, 0);
                     RgbaColor32 b = ((sumY << 6) - m * sumXV) / nV;
 

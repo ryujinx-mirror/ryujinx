@@ -54,22 +54,22 @@ namespace Ryujinx.Graphics.Texture.Utils
             return Unsafe.As<RgbaColor8, uint>(ref this);
         }
 
-        public override int GetHashCode()
+        public readonly override int GetHashCode()
         {
             return HashCode.Combine(R, G, B, A);
         }
 
-        public override bool Equals(object obj)
+        public readonly override bool Equals(object obj)
         {
             return obj is RgbaColor8 other && Equals(other);
         }
 
-        public bool Equals(RgbaColor8 other)
+        public readonly bool Equals(RgbaColor8 other)
         {
             return R == other.R && G == other.G && B == other.B && A == other.A;
         }
 
-        public byte GetComponent(int index)
+        public readonly byte GetComponent(int index)
         {
             return index switch
             {

@@ -28,8 +28,6 @@ namespace Ryujinx.Graphics.Texture
 
             for (int l = 0; l < levels; l++)
             {
-                int rgba8Size = width * height * depth * layers * 4;
-
                 int w = BitUtils.DivRoundUp(width, BlockWidth);
                 int h = BitUtils.DivRoundUp(height, BlockHeight);
 
@@ -38,8 +36,8 @@ namespace Ryujinx.Graphics.Texture
                     for (int z = 0; z < depth; z++)
                     {
                         BC7Encoder.Encode(
-                            output.AsMemory().Slice(imageBaseOOffs),
-                            data.AsMemory().Slice(imageBaseIOffs),
+                            output.AsMemory()[imageBaseOOffs..],
+                            data.AsMemory()[imageBaseIOffs..],
                             width,
                             height,
                             EncodeMode.Fast | EncodeMode.Multithreaded);

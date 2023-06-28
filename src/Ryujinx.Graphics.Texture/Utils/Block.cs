@@ -25,7 +25,7 @@ namespace Ryujinx.Graphics.Texture.Utils
             offset += bits;
         }
 
-        public ulong Decode(ref int offset, int bits)
+        public readonly ulong Decode(ref int offset, int bits)
         {
             ulong value;
             ulong mask = bits == 64 ? ulong.MaxValue : (1UL << bits) - 1;

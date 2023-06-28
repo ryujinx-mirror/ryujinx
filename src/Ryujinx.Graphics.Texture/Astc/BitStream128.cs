@@ -6,7 +6,9 @@ namespace Ryujinx.Graphics.Texture.Astc
 {
     public struct BitStream128
     {
+#pragma warning disable IDE0044 // Make field readonly
         private Buffer16 _data;
+#pragma warning restore IDE0044
         public int BitsLeft { get; set; }
 
         public BitStream128(Buffer16 data)
@@ -42,7 +44,10 @@ namespace Ryujinx.Graphics.Texture.Astc
         {
             Debug.Assert(bitCount < 32);
 
-            if (bitCount == 0) return;
+            if (bitCount == 0)
+            {
+                return;
+            }
 
             ulong maskedValue = (uint)(value & ((1 << bitCount) - 1));
 
