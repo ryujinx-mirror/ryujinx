@@ -114,6 +114,35 @@ namespace ARMeilleure.Instructions
             }
         }
 
+        public static void Vcvt_V_Fixed(ArmEmitterContext context)
+        {
+            OpCode32SimdCvtFFixed op = (OpCode32SimdCvtFFixed)context.CurrOp;
+
+            var toFixed = op.Opc == 1;
+            int fracBits = op.Fbits;
+            var unsigned = op.U;
+
+            if (toFixed) // F32 to S32 or U32 (fixed)
+            {
+                EmitVectorUnaryOpF32(context, (op1) =>
+                {
+                    var scaledValue = context.Multiply(op1, ConstF(MathF.Pow(2f, fracBits)));
+                    MethodInfo info = unsigned ? typeof(SoftFallback).GetMethod(nameof(SoftFallback.SatF32ToU32)) : typeof(SoftFallback).GetMethod(nameof(SoftFallback.SatF32ToS32));
+
+                    return context.Call(info, scaledValue);
+                });
+            }
+            else // S32 or U32 (fixed) to F32
+            {
+                EmitVectorUnaryOpI32(context, (op1) =>
+                {
+                    var floatValue = unsigned ? context.ConvertToFPUI(OperandType.FP32, op1) : context.ConvertToFP(OperandType.FP32, op1);
+
+                    return context.Multiply(floatValue, ConstF(1f / MathF.Pow(2f, fracBits)));
+                }, !unsigned);
+            }
+        }
+
         public static void Vcvt_FD(ArmEmitterContext context)
         {
             OpCode32SimdS op = (OpCode32SimdS)context.CurrOp;

@@ -395,11 +395,11 @@ namespace Ryujinx.Tests.Cpu
         [Explicit]
         [Test, Pairwise, Description("VCVT<top>.F<size>.F16 <Vd>, <Sm>")]
         public void Vcvt_F16_Fx([Values(0u, 1u, 2u, 3u)] uint rd,
-                                 [Values(0u, 1u, 2u, 3u)] uint rm,
-                                 [ValueSource(nameof(_1D_F_))] ulong d0,
-                                 [ValueSource(nameof(_1D_F_))] ulong d1,
-                                 [Values] bool top,
-                                 [Values] bool sz)
+                                [Values(0u, 1u, 2u, 3u)] uint rm,
+                                [ValueSource(nameof(_1D_F_))] ulong d0,
+                                [ValueSource(nameof(_1D_F_))] ulong d1,
+                                [Values] bool top,
+                                [Values] bool sz)
         {
             uint opcode = 0xeeb20a40; // VCVTB.F32.F16 S0, S0
 
@@ -421,6 +421,86 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((rm & 0xf) << 0) | ((rm & 0x10) << 1);
 
             V128 v0 = MakeVectorE0E1(d0, d1);
+
+            SingleOpcode(opcode, v0: v0);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise, Description("VCVT.I32.F32 <Vd>, <Vm>, #<fbits>")]
+        public void Vcvt_V_Fixed_F32_I32([Values(0u, 1u, 2u, 3u)] uint vd,
+                                         [Values(0u, 1u, 2u, 3u)] uint vm,
+                                         [ValueSource(nameof(_1S_F_))][Random(RndCnt)] ulong s0,
+                                         [ValueSource(nameof(_1S_F_))][Random(RndCnt)] ulong s1,
+                                         [ValueSource(nameof(_1S_F_))][Random(RndCnt)] ulong s2,
+                                         [ValueSource(nameof(_1S_F_))][Random(RndCnt)] ulong s3,
+                                         [Random(32u, 63u, 1)] uint fixImm,
+                                         [Values] bool unsigned,
+                                         [Values] bool q)
+        {
+            uint opcode = 0xF2800F10u; // VCVT.U32.F32 D0, D0, #0
+
+            if (q)
+            {
+                opcode |= 1 << 6;
+                vm <<= 1;
+                vd <<= 1;
+            }
+
+            if (unsigned)
+            {
+                opcode |= 1 << 24;
+            }
+
+            opcode |= ((vm & 0x10) << 1);
+            opcode |= ((vm & 0xf) << 0);
+
+            opcode |= ((vd & 0x10) << 18);
+            opcode |= ((vd & 0xf) << 12);
+
+            opcode |= (fixImm & 0x3f) << 16;
+
+            var v0 = new V128((uint)s0, (uint)s1, (uint)s2, (uint)s3);
+
+            SingleOpcode(opcode, v0: v0);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise, Description("VCVT.F32.I32 <Vd>, <Vm>, #<fbits>")]
+        public void Vcvt_V_Fixed_I32_F32([Values(0u, 1u, 2u, 3u)] uint vd,
+                                         [Values(0u, 1u, 2u, 3u)] uint vm,
+                                         [ValueSource(nameof(_1S_))][Random(RndCnt)] uint s0,
+                                         [ValueSource(nameof(_1S_))][Random(RndCnt)] uint s1,
+                                         [ValueSource(nameof(_1S_))][Random(RndCnt)] uint s2,
+                                         [ValueSource(nameof(_1S_))][Random(RndCnt)] uint s3,
+                                         [Range(32u, 63u, 1)] uint fixImm,
+                                         [Values] bool unsigned,
+                                         [Values] bool q)
+        {
+            uint opcode = 0xF2800E10u; // VCVT.F32.U32 D0, D0, #0
+
+            if (q)
+            {
+                opcode |= 1 << 6;
+                vm <<= 1;
+                vd <<= 1;
+            }
+
+            if (unsigned)
+            {
+                opcode |= 1 << 24;
+            }
+
+            opcode |= ((vm & 0x10) << 1);
+            opcode |= ((vm & 0xf) << 0);
+
+            opcode |= ((vd & 0x10) << 18);
+            opcode |= ((vd & 0xf) << 12);
+
+            opcode |= (fixImm & 0x3f) << 16;
+
+            var v0 = new V128(s0, s1, s2, s3);
 
             SingleOpcode(opcode, v0: v0);
 
