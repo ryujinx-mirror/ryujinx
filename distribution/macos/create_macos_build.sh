@@ -35,12 +35,12 @@ EXECUTABLE_SUB_PATH=Contents/MacOS/Ryujinx
 rm -rf "$TEMP_DIRECTORY"
 mkdir -p "$TEMP_DIRECTORY"
 
-DOTNET_COMMON_ARGS="-p:DebugType=embedded -p:Version=$VERSION -p:SourceRevisionId=$SOURCE_REVISION_ID --self-contained true $EXTRA_ARGS"
+DOTNET_COMMON_ARGS=(-p:DebugType=embedded -p:Version="$VERSION" -p:SourceRevisionId="$SOURCE_REVISION_ID" --self-contained true $EXTRA_ARGS)
 
 dotnet restore
-dotnet build -c $CONFIGURATION src/Ryujinx.Ava
-dotnet publish -c $CONFIGURATION -r osx-arm64 -o "$TEMP_DIRECTORY/publish_arm64" $DOTNET_COMMON_ARGS src/Ryujinx.Ava
-dotnet publish -c $CONFIGURATION -r osx-x64 -o "$TEMP_DIRECTORY/publish_x64" $DOTNET_COMMON_ARGS src/Ryujinx.Ava
+dotnet build -c "$CONFIGURATION" src/Ryujinx.Ava
+dotnet publish -c "$CONFIGURATION" -r osx-arm64 -o "$TEMP_DIRECTORY/publish_arm64" "${DOTNET_COMMON_ARGS[@]}" src/Ryujinx.Ava
+dotnet publish -c "$CONFIGURATION" -r osx-x64 -o "$TEMP_DIRECTORY/publish_x64" "${DOTNET_COMMON_ARGS[@]}" src/Ryujinx.Ava
 
 # Get rid of the support library for ARMeilleure for x64 (that's only for arm64)
 rm -rf "$TEMP_DIRECTORY/publish_x64/libarmeilleure-jitsupport.dylib"
@@ -104,10 +104,10 @@ fi
 
 echo "Creating archive"
 pushd "$OUTPUT_DIRECTORY"
-tar --exclude "Ryujinx.app/Contents/MacOS/Ryujinx" -cvf $RELEASE_TAR_FILE_NAME Ryujinx.app 1> /dev/null
-python3 "$BASE_DIR/distribution/misc/add_tar_exec.py" $RELEASE_TAR_FILE_NAME "Ryujinx.app/Contents/MacOS/Ryujinx" "Ryujinx.app/Contents/MacOS/Ryujinx"
-gzip -9 < $RELEASE_TAR_FILE_NAME > $RELEASE_TAR_FILE_NAME.gz
-rm $RELEASE_TAR_FILE_NAME
+tar --exclude "Ryujinx.app/Contents/MacOS/Ryujinx" -cvf "$RELEASE_TAR_FILE_NAME" Ryujinx.app 1> /dev/null
+python3 "$BASE_DIR/distribution/misc/add_tar_exec.py" "$RELEASE_TAR_FILE_NAME" "Ryujinx.app/Contents/MacOS/Ryujinx" "Ryujinx.app/Contents/MacOS/Ryujinx"
+gzip -9 < "$RELEASE_TAR_FILE_NAME" > "$RELEASE_TAR_FILE_NAME.gz"
+rm "$RELEASE_TAR_FILE_NAME"
 popd
 
 echo "Done"
