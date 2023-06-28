@@ -16,15 +16,15 @@ namespace Ryujinx.Input.Motion.CemuHook.Protocol
     public struct ControllerDataResponse
     {
         public SharedResponse Shared;
-        public byte           Connected;
-        public uint           PacketId;
-        public byte           ExtraButtons;
-        public byte           MainButtons;
-        public ushort         PSExtraInput;
-        public ushort         LeftStickXY;
-        public ushort         RightStickXY;
-        public uint           DPadAnalog;
-        public ulong          MainButtonsAnalog;
+        public byte Connected;
+        public uint PacketId;
+        public byte ExtraButtons;
+        public byte MainButtons;
+        public ushort PSExtraInput;
+        public ushort LeftStickXY;
+        public ushort RightStickXY;
+        public uint DPadAnalog;
+        public ulong MainButtonsAnalog;
 
         public Array6<byte> Touch1;
         public Array6<byte> Touch2;
@@ -42,6 +42,6 @@ namespace Ryujinx.Input.Motion.CemuHook.Protocol
     {
         All,
         Slot,
-        Mac
+        Mac,
     }
 }

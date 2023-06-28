@@ -11,6 +11,6 @@ namespace Ryujinx.Input
         Button7,
         Button8,
         Button9,
-        Count
+        Count,
     }
 }

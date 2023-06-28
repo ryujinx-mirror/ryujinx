@@ -137,6 +137,6 @@
         BackSlash,
         Unbound,
 
-        Count
+        Count,
     }
 }

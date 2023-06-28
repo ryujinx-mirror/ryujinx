@@ -9,6 +9,6 @@
         Left,
         Right,
 
-        Count
+        Count,
     }
 }

@@ -7,7 +7,7 @@ namespace Ryujinx.Input.Motion.CemuHook.Protocol
     public struct ControllerInfoResponse
     {
         public SharedResponse Shared;
-        private byte _zero;
+        private readonly byte _zero;
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]

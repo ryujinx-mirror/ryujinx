@@ -52,6 +52,6 @@
         SingleLeftTrigger1,
         SingleRightTrigger1,
 
-        Count
+        Count,
     }
 }

@@ -4,6 +4,6 @@
     {
         Protocol = 0x100000,
         Info,
-        Data
+        Data,
     }
 }

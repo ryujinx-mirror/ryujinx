@@ -25,7 +25,7 @@ namespace Ryujinx.Input.HLE
         {
             return new NpadManager(KeyboardDriver, GamepadDriver, MouseDriver);
         }
-        
+
         public TouchScreenManager CreateTouchScreenManager()
         {
             if (MouseDriver == null)
@@ -48,6 +48,7 @@ namespace Ryujinx.Input.HLE
 
         public void Dispose()
         {
+            GC.SuppressFinalize(this);
             Dispose(true);
         }
     }

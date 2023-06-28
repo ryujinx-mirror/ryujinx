@@ -8,7 +8,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Numerics;
 using System.Runtime.CompilerServices;
-
 using CemuHookClient = Ryujinx.Input.Motion.CemuHook.Client;
 using ConfigControllerType = Ryujinx.Common.Configuration.Hid.ControllerType;
 
@@ -28,29 +27,28 @@ namespace Ryujinx.Input.HLE
             }
         }
 
-        private static readonly HLEButtonMappingEntry[] _hleButtonMapping = new HLEButtonMappingEntry[]
-        {
-            new HLEButtonMappingEntry(GamepadButtonInputId.A, ControllerKeys.A),
-            new HLEButtonMappingEntry(GamepadButtonInputId.B, ControllerKeys.B),
-            new HLEButtonMappingEntry(GamepadButtonInputId.X, ControllerKeys.X),
-            new HLEButtonMappingEntry(GamepadButtonInputId.Y, ControllerKeys.Y),
-            new HLEButtonMappingEntry(GamepadButtonInputId.LeftStick, ControllerKeys.LStick),
-            new HLEButtonMappingEntry(GamepadButtonInputId.RightStick, ControllerKeys.RStick),
-            new HLEButtonMappingEntry(GamepadButtonInputId.LeftShoulder, ControllerKeys.L),
-            new HLEButtonMappingEntry(GamepadButtonInputId.RightShoulder, ControllerKeys.R),
-            new HLEButtonMappingEntry(GamepadButtonInputId.LeftTrigger, ControllerKeys.Zl),
-            new HLEButtonMappingEntry(GamepadButtonInputId.RightTrigger, ControllerKeys.Zr),
-            new HLEButtonMappingEntry(GamepadButtonInputId.DpadUp, ControllerKeys.DpadUp),
-            new HLEButtonMappingEntry(GamepadButtonInputId.DpadDown, ControllerKeys.DpadDown),
-            new HLEButtonMappingEntry(GamepadButtonInputId.DpadLeft, ControllerKeys.DpadLeft),
-            new HLEButtonMappingEntry(GamepadButtonInputId.DpadRight, ControllerKeys.DpadRight),
-            new HLEButtonMappingEntry(GamepadButtonInputId.Minus, ControllerKeys.Minus),
-            new HLEButtonMappingEntry(GamepadButtonInputId.Plus, ControllerKeys.Plus),
+        private static readonly HLEButtonMappingEntry[] _hleButtonMapping = {
+            new(GamepadButtonInputId.A, ControllerKeys.A),
+            new(GamepadButtonInputId.B, ControllerKeys.B),
+            new(GamepadButtonInputId.X, ControllerKeys.X),
+            new(GamepadButtonInputId.Y, ControllerKeys.Y),
+            new(GamepadButtonInputId.LeftStick, ControllerKeys.LStick),
+            new(GamepadButtonInputId.RightStick, ControllerKeys.RStick),
+            new(GamepadButtonInputId.LeftShoulder, ControllerKeys.L),
+            new(GamepadButtonInputId.RightShoulder, ControllerKeys.R),
+            new(GamepadButtonInputId.LeftTrigger, ControllerKeys.Zl),
+            new(GamepadButtonInputId.RightTrigger, ControllerKeys.Zr),
+            new(GamepadButtonInputId.DpadUp, ControllerKeys.DpadUp),
+            new(GamepadButtonInputId.DpadDown, ControllerKeys.DpadDown),
+            new(GamepadButtonInputId.DpadLeft, ControllerKeys.DpadLeft),
+            new(GamepadButtonInputId.DpadRight, ControllerKeys.DpadRight),
+            new(GamepadButtonInputId.Minus, ControllerKeys.Minus),
+            new(GamepadButtonInputId.Plus, ControllerKeys.Plus),
 
-            new HLEButtonMappingEntry(GamepadButtonInputId.SingleLeftTrigger0, ControllerKeys.SlLeft),
-            new HLEButtonMappingEntry(GamepadButtonInputId.SingleRightTrigger0, ControllerKeys.SrLeft),
-            new HLEButtonMappingEntry(GamepadButtonInputId.SingleLeftTrigger1, ControllerKeys.SlRight),
-            new HLEButtonMappingEntry(GamepadButtonInputId.SingleRightTrigger1, ControllerKeys.SrRight),
+            new(GamepadButtonInputId.SingleLeftTrigger0, ControllerKeys.SlLeft),
+            new(GamepadButtonInputId.SingleRightTrigger0, ControllerKeys.SrLeft),
+            new(GamepadButtonInputId.SingleLeftTrigger1, ControllerKeys.SlRight),
+            new(GamepadButtonInputId.SingleRightTrigger1, ControllerKeys.SrRight),
         };
 
         private class HLEKeyboardMappingEntry
@@ -65,150 +63,147 @@ namespace Ryujinx.Input.HLE
             }
         }
 
-        private static readonly HLEKeyboardMappingEntry[] KeyMapping = new HLEKeyboardMappingEntry[]
-        {
-            new HLEKeyboardMappingEntry(Key.A, 0x4),
-            new HLEKeyboardMappingEntry(Key.B, 0x5),
-            new HLEKeyboardMappingEntry(Key.C, 0x6),
-            new HLEKeyboardMappingEntry(Key.D, 0x7),
-            new HLEKeyboardMappingEntry(Key.E, 0x8),
-            new HLEKeyboardMappingEntry(Key.F, 0x9),
-            new HLEKeyboardMappingEntry(Key.G, 0xA),
-            new HLEKeyboardMappingEntry(Key.H, 0xB),
-            new HLEKeyboardMappingEntry(Key.I, 0xC),
-            new HLEKeyboardMappingEntry(Key.J, 0xD),
-            new HLEKeyboardMappingEntry(Key.K, 0xE),
-            new HLEKeyboardMappingEntry(Key.L, 0xF),
-            new HLEKeyboardMappingEntry(Key.M, 0x10),
-            new HLEKeyboardMappingEntry(Key.N, 0x11),
-            new HLEKeyboardMappingEntry(Key.O, 0x12),
-            new HLEKeyboardMappingEntry(Key.P, 0x13),
-            new HLEKeyboardMappingEntry(Key.Q, 0x14),
-            new HLEKeyboardMappingEntry(Key.R, 0x15),
-            new HLEKeyboardMappingEntry(Key.S, 0x16),
-            new HLEKeyboardMappingEntry(Key.T, 0x17),
-            new HLEKeyboardMappingEntry(Key.U, 0x18),
-            new HLEKeyboardMappingEntry(Key.V, 0x19),
-            new HLEKeyboardMappingEntry(Key.W, 0x1A),
-            new HLEKeyboardMappingEntry(Key.X, 0x1B),
-            new HLEKeyboardMappingEntry(Key.Y, 0x1C),
-            new HLEKeyboardMappingEntry(Key.Z, 0x1D),
+        private static readonly HLEKeyboardMappingEntry[] _keyMapping = {
+            new(Key.A, 0x4),
+            new(Key.B, 0x5),
+            new(Key.C, 0x6),
+            new(Key.D, 0x7),
+            new(Key.E, 0x8),
+            new(Key.F, 0x9),
+            new(Key.G, 0xA),
+            new(Key.H, 0xB),
+            new(Key.I, 0xC),
+            new(Key.J, 0xD),
+            new(Key.K, 0xE),
+            new(Key.L, 0xF),
+            new(Key.M, 0x10),
+            new(Key.N, 0x11),
+            new(Key.O, 0x12),
+            new(Key.P, 0x13),
+            new(Key.Q, 0x14),
+            new(Key.R, 0x15),
+            new(Key.S, 0x16),
+            new(Key.T, 0x17),
+            new(Key.U, 0x18),
+            new(Key.V, 0x19),
+            new(Key.W, 0x1A),
+            new(Key.X, 0x1B),
+            new(Key.Y, 0x1C),
+            new(Key.Z, 0x1D),
 
-            new HLEKeyboardMappingEntry(Key.Number1, 0x1E),
-            new HLEKeyboardMappingEntry(Key.Number2, 0x1F),
-            new HLEKeyboardMappingEntry(Key.Number3, 0x20),
-            new HLEKeyboardMappingEntry(Key.Number4, 0x21),
-            new HLEKeyboardMappingEntry(Key.Number5, 0x22),
-            new HLEKeyboardMappingEntry(Key.Number6, 0x23),
-            new HLEKeyboardMappingEntry(Key.Number7, 0x24),
-            new HLEKeyboardMappingEntry(Key.Number8, 0x25),
-            new HLEKeyboardMappingEntry(Key.Number9, 0x26),
-            new HLEKeyboardMappingEntry(Key.Number0, 0x27),
+            new(Key.Number1, 0x1E),
+            new(Key.Number2, 0x1F),
+            new(Key.Number3, 0x20),
+            new(Key.Number4, 0x21),
+            new(Key.Number5, 0x22),
+            new(Key.Number6, 0x23),
+            new(Key.Number7, 0x24),
+            new(Key.Number8, 0x25),
+            new(Key.Number9, 0x26),
+            new(Key.Number0, 0x27),
 
-            new HLEKeyboardMappingEntry(Key.Enter,        0x28),
-            new HLEKeyboardMappingEntry(Key.Escape,       0x29),
-            new HLEKeyboardMappingEntry(Key.BackSpace,    0x2A),
-            new HLEKeyboardMappingEntry(Key.Tab,          0x2B),
-            new HLEKeyboardMappingEntry(Key.Space,        0x2C),
-            new HLEKeyboardMappingEntry(Key.Minus,        0x2D),
-            new HLEKeyboardMappingEntry(Key.Plus,         0x2E),
-            new HLEKeyboardMappingEntry(Key.BracketLeft,  0x2F),
-            new HLEKeyboardMappingEntry(Key.BracketRight, 0x30),
-            new HLEKeyboardMappingEntry(Key.BackSlash,    0x31),
-            new HLEKeyboardMappingEntry(Key.Tilde,        0x32),
-            new HLEKeyboardMappingEntry(Key.Semicolon,    0x33),
-            new HLEKeyboardMappingEntry(Key.Quote,        0x34),
-            new HLEKeyboardMappingEntry(Key.Grave,        0x35),
-            new HLEKeyboardMappingEntry(Key.Comma,        0x36),
-            new HLEKeyboardMappingEntry(Key.Period,       0x37),
-            new HLEKeyboardMappingEntry(Key.Slash,        0x38),
-            new HLEKeyboardMappingEntry(Key.CapsLock,     0x39),
+            new(Key.Enter,        0x28),
+            new(Key.Escape,       0x29),
+            new(Key.BackSpace,    0x2A),
+            new(Key.Tab,          0x2B),
+            new(Key.Space,        0x2C),
+            new(Key.Minus,        0x2D),
+            new(Key.Plus,         0x2E),
+            new(Key.BracketLeft,  0x2F),
+            new(Key.BracketRight, 0x30),
+            new(Key.BackSlash,    0x31),
+            new(Key.Tilde,        0x32),
+            new(Key.Semicolon,    0x33),
+            new(Key.Quote,        0x34),
+            new(Key.Grave,        0x35),
+            new(Key.Comma,        0x36),
+            new(Key.Period,       0x37),
+            new(Key.Slash,        0x38),
+            new(Key.CapsLock,     0x39),
 
-            new HLEKeyboardMappingEntry(Key.F1,  0x3a),
-            new HLEKeyboardMappingEntry(Key.F2,  0x3b),
-            new HLEKeyboardMappingEntry(Key.F3,  0x3c),
-            new HLEKeyboardMappingEntry(Key.F4,  0x3d),
-            new HLEKeyboardMappingEntry(Key.F5,  0x3e),
-            new HLEKeyboardMappingEntry(Key.F6,  0x3f),
-            new HLEKeyboardMappingEntry(Key.F7,  0x40),
-            new HLEKeyboardMappingEntry(Key.F8,  0x41),
-            new HLEKeyboardMappingEntry(Key.F9,  0x42),
-            new HLEKeyboardMappingEntry(Key.F10, 0x43),
-            new HLEKeyboardMappingEntry(Key.F11, 0x44),
-            new HLEKeyboardMappingEntry(Key.F12, 0x45),
+            new(Key.F1,  0x3a),
+            new(Key.F2,  0x3b),
+            new(Key.F3,  0x3c),
+            new(Key.F4,  0x3d),
+            new(Key.F5,  0x3e),
+            new(Key.F6,  0x3f),
+            new(Key.F7,  0x40),
+            new(Key.F8,  0x41),
+            new(Key.F9,  0x42),
+            new(Key.F10, 0x43),
+            new(Key.F11, 0x44),
+            new(Key.F12, 0x45),
 
-            new HLEKeyboardMappingEntry(Key.PrintScreen, 0x46),
-            new HLEKeyboardMappingEntry(Key.ScrollLock,  0x47),
-            new HLEKeyboardMappingEntry(Key.Pause,       0x48),
-            new HLEKeyboardMappingEntry(Key.Insert,      0x49),
-            new HLEKeyboardMappingEntry(Key.Home,        0x4A),
-            new HLEKeyboardMappingEntry(Key.PageUp,      0x4B),
-            new HLEKeyboardMappingEntry(Key.Delete,      0x4C),
-            new HLEKeyboardMappingEntry(Key.End,         0x4D),
-            new HLEKeyboardMappingEntry(Key.PageDown,    0x4E),
-            new HLEKeyboardMappingEntry(Key.Right,       0x4F),
-            new HLEKeyboardMappingEntry(Key.Left,        0x50),
-            new HLEKeyboardMappingEntry(Key.Down,        0x51),
-            new HLEKeyboardMappingEntry(Key.Up,          0x52),
+            new(Key.PrintScreen, 0x46),
+            new(Key.ScrollLock,  0x47),
+            new(Key.Pause,       0x48),
+            new(Key.Insert,      0x49),
+            new(Key.Home,        0x4A),
+            new(Key.PageUp,      0x4B),
+            new(Key.Delete,      0x4C),
+            new(Key.End,         0x4D),
+            new(Key.PageDown,    0x4E),
+            new(Key.Right,       0x4F),
+            new(Key.Left,        0x50),
+            new(Key.Down,        0x51),
+            new(Key.Up,          0x52),
 
-            new HLEKeyboardMappingEntry(Key.NumLock,        0x53),
-            new HLEKeyboardMappingEntry(Key.KeypadDivide,   0x54),
-            new HLEKeyboardMappingEntry(Key.KeypadMultiply, 0x55),
-            new HLEKeyboardMappingEntry(Key.KeypadSubtract, 0x56),
-            new HLEKeyboardMappingEntry(Key.KeypadAdd,      0x57),
-            new HLEKeyboardMappingEntry(Key.KeypadEnter,    0x58),
-            new HLEKeyboardMappingEntry(Key.Keypad1,        0x59),
-            new HLEKeyboardMappingEntry(Key.Keypad2,        0x5A),
-            new HLEKeyboardMappingEntry(Key.Keypad3,        0x5B),
-            new HLEKeyboardMappingEntry(Key.Keypad4,        0x5C),
-            new HLEKeyboardMappingEntry(Key.Keypad5,        0x5D),
-            new HLEKeyboardMappingEntry(Key.Keypad6,        0x5E),
-            new HLEKeyboardMappingEntry(Key.Keypad7,        0x5F),
-            new HLEKeyboardMappingEntry(Key.Keypad8,        0x60),
-            new HLEKeyboardMappingEntry(Key.Keypad9,        0x61),
-            new HLEKeyboardMappingEntry(Key.Keypad0,        0x62),
-            new HLEKeyboardMappingEntry(Key.KeypadDecimal,  0x63),
+            new(Key.NumLock,        0x53),
+            new(Key.KeypadDivide,   0x54),
+            new(Key.KeypadMultiply, 0x55),
+            new(Key.KeypadSubtract, 0x56),
+            new(Key.KeypadAdd,      0x57),
+            new(Key.KeypadEnter,    0x58),
+            new(Key.Keypad1,        0x59),
+            new(Key.Keypad2,        0x5A),
+            new(Key.Keypad3,        0x5B),
+            new(Key.Keypad4,        0x5C),
+            new(Key.Keypad5,        0x5D),
+            new(Key.Keypad6,        0x5E),
+            new(Key.Keypad7,        0x5F),
+            new(Key.Keypad8,        0x60),
+            new(Key.Keypad9,        0x61),
+            new(Key.Keypad0,        0x62),
+            new(Key.KeypadDecimal,  0x63),
 
-            new HLEKeyboardMappingEntry(Key.F13, 0x68),
-            new HLEKeyboardMappingEntry(Key.F14, 0x69),
-            new HLEKeyboardMappingEntry(Key.F15, 0x6A),
-            new HLEKeyboardMappingEntry(Key.F16, 0x6B),
-            new HLEKeyboardMappingEntry(Key.F17, 0x6C),
-            new HLEKeyboardMappingEntry(Key.F18, 0x6D),
-            new HLEKeyboardMappingEntry(Key.F19, 0x6E),
-            new HLEKeyboardMappingEntry(Key.F20, 0x6F),
-            new HLEKeyboardMappingEntry(Key.F21, 0x70),
-            new HLEKeyboardMappingEntry(Key.F22, 0x71),
-            new HLEKeyboardMappingEntry(Key.F23, 0x72),
-            new HLEKeyboardMappingEntry(Key.F24, 0x73),
+            new(Key.F13, 0x68),
+            new(Key.F14, 0x69),
+            new(Key.F15, 0x6A),
+            new(Key.F16, 0x6B),
+            new(Key.F17, 0x6C),
+            new(Key.F18, 0x6D),
+            new(Key.F19, 0x6E),
+            new(Key.F20, 0x6F),
+            new(Key.F21, 0x70),
+            new(Key.F22, 0x71),
+            new(Key.F23, 0x72),
+            new(Key.F24, 0x73),
 
-            new HLEKeyboardMappingEntry(Key.ControlLeft,  0xE0),
-            new HLEKeyboardMappingEntry(Key.ShiftLeft,    0xE1),
-            new HLEKeyboardMappingEntry(Key.AltLeft,      0xE2),
-            new HLEKeyboardMappingEntry(Key.WinLeft,      0xE3),
-            new HLEKeyboardMappingEntry(Key.ControlRight, 0xE4),
-            new HLEKeyboardMappingEntry(Key.ShiftRight,   0xE5),
-            new HLEKeyboardMappingEntry(Key.AltRight,     0xE6),
-            new HLEKeyboardMappingEntry(Key.WinRight,     0xE7),
+            new(Key.ControlLeft,  0xE0),
+            new(Key.ShiftLeft,    0xE1),
+            new(Key.AltLeft,      0xE2),
+            new(Key.WinLeft,      0xE3),
+            new(Key.ControlRight, 0xE4),
+            new(Key.ShiftRight,   0xE5),
+            new(Key.AltRight,     0xE6),
+            new(Key.WinRight,     0xE7),
         };
 
-        private static readonly HLEKeyboardMappingEntry[] KeyModifierMapping = new HLEKeyboardMappingEntry[]
-        {
-            new HLEKeyboardMappingEntry(Key.ControlLeft,  0),
-            new HLEKeyboardMappingEntry(Key.ShiftLeft,    1),
-            new HLEKeyboardMappingEntry(Key.AltLeft,      2),
-            new HLEKeyboardMappingEntry(Key.WinLeft,      3),
-            new HLEKeyboardMappingEntry(Key.ControlRight, 4),
-            new HLEKeyboardMappingEntry(Key.ShiftRight,   5),
-            new HLEKeyboardMappingEntry(Key.AltRight,     6),
-            new HLEKeyboardMappingEntry(Key.WinRight,     7),
-            new HLEKeyboardMappingEntry(Key.CapsLock,     8),
-            new HLEKeyboardMappingEntry(Key.ScrollLock,   9),
-            new HLEKeyboardMappingEntry(Key.NumLock,      10),
+        private static readonly HLEKeyboardMappingEntry[] _keyModifierMapping = {
+            new(Key.ControlLeft,  0),
+            new(Key.ShiftLeft,    1),
+            new(Key.AltLeft,      2),
+            new(Key.WinLeft,      3),
+            new(Key.ControlRight, 4),
+            new(Key.ShiftRight,   5),
+            new(Key.AltRight,     6),
+            new(Key.WinRight,     7),
+            new(Key.CapsLock,     8),
+            new(Key.ScrollLock,   9),
+            new(Key.NumLock,      10),
         };
 
         private bool _isValid;
-        private string _id;
 
         private MotionInput _leftMotionInput;
         private MotionInput _rightMotionInput;
@@ -219,14 +214,14 @@ namespace Ryujinx.Input.HLE
         public IGamepadDriver GamepadDriver { get; private set; }
         public GamepadStateSnapshot State { get; private set; }
 
-        public string Id => _id;
+        public string Id { get; private set; }
 
-        private CemuHookClient _cemuHookClient;
+        private readonly CemuHookClient _cemuHookClient;
 
         public NpadController(CemuHookClient cemuHookClient)
         {
             State = default;
-            _id = null;
+            Id = null;
             _isValid = false;
             _cemuHookClient = cemuHookClient;
         }
@@ -237,8 +232,8 @@ namespace Ryujinx.Input.HLE
 
             _gamepad?.Dispose();
 
-            _id = config.Id;
-            _gamepad = GamepadDriver.GetGamepad(_id);
+            Id = config.Id;
+            _gamepad = GamepadDriver.GetGamepad(Id);
             _isValid = _gamepad != null;
 
             UpdateUserConfiguration(config);
@@ -278,7 +273,7 @@ namespace Ryujinx.Input.HLE
             if (motionConfig.MotionBackend != MotionInputBackendType.CemuHook)
             {
                 _leftMotionInput = new MotionInput();
-             }
+            }
             else
             {
                 _leftMotionInput = null;
@@ -347,7 +342,7 @@ namespace Ryujinx.Input.HLE
 
         public GamepadInput GetHLEInputState()
         {
-            GamepadInput state = new GamepadInput();
+            GamepadInput state = new();
 
             // First update all buttons
             foreach (HLEButtonMappingEntry entry in _hleButtonMapping)
@@ -366,13 +361,13 @@ namespace Ryujinx.Input.HLE
                 state.LStick = new JoystickPosition
                 {
                     Dx = ClampAxis(leftAxisX),
-                    Dy = ClampAxis(leftAxisY)
+                    Dy = ClampAxis(leftAxisY),
                 };
 
                 state.RStick = new JoystickPosition
                 {
                     Dx = ClampAxis(rightAxisX),
-                    Dy = ClampAxis(rightAxisY)
+                    Dy = ClampAxis(rightAxisY),
                 };
             }
             else if (_config is StandardControllerInputConfig controllerConfig)
@@ -391,16 +386,16 @@ namespace Ryujinx.Input.HLE
         private static JoystickPosition ApplyDeadzone(float x, float y, float deadzone)
         {
             float magnitudeClamped = Math.Min(MathF.Sqrt(x * x + y * y), 1f);
-            
+
             if (magnitudeClamped <= deadzone)
             {
-                return new JoystickPosition() {Dx = 0, Dy = 0};
+                return new JoystickPosition { Dx = 0, Dy = 0 };
             }
-            
-            return new JoystickPosition()
+
+            return new JoystickPosition
             {
                 Dx = ClampAxis((x / magnitudeClamped) * ((magnitudeClamped - deadzone) / (1 - deadzone))),
-                Dy = ClampAxis((y / magnitudeClamped) * ((magnitudeClamped - deadzone) / (1 - deadzone)))
+                Dy = ClampAxis((y / magnitudeClamped) * ((magnitudeClamped - deadzone) / (1 - deadzone))),
             };
         }
 
@@ -428,7 +423,7 @@ namespace Ryujinx.Input.HLE
             return new JoystickPosition
             {
                 Dx = (int)point.X,
-                Dy = (int)point.Y
+                Dy = (int)point.Y,
             };
         }
 
@@ -476,12 +471,12 @@ namespace Ryujinx.Input.HLE
                 rotation = new Vector3();
             }
 
-            return new SixAxisInput()
+            return new SixAxisInput
             {
                 Accelerometer = accelerometer,
-                Gyroscope     = gyroscope,
-                Rotation      = rotation,
-                Orientation   = orientationForHLE
+                Gyroscope = gyroscope,
+                Rotation = rotation,
+                Orientation = orientationForHLE,
             };
         }
 
@@ -502,20 +497,20 @@ namespace Ryujinx.Input.HLE
             {
                 KeyboardStateSnapshot keyboardState = keyboard.GetKeyboardStateSnapshot();
 
-                KeyboardInput hidKeyboard = new KeyboardInput
+                KeyboardInput hidKeyboard = new()
                 {
                     Modifier = 0,
-                    Keys = new ulong[0x4]
+                    Keys = new ulong[0x4],
                 };
 
-                foreach (HLEKeyboardMappingEntry entry in KeyMapping)
+                foreach (HLEKeyboardMappingEntry entry in _keyMapping)
                 {
                     ulong value = keyboardState.IsPressed(entry.TargetKey) ? 1UL : 0UL;
 
                     hidKeyboard.Keys[entry.Target / 0x40] |= (value << (entry.Target % 0x40));
                 }
 
-                foreach (HLEKeyboardMappingEntry entry in KeyModifierMapping)
+                foreach (HLEKeyboardMappingEntry entry in _keyModifierMapping)
                 {
                     int value = keyboardState.IsPressed(entry.TargetKey) ? 1 : 0;
 
@@ -539,6 +534,7 @@ namespace Ryujinx.Input.HLE
 
         public void Dispose()
         {
+            GC.SuppressFinalize(this);
             Dispose(true);
         }
 

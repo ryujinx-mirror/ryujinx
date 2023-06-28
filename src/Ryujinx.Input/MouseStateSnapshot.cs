@@ -8,7 +8,7 @@ namespace Ryujinx.Input
     /// </summary>
     public class MouseStateSnapshot
     {
-        private bool[] _buttonState;
+        private readonly bool[] _buttonState;
 
         /// <summary>
         /// The position of the mouse cursor
@@ -31,7 +31,7 @@ namespace Ryujinx.Input
             _buttonState = buttonState;
 
             Position = position;
-            Scroll   = scroll;
+            Scroll = scroll;
         }
 
         /// <summary>

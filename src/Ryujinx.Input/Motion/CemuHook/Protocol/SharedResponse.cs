@@ -6,11 +6,11 @@ namespace Ryujinx.Input.Motion.CemuHook.Protocol
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct SharedResponse
     {
-        public MessageType     Type;
-        public byte            Slot;
-        public SlotState       State;
+        public MessageType Type;
+        public byte Slot;
+        public SlotState State;
         public DeviceModelType ModelType;
-        public ConnectionType  ConnectionType;
+        public ConnectionType ConnectionType;
 
         public Array6<byte> MacAddress;
         public BatteryStatus BatteryStatus;
@@ -20,21 +20,21 @@ namespace Ryujinx.Input.Motion.CemuHook.Protocol
     {
         Disconnected,
         Reserved,
-        Connected
+        Connected,
     }
 
     public enum DeviceModelType : byte
     {
         None,
         PartialGyro,
-        FullGyro
+        FullGyro,
     }
 
     public enum ConnectionType : byte
     {
         None,
         USB,
-        Bluetooth
+        Bluetooth,
     }
 
     public enum BatteryStatus : byte
@@ -46,6 +46,6 @@ namespace Ryujinx.Input.Motion.CemuHook.Protocol
         High,
         Full,
         Charging,
-        Charged
+        Charged,
     }
 }

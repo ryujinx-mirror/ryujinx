@@ -31,7 +31,7 @@ namespace Ryujinx.Input.HLE
                     MouseStateSnapshot snapshot = IMouse.GetMouseStateSnapshot(_mouse);
                     var touchPosition = IMouse.GetScreenPosition(snapshot.Position, _mouse.ClientSize, aspectRatio);
 
-                    TouchPoint currentPoint = new TouchPoint
+                    TouchPoint currentPoint = new()
                     {
                         Attribute = TouchAttribute.End,
 
@@ -41,7 +41,7 @@ namespace Ryujinx.Input.HLE
                         // Placeholder values till more data is acquired
                         DiameterX = 10,
                         DiameterY = 10,
-                        Angle = 90
+                        Angle = 90,
                     };
 
                     _device.Hid.Touchscreen.Update(currentPoint);
@@ -71,7 +71,7 @@ namespace Ryujinx.Input.HLE
                     attribute = TouchAttribute.End;
                 }
 
-                TouchPoint currentPoint = new TouchPoint
+                TouchPoint currentPoint = new()
                 {
                     Attribute = attribute,
 
@@ -81,7 +81,7 @@ namespace Ryujinx.Input.HLE
                     // Placeholder values till more data is acquired
                     DiameterX = 10,
                     DiameterY = 10,
-                    Angle = 90
+                    Angle = 90,
                 };
 
                 _device.Hid.Touchscreen.Update(currentPoint);
@@ -94,6 +94,9 @@ namespace Ryujinx.Input.HLE
             return false;
         }
 
-        public void Dispose() { }
+        public void Dispose()
+        {
+            GC.SuppressFinalize(this);
+        }
     }
 }

@@ -106,19 +106,19 @@ namespace Ryujinx.Input.Motion
             float q1 = Quaternion.W;
 
             // Estimated direction of gravity.
-            Vector3 gravity = new Vector3()
+            Vector3 gravity = new()
             {
                 X = 2f * (q2 * q4 - q1 * q3),
                 Y = 2f * (q1 * q2 + q3 * q4),
-                Z = q1 * q1 - q2 * q2 - q3 * q3 + q4 * q4
+                Z = q1 * q1 - q2 * q2 - q3 * q3 + q4 * q4,
             };
 
             // Error is cross product between estimated direction and measured direction of gravity.
-            Vector3 error = new Vector3()
+            Vector3 error = new()
             {
                 X = accel.Y * gravity.Z - accel.Z * gravity.Y,
                 Y = accel.Z * gravity.X - accel.X * gravity.Z,
-                Z = accel.X * gravity.Y - accel.Y * gravity.X
+                Z = accel.X * gravity.Y - accel.Y * gravity.X,
             };
 
             if (Ki > 0f)
@@ -134,7 +134,7 @@ namespace Ryujinx.Input.Motion
             gyro += (Kp * error) + (Ki * _intergralError);
 
             // Integrate rate of change of quaternion.
-            Vector3 delta = new Vector3(q2, q3, q4);
+            Vector3 delta = new(q2, q3, q4);
 
             q1 += (-q2 * gyro.X - q3 * gyro.Y - q4 * gyro.Z) * (SampleRateCoefficient * SamplePeriod);
             q2 += (q1 * gyro.X + delta.Y * gyro.Z - delta.Z * gyro.Y) * (SampleRateCoefficient * SamplePeriod);
@@ -142,7 +142,7 @@ namespace Ryujinx.Input.Motion
             q4 += (q1 * gyro.Z + delta.X * gyro.Y - delta.Y * gyro.X) * (SampleRateCoefficient * SamplePeriod);
 
             // Normalise quaternion.
-            Quaternion quaternion = new Quaternion(q2, q3, q4, q1);
+            Quaternion quaternion = new(q2, q3, q4, q1);
 
             norm = 1f / quaternion.Length();
 

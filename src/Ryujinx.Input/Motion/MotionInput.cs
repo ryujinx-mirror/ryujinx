@@ -6,19 +6,19 @@ namespace Ryujinx.Input
 {
     public class MotionInput
     {
-        public ulong   TimeStamp     { get; set; }
+        public ulong TimeStamp { get; set; }
         public Vector3 Accelerometer { get; set; }
-        public Vector3 Gyroscrope    { get; set; }
-        public Vector3 Rotation      { get; set; }
+        public Vector3 Gyroscrope { get; set; }
+        public Vector3 Rotation { get; set; }
 
         private readonly MotionSensorFilter _filter;
 
         public MotionInput()
         {
-            TimeStamp     = 0;
+            TimeStamp = 0;
             Accelerometer = new Vector3();
-            Gyroscrope    = new Vector3();
-            Rotation      = new Vector3();
+            Gyroscrope = new Vector3();
+            Rotation = new Vector3();
 
             // TODO: RE the correct filter.
             _filter = new MotionSensorFilter(0f);

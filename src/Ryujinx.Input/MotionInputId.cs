@@ -20,6 +20,6 @@
         /// Gyroscope.
         /// </summary>
         /// <remarks>Values are in degrees</remarks>
-        Gyroscope
+        Gyroscope,
     }
 }

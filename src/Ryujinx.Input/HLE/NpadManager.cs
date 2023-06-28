@@ -7,13 +7,15 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using CemuHookClient = Ryujinx.Input.Motion.CemuHook.Client;
+using ControllerType = Ryujinx.Common.Configuration.Hid.ControllerType;
+using PlayerIndex = Ryujinx.HLE.HOS.Services.Hid.PlayerIndex;
 using Switch = Ryujinx.HLE.Switch;
 
 namespace Ryujinx.Input.HLE
 {
     public class NpadManager : IDisposable
     {
-        private CemuHookClient _cemuHookClient;
+        private readonly CemuHookClient _cemuHookClient;
 
         private readonly object _lock = new();
 
@@ -21,7 +23,7 @@ namespace Ryujinx.Input.HLE
 
         private const int MaxControllers = 9;
 
-        private NpadController[] _controllers;
+        private readonly NpadController[] _controllers;
 
         private readonly IGamepadDriver _keyboardDriver;
         private readonly IGamepadDriver _gamepadDriver;
@@ -51,7 +53,7 @@ namespace Ryujinx.Input.HLE
         {
             lock (_lock)
             {
-                List<InputConfig> validInputs = new List<InputConfig>();
+                List<InputConfig> validInputs = new();
                 foreach (var inputConfigEntry in _inputConfig)
                 {
                     if (_controllers[(int)inputConfigEntry.PlayerIndex] != null)
@@ -96,10 +98,8 @@ namespace Ryujinx.Input.HLE
             {
                 return controller.UpdateDriverConfiguration(targetDriver, config);
             }
-            else
-            {
-                return controller.GamepadDriver != null;
-            }
+
+            return controller.GamepadDriver != null;
         }
 
         public void ReloadConfiguration(List<InputConfig> inputConfig, bool enableKeyboard, bool enableMouse)
@@ -112,11 +112,11 @@ namespace Ryujinx.Input.HLE
                     _controllers[i] = null;
                 }
 
-                List<InputConfig> validInputs = new List<InputConfig>();
+                List<InputConfig> validInputs = new();
 
                 foreach (InputConfig inputConfigEntry in inputConfig)
                 {
-                    NpadController controller = new NpadController(_cemuHookClient);
+                    NpadController controller = new(_cemuHookClient);
 
                     bool isValid = DriverConfigurationUpdate(ref controller, inputConfigEntry);
 
@@ -131,9 +131,9 @@ namespace Ryujinx.Input.HLE
                     }
                 }
 
-                _inputConfig    = inputConfig;
+                _inputConfig = inputConfig;
                 _enableKeyboard = enableKeyboard;
-                _enableMouse    = enableMouse;
+                _enableMouse = enableMouse;
 
                 _device.Hid.RefreshInputConfig(validInputs);
             }
@@ -167,8 +167,8 @@ namespace Ryujinx.Input.HLE
         {
             lock (_lock)
             {
-                List<GamepadInput> hleInputStates = new List<GamepadInput>();
-                List<SixAxisInput> hleMotionStates = new List<SixAxisInput>(NpadDevices.MaxControllers);
+                List<GamepadInput> hleInputStates = new();
+                List<SixAxisInput> hleMotionStates = new(NpadDevices.MaxControllers);
 
                 KeyboardInput? hleKeyboardInput = null;
 
@@ -178,7 +178,7 @@ namespace Ryujinx.Input.HLE
                     (SixAxisInput, SixAxisInput) motionState = default;
 
                     NpadController controller = _controllers[(int)inputConfig.PlayerIndex];
-                    Ryujinx.HLE.HOS.Services.Hid.PlayerIndex playerIndex = (Ryujinx.HLE.HOS.Services.Hid.PlayerIndex)inputConfig.PlayerIndex;
+                    PlayerIndex playerIndex = (PlayerIndex)inputConfig.PlayerIndex;
 
                     bool isJoyconPair = false;
 
@@ -195,7 +195,7 @@ namespace Ryujinx.Input.HLE
 
                         inputState.Buttons |= _device.Hid.UpdateStickButtons(inputState.LStick, inputState.RStick);
 
-                        isJoyconPair = inputConfig.ControllerType == Common.Configuration.Hid.ControllerType.JoyconPair;
+                        isJoyconPair = inputConfig.ControllerType == ControllerType.JoyconPair;
 
                         var altMotionState = isJoyconPair ? controller.GetHLEMotionState(true) : default;
 
@@ -284,7 +284,7 @@ namespace Ryujinx.Input.HLE
         {
             lock (_lock)
             {
-                return _inputConfig.Find(x => x.PlayerIndex == (Ryujinx.Common.Configuration.Hid.PlayerIndex)index);
+                return _inputConfig.Find(x => x.PlayerIndex == (Common.Configuration.Hid.PlayerIndex)index);
             }
         }
 
@@ -314,6 +314,7 @@ namespace Ryujinx.Input.HLE
 
         public void Dispose()
         {
+            GC.SuppressFinalize(this);
             Dispose(true);
         }
     }
