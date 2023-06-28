@@ -3,7 +3,7 @@
 namespace Ryujinx.Common.GraphicsDriver.NVAPI
 {
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    unsafe struct NvdrsProfile
+    struct NvdrsProfile
     {
         public uint Version;
         public NvapiUnicodeString ProfileName;

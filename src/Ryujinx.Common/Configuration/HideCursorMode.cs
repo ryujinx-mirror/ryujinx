@@ -4,6 +4,6 @@ namespace Ryujinx.Common.Configuration
     {
         Never,
         OnIdle,
-        Always
+        Always,
     }
 }

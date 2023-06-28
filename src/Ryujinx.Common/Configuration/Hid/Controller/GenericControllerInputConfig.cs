@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 
 namespace Ryujinx.Common.Configuration.Hid.Controller
 {
-    public class GenericControllerInputConfig<Button, Stick> : GenericInputConfigurationCommon<Button> where Button : unmanaged where Stick : unmanaged
+    public class GenericControllerInputConfig<TButton, TStick> : GenericInputConfigurationCommon<TButton> where TButton : unmanaged where TStick : unmanaged
     {
         [JsonIgnore]
         private float _deadzoneLeft;
@@ -16,12 +16,12 @@ namespace Ryujinx.Common.Configuration.Hid.Controller
         /// <summary>
         /// Left JoyCon Controller Stick Bindings
         /// </summary>
-        public JoyconConfigControllerStick<Button, Stick> LeftJoyconStick { get; set; }
+        public JoyconConfigControllerStick<TButton, TStick> LeftJoyconStick { get; set; }
 
         /// <summary>
         /// Right JoyCon Controller Stick Bindings
         /// </summary>
-        public JoyconConfigControllerStick<Button, Stick> RightJoyconStick { get; set; }
+        public JoyconConfigControllerStick<TButton, TStick> RightJoyconStick { get; set; }
 
         /// <summary>
         /// Controller Left Analog Stick Deadzone

@@ -71,6 +71,6 @@ namespace Ryujinx.Common.Logging
         SurfaceFlinger,
         TamperMachine,
         Ui,
-        Vic
+        Vic,
     }
 }

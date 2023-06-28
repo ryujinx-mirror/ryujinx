@@ -5,8 +5,8 @@ namespace Ryujinx.Common
 {
     public class ReactiveObject<T>
     {
-        private ReaderWriterLock _readerWriterLock = new ReaderWriterLock();
-        private bool _isInitialized = false;
+        private readonly ReaderWriterLock _readerWriterLock = new();
+        private bool _isInitialized;
         private T _value;
 
         public event EventHandler<ReactiveEventArgs<T>> Event;
@@ -30,7 +30,7 @@ namespace Ryujinx.Common
                 bool oldIsInitialized = _isInitialized;
 
                 _isInitialized = true;
-                _value         = value;
+                _value = value;
 
                 _readerWriterLock.ReleaseWriterLock();
 

@@ -7,7 +7,7 @@ namespace Ryujinx.Common.Utilities
 {
     public class JsonHelper
     {
-        private static readonly JsonNamingPolicy SnakeCasePolicy = new SnakeCaseNamingPolicy();
+        private static readonly JsonNamingPolicy _snakeCasePolicy = new SnakeCaseNamingPolicy();
         private const int DefaultFileWriteBufferSize = 4096;
 
         /// <summary>
@@ -21,11 +21,11 @@ namespace Ryujinx.Common.Utilities
         {
             JsonSerializerOptions options = new()
             {
-                DictionaryKeyPolicy  = SnakeCasePolicy,
-                PropertyNamingPolicy = SnakeCasePolicy,
-                WriteIndented        = indented,
-                AllowTrailingCommas  = true,
-                ReadCommentHandling  = JsonCommentHandling.Skip
+                DictionaryKeyPolicy = _snakeCasePolicy,
+                PropertyNamingPolicy = _snakeCasePolicy,
+                WriteIndented = indented,
+                AllowTrailingCommas = true,
+                ReadCommentHandling = JsonCommentHandling.Skip,
             };
 
             return options;

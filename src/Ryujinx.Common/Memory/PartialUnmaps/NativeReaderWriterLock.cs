@@ -1,6 +1,5 @@
 ﻿using System.Runtime.InteropServices;
 using System.Threading;
-
 using static Ryujinx.Common.Memory.PartialUnmaps.PartialUnmapHelpers;
 
 namespace Ryujinx.Common.Memory.PartialUnmaps
@@ -14,15 +13,15 @@ namespace Ryujinx.Common.Memory.PartialUnmaps
         public int WriteLock;
         public int ReaderCount;
 
-        public static int WriteLockOffset;
-        public static int ReaderCountOffset;
+        public static readonly int WriteLockOffset;
+        public static readonly int ReaderCountOffset;
 
         /// <summary>
         /// Populates the field offsets for use when emitting native code.
         /// </summary>
         static NativeReaderWriterLock()
         {
-            NativeReaderWriterLock instance = new NativeReaderWriterLock();
+            NativeReaderWriterLock instance = new();
 
             WriteLockOffset = OffsetOf(ref instance, ref instance.WriteLock);
             ReaderCountOffset = OffsetOf(ref instance, ref instance.ReaderCount);
@@ -35,7 +34,9 @@ namespace Ryujinx.Common.Memory.PartialUnmaps
         {
             // Must take write lock for a very short time to become a reader.
 
-            while (Interlocked.CompareExchange(ref WriteLock, 1, 0) != 0) { }
+            while (Interlocked.CompareExchange(ref WriteLock, 1, 0) != 0)
+            {
+            }
 
             Interlocked.Increment(ref ReaderCount);
 
@@ -60,11 +61,15 @@ namespace Ryujinx.Common.Memory.PartialUnmaps
 
             Interlocked.Decrement(ref ReaderCount);
 
-            while (Interlocked.CompareExchange(ref WriteLock, 1, 0) != 0) { }
+            while (Interlocked.CompareExchange(ref WriteLock, 1, 0) != 0)
+            {
+            }
 
             // Wait for reader count to drop to 0, then take the lock again as the only reader.
 
-            while (Interlocked.CompareExchange(ref ReaderCount, 1, 0) != 0) { }
+            while (Interlocked.CompareExchange(ref ReaderCount, 1, 0) != 0)
+            {
+            }
         }
 
         /// <summary>

@@ -13,7 +13,7 @@ namespace Ryujinx.Common.GraphicsDriver.NVAPI
             Set(text);
         }
 
-        public string Get()
+        public readonly string Get()
         {
             fixed (byte* data = _data)
             {
@@ -29,7 +29,7 @@ namespace Ryujinx.Common.GraphicsDriver.NVAPI
             }
         }
 
-        public void Set(string text)
+        public readonly void Set(string text)
         {
             text += '\0';
             fixed (char* textPtr = text)

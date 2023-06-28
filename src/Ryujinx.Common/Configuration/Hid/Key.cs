@@ -138,6 +138,6 @@ namespace Ryujinx.Common.Configuration.Hid
         BackSlash,
         Unbound,
 
-        Count
+        Count,
     }
 }

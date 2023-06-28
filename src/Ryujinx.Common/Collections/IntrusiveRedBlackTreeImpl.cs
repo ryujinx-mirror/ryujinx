@@ -10,7 +10,7 @@ namespace Ryujinx.Common.Collections
     {
         protected const bool Black = true;
         protected const bool Red = false;
-        protected T Root = null;
+        protected T Root;
 
         internal T RootNode => Root;
 

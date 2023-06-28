@@ -28,14 +28,14 @@ namespace Ryujinx.Common.SystemInterop
         {
             public int GdiplusVersion;
 
-#pragma warning disable CS0649
+#pragma warning disable CS0649 // Field is never assigned to
             public IntPtr DebugEventCallback;
             public int SuppressBackgroundThread;
             public int SuppressExternalCodecs;
             public int StartupParameters;
 #pragma warning restore CS0649
 
-            public static StartupInputEx Default => new StartupInputEx
+            public static StartupInputEx Default => new()
             {
                 // We assume Windows 8 and upper
                 GdiplusVersion = 2,

@@ -53,6 +53,6 @@ namespace Ryujinx.Common.Configuration.Hid.Controller
         SingleLeftTrigger1,
         SingleRightTrigger1,
 
-        Count
+        Count,
     }
 }

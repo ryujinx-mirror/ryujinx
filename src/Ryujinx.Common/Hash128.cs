@@ -15,7 +15,7 @@ namespace Ryujinx.Common
             High = high;
         }
 
-        public override string ToString()
+        public readonly override string ToString()
         {
             return $"{High:x16}{Low:x16}";
         }
@@ -30,17 +30,17 @@ namespace Ryujinx.Common
             return !x.Equals(y);
         }
 
-        public override bool Equals(object obj)
+        public readonly override bool Equals(object obj)
         {
             return obj is Hash128 hash128 && Equals(hash128);
         }
 
-        public bool Equals(Hash128 cmpObj)
+        public readonly bool Equals(Hash128 cmpObj)
         {
             return Low == cmpObj.Low && High == cmpObj.High;
         }
 
-        public override int GetHashCode()
+        public readonly override int GetHashCode()
         {
             return HashCode.Combine(Low, High);
         }

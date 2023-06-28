@@ -12,10 +12,8 @@ namespace Ryujinx.Common.Utilities
             {
                 return Format(obj);
             }
-            else
-            {
-                return obj.ToString();
-            }
+
+            return obj.ToString();
         }
 
         public static string Format(MessagePackObject obj)
@@ -179,19 +177,17 @@ namespace Ryujinx.Common.Utilities
             {
                 return unchecked((char)('0' + b));
             }
-            else
-            {
-                return unchecked((char)('A' + (b - 10)));
-            }
+
+            return unchecked((char)('A' + (b - 10)));
         }
 
         internal class IndentedStringBuilder
         {
             const string DefaultIndent = "    ";
 
-            private int _indentCount = 0;
-            private int _newLineIndex = 0;
-            private StringBuilder _builder;
+            private int _indentCount;
+            private int _newLineIndex;
+            private readonly StringBuilder _builder;
 
             public string IndentString { get; set; } = DefaultIndent;
 

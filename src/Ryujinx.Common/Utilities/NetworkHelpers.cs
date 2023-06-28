@@ -30,7 +30,7 @@ namespace Ryujinx.Common.Utilities
                 return (null, null);
             }
 
-            IPInterfaceProperties       targetProperties  = null;
+            IPInterfaceProperties targetProperties = null;
             UnicastIPAddressInformation targetAddressInfo = null;
 
             NetworkInterface[] interfaces = NetworkInterface.GetAllNetworkInterfaces();

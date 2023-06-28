@@ -11,7 +11,7 @@ namespace Ryujinx.Common.SystemInterop
 {
     public partial class StdErrAdapter : IDisposable
     {
-        private bool _disposable = false;
+        private bool _disposable;
         private Stream _pipeReader;
         private Stream _pipeWriter;
         private CancellationTokenSource _cancellationTokenSource;
@@ -41,7 +41,7 @@ namespace Ryujinx.Common.SystemInterop
             _worker = Task.Run(async () => await EventWorkerAsync(_cancellationTokenSource.Token), _cancellationTokenSource.Token);
             _disposable = true;
         }
-        
+
         [SupportedOSPlatform("linux")]
         [SupportedOSPlatform("macos")]
         private async Task EventWorkerAsync(CancellationToken cancellationToken)
@@ -53,13 +53,15 @@ namespace Ryujinx.Common.SystemInterop
                 Logger.Error?.PrintRawMsg(line);
             }
         }
-        
-        private void Dispose(bool disposing)
+
+        public void Dispose()
         {
+            GC.SuppressFinalize(this);
+
             if (_disposable)
             {
                 _disposable = false;
-                
+
                 if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
                 {
                     _cancellationTokenSource.Cancel();
@@ -70,11 +72,6 @@ namespace Ryujinx.Common.SystemInterop
             }
         }
 
-        public void Dispose()
-        {
-            Dispose(true);
-        }
-
         [LibraryImport("libc", SetLastError = true)]
         private static partial int dup2(int fd, int fd2);
 
@@ -83,27 +80,25 @@ namespace Ryujinx.Common.SystemInterop
 
         private static (int, int) MakePipe()
         {
-            Span<int> pipefd = stackalloc int[2]; 
+            Span<int> pipefd = stackalloc int[2];
 
             if (pipe(pipefd) == 0)
             {
                 return (pipefd[0], pipefd[1]);
             }
-            else
-            {
-                throw new();
-            }
+
+            throw new();
         }
-        
+
         [SupportedOSPlatform("linux")]
         [SupportedOSPlatform("macos")]
         private static Stream CreateFileDescriptorStream(int fd)
         {
             return new FileStream(
-                new SafeFileHandle((IntPtr)fd, ownsHandle: true),
+                new SafeFileHandle(fd, ownsHandle: true),
                 FileAccess.ReadWrite
             );
         }
-       
+
     }
 }

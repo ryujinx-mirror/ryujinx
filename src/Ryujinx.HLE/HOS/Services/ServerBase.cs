@@ -439,7 +439,7 @@ namespace Ryujinx.HLE.HOS.Services
         {
             const int messageSize = 0x100;
 
-            using IMemoryOwner<byte> reqDataOwner = ByteMemoryPool.Shared.Rent(messageSize);
+            using IMemoryOwner<byte> reqDataOwner = ByteMemoryPool.Rent(messageSize);
 
             Span<byte> reqDataSpan = reqDataOwner.Memory.Span;
 

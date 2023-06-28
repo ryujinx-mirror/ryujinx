@@ -29,7 +29,7 @@ namespace Ryujinx.Common.SystemInterop
         private static partial int XCloseDisplay(IntPtr display);
 
         private static readonly double _standardDpiScale = 96.0;
-        private static readonly double _maxScaleFactor   = 1.25;
+        private static readonly double _maxScaleFactor = 1.25;
 
         /// <summary>
         /// Marks the application as DPI-Aware when running on the Windows operating system.
@@ -63,14 +63,14 @@ namespace Ryujinx.Common.SystemInterop
                         string dpiString = Marshal.PtrToStringAnsi(XGetDefault(display, "Xft", "dpi"));
                         if (dpiString == null || !double.TryParse(dpiString, NumberStyles.Any, CultureInfo.InvariantCulture, out userDpiScale))
                         {
-                            userDpiScale = (double)XDisplayWidth(display, 0) * 25.4 / (double)XDisplayWidthMM(display, 0);
+                            userDpiScale = XDisplayWidth(display, 0) * 25.4 / XDisplayWidthMM(display, 0);
                         }
-                        XCloseDisplay(display);
+                        _ = XCloseDisplay(display);
                     }
                     else if (xdgSessionType == "wayland")
                     {
                         // TODO
-                        Logger.Warning?.Print(LogClass.Application, $"Couldn't determine monitor DPI: Wayland not yet supported");
+                        Logger.Warning?.Print(LogClass.Application, "Couldn't determine monitor DPI: Wayland not yet supported");
                     }
                     else
                     {

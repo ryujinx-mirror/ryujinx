@@ -1,4 +1,3 @@
-using Ryujinx.Common.Memory;
 using Ryujinx.Common.Utilities;
 using System;
 using System.IO;
@@ -10,11 +9,11 @@ namespace Ryujinx.Common
 {
     public static class EmbeddedResources
     {
-        private readonly static Assembly ResourceAssembly;
+        private readonly static Assembly _resourceAssembly;
 
         static EmbeddedResources()
         {
-            ResourceAssembly = Assembly.GetAssembly(typeof(EmbeddedResources));
+            _resourceAssembly = Assembly.GetAssembly(typeof(EmbeddedResources));
         }
 
         public static byte[] Read(string filename)
@@ -33,28 +32,24 @@ namespace Ryujinx.Common
 
         public static byte[] Read(Assembly assembly, string filename)
         {
-            using (var stream = GetStream(assembly, filename))
+            using var stream = GetStream(assembly, filename);
+            if (stream == null)
             {
-                if (stream == null)
-                {
-                    return null;
-                }
-
-                return StreamUtils.StreamToBytes(stream);
+                return null;
             }
+
+            return StreamUtils.StreamToBytes(stream);
         }
 
         public async static Task<byte[]> ReadAsync(Assembly assembly, string filename)
         {
-            using (var stream = GetStream(assembly, filename))
+            using var stream = GetStream(assembly, filename);
+            if (stream == null)
             {
-                if (stream == null)
-                {
-                    return null;
-                }
-
-                return await StreamUtils.StreamToBytesAsync(stream);
+                return null;
             }
+
+            return await StreamUtils.StreamToBytesAsync(stream);
         }
 
         public static string ReadAllText(string filename)
@@ -73,34 +68,26 @@ namespace Ryujinx.Common
 
         public static string ReadAllText(Assembly assembly, string filename)
         {
-            using (var stream = GetStream(assembly, filename))
+            using var stream = GetStream(assembly, filename);
+            if (stream == null)
             {
-                if (stream == null)
-                {
-                    return null;
-                }
-
-                using (var reader = new StreamReader(stream))
-                {
-                    return reader.ReadToEnd();
-                }
+                return null;
             }
+
+            using var reader = new StreamReader(stream);
+            return reader.ReadToEnd();
         }
 
         public async static Task<string> ReadAllTextAsync(Assembly assembly, string filename)
         {
-            using (var stream = GetStream(assembly, filename))
+            using var stream = GetStream(assembly, filename);
+            if (stream == null)
             {
-                if (stream == null)
-                {
-                    return null;
-                }
-
-                using (var reader = new StreamReader(stream))
-                {
-                    return await reader.ReadToEndAsync();
-                }
+                return null;
             }
+
+            using var reader = new StreamReader(stream);
+            return await reader.ReadToEndAsync();
         }
 
         public static Stream GetStream(string filename)
@@ -112,8 +99,8 @@ namespace Ryujinx.Common
 
         public static Stream GetStream(Assembly assembly, string filename)
         {
-            var namespace_ = assembly.GetName().Name;
-            var manifestUri = namespace_ + "." + filename.Replace('/', '.');
+            var @namespace = assembly.GetName().Name;
+            var manifestUri = @namespace + "." + filename.Replace('/', '.');
 
             var stream = assembly.GetManifestResourceStream(manifestUri);
 
@@ -142,7 +129,7 @@ namespace Ryujinx.Common
                 }
             }
 
-            return (ResourceAssembly, filename);
+            return (_resourceAssembly, filename);
         }
     }
 }

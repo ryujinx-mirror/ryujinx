@@ -10,6 +10,6 @@ namespace Ryujinx.Common.Configuration.Hid.Controller
         Left,
         Right,
 
-        Count
+        Count,
     }
 }

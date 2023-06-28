@@ -17,7 +17,7 @@ namespace Ryujinx.Common.SystemInterop
         {
             public uint wPeriodMin;
             public uint wPeriodMax;
-        };
+        }
 
         [LibraryImport("winmm.dll", EntryPoint = "timeGetDevCaps", SetLastError = true)]
         private static partial uint TimeGetDevCaps(ref TimeCaps timeCaps, uint sizeTimeCaps);

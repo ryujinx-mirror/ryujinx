@@ -15,17 +15,17 @@ namespace Ryujinx.Common.Memory
         /// <summary>
         /// Null pointer.
         /// </summary>
-        public static Ptr<T> Null => new Ptr<T>() { _ptr = IntPtr.Zero };
+        public static Ptr<T> Null => new() { _ptr = IntPtr.Zero };
 
         /// <summary>
         /// True if the pointer is null, false otherwise.
         /// </summary>
-        public bool IsNull => _ptr == IntPtr.Zero;
+        public readonly bool IsNull => _ptr == IntPtr.Zero;
 
         /// <summary>
         /// Gets a reference to the value.
         /// </summary>
-        public ref T Value => ref Unsafe.AsRef<T>((void*)_ptr);
+        public readonly ref T Value => ref Unsafe.AsRef<T>((void*)_ptr);
 
         /// <summary>
         /// Creates a new pointer to an unmanaged resource.
@@ -40,17 +40,17 @@ namespace Ryujinx.Common.Memory
             _ptr = (IntPtr)Unsafe.AsPointer(ref value);
         }
 
-        public override bool Equals(object obj)
+        public readonly override bool Equals(object obj)
         {
             return obj is Ptr<T> other && Equals(other);
         }
 
-        public bool Equals([AllowNull] Ptr<T> other)
+        public readonly bool Equals([AllowNull] Ptr<T> other)
         {
             return _ptr == other._ptr;
         }
 
-        public override int GetHashCode()
+        public readonly override int GetHashCode()
         {
             return _ptr.GetHashCode();
         }

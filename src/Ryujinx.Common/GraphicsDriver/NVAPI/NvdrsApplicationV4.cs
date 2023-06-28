@@ -3,7 +3,7 @@
 namespace Ryujinx.Common.GraphicsDriver.NVAPI
 {
     [StructLayout(LayoutKind.Sequential, Pack = 4)]
-    unsafe struct NvdrsApplicationV4
+    struct NvdrsApplicationV4
     {
         public uint Version;
         public uint IsPredefined;

@@ -10,7 +10,7 @@ namespace Ryujinx.Common.Memory
 
         byte _element;
 
-        public int Length => Size;
+        public readonly int Length => Size;
         public ref byte this[int index] => ref AsSpan()[index];
         public Span<byte> AsSpan() => MemoryMarshal.CreateSpan(ref _element, Size);
     }
@@ -22,7 +22,7 @@ namespace Ryujinx.Common.Memory
 
         byte _element;
 
-        public int Length => Size;
+        public readonly int Length => Size;
         public ref byte this[int index] => ref AsSpan()[index];
         public Span<byte> AsSpan() => MemoryMarshal.CreateSpan(ref _element, Size);
     }
@@ -34,7 +34,7 @@ namespace Ryujinx.Common.Memory
 
         byte _element;
 
-        public int Length => Size;
+        public readonly int Length => Size;
         public ref byte this[int index] => ref AsSpan()[index];
         public Span<byte> AsSpan() => MemoryMarshal.CreateSpan(ref _element, Size);
     }
@@ -46,7 +46,7 @@ namespace Ryujinx.Common.Memory
 
         byte _element;
 
-        public int Length => Size;
+        public readonly int Length => Size;
         public ref byte this[int index] => ref AsSpan()[index];
         public Span<byte> AsSpan() => MemoryMarshal.CreateSpan(ref _element, Size);
     }
@@ -58,7 +58,7 @@ namespace Ryujinx.Common.Memory
 
         byte _element;
 
-        public int Length => Size;
+        public readonly int Length => Size;
         public ref byte this[int index] => ref AsSpan()[index];
         public Span<byte> AsSpan() => MemoryMarshal.CreateSpan(ref _element, Size);
     }
@@ -70,7 +70,7 @@ namespace Ryujinx.Common.Memory
 
         byte _element;
 
-        public int Length => Size;
+        public readonly int Length => Size;
         public ref byte this[int index] => ref AsSpan()[index];
         public Span<byte> AsSpan() => MemoryMarshal.CreateSpan(ref _element, Size);
     }

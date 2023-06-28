@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.Marshalling;
 using System.Runtime.Versioning;
 using System.Threading;
-
 using static Ryujinx.Common.Memory.PartialUnmaps.PartialUnmapHelpers;
 
 namespace Ryujinx.Common.Memory.PartialUnmaps
@@ -35,7 +33,7 @@ namespace Ryujinx.Common.Memory.PartialUnmaps
 
         [SupportedOSPlatform("windows")]
         [LibraryImport("kernel32.dll", SetLastError = true)]
-        [return: MarshalAs (UnmanagedType.Bool)]
+        [return: MarshalAs(UnmanagedType.Bool)]
         private static partial bool CloseHandle(IntPtr hObject);
 
         [SupportedOSPlatform("windows")]
@@ -48,7 +46,7 @@ namespace Ryujinx.Common.Memory.PartialUnmaps
         /// </summary>
         static unsafe PartialUnmapState()
         {
-            PartialUnmapState instance = new PartialUnmapState();
+            PartialUnmapState instance = new();
 
             PartialUnmapLockOffset = OffsetOf(ref instance, ref instance.PartialUnmapLock);
             PartialUnmapsCountOffset = OffsetOf(ref instance, ref instance.PartialUnmapsCount);

@@ -8,6 +8,6 @@ namespace Ryujinx.Common.Configuration
     {
         Bilinear,
         Nearest,
-        Fsr
+        Fsr,
     }
 }

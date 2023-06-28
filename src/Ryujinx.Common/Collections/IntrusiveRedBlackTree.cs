@@ -180,11 +180,6 @@ namespace Ryujinx.Common.Collections
                     parent.Right = child;
                 }
 
-                if (ParentOf(element) == old)
-                {
-                    parent = element;
-                }
-
                 element.Color = old.Color;
                 element.Left = old.Left;
                 element.Right = old.Right;
@@ -258,11 +253,11 @@ namespace Ryujinx.Common.Collections
         /// <param name="tree">Tree to search at</param>
         /// <param name="key">Key of the node to be found</param>
         /// <returns>Node that is equal to <paramref name="key"/></returns>
-        public static N GetNodeByKey<N, K>(this IntrusiveRedBlackTree<N> tree, K key)
-            where N : IntrusiveRedBlackTreeNode<N>, IComparable<N>, IComparable<K>
-            where K : struct
+        public static TNode GetNodeByKey<TNode, TKey>(this IntrusiveRedBlackTree<TNode> tree, TKey key)
+            where TNode : IntrusiveRedBlackTreeNode<TNode>, IComparable<TNode>, IComparable<TKey>
+            where TKey : struct
         {
-            N node = tree.RootNode;
+            TNode node = tree.RootNode;
             while (node != null)
             {
                 int cmp = node.CompareTo(key);

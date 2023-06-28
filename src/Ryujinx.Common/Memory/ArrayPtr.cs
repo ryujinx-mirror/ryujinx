@@ -16,12 +16,12 @@ namespace Ryujinx.Common.Memory
         /// <summary>
         /// Null pointer.
         /// </summary>
-        public static ArrayPtr<T> Null => new ArrayPtr<T>() { _ptr = IntPtr.Zero };
+        public static ArrayPtr<T> Null => new() { _ptr = IntPtr.Zero };
 
         /// <summary>
         /// True if the pointer is null, false otherwise.
         /// </summary>
-        public bool IsNull => _ptr == IntPtr.Zero;
+        public readonly bool IsNull => _ptr == IntPtr.Zero;
 
         /// <summary>
         /// Number of elements on the array.
@@ -37,7 +37,7 @@ namespace Ryujinx.Common.Memory
         /// </remarks>
         /// <param name="index">Index of the element</param>
         /// <returns>Reference to the element at the given index</returns>
-        public ref T this[int index] => ref Unsafe.AsRef<T>((T*)_ptr + index);
+        public readonly ref T this[int index] => ref Unsafe.AsRef<T>((T*)_ptr + index);
 
         /// <summary>
         /// Creates a new array from a given reference.
@@ -81,7 +81,7 @@ namespace Ryujinx.Common.Memory
         /// </summary>
         /// <param name="start">Index where the new array should start</param>
         /// <returns>New array starting at the specified position</returns>
-        public ArrayPtr<T> Slice(int start) => new ArrayPtr<T>(ref this[start], Length - start);
+        public ArrayPtr<T> Slice(int start) => new(ref this[start], Length - start);
 
         /// <summary>
         /// Gets a span from the array.
@@ -93,19 +93,19 @@ namespace Ryujinx.Common.Memory
         /// Gets the array base pointer.
         /// </summary>
         /// <returns>Base pointer</returns>
-        public T* ToPointer() => (T*)_ptr;
+        public readonly T* ToPointer() => (T*)_ptr;
 
-        public override bool Equals(object obj)
+        public readonly override bool Equals(object obj)
         {
             return obj is ArrayPtr<T> other && Equals(other);
         }
 
-        public bool Equals([AllowNull] ArrayPtr<T> other)
+        public readonly bool Equals([AllowNull] ArrayPtr<T> other)
         {
             return _ptr == other._ptr && Length == other.Length;
         }
 
-        public override int GetHashCode()
+        public readonly override int GetHashCode()
         {
             return HashCode.Combine(_ptr, Length);
         }

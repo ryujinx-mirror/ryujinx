@@ -9,10 +9,7 @@ namespace Ryujinx.Common.Pools
 
         public static ref T[] Get()
         {
-            if (_array == null)
-            {
-                _array = new T[1];
-            }
+            _array ??= new T[1];
 
             return ref _array;
         }

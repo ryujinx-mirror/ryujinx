@@ -1,6 +1,5 @@
 ﻿using System.Runtime.InteropServices;
 using System.Threading;
-
 using static Ryujinx.Common.Memory.PartialUnmaps.PartialUnmapHelpers;
 
 namespace Ryujinx.Common.Memory.PartialUnmaps
@@ -18,15 +17,15 @@ namespace Ryujinx.Common.Memory.PartialUnmaps
         public Array20<int> ThreadIds;
         public Array20<T> Structs;
 
-        public static int ThreadIdsOffset;
-        public static int StructsOffset;
+        public static readonly int ThreadIdsOffset;
+        public static readonly int StructsOffset;
 
         /// <summary>
         /// Populates the field offsets for use when emitting native code.
         /// </summary>
         static ThreadLocalMap()
         {
-            ThreadLocalMap<T> instance = new ThreadLocalMap<T>();
+            ThreadLocalMap<T> instance = new();
 
             ThreadIdsOffset = OffsetOf(ref instance, ref instance.ThreadIds);
             StructsOffset = OffsetOf(ref instance, ref instance.Structs);

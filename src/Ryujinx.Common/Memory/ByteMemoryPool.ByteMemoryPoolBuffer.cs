@@ -30,7 +30,7 @@ namespace Ryujinx.Common.Memory
                 get
                 {
                     byte[] array = _array;
-                    
+
                     ObjectDisposedException.ThrowIf(array is null, this);
 
                     return new Memory<byte>(array, 0, _length);
@@ -40,7 +40,7 @@ namespace Ryujinx.Common.Memory
             public void Dispose()
             {
                 var array = Interlocked.Exchange(ref _array, null);
-                
+
                 if (array != null)
                 {
                     ArrayPool<byte>.Shared.Return(array);

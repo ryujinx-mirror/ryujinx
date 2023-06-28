@@ -11,6 +11,6 @@ namespace Ryujinx.Common.Configuration
         SmaaLow,
         SmaaMedium,
         SmaaHigh,
-        SmaaUltra
+        SmaaUltra,
     }
 }

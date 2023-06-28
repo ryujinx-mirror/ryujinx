@@ -97,27 +97,26 @@ namespace Ryujinx.Common.GraphicsDriver
 
             Check(NvAPI_DRS_LoadSettings(handle));
 
-            IntPtr profileHandle;
-
             // Check if the profile already exists.
 
-            int status = NvAPI_DRS_FindProfileByName(handle, new NvapiUnicodeString(ProfileName), out profileHandle);
+            int status = NvAPI_DRS_FindProfileByName(handle, new NvapiUnicodeString(ProfileName), out nint profileHandle);
 
             if (status != 0)
             {
-                NvdrsProfile profile = new NvdrsProfile { 
-                    Version = MakeVersion<NvdrsProfile>(1), 
-                    IsPredefined = 0, 
-                    GpuSupport = uint.MaxValue 
+                NvdrsProfile profile = new()
+                {
+                    Version = MakeVersion<NvdrsProfile>(1),
+                    IsPredefined = 0,
+                    GpuSupport = uint.MaxValue,
                 };
                 profile.ProfileName.Set(ProfileName);
                 Check(NvAPI_DRS_CreateProfile(handle, ref profile, out profileHandle));
 
-                NvdrsApplicationV4 application = new NvdrsApplicationV4
+                NvdrsApplicationV4 application = new()
                 {
                     Version = MakeVersion<NvdrsApplicationV4>(4),
                     IsPredefined = 0,
-                    Flags = 3 // IsMetro, IsCommandLine
+                    Flags = 3, // IsMetro, IsCommandLine
                 };
                 application.AppName.Set("Ryujinx.exe");
                 application.UserFriendlyName.Set("Ryujinx");
@@ -127,7 +126,7 @@ namespace Ryujinx.Common.GraphicsDriver
                 Check(NvAPI_DRS_CreateApplication(handle, profileHandle, ref application));
             }
 
-            NvdrsSetting setting = new NvdrsSetting
+            NvdrsSetting setting = new()
             {
                 Version = MakeVersion<NvdrsSetting>(1),
                 SettingId = Nvapi.OglThreadControlId,
@@ -136,7 +135,7 @@ namespace Ryujinx.Common.GraphicsDriver
                 IsCurrentPredefined = 0,
                 IsPredefinedValid = 0,
                 CurrentValue = targetValue,
-                PredefinedValue = targetValue
+                PredefinedValue = targetValue,
             };
 
             Check(NvAPI_DRS_SetSetting(handle, profileHandle, ref setting));
@@ -154,10 +153,8 @@ namespace Ryujinx.Common.GraphicsDriver
             {
                 return Marshal.GetDelegateForFunctionPointer<T>(ptr);
             }
-            else
-            {
-                return null;
-            }
+
+            return null;
         }
     }
 }

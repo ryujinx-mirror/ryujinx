@@ -5,7 +5,7 @@ namespace Ryujinx.Common.Memory
 {
     public static class MemoryStreamManager
     {
-        private static readonly RecyclableMemoryStreamManager _shared = new RecyclableMemoryStreamManager();
+        private static readonly RecyclableMemoryStreamManager _shared = new();
 
         /// <summary>
         /// We don't expose the <c>RecyclableMemoryStreamManager</c> directly because version 2.x
@@ -19,7 +19,7 @@ namespace Ryujinx.Common.Memory
             /// </summary>
             /// <returns>A <c>RecyclableMemoryStream</c></returns>
             public static RecyclableMemoryStream GetStream()
-                => new RecyclableMemoryStream(_shared);
+                => new(_shared);
 
             /// <summary>
             /// Retrieve a new <c>MemoryStream</c> object with the contents copied from the provided

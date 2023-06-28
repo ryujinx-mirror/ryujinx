@@ -7,7 +7,7 @@ namespace Ryujinx.Common.Logging.Formatters
 {
     internal static class DynamicObjectFormatter
     {
-        private static readonly ObjectPool<StringBuilder> StringBuilderPool = SharedPools.Default<StringBuilder>();
+        private static readonly ObjectPool<StringBuilder> _stringBuilderPool = SharedPools.Default<StringBuilder>();
 
         public static string? Format(object? dynamicObject)
         {
@@ -16,7 +16,7 @@ namespace Ryujinx.Common.Logging.Formatters
                 return null;
             }
 
-            StringBuilder sb = StringBuilderPool.Allocate();
+            StringBuilder sb = _stringBuilderPool.Allocate();
 
             try
             {
@@ -26,7 +26,7 @@ namespace Ryujinx.Common.Logging.Formatters
             }
             finally
             {
-                StringBuilderPool.Release(sb);
+                _stringBuilderPool.Release(sb);
             }
         }
 
@@ -48,7 +48,7 @@ namespace Ryujinx.Common.Logging.Formatters
 
                 if (typeof(Array).IsAssignableFrom(prop.PropertyType))
                 {
-                    Array? array = (Array?) prop.GetValue(dynamicObject);
+                    Array? array = (Array?)prop.GetValue(dynamicObject);
 
                     if (array is not null)
                     {

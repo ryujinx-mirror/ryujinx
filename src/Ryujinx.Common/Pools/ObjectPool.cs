@@ -13,7 +13,7 @@ namespace Ryujinx.Common
 
         public ObjectPool(Func<T> factory, int size)
         {
-            _items   = new T[size - 1];
+            _items = new T[size - 1];
             _factory = factory;
         }
 
