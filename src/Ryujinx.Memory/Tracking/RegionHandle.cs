@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection.Metadata;
 using System.Threading;
 
 namespace Ryujinx.Memory.Tracking
@@ -50,7 +49,7 @@ namespace Ryujinx.Memory.Tracking
 
         internal IMultiRegionHandle Parent { get; set; }
 
-        private event Action _onDirty;
+        private event Action OnDirty;
 
         private readonly object _preActionLock = new();
         private RegionSignal _preAction; // Action to perform before a read or write. This will block the memory access.
@@ -269,7 +268,7 @@ namespace Ryujinx.Memory.Tracking
                 Dirty = true;
                 if (!oldDirty)
                 {
-                    _onDirty?.Invoke();
+                    OnDirty?.Invoke();
                 }
                 Parent?.SignalWrite();
             }
@@ -311,7 +310,10 @@ namespace Ryujinx.Memory.Tracking
         /// <param name="consecutiveCheck">True if this reprotect is the result of consecutive dirty checks</param>
         public void Reprotect(bool asDirty, bool consecutiveCheck = false)
         {
-            if (_volatile) return;
+            if (_volatile)
+            {
+                return;
+            }
 
             Dirty = asDirty;
 
@@ -403,7 +405,7 @@ namespace Ryujinx.Memory.Tracking
         /// <param name="action">Action to call on dirty</param>
         public void RegisterDirtyEvent(Action action)
         {
-            _onDirty += action;
+            OnDirty += action;
         }
 
         /// <summary>
@@ -460,6 +462,8 @@ namespace Ryujinx.Memory.Tracking
         public void Dispose()
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
+
+            GC.SuppressFinalize(this);
 
             _disposed = true;
 

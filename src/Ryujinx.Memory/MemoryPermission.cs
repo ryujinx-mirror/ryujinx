@@ -46,6 +46,6 @@ namespace Ryujinx.Memory
         /// <summary>
         /// Indicates an invalid protection.
         /// </summary>
-        Invalid = 255
+        Invalid = 255,
     }
 }

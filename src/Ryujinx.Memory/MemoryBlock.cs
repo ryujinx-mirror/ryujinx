@@ -364,9 +364,9 @@ namespace Ryujinx.Memory
         /// <param name="pointer">Native pointer</param>
         /// <param name="offset">Offset to add</param>
         /// <returns>Native pointer with the added offset</returns>
-        private IntPtr PtrAddr(IntPtr pointer, ulong offset)
+        private static IntPtr PtrAddr(IntPtr pointer, ulong offset)
         {
-            return (IntPtr)(pointer.ToInt64() + (long)offset);
+            return new IntPtr(pointer.ToInt64() + (long)offset);
         }
 
         /// <summary>

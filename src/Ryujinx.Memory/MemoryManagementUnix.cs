@@ -50,7 +50,7 @@ namespace Ryujinx.Memory
                 }
             }
 
-            IntPtr ptr = mmap(IntPtr.Zero, size, prot, flags, -1, 0);
+            IntPtr ptr = Mmap(IntPtr.Zero, size, prot, flags, -1, 0);
 
             if (ptr == MAP_FAILED)
             {
@@ -115,7 +115,7 @@ namespace Ryujinx.Memory
                 MemoryPermission.ReadAndExecute => MmapProts.PROT_READ | MmapProts.PROT_EXEC,
                 MemoryPermission.ReadWriteExecute => MmapProts.PROT_READ | MmapProts.PROT_WRITE | MmapProts.PROT_EXEC,
                 MemoryPermission.Execute => MmapProts.PROT_EXEC,
-                _ => throw new MemoryProtectionException(permission)
+                _ => throw new MemoryProtectionException(permission),
             };
         }
 
@@ -185,12 +185,12 @@ namespace Ryujinx.Memory
 
         public static void DestroySharedMemory(IntPtr handle)
         {
-            close((int)handle);
+            close(handle.ToInt32());
         }
 
         public static IntPtr MapSharedMemory(IntPtr handle, ulong size)
         {
-            return mmap(IntPtr.Zero, size, MmapProts.PROT_READ | MmapProts.PROT_WRITE, MmapFlags.MAP_SHARED, (int)handle, 0);
+            return Mmap(IntPtr.Zero, size, MmapProts.PROT_READ | MmapProts.PROT_WRITE, MmapFlags.MAP_SHARED, handle.ToInt32(), 0);
         }
 
         public static void UnmapSharedMemory(IntPtr address, ulong size)
@@ -200,12 +200,12 @@ namespace Ryujinx.Memory
 
         public static void MapView(IntPtr sharedMemory, ulong srcOffset, IntPtr location, ulong size)
         {
-            mmap(location, size, MmapProts.PROT_READ | MmapProts.PROT_WRITE, MmapFlags.MAP_FIXED | MmapFlags.MAP_SHARED, (int)sharedMemory, (long)srcOffset);
+            Mmap(location, size, MmapProts.PROT_READ | MmapProts.PROT_WRITE, MmapFlags.MAP_FIXED | MmapFlags.MAP_SHARED, sharedMemory.ToInt32(), (long)srcOffset);
         }
 
         public static void UnmapView(IntPtr location, ulong size)
         {
-            mmap(location, size, MmapProts.PROT_NONE, MmapFlags.MAP_FIXED | MmapFlags.MAP_PRIVATE | MmapFlags.MAP_ANONYMOUS | MmapFlags.MAP_NORESERVE, -1, 0);
+            Mmap(location, size, MmapProts.PROT_NONE, MmapFlags.MAP_FIXED | MmapFlags.MAP_PRIVATE | MmapFlags.MAP_ANONYMOUS | MmapFlags.MAP_NORESERVE, -1, 0);
         }
     }
 }

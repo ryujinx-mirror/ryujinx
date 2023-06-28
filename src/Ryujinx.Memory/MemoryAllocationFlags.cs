@@ -47,6 +47,6 @@ namespace Ryujinx.Memory
         /// Indicates that the memory will be used to store JIT generated code.
         /// On some platforms, this requires special flags to be passed that will allow the memory to be executable.
         /// </summary>
-        Jit = 1 << 5
+        Jit = 1 << 5,
     }
 }

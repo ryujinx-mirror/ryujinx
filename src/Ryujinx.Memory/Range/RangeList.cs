@@ -238,7 +238,7 @@ namespace Ryujinx.Memory.Range
 
             if (index < 0)
             {
-                return default(T);
+                return default;
             }
 
             return _items[index].Value;
@@ -398,7 +398,7 @@ namespace Ryujinx.Memory.Range
         /// <returns>List index of the item, or complement index of nearest item with lower value on the list</returns>
         private int BinarySearch(ulong address)
         {
-            int left  = 0;
+            int left = 0;
             int right = Count - 1;
 
             while (left <= right)
@@ -435,7 +435,7 @@ namespace Ryujinx.Memory.Range
         /// <returns>List index of the item, or complement index of nearest item with lower value on the list</returns>
         private int BinarySearch(ulong address, ulong endAddress)
         {
-            int left  = 0;
+            int left = 0;
             int right = Count - 1;
 
             while (left <= right)

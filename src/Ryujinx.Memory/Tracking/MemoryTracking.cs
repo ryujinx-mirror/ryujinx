@@ -21,7 +21,7 @@ namespace Ryujinx.Memory.Tracking
         /// This lock must be obtained when traversing or updating the region-handle hierarchy.
         /// It is not required when reading dirty flags.
         /// </summary>
-        internal object TrackingLock = new object();
+        internal object TrackingLock = new();
 
         /// <summary>
         /// Create a new tracking structure for the given "physical" memory block,
@@ -114,7 +114,7 @@ namespace Ryujinx.Memory.Tracking
         /// <returns>A list of virtual regions within the given range</returns>
         internal List<VirtualRegion> GetVirtualRegionsForHandle(ulong va, ulong size)
         {
-            List<VirtualRegion> result = new List<VirtualRegion>();
+            List<VirtualRegion> result = new();
             _virtualRegions.GetOrAddRegions(result, va, size, (va, size) => new VirtualRegion(this, va, size));
 
             return result;
@@ -172,7 +172,7 @@ namespace Ryujinx.Memory.Tracking
             lock (TrackingLock)
             {
                 bool mapped = _memoryManager.IsRangeMapped(address, size);
-                RegionHandle handle = new RegionHandle(this, paAddress, paSize, address, size, id, mapped);
+                RegionHandle handle = new(this, paAddress, paSize, address, size, id, mapped);
 
                 return handle;
             }
@@ -194,7 +194,7 @@ namespace Ryujinx.Memory.Tracking
             lock (TrackingLock)
             {
                 bool mapped = _memoryManager.IsRangeMapped(address, size);
-                RegionHandle handle = new RegionHandle(this, paAddress, paSize, address, size, bitmap, bit, id, mapped);
+                RegionHandle handle = new(this, paAddress, paSize, address, size, bitmap, bit, id, mapped);
 
                 return handle;
             }

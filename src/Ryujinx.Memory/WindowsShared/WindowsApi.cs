@@ -7,8 +7,8 @@ namespace Ryujinx.Memory.WindowsShared
     [SupportedOSPlatform("windows")]
     static partial class WindowsApi
     {
-        public static readonly IntPtr InvalidHandleValue = new IntPtr(-1);
-        public static readonly IntPtr CurrentProcessHandle = new IntPtr(-1);
+        public static readonly IntPtr InvalidHandleValue = new(-1);
+        public static readonly IntPtr CurrentProcessHandle = new(-1);
 
         [LibraryImport("kernel32.dll", SetLastError = true)]
         public static partial IntPtr VirtualAlloc(
@@ -96,7 +96,7 @@ namespace Ryujinx.Memory.WindowsShared
                 MemoryPermission.ReadAndExecute => MemoryProtection.ExecuteRead,
                 MemoryPermission.ReadWriteExecute => MemoryProtection.ExecuteReadWrite,
                 MemoryPermission.Execute => MemoryProtection.Execute,
-                _ => throw new MemoryProtectionException(permission)
+                _ => throw new MemoryProtectionException(permission),
             };
         }
     }

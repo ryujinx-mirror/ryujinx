@@ -14,7 +14,7 @@ namespace Ryujinx.Memory
             PROT_NONE = 0,
             PROT_READ = 1,
             PROT_WRITE = 2,
-            PROT_EXEC = 4
+            PROT_EXEC = 4,
         }
 
         [Flags]
@@ -26,7 +26,7 @@ namespace Ryujinx.Memory
             MAP_NORESERVE = 8,
             MAP_FIXED = 16,
             MAP_UNLOCKED = 32,
-            MAP_JIT_DARWIN = 0x800
+            MAP_JIT_DARWIN = 0x800,
         }
 
         [Flags]
@@ -164,7 +164,7 @@ namespace Ryujinx.Memory
             return result;
         }
 
-        public static IntPtr mmap(IntPtr address, ulong length, MmapProts prot, MmapFlags flags, int fd, long offset)
+        public static IntPtr Mmap(IntPtr address, ulong length, MmapProts prot, MmapFlags flags, int fd, long offset)
         {
             return Internal_mmap(address, length, prot, MmapFlagsToSystemFlags(flags), fd, offset);
         }

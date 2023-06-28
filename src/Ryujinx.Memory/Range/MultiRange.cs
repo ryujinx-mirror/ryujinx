@@ -310,7 +310,7 @@ namespace Ryujinx.Memory.Range
                 return _singleRange.GetHashCode();
             }
 
-            HashCode hash = new HashCode();
+            HashCode hash = new();
 
             foreach (MemoryRange range in _ranges)
             {
@@ -327,6 +327,16 @@ namespace Ryujinx.Memory.Range
         public override string ToString()
         {
             return HasSingleRange ? _singleRange.ToString() : string.Join(", ", _ranges);
+        }
+
+        public static bool operator ==(MultiRange left, MultiRange right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(MultiRange left, MultiRange right)
+        {
+            return !(left == right);
         }
     }
 }

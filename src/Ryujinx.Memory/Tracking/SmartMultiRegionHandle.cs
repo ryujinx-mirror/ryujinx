@@ -17,7 +17,7 @@ namespace Ryujinx.Memory.Tracking
         private readonly ulong _address;
         private readonly ulong _granularity;
         private readonly ulong _size;
-        private MemoryTracking _tracking;
+        private readonly MemoryTracking _tracking;
         private readonly int _id;
 
         public bool Dirty { get; private set; } = true;
@@ -271,6 +271,8 @@ namespace Ryujinx.Memory.Tracking
 
         public void Dispose()
         {
+            GC.SuppressFinalize(this);
+
             foreach (var handle in _handles)
             {
                 handle?.Dispose();

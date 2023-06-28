@@ -10,14 +10,14 @@ namespace Ryujinx.Memory.WindowsShared
         Commit = 0x1000,
         Reserve = 0x2000,
         Decommit = 0x4000,
-        ReplacePlaceholder = 0x4000,
+        ReplacePlaceholder = Decommit,
         Release = 0x8000,
         ReservePlaceholder = 0x40000,
         Reset = 0x80000,
         Physical = 0x400000,
         TopDown = 0x100000,
         WriteWatch = 0x200000,
-        LargePages = 0x20000000
+        LargePages = 0x20000000,
     }
 
     [Flags]
@@ -33,7 +33,7 @@ namespace Ryujinx.Memory.WindowsShared
         ExecuteWriteCopy = 0x80,
         GuardModifierflag = 0x100,
         NoCacheModifierflag = 0x200,
-        WriteCombineModifierflag = 0x400
+        WriteCombineModifierflag = 0x400,
     }
 
     [Flags]
@@ -47,6 +47,6 @@ namespace Ryujinx.Memory.WindowsShared
         SectionCommit = 0x8000000,
         SectionImage = 0x1000000,
         SectionNoCache = 0x10000000,
-        SectionReserve = 0x4000000
+        SectionReserve = 0x4000000,
     }
 }
