@@ -13,11 +13,11 @@ namespace Ryujinx.Graphics.Shader.Translation
         {
             Blocks = blocks;
 
-            HashSet<BasicBlock> visited = new HashSet<BasicBlock>();
+            HashSet<BasicBlock> visited = new();
 
-            Stack<BasicBlock> blockStack = new Stack<BasicBlock>();
+            Stack<BasicBlock> blockStack = new();
 
-            List<BasicBlock> postOrderBlocks = new List<BasicBlock>(blocks.Length);
+            List<BasicBlock> postOrderBlocks = new(blocks.Length);
 
             PostOrderMap = new int[blocks.Length];
 
@@ -50,9 +50,9 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         public static ControlFlowGraph Create(Operation[] operations)
         {
-            Dictionary<Operand, BasicBlock> labels = new Dictionary<Operand, BasicBlock>();
+            Dictionary<Operand, BasicBlock> labels = new();
 
-            List<BasicBlock> blocks = new List<BasicBlock>();
+            List<BasicBlock> blocks = new();
 
             BasicBlock currentBlock = null;
 
@@ -68,7 +68,7 @@ namespace Ryujinx.Graphics.Shader.Translation
 
             void NewNextBlock()
             {
-                BasicBlock block = new BasicBlock(blocks.Count);
+                BasicBlock block = new(blocks.Count);
 
                 blocks.Add(block);
 
@@ -110,7 +110,7 @@ namespace Ryujinx.Graphics.Shader.Translation
                     currentBlock.Operations.AddLast(operation);
                 }
 
-                needsNewBlock = operation.Inst == Instruction.Branch       ||
+                needsNewBlock = operation.Inst == Instruction.Branch ||
                                 operation.Inst == Instruction.BranchIfTrue ||
                                 operation.Inst == Instruction.BranchIfFalse;
 

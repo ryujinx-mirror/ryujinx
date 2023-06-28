@@ -126,9 +126,9 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         public ShaderConfig(ShaderStage stage, IGpuAccessor gpuAccessor, TranslationOptions options, int localMemorySize)
         {
-            Stage           = stage;
-            GpuAccessor     = gpuAccessor;
-            Options         = options;
+            Stage = stage;
+            GpuAccessor = gpuAccessor;
+            Options = options;
             LocalMemorySize = localMemorySize;
 
             _transformFeedbackDefinitions = new Dictionary<TransformFeedbackVariable, TransformFeedbackOutput>();
@@ -138,35 +138,35 @@ namespace Ryujinx.Graphics.Shader.Translation
                 gpuAccessor.QueryTransformFeedbackEnabled() &&
                 gpuAccessor.QueryHostSupportsTransformFeedback();
 
-            UsedInputAttributesPerPatch  = new HashSet<int>();
+            UsedInputAttributesPerPatch = new HashSet<int>();
             UsedOutputAttributesPerPatch = new HashSet<int>();
 
             _usedTextures = new Dictionary<TextureInfo, TextureMeta>();
-            _usedImages   = new Dictionary<TextureInfo, TextureMeta>();
+            _usedImages = new Dictionary<TextureInfo, TextureMeta>();
 
             ResourceManager = new ResourceManager(stage, gpuAccessor, new ShaderProperties());
 
             if (!gpuAccessor.QueryHostSupportsTransformFeedback() && gpuAccessor.QueryTransformFeedbackEnabled())
             {
-                StructureType tfeInfoStruct = new StructureType(new StructureField[]
+                StructureType tfeInfoStruct = new(new StructureField[]
                 {
-                    new StructureField(AggregateType.Array | AggregateType.U32, "base_offset", 4),
-                    new StructureField(AggregateType.U32, "vertex_count")
+                    new(AggregateType.Array | AggregateType.U32, "base_offset", 4),
+                    new(AggregateType.U32, "vertex_count"),
                 });
 
-                BufferDefinition tfeInfoBuffer = new BufferDefinition(BufferLayout.Std430, 1, Constants.TfeInfoBinding, "tfe_info", tfeInfoStruct);
+                BufferDefinition tfeInfoBuffer = new(BufferLayout.Std430, 1, Constants.TfeInfoBinding, "tfe_info", tfeInfoStruct);
 
                 Properties.AddStorageBuffer(Constants.TfeInfoBinding, tfeInfoBuffer);
 
-                StructureType tfeDataStruct = new StructureType(new StructureField[]
+                StructureType tfeDataStruct = new(new StructureField[]
                 {
-                    new StructureField(AggregateType.Array | AggregateType.U32, "data", 0)
+                    new(AggregateType.Array | AggregateType.U32, "data", 0),
                 });
 
                 for (int i = 0; i < Constants.TfeBuffersCount; i++)
                 {
                     int binding = Constants.TfeBufferBaseBinding + i;
-                    BufferDefinition tfeDataBuffer = new BufferDefinition(BufferLayout.Std430, 1, binding, $"tfe_data{i}", tfeDataStruct);
+                    BufferDefinition tfeDataBuffer = new(BufferLayout.Std430, 1, binding, $"tfe_data{i}", tfeDataStruct);
                     Properties.AddStorageBuffer(binding, tfeDataBuffer);
                 }
             }
@@ -180,8 +180,8 @@ namespace Ryujinx.Graphics.Shader.Translation
             TranslationOptions options) : this(stage, gpuAccessor, options, 0)
         {
             ThreadsPerInputPrimitive = 1;
-            OutputTopology           = outputTopology;
-            MaxOutputVertices        = maxOutputVertices;
+            OutputTopology = outputTopology;
+            MaxOutputVertices = maxOutputVertices;
         }
 
         public ShaderConfig(
@@ -189,15 +189,15 @@ namespace Ryujinx.Graphics.Shader.Translation
             IGpuAccessor gpuAccessor,
             TranslationOptions options) : this(header.Stage, gpuAccessor, options, GetLocalMemorySize(header))
         {
-            GpPassthrough            = header.Stage == ShaderStage.Geometry && header.GpPassthrough;
+            GpPassthrough = header.Stage == ShaderStage.Geometry && header.GpPassthrough;
             ThreadsPerInputPrimitive = header.ThreadsPerInputPrimitive;
-            OutputTopology           = header.OutputTopology;
-            MaxOutputVertices        = header.MaxOutputVertexCount;
-            ImapTypes                = header.ImapTypes;
-            OmapTargets              = header.OmapTargets;
-            OmapSampleMask           = header.OmapSampleMask;
-            OmapDepth                = header.OmapDepth;
-            LastInVertexPipeline     = header.Stage < ShaderStage.Fragment;
+            OutputTopology = header.OutputTopology;
+            MaxOutputVertices = header.MaxOutputVertexCount;
+            ImapTypes = header.ImapTypes;
+            OmapTargets = header.OmapTargets;
+            OmapSampleMask = header.OmapSampleMask;
+            OmapDepth = header.OmapDepth;
+            LastInVertexPipeline = header.Stage < ShaderStage.Fragment;
         }
 
         private static int GetLocalMemorySize(ShaderHeader header)
@@ -524,7 +524,7 @@ namespace Ryujinx.Graphics.Shader.Translation
                 // Regular and per-patch input/output locations can't overlap,
                 // so we must assign on our location using unused regular input/output locations.
 
-                Dictionary<int, int> locationsMap = new Dictionary<int, int>();
+                Dictionary<int, int> locationsMap = new();
 
                 int freeMask = ~UsedOutputAttributes;
 
@@ -718,7 +718,7 @@ namespace Ryujinx.Graphics.Shader.Translation
                 {
                     AccurateType = accurateType,
                     Type = type,
-                    UsageFlags = usageFlags
+                    UsageFlags = usageFlags,
                 };
 
                 if (dict.TryGetValue(info, out var existingMeta))
@@ -795,24 +795,6 @@ namespace Ryujinx.Graphics.Shader.Translation
             }
 
             return default;
-        }
-
-        private static int FindDescriptorIndex(TextureDescriptor[] array, AstTextureOperation texOp)
-        {
-            for (int i = 0; i < array.Length; i++)
-            {
-                var descriptor = array[i];
-
-                if (descriptor.Type == texOp.Type &&
-                    descriptor.CbufSlot == texOp.CbufSlot &&
-                    descriptor.HandleIndex == texOp.Handle &&
-                    descriptor.Format == texOp.Format)
-                {
-                    return i;
-                }
-            }
-
-            return -1;
         }
 
         private static int FindDescriptorIndex(TextureDescriptor[] array, TextureOperation texOp, bool ignoreType = false)

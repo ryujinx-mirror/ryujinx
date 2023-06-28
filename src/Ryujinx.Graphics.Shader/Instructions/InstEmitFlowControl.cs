@@ -3,8 +3,6 @@ using Ryujinx.Graphics.Shader.IntermediateRepresentation;
 using Ryujinx.Graphics.Shader.Translation;
 using System.Collections.Generic;
 using System.Linq;
-
-using static Ryujinx.Graphics.Shader.Instructions.InstEmitHelper;
 using static Ryujinx.Graphics.Shader.IntermediateRepresentation.OperandHelper;
 
 namespace Ryujinx.Graphics.Shader.Instructions
@@ -13,14 +11,14 @@ namespace Ryujinx.Graphics.Shader.Instructions
     {
         public static void Bra(EmitterContext context)
         {
-            InstBra op = context.GetOp<InstBra>();
+            context.GetOp<InstBra>();
 
             EmitBranch(context, context.CurrBlock.Successors[^1].Address);
         }
 
         public static void Brk(EmitterContext context)
         {
-            InstBrk op = context.GetOp<InstBrk>();
+            context.GetOp<InstBrk>();
 
             EmitBrkContSync(context);
         }
@@ -123,7 +121,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
         public static void Cal(EmitterContext context)
         {
-            InstCal op = context.GetOp<InstCal>();
+            context.GetOp<InstCal>();
 
             DecodedFunction function = context.Program.GetFunctionByAddress(context.CurrOp.GetAbsoluteAddress());
 
@@ -147,7 +145,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
         public static void Cont(EmitterContext context)
         {
-            InstCont op = context.GetOp<InstCont>();
+            context.GetOp<InstCont>();
 
             EmitBrkContSync(context);
         }
@@ -185,28 +183,28 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
         public static void Kil(EmitterContext context)
         {
-            InstKil op = context.GetOp<InstKil>();
+            context.GetOp<InstKil>();
 
             context.Discard();
         }
 
         public static void Pbk(EmitterContext context)
         {
-            InstPbk op = context.GetOp<InstPbk>();
+            context.GetOp<InstPbk>();
 
             EmitPbkPcntSsy(context);
         }
 
         public static void Pcnt(EmitterContext context)
         {
-            InstPcnt op = context.GetOp<InstPcnt>();
+            context.GetOp<InstPcnt>();
 
             EmitPbkPcntSsy(context);
         }
 
         public static void Ret(EmitterContext context)
         {
-            InstRet op = context.GetOp<InstRet>();
+            context.GetOp<InstRet>();
 
             if (context.IsNonMain)
             {
@@ -220,14 +218,14 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
         public static void Ssy(EmitterContext context)
         {
-            InstSsy op = context.GetOp<InstSsy>();
+            context.GetOp<InstSsy>();
 
             EmitPbkPcntSsy(context);
         }
 
         public static void Sync(EmitterContext context)
         {
-            InstSync op = context.GetOp<InstSync>();
+            context.GetOp<InstSync>();
 
             EmitBrkContSync(context);
         }
@@ -275,7 +273,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
         private static void EmitBranch(EmitterContext context, ulong address)
         {
             InstOp op = context.CurrOp;
-            InstConditional opCond = new InstConditional(op.RawOpCode);
+            InstConditional opCond = new(op.RawOpCode);
 
             // If we're branching to the next instruction, then the branch
             // is useless and we can ignore it.

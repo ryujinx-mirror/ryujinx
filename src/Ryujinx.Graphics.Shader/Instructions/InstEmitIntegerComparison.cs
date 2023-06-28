@@ -2,7 +2,6 @@ using Ryujinx.Graphics.Shader.Decoders;
 using Ryujinx.Graphics.Shader.IntermediateRepresentation;
 using Ryujinx.Graphics.Shader.Translation;
 using System;
-
 using static Ryujinx.Graphics.Shader.Instructions.InstEmitAluHelper;
 using static Ryujinx.Graphics.Shader.Instructions.InstEmitHelper;
 using static Ryujinx.Graphics.Shader.IntermediateRepresentation.OperandHelper;
@@ -220,7 +219,9 @@ namespace Ryujinx.Graphics.Shader.Instructions
             else
             {
                 res = context.ISubtract(srcA, srcB);
+#pragma warning disable IDE0059 // Remove unnecessary value assignment
                 res = context.IAdd(res, context.BitwiseNot(GetCF()));
+#pragma warning restore IDE0059
 
                 switch (cond)
                 {
@@ -287,17 +288,25 @@ namespace Ryujinx.Graphics.Shader.Instructions
                     IComp.Gt => Instruction.CompareGreaterU32,
                     IComp.Ne => Instruction.CompareNotEqual,
                     IComp.Ge => Instruction.CompareGreaterOrEqualU32,
-                    _ => throw new InvalidOperationException($"Unexpected condition \"{cond}\".")
+                    _ => throw new InvalidOperationException($"Unexpected condition \"{cond}\"."),
                 };
 
                 if (isSigned)
                 {
                     switch (cond)
                     {
-                        case IComp.Lt: inst = Instruction.CompareLess; break;
-                        case IComp.Le: inst = Instruction.CompareLessOrEqual; break;
-                        case IComp.Gt: inst = Instruction.CompareGreater; break;
-                        case IComp.Ge: inst = Instruction.CompareGreaterOrEqual; break;
+                        case IComp.Lt:
+                            inst = Instruction.CompareLess;
+                            break;
+                        case IComp.Le:
+                            inst = Instruction.CompareLessOrEqual;
+                            break;
+                        case IComp.Gt:
+                            inst = Instruction.CompareGreater;
+                            break;
+                        case IComp.Ge:
+                            inst = Instruction.CompareGreaterOrEqual;
+                            break;
                     }
                 }
 

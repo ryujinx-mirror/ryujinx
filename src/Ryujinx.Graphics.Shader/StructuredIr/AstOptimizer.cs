@@ -17,7 +17,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             // (this makes comparison with the disassembly easier).
             if (!context.Config.Options.Flags.HasFlag(TranslationFlags.DebugMode))
             {
-                AstBlockVisitor visitor = new AstBlockVisitor(mainBlock);
+                AstBlockVisitor visitor = new(mainBlock);
 
                 foreach (IAstNode node in visitor.Visit())
                 {
@@ -45,7 +45,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
 
         private static bool IsWorthPropagating(IAstNode source)
         {
-            if (!(source is AstOperation srcOp))
+            if (source is not AstOperation srcOp)
             {
                 return false;
             }
@@ -87,7 +87,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
 
         private static void RemoveEmptyBlocks(AstBlock mainBlock)
         {
-            Queue<AstBlock> pending = new Queue<AstBlock>();
+            Queue<AstBlock> pending = new();
 
             pending.Enqueue(mainBlock);
 

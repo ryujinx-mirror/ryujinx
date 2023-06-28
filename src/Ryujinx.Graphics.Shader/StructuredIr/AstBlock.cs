@@ -29,7 +29,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             }
         }
 
-        private LinkedList<IAstNode> _nodes;
+        private readonly LinkedList<IAstNode> _nodes;
 
         public IAstNode First => _nodes.First?.Value;
         public IAstNode Last => _nodes.Last?.Value;
@@ -38,7 +38,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
 
         public AstBlock(AstBlockType type, IAstNode condition = null)
         {
-            Type      = type;
+            Type = type;
             Condition = condition;
 
             _nodes = new LinkedList<IAstNode>();

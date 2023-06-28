@@ -8,7 +8,7 @@ namespace Ryujinx.Graphics.Shader
         // Generic types.
         Float,
         Sint,
-        Uint
+        Uint,
     }
 
     static class AttributeTypeExtensions
@@ -20,7 +20,7 @@ namespace Ryujinx.Graphics.Shader
                 AttributeType.Float => "vec4",
                 AttributeType.Sint => "ivec4",
                 AttributeType.Uint => "uvec4",
-                _ => throw new ArgumentException($"Invalid attribute type \"{type}\".")
+                _ => throw new ArgumentException($"Invalid attribute type \"{type}\"."),
             };
         }
 
@@ -31,7 +31,7 @@ namespace Ryujinx.Graphics.Shader
                 AttributeType.Float => AggregateType.FP32,
                 AttributeType.Sint => AggregateType.S32,
                 AttributeType.Uint => AggregateType.U32,
-                _ => throw new ArgumentException($"Invalid attribute type \"{type}\".")
+                _ => throw new ArgumentException($"Invalid attribute type \"{type}\"."),
             };
         }
     }

@@ -1,5 +1,4 @@
-﻿using Ryujinx.Common;
-using Ryujinx.Graphics.Shader.IntermediateRepresentation;
+﻿using Ryujinx.Graphics.Shader.IntermediateRepresentation;
 using Ryujinx.Graphics.Shader.StructuredIr;
 using Ryujinx.Graphics.Shader.Translation;
 using Spv.Generator;
@@ -14,7 +13,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
 {
     static class Declarations
     {
-        private static readonly string[] StagePrefixes = new string[] { "cp", "vp", "tcp", "tep", "gp", "fp" };
+        private static readonly string[] _stagePrefixes = { "cp", "vp", "tcp", "tep", "gp", "fp" };
 
         public static void DeclareParameters(CodeGenContext context, StructuredFunction function)
         {
@@ -107,7 +106,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
 
         private static void DeclareBuffers(CodeGenContext context, IEnumerable<BufferDefinition> buffers, bool isBuffer)
         {
-            HashSet<SpvInstruction> decoratedTypes = new HashSet<SpvInstruction>();
+            HashSet<SpvInstruction> decoratedTypes = new();
 
             foreach (BufferDefinition buffer in buffers)
             {
@@ -199,7 +198,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                     SamplerType.Texture3D => Dim.Dim3D,
                     SamplerType.TextureCube => Dim.Cube,
                     SamplerType.TextureBuffer => Dim.Buffer,
-                    _ => throw new InvalidOperationException($"Invalid sampler type \"{descriptor.Type & SamplerType.Mask}\".")
+                    _ => throw new InvalidOperationException($"Invalid sampler type \"{descriptor.Type & SamplerType.Mask}\"."),
                 };
 
                 var imageType = context.TypeImage(
@@ -282,7 +281,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                 SamplerType.Texture3D => Dim.Dim3D,
                 SamplerType.TextureCube => Dim.Cube,
                 SamplerType.TextureBuffer => Dim.Buffer,
-                _ => throw new ArgumentException($"Invalid sampler type \"{type & SamplerType.Mask}\".")
+                _ => throw new ArgumentException($"Invalid sampler type \"{type & SamplerType.Mask}\"."),
             };
         }
 
@@ -330,7 +329,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                 TextureFormat.R10G10B10A2Unorm => ImageFormat.Rgb10A2,
                 TextureFormat.R10G10B10A2Uint => ImageFormat.Rgb10a2ui,
                 TextureFormat.R11G11B10Float => ImageFormat.R11fG11fB10f,
-                _ => throw new ArgumentException($"Invalid texture format \"{format}\".")
+                _ => throw new ArgumentException($"Invalid texture format \"{format}\"."),
             };
         }
 
@@ -352,7 +351,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                         (_, AggregateType varType) = IoMap.GetSpirvBuiltIn(ioVariable);
                         AggregateType elemType = varType & AggregateType.ElementTypeMask;
 
-                        if (elemType == AggregateType.S32 || elemType == AggregateType.U32)
+                        if (elemType is AggregateType.S32 or AggregateType.U32)
                         {
                             iq = PixelImap.Constant;
                         }
@@ -410,7 +409,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                     2 => AggregateType.Vector2,
                     3 => AggregateType.Vector3,
                     4 => AggregateType.Vector4,
-                    _ => AggregateType.Invalid
+                    _ => AggregateType.Invalid,
                 };
             }
 
@@ -420,7 +419,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             if (!isPerPatch && IoMap.IsPerVertex(ioVariable, context.Config.Stage, isOutput))
             {
                 int arraySize = context.Config.Stage == ShaderStage.Geometry ? context.InputVertices : 32;
-                spvType = context.TypeArray(spvType, context.Constant(context.TypeU32(), (LiteralInteger)arraySize));
+                spvType = context.TypeArray(spvType, context.Constant(context.TypeU32(), arraySize));
 
                 if (context.Config.GpPassthrough && context.Config.GpuAccessor.QueryHostSupportsGeometryShaderPassthrough())
                 {
@@ -542,7 +541,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
 
         private static string GetStagePrefix(ShaderStage stage)
         {
-            return StagePrefixes[(int)stage];
+            return _stagePrefixes[(int)stage];
         }
     }
 }

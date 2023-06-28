@@ -10,9 +10,9 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
     {
         public static string ReinterpretCast(
             CodeGenContext context,
-            IAstNode       node,
-            AggregateType  srcType,
-            AggregateType  dstType)
+            IAstNode node,
+            AggregateType srcType,
+            AggregateType dstType)
         {
             if (node is AstOperand operand && operand.Type == OperandType.Constant)
             {
@@ -38,18 +38,24 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             {
                 switch (dstType)
                 {
-                    case AggregateType.Bool: return $"(floatBitsToInt({expr}) != 0)";
-                    case AggregateType.S32:  return $"floatBitsToInt({expr})";
-                    case AggregateType.U32:  return $"floatBitsToUint({expr})";
+                    case AggregateType.Bool:
+                        return $"(floatBitsToInt({expr}) != 0)";
+                    case AggregateType.S32:
+                        return $"floatBitsToInt({expr})";
+                    case AggregateType.U32:
+                        return $"floatBitsToUint({expr})";
                 }
             }
             else if (dstType == AggregateType.FP32)
             {
                 switch (srcType)
                 {
-                    case AggregateType.Bool: return $"intBitsToFloat({ReinterpretBoolToInt(expr, node, AggregateType.S32)})";
-                    case AggregateType.S32:  return $"intBitsToFloat({expr})";
-                    case AggregateType.U32:  return $"uintBitsToFloat({expr})";
+                    case AggregateType.Bool:
+                        return $"intBitsToFloat({ReinterpretBoolToInt(expr, node, AggregateType.S32)})";
+                    case AggregateType.S32:
+                        return $"intBitsToFloat({expr})";
+                    case AggregateType.U32:
+                        return $"uintBitsToFloat({expr})";
                 }
             }
             else if (srcType == AggregateType.Bool)
@@ -76,7 +82,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
         private static string ReinterpretBoolToInt(string expr, IAstNode node, AggregateType dstType)
         {
-            string trueExpr  = NumberFormatter.FormatInt(IrConsts.True,  dstType);
+            string trueExpr = NumberFormatter.FormatInt(IrConsts.True, dstType);
             string falseExpr = NumberFormatter.FormatInt(IrConsts.False, dstType);
 
             expr = InstGenHelper.Enclose(expr, node, Instruction.ConditionalSelect, isLhs: false);

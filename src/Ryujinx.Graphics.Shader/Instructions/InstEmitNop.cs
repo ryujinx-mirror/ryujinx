@@ -7,7 +7,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
     {
         public static void Nop(EmitterContext context)
         {
-            InstNop op = context.GetOp<InstNop>();
+            context.GetOp<InstNop>();
 
             // No operation.
         }

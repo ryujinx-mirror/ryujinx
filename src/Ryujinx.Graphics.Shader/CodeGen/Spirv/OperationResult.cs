@@ -5,7 +5,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
 {
     readonly struct OperationResult
     {
-        public static OperationResult Invalid => new OperationResult(AggregateType.Invalid, null);
+        public static OperationResult Invalid => new(AggregateType.Invalid, null);
 
         public AggregateType Type { get; }
         public Instruction Value { get; }

@@ -14,7 +14,7 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
 
         public static bool IsInputLoad(INode node, IoVariable ioVariable, int elemIndex)
         {
-            if (!(node is Operation operation) ||
+            if (node is not Operation operation ||
                 operation.Inst != Instruction.Load ||
                 operation.StorageKind != StorageKind.Input ||
                 operation.SourcesCount != 2)

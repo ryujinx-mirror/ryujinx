@@ -1,13 +1,14 @@
-﻿using Ryujinx.Graphics.Shader.StructuredIr;
+﻿using Ryujinx.Graphics.Shader.IntermediateRepresentation;
+using Ryujinx.Graphics.Shader.StructuredIr;
 using Ryujinx.Graphics.Shader.Translation;
 using Spv.Generator;
 using System;
 using System.Collections.Generic;
 using static Spv.Specification;
+using Instruction = Spv.Generator.Instruction;
 
 namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
 {
-    using IrConsts = IntermediateRepresentation.IrConsts;
     using IrOperandType = IntermediateRepresentation.OperandType;
 
     partial class CodeGenContext : Module
@@ -36,15 +37,15 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
         public Dictionary<IoDefinition, Instruction> OutputsPerPatch { get; } = new Dictionary<IoDefinition, Instruction>();
 
         public StructuredFunction CurrentFunction { get; set; }
-        private readonly Dictionary<AstOperand, Instruction> _locals = new Dictionary<AstOperand, Instruction>();
-        private readonly Dictionary<int, Instruction[]> _localForArgs = new Dictionary<int, Instruction[]>();
-        private readonly Dictionary<int, Instruction> _funcArgs = new Dictionary<int, Instruction>();
-        private readonly Dictionary<int, (StructuredFunction, Instruction)> _functions = new Dictionary<int, (StructuredFunction, Instruction)>();
+        private readonly Dictionary<AstOperand, Instruction> _locals = new();
+        private readonly Dictionary<int, Instruction[]> _localForArgs = new();
+        private readonly Dictionary<int, Instruction> _funcArgs = new();
+        private readonly Dictionary<int, (StructuredFunction, Instruction)> _functions = new();
 
         private class BlockState
         {
             private int _entryCount;
-            private readonly List<Instruction> _labels = new List<Instruction>();
+            private readonly List<Instruction> _labels = new();
 
             public Instruction GetNextLabel(CodeGenContext context)
             {
@@ -67,7 +68,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             }
         }
 
-        private readonly Dictionary<AstBlock, BlockState> _labels = new Dictionary<AstBlock, BlockState>();
+        private readonly Dictionary<AstBlock, BlockState> _labels = new();
 
         public Dictionary<AstBlock, (Instruction, Instruction)> LoopTargets { get; set; }
 
@@ -98,7 +99,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                     InputTopology.LinesAdjacency => 2,
                     InputTopology.Triangles => 3,
                     InputTopology.TrianglesAdjacency => 3,
-                    _ => throw new InvalidOperationException($"Invalid input topology \"{inPrimitive}\".")
+                    _ => throw new InvalidOperationException($"Invalid input topology \"{inPrimitive}\"."),
                 };
             }
 
@@ -222,7 +223,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                     IrOperandType.Constant => GetConstant(type, operand),
                     IrOperandType.LocalVariable => GetLocal(type, operand),
                     IrOperandType.Undefined => GetUndefined(type),
-                    _ => throw new ArgumentException($"Invalid operand type \"{operand.Type}\".")
+                    _ => throw new ArgumentException($"Invalid operand type \"{operand.Type}\"."),
                 };
             }
 
@@ -259,7 +260,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                 AggregateType.Bool => ConstantFalse(TypeBool()),
                 AggregateType.FP32 => Constant(TypeFP32(), 0f),
                 AggregateType.FP64 => Constant(TypeFP64(), 0d),
-                _ => Constant(GetType(type), 0)
+                _ => Constant(GetType(type), 0),
             };
         }
 
@@ -272,7 +273,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                 AggregateType.FP64 => Constant(TypeFP64(), (double)BitConverter.Int32BitsToSingle(operand.Value)),
                 AggregateType.S32 => Constant(TypeS32(), operand.Value),
                 AggregateType.U32 => Constant(TypeU32(), (uint)operand.Value),
-                _ => throw new ArgumentException($"Invalid type \"{type}\".")
+                _ => throw new ArgumentException($"Invalid type \"{type}\"."),
             };
         }
 
@@ -328,7 +329,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                     AggregateType.Vector2 => 2,
                     AggregateType.Vector3 => 3,
                     AggregateType.Vector4 => 4,
-                    _ => 1
+                    _ => 1,
                 };
 
                 return TypeVector(GetType(type & ~AggregateType.ElementCountMask), vectorLength);
@@ -342,7 +343,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                 AggregateType.FP64 => TypeFP64(),
                 AggregateType.S32 => TypeS32(),
                 AggregateType.U32 => TypeU32(),
-                _ => throw new ArgumentException($"Invalid attribute type \"{type}\".")
+                _ => throw new ArgumentException($"Invalid attribute type \"{type}\"."),
             };
         }
 
@@ -359,7 +360,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             }
             else if (srcType == AggregateType.Bool)
             {
-                var intTrue  = Constant(TypeS32(), IrConsts.True);
+                var intTrue = Constant(TypeS32(), IrConsts.True);
                 var intFalse = Constant(TypeS32(), IrConsts.False);
 
                 return BitcastIfNeeded(dstType, AggregateType.S32, Select(TypeS32(), value, intTrue, intFalse));

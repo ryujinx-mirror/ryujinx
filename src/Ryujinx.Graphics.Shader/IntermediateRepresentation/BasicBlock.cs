@@ -83,9 +83,9 @@ namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
                 case Instruction.Discard:
                 case Instruction.Return:
                     return true;
+                default:
+                    return false;
             }
-
-            return false;
         }
     }
 }

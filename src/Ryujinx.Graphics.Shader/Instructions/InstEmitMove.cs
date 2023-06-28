@@ -212,7 +212,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
             int count = ccpr ? RegisterConsts.FlagsCount : RegisterConsts.PredsCount;
             RegisterType type = ccpr ? RegisterType.Flag : RegisterType.Predicate;
             int shift = (int)byteSel * 8;
-            
+
             for (int bit = 0; bit < count; bit++)
             {
                 Operand flag = Register(bit, type);

@@ -1,6 +1,5 @@
 using Ryujinx.Graphics.Shader.IntermediateRepresentation;
 using Ryujinx.Graphics.Shader.Translation;
-
 using static Ryujinx.Graphics.Shader.IntermediateRepresentation.OperandHelper;
 
 namespace Ryujinx.Graphics.Shader.Instructions
@@ -9,27 +8,27 @@ namespace Ryujinx.Graphics.Shader.Instructions
     {
         private enum TruthTable : byte
         {
-            False         = 0x00, // false
-            True          = 0xff, // true
-            In            = 0xf0, // a
-            And2          = 0xc0, // a & b
-            Or2           = 0xfc, // a | b
-            Xor2          = 0x3c, // a ^ b
-            And3          = 0x80, // a & b & c
-            Or3           = 0xfe, // a | b | c
-            XorAnd        = 0x60, // a & (b ^ c)
-            XorOr         = 0xf6, // a | (b ^ c)
-            OrAnd         = 0xe0, // a & (b | c)
-            AndOr         = 0xf8, // a | (b & c)
-            Onehot        = 0x16, // (a & !b & !c) | (!a & b & !c) | (!a & !b & c) - Only one value is true.
-            Majority      = 0xe8, // Popcount(a, b, c) >= 2
-            Gamble        = 0x81, // (a & b & c) | (!a & !b & !c) - All on or all off
+            False = 0x00, // false
+            True = 0xff, // true
+            In = 0xf0, // a
+            And2 = 0xc0, // a & b
+            Or2 = 0xfc, // a | b
+            Xor2 = 0x3c, // a ^ b
+            And3 = 0x80, // a & b & c
+            Or3 = 0xfe, // a | b | c
+            XorAnd = 0x60, // a & (b ^ c)
+            XorOr = 0xf6, // a | (b ^ c)
+            OrAnd = 0xe0, // a & (b | c)
+            AndOr = 0xf8, // a | (b & c)
+            Onehot = 0x16, // (a & !b & !c) | (!a & b & !c) | (!a & !b & c) - Only one value is true.
+            Majority = 0xe8, // Popcount(a, b, c) >= 2
+            Gamble = 0x81, // (a & b & c) | (!a & !b & !c) - All on or all off
             InverseGamble = 0x7e, // Inverse of Gamble
-            Dot           = 0x1a, // a ^ (c | (a & b))
-            Mux           = 0xca, // a ? b : c
-            AndXor        = 0x78, // a ^ (b & c)
-            OrXor         = 0x1e, // a ^ (b | c)
-            Xor3          = 0x96, // a ^ b ^ c
+            Dot = 0x1a, // a ^ (c | (a & b))
+            Mux = 0xca, // a ? b : c
+            AndXor = 0x78, // a ^ (b & c)
+            OrXor = 0x1e, // a ^ (b | c)
+            Xor3 = 0x96, // a ^ b ^ c
         }
 
         public static Operand GetFromTruthTable(EmitterContext context, Operand srcA, Operand srcB, Operand srcC, int imm)
@@ -41,7 +40,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 Operand x = srcA;
                 Operand y = srcB;
                 Operand z = srcC;
-                
+
                 if ((i & 0x01) != 0)
                 {
                     (x, y) = (y, x);
@@ -98,6 +97,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
         {
             return imm switch
             {
+#pragma warning disable IDE0055 // Disable formatting
                 TruthTable.False         => Const(0),
                 TruthTable.True          => Const(-1),
                 TruthTable.In            => x,
@@ -118,7 +118,8 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 TruthTable.AndXor        => context.BitwiseExclusiveOr(x, context.BitwiseAnd(y, z)),
                 TruthTable.OrXor         => context.BitwiseExclusiveOr(x, context.BitwiseOr(y, z)),
                 TruthTable.Xor3          => context.BitwiseExclusiveOr(x, context.BitwiseExclusiveOr(y, z)),
-                _                        => null
+                _                        => null,
+#pragma warning restore IDE0055
             };
         }
 

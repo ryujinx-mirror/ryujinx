@@ -14,7 +14,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
 
         public int Index { get; }
 
-        private IAstNode[] _sources;
+        private readonly IAstNode[] _sources;
 
         public int SourcesCount => _sources.Length;
 
@@ -77,9 +77,15 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
 
             switch (componentsCount)
             {
-                case 2: type |= AggregateType.Vector2; break;
-                case 3: type |= AggregateType.Vector3; break;
-                case 4: type |= AggregateType.Vector4; break;
+                case 2:
+                    type |= AggregateType.Vector2;
+                    break;
+                case 3:
+                    type |= AggregateType.Vector3;
+                    break;
+                case 4:
+                    type |= AggregateType.Vector4;
+                    break;
             }
 
             return type;

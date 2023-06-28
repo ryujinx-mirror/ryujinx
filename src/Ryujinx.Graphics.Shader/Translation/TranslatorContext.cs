@@ -7,7 +7,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-
 using static Ryujinx.Graphics.Shader.IntermediateRepresentation.OperandHelper;
 using static Ryujinx.Graphics.Shader.Translation.Translator;
 
@@ -16,7 +15,7 @@ namespace Ryujinx.Graphics.Shader.Translation
     public class TranslatorContext
     {
         private readonly DecodedProgram _program;
-        private ShaderConfig _config;
+        private readonly ShaderConfig _config;
 
         public ulong Address { get; }
 
@@ -59,7 +58,7 @@ namespace Ryujinx.Graphics.Shader.Translation
             // temporary variable, as long that attribute is written by shader A.
             FunctionCode[] output = new FunctionCode[a.Length + b.Length - 1];
 
-            List<Operation> ops = new List<Operation>(a.Length + b.Length);
+            List<Operation> ops = new(a.Length + b.Length);
 
             Operand[] temps = new Operand[AttributeConsts.UserAttributesCount * 4];
 
@@ -205,9 +204,9 @@ namespace Ryujinx.Graphics.Shader.Translation
                     break;
             }
 
-            ShaderConfig config = new ShaderConfig(ShaderStage.Geometry, outputTopology, maxOutputVertices, GpuAccessor, _config.Options);
+            ShaderConfig config = new(ShaderStage.Geometry, outputTopology, maxOutputVertices, GpuAccessor, _config.Options);
 
-            EmitterContext context = new EmitterContext(default, config, false);
+            EmitterContext context = new(default, config, false);
 
             for (int v = 0; v < maxOutputVertices; v++)
             {
@@ -263,7 +262,7 @@ namespace Ryujinx.Graphics.Shader.Translation
             {
                 TargetLanguage.Glsl => new ShaderProgram(info, TargetLanguage.Glsl, GlslGenerator.Generate(sInfo, config)),
                 TargetLanguage.Spirv => new ShaderProgram(info, TargetLanguage.Spirv, SpirvGenerator.Generate(sInfo, config)),
-                _ => throw new NotImplementedException(config.Options.TargetLanguage.ToString())
+                _ => throw new NotImplementedException(config.Options.TargetLanguage.ToString()),
             };
         }
     }

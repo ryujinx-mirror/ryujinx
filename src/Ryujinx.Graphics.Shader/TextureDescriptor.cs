@@ -16,12 +16,12 @@ namespace Ryujinx.Graphics.Shader
 
         public TextureDescriptor(int binding, SamplerType type, TextureFormat format, int cbufSlot, int handleIndex)
         {
-            Binding     = binding;
-            Type        = type;
-            Format      = format;
-            CbufSlot    = cbufSlot;
+            Binding = binding;
+            Type = type;
+            Format = format;
+            CbufSlot = cbufSlot;
             HandleIndex = handleIndex;
-            Flags       = TextureUsageFlags.None;
+            Flags = TextureUsageFlags.None;
         }
 
         public TextureDescriptor SetFlag(TextureUsageFlags flag)

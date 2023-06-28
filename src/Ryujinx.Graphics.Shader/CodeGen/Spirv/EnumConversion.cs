@@ -15,7 +15,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                 ShaderStage.TessellationEvaluation => ExecutionModel.TessellationEvaluation,
                 ShaderStage.Geometry => ExecutionModel.Geometry,
                 ShaderStage.Fragment => ExecutionModel.Fragment,
-                _ => throw new ArgumentException($"Invalid shader stage \"{stage}\".")
+                _ => throw new ArgumentException($"Invalid shader stage \"{stage}\"."),
             };
         }
     }

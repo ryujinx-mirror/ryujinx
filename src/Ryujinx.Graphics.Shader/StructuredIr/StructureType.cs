@@ -2,7 +2,7 @@ using Ryujinx.Graphics.Shader.Translation;
 
 namespace Ryujinx.Graphics.Shader.StructuredIr
 {
-    struct StructureField
+    readonly struct StructureField
     {
         public AggregateType Type { get; }
         public string Name { get; }

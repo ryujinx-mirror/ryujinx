@@ -3,7 +3,6 @@ using Ryujinx.Graphics.Shader.StructuredIr;
 using Ryujinx.Graphics.Shader.Translation;
 using System;
 using System.Text;
-
 using static Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions.InstGenHelper;
 using static Ryujinx.Graphics.Shader.StructuredIr.InstructionInfo;
 
@@ -42,14 +41,16 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
                 }
             }
 
-            bool isArray   = (texOp.Type & SamplerType.Array)   != 0;
+            bool isArray = (texOp.Type & SamplerType.Array) != 0;
             bool isIndexed = (texOp.Type & SamplerType.Indexed) != 0;
 
             var texCallBuilder = new StringBuilder();
 
             if (texOp.Inst == Instruction.ImageAtomic)
             {
-                texCallBuilder.Append((texOp.Flags & TextureFlags.AtomicMask) switch {
+                texCallBuilder.Append((texOp.Flags & TextureFlags.AtomicMask) switch
+                {
+#pragma warning disable IDE0055 // Disable formatting
                     TextureFlags.Add        => "imageAtomicAdd",
                     TextureFlags.Minimum    => "imageAtomicMin",
                     TextureFlags.Maximum    => "imageAtomicMax",
@@ -61,6 +62,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
                     TextureFlags.Swap       => "imageAtomicExchange",
                     TextureFlags.CAS        => "imageAtomicCompSwap",
                     _                       => "imageAtomicAdd",
+#pragma warning restore IDE0055
                 });
             }
             else
@@ -131,7 +133,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
                         {
                             AggregateType.S32 => NumberFormatter.FormatInt(0),
                             AggregateType.U32 => NumberFormatter.FormatUint(0),
-                            _                => NumberFormatter.FormatFloat(0)
+                            _ => NumberFormatter.FormatFloat(0),
                         };
                     }
                 }
@@ -140,7 +142,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
                 {
                     AggregateType.S32 => "i",
                     AggregateType.U32 => "u",
-                    _                => string.Empty
+                    _ => string.Empty,
                 };
 
                 Append($"{prefix}vec4({string.Join(", ", cElems)})");
@@ -159,7 +161,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
                 {
                     TextureFlags.Increment => NumberFormatter.FormatInt(1, type), // TODO: Clamp value
                     TextureFlags.Decrement => NumberFormatter.FormatInt(-1, type), // TODO: Clamp value
-                    _ => Src(type)
+                    _ => Src(type),
                 };
 
                 Append(value);
@@ -248,25 +250,25 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
         {
             AstTextureOperation texOp = (AstTextureOperation)operation;
 
-            bool isBindless     = (texOp.Flags & TextureFlags.Bindless)    != 0;
-            bool isGather       = (texOp.Flags & TextureFlags.Gather)      != 0;
+            bool isBindless = (texOp.Flags & TextureFlags.Bindless) != 0;
+            bool isGather = (texOp.Flags & TextureFlags.Gather) != 0;
             bool hasDerivatives = (texOp.Flags & TextureFlags.Derivatives) != 0;
-            bool intCoords      = (texOp.Flags & TextureFlags.IntCoords)   != 0;
-            bool hasLodBias     = (texOp.Flags & TextureFlags.LodBias)     != 0;
-            bool hasLodLevel    = (texOp.Flags & TextureFlags.LodLevel)    != 0;
-            bool hasOffset      = (texOp.Flags & TextureFlags.Offset)      != 0;
-            bool hasOffsets     = (texOp.Flags & TextureFlags.Offsets)     != 0;
+            bool intCoords = (texOp.Flags & TextureFlags.IntCoords) != 0;
+            bool hasLodBias = (texOp.Flags & TextureFlags.LodBias) != 0;
+            bool hasLodLevel = (texOp.Flags & TextureFlags.LodLevel) != 0;
+            bool hasOffset = (texOp.Flags & TextureFlags.Offset) != 0;
+            bool hasOffsets = (texOp.Flags & TextureFlags.Offsets) != 0;
 
-            bool isArray       = (texOp.Type & SamplerType.Array)       != 0;
-            bool isIndexed     = (texOp.Type & SamplerType.Indexed)     != 0;
+            bool isArray = (texOp.Type & SamplerType.Array) != 0;
+            bool isIndexed = (texOp.Type & SamplerType.Indexed) != 0;
             bool isMultisample = (texOp.Type & SamplerType.Multisample) != 0;
-            bool isShadow      = (texOp.Type & SamplerType.Shadow)      != 0;
+            bool isShadow = (texOp.Type & SamplerType.Shadow) != 0;
 
             bool colorIsVector = isGather || !isShadow;
 
             SamplerType type = texOp.Type & SamplerType.Mask;
 
-            bool is2D   = type == SamplerType.Texture2D;
+            bool is2D = type == SamplerType.Texture2D;
             bool isCube = type == SamplerType.TextureCube;
 
             // 2D Array and Cube shadow samplers with LOD level or bias requires an extension.
@@ -500,14 +502,14 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 
             if (hasLodBias)
             {
-               Append(Src(AggregateType.FP32));
+                Append(Src(AggregateType.FP32));
             }
 
             // textureGather* optional extra component index,
             // not needed for shadow samplers.
             if (isGather && !isShadow)
             {
-               Append(Src(AggregateType.S32));
+                Append(Src(AggregateType.S32));
             }
 
             texCall += ")" + (colorIsVector ? GetMaskMultiDest(texOp.Index) : "");
@@ -584,7 +586,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             {
                 case StorageKind.ConstantBuffer:
                 case StorageKind.StorageBuffer:
-                    if (!(operation.GetSource(srcIndex++) is AstOperand bindingIndex) || bindingIndex.Type != OperandType.Constant)
+                    if (operation.GetSource(srcIndex++) is not AstOperand bindingIndex || bindingIndex.Type != OperandType.Constant)
                     {
                         throw new InvalidOperationException($"First input of {operation.Inst} with {storageKind} storage must be a constant operand.");
                     }
@@ -594,7 +596,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
                         ? context.Config.Properties.ConstantBuffers[binding]
                         : context.Config.Properties.StorageBuffers[binding];
 
-                    if (!(operation.GetSource(srcIndex++) is AstOperand fieldIndex) || fieldIndex.Type != OperandType.Constant)
+                    if (operation.GetSource(srcIndex++) is not AstOperand fieldIndex || fieldIndex.Type != OperandType.Constant)
                     {
                         throw new InvalidOperationException($"Second input of {operation.Inst} with {storageKind} storage must be a constant operand.");
                     }
@@ -606,7 +608,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 
                 case StorageKind.LocalMemory:
                 case StorageKind.SharedMemory:
-                    if (!(operation.GetSource(srcIndex++) is AstOperand bindingId) || bindingId.Type != OperandType.Constant)
+                    if (operation.GetSource(srcIndex++) is not AstOperand { Type: OperandType.Constant } bindingId)
                     {
                         throw new InvalidOperationException($"First input of {operation.Inst} with {storageKind} storage must be a constant operand.");
                     }
@@ -623,7 +625,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
                 case StorageKind.InputPerPatch:
                 case StorageKind.Output:
                 case StorageKind.OutputPerPatch:
-                    if (!(operation.GetSource(srcIndex++) is AstOperand varId) || varId.Type != OperandType.Constant)
+                    if (operation.GetSource(srcIndex++) is not AstOperand varId || varId.Type != OperandType.Constant)
                     {
                         throw new InvalidOperationException($"First input of {operation.Inst} with {storageKind} storage must be a constant operand.");
                     }
@@ -636,7 +638,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 
                     if (context.Config.HasPerLocationInputOrOutput(ioVariable, isOutput))
                     {
-                        if (!(operation.GetSource(srcIndex++) is AstOperand vecIndex) || vecIndex.Type != OperandType.Constant)
+                        if (operation.GetSource(srcIndex++) is not AstOperand vecIndex || vecIndex.Type != OperandType.Constant)
                         {
                             throw new InvalidOperationException($"Second input of {operation.Inst} with {storageKind} storage must be a constant operand.");
                         }

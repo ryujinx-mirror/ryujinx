@@ -9,7 +9,7 @@ namespace Ryujinx.Graphics.Shader.Translation
         Unused = 0,
         Constant = 1,
         Perspective = 2,
-        ScreenLinear = 3
+        ScreenLinear = 3,
     }
 
     readonly struct ImapPixelType
@@ -29,9 +29,19 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         public PixelImap GetFirstUsedType()
         {
-            if (X != PixelImap.Unused) return X;
-            if (Y != PixelImap.Unused) return Y;
-            if (Z != PixelImap.Unused) return Z;
+            if (X != PixelImap.Unused)
+            {
+                return X;
+            }
+            if (Y != PixelImap.Unused)
+            {
+                return Y;
+            }
+            if (Z != PixelImap.Unused)
+            {
+                return Z;
+            }
+
             return W;
         }
     }

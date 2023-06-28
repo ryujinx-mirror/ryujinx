@@ -19,12 +19,13 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             }
         }
 
-        private static InstInfo[] _infoTbl;
+        private static readonly InstInfo[] _infoTbl;
 
         static InstructionInfo()
         {
             _infoTbl = new InstInfo[(int)Instruction.Count];
 
+#pragma warning disable IDE0055 // Disable formatting
             //  Inst                                  Destination type      Source 1 type          Source 2 type          Source 3 type          Source 4 type
             Add(Instruction.AtomicAdd,                AggregateType.U32,    AggregateType.S32,     AggregateType.S32,     AggregateType.U32);
             Add(Instruction.AtomicAnd,                AggregateType.U32,    AggregateType.S32,     AggregateType.S32,     AggregateType.U32);
@@ -130,6 +131,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             Add(Instruction.VoteAll,                  AggregateType.Bool,   AggregateType.Bool);
             Add(Instruction.VoteAllEqual,             AggregateType.Bool,   AggregateType.Bool);
             Add(Instruction.VoteAny,                  AggregateType.Bool,   AggregateType.Bool);
+#pragma warning restore IDE0055v
         }
 
         private static void Add(Instruction inst, AggregateType destType, params AggregateType[] srcTypes)

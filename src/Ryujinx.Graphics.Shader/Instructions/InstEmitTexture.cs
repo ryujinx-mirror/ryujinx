@@ -4,7 +4,6 @@ using Ryujinx.Graphics.Shader.Translation;
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-
 using static Ryujinx.Graphics.Shader.IntermediateRepresentation.OperandHelper;
 
 namespace Ryujinx.Graphics.Shader.Instructions
@@ -14,7 +13,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
         private static readonly int[,] _maskLut = new int[,]
         {
             { 0b0001, 0b0010, 0b0100, 0b1000, 0b0011, 0b1001, 0b1010, 0b1100 },
-            { 0b0111, 0b1011, 0b1101, 0b1110, 0b1111, 0b0000, 0b0000, 0b0000 }
+            { 0b0111, 0b1011, 0b1101, 0b1110, 0b1111, 0b0000, 0b0000, 0b0000 },
         };
 
         public const bool Sample1DAs2D = true;
@@ -23,7 +22,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
         {
             Texs,
             Tlds,
-            Tld4s
+            Tld4s,
         }
 
         public static void Tex(EmitterContext context)
@@ -207,7 +206,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             Operand arrayIndex = isArray ? Ra() : null;
 
-            List<Operand> sourcesList = new List<Operand>();
+            List<Operand> sourcesList = new();
 
             if (isBindless)
             {
@@ -353,7 +352,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 return;
             }
 
-            List<Operand> sourcesList = new List<Operand>();
+            List<Operand> sourcesList = new();
 
             Operand Ra()
             {
@@ -722,7 +721,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             Operand arrayIndex = isArray ? Ra() : null;
 
-            List<Operand> sourcesList = new List<Operand>();
+            List<Operand> sourcesList = new();
 
             SamplerType type = ConvertSamplerType(dimensions);
             TextureFlags flags = TextureFlags.Gather;
@@ -864,7 +863,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             TextureFlags flags = TextureFlags.None;
 
-            List<Operand> sourcesList = new List<Operand>();
+            List<Operand> sourcesList = new();
 
             if (isBindless)
             {
@@ -996,7 +995,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             TextureFlags flags = TextureFlags.Derivatives;
 
-            List<Operand> sourcesList = new List<Operand>();
+            List<Operand> sourcesList = new();
 
             if (isBindless)
             {
@@ -1126,7 +1125,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 return context.Copy(Register(srcA++, RegisterType.Gpr));
             }
 
-            List<Operand> sourcesList = new List<Operand>();
+            List<Operand> sourcesList = new();
 
             if (isBindless)
             {
@@ -1195,7 +1194,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 TexDim.Array3d => SamplerType.Texture3D | SamplerType.Array,
                 TexDim.Cube => SamplerType.TextureCube,
                 TexDim.ArrayCube => SamplerType.TextureCube | SamplerType.Array,
-                _ => throw new ArgumentException($"Invalid texture dimensions \"{dimensions}\".")
+                _ => throw new ArgumentException($"Invalid texture dimensions \"{dimensions}\"."),
             };
         }
 

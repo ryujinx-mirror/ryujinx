@@ -6,7 +6,7 @@ namespace Ryujinx.Graphics.Shader
         Lines,
         LinesAdjacency,
         Triangles,
-        TrianglesAdjacency
+        TrianglesAdjacency,
     }
 
     static class InputTopologyExtensions
@@ -20,7 +20,7 @@ namespace Ryujinx.Graphics.Shader
                 InputTopology.LinesAdjacency => "lines_adjacency",
                 InputTopology.Triangles => "triangles",
                 InputTopology.TrianglesAdjacency => "triangles_adjacency",
-                _ => "points"
+                _ => "points",
             };
         }
 
@@ -33,7 +33,7 @@ namespace Ryujinx.Graphics.Shader
                 InputTopology.LinesAdjacency => 2,
                 InputTopology.Triangles or
                 InputTopology.TrianglesAdjacency => 3,
-                _ => 1
+                _ => 1,
             };
         }
     }

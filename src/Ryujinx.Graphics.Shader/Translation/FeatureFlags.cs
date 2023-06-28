@@ -13,7 +13,7 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         // Affected by resolution scaling.
         IntegerSampling = 1 << 0,
-        FragCoordXY     = 1 << 1,
+        FragCoordXY = 1 << 1,
 
         Bindless = 1 << 2,
         InstanceId = 1 << 3,
@@ -23,6 +23,6 @@ namespace Ryujinx.Graphics.Shader.Translation
         OaIndexing = 1 << 8,
         FixedFuncAttr = 1 << 9,
         LocalMemory = 1 << 10,
-        SharedMemory = 1 << 11
+        SharedMemory = 1 << 11,
     }
 }

@@ -43,6 +43,6 @@ namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
         VertexId,
         VertexIndex,
         ViewportIndex,
-        ViewportMask
+        ViewportMask,
     }
 }

@@ -13,6 +13,6 @@ namespace Ryujinx.Graphics.Shader
         /// <summary>
         /// Buffer is written to.
         /// </summary>
-        Write = 1 << 0
+        Write = 1 << 0,
     }
 }

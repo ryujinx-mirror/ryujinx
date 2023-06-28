@@ -28,7 +28,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
                 IoVariable.FragmentOutputColor => GetFragmentOutputColorVariableName(config, location),
                 IoVariable.FragmentOutputDepth => ("gl_FragDepth", AggregateType.FP32),
                 IoVariable.FrontColorDiffuse => ("gl_FrontColor", AggregateType.Vector4 | AggregateType.FP32), // Deprecated.
-                IoVariable.FrontColorSpecular  => ("gl_FrontSecondaryColor", AggregateType.Vector4 | AggregateType.FP32), // Deprecated.
+                IoVariable.FrontColorSpecular => ("gl_FrontSecondaryColor", AggregateType.Vector4 | AggregateType.FP32), // Deprecated.
                 IoVariable.FrontFacing => ("gl_FrontFacing", AggregateType.Bool),
                 IoVariable.InstanceId => ("gl_InstanceID", AggregateType.S32),
                 IoVariable.InstanceIndex => ("gl_InstanceIndex", AggregateType.S32),
@@ -56,7 +56,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
                 IoVariable.VertexIndex => ("gl_VertexIndex", AggregateType.S32),
                 IoVariable.ViewportIndex => ("gl_ViewportIndex", AggregateType.S32),
                 IoVariable.ViewportMask => ("gl_ViewportMask", AggregateType.Array | AggregateType.S32),
-                _ => (null, AggregateType.Invalid)
+                _ => (null, AggregateType.Invalid),
             };
         }
 

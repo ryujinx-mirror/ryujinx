@@ -11,7 +11,7 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
         {
             for (LinkedListNode<INode> node = block.Operations.First; node != null; node = node.Next)
             {
-                if (node.Value is not Operation operation)
+                if (node.Value is not Operation)
                 {
                     continue;
                 }

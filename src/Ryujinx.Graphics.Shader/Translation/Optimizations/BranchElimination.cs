@@ -31,7 +31,7 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
                 return false;
             }
 
-            if (!(nextBlock.Operations.First?.Value is Operation next))
+            if (nextBlock.Operations.First?.Value is not Operation next)
             {
                 return false;
             }

@@ -24,13 +24,14 @@ namespace Ryujinx.Graphics.Shader.Decoders
             }
         }
 
-        private static TableEntry[] _opCodes;
+        private static readonly TableEntry[] _opCodes;
 
         static InstTable()
         {
             _opCodes = new TableEntry[1 << EncodingBits];
 
             #region Instructions
+#pragma warning disable IDE0055 // Disable formatting
             Add("1110111110100xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", InstName.Al2p,        InstEmit.Al2p,        InstProps.Rd  | InstProps.Ra);
             Add("1110111111011xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", InstName.Ald,         InstEmit.Ald,         InstProps.Rd  | InstProps.Ra);
             Add("1110111111110xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", InstName.Ast,         InstEmit.Ast,         InstProps.Ra  | InstProps.Rb2 | InstProps.Rc);
@@ -325,6 +326,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
             Add("0011011x00xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", InstName.Xmad,        InstEmit.XmadI,       InstProps.Rd  | InstProps.Ra  | InstProps.Ib  | InstProps.Rc);
             Add("0100111xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", InstName.Xmad,        InstEmit.XmadC,       InstProps.Rd  | InstProps.Ra  | InstProps.Rc);
             Add("010100010xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", InstName.Xmad,        InstEmit.XmadRc,      InstProps.Rd  | InstProps.Ra  | InstProps.Rc);
+#pragma warning restore IDE0055
             #endregion
         }
 
@@ -357,7 +359,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
 
             xMask = ~xMask;
 
-            TableEntry entry = new TableEntry(name, emitter, props, xBits);
+            TableEntry entry = new(name, emitter, props, xBits);
 
             for (int index = 0; index < (1 << xBits); index++)
             {

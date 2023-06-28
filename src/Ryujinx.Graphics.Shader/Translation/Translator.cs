@@ -45,14 +45,14 @@ namespace Ryujinx.Graphics.Shader.Translation
                 }
             }
 
-            List<Function> funcs = new List<Function>(functions.Length);
+            List<Function> funcs = new(functions.Length);
 
             for (int i = 0; i < functions.Length; i++)
             {
                 funcs.Add(null);
             }
 
-            HelperFunctionManager hfm = new HelperFunctionManager(funcs, config.Stage);
+            HelperFunctionManager hfm = new(funcs, config.Stage);
 
             for (int i = 0; i < functions.Length; i++)
             {
@@ -65,7 +65,7 @@ namespace Ryujinx.Graphics.Shader.Translation
                 {
                     var fru = frus[i];
 
-                    inArgumentsCount  = fru.InArguments.Length;
+                    inArgumentsCount = fru.InArguments.Length;
                     outArgumentsCount = fru.OutArguments.Length;
                 }
 
@@ -95,7 +95,7 @@ namespace Ryujinx.Graphics.Shader.Translation
             {
                 TargetLanguage.Glsl => new ShaderProgram(info, TargetLanguage.Glsl, GlslGenerator.Generate(sInfo, config)),
                 TargetLanguage.Spirv => new ShaderProgram(info, TargetLanguage.Spirv, SpirvGenerator.Generate(sInfo, config)),
-                _ => throw new NotImplementedException(config.Options.TargetLanguage.ToString())
+                _ => throw new NotImplementedException(config.Options.TargetLanguage.ToString()),
             };
         }
 
@@ -149,7 +149,7 @@ namespace Ryujinx.Graphics.Shader.Translation
 
             for (int index = 0; index < functions.Length; index++)
             {
-                EmitterContext context = new EmitterContext(program, config, index != 0);
+                EmitterContext context = new(program, config, index != 0);
 
                 if (initializeOutputs && index == 0)
                 {
@@ -306,7 +306,7 @@ namespace Ryujinx.Graphics.Shader.Translation
                     context.Add(new CommentNode(dbgComment));
                 }
 
-                InstConditional opConditional = new InstConditional(op.RawOpCode);
+                InstConditional opConditional = new(op.RawOpCode);
 
                 bool noPred = op.Props.HasFlag(InstProps.NoPred);
                 if (!noPred && opConditional.Pred == RegisterConsts.PredicateTrueIndex && opConditional.PredInv)

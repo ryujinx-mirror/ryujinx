@@ -9,7 +9,7 @@ namespace Ryujinx.Graphics.Shader
         Geometry,
         Fragment,
 
-        Count
+        Count,
     }
 
     public static class ShaderStageExtensions

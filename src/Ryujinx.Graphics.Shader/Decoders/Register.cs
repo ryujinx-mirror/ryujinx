@@ -8,13 +8,13 @@ namespace Ryujinx.Graphics.Shader.Decoders
 
         public RegisterType Type { get; }
 
-        public bool IsRZ => Type == RegisterType.Gpr       && Index == RegisterConsts.RegisterZeroIndex;
+        public bool IsRZ => Type == RegisterType.Gpr && Index == RegisterConsts.RegisterZeroIndex;
         public bool IsPT => Type == RegisterType.Predicate && Index == RegisterConsts.PredicateTrueIndex;
 
         public Register(int index, RegisterType type)
         {
             Index = index;
-            Type  = type;
+            Type = type;
         }
 
         public override int GetHashCode()
@@ -30,7 +30,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
         public bool Equals(Register other)
         {
             return other.Index == Index &&
-                   other.Type  == Type;
+                   other.Type == Type;
         }
     }
 }

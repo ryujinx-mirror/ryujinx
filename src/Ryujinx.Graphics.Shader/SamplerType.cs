@@ -15,10 +15,10 @@ namespace Ryujinx.Graphics.Shader
 
         Mask = 0xff,
 
-        Array       = 1 << 8,
-        Indexed     = 1 << 9,
+        Array = 1 << 8,
+        Indexed = 1 << 9,
         Multisample = 1 << 10,
-        Shadow      = 1 << 11
+        Shadow = 1 << 11,
     }
 
     static class SamplerTypeExtensions
@@ -32,7 +32,7 @@ namespace Ryujinx.Graphics.Shader
                 SamplerType.Texture2D => 2,
                 SamplerType.Texture3D => 3,
                 SamplerType.TextureCube => 3,
-                _ => throw new ArgumentException($"Invalid sampler type \"{type}\".")
+                _ => throw new ArgumentException($"Invalid sampler type \"{type}\"."),
             };
         }
 
@@ -45,7 +45,7 @@ namespace Ryujinx.Graphics.Shader
                 SamplerType.Texture2D => "sampler2D",
                 SamplerType.Texture3D => "sampler3D",
                 SamplerType.TextureCube => "samplerCube",
-                _ => throw new ArgumentException($"Invalid sampler type \"{type}\".")
+                _ => throw new ArgumentException($"Invalid sampler type \"{type}\"."),
             };
 
             if ((type & SamplerType.Multisample) != 0)
@@ -75,7 +75,7 @@ namespace Ryujinx.Graphics.Shader
                 SamplerType.Texture2D => "image2D",
                 SamplerType.Texture3D => "image3D",
                 SamplerType.TextureCube => "imageCube",
-                _ => throw new ArgumentException($"Invalid sampler type \"{type}\".")
+                _ => throw new ArgumentException($"Invalid sampler type \"{type}\"."),
             };
 
             if ((type & SamplerType.Multisample) != 0)
@@ -90,8 +90,12 @@ namespace Ryujinx.Graphics.Shader
 
             switch (componentType)
             {
-                case AggregateType.U32: typeName = 'u' + typeName; break;
-                case AggregateType.S32: typeName = 'i' + typeName; break;
+                case AggregateType.U32:
+                    typeName = 'u' + typeName;
+                    break;
+                case AggregateType.S32:
+                    typeName = 'i' + typeName;
+                    break;
             }
 
             return typeName;

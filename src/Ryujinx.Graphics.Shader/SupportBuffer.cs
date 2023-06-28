@@ -20,22 +20,22 @@ namespace Ryujinx.Graphics.Shader
         FragmentIsBgra,
         ViewportInverse,
         FragmentRenderScaleCount,
-        RenderScale
+        RenderScale,
     }
 
     public struct SupportBuffer
     {
         internal const int Binding = 0;
 
-        public static int FieldSize;
-        public static int RequiredSize;
+        public static readonly int FieldSize;
+        public static readonly int RequiredSize;
 
-        public static int FragmentAlphaTestOffset;
-        public static int FragmentIsBgraOffset;
-        public static int ViewportInverseOffset;
-        public static int FragmentRenderScaleCountOffset;
-        public static int GraphicsRenderScaleOffset;
-        public static int ComputeRenderScaleOffset;
+        public static readonly int FragmentAlphaTestOffset;
+        public static readonly int FragmentIsBgraOffset;
+        public static readonly int ViewportInverseOffset;
+        public static readonly int FragmentRenderScaleCountOffset;
+        public static readonly int GraphicsRenderScaleOffset;
+        public static readonly int ComputeRenderScaleOffset;
 
         public const int FragmentIsBgraCount = 8;
         // One for the render target, 64 for the textures, and 8 for the images.
@@ -51,7 +51,7 @@ namespace Ryujinx.Graphics.Shader
             FieldSize = Unsafe.SizeOf<Vector4<float>>();
             RequiredSize = Unsafe.SizeOf<SupportBuffer>();
 
-            SupportBuffer instance = new SupportBuffer();
+            SupportBuffer instance = new();
 
             FragmentAlphaTestOffset = OffsetOf(ref instance, ref instance.FragmentAlphaTest);
             FragmentIsBgraOffset = OffsetOf(ref instance, ref instance.FragmentIsBgra);
@@ -69,7 +69,7 @@ namespace Ryujinx.Graphics.Shader
                 new StructureField(AggregateType.Array | AggregateType.U32, "s_is_bgra", FragmentIsBgraCount),
                 new StructureField(AggregateType.Vector4 | AggregateType.FP32, "s_viewport_inverse"),
                 new StructureField(AggregateType.S32, "s_frag_scale_count"),
-                new StructureField(AggregateType.Array | AggregateType.FP32, "s_render_scale", RenderScaleMaxCount)
+                new StructureField(AggregateType.Array | AggregateType.FP32, "s_render_scale", RenderScaleMaxCount),
             });
         }
 

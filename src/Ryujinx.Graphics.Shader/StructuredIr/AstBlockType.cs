@@ -7,6 +7,6 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
         Else,
         ElseIf,
         Main,
-        While
+        While,
     }
 }

@@ -4,7 +4,7 @@ namespace Ryujinx.Graphics.Shader
     {
         Isolines = 0,
         Triangles = 1,
-        Quads = 2
+        Quads = 2,
     }
 
     static class TessPatchTypeExtensions
@@ -15,7 +15,7 @@ namespace Ryujinx.Graphics.Shader
             {
                 TessPatchType.Isolines => "isolines",
                 TessPatchType.Quads => "quads",
-                _ => "triangles"
+                _ => "triangles",
             };
         }
     }

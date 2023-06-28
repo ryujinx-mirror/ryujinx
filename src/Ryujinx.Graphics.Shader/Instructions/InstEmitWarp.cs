@@ -1,7 +1,6 @@
 using Ryujinx.Graphics.Shader.Decoders;
 using Ryujinx.Graphics.Shader.IntermediateRepresentation;
 using Ryujinx.Graphics.Shader.Translation;
-
 using static Ryujinx.Graphics.Shader.Instructions.InstEmitHelper;
 using static Ryujinx.Graphics.Shader.IntermediateRepresentation.OperandHelper;
 
@@ -39,7 +38,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 ShflMode.Up => context.ShuffleUp(srcA, srcB, srcC),
                 ShflMode.Down => context.ShuffleDown(srcA, srcB, srcC),
                 ShflMode.Bfly => context.ShuffleXor(srcA, srcB, srcC),
-                _ => (null, null)
+                _ => (null, null),
             };
 
             context.Copy(GetDest(op.Dest), res);

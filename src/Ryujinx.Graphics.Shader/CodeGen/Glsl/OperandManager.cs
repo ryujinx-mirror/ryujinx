@@ -5,7 +5,6 @@ using Ryujinx.Graphics.Shader.Translation;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-
 using static Ryujinx.Graphics.Shader.StructuredIr.InstructionInfo;
 
 namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
@@ -14,7 +13,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
     {
         private static readonly string[] _stagePrefixes = new string[] { "cp", "vp", "tcp", "tep", "gp", "fp" };
 
-        private Dictionary<AstOperand, string> _locals;
+        private readonly Dictionary<AstOperand, string> _locals;
 
         public OperandManager()
         {
@@ -38,7 +37,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                 OperandType.Constant => NumberFormatter.FormatInt(operand.Value),
                 OperandType.LocalVariable => _locals[operand],
                 OperandType.Undefined => DefaultNames.UndefinedName,
-                _ => throw new ArgumentException($"Invalid operand type \"{operand.Type}\".")
+                _ => throw new ArgumentException($"Invalid operand type \"{operand.Type}\"."),
             };
         }
 
@@ -96,11 +95,6 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             return _stagePrefixes[index];
         }
 
-        private static char GetSwizzleMask(int value)
-        {
-            return "xyzw"[value];
-        }
-
         public static string GetArgumentName(int argIndex)
         {
             return $"{DefaultNames.ArgumentNamePrefix}{argIndex}";
@@ -119,12 +113,12 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                     {
                         case StorageKind.ConstantBuffer:
                         case StorageKind.StorageBuffer:
-                            if (!(operation.GetSource(0) is AstOperand bindingIndex) || bindingIndex.Type != OperandType.Constant)
+                            if (operation.GetSource(0) is not AstOperand bindingIndex || bindingIndex.Type != OperandType.Constant)
                             {
                                 throw new InvalidOperationException($"First input of {operation.Inst} with {operation.StorageKind} storage must be a constant operand.");
                             }
 
-                            if (!(operation.GetSource(1) is AstOperand fieldIndex) || fieldIndex.Type != OperandType.Constant)
+                            if (operation.GetSource(1) is not AstOperand fieldIndex || fieldIndex.Type != OperandType.Constant)
                             {
                                 throw new InvalidOperationException($"Second input of {operation.Inst} with {operation.StorageKind} storage must be a constant operand.");
                             }
@@ -138,7 +132,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
                         case StorageKind.LocalMemory:
                         case StorageKind.SharedMemory:
-                            if (!(operation.GetSource(0) is AstOperand bindingId) || bindingId.Type != OperandType.Constant)
+                            if (operation.GetSource(0) is not AstOperand { Type: OperandType.Constant } bindingId)
                             {
                                 throw new InvalidOperationException($"First input of {operation.Inst} with {operation.StorageKind} storage must be a constant operand.");
                             }
@@ -153,7 +147,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                         case StorageKind.InputPerPatch:
                         case StorageKind.Output:
                         case StorageKind.OutputPerPatch:
-                            if (!(operation.GetSource(0) is AstOperand varId) || varId.Type != OperandType.Constant)
+                            if (operation.GetSource(0) is not AstOperand varId || varId.Type != OperandType.Constant)
                             {
                                 throw new InvalidOperationException($"First input of {operation.Inst} with {operation.StorageKind} storage must be a constant operand.");
                             }
@@ -166,7 +160,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
                             if (context.Config.HasPerLocationInputOrOutput(ioVariable, isOutput))
                             {
-                                if (!(operation.GetSource(1) is AstOperand vecIndex) || vecIndex.Type != OperandType.Constant)
+                                if (operation.GetSource(1) is not AstOperand vecIndex || vecIndex.Type != OperandType.Constant)
                                 {
                                     throw new InvalidOperationException($"Second input of {operation.Inst} with {operation.StorageKind} storage must be a constant operand.");
                                 }

@@ -1,7 +1,6 @@
 using Ryujinx.Graphics.Shader.IntermediateRepresentation;
 using System;
 using System.Collections.Generic;
-
 using static Ryujinx.Graphics.Shader.IntermediateRepresentation.OperandHelper;
 
 namespace Ryujinx.Graphics.Shader.Translation
@@ -65,13 +64,13 @@ namespace Ryujinx.Graphics.Shader.Translation
                 HelperFunctionName.ConvertFloatToDouble => GenerateConvertFloatToDoubleFunction(),
                 HelperFunctionName.TexelFetchScale => GenerateTexelFetchScaleFunction(),
                 HelperFunctionName.TextureSizeUnscale => GenerateTextureSizeUnscaleFunction(),
-                _ => throw new ArgumentException($"Invalid function name {functionName}")
+                _ => throw new ArgumentException($"Invalid function name {functionName}"),
             };
         }
 
-        private Function GenerateConvertDoubleToFloatFunction()
+        private static Function GenerateConvertDoubleToFloatFunction()
         {
-            EmitterContext context = new EmitterContext();
+            EmitterContext context = new();
 
             Operand valueLow = Argument(0);
             Operand valueHigh = Argument(1);
@@ -119,9 +118,9 @@ namespace Ryujinx.Graphics.Shader.Translation
             return new Function(ControlFlowGraph.Create(context.GetOperations()).Blocks, "ConvertDoubleToFloat", true, 2, 0);
         }
 
-        private Function GenerateConvertFloatToDoubleFunction()
+        private static Function GenerateConvertFloatToDoubleFunction()
         {
-            EmitterContext context = new EmitterContext();
+            EmitterContext context = new();
 
             Operand value = Argument(0);
 
@@ -164,13 +163,13 @@ namespace Ryujinx.Graphics.Shader.Translation
                 HelperFunctionName.SharedAtomicMinS32 => GenerateSharedAtomicSigned(id, isMin: true),
                 HelperFunctionName.SharedStore8 => GenerateSharedStore8(id),
                 HelperFunctionName.SharedStore16 => GenerateSharedStore16(id),
-                _ => throw new ArgumentException($"Invalid function name {functionName}")
+                _ => throw new ArgumentException($"Invalid function name {functionName}"),
             };
         }
 
         private static Function GenerateSharedAtomicSigned(int id, bool isMin)
         {
-            EmitterContext context = new EmitterContext();
+            EmitterContext context = new();
 
             Operand wordOffset = Argument(0);
             Operand value = Argument(1);
@@ -199,7 +198,7 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         private static Function GenerateSharedStore(int id, int bitSize)
         {
-            EmitterContext context = new EmitterContext();
+            EmitterContext context = new();
 
             Operand offset = Argument(0);
             Operand value = Argument(1);
@@ -219,7 +218,7 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         private Function GenerateTexelFetchScaleFunction()
         {
-            EmitterContext context = new EmitterContext();
+            EmitterContext context = new();
 
             Operand input = Argument(0);
             Operand samplerIndex = Argument(1);
@@ -270,7 +269,7 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         private Function GenerateTextureSizeUnscaleFunction()
         {
-            EmitterContext context = new EmitterContext();
+            EmitterContext context = new();
 
             Operand input = Argument(0);
             Operand samplerIndex = Argument(1);

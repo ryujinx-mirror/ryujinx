@@ -9,6 +9,6 @@ namespace Ryujinx.Graphics.Shader
         Greater,
         NotEqual,
         GreaterOrEqual,
-        Always
+        Always,
     }
 }

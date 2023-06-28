@@ -29,9 +29,9 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             Value = operand.Value;
         }
 
-        public AstOperand(OperandType type, int value = 0)  : this()
+        public AstOperand(OperandType type, int value = 0) : this()
         {
-            Type  = type;
+            Type = type;
             Value = value;
         }
     }

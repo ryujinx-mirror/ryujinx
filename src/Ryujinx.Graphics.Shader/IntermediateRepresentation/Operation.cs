@@ -62,7 +62,7 @@ namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
 
         public Operation(Instruction inst, int index, Operand[] dests, Operand[] sources) : this(sources)
         {
-            Inst  = inst;
+            Inst = inst;
             Index = index;
 
             if (dests != null)

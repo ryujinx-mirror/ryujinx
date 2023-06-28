@@ -49,9 +49,10 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
 
         public static AstOperand Local(AggregateType type)
         {
-            AstOperand local = new AstOperand(OperandType.LocalVariable);
-
-            local.VarType = type;
+            AstOperand local = new(OperandType.LocalVariable)
+            {
+                VarType = type,
+            };
 
             return local;
         }

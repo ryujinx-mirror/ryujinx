@@ -17,15 +17,15 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
     {
         // Resource pools for Spirv generation. Note: Increase count when more threads are being used.
         private const int GeneratorPoolCount = 1;
-        private static ObjectPool<SpvInstructionPool> InstructionPool;
-        private static ObjectPool<SpvLiteralIntegerPool> IntegerPool;
-        private static object PoolLock;
+        private static readonly ObjectPool<SpvInstructionPool> _instructionPool;
+        private static readonly ObjectPool<SpvLiteralIntegerPool> _integerPool;
+        private static readonly object _poolLock;
 
         static SpirvGenerator()
         {
-            InstructionPool = new (() => new SpvInstructionPool(), GeneratorPoolCount);
-            IntegerPool = new (() => new SpvLiteralIntegerPool(), GeneratorPoolCount);
-            PoolLock = new object();
+            _instructionPool = new(() => new SpvInstructionPool(), GeneratorPoolCount);
+            _integerPool = new(() => new SpvLiteralIntegerPool(), GeneratorPoolCount);
+            _poolLock = new object();
         }
 
         private const HelperFunctionsMask NeedsInvocationIdMask =
@@ -40,13 +40,13 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             SpvInstructionPool instPool;
             SpvLiteralIntegerPool integerPool;
 
-            lock (PoolLock)
+            lock (_poolLock)
             {
-                instPool = InstructionPool.Allocate();
-                integerPool = IntegerPool.Allocate();
+                instPool = _instructionPool.Allocate();
+                integerPool = _integerPool.Allocate();
             }
 
-            CodeGenContext context = new CodeGenContext(info, config, instPool, integerPool);
+            CodeGenContext context = new(info, config, instPool, integerPool);
 
             context.AddCapability(Capability.GroupNonUniformBallot);
             context.AddCapability(Capability.GroupNonUniformShuffle);
@@ -133,10 +133,10 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
 
             byte[] result = context.Generate();
 
-            lock (PoolLock)
+            lock (_poolLock)
             {
-                InstructionPool.Release(instPool);
-                IntegerPool.Release(integerPool);
+                _instructionPool.Release(instPool);
+                _integerPool.Release(integerPool);
             }
 
             return result;
@@ -144,7 +144,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
 
         private static void Generate(CodeGenContext context, StructuredProgramInfo info, int funcIndex)
         {
-            (var function, var spvFunc) = context.GetFunction(funcIndex);
+            var (function, spvFunc) = context.GetFunction(funcIndex);
 
             context.CurrentFunction = function;
             context.AddFunction(spvFunc);
@@ -160,7 +160,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             Generate(context, function.MainBlock);
 
             // Functions must always end with a return.
-            if (!(function.MainBlock.Last is AstOperation operation) ||
+            if (function.MainBlock.Last is not AstOperation operation ||
                 (operation.Inst != Instruction.Return && operation.Inst != Instruction.Discard))
             {
                 context.Return();
@@ -232,7 +232,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                         InputTopology.LinesAdjacency => ExecutionMode.InputLinesAdjacency,
                         InputTopology.Triangles => ExecutionMode.Triangles,
                         InputTopology.TrianglesAdjacency => ExecutionMode.InputTrianglesAdjacency,
-                        _ => throw new InvalidOperationException($"Invalid input topology \"{inputTopology}\".")
+                        _ => throw new InvalidOperationException($"Invalid input topology \"{inputTopology}\"."),
                     });
 
                     context.AddExecutionMode(spvFunc, ExecutionMode.Invocations, (SpvLiteralInteger)context.Config.ThreadsPerInputPrimitive);
@@ -242,7 +242,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                         OutputTopology.PointList => ExecutionMode.OutputPoints,
                         OutputTopology.LineStrip => ExecutionMode.OutputLineStrip,
                         OutputTopology.TriangleStrip => ExecutionMode.OutputTriangleStrip,
-                        _ => throw new InvalidOperationException($"Invalid output topology \"{context.Config.OutputTopology}\".")
+                        _ => throw new InvalidOperationException($"Invalid output topology \"{context.Config.OutputTopology}\"."),
                     });
 
                     int maxOutputVertices = context.Config.GpPassthrough ? context.InputVertices : context.Config.MaxOutputVertices;
@@ -294,7 +294,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
 
         private static void Generate(CodeGenContext context, AstBlock block)
         {
-            AstBlockVisitor visitor = new AstBlockVisitor(block);
+            AstBlockVisitor visitor = new(block);
 
             var loopTargets = new Dictionary<AstBlock, (SpvInstruction, SpvInstruction)>();
 
@@ -346,7 +346,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                         // if the condition is true.
                         AstBlock mergeBlock = e.Block.Parent;
 
-                        (var loopTarget, var continueTarget) = loopTargets[e.Block];
+                        var (loopTarget, continueTarget) = loopTargets[e.Block];
 
                         context.Branch(continueTarget);
                         context.AddLabel(continueTarget);

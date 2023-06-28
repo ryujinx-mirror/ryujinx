@@ -92,7 +92,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
                 pushOpInfo.Consumers.Add(rightBlock, local);
             }
 
-            foreach ((ulong  key, SyncTarget value) in SyncTargets)
+            foreach ((ulong key, SyncTarget value) in SyncTargets)
             {
                 rightBlock.SyncTargets.Add(key, value);
             }
@@ -148,7 +148,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
         {
             if (OpCodes.Count != 0)
             {
-                return OpCodes[OpCodes.Count - 1];
+                return OpCodes[^1];
             }
 
             return default;

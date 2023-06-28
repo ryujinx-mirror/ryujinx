@@ -14,6 +14,6 @@ namespace Ryujinx.Graphics.Shader
         ResScaleUnsupported = 1 << 0,
         NeedsScaleValue = 1 << 1,
         ImageStore = 1 << 2,
-        ImageCoherent = 1 << 3
+        ImageCoherent = 1 << 3,
     }
 }

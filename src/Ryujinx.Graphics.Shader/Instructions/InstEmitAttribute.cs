@@ -33,7 +33,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             for (int index = 0; index < (int)op.AlSize + 1; index++)
             {
-                Register rd = new Register(op.Dest + index, RegisterType.Gpr);
+                Register rd = new(op.Dest + index, RegisterType.Gpr);
 
                 if (rd.IsRZ)
                 {
@@ -91,7 +91,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                     break;
                 }
 
-                Register rd = new Register(op.SrcB + index, RegisterType.Gpr);
+                Register rd = new(op.SrcB + index, RegisterType.Gpr);
 
                 if (op.Phys)
                 {

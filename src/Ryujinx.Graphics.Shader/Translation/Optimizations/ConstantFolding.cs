@@ -1,7 +1,6 @@
 using Ryujinx.Common.Utilities;
 using Ryujinx.Graphics.Shader.IntermediateRepresentation;
 using System;
-
 using static Ryujinx.Graphics.Shader.IntermediateRepresentation.OperandHelper;
 
 namespace Ryujinx.Graphics.Shader.Translation.Optimizations
@@ -262,8 +261,8 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
 
         private static int GetBitfieldExtractValue(Operation operation)
         {
-            int value  = operation.GetSource(0).Value;
-            int lsb    = operation.GetSource(1).Value;
+            int value = operation.GetSource(0).Value;
+            int lsb = operation.GetSource(1).Value;
             int length = operation.GetSource(2).Value;
 
             return value.Extract(lsb, length);
@@ -276,13 +275,6 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
             value = (value >> operation.Index * 16) & 0xffff;
 
             operation.TurnIntoCopy(ConstF((float)BitConverter.UInt16BitsToHalf((ushort)value)));
-        }
-
-        private static void FPNegate(Operation operation)
-        {
-            float value = operation.GetSource(0).AsFloat();
-
-            operation.TurnIntoCopy(ConstF(-value));
         }
 
         private static void EvaluateUnary(Operation operation, Func<int, int> op)

@@ -2,7 +2,6 @@ using Ryujinx.Graphics.Shader.Decoders;
 using Ryujinx.Graphics.Shader.IntermediateRepresentation;
 using Ryujinx.Graphics.Shader.Translation;
 using System;
-
 using static Ryujinx.Graphics.Shader.Instructions.InstEmitAluHelper;
 using static Ryujinx.Graphics.Shader.Instructions.InstEmitHelper;
 using static Ryujinx.Graphics.Shader.IntermediateRepresentation.OperandHelper;
@@ -140,7 +139,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                     IntegerRound.Floor => context.FPFloor(srcB, srcType.ToInstFPType()),
                     IntegerRound.Ceil => context.FPCeiling(srcB, srcType.ToInstFPType()),
                     IntegerRound.Trunc => context.FPTruncate(srcB, srcType.ToInstFPType()),
-                    _ => srcB
+                    _ => srcB,
                 };
             }
 
@@ -191,7 +190,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 RoundMode2.Floor => context.FPFloor(srcB, fpType),
                 RoundMode2.Ceil => context.FPCeiling(srcB, fpType),
                 RoundMode2.Trunc => context.FPTruncate(srcB, fpType),
-                _ => srcB
+                _ => srcB,
             };
 
             if (!isSignedInt)

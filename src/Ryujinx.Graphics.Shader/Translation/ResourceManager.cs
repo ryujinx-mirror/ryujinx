@@ -13,10 +13,9 @@ namespace Ryujinx.Graphics.Shader.Translation
         private const int DefaultLocalMemorySize = 128;
         private const int DefaultSharedMemorySize = 4096;
 
-        private static readonly string[] _stagePrefixes = new string[] { "cp", "vp", "tcp", "tep", "gp", "fp" };
+        private static readonly string[] _stagePrefixes = { "cp", "vp", "tcp", "tep", "gp", "fp" };
 
         private readonly IGpuAccessor _gpuAccessor;
-        private readonly ShaderProperties _properties;
         private readonly string _stagePrefix;
 
         private readonly int[] _cbSlotToBindingMap;
@@ -31,12 +30,12 @@ namespace Ryujinx.Graphics.Shader.Translation
         public int LocalMemoryId { get; private set; }
         public int SharedMemoryId { get; private set; }
 
-        public ShaderProperties Properties => _properties;
+        public ShaderProperties Properties { get; }
 
         public ResourceManager(ShaderStage stage, IGpuAccessor gpuAccessor, ShaderProperties properties)
         {
             _gpuAccessor = gpuAccessor;
-            _properties = properties;
+            Properties = properties;
             _stagePrefix = GetShaderStagePrefix(stage);
 
             _cbSlotToBindingMap = new int[18];
@@ -83,7 +82,7 @@ namespace Ryujinx.Graphics.Shader.Translation
                     size = DefaultSharedMemorySize;
                 }
 
-                var smem = new MemoryDefinition("shared_memory", AggregateType.Array | AggregateType.U32,  BitUtils.DivRoundUp(size, sizeof(uint)));
+                var smem = new MemoryDefinition("shared_memory", AggregateType.Array | AggregateType.U32, BitUtils.DivRoundUp(size, sizeof(uint)));
 
                 SharedMemoryId = Properties.AddSharedMemory(smem);
             }
@@ -211,7 +210,7 @@ namespace Ryujinx.Graphics.Shader.Translation
                     (int sbCbSlot, int sbCbOffset) = UnpackSbCbInfo(key);
                     descriptors[descriptorIndex++] = new BufferDescriptor(binding, slot, sbCbSlot, sbCbOffset)
                     {
-                        Flags = (_sbSlotWritten & (1u << slot)) != 0 ? BufferUsageFlags.Write : BufferUsageFlags.None
+                        Flags = (_sbSlotWritten & (1u << slot)) != 0 ? BufferUsageFlags.Write : BufferUsageFlags.None,
                     };
                 }
             }
@@ -226,39 +225,34 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         private void AddNewConstantBuffer(int binding, string name)
         {
-            StructureType type = new StructureType(new[]
+            StructureType type = new(new[]
             {
-                new StructureField(AggregateType.Array | AggregateType.Vector4 | AggregateType.FP32, "data", Constants.ConstantBufferSize / 16)
+                new StructureField(AggregateType.Array | AggregateType.Vector4 | AggregateType.FP32, "data", Constants.ConstantBufferSize / 16),
             });
 
-            _properties.AddConstantBuffer(binding, new BufferDefinition(BufferLayout.Std140, 0, binding, name, type));
+            Properties.AddConstantBuffer(binding, new BufferDefinition(BufferLayout.Std140, 0, binding, name, type));
         }
 
         private void AddNewStorageBuffer(int binding, string name)
         {
-            StructureType type = new StructureType(new[]
+            StructureType type = new(new[]
             {
-                new StructureField(AggregateType.Array | AggregateType.U32, "data", 0)
+                new StructureField(AggregateType.Array | AggregateType.U32, "data", 0),
             });
 
-            _properties.AddStorageBuffer(binding, new BufferDefinition(BufferLayout.Std430, 1, binding, name, type));
+            Properties.AddStorageBuffer(binding, new BufferDefinition(BufferLayout.Std430, 1, binding, name, type));
         }
 
         public static string GetShaderStagePrefix(ShaderStage stage)
         {
             uint index = (uint)stage;
 
-            if (index >= _stagePrefixes.Length)
-            {
-                return "invalid";
-            }
-
-            return _stagePrefixes[index];
+            return index >= _stagePrefixes.Length ? "invalid" : _stagePrefixes[index];
         }
 
         private static int PackSbCbInfo(int sbCbSlot, int sbCbOffset)
         {
-            return sbCbOffset | ((int)sbCbSlot << 16);
+            return sbCbOffset | (sbCbSlot << 16);
         }
 
         private static (int, int) UnpackSbCbInfo(int key)

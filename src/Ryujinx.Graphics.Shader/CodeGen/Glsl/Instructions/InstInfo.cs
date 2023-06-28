@@ -10,8 +10,8 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 
         public InstInfo(InstType type, string opName, int precedence)
         {
-            Type       = type;
-            OpName     = opName;
+            Type = type;
+            OpName = opName;
             Precedence = precedence;
         }
     }

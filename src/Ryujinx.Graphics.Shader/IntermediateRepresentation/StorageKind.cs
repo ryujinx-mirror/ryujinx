@@ -17,7 +17,7 @@ namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
         GlobalMemoryS8, // TODO: Remove this and store type as a field on the Operation class itself.
         GlobalMemoryS16, // TODO: Remove this and store type as a field on the Operation class itself.
         GlobalMemoryU8, // TODO: Remove this and store type as a field on the Operation class itself.
-        GlobalMemoryU16 // TODO: Remove this and store type as a field on the Operation class itself.
+        GlobalMemoryU16, // TODO: Remove this and store type as a field on the Operation class itself.
     }
 
     static class StorageKindExtensions

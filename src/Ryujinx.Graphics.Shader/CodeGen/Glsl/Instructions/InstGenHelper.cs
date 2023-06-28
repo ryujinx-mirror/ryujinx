@@ -14,6 +14,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
         {
             _infoTable = new InstInfo[(int)Instruction.Count];
 
+#pragma warning disable IDE0055 // Disable formatting
             Add(Instruction.AtomicAdd,                InstType.AtomicBinary,   "atomicAdd");
             Add(Instruction.AtomicAnd,                InstType.AtomicBinary,   "atomicAnd");
             Add(Instruction.AtomicCompareAndSwap,     InstType.AtomicTernary,  "atomicCompSwap");
@@ -125,6 +126,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             Add(Instruction.VoteAll,                  InstType.CallUnary,      "allInvocationsARB");
             Add(Instruction.VoteAllEqual,             InstType.CallUnary,      "allInvocationsEqualARB");
             Add(Instruction.VoteAny,                  InstType.CallUnary,      "anyInvocationARB");
+#pragma warning restore IDE0055
         }
 
         private static void Add(Instruction inst, InstType flags, string opName = null, int precedence = 0)
@@ -163,7 +165,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
         {
             // If the node isn't a operation, then it can only be a operand,
             // and those never needs to be surrounded in parenthesis.
-            if (!(node is AstOperation operation))
+            if (node is not AstOperation operation)
             {
                 // This is sort of a special case, if this is a negative constant,
                 // and it is consumed by a unary operation, we need to put on the parenthesis,
@@ -208,7 +210,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 
         private static bool IsNegativeConst(IAstNode node)
         {
-            if (!(node is AstOperand operand))
+            if (node is not AstOperand operand)
             {
                 return false;
             }

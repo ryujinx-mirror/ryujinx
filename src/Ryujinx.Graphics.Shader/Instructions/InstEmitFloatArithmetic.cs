@@ -1,7 +1,6 @@
 using Ryujinx.Graphics.Shader.Decoders;
 using Ryujinx.Graphics.Shader.IntermediateRepresentation;
 using Ryujinx.Graphics.Shader.Translation;
-
 using static Ryujinx.Graphics.Shader.Instructions.InstEmitAluHelper;
 using static Ryujinx.Graphics.Shader.Instructions.InstEmitHelper;
 using static Ryujinx.Graphics.Shader.IntermediateRepresentation.OperandHelper;
@@ -458,7 +457,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                     MultiplyScale.M2 => ConstF(2f),
                     MultiplyScale.M4 => ConstF(4f),
                     MultiplyScale.M8 => ConstF(8f),
-                    _ => ConstF(1f) // Invalid, behave as if it had no scale.
+                    _ => ConstF(1f), // Invalid, behave as if it had no scale.
                 };
 
                 if (scaleConst.AsFloat() == 1f)
