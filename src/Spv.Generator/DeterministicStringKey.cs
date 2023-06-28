@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics.CodeAnalysis;
 
 namespace Spv.Generator
 {
@@ -19,12 +18,12 @@ namespace Spv.Generator
 
         public bool Equals(DeterministicStringKey other)
         {
-            return _value == other._value;
+            return _value == other?._value;
         }
 
-        public override bool Equals([NotNullWhen(true)] object obj)
+        public override bool Equals(object obj)
         {
-            return obj is DeterministicStringKey && Equals((DeterministicStringKey)obj);
+            return obj is DeterministicStringKey key && Equals(key);
         }
     }
 }

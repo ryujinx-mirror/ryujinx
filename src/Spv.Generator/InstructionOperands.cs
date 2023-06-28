@@ -10,14 +10,14 @@ namespace Spv.Generator
         private const int InternalCount = 5;
 
         public int Count;
-        public Operand Operand1;
-        public Operand Operand2;
-        public Operand Operand3;
-        public Operand Operand4;
-        public Operand Operand5;
-        public Operand[] Overflow;
+        public IOperand Operand1;
+        public IOperand Operand2;
+        public IOperand Operand3;
+        public IOperand Operand4;
+        public IOperand Operand5;
+        public IOperand[] Overflow;
 
-        public Span<Operand> AsSpan()
+        public Span<IOperand> AsSpan()
         {
             if (Count > InternalCount)
             {
@@ -29,7 +29,7 @@ namespace Spv.Generator
             }
         }
 
-        public void Add(Operand operand)
+        public void Add(IOperand operand)
         {
             if (Count < InternalCount)
             {
@@ -40,7 +40,7 @@ namespace Spv.Generator
             {
                 if (Overflow == null)
                 {
-                    Overflow = new Operand[InternalCount * 2];
+                    Overflow = new IOperand[InternalCount * 2];
                     MemoryMarshal.CreateSpan(ref this.Operand1, InternalCount).CopyTo(Overflow.AsSpan());
                 }
                 else if (Count == Overflow.Length)
@@ -52,16 +52,16 @@ namespace Spv.Generator
             }
         }
 
-        private IEnumerable<Operand> AllOperands => new[] { Operand1, Operand2, Operand3, Operand4, Operand5 }
-            .Concat(Overflow ?? Array.Empty<Operand>())
+        private readonly IEnumerable<IOperand> AllOperands => new[] { Operand1, Operand2, Operand3, Operand4, Operand5 }
+            .Concat(Overflow ?? Array.Empty<IOperand>())
             .Take(Count);
 
-        public override string ToString()
+        public readonly override string ToString()
         {
             return $"({string.Join(", ", AllOperands)})";
         }
 
-        public string ToString(string[] labels)
+        public readonly string ToString(string[] labels)
         {
             var labeledParams = AllOperands.Zip(labels, (op, label) => $"{label}: {op}");
             var unlabeledParams = AllOperands.Skip(labels.Length).Select(op => op.ToString());

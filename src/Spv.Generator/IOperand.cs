@@ -3,7 +3,7 @@ using System.IO;
 
 namespace Spv.Generator
 {
-    public interface Operand : IEquatable<Operand>
+    public interface IOperand : IEquatable<IOperand>
     {
         OperandType Type { get; }
 

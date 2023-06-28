@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Spv.Generator
 {
-    public class LiteralString : Operand, IEquatable<LiteralString>
+    public class LiteralString : IOperand, IEquatable<LiteralString>
     {
         public OperandType Type => OperandType.String;
 
@@ -44,7 +44,7 @@ namespace Spv.Generator
             return DeterministicHashCode.Combine(Type, DeterministicHashCode.GetHashCode(_value));
         }
 
-        public bool Equals(Operand obj)
+        public bool Equals(IOperand obj)
         {
             return obj is LiteralString literalString && Equals(literalString);
         }

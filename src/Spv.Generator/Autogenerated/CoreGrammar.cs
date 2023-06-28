@@ -180,7 +180,7 @@ namespace Spv.Generator
             return result;
         }
 
-        public Instruction Decorate(Instruction target, Decoration decoration, Operand parameter)
+        public Instruction Decorate(Instruction target, Decoration decoration, IOperand parameter)
         {
             Instruction result = NewInstruction(Op.OpDecorate);
 
@@ -192,7 +192,7 @@ namespace Spv.Generator
             return result;
         }
 
-        public Instruction Decorate(Instruction target, Decoration decoration, params Operand[] parameters)
+        public Instruction Decorate(Instruction target, Decoration decoration, params IOperand[] parameters)
         {
             Instruction result = NewInstruction(Op.OpDecorate);
 
@@ -216,7 +216,7 @@ namespace Spv.Generator
             return result;
         }
 
-        public Instruction MemberDecorate(Instruction structureType, LiteralInteger member, Decoration decoration, Operand parameter)
+        public Instruction MemberDecorate(Instruction structureType, LiteralInteger member, Decoration decoration, IOperand parameter)
         {
             Instruction result = NewInstruction(Op.OpMemberDecorate);
 
@@ -229,7 +229,7 @@ namespace Spv.Generator
             return result;
         }
 
-        public Instruction MemberDecorate(Instruction structureType, LiteralInteger member, Decoration decoration, params Operand[] parameters)
+        public Instruction MemberDecorate(Instruction structureType, LiteralInteger member, Decoration decoration, params IOperand[] parameters)
         {
             Instruction result = NewInstruction(Op.OpMemberDecorate);
 
@@ -262,7 +262,7 @@ namespace Spv.Generator
             return result;
         }
 
-        public Instruction GroupMemberDecorate(Instruction decorationGroup, params Operand[] targets)
+        public Instruction GroupMemberDecorate(Instruction decorationGroup, params IOperand[] targets)
         {
             Instruction result = NewInstruction(Op.OpGroupMemberDecorate);
 
@@ -273,7 +273,7 @@ namespace Spv.Generator
             return result;
         }
 
-        public Instruction DecorateId(Instruction target, Decoration decoration, params Operand[] parameters)
+        public Instruction DecorateId(Instruction target, Decoration decoration, params IOperand[] parameters)
         {
             Instruction result = NewInstruction(Op.OpDecorateId);
 
@@ -285,7 +285,7 @@ namespace Spv.Generator
             return result;
         }
 
-        public Instruction DecorateString(Instruction target, Decoration decoration, params Operand[] parameters)
+        public Instruction DecorateString(Instruction target, Decoration decoration, params IOperand[] parameters)
         {
             Instruction result = NewInstruction(Op.OpDecorateString);
 
@@ -297,7 +297,7 @@ namespace Spv.Generator
             return result;
         }
 
-        public Instruction DecorateStringGOOGLE(Instruction target, Decoration decoration, params Operand[] parameters)
+        public Instruction DecorateStringGOOGLE(Instruction target, Decoration decoration, params IOperand[] parameters)
         {
             Instruction result = NewInstruction(Op.OpDecorateStringGOOGLE);
 
@@ -309,7 +309,7 @@ namespace Spv.Generator
             return result;
         }
 
-        public Instruction MemberDecorateString(Instruction structType, LiteralInteger member, Decoration decoration, params Operand[] parameters)
+        public Instruction MemberDecorateString(Instruction structType, LiteralInteger member, Decoration decoration, params IOperand[] parameters)
         {
             Instruction result = NewInstruction(Op.OpMemberDecorateString);
 
@@ -322,7 +322,7 @@ namespace Spv.Generator
             return result;
         }
 
-        public Instruction MemberDecorateStringGOOGLE(Instruction structType, LiteralInteger member, Decoration decoration, params Operand[] parameters)
+        public Instruction MemberDecorateStringGOOGLE(Instruction structType, LiteralInteger member, Decoration decoration, params IOperand[] parameters)
         {
             Instruction result = NewInstruction(Op.OpMemberDecorateStringGOOGLE);
 
@@ -2815,7 +2815,7 @@ namespace Spv.Generator
             return result;
         }
 
-        public Instruction Switch(Instruction selector, Instruction defaultObj, params Operand[] target)
+        public Instruction Switch(Instruction selector, Instruction defaultObj, params IOperand[] target)
         {
             Instruction result = NewInstruction(Op.OpSwitch);
 

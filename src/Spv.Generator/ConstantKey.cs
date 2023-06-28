@@ -3,7 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Spv.Generator
 {
-    internal struct ConstantKey : IEquatable<ConstantKey>
+    internal readonly struct ConstantKey : IEquatable<ConstantKey>
     {
         private readonly Instruction _constant;
 
@@ -24,7 +24,7 @@ namespace Spv.Generator
 
         public override bool Equals([NotNullWhen(true)] object obj)
         {
-            return obj is ConstantKey && Equals((ConstantKey)obj);
+            return obj is ConstantKey key && Equals(key);
         }
     }
 }

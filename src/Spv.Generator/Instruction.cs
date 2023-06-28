@@ -5,7 +5,7 @@ using System.IO;
 
 namespace Spv.Generator
 {
-    public sealed class Instruction : Operand, IEquatable<Instruction>
+    public sealed class Instruction : IOperand, IEquatable<Instruction>
     {
         public const uint InvalidId = uint.MaxValue;
 
@@ -47,7 +47,7 @@ namespace Spv.Generator
                 result += _resultType.WordCount;
             }
 
-            Span<Operand> operands = _operands.AsSpan();
+            Span<IOperand> operands = _operands.AsSpan();
             for (int i = 0; i < operands.Length; i++)
             {
                 result += operands[i].WordCount;
@@ -58,15 +58,15 @@ namespace Spv.Generator
 
         public ushort WordCount => 1;
 
-        public void AddOperand(Operand value)
+        public void AddOperand(IOperand value)
         {
             Debug.Assert(value != null);
             _operands.Add(value);
         }
 
-        public void AddOperand(Operand[] value)
+        public void AddOperand(IOperand[] value)
         {
-            foreach (Operand instruction in value)
+            foreach (IOperand instruction in value)
             {
                 AddOperand(instruction);
             }
@@ -82,7 +82,7 @@ namespace Spv.Generator
 
         public void AddOperand(LiteralInteger value)
         {
-            AddOperand((Operand)value);
+            AddOperand((IOperand)value);
         }
 
         public void AddOperand(Instruction[] value)
@@ -95,7 +95,7 @@ namespace Spv.Generator
 
         public void AddOperand(Instruction value)
         {
-            AddOperand((Operand)value);
+            AddOperand((IOperand)value);
         }
 
         public void AddOperand(string value)
@@ -103,7 +103,7 @@ namespace Spv.Generator
             AddOperand(new LiteralString(value));
         }
 
-        public void AddOperand<T>(T value) where T: Enum
+        public void AddOperand<T>(T value) where T : Enum
         {
             AddOperand(LiteralInteger.CreateForEnum(value));
         }
@@ -121,7 +121,7 @@ namespace Spv.Generator
                 writer.Write(Id);
             }
 
-            Span<Operand> operands = _operands.AsSpan();
+            Span<IOperand> operands = _operands.AsSpan();
             for (int i = 0; i < operands.Length; i++)
             {
                 operands[i].WriteOperand(writer);
@@ -186,8 +186,8 @@ namespace Spv.Generator
 
         public bool EqualsContent(Instruction cmpObj)
         {
-            Span<Operand> thisOperands = _operands.AsSpan();
-            Span<Operand> cmpOperands = cmpObj._operands.AsSpan();
+            Span<IOperand> thisOperands = _operands.AsSpan();
+            Span<IOperand> cmpOperands = cmpObj._operands.AsSpan();
 
             if (thisOperands.Length != cmpOperands.Length)
             {
@@ -212,7 +212,7 @@ namespace Spv.Generator
 
         public int GetHashCodeContent()
         {
-            return DeterministicHashCode.Combine<Operand>(_operands.AsSpan());
+            return DeterministicHashCode.Combine<IOperand>(_operands.AsSpan());
         }
 
         public int GetHashCodeResultType()
@@ -222,14 +222,14 @@ namespace Spv.Generator
 
         public override int GetHashCode()
         {
-            return DeterministicHashCode.Combine(Opcode, Id, _resultType, DeterministicHashCode.Combine<Operand>(_operands.AsSpan()));
+            return DeterministicHashCode.Combine(Opcode, Id, _resultType, DeterministicHashCode.Combine<IOperand>(_operands.AsSpan()));
         }
 
-        public bool Equals(Operand obj)
+        public bool Equals(IOperand obj)
         {
             return obj is Instruction instruction && Equals(instruction);
         }
-        
+
         private static readonly Dictionary<Specification.Op, string[]> _operandLabels = new()
         {
             { Specification.Op.OpConstant, new [] { "Value" } },
