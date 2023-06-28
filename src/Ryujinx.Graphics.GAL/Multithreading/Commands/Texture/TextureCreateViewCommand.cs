@@ -5,7 +5,7 @@ namespace Ryujinx.Graphics.GAL.Multithreading.Commands.Texture
 {
     struct TextureCreateViewCommand : IGALCommand, IGALCommand<TextureCreateViewCommand>
     {
-        public CommandType CommandType => CommandType.TextureCreateView;
+        public readonly CommandType CommandType => CommandType.TextureCreateView;
         private TableRef<ThreadedTexture> _texture;
         private TableRef<ThreadedTexture> _destination;
         private TextureCreateInfo _info;

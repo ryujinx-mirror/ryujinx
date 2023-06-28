@@ -2,7 +2,7 @@
 {
     struct UpdateCountersCommand : IGALCommand, IGALCommand<UpdateCountersCommand>
     {
-        public CommandType CommandType => CommandType.UpdateCounters;
+        public readonly CommandType CommandType => CommandType.UpdateCounters;
 
         public static void Run(ref UpdateCountersCommand command, ThreadedRenderer threaded, IRenderer renderer)
         {

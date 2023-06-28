@@ -7,6 +7,6 @@ namespace Ryujinx.Graphics.GAL
         Red,
         Green,
         Blue,
-        Alpha
+        Alpha,
     }
 }

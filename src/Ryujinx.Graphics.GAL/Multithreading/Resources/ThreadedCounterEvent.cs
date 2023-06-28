@@ -6,7 +6,7 @@ namespace Ryujinx.Graphics.GAL.Multithreading.Resources
 {
     class ThreadedCounterEvent : ICounterEvent
     {
-        private ThreadedRenderer _renderer;
+        private readonly ThreadedRenderer _renderer;
         public ICounterEvent Base;
 
         public bool Invalid { get; set; }

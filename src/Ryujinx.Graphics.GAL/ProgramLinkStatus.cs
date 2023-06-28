@@ -4,6 +4,6 @@
     {
         Incomplete,
         Success,
-        Failure
+        Failure,
     }
 }

@@ -2,9 +2,9 @@
 
 namespace Ryujinx.Graphics.GAL.Multithreading.Model
 {
-    struct SpanRef<T> where T : unmanaged
+    readonly struct SpanRef<T> where T : unmanaged
     {
-        private int _packedLengthId;
+        private readonly int _packedLengthId;
 
         public SpanRef(ThreadedRenderer renderer, T[] data)
         {

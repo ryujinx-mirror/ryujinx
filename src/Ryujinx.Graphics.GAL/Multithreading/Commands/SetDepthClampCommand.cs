@@ -2,7 +2,7 @@
 {
     struct SetDepthClampCommand : IGALCommand, IGALCommand<SetDepthClampCommand>
     {
-        public CommandType CommandType => CommandType.SetDepthClamp;
+        public readonly CommandType CommandType => CommandType.SetDepthClamp;
         private bool _clamp;
 
         public void Set(bool clamp)

@@ -1,11 +1,10 @@
 ﻿using Ryujinx.Graphics.GAL.Multithreading.Model;
-using System;
 
 namespace Ryujinx.Graphics.GAL.Multithreading.Commands.Buffer
 {
     struct BufferGetDataCommand : IGALCommand, IGALCommand<BufferGetDataCommand>
     {
-        public CommandType CommandType => CommandType.BufferGetData;
+        public readonly CommandType CommandType => CommandType.BufferGetData;
         private BufferHandle _buffer;
         private int _offset;
         private int _size;

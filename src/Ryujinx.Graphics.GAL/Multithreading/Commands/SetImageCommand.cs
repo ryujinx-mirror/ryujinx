@@ -5,7 +5,7 @@ namespace Ryujinx.Graphics.GAL.Multithreading.Commands
 {
     struct SetImageCommand : IGALCommand, IGALCommand<SetImageCommand>
     {
-        public CommandType CommandType => CommandType.SetImage;
+        public readonly CommandType CommandType => CommandType.SetImage;
         private int _binding;
         private TableRef<ITexture> _texture;
         private Format _imageFormat;

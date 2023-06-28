@@ -16,6 +16,6 @@ namespace Ryujinx.Graphics.GAL
         LineStripAdjacency,
         TrianglesAdjacency,
         TriangleStripAdjacency,
-        Patches
+        Patches,
     }
 }

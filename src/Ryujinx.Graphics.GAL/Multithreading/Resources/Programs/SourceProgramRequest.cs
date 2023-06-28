@@ -4,7 +4,7 @@
     {
         public ThreadedProgram Threaded { get; set; }
 
-        private ShaderSource[] _shaders;
+        private readonly ShaderSource[] _shaders;
         private ShaderInfo _info;
 
         public SourceProgramRequest(ThreadedProgram program, ShaderSource[] shaders, ShaderInfo info)

@@ -9,6 +9,6 @@ namespace Ryujinx.Graphics.GAL
         Clamp,
         MirrorClampToEdge,
         MirrorClampToBorder,
-        MirrorClamp
+        MirrorClamp,
     }
 }

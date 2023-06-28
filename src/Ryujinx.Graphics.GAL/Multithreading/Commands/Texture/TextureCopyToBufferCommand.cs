@@ -5,7 +5,7 @@ namespace Ryujinx.Graphics.GAL.Multithreading.Commands.Texture
 {
     struct TextureCopyToBufferCommand : IGALCommand, IGALCommand<TextureCopyToBufferCommand>
     {
-        public CommandType CommandType => CommandType.TextureCopyToBuffer;
+        public readonly CommandType CommandType => CommandType.TextureCopyToBuffer;
         private TableRef<ThreadedTexture> _texture;
         private BufferRange _range;
         private int _layer;

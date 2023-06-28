@@ -5,7 +5,7 @@ namespace Ryujinx.Graphics.GAL.Multithreading.Commands.Buffer
 {
     struct BufferSetDataCommand : IGALCommand, IGALCommand<BufferSetDataCommand>
     {
-        public CommandType CommandType => CommandType.BufferSetData;
+        public readonly CommandType CommandType => CommandType.BufferSetData;
         private BufferHandle _buffer;
         private int _offset;
         private SpanRef<byte> _data;

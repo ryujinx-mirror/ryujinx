@@ -5,7 +5,7 @@ namespace Ryujinx.Graphics.GAL.Multithreading.Commands.CounterEvent
 {
     struct CounterEventDisposeCommand : IGALCommand, IGALCommand<CounterEventDisposeCommand>
     {
-        public CommandType CommandType => CommandType.CounterEventDispose;
+        public readonly CommandType CommandType => CommandType.CounterEventDispose;
         private TableRef<ThreadedCounterEvent> _event;
 
         public void Set(TableRef<ThreadedCounterEvent> evt)

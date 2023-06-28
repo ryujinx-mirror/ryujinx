@@ -12,9 +12,9 @@ namespace Ryujinx.Graphics.GAL.Multithreading.Model
     /// </summary>
     class CircularSpanPool
     {
-        private ThreadedRenderer _renderer;
-        private byte[] _pool;
-        private int _size;
+        private readonly ThreadedRenderer _renderer;
+        private readonly byte[] _pool;
+        private readonly int _size;
 
         private int _producerPtr;
         private int _producerSkipPosition = -1;
@@ -83,7 +83,7 @@ namespace Ryujinx.Graphics.GAL.Multithreading.Model
         {
             int size = length * Unsafe.SizeOf<T>();
 
-            _consumerPtr = _consumerPtr + size;
+            _consumerPtr += size;
         }
     }
 }

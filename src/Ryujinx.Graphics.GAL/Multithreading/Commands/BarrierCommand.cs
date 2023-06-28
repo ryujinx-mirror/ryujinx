@@ -2,7 +2,7 @@
 {
     struct BarrierCommand : IGALCommand, IGALCommand<BarrierCommand>
     {
-        public CommandType CommandType => CommandType.Barrier;
+        public readonly CommandType CommandType => CommandType.Barrier;
 
         public static void Run(ref BarrierCommand command, ThreadedRenderer threaded, IRenderer renderer)
         {

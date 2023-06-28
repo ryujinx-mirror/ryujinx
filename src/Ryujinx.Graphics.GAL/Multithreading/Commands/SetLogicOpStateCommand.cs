@@ -2,7 +2,7 @@
 {
     struct SetLogicOpStateCommand : IGALCommand, IGALCommand<SetLogicOpStateCommand>
     {
-        public CommandType CommandType => CommandType.SetLogicOpState;
+        public readonly CommandType CommandType => CommandType.SetLogicOpState;
         private bool _enable;
         private LogicalOp _op;
 

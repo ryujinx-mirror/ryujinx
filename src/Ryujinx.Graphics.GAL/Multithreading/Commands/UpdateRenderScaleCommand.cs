@@ -4,7 +4,7 @@ namespace Ryujinx.Graphics.GAL.Multithreading.Commands
 {
     struct UpdateRenderScaleCommand : IGALCommand, IGALCommand<UpdateRenderScaleCommand>
     {
-        public CommandType CommandType => CommandType.UpdateRenderScale;
+        public readonly CommandType CommandType => CommandType.UpdateRenderScale;
         private SpanRef<float> _scales;
         private int _totalCount;
         private int _fragmentCount;

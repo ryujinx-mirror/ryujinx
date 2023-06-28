@@ -2,7 +2,7 @@
 {
     struct CreateBufferCommand : IGALCommand, IGALCommand<CreateBufferCommand>
     {
-        public CommandType CommandType => CommandType.CreateBuffer;
+        public readonly CommandType CommandType => CommandType.CreateBuffer;
         private BufferHandle _threadedHandle;
         private int _size;
         private BufferHandle _storageHint;

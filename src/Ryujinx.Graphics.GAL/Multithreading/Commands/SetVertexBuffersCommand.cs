@@ -5,7 +5,7 @@ namespace Ryujinx.Graphics.GAL.Multithreading.Commands
 {
     struct SetVertexBuffersCommand : IGALCommand, IGALCommand<SetVertexBuffersCommand>
     {
-        public CommandType CommandType => CommandType.SetVertexBuffers;
+        public readonly CommandType CommandType => CommandType.SetVertexBuffers;
         private SpanRef<VertexBufferDescriptor> _vertexBuffers;
 
         public void Set(SpanRef<VertexBufferDescriptor> vertexBuffers)

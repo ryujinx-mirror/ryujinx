@@ -26,24 +26,24 @@ namespace Ryujinx.Graphics.GAL.Multithreading
         private const int MaxRefsPerCommand = 2;
         private const int QueueCount = 10000;
 
-        private int _elementSize;
-        private IRenderer _baseRenderer;
+        private readonly int _elementSize;
+        private readonly IRenderer _baseRenderer;
         private Thread _gpuThread;
         private Thread _backendThread;
         private bool _running;
 
-        private AutoResetEvent _frameComplete = new AutoResetEvent(true);
+        private readonly AutoResetEvent _frameComplete = new(true);
 
-        private ManualResetEventSlim _galWorkAvailable;
-        private CircularSpanPool _spanPool;
+        private readonly ManualResetEventSlim _galWorkAvailable;
+        private readonly CircularSpanPool _spanPool;
 
-        private ManualResetEventSlim _invokeRun;
-        private AutoResetEvent _interruptRun;
+        private readonly ManualResetEventSlim _invokeRun;
+        private readonly AutoResetEvent _interruptRun;
 
         private bool _lastSampleCounterClear = true;
 
-        private byte[] _commandQueue;
-        private object[] _refQueue;
+        private readonly byte[] _commandQueue;
+        private readonly object[] _refQueue;
 
         private int _consumerPtr;
         private int _commandCount;
@@ -79,7 +79,7 @@ namespace Ryujinx.Graphics.GAL.Multithreading
             renderer.ScreenCaptured += (sender, info) => ScreenCaptured?.Invoke(this, info);
             renderer.SetInterruptAction(Interrupt);
 
-            Pipeline = new ThreadedPipeline(this, renderer.Pipeline);
+            Pipeline = new ThreadedPipeline(this);
             Window = new ThreadedWindow(this, renderer);
             Buffers = new BufferMap();
             Sync = new SyncMap();
@@ -105,7 +105,7 @@ namespace Ryujinx.Graphics.GAL.Multithreading
 
             _gpuThread = new Thread(gpuLoop)
             {
-                Name = "GPU.MainThread"
+                Name = "GPU.MainThread",
             };
 
             _gpuThread.Start();
@@ -137,7 +137,7 @@ namespace Ryujinx.Graphics.GAL.Multithreading
                 {
                     int commandPtr = _consumerPtr;
 
-                    Span<byte> command = new Span<byte>(_commandQueue, commandPtr * _elementSize, _elementSize);
+                    Span<byte> command = new(_commandQueue, commandPtr * _elementSize, _elementSize);
 
                     // Run the command.
 
@@ -180,10 +180,10 @@ namespace Ryujinx.Graphics.GAL.Multithreading
 
             _producerPtr = (_producerPtr + 1) % QueueCount;
 
-            Span<byte> memory = new Span<byte>(_commandQueue, taken * _elementSize, _elementSize);
+            Span<byte> memory = new(_commandQueue, taken * _elementSize, _elementSize);
             ref T result = ref Unsafe.As<byte, T>(ref MemoryMarshal.GetReference(memory));
 
-            memory[memory.Length - 1] = (byte)((IGALCommand)result).CommandType;
+            memory[^1] = (byte)((IGALCommand)result).CommandType;
 
             return ref result;
         }
@@ -294,7 +294,7 @@ namespace Ryujinx.Graphics.GAL.Multithreading
         {
             var program = new ThreadedProgram(this);
 
-            SourceProgramRequest request = new SourceProgramRequest(program, shaders, info);
+            SourceProgramRequest request = new(program, shaders, info);
 
             Programs.Add(request);
 
@@ -332,8 +332,10 @@ namespace Ryujinx.Graphics.GAL.Multithreading
             }
             else
             {
-                var texture = new ThreadedTexture(this, info, scale);
-                texture.Base = _baseRenderer.CreateTexture(info, scale);
+                var texture = new ThreadedTexture(this, info, scale)
+                {
+                    Base = _baseRenderer.CreateTexture(info, scale),
+                };
 
                 return texture;
             }
@@ -349,7 +351,7 @@ namespace Ryujinx.Graphics.GAL.Multithreading
         {
             if (IsGpuThread())
             {
-                ResultBox<PinnedSpan<byte>> box = new ResultBox<PinnedSpan<byte>>();
+                ResultBox<PinnedSpan<byte>> box = new();
                 New<BufferGetDataCommand>().Set(buffer, offset, size, Ref(box));
                 InvokeCommand();
 
@@ -363,7 +365,7 @@ namespace Ryujinx.Graphics.GAL.Multithreading
 
         public Capabilities GetCapabilities()
         {
-            ResultBox<Capabilities> box = new ResultBox<Capabilities>();
+            ResultBox<Capabilities> box = new();
             New<GetCapabilitiesCommand>().Set(Ref(box));
             InvokeCommand();
 
@@ -393,7 +395,7 @@ namespace Ryujinx.Graphics.GAL.Multithreading
         {
             var program = new ThreadedProgram(this);
 
-            BinaryProgramRequest request = new BinaryProgramRequest(program, programBinary, hasFragmentShader, info);
+            BinaryProgramRequest request = new(program, programBinary, hasFragmentShader, info);
             Programs.Add(request);
 
             New<CreateProgramCommand>().Set(Ref((IProgramRequest)request));
@@ -410,7 +412,7 @@ namespace Ryujinx.Graphics.GAL.Multithreading
 
         public ICounterEvent ReportCounter(CounterType type, EventHandler<ulong> resultHandler, bool hostReserved)
         {
-            ThreadedCounterEvent evt = new ThreadedCounterEvent(this, type, _lastSampleCounterClear);
+            ThreadedCounterEvent evt = new(this, type, _lastSampleCounterClear);
             New<ReportCounterCommand>().Set(Ref(evt), type, Ref(resultHandler), hostReserved);
             QueueCommand();
 
@@ -466,7 +468,9 @@ namespace Ryujinx.Graphics.GAL.Multithreading
             {
                 lock (_interruptLock)
                 {
-                    while (Interlocked.CompareExchange(ref _interruptAction, action, null) != null) { }
+                    while (Interlocked.CompareExchange(ref _interruptAction, action, null) != null)
+                    {
+                    }
 
                     _galWorkAvailable.Set();
 
@@ -497,6 +501,8 @@ namespace Ryujinx.Graphics.GAL.Multithreading
 
         public void Dispose()
         {
+            GC.SuppressFinalize(this);
+
             // Dispose must happen from the render thread, after all commands have completed.
 
             // Stop the GPU thread.

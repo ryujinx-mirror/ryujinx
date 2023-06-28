@@ -2,7 +2,7 @@
 {
     struct SetBlendStateCommand : IGALCommand, IGALCommand<SetBlendStateCommand>
     {
-        public CommandType CommandType => CommandType.SetBlendState;
+        public readonly CommandType CommandType => CommandType.SetBlendState;
         private int _index;
         private BlendDescriptor _blend;
 

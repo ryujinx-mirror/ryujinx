@@ -1,5 +1,8 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace Ryujinx.Graphics.GAL
 {
+    [SuppressMessage("Design", "CA1069: Enums values should not be duplicated")]
     public enum ViewportSwizzle
     {
         PositiveX = 0,
@@ -11,6 +14,6 @@ namespace Ryujinx.Graphics.GAL
         PositiveW = 6,
         NegativeW = 7,
 
-        NegativeFlag = 1
+        NegativeFlag = 1,
     }
 }

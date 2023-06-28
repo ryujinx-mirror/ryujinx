@@ -6,7 +6,7 @@ namespace Ryujinx.Graphics.GAL.Multithreading.Commands.Window
 {
     struct WindowPresentCommand : IGALCommand, IGALCommand<WindowPresentCommand>
     {
-        public CommandType CommandType => CommandType.WindowPresent;
+        public readonly CommandType CommandType => CommandType.WindowPresent;
         private TableRef<ThreadedTexture> _texture;
         private ImageCrop _crop;
         private TableRef<Action> _swapBuffersCallback;

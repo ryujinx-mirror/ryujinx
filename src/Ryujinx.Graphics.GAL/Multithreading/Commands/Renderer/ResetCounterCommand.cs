@@ -2,7 +2,7 @@
 {
     struct ResetCounterCommand : IGALCommand, IGALCommand<ResetCounterCommand>
     {
-        public CommandType CommandType => CommandType.ResetCounter;
+        public readonly CommandType CommandType => CommandType.ResetCounter;
         private CounterType _type;
 
         public void Set(CounterType type)

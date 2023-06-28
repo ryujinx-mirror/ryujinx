@@ -5,7 +5,7 @@ namespace Ryujinx.Graphics.GAL.Multithreading.Commands.Program
 {
     struct ProgramGetBinaryCommand : IGALCommand, IGALCommand<ProgramGetBinaryCommand>
     {
-        public CommandType CommandType => CommandType.ProgramGetBinary;
+        public readonly CommandType CommandType => CommandType.ProgramGetBinary;
         private TableRef<ThreadedProgram> _program;
         private TableRef<ResultBox<byte[]>> _result;
 

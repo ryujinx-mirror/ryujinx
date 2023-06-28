@@ -2,7 +2,7 @@
 {
     struct EndTransformFeedbackCommand : IGALCommand, IGALCommand<EndTransformFeedbackCommand>
     {
-        public CommandType CommandType => CommandType.EndTransformFeedback;
+        public readonly CommandType CommandType => CommandType.EndTransformFeedback;
 
         public static void Run(ref EndTransformFeedbackCommand command, ThreadedRenderer threaded, IRenderer renderer)
         {

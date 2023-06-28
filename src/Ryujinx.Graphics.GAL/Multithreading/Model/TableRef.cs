@@ -1,8 +1,8 @@
 ﻿namespace Ryujinx.Graphics.GAL.Multithreading.Model
 {
-    struct TableRef<T>
+    readonly struct TableRef<T>
     {
-        private int _index;
+        private readonly int _index;
 
         public TableRef(ThreadedRenderer renderer, T reference)
         {

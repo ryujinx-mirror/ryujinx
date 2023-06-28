@@ -6,8 +6,8 @@ namespace Ryujinx.Graphics.GAL.Multithreading
 {
     class SyncMap : IDisposable
     {
-        private HashSet<ulong> _inFlight = new HashSet<ulong>();
-        private AutoResetEvent _inFlightChanged = new AutoResetEvent(false);
+        private readonly HashSet<ulong> _inFlight = new();
+        private readonly AutoResetEvent _inFlightChanged = new(false);
 
         internal void CreateSyncHandle(ulong id)
         {

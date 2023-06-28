@@ -2,7 +2,7 @@
 {
     struct BeginTransformFeedbackCommand : IGALCommand, IGALCommand<BeginTransformFeedbackCommand>
     {
-        public CommandType CommandType => CommandType.BeginTransformFeedback;
+        public readonly CommandType CommandType => CommandType.BeginTransformFeedback;
         private PrimitiveTopology _topology;
 
         public void Set(PrimitiveTopology topology)

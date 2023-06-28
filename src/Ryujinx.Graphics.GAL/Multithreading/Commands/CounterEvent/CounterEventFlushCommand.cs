@@ -5,7 +5,7 @@ namespace Ryujinx.Graphics.GAL.Multithreading.Commands.CounterEvent
 {
     struct CounterEventFlushCommand : IGALCommand, IGALCommand<CounterEventFlushCommand>
     {
-        public CommandType CommandType => CommandType.CounterEventFlush;
+        public readonly CommandType CommandType => CommandType.CounterEventFlush;
         private TableRef<ThreadedCounterEvent> _event;
 
         public void Set(TableRef<ThreadedCounterEvent> evt)

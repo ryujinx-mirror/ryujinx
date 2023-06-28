@@ -1,6 +1,6 @@
 namespace Ryujinx.Graphics.GAL
 {
-    public struct AdvancedBlendDescriptor
+    public readonly struct AdvancedBlendDescriptor
     {
         public AdvancedBlendOp Op { get; }
         public AdvancedBlendOverlap Overlap { get; }

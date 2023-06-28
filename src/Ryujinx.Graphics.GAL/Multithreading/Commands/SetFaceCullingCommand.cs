@@ -2,7 +2,7 @@
 {
     struct SetFaceCullingCommand : IGALCommand, IGALCommand<SetFaceCullingCommand>
     {
-        public CommandType CommandType => CommandType.SetFaceCulling;
+        public readonly CommandType CommandType => CommandType.SetFaceCulling;
         private bool _enable;
         private Face _face;
 

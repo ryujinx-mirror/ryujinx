@@ -12,7 +12,7 @@ namespace Ryujinx.Graphics.GAL
         TextureAndSampler,
         Image,
         BufferTexture,
-        BufferImage
+        BufferImage,
     }
 
     public enum ResourceAccess : byte
@@ -20,7 +20,7 @@ namespace Ryujinx.Graphics.GAL
         None = 0,
         Read = 1,
         Write = 2,
-        ReadWrite = Read | Write
+        ReadWrite = Read | Write,
     }
 
     [Flags]
@@ -32,7 +32,7 @@ namespace Ryujinx.Graphics.GAL
         TessellationControl = 1 << 2,
         TessellationEvaluation = 1 << 3,
         Geometry = 1 << 4,
-        Fragment = 1 << 5
+        Fragment = 1 << 5,
     }
 
     public readonly struct ResourceDescriptor : IEquatable<ResourceDescriptor>
@@ -63,6 +63,16 @@ namespace Ryujinx.Graphics.GAL
         public bool Equals(ResourceDescriptor other)
         {
             return Binding == other.Binding && Count == other.Count && Type == other.Type && Stages == other.Stages;
+        }
+
+        public static bool operator ==(ResourceDescriptor left, ResourceDescriptor right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(ResourceDescriptor left, ResourceDescriptor right)
+        {
+            return !(left == right);
         }
     }
 
@@ -95,6 +105,16 @@ namespace Ryujinx.Graphics.GAL
         {
             return Binding == other.Binding && Type == other.Type && Stages == other.Stages && Access == other.Access;
         }
+
+        public static bool operator ==(ResourceUsage left, ResourceUsage right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(ResourceUsage left, ResourceUsage right)
+        {
+            return !(left == right);
+        }
     }
 
     public readonly struct ResourceDescriptorCollection
@@ -108,7 +128,7 @@ namespace Ryujinx.Graphics.GAL
 
         public override int GetHashCode()
         {
-            HashCode hasher = new HashCode();
+            HashCode hasher = new();
 
             if (Descriptors != null)
             {
@@ -150,6 +170,16 @@ namespace Ryujinx.Graphics.GAL
             }
 
             return true;
+        }
+
+        public static bool operator ==(ResourceDescriptorCollection left, ResourceDescriptorCollection right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(ResourceDescriptorCollection left, ResourceDescriptorCollection right)
+        {
+            return !(left == right);
         }
     }
 

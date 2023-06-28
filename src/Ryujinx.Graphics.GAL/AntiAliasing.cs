@@ -7,6 +7,6 @@
         SmaaLow,
         SmaaMedium,
         SmaaHigh,
-        SmaaUltra
+        SmaaUltra,
     }
 }

@@ -4,6 +4,6 @@ namespace Ryujinx.Graphics.GAL
     {
         SamplesPassed,
         PrimitivesGenerated,
-        TransformFeedbackPrimitivesWritten
+        TransformFeedbackPrimitivesWritten,
     }
 }

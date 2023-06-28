@@ -5,7 +5,7 @@ namespace Ryujinx.Graphics.GAL.Multithreading.Commands
 {
     struct SetStorageBuffersCommand : IGALCommand, IGALCommand<SetStorageBuffersCommand>
     {
-        public CommandType CommandType => CommandType.SetStorageBuffers;
+        public readonly CommandType CommandType => CommandType.SetStorageBuffers;
         private SpanRef<BufferAssignment> _buffers;
 
         public void Set(SpanRef<BufferAssignment> buffers)

@@ -2,7 +2,7 @@
 {
     struct SetRenderTargetScaleCommand : IGALCommand, IGALCommand<SetRenderTargetScaleCommand>
     {
-        public CommandType CommandType => CommandType.SetRenderTargetScale;
+        public readonly CommandType CommandType => CommandType.SetRenderTargetScale;
         private float _scale;
 
         public void Set(float scale)

@@ -11,7 +11,7 @@ namespace Ryujinx.Graphics.GAL
         Texture2DMultisampleArray,
         Cubemap,
         CubemapArray,
-        TextureBuffer
+        TextureBuffer,
     }
 
     public static class TargetExtensions

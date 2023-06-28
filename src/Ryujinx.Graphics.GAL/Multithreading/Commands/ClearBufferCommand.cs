@@ -2,7 +2,7 @@
 {
     struct ClearBufferCommand : IGALCommand, IGALCommand<ClearBufferCommand>
     {
-        public CommandType CommandType => CommandType.ClearBuffer;
+        public readonly CommandType CommandType => CommandType.ClearBuffer;
         private BufferHandle _destination;
         private int _offset;
         private int _size;

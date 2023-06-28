@@ -4,6 +4,6 @@ namespace Ryujinx.Graphics.GAL
     {
         UByte,
         UShort,
-        UInt
+        UInt,
     }
 }

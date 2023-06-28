@@ -5,7 +5,7 @@ namespace Ryujinx.Graphics.GAL.Multithreading.Commands
 {
     struct SetProgramCommand : IGALCommand, IGALCommand<SetProgramCommand>
     {
-        public CommandType CommandType => CommandType.SetProgram;
+        public readonly CommandType CommandType => CommandType.SetProgram;
         private TableRef<IProgram> _program;
 
         public void Set(TableRef<IProgram> program)

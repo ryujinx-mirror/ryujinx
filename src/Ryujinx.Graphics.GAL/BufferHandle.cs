@@ -7,7 +7,7 @@ namespace Ryujinx.Graphics.GAL
     {
         private readonly ulong _value;
 
-        public static BufferHandle Null => new BufferHandle(0);
+        public static BufferHandle Null => new(0);
 
         private BufferHandle(ulong value) => _value = value;
     }

@@ -2,7 +2,7 @@
 {
     struct SetUserClipDistanceCommand : IGALCommand, IGALCommand<SetUserClipDistanceCommand>
     {
-        public CommandType CommandType => CommandType.SetUserClipDistance;
+        public readonly CommandType CommandType => CommandType.SetUserClipDistance;
         private int _index;
         private bool _enableClip;
 

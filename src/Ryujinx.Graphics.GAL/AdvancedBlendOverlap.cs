@@ -4,6 +4,6 @@ namespace Ryujinx.Graphics.GAL
     {
         Uncorrelated,
         Disjoint,
-        Conjoint
+        Conjoint,
     }
 }

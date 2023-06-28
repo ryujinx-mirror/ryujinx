@@ -6,7 +6,7 @@ namespace Ryujinx.Graphics.GAL.Multithreading.Commands.Renderer
 {
     struct ReportCounterCommand : IGALCommand, IGALCommand<ReportCounterCommand>
     {
-        public CommandType CommandType => CommandType.ReportCounter;
+        public readonly CommandType CommandType => CommandType.ReportCounter;
         private TableRef<ThreadedCounterEvent> _event;
         private CounterType _type;
         private TableRef<EventHandler<ulong>> _resultHandler;

@@ -100,6 +100,6 @@
         TextureBarrierTiled,
         TryHostConditionalRendering,
         TryHostConditionalRenderingFlush,
-        UpdateRenderScale
+        UpdateRenderScale,
     }
 }

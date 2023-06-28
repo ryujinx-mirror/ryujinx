@@ -2,7 +2,7 @@
 {
     struct CopyBufferCommand : IGALCommand, IGALCommand<CopyBufferCommand>
     {
-        public CommandType CommandType => CommandType.CopyBuffer;
+        public readonly CommandType CommandType => CommandType.CopyBuffer;
         private BufferHandle _source;
         private BufferHandle _destination;
         private int _srcOffset;

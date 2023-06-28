@@ -2,7 +2,7 @@
 {
     struct ClearRenderTargetColorCommand : IGALCommand, IGALCommand<ClearRenderTargetColorCommand>
     {
-        public CommandType CommandType => CommandType.ClearRenderTargetColor;
+        public readonly CommandType CommandType => CommandType.ClearRenderTargetColor;
         private int _index;
         private int _layer;
         private int _layerCount;

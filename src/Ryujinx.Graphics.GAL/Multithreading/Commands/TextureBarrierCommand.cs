@@ -2,7 +2,7 @@
 {
     struct TextureBarrierCommand : IGALCommand, IGALCommand<TextureBarrierCommand>
     {
-        public CommandType CommandType => CommandType.TextureBarrier;
+        public readonly CommandType CommandType => CommandType.TextureBarrier;
 
         public static void Run(ref TextureBarrierCommand command, ThreadedRenderer threaded, IRenderer renderer)
         {

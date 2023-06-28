@@ -5,7 +5,7 @@ namespace Ryujinx.Graphics.GAL.Multithreading.Commands
 {
     struct SetRenderTargetColorMasksCommand : IGALCommand, IGALCommand<SetRenderTargetColorMasksCommand>
     {
-        public CommandType CommandType => CommandType.SetRenderTargetColorMasks;
+        public readonly CommandType CommandType => CommandType.SetRenderTargetColorMasks;
         private SpanRef<uint> _componentMask;
 
         public void Set(SpanRef<uint> componentMask)

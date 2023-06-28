@@ -3,6 +3,6 @@
     public enum Origin
     {
         UpperLeft,
-        LowerLeft
+        LowerLeft,
     }
 }

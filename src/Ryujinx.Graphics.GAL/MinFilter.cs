@@ -7,6 +7,6 @@ namespace Ryujinx.Graphics.GAL
         NearestMipmapNearest,
         LinearMipmapNearest,
         NearestMipmapLinear,
-        LinearMipmapLinear
+        LinearMipmapLinear,
     }
 }

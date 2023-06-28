@@ -6,7 +6,7 @@ namespace Ryujinx.Graphics.GAL.Multithreading.Commands
 {
     struct SetRenderTargetsCommand : IGALCommand, IGALCommand<SetRenderTargetsCommand>
     {
-        public CommandType CommandType => CommandType.SetRenderTargets;
+        public readonly CommandType CommandType => CommandType.SetRenderTargets;
         private TableRef<ITexture[]> _colors;
         private TableRef<ITexture> _depthStencil;
 

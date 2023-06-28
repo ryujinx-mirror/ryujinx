@@ -5,7 +5,7 @@ namespace Ryujinx.Graphics.GAL.Multithreading.Commands.Texture
 {
     struct TextureCopyToSliceCommand : IGALCommand, IGALCommand<TextureCopyToSliceCommand>
     {
-        public CommandType CommandType => CommandType.TextureCopyToSlice;
+        public readonly CommandType CommandType => CommandType.TextureCopyToSlice;
         private TableRef<ThreadedTexture> _texture;
         private TableRef<ThreadedTexture> _destination;
         private int _srcLayer;

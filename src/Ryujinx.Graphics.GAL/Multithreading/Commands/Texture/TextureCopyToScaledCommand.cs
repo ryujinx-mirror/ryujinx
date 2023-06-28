@@ -5,7 +5,7 @@ namespace Ryujinx.Graphics.GAL.Multithreading.Commands.Texture
 {
     struct TextureCopyToScaledCommand : IGALCommand, IGALCommand<TextureCopyToScaledCommand>
     {
-        public CommandType CommandType => CommandType.TextureCopyToScaled;
+        public readonly CommandType CommandType => CommandType.TextureCopyToScaled;
         private TableRef<ThreadedTexture> _texture;
         private TableRef<ThreadedTexture> _destination;
         private Extents2D _srcRegion;

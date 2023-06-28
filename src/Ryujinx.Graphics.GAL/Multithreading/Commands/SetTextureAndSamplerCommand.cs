@@ -6,7 +6,7 @@ namespace Ryujinx.Graphics.GAL.Multithreading.Commands
 {
     struct SetTextureAndSamplerCommand : IGALCommand, IGALCommand<SetTextureAndSamplerCommand>
     {
-        public CommandType CommandType => CommandType.SetTextureAndSampler;
+        public readonly CommandType CommandType => CommandType.SetTextureAndSampler;
         private ShaderStage _stage;
         private int _binding;
         private TableRef<ITexture> _texture;

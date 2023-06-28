@@ -2,7 +2,7 @@ namespace Ryujinx.Graphics.GAL.Multithreading.Commands
 {
     struct SetBlendStateAdvancedCommand : IGALCommand, IGALCommand<SetBlendStateAdvancedCommand>
     {
-        public CommandType CommandType => CommandType.SetBlendStateAdvanced;
+        public readonly CommandType CommandType => CommandType.SetBlendStateAdvanced;
         private AdvancedBlendDescriptor _blend;
 
         public void Set(AdvancedBlendDescriptor blend)

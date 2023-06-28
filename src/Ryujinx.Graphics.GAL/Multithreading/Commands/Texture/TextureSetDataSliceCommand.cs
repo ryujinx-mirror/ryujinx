@@ -6,7 +6,7 @@ namespace Ryujinx.Graphics.GAL.Multithreading.Commands.Texture
 {
     struct TextureSetDataSliceCommand : IGALCommand, IGALCommand<TextureSetDataSliceCommand>
     {
-        public CommandType CommandType => CommandType.TextureSetDataSlice;
+        public readonly CommandType CommandType => CommandType.TextureSetDataSlice;
         private TableRef<ThreadedTexture> _texture;
         private TableRef<byte[]> _data;
         private int _layer;

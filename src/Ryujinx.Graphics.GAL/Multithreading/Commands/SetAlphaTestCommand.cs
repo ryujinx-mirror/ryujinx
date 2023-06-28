@@ -2,7 +2,7 @@
 {
     struct SetAlphaTestCommand : IGALCommand, IGALCommand<SetAlphaTestCommand>
     {
-        public CommandType CommandType => CommandType.SetAlphaTest;
+        public readonly CommandType CommandType => CommandType.SetAlphaTest;
         private bool _enable;
         private float _reference;
         private CompareOp _op;

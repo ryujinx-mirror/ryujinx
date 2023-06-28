@@ -17,6 +17,6 @@
         CopyInverted = 0x150C,
         OrInverted = 0x150D,
         Nand = 0x150E,
-        Set = 0x150F
+        Set = 0x150F,
     }
 }

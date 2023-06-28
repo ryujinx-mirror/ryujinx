@@ -17,8 +17,8 @@ namespace Ryujinx.Graphics.GAL.Multithreading
     {
         private delegate void CommandDelegate(Span<byte> memory, ThreadedRenderer threaded, IRenderer renderer);
 
-        private static int _totalCommands = (int)Enum.GetValues<CommandType>().Max() + 1;
-        private static CommandDelegate[] _lookup = new CommandDelegate[_totalCommands];
+        private static readonly int _totalCommands = (int)Enum.GetValues<CommandType>().Max() + 1;
+        private static readonly CommandDelegate[] _lookup = new CommandDelegate[_totalCommands];
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static ref T GetCommand<T>(Span<byte> memory)
@@ -146,7 +146,7 @@ namespace Ryujinx.Graphics.GAL.Multithreading
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void RunCommand(Span<byte> memory, ThreadedRenderer threaded, IRenderer renderer)
         {
-            _lookup[memory[memory.Length - 1]](memory, threaded, renderer);
+            _lookup[memory[^1]](memory, threaded, renderer);
         }
     }
 }

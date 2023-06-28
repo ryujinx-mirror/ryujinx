@@ -5,7 +5,7 @@ namespace Ryujinx.Graphics.GAL.Multithreading.Commands
 {
     struct DrawTextureCommand : IGALCommand, IGALCommand<DrawTextureCommand>
     {
-        public CommandType CommandType => CommandType.DrawTexture;
+        public readonly CommandType CommandType => CommandType.DrawTexture;
         private TableRef<ITexture> _texture;
         private TableRef<ISampler> _sampler;
         private Extents2DF _srcRegion;

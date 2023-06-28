@@ -9,13 +9,11 @@ namespace Ryujinx.Graphics.GAL.Multithreading
 {
     public class ThreadedPipeline : IPipeline
     {
-        private ThreadedRenderer _renderer;
-        private IPipeline _impl;
+        private readonly ThreadedRenderer _renderer;
 
-        public ThreadedPipeline(ThreadedRenderer renderer, IPipeline impl)
+        public ThreadedPipeline(ThreadedRenderer renderer)
         {
             _renderer = renderer;
-            _impl = impl;
         }
 
         private TableRef<T> Ref<T>(T reference)
@@ -373,7 +371,7 @@ namespace Ryujinx.Graphics.GAL.Multithreading
 
         public void UpdateRenderScale(ReadOnlySpan<float> scales, int totalCount, int fragmentCount)
         {
-            _renderer.New<UpdateRenderScaleCommand>().Set(_renderer.CopySpan(scales.Slice(0, totalCount)), totalCount, fragmentCount);
+            _renderer.New<UpdateRenderScaleCommand>().Set(_renderer.CopySpan(scales[..totalCount]), totalCount, fragmentCount);
             _renderer.QueueCommand();
         }
     }

@@ -5,7 +5,7 @@ namespace Ryujinx.Graphics.GAL.Multithreading.Commands.Sampler
 {
     struct SamplerDisposeCommand : IGALCommand, IGALCommand<SamplerDisposeCommand>
     {
-        public CommandType CommandType => CommandType.SamplerDispose;
+        public readonly CommandType CommandType => CommandType.SamplerDispose;
         private TableRef<ThreadedSampler> _sampler;
 
         public void Set(TableRef<ThreadedSampler> sampler)

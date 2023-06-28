@@ -10,7 +10,7 @@ namespace Ryujinx.Graphics.GAL
         public SupportBuffer Data;
         public BufferHandle Handle;
 
-        private IRenderer _renderer;
+        private readonly IRenderer _renderer;
         private int _startOffset = -1;
         private int _endOffset = -1;
 
@@ -56,7 +56,7 @@ namespace Ryujinx.Graphics.GAL
 
         private void UpdateGenericField<T>(int baseOffset, ReadOnlySpan<T> data, Span<T> target, int offset, int count) where T : unmanaged
         {
-            data.Slice(0, count).CopyTo(target.Slice(offset));
+            data[..count].CopyTo(target[offset..]);
 
             int elemSize = Unsafe.SizeOf<T>();
 
@@ -86,7 +86,7 @@ namespace Ryujinx.Graphics.GAL
             {
                 ReadOnlySpan<byte> data = MemoryMarshal.Cast<SupportBuffer, byte>(MemoryMarshal.CreateSpan(ref Data, 1));
 
-                _renderer.SetBufferData(Handle, _startOffset, data.Slice(_startOffset, _endOffset - _startOffset));
+                _renderer.SetBufferData(Handle, _startOffset, data[_startOffset.._endOffset]);
 
                 _startOffset = -1;
                 _endOffset = -1;
@@ -95,6 +95,7 @@ namespace Ryujinx.Graphics.GAL
 
         public void Dispose()
         {
+            GC.SuppressFinalize(this);
             _renderer.DeleteBuffer(Handle);
         }
     }
