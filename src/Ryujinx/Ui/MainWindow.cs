@@ -874,7 +874,7 @@ namespace Ryujinx.Ui
                 DiscordIntegrationModule.SwitchToPlayingState(_emulationContext.Processes.ActiveApplication.ProgramIdText,
                                                               _emulationContext.Processes.ActiveApplication.ApplicationControlProperties.Title[(int)_emulationContext.System.State.DesiredTitleLanguage].NameString.ToString());
 
-                _applicationLibrary.LoadAndSaveMetaData(_emulationContext.Processes.ActiveApplication.ProgramIdText, appMetadata =>
+                ApplicationLibrary.LoadAndSaveMetaData(_emulationContext.Processes.ActiveApplication.ProgramIdText, appMetadata =>
                 {
                     appMetadata.LastPlayed = DateTime.UtcNow;
                 });
@@ -1017,7 +1017,7 @@ namespace Ryujinx.Ui
         {
             if (_gameLoaded)
             {
-                _applicationLibrary.LoadAndSaveMetaData(titleId, appMetadata =>
+                ApplicationLibrary.LoadAndSaveMetaData(titleId, appMetadata =>
                 {
                     if (appMetadata.LastPlayed.HasValue)
                     {
@@ -1156,7 +1156,7 @@ namespace Ryujinx.Ui
 
             _tableStore.SetValue(treeIter, 0, newToggleValue);
 
-            _applicationLibrary.LoadAndSaveMetaData(titleId, appMetadata =>
+            ApplicationLibrary.LoadAndSaveMetaData(titleId, appMetadata =>
             {
                 appMetadata.Favorite = newToggleValue;
             });
@@ -1321,7 +1321,7 @@ namespace Ryujinx.Ui
         {
             if (!_gameLoaded || !ConfigurationState.Instance.ShowConfirmExit || GtkDialog.CreateExitDialog())
             {
-                SaveWindowSizePosition();        
+                SaveWindowSizePosition();
                 End();
             }
             else
@@ -1337,9 +1337,9 @@ namespace Ryujinx.Ui
 
             Move(ConfigurationState.Instance.Ui.WindowStartup.WindowPositionX, ConfigurationState.Instance.Ui.WindowStartup.WindowPositionY);
 
-            if (ConfigurationState.Instance.Ui.WindowStartup.WindowMaximized) 
-            { 
-                Maximize(); 
+            if (ConfigurationState.Instance.Ui.WindowStartup.WindowMaximized)
+            {
+                Maximize();
             }
         }
 
@@ -1354,7 +1354,7 @@ namespace Ryujinx.Ui
             ConfigurationState.Instance.Ui.WindowStartup.WindowPositionX.Value = windowXPos;
             ConfigurationState.Instance.Ui.WindowStartup.WindowPositionY.Value = windowYPos;
 
-            SaveConfig();        
+            SaveConfig();
         }
 
         private void StopEmulation_Pressed(object sender, EventArgs args)
@@ -1633,7 +1633,7 @@ namespace Ryujinx.Ui
                 _virtualFileSystem,
                 _emulationContext.Processes.ActiveApplication.ProgramId,
                 _emulationContext.Processes.ActiveApplication.ApplicationControlProperties
-                    .Title[(int)_emulationContext.System.State.DesiredTitleLanguage].NameString.ToString(), 
+                    .Title[(int)_emulationContext.System.State.DesiredTitleLanguage].NameString.ToString(),
                 _currentEmulatedGamePath);
 
             window.Destroyed += CheatWindow_Destroyed;

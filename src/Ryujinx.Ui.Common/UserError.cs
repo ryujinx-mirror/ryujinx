@@ -34,6 +34,6 @@
         /// <summary>
         /// An unknown error.
         /// </summary>
-        Unknown = 0xDEAD
+        Unknown = 0xDEAD,
     }
 }

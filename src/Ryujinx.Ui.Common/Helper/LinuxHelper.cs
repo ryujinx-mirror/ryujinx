@@ -49,8 +49,8 @@ namespace Ryujinx.Ui.Common.Helper
                 StartInfo =
                 {
                     FileName = PkExecPath,
-                    ArgumentList = { "sh", "-c", command }
-                }
+                    ArgumentList = { "sh", "-c", command },
+                },
             };
 
             process.Start();

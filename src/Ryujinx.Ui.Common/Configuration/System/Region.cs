@@ -12,6 +12,6 @@ namespace Ryujinx.Ui.Common.Configuration.System
         Australia,
         China,
         Korea,
-        Taiwan
+        Taiwan,
     }
 }

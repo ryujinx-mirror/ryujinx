@@ -9,6 +9,6 @@ namespace Ryujinx.Ui.Common.Configuration
         Dummy,
         OpenAl,
         SoundIo,
-        SDL2
+        SDL2,
     }
 }

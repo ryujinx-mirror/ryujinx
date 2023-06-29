@@ -4,6 +4,6 @@ namespace Ryujinx.Ui.Common.Configuration
     {
         Success = 0,
         NotLoaded = 1,
-        MigratedFromPreVulkan = 1 << 8
+        MigratedFromPreVulkan = 1 << 8,
     }
 }

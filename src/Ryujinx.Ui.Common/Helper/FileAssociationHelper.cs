@@ -17,7 +17,7 @@ namespace Ryujinx.Ui.Common.Helper
         private static readonly string _mimeDbPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".local", "share", "mime");
 
         private const int SHCNE_ASSOCCHANGED = 0x8000000;
-        private const int SHCNF_FLUSH        = 0x1000;
+        private const int SHCNF_FLUSH = 0x1000;
 
         [LibraryImport("shell32.dll", SetLastError = true)]
         public static partial void SHChangeNotify(uint wEventId, uint uFlags, IntPtr dwItem1, IntPtr dwItem2);

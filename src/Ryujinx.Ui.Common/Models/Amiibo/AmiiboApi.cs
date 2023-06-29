@@ -29,29 +29,39 @@ namespace Ryujinx.Ui.Common.Models.Amiibo
         [JsonPropertyName("gamesSwitch")]
         public List<AmiiboApiGamesSwitch> GamesSwitch { get; set; }
 
-        public override string ToString()
+        public readonly override string ToString()
         {
             return Name;
         }
 
-        public string GetId()
+        public readonly string GetId()
         {
             return Head + Tail;
         }
 
-        public bool Equals(AmiiboApi other)
+        public readonly bool Equals(AmiiboApi other)
         {
             return Head + Tail == other.Head + other.Tail;
         }
 
-        public override bool Equals(object obj)
+        public readonly override bool Equals(object obj)
         {
             return obj is AmiiboApi other && Equals(other);
         }
 
-        public override int GetHashCode()
+        public readonly override int GetHashCode()
         {
             return HashCode.Combine(Head, Tail);
+        }
+
+        public static bool operator ==(AmiiboApi left, AmiiboApi right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(AmiiboApi left, AmiiboApi right)
+        {
+            return !(left == right);
         }
     }
 }

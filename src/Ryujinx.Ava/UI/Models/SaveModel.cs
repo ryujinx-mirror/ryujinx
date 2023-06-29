@@ -3,6 +3,7 @@ using LibHac.Ncm;
 using Ryujinx.Ava.UI.ViewModels;
 using Ryujinx.Ava.UI.Windows;
 using Ryujinx.HLE.FileSystem;
+using Ryujinx.Ui.App.Common;
 using System;
 using System.IO;
 using System.Linq;
@@ -74,7 +75,7 @@ namespace Ryujinx.Ava.UI.Models
             }
             else
             {
-                var appMetadata = MainWindow.MainWindowViewModel.ApplicationLibrary.LoadAndSaveMetaData(TitleIdString);
+                var appMetadata = ApplicationLibrary.LoadAndSaveMetaData(TitleIdString);
                 Title = appMetadata.Title ?? TitleIdString;
             }
 

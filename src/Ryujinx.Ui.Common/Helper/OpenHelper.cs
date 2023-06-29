@@ -9,13 +9,13 @@ namespace Ryujinx.Ui.Common.Helper
     public static partial class OpenHelper
     {
         [LibraryImport("shell32.dll", SetLastError = true)]
-        public static partial int SHOpenFolderAndSelectItems(IntPtr pidlFolder, uint cidl, IntPtr apidl, uint dwFlags);
+        private static partial int SHOpenFolderAndSelectItems(IntPtr pidlFolder, uint cidl, IntPtr apidl, uint dwFlags);
 
         [LibraryImport("shell32.dll", SetLastError = true)]
-        public static partial void ILFree(IntPtr pidlList);
+        private static partial void ILFree(IntPtr pidlList);
 
         [LibraryImport("shell32.dll", SetLastError = true)]
-        public static partial IntPtr ILCreateFromPathW([MarshalAs(UnmanagedType.LPWStr)] string pszPath);
+        private static partial IntPtr ILCreateFromPathW([MarshalAs(UnmanagedType.LPWStr)] string pszPath);
 
         public static void OpenFolder(string path)
         {
@@ -23,9 +23,9 @@ namespace Ryujinx.Ui.Common.Helper
             {
                 Process.Start(new ProcessStartInfo
                 {
-                    FileName        = path,
+                    FileName = path,
                     UseShellExecute = true,
-                    Verb            = "open"
+                    Verb = "open",
                 });
             }
             else
@@ -56,16 +56,16 @@ namespace Ryujinx.Ui.Common.Helper
                 else if (OperatingSystem.IsMacOS())
                 {
                     ObjectiveC.NSString nsStringPath = new(path);
-                    IntPtr nsUrl = ObjectiveC.objc_getClass("NSURL");
-                    var urlPtr = ObjectiveC.IntPtr_objc_msgSend(nsUrl, "fileURLWithPath:", nsStringPath);
+                    ObjectiveC.Object nsUrl = new("NSURL");
+                    var urlPtr = nsUrl.GetFromMessage("fileURLWithPath:", nsStringPath);
 
-                    IntPtr nsArray = ObjectiveC.objc_getClass("NSArray");
-                    IntPtr urlArray = ObjectiveC.IntPtr_objc_msgSend(nsArray, "arrayWithObject:", urlPtr);
+                    ObjectiveC.Object nsArray = new("NSArray");
+                    ObjectiveC.Object urlArray = nsArray.GetFromMessage("arrayWithObject:", urlPtr);
 
-                    IntPtr nsWorkspace = ObjectiveC.objc_getClass("NSWorkspace");
-                    IntPtr sharedWorkspace = ObjectiveC.IntPtr_objc_msgSend(nsWorkspace, "sharedWorkspace");
+                    ObjectiveC.Object nsWorkspace = new("NSWorkspace");
+                    ObjectiveC.Object sharedWorkspace = nsWorkspace.GetFromMessage("sharedWorkspace");
 
-                    ObjectiveC.objc_msgSend(sharedWorkspace, "activateFileViewerSelectingURLs:", urlArray);
+                    sharedWorkspace.SendMessage("activateFileViewerSelectingURLs:", urlArray);
                 }
                 else if (OperatingSystem.IsLinux())
                 {
@@ -95,13 +95,13 @@ namespace Ryujinx.Ui.Common.Helper
             else if (OperatingSystem.IsMacOS())
             {
                 ObjectiveC.NSString nsStringPath = new(url);
-                IntPtr nsUrl = ObjectiveC.objc_getClass("NSURL");
-                var urlPtr = ObjectiveC.IntPtr_objc_msgSend(nsUrl, "URLWithString:", nsStringPath);
+                ObjectiveC.Object nsUrl = new("NSURL");
+                var urlPtr = nsUrl.GetFromMessage("URLWithString:", nsStringPath);
 
-                IntPtr nsWorkspace = ObjectiveC.objc_getClass("NSWorkspace");
-                IntPtr sharedWorkspace = ObjectiveC.IntPtr_objc_msgSend(nsWorkspace, "sharedWorkspace");
+                ObjectiveC.Object nsWorkspace = new("NSWorkspace");
+                ObjectiveC.Object sharedWorkspace = nsWorkspace.GetFromMessage("sharedWorkspace");
 
-                ObjectiveC.bool_objc_msgSend(sharedWorkspace, "openURL:", urlPtr);
+                sharedWorkspace.GetBoolFromMessage("openURL:", urlPtr);
             }
             else
             {

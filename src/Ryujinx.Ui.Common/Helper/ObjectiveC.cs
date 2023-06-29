@@ -1,8 +1,6 @@
 using System;
-using System.IO;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
-using System.Text;
 
 namespace Ryujinx.Ui.Common.Helper
 {
@@ -12,44 +10,109 @@ namespace Ryujinx.Ui.Common.Helper
         private const string ObjCRuntime = "/usr/lib/libobjc.A.dylib";
 
         [LibraryImport(ObjCRuntime, StringMarshalling = StringMarshalling.Utf8)]
-        private static unsafe partial IntPtr sel_getUid(string name);
+        private static partial IntPtr sel_getUid(string name);
 
         [LibraryImport(ObjCRuntime, StringMarshalling = StringMarshalling.Utf8)]
-        public static partial IntPtr objc_getClass(string name);
+        private static partial IntPtr objc_getClass(string name);
 
         [LibraryImport(ObjCRuntime)]
-        public static partial void objc_msgSend(IntPtr receiver, Selector selector);
+        private static partial void objc_msgSend(IntPtr receiver, Selector selector);
 
         [LibraryImport(ObjCRuntime)]
-        public static partial void objc_msgSend(IntPtr receiver, Selector selector, byte value);
+        private static partial void objc_msgSend(IntPtr receiver, Selector selector, byte value);
 
         [LibraryImport(ObjCRuntime)]
-        public static partial void objc_msgSend(IntPtr receiver, Selector selector, IntPtr value);
+        private static partial void objc_msgSend(IntPtr receiver, Selector selector, IntPtr value);
 
         [LibraryImport(ObjCRuntime)]
-        public static partial void objc_msgSend(IntPtr receiver, Selector selector, NSRect point);
+        private static partial void objc_msgSend(IntPtr receiver, Selector selector, NSRect point);
 
         [LibraryImport(ObjCRuntime)]
-        public static partial void objc_msgSend(IntPtr receiver, Selector selector, double value);
+        private static partial void objc_msgSend(IntPtr receiver, Selector selector, double value);
 
         [LibraryImport(ObjCRuntime, EntryPoint = "objc_msgSend")]
-        public static partial IntPtr IntPtr_objc_msgSend(IntPtr receiver, Selector selector);
+        private static partial IntPtr IntPtr_objc_msgSend(IntPtr receiver, Selector selector);
 
         [LibraryImport(ObjCRuntime, EntryPoint = "objc_msgSend")]
-        public static partial IntPtr IntPtr_objc_msgSend(IntPtr receiver, Selector selector, IntPtr param);
+        private static partial IntPtr IntPtr_objc_msgSend(IntPtr receiver, Selector selector, IntPtr param);
 
         [LibraryImport(ObjCRuntime, EntryPoint = "objc_msgSend", StringMarshalling = StringMarshalling.Utf8)]
-        public static partial IntPtr IntPtr_objc_msgSend(IntPtr receiver, Selector selector, string param);
+        private static partial IntPtr IntPtr_objc_msgSend(IntPtr receiver, Selector selector, string param);
 
         [LibraryImport(ObjCRuntime, EntryPoint = "objc_msgSend")]
         [return: MarshalAs(UnmanagedType.Bool)]
-        public static partial bool bool_objc_msgSend(IntPtr receiver, Selector selector, IntPtr param);
+        private static partial bool bool_objc_msgSend(IntPtr receiver, Selector selector, IntPtr param);
 
-        public struct Selector
+        public readonly struct Object
+        {
+            public readonly IntPtr ObjPtr;
+
+            private Object(IntPtr pointer)
+            {
+                ObjPtr = pointer;
+            }
+
+            public Object(string name)
+            {
+                ObjPtr = objc_getClass(name);
+            }
+
+            public void SendMessage(Selector selector)
+            {
+                objc_msgSend(ObjPtr, selector);
+            }
+
+            public void SendMessage(Selector selector, byte value)
+            {
+                objc_msgSend(ObjPtr, selector, value);
+            }
+
+            public void SendMessage(Selector selector, Object obj)
+            {
+                objc_msgSend(ObjPtr, selector, obj.ObjPtr);
+            }
+
+            public void SendMessage(Selector selector, NSRect point)
+            {
+                objc_msgSend(ObjPtr, selector, point);
+            }
+
+            public void SendMessage(Selector selector, double value)
+            {
+                objc_msgSend(ObjPtr, selector, value);
+            }
+
+            public Object GetFromMessage(Selector selector)
+            {
+                return new Object(IntPtr_objc_msgSend(ObjPtr, selector));
+            }
+
+            public Object GetFromMessage(Selector selector, Object obj)
+            {
+                return new Object(IntPtr_objc_msgSend(ObjPtr, selector, obj.ObjPtr));
+            }
+
+            public Object GetFromMessage(Selector selector, NSString nsString)
+            {
+                return new Object(IntPtr_objc_msgSend(ObjPtr, selector, nsString.StrPtr));
+            }
+
+            public Object GetFromMessage(Selector selector, string param)
+            {
+                return new Object(IntPtr_objc_msgSend(ObjPtr, selector, param));
+            }
+
+            public bool GetBoolFromMessage(Selector selector, Object obj)
+            {
+                return bool_objc_msgSend(ObjPtr, selector, obj.ObjPtr);
+            }
+        }
+
+        public readonly struct Selector
         {
             public readonly IntPtr SelPtr;
 
-            public unsafe Selector(string name)
+            private Selector(string name)
             {
                 SelPtr = sel_getUid(name);
             }
@@ -57,7 +120,7 @@ namespace Ryujinx.Ui.Common.Helper
             public static implicit operator Selector(string value) => new(value);
         }
 
-        public struct NSString
+        public readonly struct NSString
         {
             public readonly IntPtr StrPtr;
 

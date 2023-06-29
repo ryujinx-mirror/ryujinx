@@ -19,7 +19,7 @@ namespace Ryujinx.Ui.Common
             FileTypes.NCA => config.NCA.Value,
             FileTypes.NRO => config.NRO.Value,
             FileTypes.NSO => config.NSO.Value,
-            _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
+            _ => throw new ArgumentOutOfRangeException(nameof(type), type, null),
         };
     }
 }

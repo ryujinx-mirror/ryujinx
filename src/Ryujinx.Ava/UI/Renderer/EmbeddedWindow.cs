@@ -239,28 +239,28 @@ namespace Ryujinx.Ava.UI.Renderer
         IPlatformHandle CreateMacOS()
         {
             // Create a new CAMetalLayer.
-            IntPtr layerClass = ObjectiveC.objc_getClass("CAMetalLayer");
-            IntPtr metalLayer = ObjectiveC.IntPtr_objc_msgSend(layerClass, "alloc");
-            ObjectiveC.objc_msgSend(metalLayer, "init");
+            ObjectiveC.Object layerObject = new("CAMetalLayer");
+            ObjectiveC.Object metalLayer = layerObject.GetFromMessage("alloc");
+            metalLayer.SendMessage("init");
 
             // Create a child NSView to render into.
-            IntPtr nsViewClass = ObjectiveC.objc_getClass("NSView");
-            IntPtr child = ObjectiveC.IntPtr_objc_msgSend(nsViewClass, "alloc");
-            ObjectiveC.objc_msgSend(child, "init", new ObjectiveC.NSRect(0, 0, 0, 0));
+            ObjectiveC.Object nsViewObject = new("NSView");
+            ObjectiveC.Object child = nsViewObject.GetFromMessage("alloc");
+            child.SendMessage("init", new ObjectiveC.NSRect(0, 0, 0, 0));
 
             // Make its renderer our metal layer.
-            ObjectiveC.objc_msgSend(child, "setWantsLayer:", 1);
-            ObjectiveC.objc_msgSend(child, "setLayer:", metalLayer);
-            ObjectiveC.objc_msgSend(metalLayer, "setContentsScale:", Program.DesktopScaleFactor);
+            child.SendMessage("setWantsLayer:", 1);
+            child.SendMessage("setLayer:", metalLayer);
+            metalLayer.SendMessage("setContentsScale:", Program.DesktopScaleFactor);
 
             // Ensure the scale factor is up to date.
             _updateBoundsCallback = rect =>
             {
-                ObjectiveC.objc_msgSend(metalLayer, "setContentsScale:", Program.DesktopScaleFactor);
+                metalLayer.SendMessage("setContentsScale:", Program.DesktopScaleFactor);
             };
 
-            IntPtr nsView = child;
-            MetalLayer = metalLayer;
+            IntPtr nsView = child.ObjPtr;
+            MetalLayer = metalLayer.ObjPtr;
             NsView = nsView;
 
             return new PlatformHandle(nsView, "NSView");
