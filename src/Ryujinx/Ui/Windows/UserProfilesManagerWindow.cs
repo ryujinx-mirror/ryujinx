@@ -13,7 +13,6 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Image = SixLabors.ImageSharp.Image;
-using UserId = Ryujinx.HLE.HOS.Services.Account.Acc.UserId;
 
 namespace Ryujinx.Ui.Windows
 {
@@ -29,7 +28,7 @@ namespace Ryujinx.Ui.Windows
 
         private Gdk.RGBA _selectedColor;
 
-        private ManualResetEvent _avatarsPreloadingEvent = new ManualResetEvent(false);
+        private readonly ManualResetEvent _avatarsPreloadingEvent = new(false);
 
         public UserProfilesManagerWindow(AccountManager accountManager, ContentManager contentManager, VirtualFileSystem virtualFileSystem) : base($"Ryujinx {Program.Version} - Manage User Profiles")
         {
@@ -37,24 +36,24 @@ namespace Ryujinx.Ui.Windows
 
             InitializeComponent();
 
-            _selectedColor.Red   = 0.212;
+            _selectedColor.Red = 0.212;
             _selectedColor.Green = 0.843;
-            _selectedColor.Blue  = 0.718;
+            _selectedColor.Blue = 0.718;
             _selectedColor.Alpha = 1;
 
             _accountManager = accountManager;
             _contentManager = contentManager;
 
-            CellRendererToggle userSelectedToggle = new CellRendererToggle();
+            CellRendererToggle userSelectedToggle = new();
             userSelectedToggle.Toggled += UserSelectedToggle_Toggled;
 
             // NOTE: Uncomment following line when multiple selection of user profiles is supported.
             //_usersTreeView.AppendColumn("Selected",  userSelectedToggle,       "active", 0);
             _usersTreeView.AppendColumn("User Icon", new CellRendererPixbuf(), "pixbuf", 1);
-            _usersTreeView.AppendColumn("User Info", new CellRendererText(),   "text",   2, "background-rgba", 3);
+            _usersTreeView.AppendColumn("User Info", new CellRendererText(), "text", 2, "background-rgba", 3);
 
             _tableStore.SetSortColumnId(0, SortType.Descending);
-            
+
             RefreshList();
 
             if (_contentManager.GetCurrentFirmwareVersion() != null)
@@ -77,8 +76,8 @@ namespace Ryujinx.Ui.Windows
 
                 if (userProfile.AccountState == AccountState.Open)
                 {
-                    _selectedUserImage.Pixbuf   = new Gdk.Pixbuf(userProfile.Image, 96, 96);
-                    _selectedUserIdLabel.Text   = userProfile.UserId.ToString();
+                    _selectedUserImage.Pixbuf = new Gdk.Pixbuf(userProfile.Image, 96, 96);
+                    _selectedUserIdLabel.Text = userProfile.UserId.ToString();
                     _selectedUserNameEntry.Text = userProfile.Name;
 
                     _deleteButton.Sensitive = userProfile.UserId != AccountManager.DefaultUserId;
@@ -111,7 +110,7 @@ namespace Ryujinx.Ui.Windows
             Gdk.Pixbuf userPicture = (Gdk.Pixbuf)_tableStore.GetValue(selectedIter, 1);
 
             string userName = _tableStore.GetValue(selectedIter, 2).ToString().Split("\n")[0];
-            string userId   = _tableStore.GetValue(selectedIter, 2).ToString().Split("\n")[1];
+            string userId = _tableStore.GetValue(selectedIter, 2).ToString().Split("\n")[1];
 
             // Unselect the first user.
             _usersTreeView.Model.GetIterFirst(out TreeIter firstIter);
@@ -121,9 +120,9 @@ namespace Ryujinx.Ui.Windows
             // Set new informations.
             _tableStore.SetValue(selectedIter, 0, true);
 
-            _selectedUserImage.Pixbuf        = userPicture;
-            _selectedUserNameEntry.Text      = userName;
-            _selectedUserIdLabel.Text        = userId;
+            _selectedUserImage.Pixbuf = userPicture;
+            _selectedUserNameEntry.Text = userName;
+            _selectedUserIdLabel.Text = userId;
             _saveProfileNameButton.Sensitive = false;
 
             // Open the selected one.
@@ -178,29 +177,27 @@ namespace Ryujinx.Ui.Windows
 
         private void ProcessProfileImage(byte[] buffer)
         {
-            using (Image image = Image.Load(buffer))
-            {
-                image.Mutate(x => x.Resize(256, 256));
+            using Image image = Image.Load(buffer);
 
-                using (MemoryStream streamJpg = MemoryStreamManager.Shared.GetStream())
-                {
-                    image.SaveAsJpeg(streamJpg);
+            image.Mutate(x => x.Resize(256, 256));
 
-                    _bufferImageProfile = streamJpg.ToArray();
-                }
-            }
+            using MemoryStream streamJpg = MemoryStreamManager.Shared.GetStream();
+
+            image.SaveAsJpeg(streamJpg);
+
+            _bufferImageProfile = streamJpg.ToArray();
         }
 
         private void ProfileImageFileChooser()
         {
-            FileChooserNative fileChooser = new FileChooserNative("Import Custom Profile Image", this, FileChooserAction.Open, "Import", "Cancel")
+            FileChooserNative fileChooser = new("Import Custom Profile Image", this, FileChooserAction.Open, "Import", "Cancel")
             {
-                SelectMultiple = false
+                SelectMultiple = false,
             };
 
-            FileFilter filter = new FileFilter()
+            FileFilter filter = new()
             {
-                Name = "Custom Profile Images"
+                Name = "Custom Profile Images",
             };
             filter.AddPattern("*.jpg");
             filter.AddPattern("*.jpeg");
@@ -225,15 +222,15 @@ namespace Ryujinx.Ui.Windows
             }
             else
             {
-                Dictionary<int, string> buttons = new Dictionary<int, string>()
+                Dictionary<int, string> buttons = new()
                 {
                     { 0, "Import Image File"      },
-                    { 1, "Select Firmware Avatar" }
+                    { 1, "Select Firmware Avatar" },
                 };
 
                 ResponseType responseDialog = GtkDialog.CreateCustomDialog("Profile Image Selection",
                                                                            "Choose a Profile Image",
-                                                                           "You may import a custom profile image, or select an avatar from the system firmware.", 
+                                                                           "You may import a custom profile image, or select an avatar from the system firmware.",
                                                                            buttons, MessageType.Question);
 
                 if (responseDialog == 0)
@@ -242,9 +239,9 @@ namespace Ryujinx.Ui.Windows
                 }
                 else if (responseDialog == (ResponseType)1)
                 {
-                    AvatarWindow avatarWindow = new AvatarWindow()
+                    AvatarWindow avatarWindow = new()
                     {
-                        NewUser = newUser
+                        NewUser = newUser,
                     };
 
                     avatarWindow.DeleteEvent += AvatarWindow_DeleteEvent;

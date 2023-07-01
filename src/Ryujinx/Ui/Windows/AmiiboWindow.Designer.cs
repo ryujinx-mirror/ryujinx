@@ -4,37 +4,35 @@ namespace Ryujinx.Ui.Windows
 {
     public partial class AmiiboWindow : Window
     {
-        private Box          _mainBox;
-        private ButtonBox    _buttonBox;
-        private Button       _scanButton;
-        private Button       _cancelButton;
-        private CheckButton  _randomUuidCheckBox;
-        private Box          _amiiboBox;
-        private Box          _amiiboHeadBox;
-        private Box          _amiiboSeriesBox;
-        private Label        _amiiboSeriesLabel;
+        private Box _mainBox;
+        private ButtonBox _buttonBox;
+        private Button _scanButton;
+        private Button _cancelButton;
+        private CheckButton _randomUuidCheckBox;
+        private Box _amiiboBox;
+        private Box _amiiboHeadBox;
+        private Box _amiiboSeriesBox;
+        private Label _amiiboSeriesLabel;
         private ComboBoxText _amiiboSeriesComboBox;
-        private Box          _amiiboCharsBox;
-        private Label        _amiiboCharsLabel;
+        private Box _amiiboCharsBox;
+        private Label _amiiboCharsLabel;
         private ComboBoxText _amiiboCharsComboBox;
-        private CheckButton  _showAllCheckBox;
-        private Image        _amiiboImage;
-        private Label        _gameUsageLabel;
+        private CheckButton _showAllCheckBox;
+        private Image _amiiboImage;
+        private Label _gameUsageLabel;
 
         private void InitializeComponent()
         {
-#pragma warning disable CS0612
-
             //
             // AmiiboWindow
             //
-            CanFocus       = false;
-            Resizable      = false;
-            Modal          = true;
+            CanFocus = false;
+            Resizable = false;
+            Modal = true;
             WindowPosition = WindowPosition.Center;
-            DefaultWidth   = 600;
-            DefaultHeight  = 470;
-            TypeHint       = Gdk.WindowTypeHint.Dialog;
+            DefaultWidth = 600;
+            DefaultHeight = 470;
+            TypeHint = Gdk.WindowTypeHint.Dialog;
 
             //
             // _mainBox
@@ -46,8 +44,8 @@ namespace Ryujinx.Ui.Windows
             //
             _buttonBox = new ButtonBox(Orientation.Horizontal)
             {
-                Margin      = 20,
-                LayoutStyle = ButtonBoxStyle.End
+                Margin = 20,
+                LayoutStyle = ButtonBoxStyle.End,
             };
 
             //
@@ -55,10 +53,10 @@ namespace Ryujinx.Ui.Windows
             //
             _scanButton = new Button()
             {
-                Label           = "Scan It!",
-                CanFocus        = true,
+                Label = "Scan It!",
+                CanFocus = true,
                 ReceivesDefault = true,
-                MarginLeft      = 10
+                MarginStart = 10,
             };
             _scanButton.Clicked += ScanButton_Pressed;
 
@@ -67,8 +65,8 @@ namespace Ryujinx.Ui.Windows
             //
             _randomUuidCheckBox = new CheckButton()
             {
-                Label       = "Hack: Use Random Tag Uuid",
-                TooltipText = "This allows multiple scans of a single Amiibo.\n(used in The Legend of Zelda: Breath of the Wild)"
+                Label = "Hack: Use Random Tag Uuid",
+                TooltipText = "This allows multiple scans of a single Amiibo.\n(used in The Legend of Zelda: Breath of the Wild)",
             };
 
             //
@@ -76,10 +74,10 @@ namespace Ryujinx.Ui.Windows
             //
             _cancelButton = new Button()
             {
-                Label           = "Cancel",
-                CanFocus        = true,
+                Label = "Cancel",
+                CanFocus = true,
                 ReceivesDefault = true,
-                MarginLeft      = 10
+                MarginStart = 10,
             };
             _cancelButton.Clicked += CancelButton_Pressed;
 
@@ -94,7 +92,7 @@ namespace Ryujinx.Ui.Windows
             _amiiboHeadBox = new Box(Orientation.Horizontal, 0)
             {
                 Margin = 20,
-                Hexpand = true
+                Hexpand = true,
             };
 
             //
@@ -102,7 +100,7 @@ namespace Ryujinx.Ui.Windows
             //
             _amiiboSeriesBox = new Box(Orientation.Horizontal, 0)
             {
-                Hexpand = true
+                Hexpand = true,
             };
 
             //
@@ -120,7 +118,7 @@ namespace Ryujinx.Ui.Windows
             //
             _amiiboCharsBox = new Box(Orientation.Horizontal, 0)
             {
-                Hexpand = true
+                Hexpand = true,
             };
 
             //
@@ -138,7 +136,7 @@ namespace Ryujinx.Ui.Windows
             //
             _showAllCheckBox = new CheckButton()
             {
-                Label = "Show All Amiibo"
+                Label = "Show All Amiibo",
             };
 
             //
@@ -147,7 +145,7 @@ namespace Ryujinx.Ui.Windows
             _amiiboImage = new Image()
             {
                 HeightRequest = 350,
-                WidthRequest  = 350
+                WidthRequest = 350,
             };
 
             //
@@ -155,10 +153,8 @@ namespace Ryujinx.Ui.Windows
             //
             _gameUsageLabel = new Label("")
             {
-                MarginTop = 20
+                MarginTop = 20,
             };
-
-#pragma warning restore CS0612
 
             ShowComponent();
         }

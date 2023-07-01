@@ -5,7 +5,6 @@ using Ryujinx.HLE.Ui;
 using Ryujinx.Ui.Widgets;
 using System;
 using System.Threading;
-using Action = System.Action;
 
 namespace Ryujinx.Ui.Applet
 {
@@ -37,7 +36,7 @@ namespace Ryujinx.Ui.Applet
 
         public bool DisplayMessageDialog(string title, string message)
         {
-            ManualResetEvent dialogCloseEvent = new ManualResetEvent(false);
+            ManualResetEvent dialogCloseEvent = new(false);
 
             bool okPressed = false;
 
@@ -49,9 +48,9 @@ namespace Ryujinx.Ui.Applet
                 {
                     msgDialog = new MessageDialog(_parent, DialogFlags.DestroyWithParent, MessageType.Info, ButtonsType.Ok, null)
                     {
-                        Title     = title,
-                        Text      = message,
-                        UseMarkup = true
+                        Title = title,
+                        Text = message,
+                        UseMarkup = true,
                     };
 
                     msgDialog.SetDefaultSize(400, 0);
@@ -84,10 +83,10 @@ namespace Ryujinx.Ui.Applet
 
         public bool DisplayInputDialog(SoftwareKeyboardUiArgs args, out string userText)
         {
-            ManualResetEvent dialogCloseEvent = new ManualResetEvent(false);
+            ManualResetEvent dialogCloseEvent = new(false);
 
-            bool   okPressed = false;
-            bool   error     = false;
+            bool okPressed = false;
+            bool error = false;
             string inputText = args.InitialText ?? "";
 
             Application.Invoke(delegate
@@ -96,14 +95,14 @@ namespace Ryujinx.Ui.Applet
                 {
                     var swkbdDialog = new SwkbdAppletDialog(_parent)
                     {
-                        Title         = "Software Keyboard",
-                        Text          = args.HeaderText,
-                        SecondaryText = args.SubtitleText
+                        Title = "Software Keyboard",
+                        Text = args.HeaderText,
+                        SecondaryText = args.SubtitleText,
                     };
 
-                    swkbdDialog.InputEntry.Text            = inputText;
+                    swkbdDialog.InputEntry.Text = inputText;
                     swkbdDialog.InputEntry.PlaceholderText = args.GuideText;
-                    swkbdDialog.OkButton.Label             = args.SubmitText;
+                    swkbdDialog.OkButton.Label = args.SubmitText;
 
                     swkbdDialog.SetInputLengthValidation(args.StringLengthMin, args.StringLengthMax);
                     swkbdDialog.SetInputValidation(args.KeyboardMode);
@@ -143,7 +142,7 @@ namespace Ryujinx.Ui.Applet
 
         public bool DisplayErrorAppletDialog(string title, string message, string[] buttons)
         {
-            ManualResetEvent dialogCloseEvent = new ManualResetEvent(false);
+            ManualResetEvent dialogCloseEvent = new(false);
 
             bool showDetails = false;
 
@@ -151,12 +150,12 @@ namespace Ryujinx.Ui.Applet
             {
                 try
                 {
-                    ErrorAppletDialog msgDialog = new ErrorAppletDialog(_parent, DialogFlags.DestroyWithParent, MessageType.Error, buttons)
+                    ErrorAppletDialog msgDialog = new(_parent, DialogFlags.DestroyWithParent, MessageType.Error, buttons)
                     {
-                        Title          = title,
-                        Text           = message,
-                        UseMarkup      = true,
-                        WindowPosition = WindowPosition.CenterAlways
+                        Title = title,
+                        Text = message,
+                        UseMarkup = true,
+                        WindowPosition = WindowPosition.CenterAlways,
                     };
 
                     msgDialog.SetDefaultSize(400, 0);
@@ -191,19 +190,6 @@ namespace Ryujinx.Ui.Applet
             dialogCloseEvent.WaitOne();
 
             return showDetails;
-        }
-
-        private void SynchronousGtkInvoke(Action action)
-        {
-            var waitHandle = new ManualResetEventSlim();
-
-            Application.Invoke(delegate
-            {
-                action();
-                waitHandle.Set();
-            });
-
-            waitHandle.Wait();
         }
 
         public IDynamicTextInputHandler CreateDynamicTextInputHandler()

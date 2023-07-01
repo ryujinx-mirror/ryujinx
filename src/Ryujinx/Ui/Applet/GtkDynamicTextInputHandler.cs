@@ -11,15 +11,15 @@ namespace Ryujinx.Ui.Applet
     /// </summary>
     internal class GtkDynamicTextInputHandler : IDynamicTextInputHandler
     {
-        private readonly Window              _parent;
-        private readonly OffscreenWindow     _inputToTextWindow = new OffscreenWindow();
-        private readonly RawInputToTextEntry _inputToTextEntry  = new RawInputToTextEntry();
+        private readonly Window _parent;
+        private readonly OffscreenWindow _inputToTextWindow = new();
+        private readonly RawInputToTextEntry _inputToTextEntry = new();
 
         private bool _canProcessInput;
 
         public event DynamicTextChangedHandler TextChangedEvent;
-        public event KeyPressedHandler         KeyPressedEvent;
-        public event KeyReleasedHandler        KeyReleasedEvent;
+        public event KeyPressedHandler KeyPressedEvent;
+        public event KeyReleasedHandler KeyReleasedEvent;
 
         public bool TextProcessingEnabled
         {
@@ -37,7 +37,7 @@ namespace Ryujinx.Ui.Applet
         public GtkDynamicTextInputHandler(Window parent)
         {
             _parent = parent;
-            _parent.KeyPressEvent   += HandleKeyPressEvent;
+            _parent.KeyPressEvent += HandleKeyPressEvent;
             _parent.KeyReleaseEvent += HandleKeyReleaseEvent;
 
             _inputToTextWindow.Add(_inputToTextEntry);
@@ -101,7 +101,7 @@ namespace Ryujinx.Ui.Applet
 
         public void Dispose()
         {
-            _parent.KeyPressEvent   -= HandleKeyPressEvent;
+            _parent.KeyPressEvent -= HandleKeyPressEvent;
             _parent.KeyReleaseEvent -= HandleKeyReleaseEvent;
         }
     }

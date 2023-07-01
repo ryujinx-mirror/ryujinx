@@ -9,7 +9,7 @@ namespace Ryujinx.Input.GTK3
     public class GTK3KeyboardDriver : IGamepadDriver
     {
         private readonly Widget _widget;
-        private HashSet<GtkKey> _pressedKeys;
+        private readonly HashSet<GtkKey> _pressedKeys;
 
         public GTK3KeyboardDriver(Widget widget)
         {
@@ -28,13 +28,13 @@ namespace Ryujinx.Input.GTK3
 
         public event Action<string> OnGamepadConnected
         {
-            add    { }
+            add { }
             remove { }
         }
 
         public event Action<string> OnGamepadDisconnected
         {
-            add    { }
+            add { }
             remove { }
         }
 
@@ -49,6 +49,7 @@ namespace Ryujinx.Input.GTK3
 
         public void Dispose()
         {
+            GC.SuppressFinalize(this);
             Dispose(true);
         }
 

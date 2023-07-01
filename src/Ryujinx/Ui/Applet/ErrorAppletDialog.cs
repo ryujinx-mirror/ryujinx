@@ -24,7 +24,7 @@ namespace Ryujinx.Ui.Applet
             {
                 AddButton("OK", 0);
             }
-            
+
             ShowAll();
         }
     }

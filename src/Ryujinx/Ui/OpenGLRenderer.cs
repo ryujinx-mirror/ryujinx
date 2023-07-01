@@ -1,7 +1,6 @@
 ﻿using OpenTK.Graphics.OpenGL;
 using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Logging;
-using Ryujinx.Graphics.OpenGL;
 using Ryujinx.Input.HLE;
 using SPB.Graphics;
 using SPB.Graphics.Exceptions;
@@ -15,16 +14,16 @@ using System.Runtime.InteropServices;
 
 namespace Ryujinx.Ui
 {
-    public partial class GlRenderer : RendererWidgetBase
+    public partial class OpenGLRenderer : RendererWidgetBase
     {
-        private GraphicsDebugLevel _glLogLevel;
+        private readonly GraphicsDebugLevel _glLogLevel;
 
         private bool _initializedOpenGL;
 
         private OpenGLContextBase _openGLContext;
         private SwappableNativeWindowBase _nativeWindow;
 
-        public GlRenderer(InputManager inputManager, GraphicsDebugLevel glLogLevel) : base(inputManager, glLogLevel)
+        public OpenGLRenderer(InputManager inputManager, GraphicsDebugLevel glLogLevel) : base(inputManager, glLogLevel)
         {
             _glLogLevel = glLogLevel;
         }
@@ -93,7 +92,7 @@ namespace Ryujinx.Ui
         public override void InitializeRenderer()
         {
             // First take exclusivity on the OpenGL context.
-            ((OpenGLRenderer)Renderer).InitializeBackgroundContext(SPBOpenGLContext.CreateBackgroundContext(_openGLContext));
+            ((Graphics.OpenGL.OpenGLRenderer)Renderer).InitializeBackgroundContext(SPBOpenGLContext.CreateBackgroundContext(_openGLContext));
 
             _openGLContext.MakeCurrent(_nativeWindow);
 

@@ -9,8 +9,8 @@ namespace Ryujinx.Ui
 {
     class SPBOpenGLContext : IOpenGLContext
     {
-        private OpenGLContextBase _context;
-        private NativeWindowBase _window;
+        private readonly OpenGLContextBase _context;
+        private readonly NativeWindowBase _window;
 
         private SPBOpenGLContext(OpenGLContextBase context, NativeWindowBase window)
         {

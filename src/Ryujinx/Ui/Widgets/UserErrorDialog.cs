@@ -6,9 +6,9 @@ namespace Ryujinx.Ui.Widgets
 {
     internal class UserErrorDialog : MessageDialog
     {
-        private const string SetupGuideUrl        = "https://github.com/Ryujinx/Ryujinx/wiki/Ryujinx-Setup-&-Configuration-Guide";
-        private const int    OkResponseId         = 0;
-        private const int    SetupGuideResponseId = 1;
+        private const string SetupGuideUrl = "https://github.com/Ryujinx/Ryujinx/wiki/Ryujinx-Setup-&-Configuration-Guide";
+        private const int OkResponseId = 0;
+        private const int SetupGuideResponseId = 1;
 
         private readonly UserError _userError;
 
@@ -16,7 +16,7 @@ namespace Ryujinx.Ui.Widgets
         {
             _userError = error;
 
-            WindowPosition     = WindowPosition.Center;
+            WindowPosition = WindowPosition.Center;
             SecondaryUseMarkup = true;
 
             Response += UserErrorDialog_Response;
@@ -36,8 +36,8 @@ namespace Ryujinx.Ui.Widgets
 
             SecondaryUseMarkup = true;
 
-            Title         = $"Ryujinx error ({errorCode})";
-            Text          = $"{errorCode}: {GetErrorTitle(error)}";
+            Title = $"Ryujinx error ({errorCode})";
+            Text = $"{errorCode}: {GetErrorTitle(error)}";
             SecondaryText = GetErrorDescription(error);
 
             if (isInSetupGuide)
@@ -46,34 +46,34 @@ namespace Ryujinx.Ui.Widgets
             }
         }
 
-        private string GetErrorCode(UserError error)
+        private static string GetErrorCode(UserError error)
         {
             return $"RYU-{(uint)error:X4}";
         }
 
-        private string GetErrorTitle(UserError error)
+        private static string GetErrorTitle(UserError error)
         {
             return error switch
             {
-                UserError.NoKeys                => "Keys not found",
-                UserError.NoFirmware            => "Firmware not found",
+                UserError.NoKeys => "Keys not found",
+                UserError.NoFirmware => "Firmware not found",
                 UserError.FirmwareParsingFailed => "Firmware parsing error",
-                UserError.ApplicationNotFound   => "Application not found",
-                UserError.Unknown               => "Unknown error",
-                _                               => "Undefined error",
+                UserError.ApplicationNotFound => "Application not found",
+                UserError.Unknown => "Unknown error",
+                _ => "Undefined error",
             };
         }
 
-        private string GetErrorDescription(UserError error)
+        private static string GetErrorDescription(UserError error)
         {
             return error switch
             {
-                UserError.NoKeys                => "Ryujinx was unable to find your 'prod.keys' file",
-                UserError.NoFirmware            => "Ryujinx was unable to find any firmwares installed",
+                UserError.NoKeys => "Ryujinx was unable to find your 'prod.keys' file",
+                UserError.NoFirmware => "Ryujinx was unable to find any firmwares installed",
                 UserError.FirmwareParsingFailed => "Ryujinx was unable to parse the provided firmware. This is usually caused by outdated keys.",
-                UserError.ApplicationNotFound   => "Ryujinx couldn't find a valid application at the given path.",
-                UserError.Unknown               => "An unknown error occured!",
-                _                               => "An undefined error occured! This shouldn't happen, please contact a dev!",
+                UserError.ApplicationNotFound => "Ryujinx couldn't find a valid application at the given path.",
+                UserError.Unknown => "An unknown error occured!",
+                _ => "An undefined error occured! This shouldn't happen, please contact a dev!",
             };
         }
 
@@ -82,9 +82,9 @@ namespace Ryujinx.Ui.Widgets
             return error switch
             {
                 UserError.NoKeys or
-                UserError.NoFirmware or 
+                UserError.NoFirmware or
                 UserError.FirmwareParsingFailed => true,
-                _                               => false,
+                _ => false,
             };
         }
 
@@ -97,9 +97,9 @@ namespace Ryujinx.Ui.Widgets
 
             return error switch
             {
-                UserError.NoKeys     => SetupGuideUrl + "#initial-setup---placement-of-prodkeys",
+                UserError.NoKeys => SetupGuideUrl + "#initial-setup---placement-of-prodkeys",
                 UserError.NoFirmware => SetupGuideUrl + "#initial-setup-continued---installation-of-firmware",
-                _                    => SetupGuideUrl,
+                _ => SetupGuideUrl,
             };
         }
 

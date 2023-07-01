@@ -12,18 +12,18 @@ namespace Ryujinx.Input.GTK3
         private bool _isDisposed;
 
         public bool[] PressedButtons { get; }
-        
+
         public Vector2 CurrentPosition { get; private set; }
-        public Vector2 Scroll{ get; private set; }
+        public Vector2 Scroll { get; private set; }
 
         public GTK3MouseDriver(Widget parent)
         {
             _widget = parent;
 
-            _widget.MotionNotifyEvent  += Parent_MotionNotifyEvent;
-            _widget.ButtonPressEvent   += Parent_ButtonPressEvent;
+            _widget.MotionNotifyEvent += Parent_MotionNotifyEvent;
+            _widget.ButtonPressEvent += Parent_ButtonPressEvent;
             _widget.ButtonReleaseEvent += Parent_ButtonReleaseEvent;
-            _widget.ScrollEvent        += Parent_ScrollEvent;
+            _widget.ScrollEvent += Parent_ScrollEvent;
 
             PressedButtons = new bool[(int)MouseButton.Count];
         }
@@ -58,7 +58,7 @@ namespace Ryujinx.Input.GTK3
 
         public bool IsButtonPressed(MouseButton button)
         {
-            return PressedButtons[(int) button];
+            return PressedButtons[(int)button];
         }
 
         public Size GetClientSize()
@@ -67,21 +67,21 @@ namespace Ryujinx.Input.GTK3
         }
 
         public string DriverName => "GTK3";
-        
+
         public event Action<string> OnGamepadConnected
         {
-            add    { }
+            add { }
             remove { }
         }
 
         public event Action<string> OnGamepadDisconnected
         {
-            add    { }
+            add { }
             remove { }
         }
 
-        public ReadOnlySpan<string> GamepadsIds => new[] {"0"};
-        
+        public ReadOnlySpan<string> GamepadsIds => new[] { "0" };
+
         public IGamepad GetGamepad(string id)
         {
             return new GTK3Mouse(this);
@@ -93,6 +93,8 @@ namespace Ryujinx.Input.GTK3
             {
                 return;
             }
+
+            GC.SuppressFinalize(this);
 
             _isDisposed = true;
 

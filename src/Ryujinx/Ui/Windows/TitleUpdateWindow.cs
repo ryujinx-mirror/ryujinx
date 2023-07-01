@@ -9,33 +9,32 @@ using LibHac.Tools.FsSystem.NcaUtils;
 using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Utilities;
 using Ryujinx.HLE.FileSystem;
-using Ryujinx.HLE.HOS;
 using Ryujinx.Ui.App.Common;
 using Ryujinx.Ui.Widgets;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using GUI         = Gtk.Builder.ObjectAttribute;
+using GUI = Gtk.Builder.ObjectAttribute;
 using SpanHelpers = LibHac.Common.SpanHelpers;
 
 namespace Ryujinx.Ui.Windows
 {
     public class TitleUpdateWindow : Window
     {
-        private readonly MainWindow        _parent;
+        private readonly MainWindow _parent;
         private readonly VirtualFileSystem _virtualFileSystem;
-        private readonly string            _titleId;
-        private readonly string            _updateJsonPath;
+        private readonly string _titleId;
+        private readonly string _updateJsonPath;
 
         private TitleUpdateMetadata _titleUpdateWindowData;
 
         private readonly Dictionary<RadioButton, string> _radioButtonToPathDictionary;
-        private static readonly TitleUpdateMetadataJsonSerializerContext SerializerContext = new(JsonHelper.GetDefaultSerializerOptions());
+        private static readonly TitleUpdateMetadataJsonSerializerContext _serializerContext = new(JsonHelper.GetDefaultSerializerOptions());
 
-#pragma warning disable CS0649, IDE0044
-        [GUI] Label       _baseTitleInfoLabel;
-        [GUI] Box         _availableUpdatesBox;
+#pragma warning disable CS0649, IDE0044 // Field is never assigned to, Add readonly modifier
+        [GUI] Label _baseTitleInfoLabel;
+        [GUI] Box _availableUpdatesBox;
         [GUI] RadioButton _noUpdateRadioButton;
 #pragma warning restore CS0649, IDE0044
 
@@ -47,26 +46,26 @@ namespace Ryujinx.Ui.Windows
 
             builder.Autoconnect(this);
 
-            _titleId                     = titleId;
-            _virtualFileSystem           = virtualFileSystem;
-            _updateJsonPath              = System.IO.Path.Combine(AppDataManager.GamesDirPath, _titleId, "updates.json");
+            _titleId = titleId;
+            _virtualFileSystem = virtualFileSystem;
+            _updateJsonPath = System.IO.Path.Combine(AppDataManager.GamesDirPath, _titleId, "updates.json");
             _radioButtonToPathDictionary = new Dictionary<RadioButton, string>();
 
             try
             {
-                _titleUpdateWindowData = JsonHelper.DeserializeFromFile(_updateJsonPath, SerializerContext.TitleUpdateMetadata);
+                _titleUpdateWindowData = JsonHelper.DeserializeFromFile(_updateJsonPath, _serializerContext.TitleUpdateMetadata);
             }
             catch
             {
                 _titleUpdateWindowData = new TitleUpdateMetadata
                 {
                     Selected = "",
-                    Paths    = new List<string>()
+                    Paths = new List<string>(),
                 };
             }
 
             _baseTitleInfoLabel.Text = $"Updates Available for {titleName} [{titleId.ToUpper()}]";
-            
+
             foreach (string path in _titleUpdateWindowData.Paths)
             {
                 AddUpdate(path);
@@ -89,41 +88,40 @@ namespace Ryujinx.Ui.Windows
         {
             if (File.Exists(path))
             {
-                using (FileStream file = new FileStream(path, FileMode.Open, FileAccess.Read))
+                using FileStream file = new(path, FileMode.Open, FileAccess.Read);
+
+                PartitionFileSystem nsp = new(file.AsStorage());
+
+                try
                 {
-                    PartitionFileSystem nsp = new PartitionFileSystem(file.AsStorage());
+                    (Nca patchNca, Nca controlNca) = ApplicationLibrary.GetGameUpdateDataFromPartition(_virtualFileSystem, nsp, _titleId, 0);
 
-                    try
+                    if (controlNca != null && patchNca != null)
                     {
-                        (Nca patchNca, Nca controlNca) = ApplicationLibrary.GetGameUpdateDataFromPartition(_virtualFileSystem, nsp, _titleId, 0);
+                        ApplicationControlProperty controlData = new();
 
-                        if (controlNca != null && patchNca != null)
-                        {
-                            ApplicationControlProperty controlData = new ApplicationControlProperty();
+                        using var nacpFile = new UniqueRef<IFile>();
 
-                            using var nacpFile = new UniqueRef<IFile>();
+                        controlNca.OpenFileSystem(NcaSectionType.Data, IntegrityCheckLevel.None).OpenFile(ref nacpFile.Ref, "/control.nacp".ToU8Span(), OpenMode.Read).ThrowIfFailure();
+                        nacpFile.Get.Read(out _, 0, SpanHelpers.AsByteSpan(ref controlData), ReadOption.None).ThrowIfFailure();
 
-                            controlNca.OpenFileSystem(NcaSectionType.Data, IntegrityCheckLevel.None).OpenFile(ref nacpFile.Ref, "/control.nacp".ToU8Span(), OpenMode.Read).ThrowIfFailure();
-                            nacpFile.Get.Read(out _, 0, SpanHelpers.AsByteSpan(ref controlData), ReadOption.None).ThrowIfFailure();
+                        RadioButton radioButton = new($"Version {controlData.DisplayVersionString.ToString()} - {path}");
+                        radioButton.JoinGroup(_noUpdateRadioButton);
 
-                            RadioButton radioButton = new RadioButton($"Version {controlData.DisplayVersionString.ToString()} - {path}");
-                            radioButton.JoinGroup(_noUpdateRadioButton);
+                        _availableUpdatesBox.Add(radioButton);
+                        _radioButtonToPathDictionary.Add(radioButton, path);
 
-                            _availableUpdatesBox.Add(radioButton);
-                            _radioButtonToPathDictionary.Add(radioButton, path);
-
-                            radioButton.Show();
-                            radioButton.Active = true;
-                        }
-                        else
-                        {
-                            GtkDialog.CreateErrorDialog("The specified file does not contain an update for the selected title!");
-                        }
+                        radioButton.Show();
+                        radioButton.Active = true;
                     }
-                    catch (Exception exception)
+                    else
                     {
-                        GtkDialog.CreateErrorDialog($"{exception.Message}. Errored File: {path}");
+                        GtkDialog.CreateErrorDialog("The specified file does not contain an update for the selected title!");
                     }
+                }
+                catch (Exception exception)
+                {
+                    GtkDialog.CreateErrorDialog($"{exception.Message}. Errored File: {path}");
                 }
             }
         }
@@ -143,24 +141,23 @@ namespace Ryujinx.Ui.Windows
 
         private void AddButton_Clicked(object sender, EventArgs args)
         {
-            using (FileChooserNative fileChooser = new FileChooserNative("Select update files", this, FileChooserAction.Open, "Add", "Cancel"))
+            using FileChooserNative fileChooser = new("Select update files", this, FileChooserAction.Open, "Add", "Cancel");
+
+            fileChooser.SelectMultiple = true;
+
+            FileFilter filter = new()
             {
-                fileChooser.SelectMultiple = true;
+                Name = "Switch Game Updates",
+            };
+            filter.AddPattern("*.nsp");
 
-                FileFilter filter = new FileFilter()
+            fileChooser.AddFilter(filter);
+
+            if (fileChooser.Run() == (int)ResponseType.Accept)
+            {
+                foreach (string path in fileChooser.Filenames)
                 {
-                    Name = "Switch Game Updates"
-                };
-                filter.AddPattern("*.nsp");
-
-                fileChooser.AddFilter(filter);
-
-                if (fileChooser.Run() == (int)ResponseType.Accept)
-                {
-                    foreach (string path in fileChooser.Filenames)
-                    {
-                        AddUpdate(path);
-                    }
+                    AddUpdate(path);
                 }
             }
         }
@@ -193,7 +190,7 @@ namespace Ryujinx.Ui.Windows
                 }
             }
 
-            JsonHelper.SerializeToFile(_updateJsonPath, _titleUpdateWindowData, SerializerContext.TitleUpdateMetadata);
+            JsonHelper.SerializeToFile(_updateJsonPath, _titleUpdateWindowData, _serializerContext.TitleUpdateMetadata);
 
             _parent.UpdateGameTable();
 

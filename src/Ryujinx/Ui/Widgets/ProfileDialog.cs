@@ -10,7 +10,7 @@ namespace Ryujinx.Ui.Widgets
     {
         public string FileName { get; private set; }
 
-#pragma warning disable CS0649, IDE0044
+#pragma warning disable CS0649, IDE0044 // Field is never assigned to, Add readonly modifier
         [GUI] Entry _profileEntry;
         [GUI] Label _errorMessage;
 #pragma warning restore CS0649, IDE0044

@@ -18,7 +18,6 @@ using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-
 using Image = SixLabors.ImageSharp.Image;
 
 namespace Ryujinx.Ui.Windows
@@ -26,23 +25,23 @@ namespace Ryujinx.Ui.Windows
     public class AvatarWindow : Window
     {
         public byte[] SelectedProfileImage;
-        public bool   NewUser;
+        public bool NewUser;
 
-        private static Dictionary<string, byte[]> _avatarDict = new Dictionary<string, byte[]>();
+        private static readonly Dictionary<string, byte[]> _avatarDict = new();
 
-        private ListStore _listStore;
-        private IconView  _iconView;
-        private Button    _setBackgroungColorButton;
-        private Gdk.RGBA  _backgroundColor;
+        private readonly ListStore _listStore;
+        private readonly IconView _iconView;
+        private readonly Button _setBackgroungColorButton;
+        private Gdk.RGBA _backgroundColor;
 
         public AvatarWindow() : base($"Ryujinx {Program.Version} - Manage Accounts - Avatar")
         {
             Icon = new Gdk.Pixbuf(Assembly.GetAssembly(typeof(ConfigurationState)), "Ryujinx.Ui.Common.Resources.Logo_Ryujinx.png");
 
-            CanFocus  = false;
+            CanFocus = false;
             Resizable = false;
-            Modal     = true;
-            TypeHint  = Gdk.WindowTypeHint.Dialog;
+            Modal = true;
+            TypeHint = Gdk.WindowTypeHint.Dialog;
 
             SetDefaultSize(740, 400);
             SetPosition(WindowPosition.Center);
@@ -50,54 +49,56 @@ namespace Ryujinx.Ui.Windows
             Box vbox = new(Orientation.Vertical, 0);
             Add(vbox);
 
-            ScrolledWindow scrolledWindow = new ScrolledWindow
+            ScrolledWindow scrolledWindow = new()
             {
-                ShadowType = ShadowType.EtchedIn
+                ShadowType = ShadowType.EtchedIn,
             };
             scrolledWindow.SetPolicy(PolicyType.Automatic, PolicyType.Automatic);
 
             Box hbox = new(Orientation.Horizontal, 0);
 
-            Button chooseButton = new Button()
+            Button chooseButton = new()
             {
-                Label           = "Choose",
-                CanFocus        = true,
-                ReceivesDefault = true
+                Label = "Choose",
+                CanFocus = true,
+                ReceivesDefault = true,
             };
             chooseButton.Clicked += ChooseButton_Pressed;
 
             _setBackgroungColorButton = new Button()
             {
-                Label    = "Set Background Color",
-                CanFocus = true
+                Label = "Set Background Color",
+                CanFocus = true,
             };
             _setBackgroungColorButton.Clicked += SetBackgroungColorButton_Pressed;
 
-            _backgroundColor.Red   = 1;
+            _backgroundColor.Red = 1;
             _backgroundColor.Green = 1;
-            _backgroundColor.Blue  = 1;
+            _backgroundColor.Blue = 1;
             _backgroundColor.Alpha = 1;
 
-            Button closeButton = new Button()
+            Button closeButton = new()
             {
-                Label           = "Close",
-                CanFocus        = true
+                Label = "Close",
+                CanFocus = true,
             };
             closeButton.Clicked += CloseButton_Pressed;
 
-            vbox.PackStart(scrolledWindow,            true,  true,  0);
-            hbox.PackStart(chooseButton,              true,  true,  0);
-            hbox.PackStart(_setBackgroungColorButton, true,  true,  0);
-            hbox.PackStart(closeButton,               true,  true,  0);
-            vbox.PackStart(hbox,                      false, false, 0);
+            vbox.PackStart(scrolledWindow, true, true, 0);
+            hbox.PackStart(chooseButton, true, true, 0);
+            hbox.PackStart(_setBackgroungColorButton, true, true, 0);
+            hbox.PackStart(closeButton, true, true, 0);
+            vbox.PackStart(hbox, false, false, 0);
 
             _listStore = new ListStore(typeof(string), typeof(Gdk.Pixbuf));
             _listStore.SetSortColumnId(0, SortType.Ascending);
 
-            _iconView              = new IconView(_listStore);
-            _iconView.ItemWidth    = 64;
-            _iconView.ItemPadding  = 10;
-            _iconView.PixbufColumn = 1;
+            _iconView = new IconView(_listStore)
+            {
+                ItemWidth = 64,
+                ItemPadding = 10,
+                PixbufColumn = 1,
+            };
 
             _iconView.SelectionChanged += IconView_SelectionChanged;
 
@@ -118,39 +119,36 @@ namespace Ryujinx.Ui.Windows
             }
 
             string contentPath = contentManager.GetInstalledContentPath(0x010000000000080A, StorageId.BuiltInSystem, NcaContentType.Data);
-            string avatarPath  = virtualFileSystem.SwitchPathToSystemPath(contentPath);
+            string avatarPath = virtualFileSystem.SwitchPathToSystemPath(contentPath);
 
             if (!string.IsNullOrWhiteSpace(avatarPath))
             {
-                using (IStorage ncaFileStream = new LocalStorage(avatarPath, FileAccess.Read, FileMode.Open))
+                using IStorage ncaFileStream = new LocalStorage(avatarPath, FileAccess.Read, FileMode.Open);
+
+                Nca nca = new(virtualFileSystem.KeySet, ncaFileStream);
+                IFileSystem romfs = nca.OpenFileSystem(NcaSectionType.Data, IntegrityCheckLevel.ErrorOnInvalid);
+
+                foreach (var item in romfs.EnumerateEntries())
                 {
-                    Nca         nca   = new Nca(virtualFileSystem.KeySet, ncaFileStream);
-                    IFileSystem romfs = nca.OpenFileSystem(NcaSectionType.Data, IntegrityCheckLevel.ErrorOnInvalid);
+                    // TODO: Parse DatabaseInfo.bin and table.bin files for more accuracy.
 
-                    foreach (var item in romfs.EnumerateEntries())
+                    if (item.Type == DirectoryEntryType.File && item.FullPath.Contains("chara") && item.FullPath.Contains("szs"))
                     {
-                        // TODO: Parse DatabaseInfo.bin and table.bin files for more accuracy.
+                        using var file = new UniqueRef<IFile>();
 
-                        if (item.Type == DirectoryEntryType.File && item.FullPath.Contains("chara") && item.FullPath.Contains("szs"))
-                        {
-                            using var file = new UniqueRef<IFile>();
+                        romfs.OpenFile(ref file.Ref, ("/" + item.FullPath).ToU8Span(), OpenMode.Read).ThrowIfFailure();
 
-                            romfs.OpenFile(ref file.Ref, ("/" + item.FullPath).ToU8Span(), OpenMode.Read).ThrowIfFailure();
+                        using MemoryStream stream = MemoryStreamManager.Shared.GetStream();
+                        using MemoryStream streamPng = MemoryStreamManager.Shared.GetStream();
+                        file.Get.AsStream().CopyTo(stream);
 
-                            using (MemoryStream stream    = MemoryStreamManager.Shared.GetStream())
-                            using (MemoryStream streamPng = MemoryStreamManager.Shared.GetStream())
-                            {
-                                file.Get.AsStream().CopyTo(stream);
+                        stream.Position = 0;
 
-                                stream.Position = 0;
+                        Image avatarImage = Image.LoadPixelData<Rgba32>(DecompressYaz0(stream), 256, 256);
 
-                                Image avatarImage = Image.LoadPixelData<Rgba32>(DecompressYaz0(stream), 256, 256);
+                        avatarImage.SaveAsPng(streamPng);
 
-                                avatarImage.SaveAsPng(streamPng);
-
-                                _avatarDict.Add(item.FullPath, streamPng.ToArray());
-                            }
-                        }
+                        _avatarDict.Add(item.FullPath, streamPng.ToArray());
                     }
                 }
             }
@@ -165,23 +163,24 @@ namespace Ryujinx.Ui.Windows
                 _listStore.AppendValues(avatar.Key, new Gdk.Pixbuf(ProcessImage(avatar.Value), 96, 96));
             }
 
-            _iconView.SelectPath(new TreePath(new int[] { 0 }));
+            _iconView.SelectPath(new TreePath(new[] { 0 }));
         }
 
         private byte[] ProcessImage(byte[] data)
         {
-            using (MemoryStream streamJpg = MemoryStreamManager.Shared.GetStream())
-            {
-                Image avatarImage = Image.Load(data, new PngDecoder());
+            using MemoryStream streamJpg = MemoryStreamManager.Shared.GetStream();
 
-                avatarImage.Mutate(x => x.BackgroundColor(new Rgba32((byte)(_backgroundColor.Red   * 255),
-                                                                     (byte)(_backgroundColor.Green * 255),
-                                                                     (byte)(_backgroundColor.Blue  * 255),
-                                                                     (byte)(_backgroundColor.Alpha * 255))));
-                avatarImage.SaveAsJpeg(streamJpg);
+            Image avatarImage = Image.Load(data, new PngDecoder());
 
-                return streamJpg.ToArray();
-            }
+            avatarImage.Mutate(x => x.BackgroundColor(new Rgba32(
+                (byte)(_backgroundColor.Red * 255),
+                (byte)(_backgroundColor.Green * 255),
+                (byte)(_backgroundColor.Blue * 255),
+                (byte)(_backgroundColor.Alpha * 255)
+            )));
+            avatarImage.SaveAsJpeg(streamJpg);
+
+            return streamJpg.ToArray();
         }
 
         private void CloseButton_Pressed(object sender, EventArgs e)
@@ -203,20 +202,19 @@ namespace Ryujinx.Ui.Windows
 
         private void SetBackgroungColorButton_Pressed(object sender, EventArgs e)
         {
-            using (ColorChooserDialog colorChooserDialog = new ColorChooserDialog("Set Background Color", this))
+            using ColorChooserDialog colorChooserDialog = new("Set Background Color", this);
+
+            colorChooserDialog.UseAlpha = false;
+            colorChooserDialog.Rgba = _backgroundColor;
+
+            if (colorChooserDialog.Run() == (int)ResponseType.Ok)
             {
-                colorChooserDialog.UseAlpha = false;
-                colorChooserDialog.Rgba     = _backgroundColor;
-                
-                if (colorChooserDialog.Run() == (int)ResponseType.Ok)
-                {
-                    _backgroundColor = colorChooserDialog.Rgba;
+                _backgroundColor = colorChooserDialog.Rgba;
 
-                    ProcessAvatars();
-                }
-
-                colorChooserDialog.Hide();
+                ProcessAvatars();
             }
+
+            colorChooserDialog.Hide();
         }
 
         private void ChooseButton_Pressed(object sender, EventArgs e)
@@ -226,69 +224,68 @@ namespace Ryujinx.Ui.Windows
 
         private static byte[] DecompressYaz0(Stream stream)
         {
-            using (BinaryReader reader = new BinaryReader(stream))
+            using BinaryReader reader = new(stream);
+
+            reader.ReadInt32(); // Magic
+
+            uint decodedLength = BinaryPrimitives.ReverseEndianness(reader.ReadUInt32());
+
+            reader.ReadInt64(); // Padding
+
+            byte[] input = new byte[stream.Length - stream.Position];
+            stream.Read(input, 0, input.Length);
+
+            long inputOffset = 0;
+
+            byte[] output = new byte[decodedLength];
+            long outputOffset = 0;
+
+            ushort mask = 0;
+            byte header = 0;
+
+            while (outputOffset < decodedLength)
             {
-                reader.ReadInt32(); // Magic
-                
-                uint decodedLength = BinaryPrimitives.ReverseEndianness(reader.ReadUInt32());
-
-                reader.ReadInt64(); // Padding
-
-                byte[] input = new byte[stream.Length - stream.Position];
-                stream.Read(input, 0, input.Length);
-
-                long inputOffset = 0;
-
-                byte[] output       = new byte[decodedLength];
-                long   outputOffset = 0;
-
-                ushort mask   = 0;
-                byte   header = 0;
-
-                while (outputOffset < decodedLength)
+                if ((mask >>= 1) == 0)
                 {
-                    if ((mask >>= 1) == 0)
+                    header = input[inputOffset++];
+                    mask = 0x80;
+                }
+
+                if ((header & mask) > 0)
+                {
+                    if (outputOffset == output.Length)
                     {
-                        header = input[inputOffset++];
-                        mask   = 0x80;
+                        break;
                     }
 
-                    if ((header & mask) > 0)
-                    {
-                        if (outputOffset == output.Length)
-                        {
-                            break;
-                        }
+                    output[outputOffset++] = input[inputOffset++];
+                }
+                else
+                {
+                    byte byte1 = input[inputOffset++];
+                    byte byte2 = input[inputOffset++];
 
-                        output[outputOffset++] = input[inputOffset++];
+                    int dist = ((byte1 & 0xF) << 8) | byte2;
+                    int position = (int)outputOffset - (dist + 1);
+
+                    int length = byte1 >> 4;
+                    if (length == 0)
+                    {
+                        length = input[inputOffset++] + 0x12;
                     }
                     else
                     {
-                        byte byte1 = input[inputOffset++];
-                        byte byte2 = input[inputOffset++];
+                        length += 2;
+                    }
 
-                        int dist     = ((byte1 & 0xF) << 8) | byte2;
-                        int position = (int)outputOffset - (dist + 1);
-
-                        int length = byte1 >> 4;
-                        if (length == 0)
-                        {
-                            length = input[inputOffset++] + 0x12;
-                        }
-                        else
-                        {
-                            length += 2;
-                        }
-
-                        while (length-- > 0)
-                        {
-                            output[outputOffset++] = output[position++];
-                        }
+                    while (length-- > 0)
+                    {
+                        output[outputOffset++] = output[position++];
                     }
                 }
-
-                return output;
             }
+
+            return output;
         }
     }
 }

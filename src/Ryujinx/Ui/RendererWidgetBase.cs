@@ -21,14 +21,13 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using Image = SixLabors.ImageSharp.Image;
+using Key = Ryujinx.Input.Key;
+using ScalingFilter = Ryujinx.Graphics.GAL.ScalingFilter;
+using Switch = Ryujinx.HLE.Switch;
 
 namespace Ryujinx.Ui
 {
-    using Image = SixLabors.ImageSharp.Image;
-    using Key = Input.Key;
-    using ScalingFilter = Graphics.GAL.ScalingFilter;
-    using Switch = HLE.Switch;
-
     public abstract class RendererWidgetBase : DrawingArea
     {
         private const int SwitchPanelWidth = 1280;
@@ -71,12 +70,12 @@ namespace Ryujinx.Ui
 
         // Hide Cursor
         const int CursorHideIdleTime = 5; // seconds
-        private static readonly Cursor _invisibleCursor = new Cursor(Display.Default, CursorType.BlankCursor);
+        private static readonly Cursor _invisibleCursor = new(Display.Default, CursorType.BlankCursor);
         private long _lastCursorMoveTime;
         private HideCursorMode _hideCursorMode;
-        private InputManager _inputManager;
-        private IKeyboard _keyboardInterface;
-        private GraphicsDebugLevel _glLogLevel;
+        private readonly InputManager _inputManager;
+        private readonly IKeyboard _keyboardInterface;
+        private readonly GraphicsDebugLevel _glLogLevel;
         private string _gpuBackendName;
         private string _gpuVendorName;
         private bool _isMouseInClient;
@@ -165,7 +164,7 @@ namespace Ryujinx.Ui
                         Window.Cursor = _invisibleCursor;
                         break;
                     default:
-                        throw new ArgumentOutOfRangeException();
+                        throw new ArgumentOutOfRangeException(nameof(state));
                 }
             });
         }
@@ -379,12 +378,12 @@ namespace Ryujinx.Ui
                 {
                     lock (this)
                     {
-                        var    currentTime = DateTime.Now;
-                        string filename    = $"ryujinx_capture_{currentTime.Year}-{currentTime.Month:D2}-{currentTime.Day:D2}_{currentTime.Hour:D2}-{currentTime.Minute:D2}-{currentTime.Second:D2}.png";
-                        string directory   = AppDataManager.Mode switch
+                        var currentTime = DateTime.Now;
+                        string filename = $"ryujinx_capture_{currentTime.Year}-{currentTime.Month:D2}-{currentTime.Day:D2}_{currentTime.Hour:D2}-{currentTime.Minute:D2}-{currentTime.Second:D2}.png";
+                        string directory = AppDataManager.Mode switch
                         {
                             AppDataManager.LaunchMode.Portable or AppDataManager.LaunchMode.Custom => System.IO.Path.Combine(AppDataManager.BaseDirPath, "screenshots"),
-                            _ => System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), "Ryujinx")
+                            _ => System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), "Ryujinx"),
                         };
 
                         string path = System.IO.Path.Combine(directory, filename);
@@ -415,7 +414,7 @@ namespace Ryujinx.Ui
 
                         image.SaveAsPng(path, new PngEncoder()
                         {
-                            ColorType = PngColorType.Rgb
+                            ColorType = PngColorType.Rgb,
                         });
 
                         image.Dispose();
@@ -524,30 +523,30 @@ namespace Ryujinx.Ui
             {
                 parent.Present();
 
-                var activeProcess   = Device.Processes.ActiveApplication;
+                var activeProcess = Device.Processes.ActiveApplication;
 
-                string titleNameSection    = string.IsNullOrWhiteSpace(activeProcess.Name) ? string.Empty : $" {activeProcess.Name}";
+                string titleNameSection = string.IsNullOrWhiteSpace(activeProcess.Name) ? string.Empty : $" {activeProcess.Name}";
                 string titleVersionSection = string.IsNullOrWhiteSpace(activeProcess.DisplayVersion) ? string.Empty : $" v{activeProcess.DisplayVersion}";
-                string titleIdSection      = $" ({activeProcess.ProgramIdText.ToUpper()})";
-                string titleArchSection    = activeProcess.Is64Bit ? " (64-bit)" : " (32-bit)";
+                string titleIdSection = $" ({activeProcess.ProgramIdText.ToUpper()})";
+                string titleArchSection = activeProcess.Is64Bit ? " (64-bit)" : " (32-bit)";
 
                 parent.Title = $"Ryujinx {Program.Version} -{titleNameSection}{titleVersionSection}{titleIdSection}{titleArchSection}";
             });
 
-            Thread renderLoopThread = new Thread(Render)
+            Thread renderLoopThread = new(Render)
             {
-                Name = "GUI.RenderLoop"
+                Name = "GUI.RenderLoop",
             };
             renderLoopThread.Start();
 
-            Thread nvStutterWorkaround = null;
+            Thread nvidiaStutterWorkaround = null;
             if (Renderer is Graphics.OpenGL.OpenGLRenderer)
             {
-                nvStutterWorkaround = new Thread(NVStutterWorkaround)
+                nvidiaStutterWorkaround = new Thread(NvidiaStutterWorkaround)
                 {
-                    Name = "GUI.NVStutterWorkaround"
+                    Name = "GUI.NvidiaStutterWorkaround",
                 };
-                nvStutterWorkaround.Start();
+                nvidiaStutterWorkaround.Start();
             }
 
             MainLoop();
@@ -556,7 +555,7 @@ namespace Ryujinx.Ui
             // We only need to wait for all commands submitted during the main gpu loop to be processed.
             _gpuDoneEvent.WaitOne();
             _gpuDoneEvent.Dispose();
-            nvStutterWorkaround?.Join();
+            nvidiaStutterWorkaround?.Join();
 
             Exit();
         }
@@ -584,7 +583,7 @@ namespace Ryujinx.Ui
             }
         }
 
-        private void NVStutterWorkaround()
+        private void NvidiaStutterWorkaround()
         {
             while (_isActive)
             {
@@ -752,7 +751,7 @@ namespace Ryujinx.Ui
             ResScaleUp = 1 << 5,
             ResScaleDown = 1 << 6,
             VolumeUp = 1 << 7,
-            VolumeDown = 1 << 8
+            VolumeDown = 1 << 8,
         }
 
         private KeyboardHotkeyState GetHotkeyState()

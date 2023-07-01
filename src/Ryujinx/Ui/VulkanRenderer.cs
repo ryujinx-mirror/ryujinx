@@ -12,12 +12,12 @@ using System.Runtime.InteropServices;
 
 namespace Ryujinx.Ui
 {
-    public partial class VKRenderer : RendererWidgetBase
+    public partial class VulkanRenderer : RendererWidgetBase
     {
         public NativeWindowBase NativeWindow { get; private set; }
         private UpdateBoundsCallbackDelegate _updateBoundsCallback;
 
-        public VKRenderer(InputManager inputManager, GraphicsDebugLevel glLogLevel) : base(inputManager, glLogLevel) { }
+        public VulkanRenderer(InputManager inputManager, GraphicsDebugLevel glLogLevel) : base(inputManager, glLogLevel) { }
 
         private NativeWindowBase RetrieveNativeWindow()
         {

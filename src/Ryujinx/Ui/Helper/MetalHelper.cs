@@ -12,7 +12,7 @@ namespace Ryujinx.Ui.Helper
     {
         private const string LibObjCImport = "/usr/lib/libobjc.A.dylib";
 
-        private struct Selector
+        private readonly struct Selector
         {
             public readonly IntPtr NativePtr;
 
@@ -29,7 +29,7 @@ namespace Ryujinx.Ui.Helper
                 NativePtr = sel_registerName(data);
             }
 
-            public static implicit operator Selector(string value) => new Selector(value);
+            public static implicit operator Selector(string value) => new(value);
         }
 
         private static unsafe IntPtr GetClass(string value)
@@ -45,27 +45,27 @@ namespace Ryujinx.Ui.Helper
             return objc_getClass(data);
         }
 
-        private struct NSPoint
+        private struct NsPoint
         {
             public double X;
             public double Y;
 
-            public NSPoint(double x, double y)
+            public NsPoint(double x, double y)
             {
                 X = x;
                 Y = y;
             }
         }
 
-        private struct NSRect
+        private struct NsRect
         {
-            public NSPoint Pos;
-            public NSPoint Size;
+            public NsPoint Pos;
+            public NsPoint Size;
 
-            public NSRect(double x, double y, double width, double height)
+            public NsRect(double x, double y, double width, double height)
             {
-                Pos = new NSPoint(x, y);
-                Size = new NSPoint(width, height);
+                Pos = new NsPoint(x, y);
+                Size = new NsPoint(width, height);
             }
         }
 
@@ -81,7 +81,7 @@ namespace Ryujinx.Ui.Helper
             // Create a child NSView to render into.
             IntPtr nsViewClass = GetClass("NSView");
             IntPtr child = IntPtr_objc_msgSend(nsViewClass, "alloc");
-            objc_msgSend(child, "init", new NSRect());
+            objc_msgSend(child, "init", new NsRect());
 
             // Add it as a child.
             objc_msgSend(nsView, "addSubview:", child);
@@ -92,11 +92,12 @@ namespace Ryujinx.Ui.Helper
             objc_msgSend(metalLayer, "setContentsScale:", (double)display.GetMonitorAtWindow(window).ScaleFactor);
 
             // Set the frame position/location.
-            updateBounds = (Window window) => {
+            updateBounds = (Window window) =>
+            {
                 window.GetPosition(out int x, out int y);
                 int width = window.Width;
                 int height = window.Height;
-                objc_msgSend(child, "setFrame:", new NSRect(x, y, width, height));
+                objc_msgSend(child, "setFrame:", new NsRect(x, y, width, height));
             };
 
             updateBounds(window);
@@ -120,7 +121,7 @@ namespace Ryujinx.Ui.Helper
         private static partial void objc_msgSend(IntPtr receiver, Selector selector, IntPtr value);
 
         [LibraryImport(LibObjCImport)]
-        private static partial void objc_msgSend(IntPtr receiver, Selector selector, NSRect point);
+        private static partial void objc_msgSend(IntPtr receiver, Selector selector, NsRect point);
 
         [LibraryImport(LibObjCImport)]
         private static partial void objc_msgSend(IntPtr receiver, Selector selector, double value);

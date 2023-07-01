@@ -9,7 +9,9 @@ namespace Ryujinx.Ui.Applet
     {
         private int _inputMin;
         private int _inputMax;
+#pragma warning disable IDE0052 // Remove unread private member
         private KeyboardMode _mode;
+#pragma warning restore IDE0052
 
         private string _validationInfoText = "";
 
@@ -18,8 +20,8 @@ namespace Ryujinx.Ui.Applet
 
         private readonly Label _validationInfo;
 
-        public Entry  InputEntry   { get; }
-        public Button OkButton     { get; }
+        public Entry InputEntry { get; }
+        public Button OkButton { get; }
         public Button CancelButton { get; }
 
         public SwkbdAppletDialog(Window parent) : base(parent, DialogFlags.Modal | DialogFlags.DestroyWithParent, MessageType.Question, ButtonsType.None, null)
@@ -28,22 +30,22 @@ namespace Ryujinx.Ui.Applet
 
             _validationInfo = new Label()
             {
-                Visible = false
+                Visible = false,
             };
 
             InputEntry = new Entry()
             {
-                Visible = true
+                Visible = true,
             };
 
             InputEntry.Activated += OnInputActivated;
-            InputEntry.Changed   += OnInputChanged;
+            InputEntry.Changed += OnInputChanged;
 
-            OkButton     = (Button)AddButton("OK",     ResponseType.Ok);
+            OkButton = (Button)AddButton("OK", ResponseType.Ok);
             CancelButton = (Button)AddButton("Cancel", ResponseType.Cancel);
 
             ((Box)MessageArea).PackEnd(_validationInfo, true, true, 0);
-            ((Box)MessageArea).PackEnd(InputEntry,      true, true, 4);
+            ((Box)MessageArea).PackEnd(InputEntry, true, true, 4);
         }
 
         private void ApplyValidationInfo()

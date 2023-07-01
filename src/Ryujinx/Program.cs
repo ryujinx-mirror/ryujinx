@@ -43,10 +43,7 @@ namespace Ryujinx
         [LibraryImport("libc", SetLastError = true)]
         private static partial int setenv([MarshalAs(UnmanagedType.LPStr)] string name, [MarshalAs(UnmanagedType.LPStr)] string value, int overwrite);
 
-        [LibraryImport("libc")]
-        private static partial IntPtr getenv([MarshalAs(UnmanagedType.LPStr)] string name);
-
-        private const uint MB_ICONWARNING = 0x30;
+        private const uint MbIconWarning = 0x30;
 
         static Program()
         {
@@ -78,16 +75,16 @@ namespace Ryujinx
 
             if (OperatingSystem.IsWindows() && !OperatingSystem.IsWindowsVersionAtLeast(10, 0, 17134))
             {
-                MessageBoxA(IntPtr.Zero, "You are running an outdated version of Windows.\n\nStarting on June 1st 2022, Ryujinx will only support Windows 10 1803 and newer.\n", $"Ryujinx {Version}", MB_ICONWARNING);
+                MessageBoxA(IntPtr.Zero, "You are running an outdated version of Windows.\n\nStarting on June 1st 2022, Ryujinx will only support Windows 10 1803 and newer.\n", $"Ryujinx {Version}", MbIconWarning);
             }
 
             // Parse arguments
             CommandLineState.ParseArguments(args);
 
             // Hook unhandled exception and process exit events.
-            GLib.ExceptionManager.UnhandledException   += (GLib.UnhandledExceptionArgs e)                => ProcessUnhandledException(e.ExceptionObject as Exception, e.IsTerminating);
+            GLib.ExceptionManager.UnhandledException += (GLib.UnhandledExceptionArgs e) => ProcessUnhandledException(e.ExceptionObject as Exception, e.IsTerminating);
             AppDomain.CurrentDomain.UnhandledException += (object sender, UnhandledExceptionEventArgs e) => ProcessUnhandledException(e.ExceptionObject as Exception, e.IsTerminating);
-            AppDomain.CurrentDomain.ProcessExit        += (object sender, EventArgs e)                   => Exit();
+            AppDomain.CurrentDomain.ProcessExit += (object sender, EventArgs e) => Exit();
 
             // Make process DPI aware for proper window sizing on high-res screens.
             ForceDpiAware.Windows();
@@ -102,7 +99,11 @@ namespace Ryujinx
             // This ends up causing race condition and abort of XCB when a context is created by SPB (even if SPB do call XInitThreads).
             if (OperatingSystem.IsLinux())
             {
-                XInitThreads();
+                if (XInitThreads() == 0)
+                {
+                    throw new NotSupportedException("Failed to initialize multi-threading support.");
+                }
+
                 Environment.SetEnvironmentVariable("GDK_BACKEND", "x11");
                 setenv("GDK_BACKEND", "x11", 1);
             }
@@ -121,7 +122,7 @@ namespace Ryujinx
                     resourcesDataDir = baseDirectory;
                 }
 
-                void SetEnvironmentVariableNoCaching(string key, string value)
+                static void SetEnvironmentVariableNoCaching(string key, string value)
                 {
                     int res = setenv(key, value, 1);
                     Debug.Assert(res != -1);
@@ -163,11 +164,11 @@ namespace Ryujinx
             // Sets ImageSharp Jpeg Encoder Quality.
             SixLabors.ImageSharp.Configuration.Default.ImageFormatsManager.SetEncoder(JpegFormat.Instance, new JpegEncoder()
             {
-                Quality = 100
+                Quality = 100,
             });
 
-            string localConfigurationPath   = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Config.json");
-            string appDataConfigurationPath = Path.Combine(AppDataManager.BaseDirPath,            "Config.json");
+            string localConfigurationPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Config.json");
+            string appDataConfigurationPath = Path.Combine(AppDataManager.BaseDirPath, "Config.json");
 
             // Now load the configuration as the other subsystems are now registered
             ConfigurationPath = File.Exists(localConfigurationPath)
@@ -232,7 +233,7 @@ namespace Ryujinx
                     "never" => HideCursorMode.Never,
                     "onidle" => HideCursorMode.OnIdle,
                     "always" => HideCursorMode.Always,
-                    _ => ConfigurationState.Instance.HideCursor.Value
+                    _ => ConfigurationState.Instance.HideCursor.Value,
                 };
             }
 
@@ -261,7 +262,7 @@ namespace Ryujinx
             }
 
             // Show the main window UI.
-            MainWindow mainWindow = new MainWindow();
+            MainWindow mainWindow = new();
             mainWindow.Show();
 
             if (OperatingSystem.IsLinux())
@@ -278,7 +279,7 @@ namespace Ryujinx
                         {
                             { 0, "Yes, until the next restart" },
                             { 1, "Yes, permanently" },
-                            { 2, "No" }
+                            { 2, "No" },
                         };
 
                         ResponseType response = GtkDialog.CreateCustomDialog(
@@ -347,7 +348,7 @@ namespace Ryujinx
                 var buttonTexts = new Dictionary<int, string>()
                 {
                     { 0, "Yes (Vulkan)" },
-                    { 1, "No (OpenGL)" }
+                    { 1, "No (OpenGL)" },
                 };
 
                 ResponseType response = GtkDialog.CreateCustomDialog(

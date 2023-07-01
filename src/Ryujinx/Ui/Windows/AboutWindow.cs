@@ -25,7 +25,7 @@ namespace Ryujinx.Ui.Windows
                 _patreonNamesText.Buffer.Text = "Connection Error.";
             }
 
-            HttpClient httpClient = new HttpClient();
+            HttpClient httpClient = new();
 
             try
             {
