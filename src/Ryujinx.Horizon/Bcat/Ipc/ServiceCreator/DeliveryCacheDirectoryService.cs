@@ -26,7 +26,7 @@ namespace Ryujinx.Horizon.Bcat.Ipc
         }
 
         [CmifCommand(1)]
-        public Result Read(out int entriesRead, [Buffer(Sdk.Sf.Hipc.HipcBufferFlags.Out | HipcBufferFlags.MapAlias)] Span<DeliveryCacheDirectoryEntry> entriesBuffer)
+        public Result Read(out int entriesRead, [Buffer(HipcBufferFlags.Out | HipcBufferFlags.MapAlias)] Span<DeliveryCacheDirectoryEntry> entriesBuffer)
         {
             return _libHacService.Get.Read(out entriesRead, entriesBuffer).ToHorizonResult();
         }

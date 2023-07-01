@@ -8,11 +8,11 @@ namespace Ryujinx.Horizon.Bcat.Ipc.Types
         public enum Status
         {
             // TODO: determine other values
-            Done = 9
+            Done = 9,
         }
 
         public Status State;
-        public uint   Result;
+        public uint Result;
         // TODO: reverse the rest of the structure
     }
 }

@@ -15,42 +15,42 @@ namespace Ryujinx.Horizon.Sdk.Sf
         OutCopyHandle,
         OutMoveHandle,
         OutObject,
-        ProcessId
+        ProcessId,
     }
 
-    struct CommandArg
+    readonly struct CommandArg
     {
-        public CommandArgType  Type            { get; }
-        public HipcBufferFlags BufferFlags     { get; }
-        public ushort          BufferFixedSize { get; }
-        public int             ArgSize         { get; }
-        public int             ArgAlignment    { get; }
+        public CommandArgType Type { get; }
+        public HipcBufferFlags BufferFlags { get; }
+        public ushort BufferFixedSize { get; }
+        public int ArgSize { get; }
+        public int ArgAlignment { get; }
 
         public CommandArg(CommandArgType type)
         {
-            Type            = type;
-            BufferFlags     = default;
+            Type = type;
+            BufferFlags = default;
             BufferFixedSize = 0;
-            ArgSize         = 0;
-            ArgAlignment    = 0;
+            ArgSize = 0;
+            ArgAlignment = 0;
         }
 
         public CommandArg(CommandArgType type, int argSize, int argAlignment)
         {
-            Type            = type;
-            BufferFlags     = default;
+            Type = type;
+            BufferFlags = default;
             BufferFixedSize = 0;
-            ArgSize         = argSize;
-            ArgAlignment    = argAlignment;
+            ArgSize = argSize;
+            ArgAlignment = argAlignment;
         }
 
         public CommandArg(HipcBufferFlags flags, ushort fixedSize = 0)
         {
-            Type            = CommandArgType.Buffer;
-            BufferFlags     = flags;
+            Type = CommandArgType.Buffer;
+            BufferFlags = flags;
             BufferFixedSize = fixedSize;
-            ArgSize         = 0;
-            ArgAlignment    = 0;
+            ArgSize = 0;
+            ArgAlignment = 0;
         }
     }
 }

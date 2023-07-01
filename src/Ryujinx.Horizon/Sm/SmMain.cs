@@ -1,6 +1,4 @@
-﻿using Ryujinx.Horizon.Prepo;
-using Ryujinx.Horizon.Prepo.Types;
-using Ryujinx.Horizon.Sdk.Sf.Hipc;
+﻿using Ryujinx.Horizon.Sdk.Sf.Hipc;
 using Ryujinx.Horizon.Sdk.Sm;
 using Ryujinx.Horizon.Sm.Impl;
 using Ryujinx.Horizon.Sm.Types;
@@ -9,8 +7,8 @@ namespace Ryujinx.Horizon.Sm
 {
     public class SmMain
     {
-        private const int SmMaxSessionsCount      = 64;
-        private const int SmmMaxSessionsCount     = 1;
+        private const int SmMaxSessionsCount = 64;
+        private const int SmmMaxSessionsCount = 1;
         private const int SmTotalMaxSessionsCount = SmMaxSessionsCount + SmmMaxSessionsCount;
 
         private const int MaxPortsCount = 2;

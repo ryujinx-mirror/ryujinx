@@ -19,7 +19,6 @@ namespace Ryujinx.Horizon.Sdk.Sf.Cmif
 
         private int InObjectsCount => _inObjectIds.Length;
         private int OutObjectsCount => _implMetadata.OutObjectsCount;
-        private int ImplOutHeadersSize => _implMetadata.OutHeadersSize;
         private int ImplOutDataTotalSize => _implMetadata.OutDataSize + _implMetadata.OutHeadersSize;
 
         public DomainServiceObjectProcessor(ServerDomainBase domain, int[] inObjectIds)

@@ -1,6 +1,6 @@
 ﻿namespace Ryujinx.Horizon.Sdk.Sf.Cmif
 {
-    struct ServiceDispatchMeta
+    readonly struct ServiceDispatchMeta
     {
         public ServiceDispatchTableBase DispatchTable { get; }
 

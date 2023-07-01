@@ -1,11 +1,4 @@
-﻿using Ryujinx.Horizon.LogManager;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Ryujinx.Horizon.Bcat
+﻿namespace Ryujinx.Horizon.Bcat
 {
     internal class BcatMain : IService
     {

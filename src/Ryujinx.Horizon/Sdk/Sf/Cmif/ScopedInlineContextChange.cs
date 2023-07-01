@@ -2,7 +2,7 @@ using System;
 
 namespace Ryujinx.Horizon.Sdk.Sf.Cmif
 {
-    struct ScopedInlineContextChange : IDisposable
+    readonly struct ScopedInlineContextChange : IDisposable
     {
         private readonly int _previousContext;
 

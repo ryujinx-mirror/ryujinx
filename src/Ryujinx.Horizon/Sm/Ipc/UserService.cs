@@ -10,7 +10,7 @@ namespace Ryujinx.Horizon.Sm.Ipc
         private readonly ServiceManager _serviceManager;
 
         private ulong _clientProcessId;
-        private bool  _initialized;
+        private bool _initialized;
 
         public UserService(ServiceManager serviceManager)
         {
@@ -21,7 +21,7 @@ namespace Ryujinx.Horizon.Sm.Ipc
         public Result Initialize([ClientProcessId] ulong clientProcessId)
         {
             _clientProcessId = clientProcessId;
-            _initialized     = true;
+            _initialized = true;
 
             return Result.Success;
         }

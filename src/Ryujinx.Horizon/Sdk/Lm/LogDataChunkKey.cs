@@ -14,6 +14,6 @@ namespace Ryujinx.Horizon.Sdk.Lm
         Time = 9,
         ProgramName = 10,
 
-        Count
+        Count,
     }
 }

@@ -17,6 +17,7 @@ namespace Ryujinx.Horizon.Prepo
         {
             return (PrepoPortIndex)portIndex switch
             {
+#pragma warning disable IDE0055 // Disable formatting
                 PrepoPortIndex.Admin   => AcceptImpl(server, new PrepoService(PrepoServicePermissionLevel.Admin)),
                 PrepoPortIndex.Admin2  => AcceptImpl(server, new PrepoService(PrepoServicePermissionLevel.Admin)),
                 PrepoPortIndex.Manager => AcceptImpl(server, new PrepoService(PrepoServicePermissionLevel.Manager)),
@@ -24,6 +25,7 @@ namespace Ryujinx.Horizon.Prepo
                 PrepoPortIndex.System  => AcceptImpl(server, new PrepoService(PrepoServicePermissionLevel.System)),
                 PrepoPortIndex.Debug   => AcceptImpl(server, new PrepoService(PrepoServicePermissionLevel.Debug)),
                 _                      => throw new ArgumentOutOfRangeException(nameof(portIndex)),
+#pragma warning restore IDE0055
             };
         }
     }

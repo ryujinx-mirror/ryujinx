@@ -6,6 +6,6 @@ namespace Ryujinx.Horizon.Sdk.Diag
         Info = 1,
         Warn = 2,
         Error = 3,
-        Fatal = 4
+        Fatal = 4,
     }
 }

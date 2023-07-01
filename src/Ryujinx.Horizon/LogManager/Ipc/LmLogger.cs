@@ -95,74 +95,52 @@ namespace Ryujinx.Horizon.LogManager.Ipc
 
                 LogDataChunkKey key = (LogDataChunkKey)type;
 
-                if (key == LogDataChunkKey.Start)
+                switch (key)
                 {
-                    reader.Skip(size);
-
-                    continue;
-                }
-                else if (key == LogDataChunkKey.Stop)
-                {
-                    break;
-                }
-                else if (key == LogDataChunkKey.Line)
-                {
-                    if (!reader.TryRead<int>(out _logPacket.Line))
-                    {
+                    case LogDataChunkKey.Start:
+                        reader.Skip(size);
+                        continue;
+                    case LogDataChunkKey.Stop:
+                        break;
+                    case LogDataChunkKey.Line when !reader.TryRead(out _logPacket.Line):
+                    case LogDataChunkKey.DropCount when !reader.TryRead(out _logPacket.DropCount):
+                    case LogDataChunkKey.Time when !reader.TryRead(out _logPacket.Time):
                         return true;
-                    }
-                }
-                else if (key == LogDataChunkKey.DropCount)
-                {
-                    if (!reader.TryRead<long>(out _logPacket.DropCount))
-                    {
-                        return true;
-                    }
-                }
-                else if (key == LogDataChunkKey.Time)
-                {
-                    if (!reader.TryRead<long>(out _logPacket.Time))
-                    {
-                        return true;
-                    }
-                }
-                else if (key == LogDataChunkKey.Message)
-                {
-                    string text = Encoding.UTF8.GetString(reader.GetSpanSafe(size)).TrimEnd();
-
-                    if (isHeadPacket && isTailPacket)
-                    {
-                        _logPacket.Message = text;
-                    }
-                    else
-                    {
-                        _logPacket.Message += text;
-
-                        if (_logPacket.Message.Length >= MessageLengthLimit)
+                    case LogDataChunkKey.Message:
                         {
-                            isTailPacket = true;
+                            string text = Encoding.UTF8.GetString(reader.GetSpanSafe(size)).TrimEnd();
+
+                            if (isHeadPacket && isTailPacket)
+                            {
+                                _logPacket.Message = text;
+                            }
+                            else
+                            {
+                                _logPacket.Message += text;
+
+                                if (_logPacket.Message.Length >= MessageLengthLimit)
+                                {
+                                    isTailPacket = true;
+                                }
+                            }
+
+                            break;
                         }
-                    }
-                }
-                else if (key == LogDataChunkKey.Filename)
-                {
-                    _logPacket.Filename = Encoding.UTF8.GetString(reader.GetSpanSafe(size)).TrimEnd();
-                }
-                else if (key == LogDataChunkKey.Function)
-                {
-                    _logPacket.Function = Encoding.UTF8.GetString(reader.GetSpanSafe(size)).TrimEnd();
-                }
-                else if (key == LogDataChunkKey.Module)
-                {
-                    _logPacket.Module = Encoding.UTF8.GetString(reader.GetSpanSafe(size)).TrimEnd();
-                }
-                else if (key == LogDataChunkKey.Thread)
-                {
-                    _logPacket.Thread = Encoding.UTF8.GetString(reader.GetSpanSafe(size)).TrimEnd();
-                }
-                else if (key == LogDataChunkKey.ProgramName)
-                {
-                    _logPacket.ProgramName = Encoding.UTF8.GetString(reader.GetSpanSafe(size)).TrimEnd();
+                    case LogDataChunkKey.Filename:
+                        _logPacket.Filename = Encoding.UTF8.GetString(reader.GetSpanSafe(size)).TrimEnd();
+                        break;
+                    case LogDataChunkKey.Function:
+                        _logPacket.Function = Encoding.UTF8.GetString(reader.GetSpanSafe(size)).TrimEnd();
+                        break;
+                    case LogDataChunkKey.Module:
+                        _logPacket.Module = Encoding.UTF8.GetString(reader.GetSpanSafe(size)).TrimEnd();
+                        break;
+                    case LogDataChunkKey.Thread:
+                        _logPacket.Thread = Encoding.UTF8.GetString(reader.GetSpanSafe(size)).TrimEnd();
+                        break;
+                    case LogDataChunkKey.ProgramName:
+                        _logPacket.ProgramName = Encoding.UTF8.GetString(reader.GetSpanSafe(size)).TrimEnd();
+                        break;
                 }
             }
 
@@ -177,7 +155,7 @@ namespace Ryujinx.Horizon.LogManager.Ipc
 
             do
             {
-                if (!reader.TryRead<byte>(out encoded))
+                if (!reader.TryRead(out encoded))
                 {
                     return false;
                 }

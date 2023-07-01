@@ -40,7 +40,7 @@ namespace Ryujinx.Horizon.Sm.Impl
             return result == KernelResult.SessionCountExceeded ? SmResult.OutOfSessions : result;
         }
 
-        private Result GetServiceImpl(out int handle, ref ServiceInfo serviceInfo)
+        private static Result GetServiceImpl(out int handle, ref ServiceInfo serviceInfo)
         {
             return HorizonStatic.Syscall.ConnectToPort(out handle, serviceInfo.PortHandle);
         }
@@ -96,8 +96,8 @@ namespace Ryujinx.Horizon.Sm.Impl
                 return result;
             }
 
-            freeService.PortHandle     = clientPort;
-            freeService.Name           = name;
+            freeService.PortHandle = clientPort;
+            freeService.Name = name;
             freeService.OwnerProcessId = processId;
 
             return Result.Success;
@@ -140,7 +140,7 @@ namespace Ryujinx.Horizon.Sm.Impl
 
             int nameLength = 1;
 
-            for (; nameLength < name.Length; nameLength++)
+            for (; nameLength < ServiceName.Length; nameLength++)
             {
                 if (name[nameLength] == 0)
                 {
@@ -148,7 +148,7 @@ namespace Ryujinx.Horizon.Sm.Impl
                 }
             }
 
-            while (nameLength < name.Length)
+            while (nameLength < ServiceName.Length)
             {
                 if (name[nameLength++] != 0)
                 {

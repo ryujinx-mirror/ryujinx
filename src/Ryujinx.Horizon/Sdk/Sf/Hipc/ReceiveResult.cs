@@ -4,6 +4,6 @@
     {
         Success,
         Closed,
-        NeedsRetry
+        NeedsRetry,
     }
 }

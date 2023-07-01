@@ -211,7 +211,7 @@ namespace Ryujinx.Horizon.Sdk.Sf.Cmif
         private readonly EntryManager _entryManager;
         private readonly object _entryOwnerLock;
         private readonly HashSet<Domain> _domains;
-        private int _maxDomains;
+        private readonly int _maxDomains;
 
         public ServerDomainManager(int entryCount, int maxDomains)
         {

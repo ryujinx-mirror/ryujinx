@@ -17,14 +17,14 @@ namespace Ryujinx.Horizon.Sdk.Account
 
         public Uid(long low, long high)
         {
-            Low  = low;
+            Low = low;
             High = high;
         }
 
         public Uid(byte[] bytes)
         {
             High = BitConverter.ToInt64(bytes, 0);
-            Low  = BitConverter.ToInt64(bytes, 8);
+            Low = BitConverter.ToInt64(bytes, 8);
         }
 
         public Uid(string hex)
@@ -34,7 +34,7 @@ namespace Ryujinx.Horizon.Sdk.Account
                 throw new ArgumentException("Invalid Hex value!", nameof(hex));
             }
 
-            Low  = Convert.ToInt64(hex[16..], 16);
+            Low = Convert.ToInt64(hex[16..], 16);
             High = Convert.ToInt64(hex[..16], 16);
         }
 

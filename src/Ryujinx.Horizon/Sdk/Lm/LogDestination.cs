@@ -9,6 +9,6 @@ namespace Ryujinx.Horizon.Sdk.Lm
         Uart = 1 << 1,
         UartIfSleep = 1 << 2,
 
-        All = 0xffff
+        All = 0xffff,
     }
 }

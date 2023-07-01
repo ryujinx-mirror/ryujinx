@@ -7,12 +7,7 @@ namespace Ryujinx.Horizon.Bcat.Ipc
 {
     partial class BcatService : IBcatService
     {
-        private readonly BcatServicePermissionLevel _permissionLevel;
-
-        public BcatService(BcatServicePermissionLevel permissionLevel)
-        {
-            _permissionLevel = permissionLevel;
-        }
+        public BcatService(BcatServicePermissionLevel permissionLevel) { }
 
         [CmifCommand(10100)]
         public Result RequestSyncDeliveryCache(out IDeliveryCacheProgressService deliveryCacheProgressService)

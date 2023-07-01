@@ -3,6 +3,6 @@
     enum SmPortIndex
     {
         User,
-        Manager
+        Manager,
     }
 }

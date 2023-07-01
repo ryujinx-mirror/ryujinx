@@ -5,6 +5,6 @@
         Admin,
         Manager,
         User,
-        System
+        System,
     }
 }

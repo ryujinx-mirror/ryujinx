@@ -17,11 +17,11 @@ namespace Ryujinx.Horizon.Bcat
         {
             return (BcatPortIndex)portIndex switch
             {
-                BcatPortIndex.Admin   => AcceptImpl(server, new ServiceCreator("bcat:a", BcatServicePermissionLevel.Admin)),
+                BcatPortIndex.Admin => AcceptImpl(server, new ServiceCreator("bcat:a", BcatServicePermissionLevel.Admin)),
                 BcatPortIndex.Manager => AcceptImpl(server, new ServiceCreator("bcat:m", BcatServicePermissionLevel.Manager)),
-                BcatPortIndex.User    => AcceptImpl(server, new ServiceCreator("bcat:u", BcatServicePermissionLevel.User)),
-                BcatPortIndex.System  => AcceptImpl(server, new ServiceCreator("bcat:s", BcatServicePermissionLevel.System)),
-                _                     => throw new ArgumentOutOfRangeException(nameof(portIndex)),
+                BcatPortIndex.User => AcceptImpl(server, new ServiceCreator("bcat:u", BcatServicePermissionLevel.User)),
+                BcatPortIndex.System => AcceptImpl(server, new ServiceCreator("bcat:s", BcatServicePermissionLevel.System)),
+                _ => throw new ArgumentOutOfRangeException(nameof(portIndex)),
             };
         }
     }

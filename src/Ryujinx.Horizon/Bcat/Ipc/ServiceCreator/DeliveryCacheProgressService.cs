@@ -39,7 +39,7 @@ namespace Ryujinx.Horizon.Bcat.Ipc
             deliveryCacheProgressImpl = new DeliveryCacheProgressImpl
             {
                 State = DeliveryCacheProgressImpl.Status.Done,
-                Result = 0
+                Result = 0,
             };
 
             Logger.Stub?.PrintStub(LogClass.ServiceBcat);

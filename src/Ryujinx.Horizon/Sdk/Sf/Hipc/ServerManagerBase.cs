@@ -10,7 +10,7 @@ namespace Ryujinx.Horizon.Sdk.Sf.Hipc
     {
         private readonly SmApi _sm;
 
-        private bool _canDeferInvokeRequest;
+        private readonly bool _canDeferInvokeRequest;
 
         private readonly MultiWait _multiWait;
         private readonly MultiWait _waitList;
@@ -26,8 +26,8 @@ namespace Ryujinx.Horizon.Sdk.Sf.Hipc
 
         private enum UserDataTag
         {
-            Server  = 1,
-            Session = 2
+            Server = 1,
+            Session = 2,
         }
 
         public ServerManagerBase(SmApi sm, ManagerOptions options) : base(options.MaxDomainObjects, options.MaxDomains)
@@ -36,13 +36,13 @@ namespace Ryujinx.Horizon.Sdk.Sf.Hipc
             _canDeferInvokeRequest = options.CanDeferInvokeRequest;
 
             _multiWait = new MultiWait();
-            _waitList  = new MultiWait();
+            _waitList = new MultiWait();
 
             _multiWaitSelectionLock = new object();
-            _waitListLock           = new object();
+            _waitListLock = new object();
 
             _requestStopEvent = new Event(EventClearMode.ManualClear);
-            _notifyEvent      = new Event(EventClearMode.ManualClear);
+            _notifyEvent = new Event(EventClearMode.ManualClear);
 
             _requestStopEventHolder = new MultiWaitHolderOfEvent(_requestStopEvent);
             _multiWait.LinkMultiWaitHolder(_requestStopEventHolder);
@@ -113,7 +113,9 @@ namespace Ryujinx.Horizon.Sdk.Sf.Hipc
 
         public void ServiceRequests()
         {
-            while (WaitAndProcessRequestsImpl());
+            while (WaitAndProcessRequestsImpl())
+            {
+            }
         }
 
         public void WaitAndProcessRequests()
@@ -183,7 +185,7 @@ namespace Ryujinx.Horizon.Sdk.Sf.Hipc
         protected override void RegisterSessionToWaitList(ServerSession session)
         {
             session.HasReceived = false;
-            session.UserData    = UserDataTag.Session;
+            session.UserData = UserDataTag.Session;
 
             RegisterToWaitList(session);
         }
@@ -209,9 +211,9 @@ namespace Ryujinx.Horizon.Sdk.Sf.Hipc
         {
             return (UserDataTag)holder.UserData switch
             {
-                UserDataTag.Server  => ProcessForServer(holder),
+                UserDataTag.Server => ProcessForServer(holder),
                 UserDataTag.Session => ProcessForSession(holder),
-                _                   => throw new NotImplementedException(((UserDataTag)holder.UserData).ToString())
+                _ => throw new NotImplementedException(((UserDataTag)holder.UserData).ToString()),
             };
         }
 

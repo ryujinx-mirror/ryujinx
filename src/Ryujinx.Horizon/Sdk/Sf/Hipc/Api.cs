@@ -41,10 +41,8 @@ namespace Ryujinx.Horizon.Sdk.Sf.Hipc
             {
                 return HorizonStatic.Syscall.ReplyAndReceive(out _, handles, 0, -1L);
             }
-            else
-            {
-                throw new NotImplementedException();
-            }
+
+            throw new NotImplementedException();
         }
 
         public static Result Reply(int sessionHandle, ReadOnlySpan<byte> messageBuffer)
@@ -64,10 +62,8 @@ namespace Ryujinx.Horizon.Sdk.Sf.Hipc
             {
                 return HorizonStatic.Syscall.ReplyAndReceive(out _, ReadOnlySpan<int>.Empty, sessionHandle, 0);
             }
-            else
-            {
-                throw new NotImplementedException();
-            }
+
+            throw new NotImplementedException();
         }
 
         public static Result CreateSession(out int serverHandle, out int clientHandle)

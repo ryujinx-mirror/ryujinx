@@ -1,11 +1,11 @@
 ﻿namespace Ryujinx.Horizon.Sdk.Sf.Hipc
 {
-    struct HipcBufferDescriptor
+    readonly struct HipcBufferDescriptor
     {
-#pragma warning disable CS0649
-        private uint _sizeLow;
-        private uint _addressLow;
-        private uint _word2;
+#pragma warning disable CS0649 // Field is never assigned to
+        private readonly uint _sizeLow;
+        private readonly uint _addressLow;
+        private readonly uint _word2;
 #pragma warning restore CS0649
 
         public ulong Address => _addressLow | (((ulong)_word2 << 4) & 0xf00000000UL) | (((ulong)_word2 << 34) & 0x7000000000UL);

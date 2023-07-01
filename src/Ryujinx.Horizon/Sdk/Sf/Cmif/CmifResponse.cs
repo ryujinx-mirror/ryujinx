@@ -6,7 +6,7 @@ namespace Ryujinx.Horizon.Sdk.Sf.Cmif
     {
         public ReadOnlySpan<byte> Data;
         public ReadOnlySpan<uint> Objects;
-        public ReadOnlySpan<int>  CopyHandles;
-        public ReadOnlySpan<int>  MoveHandles;
+        public ReadOnlySpan<int> CopyHandles;
+        public ReadOnlySpan<int> MoveHandles;
     }
 }

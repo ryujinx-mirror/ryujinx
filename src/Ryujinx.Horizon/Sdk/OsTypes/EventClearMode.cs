@@ -3,6 +3,6 @@
     enum EventClearMode
     {
         ManualClear,
-        AutoClear
+        AutoClear,
     }
 }

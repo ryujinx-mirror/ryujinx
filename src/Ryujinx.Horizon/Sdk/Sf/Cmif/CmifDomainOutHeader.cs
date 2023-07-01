@@ -2,7 +2,7 @@
 {
     struct CmifDomainOutHeader
     {
-#pragma warning disable CS0649
+#pragma warning disable CS0649 // Field is never assigned to
         public uint ObjectsCount;
         public uint Padding;
         public uint Padding2;

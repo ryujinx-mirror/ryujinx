@@ -14,7 +14,7 @@ namespace Ryujinx.Horizon.Sdk.Sf.Cmif
 
         public abstract Result ProcessMessage(ref ServiceDispatchContext context, ReadOnlySpan<byte> inRawData);
 
-        protected Result ProcessMessageImpl(ref ServiceDispatchContext context, ReadOnlySpan<byte> inRawData, IReadOnlyDictionary<int, CommandHandler> entries, string objectName)
+        protected static Result ProcessMessageImpl(ref ServiceDispatchContext context, ReadOnlySpan<byte> inRawData, IReadOnlyDictionary<int, CommandHandler> entries, string objectName)
         {
             if (inRawData.Length < Unsafe.SizeOf<CmifInHeader>())
             {
@@ -44,7 +44,7 @@ namespace Ryujinx.Horizon.Sdk.Sf.Cmif
                     // If ignore missing services is enabled, just pretend that everything is fine.
                     PrepareForStubReply(ref context, out Span<byte> outRawData);
                     CommandHandler.GetCmifOutHeaderPointer(ref outHeader, ref outRawData);
-                    outHeader[0] = new CmifOutHeader() { Magic = CmifMessage.CmifOutHeaderMagic, Result = Result.Success };
+                    outHeader[0] = new CmifOutHeader { Magic = CmifMessage.CmifOutHeaderMagic, Result = Result.Success };
 
                     Logger.Warning?.Print(LogClass.Service, $"Missing service {objectName} (command ID: {commandId}) ignored");
 
@@ -80,7 +80,7 @@ namespace Ryujinx.Horizon.Sdk.Sf.Cmif
                 return commandResult;
             }
 
-            outHeader[0] = new CmifOutHeader() { Magic = CmifMessage.CmifOutHeaderMagic, Result = commandResult };
+            outHeader[0] = new CmifOutHeader { Magic = CmifMessage.CmifOutHeaderMagic, Result = commandResult };
 
             return Result.Success;
         }

@@ -4,6 +4,6 @@
     {
         False,
         True,
-        Undefined
+        Undefined,
     }
 }

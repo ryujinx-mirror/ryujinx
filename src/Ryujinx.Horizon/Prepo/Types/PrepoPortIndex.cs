@@ -7,6 +7,6 @@
         Manager,
         User,
         System,
-        Debug
+        Debug,
     }
 }

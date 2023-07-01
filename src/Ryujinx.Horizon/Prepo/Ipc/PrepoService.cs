@@ -10,6 +10,7 @@ using Ryujinx.Horizon.Sdk.Sf;
 using Ryujinx.Horizon.Sdk.Sf.Hipc;
 using System;
 using System.Text;
+using ApplicationId = Ryujinx.Horizon.Sdk.Ncm.ApplicationId;
 
 namespace Ryujinx.Horizon.Prepo.Ipc
 {
@@ -18,14 +19,14 @@ namespace Ryujinx.Horizon.Prepo.Ipc
         enum PlayReportKind
         {
             Normal,
-            System
+            System,
         }
 
         private readonly PrepoServicePermissionLevel _permissionLevel;
         private ulong _systemSessionId;
 
-        private bool _immediateTransmissionEnabled = false;
-        private bool _userAgreementCheckEnabled    = true;
+        private bool _immediateTransmissionEnabled;
+        private bool _userAgreementCheckEnabled = true;
 
         public PrepoService(PrepoServicePermissionLevel permissionLevel)
         {
@@ -107,7 +108,7 @@ namespace Ryujinx.Horizon.Prepo.Ipc
         }
 
         [CmifCommand(20100)]
-        public Result SaveSystemReport([Buffer(HipcBufferFlags.In | HipcBufferFlags.Pointer)] ReadOnlySpan<byte> gameRoomBuffer, Sdk.Ncm.ApplicationId applicationId, [Buffer(HipcBufferFlags.In | HipcBufferFlags.MapAlias)] ReadOnlySpan<byte> reportBuffer)
+        public Result SaveSystemReport([Buffer(HipcBufferFlags.In | HipcBufferFlags.Pointer)] ReadOnlySpan<byte> gameRoomBuffer, ApplicationId applicationId, [Buffer(HipcBufferFlags.In | HipcBufferFlags.MapAlias)] ReadOnlySpan<byte> reportBuffer)
         {
             if ((_permissionLevel & PrepoServicePermissionLevel.System) != 0)
             {
@@ -118,7 +119,7 @@ namespace Ryujinx.Horizon.Prepo.Ipc
         }
 
         [CmifCommand(20101)]
-        public Result SaveSystemReportWithUser(Uid userId, [Buffer(HipcBufferFlags.In | HipcBufferFlags.Pointer)] ReadOnlySpan<byte> gameRoomBuffer, Sdk.Ncm.ApplicationId applicationId, [Buffer(HipcBufferFlags.In | HipcBufferFlags.MapAlias)] ReadOnlySpan<byte> reportBuffer)
+        public Result SaveSystemReportWithUser(Uid userId, [Buffer(HipcBufferFlags.In | HipcBufferFlags.Pointer)] ReadOnlySpan<byte> gameRoomBuffer, ApplicationId applicationId, [Buffer(HipcBufferFlags.In | HipcBufferFlags.MapAlias)] ReadOnlySpan<byte> reportBuffer)
         {
             if ((_permissionLevel & PrepoServicePermissionLevel.System) != 0)
             {
@@ -164,7 +165,7 @@ namespace Ryujinx.Horizon.Prepo.Ipc
             return PrepoResult.PermissionDenied;
         }
 
-        private static Result ProcessPlayReport(PlayReportKind playReportKind, ReadOnlySpan<byte> gameRoomBuffer, ReadOnlySpan<byte> reportBuffer, ulong pid, Uid userId, bool withUserId = false, Sdk.Ncm.ApplicationId applicationId = default)
+        private static Result ProcessPlayReport(PlayReportKind playReportKind, ReadOnlySpan<byte> gameRoomBuffer, ReadOnlySpan<byte> reportBuffer, ulong pid, Uid userId, bool withUserId = false, ApplicationId applicationId = default)
         {
             if (withUserId)
             {
@@ -191,7 +192,7 @@ namespace Ryujinx.Horizon.Prepo.Ipc
                 return PrepoResult.InvalidBufferSize;
             }
 
-            StringBuilder     builder            = new();
+            StringBuilder builder = new();
             MessagePackObject deserializedReport = MessagePackSerializer.UnpackMessagePackObject(reportBuffer.ToArray());
 
             builder.AppendLine();
