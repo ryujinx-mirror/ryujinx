@@ -1,5 +1,6 @@
 using Ryujinx.Audio.Common;
 using Ryujinx.Audio.Renderer.Common;
+using Ryujinx.Audio.Renderer.Dsp.State;
 using Ryujinx.Audio.Renderer.Parameter;
 using Ryujinx.Audio.Renderer.Server.MemoryPool;
 using Ryujinx.Common.Memory;
@@ -9,6 +10,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using static Ryujinx.Audio.Renderer.Common.BehaviourParameter;
 using static Ryujinx.Audio.Renderer.Parameter.VoiceInParameter;
+using PlayState = Ryujinx.Audio.Renderer.Server.Types.PlayState;
 
 namespace Ryujinx.Audio.Renderer.Server.Voice
 {
@@ -65,12 +67,12 @@ namespace Ryujinx.Audio.Renderer.Server.Voice
         /// <summary>
         /// The current voice <see cref="Types.PlayState"/>.
         /// </summary>
-        public Types.PlayState PlayState;
+        public PlayState PlayState;
 
         /// <summary>
         /// The previous voice <see cref="Types.PlayState"/>.
         /// </summary>
-        public Types.PlayState PreviousPlayState;
+        public PlayState PreviousPlayState;
 
         /// <summary>
         /// The priority of the voice.
@@ -192,7 +194,7 @@ namespace Ryujinx.Audio.Renderer.Server.Voice
             DataSourceStateUnmapped = false;
             BufferInfoUnmapped = false;
             FlushWaveBufferCount = 0;
-            PlayState = Types.PlayState.Stopped;
+            PlayState = PlayState.Stopped;
             Priority = Constants.VoiceLowestPriority;
             Id = 0;
             NodeId = 0;
@@ -202,7 +204,7 @@ namespace Ryujinx.Audio.Renderer.Server.Voice
             Pitch = 0.0f;
             Volume = 0.0f;
             PreviousVolume = 0.0f;
-            BiquadFilters.AsSpan().Fill(new BiquadFilterParameter());
+            BiquadFilters.AsSpan().Clear();
             WaveBuffersCount = 0;
             WaveBuffersIndex = 0;
             MixId = Constants.UnusedMixId;
@@ -233,7 +235,7 @@ namespace Ryujinx.Audio.Renderer.Server.Voice
         /// Check if the voice needs to be skipped.
         /// </summary>
         /// <returns>Returns true if the voice needs to be skipped.</returns>
-        public bool ShouldSkip()
+        public readonly bool ShouldSkip()
         {
             return !InUse || WaveBuffersCount == 0 || DataSourceStateUnmapped || BufferInfoUnmapped || VoiceDropFlag;
         }
@@ -242,7 +244,7 @@ namespace Ryujinx.Audio.Renderer.Server.Voice
         /// Return true if the mix has any destinations.
         /// </summary>
         /// <returns>True if the mix has any destinations.</returns>
-        public bool HasAnyDestination()
+        public readonly bool HasAnyDestination()
         {
             return MixId != Constants.UnusedMixId || SplitterId != Constants.UnusedSplitterId;
         }
@@ -252,7 +254,7 @@ namespace Ryujinx.Audio.Renderer.Server.Voice
         /// </summary>
         /// <param name="parameter">The user parameter.</param>
         /// <returns>Return true, if the server voice information needs to be updated.</returns>
-        private bool ShouldUpdateParameters(ref VoiceInParameter parameter)
+        private readonly bool ShouldUpdateParameters(ref VoiceInParameter parameter)
         {
             if (DataSourceStateAddressInfo.CpuAddress == parameter.DataSourceStateAddress)
             {
@@ -338,31 +340,31 @@ namespace Ryujinx.Audio.Renderer.Server.Voice
         /// Update the internal play state from user play state.
         /// </summary>
         /// <param name="userPlayState">The target user play state.</param>
-        public void UpdatePlayState(PlayState userPlayState)
+        public void UpdatePlayState(Common.PlayState userPlayState)
         {
-            Types.PlayState oldServerPlayState = PlayState;
+            PlayState oldServerPlayState = PlayState;
 
             PreviousPlayState = oldServerPlayState;
 
-            Types.PlayState newServerPlayState;
+            PlayState newServerPlayState;
 
             switch (userPlayState)
             {
                 case Common.PlayState.Start:
-                    newServerPlayState = Types.PlayState.Started;
+                    newServerPlayState = PlayState.Started;
                     break;
 
                 case Common.PlayState.Stop:
-                    if (oldServerPlayState == Types.PlayState.Stopped)
+                    if (oldServerPlayState == PlayState.Stopped)
                     {
                         return;
                     }
 
-                    newServerPlayState = Types.PlayState.Stopping;
+                    newServerPlayState = PlayState.Stopping;
                     break;
 
                 case Common.PlayState.Pause:
-                    newServerPlayState = Types.PlayState.Paused;
+                    newServerPlayState = PlayState.Paused;
                     break;
 
                 default:
@@ -434,7 +436,7 @@ namespace Ryujinx.Audio.Renderer.Server.Voice
 
                 for (int i = 0; i < parameter.ChannelCount; i++)
                 {
-                    voiceUpdateStates[i].Span[0].IsWaveBufferValid.Fill(false);
+                    voiceUpdateStates[i].Span[0].IsWaveBufferValid.Clear();
                 }
             }
 
@@ -530,7 +532,7 @@ namespace Ryujinx.Audio.Renderer.Server.Voice
 
                 Memory<VoiceUpdateState> dspSharedState = context.GetUpdateStateForDsp(channelResourceId);
 
-                MemoryMarshal.Cast<VoiceUpdateState, byte>(dspSharedState.Span).Fill(0);
+                MemoryMarshal.Cast<VoiceUpdateState, byte>(dspSharedState.Span).Clear();
 
                 voiceChannelResource.UpdateState();
             }
@@ -579,7 +581,7 @@ namespace Ryujinx.Audio.Renderer.Server.Voice
 
             switch (PlayState)
             {
-                case Types.PlayState.Started:
+                case PlayState.Started:
                     for (int i = 0; i < WaveBuffers.Length; i++)
                     {
                         ref WaveBuffer wavebuffer = ref WaveBuffers[i];
@@ -611,7 +613,7 @@ namespace Ryujinx.Audio.Renderer.Server.Voice
 
                     return false;
 
-                case Types.PlayState.Stopping:
+                case PlayState.Stopping:
                     for (int i = 0; i < WaveBuffers.Length; i++)
                     {
                         ref WaveBuffer wavebuffer = ref WaveBuffers[i];
@@ -638,18 +640,18 @@ namespace Ryujinx.Audio.Renderer.Server.Voice
 
                         voiceUpdateState.Offset = 0;
                         voiceUpdateState.PlayedSampleCount = 0;
-                        voiceUpdateState.Pitch.AsSpan().Fill(0);
+                        voiceUpdateState.Pitch.AsSpan().Clear();
                         voiceUpdateState.Fraction = 0;
-                        voiceUpdateState.LoopContext = new Dsp.State.AdpcmLoopContext();
+                        voiceUpdateState.LoopContext = new AdpcmLoopContext();
                     }
 
-                    PlayState = Types.PlayState.Stopped;
-                    WasPlaying = PreviousPlayState == Types.PlayState.Started;
+                    PlayState = PlayState.Stopped;
+                    WasPlaying = PreviousPlayState == PlayState.Started;
 
                     return WasPlaying;
 
-                case Types.PlayState.Stopped:
-                case Types.PlayState.Paused:
+                case PlayState.Stopped:
+                case PlayState.Paused:
                     foreach (ref WaveBuffer wavebuffer in WaveBuffers.AsSpan())
                     {
                         wavebuffer.BufferAddressInfo.GetReference(true);
@@ -664,7 +666,7 @@ namespace Ryujinx.Audio.Renderer.Server.Voice
                         }
                     }
 
-                    WasPlaying = PreviousPlayState == Types.PlayState.Started;
+                    WasPlaying = PreviousPlayState == PlayState.Started;
 
                     return WasPlaying;
                 default:

@@ -28,6 +28,6 @@ namespace Ryujinx.Audio.Renderer.Common
         /// <summary>
         /// Performance monitoring related node id (performance commands)
         /// </summary>
-        Performance = 15
+        Performance = 15,
     }
 }

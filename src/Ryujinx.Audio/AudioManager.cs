@@ -16,17 +16,17 @@ namespace Ryujinx.Audio
         /// <summary>
         /// Events signaled when the driver played audio buffers.
         /// </summary>
-        private ManualResetEvent[] _updateRequiredEvents;
+        private readonly ManualResetEvent[] _updateRequiredEvents;
 
         /// <summary>
         /// Action to execute when the driver played audio buffers.
         /// </summary>
-        private Action[] _actions;
+        private readonly Action[] _actions;
 
         /// <summary>
         /// The worker thread in charge of handling sessions update.
         /// </summary>
-        private Thread _workerThread;
+        private readonly Thread _workerThread;
 
         private bool _isRunning;
 
@@ -44,7 +44,7 @@ namespace Ryujinx.Audio
 
             _workerThread = new Thread(Update)
             {
-                Name = "AudioManager.Worker"
+                Name = "AudioManager.Worker",
             };
         }
 
@@ -115,6 +115,7 @@ namespace Ryujinx.Audio
 
         public void Dispose()
         {
+            GC.SuppressFinalize(this);
             Dispose(true);
         }
 

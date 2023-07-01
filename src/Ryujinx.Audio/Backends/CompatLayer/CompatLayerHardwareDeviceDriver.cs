@@ -6,14 +6,13 @@ using Ryujinx.Common.Logging;
 using Ryujinx.Memory;
 using System;
 using System.Threading;
-
 using static Ryujinx.Audio.Integration.IHardwareDeviceDriver;
 
 namespace Ryujinx.Audio.Backends.CompatLayer
 {
     public class CompatLayerHardwareDeviceDriver : IHardwareDeviceDriver
     {
-        private IHardwareDeviceDriver _realDriver;
+        private readonly IHardwareDeviceDriver _realDriver;
 
         public static bool IsSupported => true;
 
@@ -24,6 +23,7 @@ namespace Ryujinx.Audio.Backends.CompatLayer
 
         public void Dispose()
         {
+            GC.SuppressFinalize(this);
             _realDriver.Dispose();
         }
 
@@ -49,7 +49,7 @@ namespace Ryujinx.Audio.Backends.CompatLayer
                 6 => SelectHardwareChannelCount(2),
                 2 => SelectHardwareChannelCount(1),
                 1 => throw new ArgumentException("No valid channel configuration found!"),
-                _ => throw new ArgumentException($"Invalid targetChannelCount {targetChannelCount}")
+                _ => throw new ArgumentException($"Invalid targetChannelCount {targetChannelCount}"),
             };
         }
 
@@ -110,7 +110,7 @@ namespace Ryujinx.Audio.Backends.CompatLayer
                 {
                     Logger.Warning?.Print(LogClass.Audio, "The selected audio backend doesn't support audio input, fallback to dummy...");
 
-                    return new DummyHardwareDeviceSessionInput(this, memoryManager, sampleFormat, sampleRate, channelCount);
+                    return new DummyHardwareDeviceSessionInput(this, memoryManager);
                 }
 
                 throw new NotImplementedException();
@@ -138,12 +138,12 @@ namespace Ryujinx.Audio.Backends.CompatLayer
 
             if (direction == Direction.Input)
             {
-                Logger.Warning?.Print(LogClass.Audio, $"The selected audio backend doesn't support the requested audio input configuration, fallback to dummy...");
+                Logger.Warning?.Print(LogClass.Audio, "The selected audio backend doesn't support the requested audio input configuration, fallback to dummy...");
 
                 // TODO: We currently don't support audio input upsampling/downsampling, implement this.
                 realSession.Dispose();
 
-                return new DummyHardwareDeviceSessionInput(this, memoryManager, sampleFormat, sampleRate, channelCount);
+                return new DummyHardwareDeviceSessionInput(this, memoryManager);
             }
 
             // It must be a HardwareDeviceSessionOutputBase.

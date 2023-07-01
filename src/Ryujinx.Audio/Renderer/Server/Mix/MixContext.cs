@@ -206,7 +206,7 @@ namespace Ryujinx.Audio.Renderer.Server.Mix
         {
             UpdateDistancesFromFinalMix();
 
-            int[] sortedMixesTemp = _sortedMixes.Slice(0, (int)GetCount()).ToArray();
+            int[] sortedMixesTemp = _sortedMixes[..(int)GetCount()].ToArray();
 
             Array.Sort(sortedMixesTemp, (a, b) =>
             {
@@ -248,12 +248,10 @@ namespace Ryujinx.Audio.Renderer.Server.Mix
 
                 return isValid;
             }
-            else
-            {
-                UpdateMixBufferOffset();
 
-                return true;
-            }
+            UpdateMixBufferOffset();
+
+            return true;
         }
     }
 }

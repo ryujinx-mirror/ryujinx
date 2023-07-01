@@ -16,6 +16,6 @@ namespace Ryujinx.Audio.Renderer.Parameter
         /// <summary>
         /// Reserved/Unused.
         /// </summary>
-        private ulong _reserved;
+        private readonly ulong _reserved;
     }
 }

@@ -20,12 +20,12 @@ namespace Ryujinx.Audio.Renderer.Server.Upsampler
         /// <summary>
         /// The index of the <see cref="UpsamplerState"/>. (used to free it)
         /// </summary>
-        private int _index;
+        private readonly int _index;
 
         /// <summary>
         /// The <see cref="UpsamplerManager"/>.
         /// </summary>
-        private UpsamplerManager _manager;
+        private readonly UpsamplerManager _manager;
 
         /// <summary>
         /// The source sample count.

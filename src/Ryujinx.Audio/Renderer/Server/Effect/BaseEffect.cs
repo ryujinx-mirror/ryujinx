@@ -244,29 +244,19 @@ namespace Ryujinx.Audio.Renderer.Server.Effect
         /// <returns>The <see cref="PerformanceDetailType"/> associated to the <see cref="Type"/> of this effect.</returns>
         public PerformanceDetailType GetPerformanceDetailType()
         {
-            switch (Type)
+            return Type switch
             {
-                case EffectType.BiquadFilter:
-                    return PerformanceDetailType.BiquadFilter;
-                case EffectType.AuxiliaryBuffer:
-                    return PerformanceDetailType.Aux;
-                case EffectType.Delay:
-                    return PerformanceDetailType.Delay;
-                case EffectType.Reverb:
-                    return PerformanceDetailType.Reverb;
-                case EffectType.Reverb3d:
-                    return PerformanceDetailType.Reverb3d;
-                case EffectType.BufferMix:
-                    return PerformanceDetailType.Mix;
-                case EffectType.Limiter:
-                    return PerformanceDetailType.Limiter;
-                case EffectType.CaptureBuffer:
-                    return PerformanceDetailType.CaptureBuffer;
-                case EffectType.Compressor:
-                    return PerformanceDetailType.Compressor;
-                default:
-                    throw new NotImplementedException($"{Type}");
-            }
+                EffectType.BiquadFilter => PerformanceDetailType.BiquadFilter,
+                EffectType.AuxiliaryBuffer => PerformanceDetailType.Aux,
+                EffectType.Delay => PerformanceDetailType.Delay,
+                EffectType.Reverb => PerformanceDetailType.Reverb,
+                EffectType.Reverb3d => PerformanceDetailType.Reverb3d,
+                EffectType.BufferMix => PerformanceDetailType.Mix,
+                EffectType.Limiter => PerformanceDetailType.Limiter,
+                EffectType.CaptureBuffer => PerformanceDetailType.CaptureBuffer,
+                EffectType.Compressor => PerformanceDetailType.Compressor,
+                _ => throw new NotImplementedException($"{Type}"),
+            };
         }
     }
 }

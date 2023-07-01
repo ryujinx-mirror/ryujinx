@@ -29,22 +29,22 @@ namespace Ryujinx.Audio.Renderer.Server.Performance
         /// </summary>
         public PerformanceEntryType EntryType;
 
-        public int GetProcessingTime()
+        public readonly int GetProcessingTime()
         {
             return ProcessingTime;
         }
 
-        public int GetProcessingTimeOffset()
+        public readonly int GetProcessingTimeOffset()
         {
             return 8;
         }
 
-        public int GetStartTime()
+        public readonly int GetStartTime()
         {
             return StartTime;
         }
 
-        public int GetStartTimeOffset()
+        public readonly int GetStartTimeOffset()
         {
             return 4;
         }

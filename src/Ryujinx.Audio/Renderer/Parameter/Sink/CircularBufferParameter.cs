@@ -2,7 +2,6 @@ using Ryujinx.Audio.Common;
 using Ryujinx.Audio.Renderer.Common;
 using Ryujinx.Common.Memory;
 using System.Runtime.InteropServices;
-
 using CpuAddress = System.UInt64;
 
 namespace Ryujinx.Audio.Renderer.Parameter.Sink
@@ -41,7 +40,7 @@ namespace Ryujinx.Audio.Renderer.Parameter.Sink
         /// <summary>
         /// The target <see cref="SampleFormat"/>.
         /// </summary>
-        /// <remarks>Only <see cref="SampleFormat.PcmInt16"/> is supported.</remarks>
+        /// <remarks>Only <see cref="Audio.Common.SampleFormat.PcmInt16"/> is supported.</remarks>
         public SampleFormat SampleFormat;
 
         /// <summary>
@@ -57,6 +56,6 @@ namespace Ryujinx.Audio.Renderer.Parameter.Sink
         /// <summary>
         /// Reserved/padding.
         /// </summary>
-        private ushort _reserved2;
+        private readonly ushort _reserved2;
     }
 }

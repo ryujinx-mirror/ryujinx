@@ -66,10 +66,7 @@ namespace Ryujinx.Audio.Backends.Common
                 return false;
             }
 
-            if (buffer.Data == null)
-            {
-                buffer.Data = samples;
-            }
+            buffer.Data ??= samples;
 
             return true;
         }

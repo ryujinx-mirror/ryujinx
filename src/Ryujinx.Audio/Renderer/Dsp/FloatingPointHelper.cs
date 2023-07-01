@@ -1,5 +1,4 @@
 using System;
-using System.Reflection.Metadata;
 using System.Runtime.CompilerServices;
 
 namespace Ryujinx.Audio.Renderer.Dsp
@@ -39,7 +38,8 @@ namespace Ryujinx.Audio.Renderer.Dsp
             {
                 return 1.0f;
             }
-            else if (x <= -5.3f)
+
+            if (x <= -5.3f)
             {
                 return 0.0f;
             }

@@ -25,20 +25,20 @@ namespace Ryujinx.Audio.Renderer.Server.Performance
         /// </summary>
         private const int MaxFrameDetailCount = 100;
 
-        private Memory<byte> _buffer;
-        private Memory<byte> _historyBuffer;
+        private readonly Memory<byte> _buffer;
+        private readonly Memory<byte> _historyBuffer;
 
-        private Memory<byte> CurrentBuffer => _buffer.Slice(0, _frameSize);
-        private Memory<byte> CurrentBufferData => CurrentBuffer.Slice(Unsafe.SizeOf<THeader>());
+        private Memory<byte> CurrentBuffer => _buffer[.._frameSize];
+        private Memory<byte> CurrentBufferData => CurrentBuffer[Unsafe.SizeOf<THeader>()..];
 
         private ref THeader CurrentHeader => ref MemoryMarshal.Cast<byte, THeader>(CurrentBuffer.Span)[0];
 
-        private Span<TEntry> Entries => MemoryMarshal.Cast<byte, TEntry>(CurrentBufferData.Span.Slice(0, GetEntriesSize()));
+        private Span<TEntry> Entries => MemoryMarshal.Cast<byte, TEntry>(CurrentBufferData.Span[..GetEntriesSize()]);
         private Span<TEntryDetail> EntriesDetail => MemoryMarshal.Cast<byte, TEntryDetail>(CurrentBufferData.Span.Slice(GetEntriesSize(), GetEntriesDetailSize()));
 
-        private int _frameSize;
-        private int _availableFrameCount;
-        private int _entryCountPerFrame;
+        private readonly int _frameSize;
+        private readonly int _availableFrameCount;
+        private readonly int _entryCountPerFrame;
         private int _detailTarget;
         private int _entryIndex;
         private int _entryDetailIndex;
@@ -56,7 +56,7 @@ namespace Ryujinx.Audio.Renderer.Server.Performance
 
             _historyFrameIndex = 0;
 
-            _historyBuffer = _buffer.Slice(_frameSize);
+            _historyBuffer = _buffer[_frameSize..];
 
             SetupNewHeader();
         }
@@ -130,7 +130,7 @@ namespace Ryujinx.Audio.Renderer.Server.Performance
                 Span<TEntry> inputEntries = GetEntriesFromBuffer(_historyBuffer.Span, _indexHistoryRead);
                 Span<TEntryDetail> inputEntriesDetail = GetEntriesDetailFromBuffer(_historyBuffer.Span, _indexHistoryRead);
 
-                Span<byte> targetSpan = performanceOutput.Slice(nextOffset);
+                Span<byte> targetSpan = performanceOutput[nextOffset..];
 
                 // NOTE: We check for the space for two headers for the final blank header.
                 int requiredSpace = Unsafe.SizeOf<THeader>() + Unsafe.SizeOf<TEntry>() * inputHeader.GetEntryCount()
@@ -146,7 +146,7 @@ namespace Ryujinx.Audio.Renderer.Server.Performance
 
                 nextOffset += Unsafe.SizeOf<THeader>();
 
-                Span<TEntry> outputEntries = MemoryMarshal.Cast<byte, TEntry>(performanceOutput.Slice(nextOffset));
+                Span<TEntry> outputEntries = MemoryMarshal.Cast<byte, TEntry>(performanceOutput[nextOffset..]);
 
                 int totalProcessingTime = 0;
 
@@ -168,7 +168,7 @@ namespace Ryujinx.Audio.Renderer.Server.Performance
                     }
                 }
 
-                Span<TEntryDetail> outputEntriesDetail = MemoryMarshal.Cast<byte, TEntryDetail>(performanceOutput.Slice(nextOffset));
+                Span<TEntryDetail> outputEntriesDetail = MemoryMarshal.Cast<byte, TEntryDetail>(performanceOutput[nextOffset..]);
 
                 int effectiveEntryDetailCount = 0;
 
@@ -198,7 +198,7 @@ namespace Ryujinx.Audio.Renderer.Server.Performance
 
             if (nextOffset < performanceOutput.Length && (performanceOutput.Length - nextOffset) >= Unsafe.SizeOf<THeader>())
             {
-                ref THeader outputHeader = ref MemoryMarshal.Cast<byte, THeader>(performanceOutput.Slice(nextOffset))[0];
+                ref THeader outputHeader = ref MemoryMarshal.Cast<byte, THeader>(performanceOutput[nextOffset..])[0];
 
                 outputHeader = default;
             }
@@ -208,9 +208,11 @@ namespace Ryujinx.Audio.Renderer.Server.Performance
 
         public override bool GetNextEntry(out PerformanceEntryAddresses performanceEntry, PerformanceEntryType entryType, int nodeId)
         {
-            performanceEntry = new PerformanceEntryAddresses();
-            performanceEntry.BaseMemory = SpanMemoryManager<int>.Cast(CurrentBuffer);
-            performanceEntry.EntryCountOffset = (uint)CurrentHeader.GetEntryCountOffset();
+            performanceEntry = new PerformanceEntryAddresses
+            {
+                BaseMemory = SpanMemoryManager<int>.Cast(CurrentBuffer),
+                EntryCountOffset = (uint)CurrentHeader.GetEntryCountOffset(),
+            };
 
             uint baseEntryOffset = (uint)(Unsafe.SizeOf<THeader>() + Unsafe.SizeOf<TEntry>() * _entryIndex);
 
@@ -237,9 +239,11 @@ namespace Ryujinx.Audio.Renderer.Server.Performance
                 return false;
             }
 
-            performanceEntry = new PerformanceEntryAddresses();
-            performanceEntry.BaseMemory = SpanMemoryManager<int>.Cast(CurrentBuffer);
-            performanceEntry.EntryCountOffset = (uint)CurrentHeader.GetEntryCountOffset();
+            performanceEntry = new PerformanceEntryAddresses
+            {
+                BaseMemory = SpanMemoryManager<int>.Cast(CurrentBuffer),
+                EntryCountOffset = (uint)CurrentHeader.GetEntryCountOffset(),
+            };
 
             uint baseEntryOffset = (uint)(Unsafe.SizeOf<THeader>() + GetEntriesSize() + Unsafe.SizeOf<IPerformanceDetailEntry>() * _entryDetailIndex);
 

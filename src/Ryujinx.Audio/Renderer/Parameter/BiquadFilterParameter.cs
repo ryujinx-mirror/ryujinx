@@ -18,7 +18,7 @@ namespace Ryujinx.Audio.Renderer.Parameter
         /// <summary>
         /// Reserved/padding.
         /// </summary>
-        private byte _reserved;
+        private readonly byte _reserved;
 
         /// <summary>
         /// Biquad filter numerator (b0, b1, b2).

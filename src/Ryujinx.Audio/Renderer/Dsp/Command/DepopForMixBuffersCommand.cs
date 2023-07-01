@@ -55,17 +55,15 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
 
                 return -depopValue;
             }
-            else
+
+            for (int i = 0; i < sampleCount; i++)
             {
-                for (int i = 0; i < sampleCount; i++)
-                {
-                    depopValue = FloatingPointHelper.MultiplyRoundDown(Decay, depopValue);
+                depopValue = FloatingPointHelper.MultiplyRoundDown(Decay, depopValue);
 
-                    buffer[i] += depopValue;
-                }
-
-                return depopValue;
+                buffer[i] += depopValue;
             }
+
+            return depopValue;
         }
 
         public void Process(CommandList context)

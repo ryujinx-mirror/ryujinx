@@ -24,7 +24,7 @@ namespace Ryujinx.Audio.Renderer.Parameter.Effect
         /// </summary>
         public void Reset()
         {
-            InputMax.AsSpan().Fill(0.0f);
+            InputMax.AsSpan().Clear();
             CompressionGainMin.AsSpan().Fill(1.0f);
         }
     }

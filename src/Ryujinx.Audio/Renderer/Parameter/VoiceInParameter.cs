@@ -94,7 +94,7 @@ namespace Ryujinx.Audio.Renderer.Parameter
         /// <summary>
         /// Reserved/unused.
         /// </summary>
-        private uint _reserved1;
+        private readonly uint _reserved1;
 
         /// <summary>
         /// User state address required by the data source.
@@ -143,7 +143,7 @@ namespace Ryujinx.Audio.Renderer.Parameter
         /// <summary>
         /// Reserved/unused.
         /// </summary>
-        private ushort _reserved2;
+        private readonly ushort _reserved2;
 
         /// <summary>
         /// Change the behaviour of the voice.
@@ -222,7 +222,7 @@ namespace Ryujinx.Audio.Renderer.Parameter
             /// <summary>
             /// Reserved/unused.
             /// </summary>
-            private byte _reserved;
+            private readonly byte _reserved;
 
             /// <summary>
             /// If set to anything other than 0, specifies how many times to loop the wavebuffer.
@@ -260,7 +260,7 @@ namespace Ryujinx.Audio.Renderer.Parameter
             /// <typeparam name="T">The PCM sample type</typeparam>
             /// <returns>Returns true if the sample offset are in range of the size.</returns>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private bool IsSampleOffsetInRangeForPcm<T>() where T : unmanaged
+            private readonly bool IsSampleOffsetInRangeForPcm<T>() where T : unmanaged
             {
                 uint dataTypeSize = (uint)Unsafe.SizeOf<T>();
 
@@ -273,27 +273,15 @@ namespace Ryujinx.Audio.Renderer.Parameter
             /// </summary>
             /// <param name="format">The target <see cref="SampleFormat"/></param>
             /// <returns>Returns true if the sample offset are in range of the size.</returns>
-            public bool IsSampleOffsetValid(SampleFormat format)
+            public readonly bool IsSampleOffsetValid(SampleFormat format)
             {
-                bool result;
-
-                switch (format)
+                return format switch
                 {
-                    case SampleFormat.PcmInt16:
-                        result = IsSampleOffsetInRangeForPcm<ushort>();
-                        break;
-                    case SampleFormat.PcmFloat:
-                        result = IsSampleOffsetInRangeForPcm<float>();
-                        break;
-                    case SampleFormat.Adpcm:
-                        result = AdpcmHelper.GetAdpcmDataSize((int)StartSampleOffset) <= Size &&
-                                 AdpcmHelper.GetAdpcmDataSize((int)EndSampleOffset) <= Size;
-                        break;
-                    default:
-                        throw new NotImplementedException($"{format} not implemented!");
-                }
-
-                return result;
+                    SampleFormat.PcmInt16 => IsSampleOffsetInRangeForPcm<ushort>(),
+                    SampleFormat.PcmFloat => IsSampleOffsetInRangeForPcm<float>(),
+                    SampleFormat.Adpcm => AdpcmHelper.GetAdpcmDataSize((int)StartSampleOffset) <= Size && AdpcmHelper.GetAdpcmDataSize((int)EndSampleOffset) <= Size,
+                    _ => throw new NotImplementedException($"{format} not implemented!"),
+                };
             }
         }
 
@@ -316,7 +304,7 @@ namespace Ryujinx.Audio.Renderer.Parameter
             /// <summary>
             /// Skip pitch and Sample Rate Conversion (SRC).
             /// </summary>
-            SkipPitchAndSampleRateConversion = 2
+            SkipPitchAndSampleRateConversion = 2,
         }
 
         /// <summary>
@@ -338,7 +326,7 @@ namespace Ryujinx.Audio.Renderer.Parameter
             /// <summary>
             /// Resample interpolating 1 samples per output sample.
             /// </summary>
-            Low
+            Low,
         }
     }
 }

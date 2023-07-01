@@ -2,7 +2,6 @@ using Ryujinx.Audio.Integration;
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
-using System.Text;
 
 namespace Ryujinx.Audio.Renderer.Utils
 {
@@ -12,8 +11,8 @@ namespace Ryujinx.Audio.Renderer.Utils
     public class FileHardwareDevice : IHardwareDevice
     {
         private FileStream _stream;
-        private uint _channelCount;
-        private uint _sampleRate;
+        private readonly uint _channelCount;
+        private readonly uint _sampleRate;
 
         private const int HeaderSize = 44;
 
@@ -82,6 +81,7 @@ namespace Ryujinx.Audio.Renderer.Utils
 
         public void Dispose()
         {
+            GC.SuppressFinalize(this);
             Dispose(true);
         }
 

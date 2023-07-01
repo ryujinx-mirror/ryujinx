@@ -84,7 +84,7 @@ namespace Ryujinx.Audio.Renderer.Parameter.Effect
         /// Check if the <see cref="ChannelCount"/> is valid.
         /// </summary>
         /// <returns>Returns true if the <see cref="ChannelCount"/> is valid.</returns>
-        public bool IsChannelCountValid()
+        public readonly bool IsChannelCountValid()
         {
             return EffectInParameterVersion1.IsChannelCountValid(ChannelCount);
         }
@@ -93,7 +93,7 @@ namespace Ryujinx.Audio.Renderer.Parameter.Effect
         /// Check if the <see cref="ChannelCountMax"/> is valid.
         /// </summary>
         /// <returns>Returns true if the <see cref="ChannelCountMax"/> is valid.</returns>
-        public bool IsChannelCountMaxValid()
+        public readonly bool IsChannelCountMaxValid()
         {
             return EffectInParameterVersion1.IsChannelCountValid(ChannelCountMax);
         }

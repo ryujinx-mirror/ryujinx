@@ -18,7 +18,7 @@ namespace Ryujinx.Audio.Renderer.Dsp
             Start,
             Stop,
             RenderStart,
-            RenderEnd
+            RenderEnd,
         }
 
         private class RendererSession
@@ -36,7 +36,7 @@ namespace Ryujinx.Audio.Renderer.Dsp
 
         private long _lastTime;
         private long _playbackEnds;
-        private ManualResetEvent _event;
+        private readonly ManualResetEvent _event;
 
         private ManualResetEvent _pauseEvent;
 
@@ -45,6 +45,7 @@ namespace Ryujinx.Audio.Renderer.Dsp
             _event = new ManualResetEvent(false);
         }
 
+#pragma warning disable IDE0051 // Remove unused private member
         private static uint GetHardwareChannelCount(IHardwareDeviceDriver deviceDriver)
         {
             // Get the real device driver (In case the compat layer is on top of it).
@@ -54,12 +55,11 @@ namespace Ryujinx.Audio.Renderer.Dsp
             {
                 return 6;
             }
-            else
-            {
-                // NOTE: We default to stereo as this will get downmixed to mono by the compat layer if it's not compatible.
-                return 2;
-            }
+
+            // NOTE: We default to stereo as this will get downmixed to mono by the compat layer if it's not compatible.
+            return 2;
         }
+#pragma warning restore IDE0051
 
         public void Start(IHardwareDeviceDriver deviceDriver, float volume)
         {
@@ -110,7 +110,7 @@ namespace Ryujinx.Audio.Renderer.Dsp
             {
                 CommandList = commands,
                 RenderingLimit = renderingLimit,
-                AppletResourceId = appletResourceId
+                AppletResourceId = appletResourceId,
             };
         }
 
@@ -171,7 +171,7 @@ namespace Ryujinx.Audio.Renderer.Dsp
         {
             _workerThread = new Thread(Work)
             {
-                Name = "AudioProcessor.Worker"
+                Name = "AudioProcessor.Worker",
             };
 
             _workerThread.Start();
@@ -260,6 +260,7 @@ namespace Ryujinx.Audio.Renderer.Dsp
 
         public void Dispose()
         {
+            GC.SuppressFinalize(this);
             Dispose(true);
         }
 

@@ -13,6 +13,6 @@ namespace Ryujinx.Audio.Renderer.Parameter
         /// <summary>
         /// The effect is disabled.
         /// </summary>
-        Disabled = 4
+        Disabled = 4,
     }
 }

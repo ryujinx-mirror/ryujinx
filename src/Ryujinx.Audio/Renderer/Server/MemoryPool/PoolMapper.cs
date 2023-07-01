@@ -40,23 +40,23 @@ namespace Ryujinx.Audio.Renderer.Server.MemoryPool
             /// <summary>
             /// <see cref="Dsp.AudioProcessor"/> unmapping failed.
             /// </summary>
-            UnmapError = 3
+            UnmapError = 3,
         }
 
         /// <summary>
         /// The handle of the process owning the CPU memory manipulated.
         /// </summary>
-        private uint _processHandle;
+        private readonly uint _processHandle;
 
         /// <summary>
         /// The <see cref="Memory{MemoryPoolState}"/> that will be manipulated.
         /// </summary>
-        private Memory<MemoryPoolState> _memoryPools;
+        private readonly Memory<MemoryPoolState> _memoryPools;
 
         /// <summary>
         /// If set to true, this will try to force map memory pool even if their state are considered invalid.
         /// </summary>
-        private bool _isForceMapEnabled;
+        private readonly bool _isForceMapEnabled;
 
         /// <summary>
         /// Create a new <see cref="PoolMapper"/> used for system mapping.
@@ -125,7 +125,8 @@ namespace Ryujinx.Audio.Renderer.Server.MemoryPool
             {
                 return CurrentProcessPseudoHandle;
             }
-            else if (memoryPool.Location == MemoryPoolState.LocationType.Dsp)
+
+            if (memoryPool.Location == MemoryPoolState.LocationType.Dsp)
             {
                 return _processHandle;
             }
@@ -234,13 +235,11 @@ namespace Ryujinx.Audio.Renderer.Server.MemoryPool
 
                 return true;
             }
-            else
-            {
-                errorInfo.ErrorCode = ResultCode.InvalidAddressInfo;
-                errorInfo.ExtraErrorInfo = addressInfo.CpuAddress;
 
-                return _isForceMapEnabled;
-            }
+            errorInfo.ErrorCode = ResultCode.InvalidAddressInfo;
+            errorInfo.ExtraErrorInfo = addressInfo.CpuAddress;
+
+            return _isForceMapEnabled;
         }
 
         /// <summary>

@@ -1,5 +1,6 @@
 using Ryujinx.Audio.Renderer.Dsp.State;
 using Ryujinx.Audio.Renderer.Parameter.Effect;
+using Ryujinx.Audio.Renderer.Server.Effect;
 using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
@@ -8,25 +9,25 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
 {
     public class ReverbCommand : ICommand
     {
-        private static readonly int[] OutputEarlyIndicesTableMono = new int[10] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-        private static readonly int[] TargetEarlyDelayLineIndicesTableMono = new int[10] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
-        private static readonly int[] OutputIndicesTableMono = new int[4] { 0, 0, 0, 0 };
-        private static readonly int[] TargetOutputFeedbackIndicesTableMono = new int[4] { 0, 1, 2, 3 };
+        private static readonly int[] _outputEarlyIndicesTableMono = new int[10] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+        private static readonly int[] _targetEarlyDelayLineIndicesTableMono = new int[10] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+        private static readonly int[] _outputIndicesTableMono = new int[4] { 0, 0, 0, 0 };
+        private static readonly int[] _targetOutputFeedbackIndicesTableMono = new int[4] { 0, 1, 2, 3 };
 
-        private static readonly int[] OutputEarlyIndicesTableStereo = new int[10] { 0, 0, 1, 1, 0, 1, 0, 0, 1, 1 };
-        private static readonly int[] TargetEarlyDelayLineIndicesTableStereo = new int[10] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
-        private static readonly int[] OutputIndicesTableStereo = new int[4] { 0, 0, 1, 1 };
-        private static readonly int[] TargetOutputFeedbackIndicesTableStereo = new int[4] { 2, 0, 3, 1 };
+        private static readonly int[] _outputEarlyIndicesTableStereo = new int[10] { 0, 0, 1, 1, 0, 1, 0, 0, 1, 1 };
+        private static readonly int[] _targetEarlyDelayLineIndicesTableStereo = new int[10] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+        private static readonly int[] _outputIndicesTableStereo = new int[4] { 0, 0, 1, 1 };
+        private static readonly int[] _targetOutputFeedbackIndicesTableStereo = new int[4] { 2, 0, 3, 1 };
 
-        private static readonly int[] OutputEarlyIndicesTableQuadraphonic = new int[10] { 0, 0, 1, 1, 0, 1, 2, 2, 3, 3 };
-        private static readonly int[] TargetEarlyDelayLineIndicesTableQuadraphonic = new int[10] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
-        private static readonly int[] OutputIndicesTableQuadraphonic = new int[4] { 0, 1, 2, 3 };
-        private static readonly int[] TargetOutputFeedbackIndicesTableQuadraphonic = new int[4] { 0, 1, 2, 3 };
+        private static readonly int[] _outputEarlyIndicesTableQuadraphonic = new int[10] { 0, 0, 1, 1, 0, 1, 2, 2, 3, 3 };
+        private static readonly int[] _targetEarlyDelayLineIndicesTableQuadraphonic = new int[10] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+        private static readonly int[] _outputIndicesTableQuadraphonic = new int[4] { 0, 1, 2, 3 };
+        private static readonly int[] _targetOutputFeedbackIndicesTableQuadraphonic = new int[4] { 0, 1, 2, 3 };
 
-        private static readonly int[] OutputEarlyIndicesTableSurround = new int[20] { 0, 5, 0, 5, 1, 5, 1, 5, 4, 5, 4, 5, 2, 5, 2, 5, 3, 5, 3, 5 };
-        private static readonly int[] TargetEarlyDelayLineIndicesTableSurround = new int[20] { 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9 };
-        private static readonly int[] OutputIndicesTableSurround = new int[Constants.ChannelCountMax] { 0, 1, 2, 3, 4, 5 };
-        private static readonly int[] TargetOutputFeedbackIndicesTableSurround = new int[Constants.ChannelCountMax] { 0, 1, 2, 3, -1, 3 };
+        private static readonly int[] _outputEarlyIndicesTableSurround = new int[20] { 0, 5, 0, 5, 1, 5, 1, 5, 4, 5, 4, 5, 2, 5, 2, 5, 3, 5, 3, 5 };
+        private static readonly int[] _targetEarlyDelayLineIndicesTableSurround = new int[20] { 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9 };
+        private static readonly int[] _outputIndicesTableSurround = new int[Constants.ChannelCountMax] { 0, 1, 2, 3, 4, 5 };
+        private static readonly int[] _targetOutputFeedbackIndicesTableSurround = new int[Constants.ChannelCountMax] { 0, 1, 2, 3, -1, 3 };
 
         public bool Enabled { get; set; }
 
@@ -82,10 +83,10 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
                      outputBuffers,
                      inputBuffers,
                      sampleCount,
-                     OutputEarlyIndicesTableMono,
-                     TargetEarlyDelayLineIndicesTableMono,
-                     TargetOutputFeedbackIndicesTableMono,
-                     OutputIndicesTableMono);
+                     _outputEarlyIndicesTableMono,
+                     _targetEarlyDelayLineIndicesTableMono,
+                     _targetOutputFeedbackIndicesTableMono,
+                     _outputIndicesTableMono);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -95,10 +96,10 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
                      outputBuffers,
                      inputBuffers,
                      sampleCount,
-                     OutputEarlyIndicesTableStereo,
-                     TargetEarlyDelayLineIndicesTableStereo,
-                     TargetOutputFeedbackIndicesTableStereo,
-                     OutputIndicesTableStereo);
+                     _outputEarlyIndicesTableStereo,
+                     _targetEarlyDelayLineIndicesTableStereo,
+                     _targetOutputFeedbackIndicesTableStereo,
+                     _outputIndicesTableStereo);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -108,10 +109,10 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
                      outputBuffers,
                      inputBuffers,
                      sampleCount,
-                     OutputEarlyIndicesTableQuadraphonic,
-                     TargetEarlyDelayLineIndicesTableQuadraphonic,
-                     TargetOutputFeedbackIndicesTableQuadraphonic,
-                     OutputIndicesTableQuadraphonic);
+                     _outputEarlyIndicesTableQuadraphonic,
+                     _targetEarlyDelayLineIndicesTableQuadraphonic,
+                     _targetOutputFeedbackIndicesTableQuadraphonic,
+                     _outputIndicesTableQuadraphonic);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -121,10 +122,10 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
                      outputBuffers,
                      inputBuffers,
                      sampleCount,
-                     OutputEarlyIndicesTableSurround,
-                     TargetEarlyDelayLineIndicesTableSurround,
-                     TargetOutputFeedbackIndicesTableSurround,
-                     OutputIndicesTableSurround);
+                     _outputEarlyIndicesTableSurround,
+                     _targetEarlyDelayLineIndicesTableSurround,
+                     _targetOutputFeedbackIndicesTableSurround,
+                     _outputIndicesTableSurround);
         }
 
         private unsafe void ProcessReverbGeneric(ref ReverbState state, ReadOnlySpan<IntPtr> outputBuffers, ReadOnlySpan<IntPtr> inputBuffers, uint sampleCount, ReadOnlySpan<int> outputEarlyIndicesTable, ReadOnlySpan<int> targetEarlyDelayLineIndicesTable, ReadOnlySpan<int> targetOutputFeedbackIndicesTable, ReadOnlySpan<int> outputIndicesTable)
@@ -143,7 +144,7 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
 
             for (int sampleIndex = 0; sampleIndex < sampleCount; sampleIndex++)
             {
-                outputValues.Fill(0);
+                outputValues.Clear();
 
                 for (int i = 0; i < targetEarlyDelayLineIndicesTable.Length; i++)
                 {
@@ -263,11 +264,11 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
 
             if (IsEffectEnabled)
             {
-                if (Parameter.Status == Server.Effect.UsageState.Invalid)
+                if (Parameter.Status == UsageState.Invalid)
                 {
                     state = new ReverbState(ref _parameter, WorkBuffer, IsLongSizePreDelaySupported);
                 }
-                else if (Parameter.Status == Server.Effect.UsageState.New)
+                else if (Parameter.Status == UsageState.New)
                 {
                     state.UpdateParameter(ref _parameter);
                 }

@@ -12,7 +12,9 @@ namespace Ryujinx.Audio.Renderer.Dsp
         private const int SamplesPerFrame = 14;
         private const int NibblesPerFrame = SamplesPerFrame + 2;
         private const int BytesPerFrame = 8;
+#pragma warning disable IDE0051 // Remove unused private member
         private const int BitsPerFrame = BytesPerFrame * 8;
+#pragma warning restore IDE0051
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static uint GetAdpcmDataSize(int sampleCount)
@@ -64,10 +66,14 @@ namespace Ryujinx.Audio.Renderer.Dsp
         private static short Saturate(int value)
         {
             if (value > short.MaxValue)
+            {
                 value = short.MaxValue;
+            }
 
             if (value < short.MinValue)
+            {
                 value = short.MinValue;
+            }
 
             return (short)value;
         }
@@ -109,7 +115,7 @@ namespace Ryujinx.Audio.Renderer.Dsp
 
             ReadOnlySpan<byte> targetInput;
 
-            targetInput = input.Slice(nibbles / 2);
+            targetInput = input[(nibbles / 2)..];
 
             while (remaining > 0)
             {

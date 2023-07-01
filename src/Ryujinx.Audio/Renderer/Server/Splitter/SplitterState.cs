@@ -43,7 +43,7 @@ namespace Ryujinx.Audio.Renderer.Server.Splitter
         /// <summary>
         /// Span to the first element of the linked list of <see cref="SplitterDestination"/>.
         /// </summary>
-        public Span<SplitterDestination> Destinations
+        public readonly Span<SplitterDestination> Destinations
         {
             get
             {
@@ -63,7 +63,7 @@ namespace Ryujinx.Audio.Renderer.Server.Splitter
             Id = id;
         }
 
-        public Span<SplitterDestination> GetData(int index)
+        public readonly Span<SplitterDestination> GetData(int index)
         {
             int i = 0;
 
@@ -95,7 +95,7 @@ namespace Ryujinx.Audio.Renderer.Server.Splitter
         /// Utility function to apply a given <see cref="SpanAction{T, TArg}"/> to all <see cref="Destinations"/>.
         /// </summary>
         /// <param name="action">The action to execute on each elements.</param>
-        private void ForEachDestination(SpanAction<SplitterDestination, int> action)
+        private readonly void ForEachDestination(SpanAction<SplitterDestination, int> action)
         {
             Span<SplitterDestination> temp = Destinations;
 
@@ -183,7 +183,7 @@ namespace Ryujinx.Audio.Renderer.Server.Splitter
         /// <summary>
         /// Update the internal state of this instance.
         /// </summary>
-        public void UpdateInternalState()
+        public readonly void UpdateInternalState()
         {
             ForEachDestination((destination, _) => destination[0].UpdateInternalState());
         }

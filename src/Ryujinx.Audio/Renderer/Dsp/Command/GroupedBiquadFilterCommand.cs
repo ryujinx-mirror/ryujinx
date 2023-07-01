@@ -14,11 +14,11 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
 
         public uint EstimatedProcessingTime { get; set; }
 
-        private BiquadFilterParameter[] _parameters;
-        private Memory<BiquadFilterState> _biquadFilterStates;
-        private int _inputBufferIndex;
-        private int _outputBufferIndex;
-        private bool[] _isInitialized;
+        private readonly BiquadFilterParameter[] _parameters;
+        private readonly Memory<BiquadFilterState> _biquadFilterStates;
+        private readonly int _inputBufferIndex;
+        private readonly int _outputBufferIndex;
+        private readonly bool[] _isInitialized;
 
         public GroupedBiquadFilterCommand(int baseIndex, ReadOnlySpan<BiquadFilterParameter> filters, Memory<BiquadFilterState> biquadFilterStateMemory, int inputBufferOffset, int outputBufferOffset, ReadOnlySpan<bool> isInitialized, int nodeId)
         {

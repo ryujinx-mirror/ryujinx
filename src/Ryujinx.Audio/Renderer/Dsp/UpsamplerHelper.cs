@@ -13,11 +13,11 @@ namespace Ryujinx.Audio.Renderer.Dsp
         private const int FilterBankLength = 20;
         // Bank0 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
         private const int Bank0CenterIndex = 9;
-        private static readonly Array20<float> Bank1 = PrecomputeFilterBank(1.0f / 6.0f);
-        private static readonly Array20<float> Bank2 = PrecomputeFilterBank(2.0f / 6.0f);
-        private static readonly Array20<float> Bank3 = PrecomputeFilterBank(3.0f / 6.0f);
-        private static readonly Array20<float> Bank4 = PrecomputeFilterBank(4.0f / 6.0f);
-        private static readonly Array20<float> Bank5 = PrecomputeFilterBank(5.0f / 6.0f);
+        private static readonly Array20<float> _bank1 = PrecomputeFilterBank(1.0f / 6.0f);
+        private static readonly Array20<float> _bank2 = PrecomputeFilterBank(2.0f / 6.0f);
+        private static readonly Array20<float> _bank3 = PrecomputeFilterBank(3.0f / 6.0f);
+        private static readonly Array20<float> _bank4 = PrecomputeFilterBank(4.0f / 6.0f);
+        private static readonly Array20<float> _bank5 = PrecomputeFilterBank(5.0f / 6.0f);
 
         private static Array20<float> PrecomputeFilterBank(float offset)
         {
@@ -39,7 +39,7 @@ namespace Ryujinx.Audio.Renderer.Dsp
                 return A0 + A1 * MathF.Cos(2 * MathF.PI * x) + A2 * MathF.Cos(4 * MathF.PI * x);
             }
 
-            Array20<float> result = new Array20<float>();
+            Array20<float> result = new();
 
             for (int i = 0; i < FilterBankLength; i++)
             {
@@ -58,10 +58,10 @@ namespace Ryujinx.Audio.Renderer.Dsp
             {
                 state.Scale = inputSampleCount switch
                 {
-                    40  => 6.0f,
-                    80  => 3.0f,
+                    40 => 6.0f,
+                    80 => 3.0f,
                     160 => 1.5f,
-                    _   => throw new ArgumentOutOfRangeException()
+                    _ => throw new ArgumentOutOfRangeException(nameof(inputSampleCount), inputSampleCount, null),
                 };
                 state.Initialized = true;
             }
@@ -105,7 +105,7 @@ namespace Ryujinx.Audio.Renderer.Dsp
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             void NextInput(ref UpsamplerBufferState state, float input)
             {
-                state.History.AsSpan().Slice(1).CopyTo(state.History.AsSpan());
+                state.History.AsSpan()[1..].CopyTo(state.History.AsSpan());
                 state.History[HistoryLength - 1] = input;
             }
 
@@ -123,19 +123,19 @@ namespace Ryujinx.Audio.Renderer.Dsp
                                 outputBuffer[i] = state.History[Bank0CenterIndex];
                                 break;
                             case 1:
-                                outputBuffer[i] = DoFilterBank(ref state, Bank1);
+                                outputBuffer[i] = DoFilterBank(ref state, _bank1);
                                 break;
                             case 2:
-                                outputBuffer[i] = DoFilterBank(ref state, Bank2);
+                                outputBuffer[i] = DoFilterBank(ref state, _bank2);
                                 break;
                             case 3:
-                                outputBuffer[i] = DoFilterBank(ref state, Bank3);
+                                outputBuffer[i] = DoFilterBank(ref state, _bank3);
                                 break;
                             case 4:
-                                outputBuffer[i] = DoFilterBank(ref state, Bank4);
+                                outputBuffer[i] = DoFilterBank(ref state, _bank4);
                                 break;
                             case 5:
-                                outputBuffer[i] = DoFilterBank(ref state, Bank5);
+                                outputBuffer[i] = DoFilterBank(ref state, _bank5);
                                 break;
                         }
 
@@ -152,10 +152,10 @@ namespace Ryujinx.Audio.Renderer.Dsp
                                 outputBuffer[i] = state.History[Bank0CenterIndex];
                                 break;
                             case 1:
-                                outputBuffer[i] = DoFilterBank(ref state, Bank2);
+                                outputBuffer[i] = DoFilterBank(ref state, _bank2);
                                 break;
                             case 2:
-                                outputBuffer[i] = DoFilterBank(ref state, Bank4);
+                                outputBuffer[i] = DoFilterBank(ref state, _bank4);
                                 break;
                         }
 
@@ -173,11 +173,11 @@ namespace Ryujinx.Audio.Renderer.Dsp
                                 outputBuffer[i] = state.History[Bank0CenterIndex];
                                 break;
                             case 1:
-                                outputBuffer[i] = DoFilterBank(ref state, Bank4);
+                                outputBuffer[i] = DoFilterBank(ref state, _bank4);
                                 break;
                             case 2:
                                 NextInput(ref state, inputBuffer[inputBufferIndex++]);
-                                outputBuffer[i] = DoFilterBank(ref state, Bank2);
+                                outputBuffer[i] = DoFilterBank(ref state, _bank2);
                                 break;
                         }
 
@@ -185,7 +185,7 @@ namespace Ryujinx.Audio.Renderer.Dsp
                     }
                     break;
                 default:
-                    throw new ArgumentOutOfRangeException();
+                    throw new ArgumentOutOfRangeException(nameof(state), state.Scale, null);
             }
         }
     }

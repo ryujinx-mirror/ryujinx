@@ -65,7 +65,7 @@ namespace Ryujinx.Audio.Renderer.Server.Splitter
         /// <summary>
         /// Get the  <see cref="Span{SplitterDestination}"/> of the next element or <see cref="Span{SplitterDestination}.Empty"/> if not present.
         /// </summary>
-        public Span<SplitterDestination> Next
+        public readonly Span<SplitterDestination> Next
         {
             get
             {
@@ -138,7 +138,7 @@ namespace Ryujinx.Audio.Renderer.Server.Splitter
         /// Return true if the <see cref="SplitterDestination"/> is used and has a destination.
         /// </summary>
         /// <returns>True if the <see cref="SplitterDestination"/> is used and has a destination.</returns>
-        public bool IsConfigured()
+        public readonly bool IsConfigured()
         {
             return IsUsed && DestinationId != Constants.UnusedMixId;
         }
@@ -160,8 +160,8 @@ namespace Ryujinx.Audio.Renderer.Server.Splitter
         /// </summary>
         public void ClearVolumes()
         {
-            MixBufferVolume.Fill(0);
-            PreviousMixBufferVolume.Fill(0);
+            MixBufferVolume.Clear();
+            PreviousMixBufferVolume.Clear();
         }
 
         /// <summary>

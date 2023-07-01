@@ -38,22 +38,22 @@ namespace Ryujinx.Audio.Renderer.Server.Performance
         /// </summary>
         public uint VoiceDropCount;
 
-        public int GetEntryCount()
+        public readonly int GetEntryCount()
         {
             return EntryCount;
         }
 
-        public int GetEntryCountOffset()
+        public readonly int GetEntryCountOffset()
         {
             return 4;
         }
 
-        public int GetEntryDetailCount()
+        public readonly int GetEntryDetailCount()
         {
             return EntryDetailCount;
         }
 
-        public void SetDspRunningBehind(bool isRunningBehind)
+        public readonly void SetDspRunningBehind(bool isRunningBehind)
         {
             // NOTE: Not present in version 1
         }
@@ -68,7 +68,7 @@ namespace Ryujinx.Audio.Renderer.Server.Performance
             EntryDetailCount = entryDetailCount;
         }
 
-        public void SetIndex(uint index)
+        public readonly void SetIndex(uint index)
         {
             // NOTE: Not present in version 1
         }
@@ -83,7 +83,7 @@ namespace Ryujinx.Audio.Renderer.Server.Performance
             NextOffset = nextOffset;
         }
 
-        public void SetStartRenderingTicks(ulong startTicks)
+        public readonly void SetStartRenderingTicks(ulong startTicks)
         {
             // NOTE: not present in version 1
         }

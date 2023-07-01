@@ -18,7 +18,7 @@ namespace Ryujinx.Audio.Output
         /// <summary>
         /// The session the <see cref="AudioOutputSystem"/>.
         /// </summary>
-        private AudioDeviceSession _session;
+        private readonly AudioDeviceSession _session;
 
         /// <summary>
         /// The target device name of the <see cref="AudioOutputSystem"/>.
@@ -43,7 +43,7 @@ namespace Ryujinx.Audio.Output
         /// <summary>
         /// The <see cref="AudioOutputManager"/> owning this.
         /// </summary>
-        private AudioOutputManager _manager;
+        private readonly AudioOutputManager _manager;
 
         /// <summary>
         /// THe lock of the parent.
@@ -90,11 +90,13 @@ namespace Ryujinx.Audio.Output
             {
                 return ResultCode.DeviceNotFound;
             }
-            else if (configuration.SampleRate != 0 && configuration.SampleRate != Constants.TargetSampleRate)
+
+            if (configuration.SampleRate != 0 && configuration.SampleRate != Constants.TargetSampleRate)
             {
                 return ResultCode.UnsupportedSampleRate;
             }
-            else if (configuration.ChannelCount != 0 && configuration.ChannelCount != 1 && configuration.ChannelCount != 2 && configuration.ChannelCount != 6)
+
+            if (configuration.ChannelCount != 0 && configuration.ChannelCount != 1 && configuration.ChannelCount != 2 && configuration.ChannelCount != 6)
             {
                 return ResultCode.UnsupportedChannelConfiguration;
             }
@@ -185,11 +187,11 @@ namespace Ryujinx.Audio.Output
         {
             lock (_parentLock)
             {
-                AudioBuffer buffer = new AudioBuffer
+                AudioBuffer buffer = new()
                 {
                     BufferTag = bufferTag,
                     DataPointer = userBuffer.Data,
-                    DataSize = userBuffer.DataSize
+                    DataSize = userBuffer.DataSize,
                 };
 
                 if (_session.AppendBuffer(buffer))
@@ -346,6 +348,8 @@ namespace Ryujinx.Audio.Output
 
         public void Dispose()
         {
+            GC.SuppressFinalize(this);
+
             if (Interlocked.CompareExchange(ref _disposeState, 1, 0) == 0)
             {
                 Dispose(true);

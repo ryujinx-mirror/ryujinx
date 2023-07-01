@@ -1,5 +1,4 @@
 using System.Runtime.InteropServices;
-
 using DspAddr = System.UInt64;
 
 namespace Ryujinx.Audio.Renderer.Common
@@ -77,6 +76,6 @@ namespace Ryujinx.Audio.Renderer.Common
         /// <summary>
         /// Padding/Reserved.
         /// </summary>
-        private ushort _padding;
+        private readonly ushort _padding;
     }
 }

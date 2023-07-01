@@ -34,6 +34,6 @@ namespace Ryujinx.Audio.Renderer.Server.Types
         /// <remarks>
         /// The user can resume to the <see cref="Started"/> state.
         /// </remarks>
-        Paused
+        Paused,
     }
 }

@@ -59,7 +59,7 @@ namespace Ryujinx.Audio.Renderer.Parameter
         /// Check if the magic is valid.
         /// </summary>
         /// <returns>Returns true if the magic is valid.</returns>
-        public bool IsMagicValid()
+        public readonly bool IsMagicValid()
         {
             return Magic == ValidMagic;
         }

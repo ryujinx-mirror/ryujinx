@@ -13,6 +13,6 @@ namespace Ryujinx.Audio.Common
         /// <summary>
         /// The audio device is stopped.
         /// </summary>
-        Stopped
+        Stopped,
     }
 }

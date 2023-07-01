@@ -6,12 +6,12 @@ namespace Ryujinx.Audio.Integration
 {
     public class HardwareDeviceImpl : IHardwareDevice
     {
-        private IHardwareDeviceSession _session;
-        private uint _channelCount;
-        private uint _sampleRate;
+        private readonly IHardwareDeviceSession _session;
+        private readonly uint _channelCount;
+        private readonly uint _sampleRate;
         private uint _currentBufferTag;
 
-        private byte[] _buffer;
+        private readonly byte[] _buffer;
 
         public HardwareDeviceImpl(IHardwareDeviceDriver deviceDriver, uint channelCount, uint sampleRate, float volume)
         {
@@ -36,7 +36,7 @@ namespace Ryujinx.Audio.Integration
                 DataSize = (ulong)_buffer.Length,
             });
 
-            _currentBufferTag = _currentBufferTag % 4;
+            _currentBufferTag %= 4;
         }
 
         public void SetVolume(float volume)
@@ -61,6 +61,7 @@ namespace Ryujinx.Audio.Integration
 
         public void Dispose()
         {
+            GC.SuppressFinalize(this);
             Dispose(true);
         }
 

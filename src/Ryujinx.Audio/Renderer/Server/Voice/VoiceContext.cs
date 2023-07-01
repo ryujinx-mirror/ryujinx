@@ -126,7 +126,7 @@ namespace Ryujinx.Audio.Renderer.Server.Voice
                 _sortedVoices.Span[i] = i;
             }
 
-            int[] sortedVoicesTemp = _sortedVoices.Slice(0, (int)GetCount()).ToArray();
+            int[] sortedVoicesTemp = _sortedVoices[..(int)GetCount()].ToArray();
 
             Array.Sort(sortedVoicesTemp, (a, b) =>
             {

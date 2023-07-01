@@ -1,7 +1,9 @@
 using Ryujinx.Audio.Common;
 using Ryujinx.Audio.Renderer.Common;
+using Ryujinx.Audio.Renderer.Server.Voice;
 using System;
 using static Ryujinx.Audio.Renderer.Parameter.VoiceInParameter;
+using WaveBuffer = Ryujinx.Audio.Renderer.Common.WaveBuffer;
 
 namespace Ryujinx.Audio.Renderer.Dsp.Command
 {
@@ -37,7 +39,7 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
 
         public SampleRateConversionQuality SrcQuality { get; }
 
-        public DataSourceVersion2Command(ref Server.Voice.VoiceState serverState, Memory<VoiceUpdateState> state, ushort outputBufferIndex, ushort channelIndex, int nodeId)
+        public DataSourceVersion2Command(ref VoiceState serverState, Memory<VoiceUpdateState> state, ushort outputBufferIndex, ushort channelIndex, int nodeId)
         {
             Enabled = true;
             NodeId = nodeId;
@@ -72,24 +74,20 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
 
         private static CommandType GetCommandTypeBySampleFormat(SampleFormat sampleFormat)
         {
-            switch (sampleFormat)
+            return sampleFormat switch
             {
-                case SampleFormat.Adpcm:
-                    return CommandType.AdpcmDataSourceVersion2;
-                case SampleFormat.PcmInt16:
-                    return CommandType.PcmInt16DataSourceVersion2;
-                case SampleFormat.PcmFloat:
-                    return CommandType.PcmFloatDataSourceVersion2;
-                default:
-                    throw new NotImplementedException($"{sampleFormat}");
-            }
+                SampleFormat.Adpcm => CommandType.AdpcmDataSourceVersion2,
+                SampleFormat.PcmInt16 => CommandType.PcmInt16DataSourceVersion2,
+                SampleFormat.PcmFloat => CommandType.PcmFloatDataSourceVersion2,
+                _ => throw new NotImplementedException($"{sampleFormat}"),
+            };
         }
 
         public void Process(CommandList context)
         {
             Span<float> outputBuffer = context.GetBuffer(OutputBufferIndex);
 
-            DataSourceHelper.WaveBufferInformation info = new DataSourceHelper.WaveBufferInformation
+            DataSourceHelper.WaveBufferInformation info = new()
             {
                 SourceSampleRate = SampleRate,
                 SampleFormat = SampleFormat,
@@ -99,7 +97,7 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
                 ExtraParameterSize = ExtraParameterSize,
                 ChannelIndex = (int)ChannelIndex,
                 ChannelCount = (int)ChannelCount,
-                SrcQuality = SrcQuality
+                SrcQuality = SrcQuality,
             };
 
             DataSourceHelper.ProcessWaveBuffers(context.MemoryManager, outputBuffer, ref info, WaveBuffers, ref State.Span[0], context.SampleRate, (int)context.SampleCount);

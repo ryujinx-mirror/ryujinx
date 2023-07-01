@@ -27,9 +27,9 @@ namespace Ryujinx.Audio.Renderer.Server.MemoryPool
         /// </summary>
         public DspAddress ForceMappedDspAddress;
 
-        private unsafe ref MemoryPoolState MemoryPoolState => ref *_memoryPools;
+        private readonly unsafe ref MemoryPoolState MemoryPoolState => ref *_memoryPools;
 
-        public unsafe bool HasMemoryPoolState => (IntPtr)_memoryPools != IntPtr.Zero;
+        public readonly unsafe bool HasMemoryPoolState => (IntPtr)_memoryPools != IntPtr.Zero;
 
         /// <summary>
         /// Create an new empty <see cref="AddressInfo"/>.
@@ -55,7 +55,7 @@ namespace Ryujinx.Audio.Renderer.Server.MemoryPool
                     CpuAddress = cpuAddress,
                     _memoryPools = MemoryPoolState.Null,
                     Size = size,
-                    ForceMappedDspAddress = 0
+                    ForceMappedDspAddress = 0,
                 };
             }
         }
@@ -105,7 +105,7 @@ namespace Ryujinx.Audio.Renderer.Server.MemoryPool
         /// Check if the <see cref="MemoryPoolState"/> is mapped.
         /// </summary>
         /// <returns>Returns true if the <see cref="MemoryPoolState"/> is mapped.</returns>
-        public bool HasMappedMemoryPool()
+        public readonly bool HasMappedMemoryPool()
         {
             return HasMemoryPoolState && MemoryPoolState.IsMapped();
         }
@@ -115,7 +115,7 @@ namespace Ryujinx.Audio.Renderer.Server.MemoryPool
         /// </summary>
         /// <param name="markUsed">If true, mark the <see cref="MemoryPoolState"/> as used.</param>
         /// <returns>Returns the DSP address associated to the <see cref="AddressInfo"/>.</returns>
-        public DspAddress GetReference(bool markUsed)
+        public readonly DspAddress GetReference(bool markUsed)
         {
             if (!HasMappedMemoryPool())
             {

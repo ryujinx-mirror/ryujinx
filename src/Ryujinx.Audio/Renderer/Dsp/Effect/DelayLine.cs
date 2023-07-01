@@ -4,8 +4,8 @@ namespace Ryujinx.Audio.Renderer.Dsp.Effect
 {
     public class DelayLine : IDelayLine
     {
-        private float[] _workBuffer;
-        private uint _sampleRate;
+        private readonly float[] _workBuffer;
+        private readonly uint _sampleRate;
         private uint _currentSampleIndex;
         private uint _lastSampleIndex;
 

@@ -54,17 +54,17 @@ namespace Ryujinx.Audio.Renderer.Server.Performance
         [MarshalAs(UnmanagedType.I1)]
         public bool IsDspRunningBehind;
 
-        public int GetEntryCount()
+        public readonly int GetEntryCount()
         {
             return EntryCount;
         }
 
-        public int GetEntryCountOffset()
+        public readonly int GetEntryCountOffset()
         {
             return 4;
         }
 
-        public int GetEntryDetailCount()
+        public readonly int GetEntryDetailCount()
         {
             return EntryDetailCount;
         }

@@ -16,7 +16,7 @@ namespace Ryujinx.Audio.Renderer.Common
         /// <summary>
         /// Reserved/padding.
         /// </summary>
-        private uint _padding;
+        private readonly uint _padding;
 
         /// <summary>
         /// The flags given controlling behaviour of the audio renderer
@@ -38,7 +38,7 @@ namespace Ryujinx.Audio.Renderer.Common
             /// <summary>
             /// Reserved/padding.
             /// </summary>
-            private uint _padding;
+            private readonly uint _padding;
 
             /// <summary>
             /// Extra information given with the <see cref="ResultCode"/>

@@ -125,7 +125,7 @@ namespace Ryujinx.Audio.Renderer.Server
         /// <summary>
         /// Error storage.
         /// </summary>
-        private ErrorInfo[] _errorInfos;
+        private readonly ErrorInfo[] _errorInfos;
 
         /// <summary>
         /// Current position in the <see cref="_errorInfos"/> array.
@@ -254,7 +254,8 @@ namespace Ryujinx.Audio.Renderer.Server
             {
                 return 0.80f;
             }
-            else if (CheckFeatureSupported(UserRevision, BaseRevisionMagic + Revision4))
+
+            if (CheckFeatureSupported(UserRevision, BaseRevisionMagic + Revision4))
             {
                 return 0.75f;
             }
@@ -299,10 +300,8 @@ namespace Ryujinx.Audio.Renderer.Server
             {
                 return 2;
             }
-            else
-            {
-                return 1;
-            }
+
+            return 1;
         }
 
         /// <summary>
@@ -436,7 +435,7 @@ namespace Ryujinx.Audio.Renderer.Server
                     errorInfos[i] = new ErrorInfo
                     {
                         ErrorCode = 0,
-                        ExtraErrorInfo = 0
+                        ExtraErrorInfo = 0,
                     };
                 }
             }

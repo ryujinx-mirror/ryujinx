@@ -20,12 +20,12 @@ namespace Ryujinx.Audio.Renderer.Dsp.State
 
             DetectorAverage.AsSpan().Fill(new ExponentialMovingAverage(0.0f));
             CompressionGainAverage.AsSpan().Fill(new ExponentialMovingAverage(1.0f));
-            DelayedSampleBufferPosition.AsSpan().Fill(0);
-            DelayedSampleBuffer.AsSpan().Fill(0.0f);
+            DelayedSampleBufferPosition.AsSpan().Clear();
+            DelayedSampleBuffer.AsSpan().Clear();
 
             UpdateParameter(ref parameter);
         }
 
-        public void UpdateParameter(ref LimiterParameter parameter) { }
+        public static void UpdateParameter(ref LimiterParameter parameter) { }
     }
 }

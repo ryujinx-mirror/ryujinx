@@ -7,7 +7,6 @@ using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-
 using static Ryujinx.Audio.Constants;
 
 namespace Ryujinx.Audio.Renderer.Server.Mix
@@ -66,7 +65,7 @@ namespace Ryujinx.Audio.Renderer.Server.Mix
         /// <summary>
         /// The effect processing order storage.
         /// </summary>
-        private IntPtr _effectProcessingOrderArrayPointer;
+        private readonly IntPtr _effectProcessingOrderArrayPointer;
 
         /// <summary>
         /// The max element count that can be found in the effect processing order storage.
@@ -120,7 +119,7 @@ namespace Ryujinx.Audio.Renderer.Server.Mix
         /// <summary>
         /// The array used to order effects associated to this mix.
         /// </summary>
-        public Span<int> EffectProcessingOrderArray
+        public readonly Span<int> EffectProcessingOrderArray
         {
             get
             {
@@ -175,7 +174,7 @@ namespace Ryujinx.Audio.Renderer.Server.Mix
         /// <summary>
         /// Clear the <see cref="EffectProcessingOrderArray"/> to its default state.
         /// </summary>
-        public void ClearEffectProcessingOrder()
+        public readonly void ClearEffectProcessingOrder()
         {
             EffectProcessingOrderArray.Fill(-1);
         }
@@ -184,7 +183,7 @@ namespace Ryujinx.Audio.Renderer.Server.Mix
         /// Return true if the mix has any destinations.
         /// </summary>
         /// <returns>True if the mix has any destinations.</returns>
-        public bool HasAnyDestination()
+        public readonly bool HasAnyDestination()
         {
             return DestinationMixId != UnusedMixId || DestinationSplitterId != UnusedSplitterId;
         }

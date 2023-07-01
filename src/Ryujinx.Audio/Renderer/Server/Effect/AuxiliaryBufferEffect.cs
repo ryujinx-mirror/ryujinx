@@ -58,7 +58,7 @@ namespace Ryujinx.Audio.Renderer.Server.Effect
             {
                 ulong bufferSize = (ulong)Unsafe.SizeOf<int>() * Parameter.BufferStorageSize + (ulong)Unsafe.SizeOf<AuxiliaryBufferHeader>();
 
-                bool sendBufferUnmapped = !mapper.TryAttachBuffer(out updateErrorInfo, ref WorkBuffers[0], Parameter.SendBufferInfoAddress, bufferSize);
+                bool sendBufferUnmapped = !mapper.TryAttachBuffer(out _, ref WorkBuffers[0], Parameter.SendBufferInfoAddress, bufferSize);
                 bool returnBufferUnmapped = !mapper.TryAttachBuffer(out updateErrorInfo, ref WorkBuffers[1], Parameter.ReturnBufferInfoAddress, bufferSize);
 
                 BufferUnmapped = sendBufferUnmapped && returnBufferUnmapped;

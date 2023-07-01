@@ -6,6 +6,6 @@ namespace Ryujinx.Audio.Renderer.Common
         Voice,
         SubMix,
         FinalMix,
-        Sink
+        Sink,
     }
 }

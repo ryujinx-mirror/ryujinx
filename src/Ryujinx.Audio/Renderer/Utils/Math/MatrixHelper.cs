@@ -28,7 +28,7 @@ namespace Ryujinx.Audio.Renderer.Dsp
                 X = value2.M11 * value1.X + value2.M12 * value1.Y + value2.M13 * value1.Z + value2.M14 * value1.W,
                 Y = value2.M21 * value1.X + value2.M22 * value1.Y + value2.M23 * value1.Z + value2.M24 * value1.W,
                 Z = value2.M31 * value1.X + value2.M32 * value1.Y + value2.M33 * value1.Z + value2.M34 * value1.W,
-                W = value2.M41 * value1.X + value2.M42 * value1.Y + value2.M43 * value1.Z + value2.M44 * value1.W
+                W = value2.M41 * value1.X + value2.M42 * value1.Y + value2.M43 * value1.Z + value2.M44 * value1.W,
             };
         }
 

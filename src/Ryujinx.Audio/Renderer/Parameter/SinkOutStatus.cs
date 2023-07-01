@@ -16,7 +16,7 @@ namespace Ryujinx.Audio.Renderer.Parameter
         /// <summary>
         /// Reserved/padding.
         /// </summary>
-        private uint _padding;
+        private readonly uint _padding;
 
         /// <summary>
         /// Reserved/padding.

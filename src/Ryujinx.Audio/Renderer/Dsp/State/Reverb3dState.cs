@@ -6,11 +6,11 @@ namespace Ryujinx.Audio.Renderer.Dsp.State
 {
     public class Reverb3dState
     {
-        private readonly float[] FdnDelayMinTimes = new float[4] { 5.0f, 6.0f, 13.0f, 14.0f };
-        private readonly float[] FdnDelayMaxTimes = new float[4] { 45.704f, 82.782f, 149.94f, 271.58f };
-        private readonly float[] DecayDelayMaxTimes1 = new float[4] { 17.0f, 13.0f, 9.0f, 7.0f };
-        private readonly float[] DecayDelayMaxTimes2 = new float[4] { 19.0f, 11.0f, 10.0f, 6.0f };
-        private readonly float[] EarlyDelayTimes = new float[20] { 0.017136f, 0.059154f, 0.16173f, 0.39019f, 0.42526f, 0.45541f, 0.68974f, 0.74591f, 0.83384f, 0.8595f, 0.0f, 0.075024f, 0.16879f, 0.2999f, 0.33744f, 0.3719f, 0.59901f, 0.71674f, 0.81786f, 0.85166f };
+        private readonly float[] _fdnDelayMinTimes = new float[4] { 5.0f, 6.0f, 13.0f, 14.0f };
+        private readonly float[] _fdnDelayMaxTimes = new float[4] { 45.704f, 82.782f, 149.94f, 271.58f };
+        private readonly float[] _decayDelayMaxTimes1 = new float[4] { 17.0f, 13.0f, 9.0f, 7.0f };
+        private readonly float[] _decayDelayMaxTimes2 = new float[4] { 19.0f, 11.0f, 10.0f, 6.0f };
+        private readonly float[] _earlyDelayTimes = new float[20] { 0.017136f, 0.059154f, 0.16173f, 0.39019f, 0.42526f, 0.45541f, 0.68974f, 0.74591f, 0.83384f, 0.8595f, 0.0f, 0.075024f, 0.16879f, 0.2999f, 0.33744f, 0.3719f, 0.59901f, 0.71674f, 0.81786f, 0.85166f };
         public readonly float[] EarlyGain = new float[20] { 0.67096f, 0.61027f, 1.0f, 0.35680f, 0.68361f, 0.65978f, 0.51939f, 0.24712f, 0.45945f, 0.45021f, 0.64196f, 0.54879f, 0.92925f, 0.38270f, 0.72867f, 0.69794f, 0.5464f, 0.24563f, 0.45214f, 0.44042f };
 
         public IDelayLine[] FdnDelayLines { get; }
@@ -46,9 +46,9 @@ namespace Ryujinx.Audio.Renderer.Dsp.State
 
             for (int i = 0; i < 4; i++)
             {
-                FdnDelayLines[i] = new DelayLine3d(sampleRate, FdnDelayMaxTimes[i]);
-                DecayDelays1[i] = new DecayDelay(new DelayLine3d(sampleRate, DecayDelayMaxTimes1[i]));
-                DecayDelays2[i] = new DecayDelay(new DelayLine3d(sampleRate, DecayDelayMaxTimes2[i]));
+                FdnDelayLines[i] = new DelayLine3d(sampleRate, _fdnDelayMaxTimes[i]);
+                DecayDelays1[i] = new DecayDelay(new DelayLine3d(sampleRate, _decayDelayMaxTimes1[i]));
+                DecayDelays2[i] = new DecayDelay(new DelayLine3d(sampleRate, _decayDelayMaxTimes2[i]));
             }
 
             PreDelayLine = new DelayLine3d(sampleRate, 400);
@@ -63,7 +63,7 @@ namespace Ryujinx.Audio.Renderer.Dsp.State
 
             EarlyDelayTime = new uint[20];
             DryGain = parameter.DryGain;
-            PreviousFeedbackOutputDecayed.AsSpan().Fill(0);
+            PreviousFeedbackOutputDecayed.AsSpan().Clear();
             PreviousPreDelayValue = 0;
 
             EarlyReflectionsGain = FloatingPointHelper.Pow10(Math.Min(parameter.RoomGain + parameter.ReflectionsGain, 5000.0f) / 2000.0f);
@@ -91,7 +91,7 @@ namespace Ryujinx.Audio.Renderer.Dsp.State
 
             for (int i = 0; i < FdnDelayLines.Length; i++)
             {
-                FdnDelayLines[i].SetDelay(FdnDelayMinTimes[i] + (parameter.Density / 100 * (FdnDelayMaxTimes[i] - FdnDelayMinTimes[i])));
+                FdnDelayLines[i].SetDelay(_fdnDelayMinTimes[i] + (parameter.Density / 100 * (_fdnDelayMaxTimes[i] - _fdnDelayMinTimes[i])));
 
                 uint tempSampleCount = FdnDelayLines[i].CurrentSampleCount + DecayDelays1[i].CurrentSampleCount + DecayDelays2[i].CurrentSampleCount;
 
@@ -111,7 +111,7 @@ namespace Ryujinx.Audio.Renderer.Dsp.State
 
             for (int i = 0; i < EarlyDelayTime.Length; i++)
             {
-                uint sampleCount = Math.Min(IDelayLine.GetSampleCount(sampleRate, (parameter.ReflectionDelay * 1000.0f) + (EarlyDelayTimes[i] * 1000.0f * ((parameter.ReverbDelayTime * 0.9998f) + 0.02f))), PreDelayLine.SampleCountMax);
+                uint sampleCount = Math.Min(IDelayLine.GetSampleCount(sampleRate, (parameter.ReflectionDelay * 1000.0f) + (_earlyDelayTimes[i] * 1000.0f * ((parameter.ReverbDelayTime * 0.9998f) + 0.02f))), PreDelayLine.SampleCountMax);
                 EarlyDelayTime[i] = sampleCount;
             }
         }

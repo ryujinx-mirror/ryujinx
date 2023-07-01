@@ -18,6 +18,6 @@ namespace Ryujinx.Audio.Renderer.Common
         /// <summary>
         /// The sink is a circular buffer.
         /// </summary>
-        CircularBuffer
+        CircularBuffer,
     }
 }

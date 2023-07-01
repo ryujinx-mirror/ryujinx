@@ -8,7 +8,7 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
         {
             Invalid,
             Start,
-            End
+            End,
         }
 
         public bool Enabled { get; set; }

@@ -11,13 +11,15 @@ namespace Ryujinx.Audio.Renderer.Device
         /// <summary>
         /// The session registry, used to store the sessions of a given AppletResourceId.
         /// </summary>
-        private Dictionary<ulong, VirtualDeviceSession[]> _sessionsRegistry = new Dictionary<ulong, VirtualDeviceSession[]>();
+        private readonly Dictionary<ulong, VirtualDeviceSession[]> _sessionsRegistry = new();
 
         /// <summary>
         /// The default <see cref="VirtualDevice"/>.
         /// </summary>
         /// <remarks>This is used when the USB device is the default one on older revision.</remarks>
+#pragma warning disable CA1822 // Mark member as static
         public VirtualDevice DefaultDevice => VirtualDevice.Devices[0];
+#pragma warning restore CA1822
 
         /// <summary>
         /// The current active <see cref="VirtualDevice"/>.

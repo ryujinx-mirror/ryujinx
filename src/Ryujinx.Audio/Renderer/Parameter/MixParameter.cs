@@ -41,7 +41,7 @@ namespace Ryujinx.Audio.Renderer.Parameter
         /// <summary>
         /// Reserved/padding.
         /// </summary>
-        private ushort _reserved1;
+        private readonly ushort _reserved1;
 
         /// <summary>
         /// The id of the mix.
@@ -61,7 +61,7 @@ namespace Ryujinx.Audio.Renderer.Parameter
         /// <summary>
         /// Reserved/padding.
         /// </summary>
-        private ulong _reserved2;
+        private readonly ulong _reserved2;
 
         /// <summary>
         /// Mix buffer volumes storage.
@@ -81,7 +81,7 @@ namespace Ryujinx.Audio.Renderer.Parameter
         /// <summary>
         /// Reserved/padding.
         /// </summary>
-        private uint _reserved3;
+        private readonly uint _reserved3;
 
         [StructLayout(LayoutKind.Sequential, Size = 4 * Constants.MixBufferCountMax * Constants.MixBufferCountMax, Pack = 1)]
         private struct MixVolumeArray { }

@@ -60,7 +60,7 @@ namespace Ryujinx.Audio.Renderer.Parameter
         /// <summary>
         /// Reserved/unused
         /// </summary>
-        private byte _reserved;
+        private readonly byte _reserved;
 
         /// <summary>
         /// The target rendering device.

@@ -28,6 +28,6 @@ namespace Ryujinx.Audio.Renderer.Common
         /// <summary>
         /// No early reflection.
         /// </summary>
-        Disabled
+        Disabled,
     }
 }

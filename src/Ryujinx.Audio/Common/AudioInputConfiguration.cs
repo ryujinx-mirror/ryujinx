@@ -24,6 +24,6 @@ namespace Ryujinx.Audio.Common
         /// <summary>
         /// Reserved/unused.
         /// </summary>
-        private ushort _reserved;
+        private readonly ushort _reserved;
     }
 }

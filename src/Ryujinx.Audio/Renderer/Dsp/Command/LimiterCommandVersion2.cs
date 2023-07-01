@@ -1,6 +1,7 @@
 using Ryujinx.Audio.Renderer.Dsp.State;
 using Ryujinx.Audio.Renderer.Parameter;
 using Ryujinx.Audio.Renderer.Parameter.Effect;
+using Ryujinx.Audio.Renderer.Server.Effect;
 using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -54,13 +55,13 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
 
             if (IsEffectEnabled)
             {
-                if (Parameter.Status == Server.Effect.UsageState.Invalid)
+                if (Parameter.Status == UsageState.Invalid)
                 {
                     state = new LimiterState(ref _parameter, WorkBuffer);
                 }
-                else if (Parameter.Status == Server.Effect.UsageState.New)
+                else if (Parameter.Status == UsageState.New)
                 {
-                    state.UpdateParameter(ref _parameter);
+                    LimiterState.UpdateParameter(ref _parameter);
                 }
             }
 

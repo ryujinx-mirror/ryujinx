@@ -9,7 +9,7 @@ namespace Ryujinx.Audio.Backends.Dummy
     internal class DummyHardwareDeviceSessionOutput : HardwareDeviceSessionOutputBase
     {
         private float _volume;
-        private IHardwareDeviceDriver _manager;
+        private readonly IHardwareDeviceDriver _manager;
 
         private ulong _playedSampleCount;
 

@@ -17,14 +17,14 @@ namespace Ryujinx.Audio.Renderer.Server
 {
     public class CommandGenerator
     {
-        private CommandBuffer _commandBuffer;
-        private RendererSystemContext _rendererContext;
-        private VoiceContext _voiceContext;
-        private MixContext _mixContext;
-        private EffectContext _effectContext;
-        private SinkContext _sinkContext;
-        private SplitterContext _splitterContext;
-        private PerformanceManager _performanceManager;
+        private readonly CommandBuffer _commandBuffer;
+        private readonly RendererSystemContext _rendererContext;
+        private readonly VoiceContext _voiceContext;
+        private readonly MixContext _mixContext;
+        private readonly EffectContext _effectContext;
+        private readonly SinkContext _sinkContext;
+        private readonly SplitterContext _splitterContext;
+        private readonly PerformanceManager _performanceManager;
 
         public CommandGenerator(CommandBuffer commandBuffer, RendererSystemContext rendererContext, VoiceContext voiceContext, MixContext mixContext, EffectContext effectContext, SinkContext sinkContext, SplitterContext splitterContext, PerformanceManager performanceManager)
         {
@@ -138,7 +138,7 @@ namespace Ryujinx.Audio.Renderer.Server
 
             if (supportsOptimizedPath && voiceState.BiquadFilters[0].Enable && voiceState.BiquadFilters[1].Enable)
             {
-                Memory<byte> biquadStateRawMemory = SpanMemoryManager<byte>.Cast(state).Slice(VoiceUpdateState.BiquadStateOffset, VoiceUpdateState.BiquadStateSize * Constants.VoiceBiquadFilterCount);
+                Memory<byte> biquadStateRawMemory = SpanMemoryManager<byte>.Cast(state)[..(VoiceUpdateState.BiquadStateSize * Constants.VoiceBiquadFilterCount)];
                 Memory<BiquadFilterState> stateMemory = SpanMemoryManager<BiquadFilterState>.Cast(biquadStateRawMemory);
 
                 _commandBuffer.GenerateGroupedBiquadFilter(baseIndex, voiceState.BiquadFilters.AsSpan(), stateMemory, bufferOffset, bufferOffset, voiceState.BiquadFilterNeedInitialization, nodeId);
@@ -151,7 +151,7 @@ namespace Ryujinx.Audio.Renderer.Server
 
                     if (filter.Enable)
                     {
-                        Memory<byte> biquadStateRawMemory = SpanMemoryManager<byte>.Cast(state).Slice(VoiceUpdateState.BiquadStateOffset, VoiceUpdateState.BiquadStateSize * Constants.VoiceBiquadFilterCount);
+                        Memory<byte> biquadStateRawMemory = SpanMemoryManager<byte>.Cast(state)[..(VoiceUpdateState.BiquadStateSize * Constants.VoiceBiquadFilterCount)];
 
                         Memory<BiquadFilterState> stateMemory = SpanMemoryManager<BiquadFilterState>.Cast(biquadStateRawMemory);
 
@@ -224,7 +224,7 @@ namespace Ryujinx.Audio.Renderer.Server
 
                 bool performanceInitialized = false;
 
-                PerformanceEntryAddresses performanceEntry = new PerformanceEntryAddresses();
+                PerformanceEntryAddresses performanceEntry = new();
 
                 if (_performanceManager != null && _performanceManager.IsTargetNodeId(nodeId) && _performanceManager.GetNextEntry(out performanceEntry, dataSourceDetailType, PerformanceEntryType.Voice, nodeId))
                 {
@@ -371,7 +371,7 @@ namespace Ryujinx.Audio.Renderer.Server
                 {
                     int nodeId = sortedState.NodeId;
 
-                    PerformanceEntryAddresses performanceEntry = new PerformanceEntryAddresses();
+                    PerformanceEntryAddresses performanceEntry = new();
 
                     bool performanceInitialized = false;
 
@@ -502,9 +502,11 @@ namespace Ryujinx.Audio.Renderer.Server
                 bool needInitialization = effect.Parameter.Status == UsageState.Invalid ||
                                          (effect.Parameter.Status == UsageState.New && !_rendererContext.BehaviourContext.IsBiquadFilterEffectStateClearBugFixed());
 
-                BiquadFilterParameter parameter = new BiquadFilterParameter();
+                BiquadFilterParameter parameter = new()
+                {
+                    Enable = true,
+                };
 
-                parameter.Enable = true;
                 effect.Parameter.Denominator.AsSpan().CopyTo(parameter.Denominator.AsSpan());
                 effect.Parameter.Numerator.AsSpan().CopyTo(parameter.Numerator.AsSpan());
 
@@ -623,7 +625,7 @@ namespace Ryujinx.Audio.Renderer.Server
 
             bool isFinalMix = mix.MixId == Constants.FinalMixId;
 
-            PerformanceEntryAddresses performanceEntry = new PerformanceEntryAddresses();
+            PerformanceEntryAddresses performanceEntry = new();
 
             bool performanceInitialized = false;
 
@@ -789,7 +791,7 @@ namespace Ryujinx.Audio.Renderer.Server
 
             GenerateEffects(ref subMix);
 
-            PerformanceEntryAddresses performanceEntry = new PerformanceEntryAddresses();
+            PerformanceEntryAddresses performanceEntry = new();
 
             int nodeId = subMix.NodeId;
 
@@ -820,7 +822,7 @@ namespace Ryujinx.Audio.Renderer.Server
                 {
                     int nodeId = sortedState.NodeId;
 
-                    PerformanceEntryAddresses performanceEntry = new PerformanceEntryAddresses();
+                    PerformanceEntryAddresses performanceEntry = new();
 
                     bool performanceInitialized = false;
 
@@ -853,7 +855,7 @@ namespace Ryujinx.Audio.Renderer.Server
 
             GenerateEffects(ref finalMix);
 
-            PerformanceEntryAddresses performanceEntry = new PerformanceEntryAddresses();
+            PerformanceEntryAddresses performanceEntry = new();
 
             int nodeId = finalMix.NodeId;
 
@@ -901,7 +903,7 @@ namespace Ryujinx.Audio.Renderer.Server
         {
             int nodeId = _mixContext.GetFinalState().NodeId;
 
-            PerformanceEntryAddresses performanceEntry = new PerformanceEntryAddresses();
+            PerformanceEntryAddresses performanceEntry = new();
 
             bool performanceInitialized = false;
 
@@ -977,7 +979,7 @@ namespace Ryujinx.Audio.Renderer.Server
         {
             bool performanceInitialized = false;
 
-            PerformanceEntryAddresses performanceEntry = new PerformanceEntryAddresses();
+            PerformanceEntryAddresses performanceEntry = new();
 
             if (_performanceManager != null && _performanceManager.GetNextEntry(out performanceEntry, PerformanceEntryType.Sink, sink.NodeId))
             {

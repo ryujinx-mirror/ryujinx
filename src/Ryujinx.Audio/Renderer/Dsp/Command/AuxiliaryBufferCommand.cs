@@ -155,7 +155,7 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
 
                 if (readResult != context.SampleCount)
                 {
-                    outputBuffer.Slice((int)readResult, (int)context.SampleCount - (int)readResult).Fill(0);
+                    outputBuffer[(int)readResult..(int)context.SampleCount].Clear();
                 }
             }
             else

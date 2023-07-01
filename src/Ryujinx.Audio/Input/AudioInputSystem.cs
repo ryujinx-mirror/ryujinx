@@ -18,7 +18,7 @@ namespace Ryujinx.Audio.Input
         /// <summary>
         /// The session the <see cref="AudioInputSystem"/>.
         /// </summary>
-        private AudioDeviceSession _session;
+        private readonly AudioDeviceSession _session;
 
         /// <summary>
         /// The target device name of the <see cref="AudioInputSystem"/>.
@@ -43,7 +43,7 @@ namespace Ryujinx.Audio.Input
         /// <summary>
         /// The <see cref="AudioInputManager"/> owning this.
         /// </summary>
-        private AudioInputManager _manager;
+        private readonly AudioInputManager _manager;
 
         /// <summary>
         /// The lock of the parent.
@@ -90,11 +90,13 @@ namespace Ryujinx.Audio.Input
             {
                 return ResultCode.DeviceNotFound;
             }
-            else if (configuration.SampleRate != 0 && configuration.SampleRate != Constants.TargetSampleRate)
+
+            if (configuration.SampleRate != 0 && configuration.SampleRate != Constants.TargetSampleRate)
             {
                 return ResultCode.UnsupportedSampleRate;
             }
-            else if (configuration.ChannelCount != 0 && configuration.ChannelCount != 1 && configuration.ChannelCount != 2 && configuration.ChannelCount != 6)
+
+            if (configuration.ChannelCount != 0 && configuration.ChannelCount != 1 && configuration.ChannelCount != 2 && configuration.ChannelCount != 6)
             {
                 return ResultCode.UnsupportedChannelConfiguration;
             }
@@ -185,11 +187,11 @@ namespace Ryujinx.Audio.Input
         {
             lock (_parentLock)
             {
-                AudioBuffer buffer = new AudioBuffer
+                AudioBuffer buffer = new()
                 {
                     BufferTag = bufferTag,
                     DataPointer = userBuffer.Data,
-                    DataSize = userBuffer.DataSize
+                    DataSize = userBuffer.DataSize,
                 };
 
                 if (_session.AppendBuffer(buffer))
@@ -213,14 +215,14 @@ namespace Ryujinx.Audio.Input
         {
             lock (_parentLock)
             {
-                AudioBuffer buffer = new AudioBuffer
+                AudioBuffer buffer = new()
                 {
                     BufferTag = bufferTag,
                     DataPointer = userBuffer.Data,
-                    DataSize = userBuffer.DataSize
+                    DataSize = userBuffer.DataSize,
                 };
 
-                if (_session.AppendUacBuffer(buffer, handle))
+                if (AudioDeviceSession.AppendUacBuffer(buffer, handle))
                 {
                     return ResultCode.Success;
                 }
@@ -373,6 +375,8 @@ namespace Ryujinx.Audio.Input
 
         public void Dispose()
         {
+            GC.SuppressFinalize(this);
+
             if (Interlocked.CompareExchange(ref _disposeState, 1, 0) == 0)
             {
                 Dispose(true);

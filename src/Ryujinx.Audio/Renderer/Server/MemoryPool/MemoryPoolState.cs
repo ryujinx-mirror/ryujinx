@@ -26,7 +26,7 @@ namespace Ryujinx.Audio.Renderer.Server.MemoryPool
             /// <summary>
             /// <see cref="MemoryPoolState"/> located on the DSP side for system use.
             /// </summary>
-            Dsp
+            Dsp,
         }
 
         /// <summary>
@@ -69,7 +69,7 @@ namespace Ryujinx.Audio.Renderer.Server.MemoryPool
                 CpuAddress = 0,
                 DspAddress = 0,
                 Size = 0,
-                Location = location
+                Location = location,
             };
         }
 
@@ -90,7 +90,7 @@ namespace Ryujinx.Audio.Renderer.Server.MemoryPool
         /// <param name="targetCpuAddress">The <see cref="CpuAddress"/>.</param>
         /// <param name="size">The size.</param>
         /// <returns>True if the <see cref="CpuAddress"/> is contained inside the <see cref="MemoryPoolState"/>.</returns>
-        public bool Contains(CpuAddress targetCpuAddress, ulong size)
+        public readonly bool Contains(CpuAddress targetCpuAddress, ulong size)
         {
             if (CpuAddress <= targetCpuAddress && size + targetCpuAddress <= Size + CpuAddress)
             {
@@ -106,7 +106,7 @@ namespace Ryujinx.Audio.Renderer.Server.MemoryPool
         /// <param name="targetCpuAddress">The <see cref="CpuAddress"/>.</param>
         /// <param name="size">The size.</param>
         /// <returns>the target DSP address.</returns>
-        public DspAddress Translate(CpuAddress targetCpuAddress, ulong size)
+        public readonly DspAddress Translate(CpuAddress targetCpuAddress, ulong size)
         {
             if (Contains(targetCpuAddress, size) && IsMapped())
             {
@@ -122,7 +122,7 @@ namespace Ryujinx.Audio.Renderer.Server.MemoryPool
         /// Is the <see cref="MemoryPoolState"/> mapped on the DSP?
         /// </summary>
         /// <returns>Returns true if the <see cref="MemoryPoolState"/> is mapped on the DSP.</returns>
-        public bool IsMapped()
+        public readonly bool IsMapped()
         {
             return DspAddress != 0;
         }

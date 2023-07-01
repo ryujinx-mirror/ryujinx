@@ -1,3 +1,4 @@
+using Ryujinx.Common.Memory;
 using System.Runtime.CompilerServices;
 
 namespace Ryujinx.Audio.Renderer.Common
@@ -19,7 +20,9 @@ namespace Ryujinx.Audio.Renderer.Common
         public uint Unknown24;
         public uint RenderInfoSize;
 
-        private unsafe fixed int _reserved[4];
+#pragma warning disable IDE0051, CS0169 // Remove unused field
+        private Array4<int> _reserved;
+#pragma warning restore IDE0051, CS0169
 
         public uint TotalSize;
 
