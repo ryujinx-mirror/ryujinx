@@ -14,7 +14,7 @@ namespace Ryujinx.Ui.LocaleGenerator
 
             context.RegisterSourceOutput(contents, (spc, content) =>
             {
-                var lines = content.Split('\n').Where(x => x.Trim().StartsWith("\"")).Select(x => x.Split(':').First().Trim().Replace("\"", ""));
+                var lines = content.Split('\n').Where(x => x.Trim().StartsWith("\"")).Select(x => x.Split(':')[0].Trim().Replace("\"", ""));
                 string enumSource = "namespace Ryujinx.Ava.Common.Locale;\n";
                 enumSource += "internal enum LocaleKeys\n{\n";
                 foreach (var line in lines)
