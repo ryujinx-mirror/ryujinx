@@ -31,7 +31,7 @@ namespace Ryujinx.Tests.Cpu
             new() { Value = 0xffff8fffffff8fff, Valid = true, ImmN = 0, ImmS = 0x1c, ImmR = 17 },
             new() { Value = 0x000000000ffff800, Valid = true, ImmN = 1, ImmS = 0x10, ImmR = 53 },
         };
-        
+
         [Test]
         public void BitImmTests([ValueSource(nameof(TestCases))] TestCase test)
         {

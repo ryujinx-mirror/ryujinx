@@ -14,8 +14,10 @@ namespace Ryujinx.Tests.Cpu
     public class CpuTest32
     {
         protected static readonly uint Size = (uint)MemoryBlock.GetPageSize();
+#pragma warning disable CA2211 // Non-constant fields should not be visible
         protected static uint CodeBaseAddress = Size;
         protected static uint DataBaseAddress = CodeBaseAddress + Size;
+#pragma warning restore CA2211
 
         private uint _currAddress;
 
@@ -79,8 +81,8 @@ namespace Ryujinx.Tests.Cpu
             _context.Dispose();
             _ram.Dispose();
 
-            _memory     = null;
-            _context    = null;
+            _memory = null;
+            _context = null;
             _cpuContext = null;
             _unicornEmu = null;
 
@@ -288,16 +290,17 @@ namespace Ryujinx.Tests.Cpu
 
             SetWorkingMemory(0, testMem);
 
-            RunPrecomputedTestCase(new PrecomputedThumbTestCase(){
+            RunPrecomputedTestCase(new PrecomputedThumbTestCase
+            {
                 Instructions = test.Instructions,
                 StartRegs = test.StartRegs,
                 FinalRegs = test.FinalRegs,
             });
 
-            foreach (var delta in test.MemoryDelta)
+            foreach (var (address, value) in test.MemoryDelta)
             {
-                testMem[delta.Address - DataBaseAddress + 0] = (byte)(delta.Value >> 0);
-                testMem[delta.Address - DataBaseAddress + 1] = (byte)(delta.Value >> 8);
+                testMem[address - DataBaseAddress + 0] = (byte)(value >> 0);
+                testMem[address - DataBaseAddress + 1] = (byte)(value >> 8);
             }
 
             byte[] mem = _memory.GetSpan(DataBaseAddress, (int)Size).ToArray();
@@ -324,8 +327,8 @@ namespace Ryujinx.Tests.Cpu
             /// <summary>Round towards Minus Infinity mode.</summary>
             Rm,
             /// <summary>Round towards Zero mode.</summary>
-            Rz
-        };
+            Rz,
+        }
 
         /// <summary>Floating-point Control Register.</summary>
         protected enum Fpcr
@@ -337,7 +340,7 @@ namespace Ryujinx.Tests.Cpu
             /// <summary>Default NaN mode control bit.</summary>
             Dn = 25,
             /// <summary>Alternative half-precision control bit.</summary>
-            Ahp = 26
+            Ahp = 26,
         }
 
         /// <summary>Floating-point Status Register.</summary>
@@ -363,7 +366,7 @@ namespace Ryujinx.Tests.Cpu
             Qc = 1 << 27,
 
             /// <summary>NZCV flags.</summary>
-            Nzcv = (1 << 31) | (1 << 30) | (1 << 29) | (1 << 28)
+            Nzcv = (1 << 31) | (1 << 30) | (1 << 29) | (1 << 28),
         }
 
         [Flags]
@@ -375,7 +378,7 @@ namespace Ryujinx.Tests.Cpu
             IfNaND = 2,
 
             IfUnderflow = 4,
-            IfOverflow = 8
+            IfOverflow = 8,
         }
 
         protected enum FpTolerances
@@ -383,7 +386,7 @@ namespace Ryujinx.Tests.Cpu
             None,
 
             UpToOneUlpsS,
-            UpToOneUlpsD
+            UpToOneUlpsD,
         }
 
         protected void CompareAgainstUnicorn(
@@ -554,13 +557,13 @@ namespace Ryujinx.Tests.Cpu
             return new SimdValue(value.Extract<ulong>(0), value.Extract<ulong>(1));
         }
 
-        protected static V128 MakeVectorScalar(float value) => new V128(value);
-        protected static V128 MakeVectorScalar(double value) => new V128(value);
+        protected static V128 MakeVectorScalar(float value) => new(value);
+        protected static V128 MakeVectorScalar(double value) => new(value);
 
-        protected static V128 MakeVectorE0(ulong e0) => new V128(e0, 0);
-        protected static V128 MakeVectorE1(ulong e1) => new V128(0, e1);
+        protected static V128 MakeVectorE0(ulong e0) => new(e0, 0);
+        protected static V128 MakeVectorE1(ulong e1) => new(0, e1);
 
-        protected static V128 MakeVectorE0E1(ulong e0, ulong e1) => new V128(e0, e1);
+        protected static V128 MakeVectorE0E1(ulong e0, ulong e1) => new(e0, e1);
 
         protected static V128 MakeVectorE0E1E2E3(uint e0, uint e1, uint e2, uint e3)
         {
@@ -574,7 +577,8 @@ namespace Ryujinx.Tests.Cpu
         {
             uint rnd;
 
-            do rnd = TestContext.CurrentContext.Random.NextUShort();
+            do
+                rnd = TestContext.CurrentContext.Random.NextUShort();
             while ((rnd & 0x7C00u) == 0u ||
                    (~rnd & 0x7C00u) == 0u);
 
@@ -585,7 +589,8 @@ namespace Ryujinx.Tests.Cpu
         {
             uint rnd;
 
-            do rnd = TestContext.CurrentContext.Random.NextUShort();
+            do
+                rnd = TestContext.CurrentContext.Random.NextUShort();
             while ((rnd & 0x03FFu) == 0u);
 
             return (ushort)(rnd & 0x83FFu);
@@ -595,7 +600,8 @@ namespace Ryujinx.Tests.Cpu
         {
             uint rnd;
 
-            do rnd = TestContext.CurrentContext.Random.NextUInt();
+            do
+                rnd = TestContext.CurrentContext.Random.NextUInt();
             while ((rnd & 0x7F800000u) == 0u ||
                    (~rnd & 0x7F800000u) == 0u);
 
@@ -606,7 +612,8 @@ namespace Ryujinx.Tests.Cpu
         {
             uint rnd;
 
-            do rnd = TestContext.CurrentContext.Random.NextUInt();
+            do
+                rnd = TestContext.CurrentContext.Random.NextUInt();
             while ((rnd & 0x007FFFFFu) == 0u);
 
             return rnd & 0x807FFFFFu;
@@ -616,7 +623,8 @@ namespace Ryujinx.Tests.Cpu
         {
             ulong rnd;
 
-            do rnd = TestContext.CurrentContext.Random.NextULong();
+            do
+                rnd = TestContext.CurrentContext.Random.NextULong();
             while ((rnd & 0x7FF0000000000000ul) == 0ul ||
                    (~rnd & 0x7FF0000000000000ul) == 0ul);
 
@@ -627,7 +635,8 @@ namespace Ryujinx.Tests.Cpu
         {
             ulong rnd;
 
-            do rnd = TestContext.CurrentContext.Random.NextULong();
+            do
+                rnd = TestContext.CurrentContext.Random.NextULong();
             while ((rnd & 0x000FFFFFFFFFFFFFul) == 0ul);
 
             return rnd & 0x800FFFFFFFFFFFFFul;

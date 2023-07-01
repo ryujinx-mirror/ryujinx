@@ -21,8 +21,7 @@ namespace Ryujinx.Tests.HLE
         [Test]
         public void StripUnicodeControlCodes_Passthrough()
         {
-            string[] prompts = new string[]
-            {
+            string[] prompts = {
                 "Please name him.",
                 "Name her, too.",
                 "Name your friend.",

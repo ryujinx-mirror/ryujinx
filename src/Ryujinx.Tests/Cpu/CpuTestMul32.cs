@@ -9,7 +9,7 @@ namespace Ryujinx.Tests.Cpu
     {
 #if Mul32
 
-#region "ValueSource (Opcodes)"
+        #region "ValueSource (Opcodes)"
         private static uint[] _Smlabb_Smlabt_Smlatb_Smlatt_()
         {
             return new[]
@@ -49,10 +49,10 @@ namespace Ryujinx.Tests.Cpu
                 0xe12000e0u, // SMULWT R0, R0, R0
             };
         }
-#endregion
+        #endregion
 
         [Test, Pairwise, Description("SMLA<x><y> <Rd>, <Rn>, <Rm>, <Ra>")]
-        public void Smla___32bit([ValueSource("_Smlabb_Smlabt_Smlatb_Smlatt_")] uint opcode,
+        public void Smla___32bit([ValueSource(nameof(_Smlabb_Smlabt_Smlatb_Smlatt_))] uint opcode,
                                  [Values(0u, 0xdu)] uint rn,
                                  [Values(1u, 0xdu)] uint rm,
                                  [Values(2u, 0xdu)] uint ra,
@@ -74,7 +74,7 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Pairwise, Description("SMLAW<x> <Rd>, <Rn>, <Rm>, <Ra>")]
-        public void Smlaw__32bit([ValueSource("_Smlawb_Smlawt_")] uint opcode,
+        public void Smlaw__32bit([ValueSource(nameof(_Smlawb_Smlawt_))] uint opcode,
                                  [Values(0u, 0xdu)] uint rn,
                                  [Values(1u, 0xdu)] uint rm,
                                  [Values(2u, 0xdu)] uint ra,
@@ -96,7 +96,7 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Pairwise, Description("SMUL<x><y> <Rd>, <Rn>, <Rm>")]
-        public void Smul___32bit([ValueSource("_Smulbb_Smulbt_Smultb_Smultt_")] uint opcode,
+        public void Smul___32bit([ValueSource(nameof(_Smulbb_Smulbt_Smultb_Smultt_))] uint opcode,
                                  [Values(0u, 0xdu)] uint rn,
                                  [Values(1u, 0xdu)] uint rm,
                                  [Values(2u, 0xdu)] uint rd,
@@ -115,7 +115,7 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Pairwise, Description("SMULW<x> <Rd>, <Rn>, <Rm>")]
-        public void Smulw__32bit([ValueSource("_Smulwb_Smulwt_")] uint opcode,
+        public void Smulw__32bit([ValueSource(nameof(_Smulwb_Smulwt_))] uint opcode,
                                  [Values(0u, 0xdu)] uint rn,
                                  [Values(1u, 0xdu)] uint rm,
                                  [Values(2u, 0xdu)] uint rd,

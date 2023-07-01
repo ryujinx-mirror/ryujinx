@@ -10,7 +10,7 @@ namespace Ryujinx.Tests.Cpu
     {
 #if Alu
 
-#region "Helper methods"
+        #region "Helper methods"
         private static uint GenLeadingSignsMinus32(int cnt) // 0 <= cnt <= 31
         {
             return ~GenLeadingZeros32(cnt + 1);
@@ -33,29 +33,43 @@ namespace Ryujinx.Tests.Cpu
 
         private static uint GenLeadingZeros32(int cnt) // 0 <= cnt <= 32
         {
-            if (cnt == 32) return 0u;
-            if (cnt == 31) return 1u;
+            if (cnt == 32)
+            {
+                return 0u;
+            }
 
-            uint rnd  = TestContext.CurrentContext.Random.NextUInt();
-            int  mask = int.MinValue;
+            if (cnt == 31)
+            {
+                return 1u;
+            }
+
+            uint rnd = TestContext.CurrentContext.Random.NextUInt();
+            int mask = int.MinValue;
 
             return (rnd >> (cnt + 1)) | ((uint)mask >> cnt);
         }
 
         private static ulong GenLeadingZeros64(int cnt) // 0 <= cnt <= 64
         {
-            if (cnt == 64) return 0ul;
-            if (cnt == 63) return 1ul;
+            if (cnt == 64)
+            {
+                return 0ul;
+            }
 
-            ulong rnd  = TestContext.CurrentContext.Random.NextULong();
-            long  mask = long.MinValue;
+            if (cnt == 63)
+            {
+                return 1ul;
+            }
+
+            ulong rnd = TestContext.CurrentContext.Random.NextULong();
+            long mask = long.MinValue;
 
             return (rnd >> (cnt + 1)) | ((ulong)mask >> cnt);
         }
-#endregion
+        #endregion
 
-#region "ValueSource (Types)"
-        private static IEnumerable<ulong> _GenLeadingSignsX_()
+        #region "ValueSource (Types)"
+        private static IEnumerable<ulong> GenLeadingSignsX()
         {
             for (int cnt = 0; cnt <= 63; cnt++)
             {
@@ -64,7 +78,7 @@ namespace Ryujinx.Tests.Cpu
             }
         }
 
-        private static IEnumerable<uint> _GenLeadingSignsW_()
+        private static IEnumerable<uint> GenLeadingSignsW()
         {
             for (int cnt = 0; cnt <= 31; cnt++)
             {
@@ -73,7 +87,7 @@ namespace Ryujinx.Tests.Cpu
             }
         }
 
-        private static IEnumerable<ulong> _GenLeadingZerosX_()
+        private static IEnumerable<ulong> GenLeadingZerosX()
         {
             for (int cnt = 0; cnt <= 64; cnt++)
             {
@@ -81,19 +95,19 @@ namespace Ryujinx.Tests.Cpu
             }
         }
 
-        private static IEnumerable<uint> _GenLeadingZerosW_()
+        private static IEnumerable<uint> GenLeadingZerosW()
         {
             for (int cnt = 0; cnt <= 32; cnt++)
             {
                 yield return GenLeadingZeros32(cnt);
             }
         }
-#endregion
+        #endregion
 
         [Test, Pairwise, Description("CLS <Xd>, <Xn>")]
         public void Cls_64bit([Values(0u, 31u)] uint rd,
                               [Values(1u, 31u)] uint rn,
-                              [ValueSource(nameof(_GenLeadingSignsX_))] ulong xn)
+                              [ValueSource(nameof(GenLeadingSignsX))] ulong xn)
         {
             uint opcode = 0xDAC01400; // CLS X0, X0
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
@@ -108,7 +122,7 @@ namespace Ryujinx.Tests.Cpu
         [Test, Pairwise, Description("CLS <Wd>, <Wn>")]
         public void Cls_32bit([Values(0u, 31u)] uint rd,
                               [Values(1u, 31u)] uint rn,
-                              [ValueSource(nameof(_GenLeadingSignsW_))] uint wn)
+                              [ValueSource(nameof(GenLeadingSignsW))] uint wn)
         {
             uint opcode = 0x5AC01400; // CLS W0, W0
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
@@ -123,7 +137,7 @@ namespace Ryujinx.Tests.Cpu
         [Test, Pairwise, Description("CLZ <Xd>, <Xn>")]
         public void Clz_64bit([Values(0u, 31u)] uint rd,
                               [Values(1u, 31u)] uint rn,
-                              [ValueSource(nameof(_GenLeadingZerosX_))] ulong xn)
+                              [ValueSource(nameof(GenLeadingZerosX))] ulong xn)
         {
             uint opcode = 0xDAC01000; // CLZ X0, X0
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
@@ -138,7 +152,7 @@ namespace Ryujinx.Tests.Cpu
         [Test, Pairwise, Description("CLZ <Wd>, <Wn>")]
         public void Clz_32bit([Values(0u, 31u)] uint rd,
                               [Values(1u, 31u)] uint rn,
-                              [ValueSource(nameof(_GenLeadingZerosW_))] uint wn)
+                              [ValueSource(nameof(GenLeadingZerosW))] uint wn)
         {
             uint opcode = 0x5AC01000; // CLZ W0, W0
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);

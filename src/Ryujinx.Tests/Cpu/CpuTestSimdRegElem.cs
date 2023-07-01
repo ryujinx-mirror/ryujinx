@@ -10,21 +10,25 @@ namespace Ryujinx.Tests.Cpu
     {
 #if SimdRegElem
 
-#region "ValueSource (Types)"
+        #region "ValueSource (Types)"
         private static ulong[] _2S_()
         {
-            return new[] { 0x0000000000000000ul, 0x7FFFFFFF7FFFFFFFul,
-                           0x8000000080000000ul, 0xFFFFFFFFFFFFFFFFul };
+            return new[] {
+                0x0000000000000000ul, 0x7FFFFFFF7FFFFFFFul,
+                0x8000000080000000ul, 0xFFFFFFFFFFFFFFFFul,
+            };
         }
 
         private static ulong[] _4H_()
         {
-            return new[] { 0x0000000000000000ul, 0x7FFF7FFF7FFF7FFFul,
-                           0x8000800080008000ul, 0xFFFFFFFFFFFFFFFFul };
+            return new[] {
+                0x0000000000000000ul, 0x7FFF7FFF7FFF7FFFul,
+                0x8000800080008000ul, 0xFFFFFFFFFFFFFFFFul,
+            };
         }
-#endregion
+        #endregion
 
-#region "ValueSource (Opcodes)"
+        #region "ValueSource (Opcodes)"
         private static uint[] _Mla_Mls_Mul_Sqdmulh_Sqrdmulh_Ve_4H_8H_()
         {
             return new[]
@@ -33,7 +37,7 @@ namespace Ryujinx.Tests.Cpu
                 0x2F404000u, // MLS      V0.4H, V0.4H, V0.H[0]
                 0x0F408000u, // MUL      V0.4H, V0.4H, V0.H[0]
                 0x0F40C000u, // SQDMULH  V0.4H, V0.4H, V0.H[0]
-                0x0F40D000u  // SQRDMULH V0.4H, V0.4H, V0.H[0]
+                0x0F40D000u, // SQRDMULH V0.4H, V0.4H, V0.H[0]
             };
         }
 
@@ -45,7 +49,7 @@ namespace Ryujinx.Tests.Cpu
                 0x2F804000u, // MLS      V0.2S, V0.2S, V0.S[0]
                 0x0F808000u, // MUL      V0.2S, V0.2S, V0.S[0]
                 0x0F80C000u, // SQDMULH  V0.2S, V0.2S, V0.S[0]
-                0x0F80D000u  // SQRDMULH V0.2S, V0.2S, V0.S[0]
+                0x0F80D000u, // SQRDMULH V0.2S, V0.2S, V0.S[0]
             };
         }
 
@@ -58,7 +62,7 @@ namespace Ryujinx.Tests.Cpu
                 0x0F40A000u, // SMULL V0.4S, V0.4H, V0.H[0]
                 0x2F402000u, // UMLAL V0.4S, V0.4H, V0.H[0]
                 0x2F406000u, // UMLSL V0.4S, V0.4H, V0.H[0]
-                0x2F40A000u  // UMULL V0.4S, V0.4H, V0.H[0]
+                0x2F40A000u, // UMULL V0.4S, V0.4H, V0.H[0]
             };
         }
 
@@ -71,15 +75,15 @@ namespace Ryujinx.Tests.Cpu
                 0x0F80A000u, // SMULL V0.2D, V0.2S, V0.S[0]
                 0x2F802000u, // UMLAL V0.2D, V0.2S, V0.S[0]
                 0x2F806000u, // UMLSL V0.2D, V0.2S, V0.S[0]
-                0x2F80A000u  // UMULL V0.2D, V0.2S, V0.S[0]
+                0x2F80A000u, // UMULL V0.2D, V0.2S, V0.S[0]
             };
         }
-#endregion
+        #endregion
 
 
         [Test, Pairwise]
         public void Mla_Mls_Mul_Sqdmulh_Sqrdmulh_Ve_4H_8H([ValueSource(nameof(_Mla_Mls_Mul_Sqdmulh_Sqrdmulh_Ve_4H_8H_))] uint opcodes,
-                                                          [Values(0u)]     uint rd,
+                                                          [Values(0u)] uint rd,
                                                           [Values(1u, 0u)] uint rn,
                                                           [Values(2u, 0u)] uint rm,
                                                           [ValueSource(nameof(_4H_))] ulong z,
@@ -134,7 +138,7 @@ namespace Ryujinx.Tests.Cpu
 
         [Test, Pairwise]
         public void SU_Mlal_Mlsl_Mull_Ve_4H4S_8H4S([ValueSource(nameof(_SU_Mlal_Mlsl_Mull_Ve_4H4S_8H4S_))] uint opcodes,
-                                                   [Values(0u)]     uint rd,
+                                                   [Values(0u)] uint rd,
                                                    [Values(1u, 0u)] uint rn,
                                                    [Values(2u, 0u)] uint rm,
                                                    [ValueSource(nameof(_4H_))] ulong z,
@@ -162,7 +166,7 @@ namespace Ryujinx.Tests.Cpu
 
         [Test, Pairwise]
         public void SU_Mlal_Mlsl_Mull_Ve_2S2D_4S2D([ValueSource(nameof(_SU_Mlal_Mlsl_Mull_Ve_2S2D_4S2D_))] uint opcodes,
-                                                   [Values(0u)]     uint rd,
+                                                   [Values(0u)] uint rd,
                                                    [Values(1u, 0u)] uint rn,
                                                    [Values(2u, 0u)] uint rm,
                                                    [ValueSource(nameof(_2S_))] ulong z,

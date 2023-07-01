@@ -6,5 +6,5 @@ namespace Ryujinx.Tests.Cpu
         public uint[] StartRegs;
         public uint[] FinalRegs;
         public (ulong Address, ushort Value)[] MemoryDelta;
-    };
+    }
 }

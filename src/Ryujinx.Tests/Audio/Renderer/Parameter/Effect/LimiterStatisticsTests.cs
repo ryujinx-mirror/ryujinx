@@ -13,4 +13,3 @@ namespace Ryujinx.Tests.Audio.Renderer.Parameter.Effect
         }
     }
 }
-

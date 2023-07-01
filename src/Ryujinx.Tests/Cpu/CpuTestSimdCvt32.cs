@@ -12,7 +12,7 @@ namespace Ryujinx.Tests.Cpu
     {
 #if SimdCvt32
 
-#region "ValueSource (Opcodes)"
+        #region "ValueSource (Opcodes)"
         private static uint[] _Vrint_AMNP_V_F32_()
         {
             return new[]
@@ -20,16 +20,18 @@ namespace Ryujinx.Tests.Cpu
                 0xf3ba0500u, // VRINTA.F32 Q0, Q0
                 0xf3ba0680u, // VRINTM.F32 Q0, Q0
                 0xf3ba0400u, // VRINTN.F32 Q0, Q0
-                0xf3ba0780u  // VRINTP.F32 Q0, Q0
+                0xf3ba0780u, // VRINTP.F32 Q0, Q0
             };
         }
-#endregion
+        #endregion
 
-#region "ValueSource (Types)"
+        #region "ValueSource (Types)"
         private static uint[] _1S_()
         {
-            return new[] { 0x00000000u, 0x7FFFFFFFu,
-                           0x80000000u, 0xFFFFFFFFu };
+            return new[] {
+                0x00000000u, 0x7FFFFFFFu,
+                0x80000000u, 0xFFFFFFFFu,
+            };
         }
 
         private static IEnumerable<ulong> _1S_F_()
@@ -43,19 +45,19 @@ namespace Ryujinx.Tests.Cpu
             yield return 0x00000000007FFFFFul; // +Max Subnormal
             yield return 0x0000000000000001ul; // +Min Subnormal (float.Epsilon)
 
-            if (!NoZeros)
+            if (!_noZeros)
             {
                 yield return 0x0000000080000000ul; // -Zero
                 yield return 0x0000000000000000ul; // +Zero
             }
 
-            if (!NoInfs)
+            if (!_noInfs)
             {
                 yield return 0x00000000FF800000ul; // -Infinity
                 yield return 0x000000007F800000ul; // +Infinity
             }
 
-            if (!NoNaNs)
+            if (!_noNaNs)
             {
                 yield return 0x00000000FFC00000ul; // -QNaN (all zeros payload) (float.NaN)
                 yield return 0x00000000FFBFFFFFul; // -SNaN (all ones  payload)
@@ -85,19 +87,19 @@ namespace Ryujinx.Tests.Cpu
             yield return 0x007FFFFF007FFFFFul; // +Max Subnormal
             yield return 0x0000000100000001ul; // +Min Subnormal (float.Epsilon)
 
-            if (!NoZeros)
+            if (!_noZeros)
             {
                 yield return 0x8000000080000000ul; // -Zero
                 yield return 0x0000000000000000ul; // +Zero
             }
 
-            if (!NoInfs)
+            if (!_noInfs)
             {
                 yield return 0xFF800000FF800000ul; // -Infinity
                 yield return 0x7F8000007F800000ul; // +Infinity
             }
 
-            if (!NoNaNs)
+            if (!_noNaNs)
             {
                 yield return 0xFFC00000FFC00000ul; // -QNaN (all zeros payload) (float.NaN)
                 yield return 0xFFBFFFFFFFBFFFFFul; // -SNaN (all ones  payload)
@@ -126,19 +128,19 @@ namespace Ryujinx.Tests.Cpu
             yield return 0x000FFFFFFFFFFFFFul; // +Max Subnormal
             yield return 0x0000000000000001ul; // +Min Subnormal (double.Epsilon)
 
-            if (!NoZeros)
+            if (!_noZeros)
             {
                 yield return 0x8000000000000000ul; // -Zero
                 yield return 0x0000000000000000ul; // +Zero
             }
 
-            if (!NoInfs)
+            if (!_noInfs)
             {
                 yield return 0xFFF0000000000000ul; // -Infinity
                 yield return 0x7FF0000000000000ul; // +Infinity
             }
 
-            if (!NoNaNs)
+            if (!_noNaNs)
             {
                 yield return 0xFFF8000000000000ul; // -QNaN (all zeros payload) (double.NaN)
                 yield return 0xFFF7FFFFFFFFFFFFul; // -SNaN (all ones  payload)
@@ -155,13 +157,13 @@ namespace Ryujinx.Tests.Cpu
                 yield return rnd2;
             }
         }
-#endregion
+        #endregion
 
         private const int RndCnt = 2;
 
-        private static readonly bool NoZeros = false;
-        private static readonly bool NoInfs  = false;
-        private static readonly bool NoNaNs  = false;
+        private static readonly bool _noZeros = false;
+        private static readonly bool _noInfs = false;
+        private static readonly bool _noNaNs = false;
 
         [Explicit]
         [Test, Pairwise, Description("VCVT.<dt>.F32 <Sd>, <Sm>")]
@@ -275,7 +277,8 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Pairwise] [Explicit]
+        [Test, Pairwise]
+        [Explicit]
         public void Vrint_AMNP_V_F32([ValueSource(nameof(_Vrint_AMNP_V_F32_))] uint opcode,
                                      [Values(0u, 1u, 2u, 3u)] uint rd,
                                      [Values(0u, 1u, 2u, 3u)] uint rm,
@@ -289,12 +292,14 @@ namespace Ryujinx.Tests.Cpu
             {
                 opcode |= 1 << 6;
 
-                rd >>= 1; rd <<= 1;
-                rm >>= 1; rm <<= 1;
+                rd >>= 1;
+                rd <<= 1;
+                rm >>= 1;
+                rm <<= 1;
             }
 
             opcode |= ((rd & 0xf) << 12) | ((rd & 0x10) << 18);
-            opcode |= ((rm & 0xf) << 0)  | ((rm & 0x10) << 1);
+            opcode |= ((rm & 0xf) << 0) | ((rm & 0x10) << 1);
 
             V128 v0 = MakeVectorE0E1(d0, d1);
             V128 v1 = MakeVectorE0E1(d2, d3);

@@ -10,7 +10,7 @@ namespace Ryujinx.Tests.Collections
         [Test]
         public void EnsureAddIntegrity()
         {
-            TreeDictionary<int, int> dictionary = new TreeDictionary<int, int>();
+            TreeDictionary<int, int> dictionary = new();
 
             Assert.AreEqual(dictionary.Count, 0);
 
@@ -35,7 +35,7 @@ namespace Ryujinx.Tests.Collections
              *              5    11
              *  
              */
-            
+
             Assert.AreEqual(list.Count, dictionary.Count);
             Assert.AreEqual(list[0].Key, 2);
             Assert.AreEqual(list[1].Key, 1);
@@ -49,7 +49,7 @@ namespace Ryujinx.Tests.Collections
         [Test]
         public void EnsureRemoveIntegrity()
         {
-            TreeDictionary<int, int> dictionary = new TreeDictionary<int, int>();
+            TreeDictionary<int, int> dictionary = new();
 
             Assert.AreEqual(dictionary.Count, 0);
 
@@ -165,7 +165,7 @@ namespace Ryujinx.Tests.Collections
         [Test]
         public void EnsureOverwriteIntegrity()
         {
-            TreeDictionary<int, int> dictionary = new TreeDictionary<int, int>();
+            TreeDictionary<int, int> dictionary = new();
 
             Assert.AreEqual(dictionary.Count, 0);
 

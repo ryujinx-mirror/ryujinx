@@ -11,7 +11,7 @@ namespace Ryujinx.Tests.Cpu
     {
 #if SimdFcond
 
-#region "ValueSource (Types)"
+        #region "ValueSource (Types)"
         private static IEnumerable<ulong> _1S_F_()
         {
             yield return 0x00000000FF7FFFFFul; // -Max Normal    (float.MinValue)
@@ -23,19 +23,19 @@ namespace Ryujinx.Tests.Cpu
             yield return 0x00000000007FFFFFul; // +Max Subnormal
             yield return 0x0000000000000001ul; // +Min Subnormal (float.Epsilon)
 
-            if (!NoZeros)
+            if (!_noZeros)
             {
                 yield return 0x0000000080000000ul; // -Zero
                 yield return 0x0000000000000000ul; // +Zero
             }
 
-            if (!NoInfs)
+            if (!_noInfs)
             {
                 yield return 0x00000000FF800000ul; // -Infinity
                 yield return 0x000000007F800000ul; // +Infinity
             }
 
-            if (!NoNaNs)
+            if (!_noNaNs)
             {
                 yield return 0x00000000FFC00000ul; // -QNaN (all zeros payload) (float.NaN)
                 yield return 0x00000000FFBFFFFFul; // -SNaN (all ones  payload)
@@ -65,19 +65,19 @@ namespace Ryujinx.Tests.Cpu
             yield return 0x000FFFFFFFFFFFFFul; // +Max Subnormal
             yield return 0x0000000000000001ul; // +Min Subnormal (double.Epsilon)
 
-            if (!NoZeros)
+            if (!_noZeros)
             {
                 yield return 0x8000000000000000ul; // -Zero
                 yield return 0x0000000000000000ul; // +Zero
             }
 
-            if (!NoInfs)
+            if (!_noInfs)
             {
                 yield return 0xFFF0000000000000ul; // -Infinity
                 yield return 0x7FF0000000000000ul; // +Infinity
             }
 
-            if (!NoNaNs)
+            if (!_noNaNs)
             {
                 yield return 0xFFF8000000000000ul; // -QNaN (all zeros payload) (double.NaN)
                 yield return 0xFFF7FFFFFFFFFFFFul; // -SNaN (all ones  payload)
@@ -94,15 +94,15 @@ namespace Ryujinx.Tests.Cpu
                 yield return rnd2;
             }
         }
-#endregion
+        #endregion
 
-#region "ValueSource (Opcodes)"
+        #region "ValueSource (Opcodes)"
         private static uint[] _F_Ccmp_Ccmpe_S_S_()
         {
             return new[]
             {
                 0x1E220420u, // FCCMP  S1, S2, #0, EQ
-                0x1E220430u  // FCCMPE S1, S2, #0, EQ
+                0x1E220430u, // FCCMPE S1, S2, #0, EQ
             };
         }
 
@@ -111,7 +111,7 @@ namespace Ryujinx.Tests.Cpu
             return new[]
             {
                 0x1E620420u, // FCCMP  D1, D2, #0, EQ
-                0x1E620430u  // FCCMPE D1, D2, #0, EQ
+                0x1E620430u, // FCCMPE D1, D2, #0, EQ
             };
         }
 
@@ -119,7 +119,7 @@ namespace Ryujinx.Tests.Cpu
         {
             return new[]
             {
-                0x1E220C20u // FCSEL S0, S1, S2, EQ
+                0x1E220C20u, // FCSEL S0, S1, S2, EQ
             };
         }
 
@@ -127,19 +127,20 @@ namespace Ryujinx.Tests.Cpu
         {
             return new[]
             {
-                0x1E620C20u // FCSEL D0, D1, D2, EQ
+                0x1E620C20u, // FCSEL D0, D1, D2, EQ
             };
         }
-#endregion
+        #endregion
 
-        private const int RndCnt     = 2;
+        private const int RndCnt = 2;
         private const int RndCntNzcv = 2;
 
-        private static readonly bool NoZeros = false;
-        private static readonly bool NoInfs  = false;
-        private static readonly bool NoNaNs  = false;
+        private static readonly bool _noZeros = false;
+        private static readonly bool _noInfs = false;
+        private static readonly bool _noNaNs = false;
 
-        [Test, Pairwise] [Explicit]
+        [Test, Pairwise]
+        [Explicit]
         public void F_Ccmp_Ccmpe_S_S([ValueSource(nameof(_F_Ccmp_Ccmpe_S_S_))] uint opcodes,
                                      [ValueSource(nameof(_1S_F_))] ulong a,
                                      [ValueSource(nameof(_1S_F_))] ulong b,
@@ -164,7 +165,8 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn(fpsrMask: Fpsr.Ioc);
         }
 
-        [Test, Pairwise] [Explicit]
+        [Test, Pairwise]
+        [Explicit]
         public void F_Ccmp_Ccmpe_S_D([ValueSource(nameof(_F_Ccmp_Ccmpe_S_D_))] uint opcodes,
                                      [ValueSource(nameof(_1D_F_))] ulong a,
                                      [ValueSource(nameof(_1D_F_))] ulong b,
@@ -189,7 +191,8 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn(fpsrMask: Fpsr.Ioc);
         }
 
-        [Test, Pairwise] [Explicit]
+        [Test, Pairwise]
+        [Explicit]
         public void F_Csel_S_S([ValueSource(nameof(_F_Csel_S_S_))] uint opcodes,
                                [ValueSource(nameof(_1S_F_))] ulong a,
                                [ValueSource(nameof(_1S_F_))] ulong b,
@@ -210,7 +213,8 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Pairwise] [Explicit]
+        [Test, Pairwise]
+        [Explicit]
         public void F_Csel_S_D([ValueSource(nameof(_F_Csel_S_D_))] uint opcodes,
                                [ValueSource(nameof(_1D_F_))] ulong a,
                                [ValueSource(nameof(_1D_F_))] ulong b,

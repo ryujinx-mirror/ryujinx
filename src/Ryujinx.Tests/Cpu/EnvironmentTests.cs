@@ -10,22 +10,24 @@ namespace Ryujinx.Tests.Cpu
 {
     internal class EnvironmentTests
     {
+#pragma warning disable IDE0052 // Remove unread private member
         private static Translator _translator;
+#pragma warning restore IDE0052
 
-        private void EnsureTranslator()
+        private static void EnsureTranslator()
         {
             // Create a translator, as one is needed to register the signal handler or emit methods.
             _translator ??= new Translator(new JitMemoryAllocator(), new MockMemoryManager(), true);
         }
 
         [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
-        private float GetDenormal()
+        private static float GetDenormal()
         {
             return BitConverter.Int32BitsToSingle(1);
         }
 
         [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
-        private float GetZero()
+        private static float GetZero()
         {
             return BitConverter.Int32BitsToSingle(0);
         }
@@ -53,7 +55,7 @@ namespace Ryujinx.Tests.Cpu
 
                 if (test < 4f)
                 {
-                    throw new System.Exception("Sanity check.");
+                    throw new Exception("Sanity check.");
                 }
 
                 isFz = GetDenormal() + GetZero() == 0f;
@@ -62,7 +64,7 @@ namespace Ryujinx.Tests.Cpu
                 {
                     if (test >= 4f)
                     {
-                        throw new System.Exception("Always throws.");
+                        throw new Exception("Always throws.");
                     }
                 }
                 catch
