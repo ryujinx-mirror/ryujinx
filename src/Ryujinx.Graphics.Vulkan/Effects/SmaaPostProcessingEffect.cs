@@ -4,10 +4,12 @@ using Ryujinx.Graphics.Shader;
 using Ryujinx.Graphics.Shader.Translation;
 using Silk.NET.Vulkan;
 using System;
+using Format = Ryujinx.Graphics.GAL.Format;
+using SamplerCreateInfo = Ryujinx.Graphics.GAL.SamplerCreateInfo;
 
 namespace Ryujinx.Graphics.Vulkan.Effects
 {
-    internal partial class SmaaPostProcessingEffect : IPostProcessingEffect
+    internal class SmaaPostProcessingEffect : IPostProcessingEffect
     {
         public const int AreaWidth = 160;
         public const int AreaHeight = 560;
@@ -63,7 +65,7 @@ namespace Ryujinx.Graphics.Vulkan.Effects
             _searchTexture?.Dispose();
         }
 
-        private unsafe void RecreateShaders(int width, int height)
+        private void RecreateShaders(int width, int height)
         {
             _recreatePipelines = false;
 
@@ -94,9 +96,9 @@ namespace Ryujinx.Graphics.Vulkan.Effects
                 .Add(ResourceStages.Compute, ResourceType.TextureAndSampler, 3)
                 .Add(ResourceStages.Compute, ResourceType.Image, 0).Build();
 
-            _samplerLinear = _renderer.CreateSampler(GAL.SamplerCreateInfo.Create(MinFilter.Linear, MagFilter.Linear));
+            _samplerLinear = _renderer.CreateSampler(SamplerCreateInfo.Create(MinFilter.Linear, MagFilter.Linear));
 
-            _specConstants = new SmaaConstants()
+            _specConstants = new SmaaConstants
             {
                 Width = width,
                 Height = height,
@@ -116,17 +118,17 @@ namespace Ryujinx.Graphics.Vulkan.Effects
 
             _edgeProgram = _renderer.CreateProgramWithMinimalLayout(new[]
             {
-                new ShaderSource(edgeShader, ShaderStage.Compute, TargetLanguage.Spirv)
+                new ShaderSource(edgeShader, ShaderStage.Compute, TargetLanguage.Spirv),
             }, edgeResourceLayout, new[] { specInfo });
 
             _blendProgram = _renderer.CreateProgramWithMinimalLayout(new[]
             {
-                new ShaderSource(blendShader, ShaderStage.Compute, TargetLanguage.Spirv)
+                new ShaderSource(blendShader, ShaderStage.Compute, TargetLanguage.Spirv),
             }, blendResourceLayout, new[] { specInfo });
 
             _neighbourProgram = _renderer.CreateProgramWithMinimalLayout(new[]
             {
-                new ShaderSource(neighbourShader, ShaderStage.Compute, TargetLanguage.Spirv)
+                new ShaderSource(neighbourShader, ShaderStage.Compute, TargetLanguage.Spirv),
             }, neighbourResourceLayout, new[] { specInfo });
         }
 
@@ -148,7 +150,7 @@ namespace Ryujinx.Graphics.Vulkan.Effects
                 1,
                 1,
                 1,
-                GAL.Format.R8G8Unorm,
+                Format.R8G8Unorm,
                 DepthStencilMode.Depth,
                 Target.Texture2D,
                 SwizzleComponent.Red,
@@ -164,7 +166,7 @@ namespace Ryujinx.Graphics.Vulkan.Effects
                 1,
                 1,
                 1,
-                GAL.Format.R8Unorm,
+                Format.R8Unorm,
                 DepthStencilMode.Depth,
                 Target.Texture2D,
                 SwizzleComponent.Red,

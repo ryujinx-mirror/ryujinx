@@ -6,7 +6,7 @@ namespace Ryujinx.Graphics.Vulkan
 {
     class MemoryAllocator : IDisposable
     {
-        private ulong MaxDeviceMemoryUsageEstimate = 16UL * 1024 * 1024 * 1024;
+        private const ulong MaxDeviceMemoryUsageEstimate = 16UL * 1024 * 1024 * 1024;
 
         private readonly Vk _api;
         private readonly VulkanPhysicalDevice _physicalDevice;
@@ -20,7 +20,7 @@ namespace Ryujinx.Graphics.Vulkan
             _physicalDevice = physicalDevice;
             _device = device;
             _blockLists = new List<MemoryAllocatorBlockList>();
-            _blockAlignment = (int)Math.Min(int.MaxValue, MaxDeviceMemoryUsageEstimate / (ulong)_physicalDevice.PhysicalDeviceProperties.Limits.MaxMemoryAllocationCount);
+            _blockAlignment = (int)Math.Min(int.MaxValue, MaxDeviceMemoryUsageEstimate / _physicalDevice.PhysicalDeviceProperties.Limits.MaxMemoryAllocationCount);
         }
 
         public MemoryAllocation AllocateDeviceMemory(

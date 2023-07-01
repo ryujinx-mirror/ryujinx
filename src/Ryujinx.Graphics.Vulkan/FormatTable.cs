@@ -12,6 +12,7 @@ namespace Ryujinx.Graphics.Vulkan
         {
             _table = new VkFormat[Enum.GetNames(typeof(Format)).Length];
 
+#pragma warning disable IDE0055 // Disable formatting
             Add(Format.R8Unorm,             VkFormat.R8Unorm);
             Add(Format.R8Snorm,             VkFormat.R8SNorm);
             Add(Format.R8Uint,              VkFormat.R8Uint);
@@ -157,6 +158,7 @@ namespace Ryujinx.Graphics.Vulkan
             Add(Format.A1B5G5R5Unorm,       VkFormat.R5G5B5A1UnormPack16);
             Add(Format.B8G8R8A8Unorm,       VkFormat.B8G8R8A8Unorm);
             Add(Format.B8G8R8A8Srgb,        VkFormat.B8G8R8A8Srgb);
+#pragma warning restore IDE0055
         }
 
         private static void Add(Format format, VkFormat vkFormat)
@@ -175,7 +177,7 @@ namespace Ryujinx.Graphics.Vulkan
             {
                 Format.R8G8B8A8Srgb => Format.R8G8B8A8Unorm,
                 Format.B8G8R8A8Srgb => Format.B8G8R8A8Unorm,
-                _ => format
+                _ => format,
             };
         }
 
@@ -280,121 +282,61 @@ namespace Ryujinx.Graphics.Vulkan
 
         public static VkFormat DropLastComponent(VkFormat format)
         {
-            switch (format)
+            return format switch
             {
-                case VkFormat.R8G8Unorm:
-                    return VkFormat.R8Unorm;
-                case VkFormat.R8G8SNorm:
-                    return VkFormat.R8SNorm;
-                case VkFormat.R8G8Uint:
-                    return VkFormat.R8Uint;
-                case VkFormat.R8G8Sint:
-                    return VkFormat.R8Sint;
-                case VkFormat.R8G8Uscaled:
-                    return VkFormat.R8Uscaled;
-                case VkFormat.R8G8Sscaled:
-                    return VkFormat.R8Sscaled;
-
-                case VkFormat.R8G8B8Unorm:
-                    return VkFormat.R8G8Unorm;
-                case VkFormat.R8G8B8SNorm:
-                    return VkFormat.R8G8SNorm;
-                case VkFormat.R8G8B8Uint:
-                    return VkFormat.R8G8Uint;
-                case VkFormat.R8G8B8Sint:
-                    return VkFormat.R8G8Sint;
-                case VkFormat.R8G8B8Uscaled:
-                    return VkFormat.R8G8Uscaled;
-                case VkFormat.R8G8B8Sscaled:
-                    return VkFormat.R8G8Sscaled;
-
-                case VkFormat.R8G8B8A8Unorm:
-                    return VkFormat.R8G8B8Unorm;
-                case VkFormat.R8G8B8A8SNorm:
-                    return VkFormat.R8G8B8SNorm;
-                case VkFormat.R8G8B8A8Uint:
-                    return VkFormat.R8G8B8Uint;
-                case VkFormat.R8G8B8A8Sint:
-                    return VkFormat.R8G8B8Sint;
-                case VkFormat.R8G8B8A8Srgb:
-                    return VkFormat.R8G8B8Srgb;
-                case VkFormat.R8G8B8A8Uscaled:
-                    return VkFormat.R8G8B8Uscaled;
-                case VkFormat.R8G8B8A8Sscaled:
-                    return VkFormat.R8G8B8Sscaled;
-                case VkFormat.B8G8R8A8Unorm:
-                    return VkFormat.B8G8R8Unorm;
-                case VkFormat.B8G8R8A8Srgb:
-                    return VkFormat.B8G8R8Srgb;
-
-                case VkFormat.R16G16Sfloat:
-                    return VkFormat.R16Sfloat;
-                case VkFormat.R16G16Unorm:
-                    return VkFormat.R16Unorm;
-                case VkFormat.R16G16SNorm:
-                    return VkFormat.R16SNorm;
-                case VkFormat.R16G16Uint:
-                    return VkFormat.R16Uint;
-                case VkFormat.R16G16Sint:
-                    return VkFormat.R16Sint;
-                case VkFormat.R16G16Uscaled:
-                    return VkFormat.R16Uscaled;
-                case VkFormat.R16G16Sscaled:
-                    return VkFormat.R16Sscaled;
-
-                case VkFormat.R16G16B16Sfloat:
-                    return VkFormat.R16G16Sfloat;
-                case VkFormat.R16G16B16Unorm:
-                    return VkFormat.R16G16Unorm;
-                case VkFormat.R16G16B16SNorm:
-                    return VkFormat.R16G16SNorm;
-                case VkFormat.R16G16B16Uint:
-                    return VkFormat.R16G16Uint;
-                case VkFormat.R16G16B16Sint:
-                    return VkFormat.R16G16Sint;
-                case VkFormat.R16G16B16Uscaled:
-                    return VkFormat.R16G16Uscaled;
-                case VkFormat.R16G16B16Sscaled:
-                    return VkFormat.R16G16Sscaled;
-
-                case VkFormat.R16G16B16A16Sfloat:
-                    return VkFormat.R16G16B16Sfloat;
-                case VkFormat.R16G16B16A16Unorm:
-                    return VkFormat.R16G16B16Unorm;
-                case VkFormat.R16G16B16A16SNorm:
-                    return VkFormat.R16G16B16SNorm;
-                case VkFormat.R16G16B16A16Uint:
-                    return VkFormat.R16G16B16Uint;
-                case VkFormat.R16G16B16A16Sint:
-                    return VkFormat.R16G16B16Sint;
-                case VkFormat.R16G16B16A16Uscaled:
-                    return VkFormat.R16G16B16Uscaled;
-                case VkFormat.R16G16B16A16Sscaled:
-                    return VkFormat.R16G16B16Sscaled;
-
-                case VkFormat.R32G32Sfloat:
-                    return VkFormat.R32Sfloat;
-                case VkFormat.R32G32Uint:
-                    return VkFormat.R32Uint;
-                case VkFormat.R32G32Sint:
-                    return VkFormat.R32Sint;
-
-                case VkFormat.R32G32B32Sfloat:
-                    return VkFormat.R32G32Sfloat;
-                case VkFormat.R32G32B32Uint:
-                    return VkFormat.R32G32Uint;
-                case VkFormat.R32G32B32Sint:
-                    return VkFormat.R32G32Sint;
-
-                case VkFormat.R32G32B32A32Sfloat:
-                    return VkFormat.R32G32B32Sfloat;
-                case VkFormat.R32G32B32A32Uint:
-                    return VkFormat.R32G32B32Uint;
-                case VkFormat.R32G32B32A32Sint:
-                    return VkFormat.R32G32B32Sint;
-            }
-
-            return format;
+                VkFormat.R8G8Unorm => VkFormat.R8Unorm,
+                VkFormat.R8G8SNorm => VkFormat.R8SNorm,
+                VkFormat.R8G8Uint => VkFormat.R8Uint,
+                VkFormat.R8G8Sint => VkFormat.R8Sint,
+                VkFormat.R8G8Uscaled => VkFormat.R8Uscaled,
+                VkFormat.R8G8Sscaled => VkFormat.R8Sscaled,
+                VkFormat.R8G8B8Unorm => VkFormat.R8G8Unorm,
+                VkFormat.R8G8B8SNorm => VkFormat.R8G8SNorm,
+                VkFormat.R8G8B8Uint => VkFormat.R8G8Uint,
+                VkFormat.R8G8B8Sint => VkFormat.R8G8Sint,
+                VkFormat.R8G8B8Uscaled => VkFormat.R8G8Uscaled,
+                VkFormat.R8G8B8Sscaled => VkFormat.R8G8Sscaled,
+                VkFormat.R8G8B8A8Unorm => VkFormat.R8G8B8Unorm,
+                VkFormat.R8G8B8A8SNorm => VkFormat.R8G8B8SNorm,
+                VkFormat.R8G8B8A8Uint => VkFormat.R8G8B8Uint,
+                VkFormat.R8G8B8A8Sint => VkFormat.R8G8B8Sint,
+                VkFormat.R8G8B8A8Srgb => VkFormat.R8G8B8Srgb,
+                VkFormat.R8G8B8A8Uscaled => VkFormat.R8G8B8Uscaled,
+                VkFormat.R8G8B8A8Sscaled => VkFormat.R8G8B8Sscaled,
+                VkFormat.B8G8R8A8Unorm => VkFormat.B8G8R8Unorm,
+                VkFormat.B8G8R8A8Srgb => VkFormat.B8G8R8Srgb,
+                VkFormat.R16G16Sfloat => VkFormat.R16Sfloat,
+                VkFormat.R16G16Unorm => VkFormat.R16Unorm,
+                VkFormat.R16G16SNorm => VkFormat.R16SNorm,
+                VkFormat.R16G16Uint => VkFormat.R16Uint,
+                VkFormat.R16G16Sint => VkFormat.R16Sint,
+                VkFormat.R16G16Uscaled => VkFormat.R16Uscaled,
+                VkFormat.R16G16Sscaled => VkFormat.R16Sscaled,
+                VkFormat.R16G16B16Sfloat => VkFormat.R16G16Sfloat,
+                VkFormat.R16G16B16Unorm => VkFormat.R16G16Unorm,
+                VkFormat.R16G16B16SNorm => VkFormat.R16G16SNorm,
+                VkFormat.R16G16B16Uint => VkFormat.R16G16Uint,
+                VkFormat.R16G16B16Sint => VkFormat.R16G16Sint,
+                VkFormat.R16G16B16Uscaled => VkFormat.R16G16Uscaled,
+                VkFormat.R16G16B16Sscaled => VkFormat.R16G16Sscaled,
+                VkFormat.R16G16B16A16Sfloat => VkFormat.R16G16B16Sfloat,
+                VkFormat.R16G16B16A16Unorm => VkFormat.R16G16B16Unorm,
+                VkFormat.R16G16B16A16SNorm => VkFormat.R16G16B16SNorm,
+                VkFormat.R16G16B16A16Uint => VkFormat.R16G16B16Uint,
+                VkFormat.R16G16B16A16Sint => VkFormat.R16G16B16Sint,
+                VkFormat.R16G16B16A16Uscaled => VkFormat.R16G16B16Uscaled,
+                VkFormat.R16G16B16A16Sscaled => VkFormat.R16G16B16Sscaled,
+                VkFormat.R32G32Sfloat => VkFormat.R32Sfloat,
+                VkFormat.R32G32Uint => VkFormat.R32Uint,
+                VkFormat.R32G32Sint => VkFormat.R32Sint,
+                VkFormat.R32G32B32Sfloat => VkFormat.R32G32Sfloat,
+                VkFormat.R32G32B32Uint => VkFormat.R32G32Uint,
+                VkFormat.R32G32B32Sint => VkFormat.R32G32Sint,
+                VkFormat.R32G32B32A32Sfloat => VkFormat.R32G32B32Sfloat,
+                VkFormat.R32G32B32A32Uint => VkFormat.R32G32B32Uint,
+                VkFormat.R32G32B32A32Sint => VkFormat.R32G32B32Sint,
+                _ => format,
+            };
         }
     }
 }

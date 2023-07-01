@@ -2,7 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using Thread = System.Threading.Thread;
+using System.Threading;
+using Semaphore = Silk.NET.Vulkan.Semaphore;
 
 namespace Ryujinx.Graphics.Vulkan
 {
@@ -10,8 +11,8 @@ namespace Ryujinx.Graphics.Vulkan
     {
         public const int MaxCommandBuffers = 16;
 
-        private int _totalCommandBuffers;
-        private int _totalCommandBuffersMask;
+        private readonly int _totalCommandBuffers;
+        private readonly int _totalCommandBuffersMask;
 
         private readonly Vk _api;
         private readonly Device _device;
@@ -36,12 +37,12 @@ namespace Ryujinx.Graphics.Vulkan
 
             public void Initialize(Vk api, Device device, CommandPool pool)
             {
-                var allocateInfo = new CommandBufferAllocateInfo()
+                var allocateInfo = new CommandBufferAllocateInfo
                 {
                     SType = StructureType.CommandBufferAllocateInfo,
                     CommandBufferCount = 1,
                     CommandPool = pool,
-                    Level = CommandBufferLevel.Primary
+                    Level = CommandBufferLevel.Primary,
                 };
 
                 api.AllocateCommandBuffers(device, allocateInfo, out CommandBuffer);
@@ -67,12 +68,12 @@ namespace Ryujinx.Graphics.Vulkan
             _queueLock = queueLock;
             _owner = Thread.CurrentThread;
 
-            var commandPoolCreateInfo = new CommandPoolCreateInfo()
+            var commandPoolCreateInfo = new CommandPoolCreateInfo
             {
                 SType = StructureType.CommandPoolCreateInfo,
                 QueueFamilyIndex = queueFamilyIndex,
                 Flags = CommandPoolCreateFlags.TransientBit |
-                        CommandPoolCreateFlags.ResetCommandBufferBit
+                        CommandPoolCreateFlags.ResetCommandBufferBit,
             };
 
             api.CreateCommandPool(device, commandPoolCreateInfo, null, out _pool).ThrowOnError();
@@ -243,9 +244,9 @@ namespace Ryujinx.Graphics.Vulkan
 
                         _inUseCount++;
 
-                        var commandBufferBeginInfo = new CommandBufferBeginInfo()
+                        var commandBufferBeginInfo = new CommandBufferBeginInfo
                         {
-                            SType = StructureType.CommandBufferBeginInfo
+                            SType = StructureType.CommandBufferBeginInfo,
                         };
 
                         _api.BeginCommandBuffer(entry.CommandBuffer, commandBufferBeginInfo).ThrowOnError();
@@ -291,7 +292,7 @@ namespace Ryujinx.Graphics.Vulkan
                 {
                     fixed (PipelineStageFlags* pWaitDstStageMask = waitDstStageMask)
                     {
-                        SubmitInfo sInfo = new SubmitInfo()
+                        SubmitInfo sInfo = new()
                         {
                             SType = StructureType.SubmitInfo,
                             WaitSemaphoreCount = waitSemaphores != null ? (uint)waitSemaphores.Length : 0,
@@ -300,7 +301,7 @@ namespace Ryujinx.Graphics.Vulkan
                             CommandBufferCount = 1,
                             PCommandBuffers = &commandBuffer,
                             SignalSemaphoreCount = signalSemaphores != null ? (uint)signalSemaphores.Length : 0,
-                            PSignalSemaphores = pSignalSemaphores
+                            PSignalSemaphores = pSignalSemaphores,
                         };
 
                         lock (_queueLock)

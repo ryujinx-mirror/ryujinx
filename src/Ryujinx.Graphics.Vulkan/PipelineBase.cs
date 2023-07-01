@@ -1,5 +1,4 @@
-﻿using Ryujinx.Common;
-using Ryujinx.Graphics.GAL;
+﻿using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.Shader;
 using Silk.NET.Vulkan;
 using System;
@@ -7,6 +6,13 @@ using System.Linq;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using CompareOp = Ryujinx.Graphics.GAL.CompareOp;
+using Format = Ryujinx.Graphics.GAL.Format;
+using FrontFace = Ryujinx.Graphics.GAL.FrontFace;
+using IndexType = Ryujinx.Graphics.GAL.IndexType;
+using PolygonMode = Ryujinx.Graphics.GAL.PolygonMode;
+using PrimitiveTopology = Ryujinx.Graphics.GAL.PrimitiveTopology;
+using Viewport = Ryujinx.Graphics.GAL.Viewport;
 
 namespace Ryujinx.Graphics.Vulkan
 {
@@ -28,7 +34,7 @@ namespace Ryujinx.Graphics.Vulkan
         protected PipelineDynamicState DynamicState;
         private PipelineState _newState;
         private bool _stateDirty;
-        private GAL.PrimitiveTopology _topology;
+        private PrimitiveTopology _topology;
 
         private ulong _currentPipelineHandle;
 
@@ -44,7 +50,7 @@ namespace Ryujinx.Graphics.Vulkan
 
         private ShaderCollection _program;
 
-        private Vector4<float>[] _renderScale = new Vector4<float>[73];
+        private readonly Vector4<float>[] _renderScale = new Vector4<float>[73];
         private int _fragmentScaleCount;
 
         protected FramebufferParams FramebufferParams;
@@ -78,7 +84,7 @@ namespace Ryujinx.Graphics.Vulkan
         private bool _tfEnabled;
         private bool _tfActive;
 
-        private PipelineColorBlendAttachmentState[] _storedBlend;
+        private readonly PipelineColorBlendAttachmentState[] _storedBlend;
 
         private ulong _drawCountSinceBarrier;
         public ulong DrawCount { get; private set; }
@@ -91,9 +97,9 @@ namespace Ryujinx.Graphics.Vulkan
 
             AutoFlush = new AutoFlushCounter(gd);
 
-            var pipelineCacheCreateInfo = new PipelineCacheCreateInfo()
+            var pipelineCacheCreateInfo = new PipelineCacheCreateInfo
             {
-                SType = StructureType.PipelineCacheCreateInfo
+                SType = StructureType.PipelineCacheCreateInfo,
             };
 
             gd.Api.CreatePipelineCache(device, pipelineCacheCreateInfo, null, out PipelineCache).ThrowOnError();
@@ -108,7 +114,7 @@ namespace Ryujinx.Graphics.Vulkan
 
             using var emptyVb = gd.BufferManager.Create(gd, EmptyVbSize);
             emptyVb.SetData(0, new byte[EmptyVbSize]);
-            _vertexBuffers[0] = new VertexBufferState(emptyVb.GetBuffer(), 0, 0, EmptyVbSize, 0);
+            _vertexBuffers[0] = new VertexBufferState(emptyVb.GetBuffer(), 0, 0, EmptyVbSize);
             _vertexBuffersDirty = ulong.MaxValue >> (64 - _vertexBuffers.Length);
 
             ClearScissor = new Rectangle<int>(0, 0, 0xffff, 0xffff);
@@ -146,11 +152,11 @@ namespace Ryujinx.Graphics.Vulkan
                 }
             }
 
-            MemoryBarrier memoryBarrier = new MemoryBarrier()
+            MemoryBarrier memoryBarrier = new()
             {
                 SType = StructureType.MemoryBarrier,
                 SrcAccessMask = AccessFlags.MemoryReadBit | AccessFlags.MemoryWriteBit,
-                DstAccessMask = AccessFlags.MemoryReadBit | AccessFlags.MemoryWriteBit
+                DstAccessMask = AccessFlags.MemoryReadBit | AccessFlags.MemoryWriteBit,
             };
 
             Gd.Api.CmdPipelineBarrier(
@@ -168,11 +174,11 @@ namespace Ryujinx.Graphics.Vulkan
 
         public void ComputeBarrier()
         {
-            MemoryBarrier memoryBarrier = new MemoryBarrier()
+            MemoryBarrier memoryBarrier = new()
             {
                 SType = StructureType.MemoryBarrier,
                 SrcAccessMask = AccessFlags.MemoryReadBit | AccessFlags.MemoryWriteBit,
-                DstAccessMask = AccessFlags.MemoryReadBit | AccessFlags.MemoryWriteBit
+                DstAccessMask = AccessFlags.MemoryReadBit | AccessFlags.MemoryWriteBit,
             };
 
             Gd.Api.CmdPipelineBarrier(
@@ -188,7 +194,7 @@ namespace Ryujinx.Graphics.Vulkan
                 ReadOnlySpan<ImageMemoryBarrier>.Empty);
         }
 
-        public void BeginTransformFeedback(GAL.PrimitiveTopology topology)
+        public void BeginTransformFeedback(PrimitiveTopology topology)
         {
             _tfEnabled = true;
         }
@@ -281,11 +287,11 @@ namespace Ryujinx.Graphics.Vulkan
 
         public unsafe void CommandBufferBarrier()
         {
-            MemoryBarrier memoryBarrier = new MemoryBarrier()
+            MemoryBarrier memoryBarrier = new()
             {
                 SType = StructureType.MemoryBarrier,
                 SrcAccessMask = BufferHolder.DefaultAccessFlags,
-                DstAccessMask = AccessFlags.IndirectCommandReadBit
+                DstAccessMask = AccessFlags.IndirectCommandReadBit,
             };
 
             Gd.Api.CmdPipelineBarrier(
@@ -374,10 +380,10 @@ namespace Ryujinx.Graphics.Vulkan
 
                 IndexBufferPattern pattern = _topology switch
                 {
-                    GAL.PrimitiveTopology.Quads => QuadsToTrisPattern,
-                    GAL.PrimitiveTopology.TriangleFan or
-                    GAL.PrimitiveTopology.Polygon => TriFanToTrisPattern,
-                    _ => throw new NotSupportedException($"Unsupported topology: {_topology}")
+                    PrimitiveTopology.Quads => QuadsToTrisPattern,
+                    PrimitiveTopology.TriangleFan or
+                    PrimitiveTopology.Polygon => TriFanToTrisPattern,
+                    _ => throw new NotSupportedException($"Unsupported topology: {_topology}"),
                 };
 
                 BufferHandle handle = pattern.GetRepeatingBuffer(vertexCount, out int indexCount);
@@ -406,10 +412,10 @@ namespace Ryujinx.Graphics.Vulkan
             {
                 pattern = _topology switch
                 {
-                    GAL.PrimitiveTopology.Quads => QuadsToTrisPattern,
-                    GAL.PrimitiveTopology.TriangleFan or
-                    GAL.PrimitiveTopology.Polygon => TriFanToTrisPattern,
-                    _ => throw new NotSupportedException($"Unsupported topology: {_topology}")
+                    PrimitiveTopology.Quads => QuadsToTrisPattern,
+                    PrimitiveTopology.TriangleFan or
+                    PrimitiveTopology.Polygon => TriFanToTrisPattern,
+                    _ => throw new NotSupportedException($"Unsupported topology: {_topology}"),
                 };
             }
 
@@ -718,7 +724,7 @@ namespace Ryujinx.Graphics.Vulkan
             return CommandBuffer.Handle == cb.Handle;
         }
 
-        public void SetAlphaTest(bool enable, float reference, GAL.CompareOp op)
+        public void SetAlphaTest(bool enable, float reference, CompareOp op)
         {
             // This is currently handled using shader specialization, as Vulkan does not support alpha test.
             // In the future, we may want to use this to write the reference value into the support buffer,
@@ -847,13 +853,13 @@ namespace Ryujinx.Graphics.Vulkan
             SignalStateChange();
         }
 
-        public void SetFrontFace(GAL.FrontFace frontFace)
+        public void SetFrontFace(FrontFace frontFace)
         {
             _newState.FrontFace = frontFace.Convert();
             SignalStateChange();
         }
 
-        public void SetImage(int binding, ITexture image, GAL.Format imageFormat)
+        public void SetImage(int binding, ITexture image, Format imageFormat)
         {
             _descriptorSetUpdater.SetImage(binding, image, imageFormat);
         }
@@ -863,7 +869,7 @@ namespace Ryujinx.Graphics.Vulkan
             _descriptorSetUpdater.SetImage(binding, image);
         }
 
-        public void SetIndexBuffer(BufferRange buffer, GAL.IndexType type)
+        public void SetIndexBuffer(BufferRange buffer, IndexType type)
         {
             if (buffer.Handle != BufferHandle.Null)
             {
@@ -897,12 +903,7 @@ namespace Ryujinx.Graphics.Vulkan
             SignalStateChange();
         }
 
-        public void SetOrigin(Origin origin)
-        {
-            // TODO.
-        }
-
-        public unsafe void SetPatchParameters(int vertices, ReadOnlySpan<float> defaultOuterLevel, ReadOnlySpan<float> defaultInnerLevel)
+        public void SetPatchParameters(int vertices, ReadOnlySpan<float> defaultOuterLevel, ReadOnlySpan<float> defaultInnerLevel)
         {
             _newState.PatchControlPoints = (uint)vertices;
             SignalStateChange();
@@ -910,15 +911,17 @@ namespace Ryujinx.Graphics.Vulkan
             // TODO: Default levels (likely needs emulation on shaders?)
         }
 
+#pragma warning disable CA1822 // Mark member as static
         public void SetPointParameters(float size, bool isProgramPointSize, bool enablePointSprite, Origin origin)
         {
             // TODO.
         }
 
-        public void SetPolygonMode(GAL.PolygonMode frontMode, GAL.PolygonMode backMode)
+        public void SetPolygonMode(PolygonMode frontMode, PolygonMode backMode)
         {
             // TODO.
         }
+#pragma warning restore CA1822
 
         public void SetPrimitiveRestart(bool enable, int index)
         {
@@ -927,7 +930,7 @@ namespace Ryujinx.Graphics.Vulkan
             SignalStateChange();
         }
 
-        public void SetPrimitiveTopology(GAL.PrimitiveTopology topology)
+        public void SetPrimitiveTopology(PrimitiveTopology topology)
         {
             _topology = topology;
 
@@ -950,7 +953,7 @@ namespace Ryujinx.Graphics.Vulkan
             _newState.PipelineLayout = internalProgram.PipelineLayout;
             _newState.StagesCount = (uint)stages.Length;
 
-            stages.CopyTo(_newState.Stages.AsSpan().Slice(0, stages.Length));
+            stages.CopyTo(_newState.Stages.AsSpan()[..stages.Length]);
 
             SignalStateChange();
 
@@ -1149,10 +1152,12 @@ namespace Ryujinx.Graphics.Vulkan
             _descriptorSetUpdater.SetUniformBuffers(CommandBuffer, buffers);
         }
 
+#pragma warning disable CA1822 // Mark member as static
         public void SetUserClipDistance(int index, bool enableClip)
         {
             // TODO.
         }
+#pragma warning restore CA1822
 
         public void SetVertexAttribs(ReadOnlySpan<VertexAttribDescriptor> vertexAttribs)
         {
@@ -1298,7 +1303,7 @@ namespace Ryujinx.Graphics.Vulkan
             SignalStateChange();
         }
 
-        public void SetViewports(ReadOnlySpan<GAL.Viewport> viewports, bool disableTransform)
+        public void SetViewports(ReadOnlySpan<Viewport> viewports, bool disableTransform)
         {
             int maxViewports = Gd.Capabilities.SupportsMultiView ? Constants.MaxViewports : 1;
             int count = Math.Min(maxViewports, viewports.Length);
@@ -1332,7 +1337,7 @@ namespace Ryujinx.Graphics.Vulkan
                     X = scale * 2f / viewports[0].Region.Width,
                     Y = scale * 2f / viewports[0].Region.Height,
                     Z = 1,
-                    W = disableTransformF
+                    W = disableTransformF,
                 });
             }
 
@@ -1361,11 +1366,11 @@ namespace Ryujinx.Graphics.Vulkan
 
         public unsafe void TextureBarrier()
         {
-            MemoryBarrier memoryBarrier = new MemoryBarrier()
+            MemoryBarrier memoryBarrier = new()
             {
                 SType = StructureType.MemoryBarrier,
                 SrcAccessMask = AccessFlags.MemoryReadBit | AccessFlags.MemoryWriteBit,
-                DstAccessMask = AccessFlags.MemoryReadBit | AccessFlags.MemoryWriteBit
+                DstAccessMask = AccessFlags.MemoryReadBit | AccessFlags.MemoryWriteBit,
             };
 
             Gd.Api.CmdPipelineBarrier(
@@ -1433,7 +1438,7 @@ namespace Ryujinx.Graphics.Vulkan
                 // Just try to remove duplicate attachments.
                 // Save a copy of the array to rebind when mask changes.
 
-                void maskOut()
+                void MaskOut()
                 {
                     if (!_framebufferUsingColorWriteMask)
                     {
@@ -1467,12 +1472,12 @@ namespace Ryujinx.Graphics.Vulkan
                             if (vkBlend.ColorWriteMask == 0)
                             {
                                 colors[i] = null;
-                                maskOut();
+                                MaskOut();
                             }
                             else if (vkBlend2.ColorWriteMask == 0)
                             {
                                 colors[j] = null;
-                                maskOut();
+                                MaskOut();
                             }
                         }
                     }
@@ -1505,9 +1510,9 @@ namespace Ryujinx.Graphics.Vulkan
 
             AttachmentDescription[] attachmentDescs = null;
 
-            var subpass = new SubpassDescription()
+            var subpass = new SubpassDescription
             {
-                PipelineBindPoint = PipelineBindPoint.Graphics
+                PipelineBindPoint = PipelineBindPoint.Graphics,
             };
 
             AttachmentReference* attachmentReferences = stackalloc AttachmentReference[MaxAttachments];
@@ -1572,7 +1577,7 @@ namespace Ryujinx.Graphics.Vulkan
 
             fixed (AttachmentDescription* pAttachmentDescs = attachmentDescs)
             {
-                var renderPassCreateInfo = new RenderPassCreateInfo()
+                var renderPassCreateInfo = new RenderPassCreateInfo
                 {
                     SType = StructureType.RenderPassCreateInfo,
                     PAttachments = pAttachmentDescs,
@@ -1580,7 +1585,7 @@ namespace Ryujinx.Graphics.Vulkan
                     PSubpasses = &subpass,
                     SubpassCount = 1,
                     PDependencies = &subpassDependency,
-                    DependencyCount = 1
+                    DependencyCount = 1,
                 };
 
                 Gd.Api.CreateRenderPass(Device, renderPassCreateInfo, null, out var renderPass).ThrowOnError();
@@ -1688,14 +1693,14 @@ namespace Ryujinx.Graphics.Vulkan
                 var renderArea = new Rect2D(null, new Extent2D(FramebufferParams.Width, FramebufferParams.Height));
                 var clearValue = new ClearValue();
 
-                var renderPassBeginInfo = new RenderPassBeginInfo()
+                var renderPassBeginInfo = new RenderPassBeginInfo
                 {
                     SType = StructureType.RenderPassBeginInfo,
                     RenderPass = _renderPass.Get(Cbs).Value,
                     Framebuffer = _framebuffer.Get(Cbs).Value,
                     RenderArea = renderArea,
                     PClearValues = &clearValue,
-                    ClearValueCount = 1
+                    ClearValueCount = 1,
                 };
 
                 Gd.Api.CmdBeginRenderPass(CommandBuffer, renderPassBeginInfo, SubpassContents.Inline);

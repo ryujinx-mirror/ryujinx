@@ -10,7 +10,7 @@ namespace Ryujinx.Graphics.Vulkan
 {
     internal class HostMemoryAllocator
     {
-        private struct HostMemoryAllocation
+        private readonly struct HostMemoryAllocation
         {
             public readonly Auto<MemoryAllocation> Allocation;
             public readonly IntPtr Pointer;
@@ -33,8 +33,8 @@ namespace Ryujinx.Graphics.Vulkan
         private readonly Device _device;
         private readonly object _lock = new();
 
-        private List<HostMemoryAllocation> _allocations;
-        private IntervalTree<ulong, HostMemoryAllocation> _allocationTree;
+        private readonly List<HostMemoryAllocation> _allocations;
+        private readonly IntervalTree<ulong, HostMemoryAllocation> _allocationTree;
 
         public HostMemoryAllocator(MemoryAllocator allocator, Vk api, ExtExternalMemoryHost hostMemoryApi, Device device)
         {
@@ -100,19 +100,19 @@ namespace Ryujinx.Graphics.Vulkan
                     return false;
                 }
 
-                ImportMemoryHostPointerInfoEXT importInfo = new ImportMemoryHostPointerInfoEXT()
+                ImportMemoryHostPointerInfoEXT importInfo = new()
                 {
                     SType = StructureType.ImportMemoryHostPointerInfoExt,
                     HandleType = ExternalMemoryHandleTypeFlags.HostAllocationBitExt,
-                    PHostPointer = (void*)pageAlignedPointer
+                    PHostPointer = (void*)pageAlignedPointer,
                 };
 
-                var memoryAllocateInfo = new MemoryAllocateInfo()
+                var memoryAllocateInfo = new MemoryAllocateInfo
                 {
                     SType = StructureType.MemoryAllocateInfo,
                     AllocationSize = pageAlignedSize,
                     MemoryTypeIndex = (uint)memoryTypeIndex,
-                    PNext = &importInfo
+                    PNext = &importInfo,
                 };
 
                 Result result = _api.AllocateMemory(_device, memoryAllocateInfo, null, out var deviceMemory);

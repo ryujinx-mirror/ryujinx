@@ -2,13 +2,13 @@
 {
     internal class BufferUsageBitmap
     {
-        private BitMap _bitmap;
-        private int _size;
-        private int _granularity;
-        private int _bits;
+        private readonly BitMap _bitmap;
+        private readonly int _size;
+        private readonly int _granularity;
+        private readonly int _bits;
 
-        private int _intsPerCb;
-        private int _bitsPerCb;
+        private readonly int _intsPerCb;
+        private readonly int _bitsPerCb;
 
         public BufferUsageBitmap(int size, int granularity)
         {

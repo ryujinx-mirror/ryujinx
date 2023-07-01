@@ -9,7 +9,7 @@ namespace Ryujinx.Graphics.Vulkan.MoltenVK
         Error = 1,
         Warning = 2,
         Info = 3,
-        Debug = 4
+        Debug = 4,
     }
 
     enum MVKConfigTraceVulkanCalls
@@ -17,14 +17,14 @@ namespace Ryujinx.Graphics.Vulkan.MoltenVK
         None = 0,
         Enter = 1,
         EnterExit = 2,
-        Duration = 3
+        Duration = 3,
     }
 
     enum MVKConfigAutoGPUCaptureScope
     {
         None = 0,
         Device = 1,
-        Frame = 2
+        Frame = 2,
     }
 
     [Flags]
@@ -33,7 +33,7 @@ namespace Ryujinx.Graphics.Vulkan.MoltenVK
         All = 0x00000001,
         MoltenVK = 0x00000002,
         WSI = 0x00000004,
-        Portability = 0x00000008
+        Portability = 0x00000008,
     }
 
     enum MVKVkSemaphoreSupportStyle
@@ -42,7 +42,7 @@ namespace Ryujinx.Graphics.Vulkan.MoltenVK
         MVK_CONFIG_VK_SEMAPHORE_SUPPORT_STYLE_METAL_EVENTS_WHERE_SAFE = 1,
         MVK_CONFIG_VK_SEMAPHORE_SUPPORT_STYLE_METAL_EVENTS = 2,
         MVK_CONFIG_VK_SEMAPHORE_SUPPORT_STYLE_CALLBACK = 3,
-        MVK_CONFIG_VK_SEMAPHORE_SUPPORT_STYLE_MAX_ENUM = 0x7FFFFFFF
+        MVK_CONFIG_VK_SEMAPHORE_SUPPORT_STYLE_MAX_ENUM = 0x7FFFFFFF,
     }
 
     readonly struct Bool32
@@ -60,7 +60,7 @@ namespace Ryujinx.Graphics.Vulkan.MoltenVK
         }
 
         public static implicit operator bool(Bool32 val) => val.Value == 1;
-        public static implicit operator Bool32(bool val) => new Bool32(val);
+        public static implicit operator Bool32(bool val) => new(val);
     }
 
     [StructLayout(LayoutKind.Sequential)]

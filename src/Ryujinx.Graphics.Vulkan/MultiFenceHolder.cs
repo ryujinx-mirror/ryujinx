@@ -8,10 +8,10 @@ namespace Ryujinx.Graphics.Vulkan
     /// </summary>
     class MultiFenceHolder
     {
-        private static int BufferUsageTrackingGranularity = 4096;
+        private static readonly int _bufferUsageTrackingGranularity = 4096;
 
         private readonly FenceHolder[] _fences;
-        private BufferUsageBitmap _bufferUsageBitmap;
+        private readonly BufferUsageBitmap _bufferUsageBitmap;
 
         /// <summary>
         /// Creates a new instance of the multiple fence holder.
@@ -28,7 +28,7 @@ namespace Ryujinx.Graphics.Vulkan
         public MultiFenceHolder(int size)
         {
             _fences = new FenceHolder[CommandBufferPool.MaxCommandBuffers];
-            _bufferUsageBitmap = new BufferUsageBitmap(size, BufferUsageTrackingGranularity);
+            _bufferUsageBitmap = new BufferUsageBitmap(size, _bufferUsageTrackingGranularity);
         }
 
         /// <summary>
@@ -189,11 +189,11 @@ namespace Ryujinx.Graphics.Vulkan
 
             if (hasTimeout)
             {
-                signaled = FenceHelper.AllSignaled(api, device, fences.Slice(0, fenceCount), timeout);
+                signaled = FenceHelper.AllSignaled(api, device, fences[..fenceCount], timeout);
             }
             else
             {
-                FenceHelper.WaitAllIndefinitely(api, device, fences.Slice(0, fenceCount));
+                FenceHelper.WaitAllIndefinitely(api, device, fences[..fenceCount]);
             }
 
             for (int i = 0; i < fenceCount; i++)

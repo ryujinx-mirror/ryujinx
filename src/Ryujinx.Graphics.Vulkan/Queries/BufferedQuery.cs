@@ -23,10 +23,10 @@ namespace Ryujinx.Graphics.Vulkan.Queries
         private readonly BufferHolder _buffer;
         private readonly IntPtr _bufferMap;
         private readonly CounterType _type;
-        private bool _result32Bit;
-        private bool _isSupported;
+        private readonly bool _result32Bit;
+        private readonly bool _isSupported;
 
-        private long _defaultValue;
+        private readonly long _defaultValue;
         private int? _resetSequence;
 
         public unsafe BufferedQuery(VulkanRenderer gd, Device device, PipelineFull pipeline, CounterType type, bool result32Bit)
@@ -44,12 +44,12 @@ namespace Ryujinx.Graphics.Vulkan.Queries
                 QueryPipelineStatisticFlags flags = type == CounterType.PrimitivesGenerated ?
                     QueryPipelineStatisticFlags.GeometryShaderPrimitivesBit : 0;
 
-                var queryPoolCreateInfo = new QueryPoolCreateInfo()
+                var queryPoolCreateInfo = new QueryPoolCreateInfo
                 {
                     SType = StructureType.QueryPoolCreateInfo,
                     QueryCount = 1,
                     QueryType = GetQueryType(type),
-                    PipelineStatistics = flags
+                    PipelineStatistics = flags,
                 };
 
                 gd.Api.CreateQueryPool(device, queryPoolCreateInfo, null, out _queryPool).ThrowOnError();
@@ -63,14 +63,14 @@ namespace Ryujinx.Graphics.Vulkan.Queries
             _buffer = buffer;
         }
 
-        private bool QueryTypeSupported(VulkanRenderer gd, CounterType type)
+        private static bool QueryTypeSupported(VulkanRenderer gd, CounterType type)
         {
             return type switch
             {
                 CounterType.SamplesPassed => true,
                 CounterType.PrimitivesGenerated => gd.Capabilities.SupportsPipelineStatisticsQuery,
                 CounterType.TransformFeedbackPrimitivesWritten => gd.Capabilities.SupportsTransformFeedbackQueries,
-                _ => false
+                _ => false,
             };
         }
 
@@ -81,7 +81,7 @@ namespace Ryujinx.Graphics.Vulkan.Queries
                 CounterType.SamplesPassed => QueryType.Occlusion,
                 CounterType.PrimitivesGenerated => QueryType.PipelineStatistics,
                 CounterType.TransformFeedbackPrimitivesWritten => QueryType.TransformFeedbackStreamExt,
-                _ => QueryType.Occlusion
+                _ => QueryType.Occlusion,
             };
         }
 
@@ -107,7 +107,7 @@ namespace Ryujinx.Graphics.Vulkan.Queries
             _resetSequence = null;
         }
 
-        public unsafe void End(bool withResult)
+        public void End(bool withResult)
         {
             if (_isSupported)
             {

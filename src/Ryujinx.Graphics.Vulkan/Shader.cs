@@ -13,7 +13,7 @@ namespace Ryujinx.Graphics.Vulkan
     {
         // The shaderc.net dependency's Options constructor and dispose are not thread safe.
         // Take this lock when using them.
-        private static object _shaderOptionsLock = new object();
+        private static readonly object _shaderOptionsLock = new();
 
         private static readonly IntPtr _ptrMainEntryPointName = Marshal.StringToHGlobalAnsi("main");
 
@@ -57,11 +57,11 @@ namespace Ryujinx.Graphics.Vulkan
 
                 fixed (byte* pCode = spirv)
                 {
-                    var shaderModuleCreateInfo = new ShaderModuleCreateInfo()
+                    var shaderModuleCreateInfo = new ShaderModuleCreateInfo
                     {
                         SType = StructureType.ShaderModuleCreateInfo,
                         CodeSize = (uint)spirv.Length,
-                        PCode = (uint*)pCode
+                        PCode = (uint*)pCode,
                     };
 
                     api.CreateShaderModule(device, shaderModuleCreateInfo, null, out _module).ThrowOnError();
@@ -80,12 +80,12 @@ namespace Ryujinx.Graphics.Vulkan
                 options = new Options(false)
                 {
                     SourceLanguage = SourceLanguage.Glsl,
-                    TargetSpirVVersion = new SpirVVersion(1, 5)
+                    TargetSpirVVersion = new SpirVVersion(1, 5),
                 };
             }
 
             options.SetTargetEnvironment(TargetEnvironment.Vulkan, EnvironmentVersion.Vulkan_1_2);
-            Compiler compiler = new Compiler(options);
+            Compiler compiler = new(options);
             var scr = compiler.Compile(glsl, "Ryu", GetShaderCShaderStage(stage));
 
             lock (_shaderOptionsLock)
@@ -104,7 +104,7 @@ namespace Ryujinx.Graphics.Vulkan
 
             byte[] code = new byte[(scr.CodeLength + 3) & ~3];
 
-            spirvBytes.CopyTo(code.AsSpan().Slice(0, (int)scr.CodeLength));
+            spirvBytes.CopyTo(code.AsSpan()[..(int)scr.CodeLength]);
 
             return code;
         }
@@ -134,12 +134,12 @@ namespace Ryujinx.Graphics.Vulkan
 
         public unsafe PipelineShaderStageCreateInfo GetInfo()
         {
-            return new PipelineShaderStageCreateInfo()
+            return new PipelineShaderStageCreateInfo
             {
                 SType = StructureType.PipelineShaderStageCreateInfo,
                 Stage = _stage,
                 Module = _module,
-                PName = (byte*)_ptrMainEntryPointName
+                PName = (byte*)_ptrMainEntryPointName,
             };
         }
 

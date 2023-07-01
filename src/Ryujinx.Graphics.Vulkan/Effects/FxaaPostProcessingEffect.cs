@@ -4,16 +4,17 @@ using Ryujinx.Graphics.Shader;
 using Ryujinx.Graphics.Shader.Translation;
 using Silk.NET.Vulkan;
 using System;
+using SamplerCreateInfo = Ryujinx.Graphics.GAL.SamplerCreateInfo;
 
 namespace Ryujinx.Graphics.Vulkan.Effects
 {
-    internal partial class FxaaPostProcessingEffect : IPostProcessingEffect
+    internal class FxaaPostProcessingEffect : IPostProcessingEffect
     {
         private readonly VulkanRenderer _renderer;
         private ISampler _samplerLinear;
         private ShaderCollection _shaderProgram;
 
-        private PipelineHelperShader _pipeline;
+        private readonly PipelineHelperShader _pipeline;
         private TextureView _texture;
 
         public FxaaPostProcessingEffect(VulkanRenderer renderer, Device device)
@@ -43,11 +44,11 @@ namespace Ryujinx.Graphics.Vulkan.Effects
                 .Add(ResourceStages.Compute, ResourceType.TextureAndSampler, 1)
                 .Add(ResourceStages.Compute, ResourceType.Image, 0).Build();
 
-            _samplerLinear = _renderer.CreateSampler(GAL.SamplerCreateInfo.Create(MinFilter.Linear, MagFilter.Linear));
+            _samplerLinear = _renderer.CreateSampler(SamplerCreateInfo.Create(MinFilter.Linear, MagFilter.Linear));
 
             _shaderProgram = _renderer.CreateProgramWithMinimalLayout(new[]
             {
-                new ShaderSource(shader, ShaderStage.Compute, TargetLanguage.Spirv)
+                new ShaderSource(shader, ShaderStage.Compute, TargetLanguage.Spirv),
             }, resourceLayout);
         }
 

@@ -12,7 +12,7 @@ namespace Ryujinx.Graphics.Vulkan
         Broadcom,
         Qualcomm,
         Apple,
-        Unknown
+        Unknown,
     }
 
     static partial class VendorUtils
@@ -32,7 +32,7 @@ namespace Ryujinx.Graphics.Vulkan
                 0x14E4 => Vendor.Broadcom,
                 0x8086 => Vendor.Intel,
                 0x5143 => Vendor.Qualcomm,
-                _ => Vendor.Unknown
+                _ => Vendor.Unknown,
             };
         }
 
@@ -55,7 +55,7 @@ namespace Ryujinx.Graphics.Vulkan
                 0x10004 => "Codeplay Software Ltd.",
                 0x10005 => "Mesa",
                 0x10006 => "PoCL",
-                _ => $"0x{id:X}"
+                _ => $"0x{id:X}",
             };
         }
     }

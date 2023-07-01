@@ -45,23 +45,23 @@ namespace Ryujinx.Graphics.Vulkan
                         stages = activeStages;
                     }
 
-                    layoutBindings[descIndex] = new DescriptorSetLayoutBinding()
+                    layoutBindings[descIndex] = new DescriptorSetLayoutBinding
                     {
                         Binding = (uint)descriptor.Binding,
                         DescriptorType = descriptor.Type.Convert(),
                         DescriptorCount = (uint)descriptor.Count,
-                        StageFlags = stages.Convert()
+                        StageFlags = stages.Convert(),
                     };
                 }
 
                 fixed (DescriptorSetLayoutBinding* pLayoutBindings = layoutBindings)
                 {
-                    var descriptorSetLayoutCreateInfo = new DescriptorSetLayoutCreateInfo()
+                    var descriptorSetLayoutCreateInfo = new DescriptorSetLayoutCreateInfo
                     {
                         SType = StructureType.DescriptorSetLayoutCreateInfo,
                         PBindings = pLayoutBindings,
                         BindingCount = (uint)layoutBindings.Length,
-                        Flags = usePushDescriptors && setIndex == 0 ? DescriptorSetLayoutCreateFlags.PushDescriptorBitKhr : DescriptorSetLayoutCreateFlags.None
+                        Flags = usePushDescriptors && setIndex == 0 ? DescriptorSetLayoutCreateFlags.PushDescriptorBitKhr : DescriptorSetLayoutCreateFlags.None,
                     };
 
                     gd.Api.CreateDescriptorSetLayout(device, descriptorSetLayoutCreateInfo, null, out layouts[setIndex]).ThrowOnError();
@@ -72,11 +72,11 @@ namespace Ryujinx.Graphics.Vulkan
 
             fixed (DescriptorSetLayout* pLayouts = layouts)
             {
-                var pipelineLayoutCreateInfo = new PipelineLayoutCreateInfo()
+                var pipelineLayoutCreateInfo = new PipelineLayoutCreateInfo
                 {
                     SType = StructureType.PipelineLayoutCreateInfo,
                     PSetLayouts = pLayouts,
-                    SetLayoutCount = (uint)layouts.Length
+                    SetLayoutCount = (uint)layouts.Length,
                 };
 
                 gd.Api.CreatePipelineLayout(device, &pipelineLayoutCreateInfo, null, out layout).ThrowOnError();

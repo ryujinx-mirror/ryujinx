@@ -5,10 +5,12 @@ using Ryujinx.Graphics.Shader.Translation;
 using Silk.NET.Vulkan;
 using System;
 using Extent2D = Ryujinx.Graphics.GAL.Extents2D;
+using Format = Silk.NET.Vulkan.Format;
+using SamplerCreateInfo = Ryujinx.Graphics.GAL.SamplerCreateInfo;
 
 namespace Ryujinx.Graphics.Vulkan.Effects
 {
-    internal partial class FsrScalingFilter : IScalingFilter
+    internal class FsrScalingFilter : IScalingFilter
     {
         private readonly VulkanRenderer _renderer;
         private PipelineHelperShader _pipeline;
@@ -66,16 +68,16 @@ namespace Ryujinx.Graphics.Vulkan.Effects
                 .Add(ResourceStages.Compute, ResourceType.TextureAndSampler, 1)
                 .Add(ResourceStages.Compute, ResourceType.Image, 0).Build();
 
-            _sampler = _renderer.CreateSampler(GAL.SamplerCreateInfo.Create(MinFilter.Linear, MagFilter.Linear));
+            _sampler = _renderer.CreateSampler(SamplerCreateInfo.Create(MinFilter.Linear, MagFilter.Linear));
 
             _scalingProgram = _renderer.CreateProgramWithMinimalLayout(new[]
             {
-                new ShaderSource(scalingShader, ShaderStage.Compute, TargetLanguage.Spirv)
+                new ShaderSource(scalingShader, ShaderStage.Compute, TargetLanguage.Spirv),
             }, scalingResourceLayout);
 
             _sharpeningProgram = _renderer.CreateProgramWithMinimalLayout(new[]
             {
-                new ShaderSource(sharpeningShader, ShaderStage.Compute, TargetLanguage.Spirv)
+                new ShaderSource(sharpeningShader, ShaderStage.Compute, TargetLanguage.Spirv),
             }, sharpeningResourceLayout);
         }
 
@@ -83,7 +85,7 @@ namespace Ryujinx.Graphics.Vulkan.Effects
             TextureView view,
             CommandBufferScoped cbs,
             Auto<DisposableImageView> destinationTexture,
-            Silk.NET.Vulkan.Format format,
+            Format format,
             int width,
             int height,
             Extent2D source,
@@ -136,14 +138,14 @@ namespace Ryujinx.Graphics.Vulkan.Effects
                 destination.Y1,
                 destination.Y2,
                 scaleX,
-                scaleY
+                scaleY,
             };
 
             int rangeSize = dimensionsBuffer.Length * sizeof(float);
             var bufferHandle = _renderer.BufferManager.CreateWithHandle(_renderer, rangeSize);
             _renderer.BufferManager.SetData(bufferHandle, 0, dimensionsBuffer);
 
-            ReadOnlySpan<float> sharpeningBuffer = stackalloc float[] { 1.5f - (Level * 0.01f * 1.5f)};
+            ReadOnlySpan<float> sharpeningBuffer = stackalloc float[] { 1.5f - (Level * 0.01f * 1.5f) };
             var sharpeningBufferHandle = _renderer.BufferManager.CreateWithHandle(_renderer, sizeof(float));
             _renderer.BufferManager.SetData(sharpeningBufferHandle, 0, sharpeningBuffer);
 

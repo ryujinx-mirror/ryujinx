@@ -4,7 +4,7 @@ namespace Ryujinx.Graphics.Vulkan
 {
     struct BufferState : IDisposable
     {
-        public static BufferState Null => new BufferState(null, 0, 0);
+        public static BufferState Null => new(null, 0, 0);
 
         private readonly int _offset;
         private readonly int _size;
@@ -19,7 +19,7 @@ namespace Ryujinx.Graphics.Vulkan
             buffer?.IncrementReferenceCount();
         }
 
-        public void BindTransformFeedbackBuffer(VulkanRenderer gd, CommandBufferScoped cbs, uint binding)
+        public readonly void BindTransformFeedbackBuffer(VulkanRenderer gd, CommandBufferScoped cbs, uint binding)
         {
             if (_buffer != null)
             {
@@ -40,7 +40,7 @@ namespace Ryujinx.Graphics.Vulkan
             }
         }
 
-        public void Dispose()
+        public readonly void Dispose()
         {
             _buffer?.DecrementReferenceCount();
         }

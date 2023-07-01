@@ -33,7 +33,7 @@ namespace Ryujinx.Graphics.Vulkan
         private MemoryAllocation _allocation;
         private Auto<DisposableBuffer> _buffer;
         private Auto<MemoryAllocation> _allocationAuto;
-        private bool _allocationImported;
+        private readonly bool _allocationImported;
         private ulong _bufferHandle;
 
         private CacheByRange<BufferHolder> _cachedConvertedBuffers;
@@ -46,7 +46,7 @@ namespace Ryujinx.Graphics.Vulkan
 
         private bool _lastAccessIsWrite;
 
-        private BufferAllocationType _baseType;
+        private readonly BufferAllocationType _baseType;
         private BufferAllocationType _currentType;
         private bool _swapQueued;
 
@@ -58,7 +58,7 @@ namespace Ryujinx.Graphics.Vulkan
         private int _flushTemp;
         private int _lastFlushWrite = -1;
 
-        private ReaderWriterLock _flushLock;
+        private readonly ReaderWriterLock _flushLock;
         private FenceHolder _flushFence;
         private int _flushWaiting;
 
@@ -143,10 +143,7 @@ namespace Ryujinx.Graphics.Vulkan
                         }
                         else
                         {
-                            if (cbs == null)
-                            {
-                                cbs = _gd.CommandBufferPool.Rent();
-                            }
+                            cbs ??= _gd.CommandBufferPool.Rent();
 
                             CommandBufferScoped cbsV = cbs.Value;
 
@@ -184,17 +181,13 @@ namespace Ryujinx.Graphics.Vulkan
 
                     return true;
                 }
-                else
-                {
-                    return false;
-                }
-            }
-            else
-            {
-                _swapQueued = false;
 
-                return true;
+                return false;
             }
+
+            _swapQueued = false;
+
+            return true;
         }
 
         private void ConsiderBackingSwap()
@@ -251,13 +244,13 @@ namespace Ryujinx.Graphics.Vulkan
 
         public unsafe Auto<DisposableBufferView> CreateView(VkFormat format, int offset, int size, Action invalidateView)
         {
-            var bufferViewCreateInfo = new BufferViewCreateInfo()
+            var bufferViewCreateInfo = new BufferViewCreateInfo
             {
                 SType = StructureType.BufferViewCreateInfo,
                 Buffer = new VkBuffer(_bufferHandle),
                 Format = format,
                 Offset = (uint)offset,
-                Range = (uint)size
+                Range = (uint)size,
             };
 
             _gd.Api.CreateBufferView(_device, bufferViewCreateInfo, null, out var bufferView).ThrowOnError();
@@ -288,11 +281,11 @@ namespace Ryujinx.Graphics.Vulkan
 
             if (needsBarrier)
             {
-                MemoryBarrier memoryBarrier = new MemoryBarrier()
+                MemoryBarrier memoryBarrier = new()
                 {
                     SType = StructureType.MemoryBarrier,
                     SrcAccessMask = DefaultAccessFlags,
-                    DstAccessMask = DefaultAccessFlags
+                    DstAccessMask = DefaultAccessFlags,
                 };
 
                 _gd.Api.CmdPipelineBarrier(
@@ -366,14 +359,14 @@ namespace Ryujinx.Graphics.Vulkan
             return Unsafe.As<ulong, BufferHandle>(ref handle);
         }
 
-        public unsafe IntPtr Map(int offset, int mappingSize)
+        public IntPtr Map(int offset, int mappingSize)
         {
             return _map;
         }
 
         private void ClearFlushFence()
         {
-            // Asusmes _flushLock is held as writer.
+            // Assumes _flushLock is held as writer.
 
             if (_flushFence != null)
             {
@@ -421,7 +414,7 @@ namespace Ryujinx.Graphics.Vulkan
             }
         }
 
-        public unsafe PinnedSpan<byte> GetData(int offset, int size)
+        public PinnedSpan<byte> GetData(int offset, int size)
         {
             _flushLock.AcquireReaderLock(Timeout.Infinite);
 
@@ -447,26 +440,24 @@ namespace Ryujinx.Graphics.Vulkan
 
                 return PinnedSpan<byte>.UnsafeFromSpan(result, _buffer.DecrementReferenceCount);
             }
+
+            BackgroundResource resource = _gd.BackgroundResources.Get();
+
+            if (_gd.CommandBufferPool.OwnedByCurrentThread)
+            {
+                _gd.FlushAllCommands();
+
+                result = resource.GetFlushBuffer().GetBufferData(_gd.CommandBufferPool, this, offset, size);
+            }
             else
             {
-                BackgroundResource resource = _gd.BackgroundResources.Get();
-
-                if (_gd.CommandBufferPool.OwnedByCurrentThread)
-                {
-                    _gd.FlushAllCommands();
-
-                    result = resource.GetFlushBuffer().GetBufferData(_gd.CommandBufferPool, this, offset, size);
-                }
-                else
-                {
-                    result = resource.GetFlushBuffer().GetBufferData(resource.GetPool(), this, offset, size);
-                }
-
-                _flushLock.ReleaseReaderLock();
-
-                // Flush buffer is pinned until the next GetBufferData on the thread, which is fine for current uses.
-                return PinnedSpan<byte>.UnsafeFromSpan(result);
+                result = resource.GetFlushBuffer().GetBufferData(resource.GetPool(), this, offset, size);
             }
+
+            _flushLock.ReleaseReaderLock();
+
+            // Flush buffer is pinned until the next GetBufferData on the thread, which is fine for current uses.
+            return PinnedSpan<byte>.UnsafeFromSpan(result);
         }
 
         public unsafe Span<byte> GetDataStorage(int offset, int size)
@@ -503,7 +494,7 @@ namespace Ryujinx.Graphics.Vulkan
                 {
                     WaitForFences(offset, dataSize);
 
-                    data.Slice(0, dataSize).CopyTo(new Span<byte>((void*)(_map + offset), dataSize));
+                    data[..dataSize].CopyTo(new Span<byte>((void*)(_map + offset), dataSize));
 
                     SignalWrite(offset, dataSize);
 
@@ -542,7 +533,7 @@ namespace Ryujinx.Graphics.Vulkan
 
             if (_map != IntPtr.Zero)
             {
-                data.Slice(0, dataSize).CopyTo(new Span<byte>((void*)(_map + offset), dataSize));
+                data[..dataSize].CopyTo(new Span<byte>((void*)(_map + offset), dataSize));
             }
             else
             {
@@ -657,7 +648,7 @@ namespace Ryujinx.Graphics.Vulkan
             int offset,
             int size)
         {
-            BufferMemoryBarrier memoryBarrier = new BufferMemoryBarrier()
+            BufferMemoryBarrier memoryBarrier = new()
             {
                 SType = StructureType.BufferMemoryBarrier,
                 SrcAccessMask = srcAccessMask,
@@ -666,7 +657,7 @@ namespace Ryujinx.Graphics.Vulkan
                 DstQueueFamilyIndex = Vk.QueueFamilyIgnored,
                 Buffer = buffer,
                 Offset = (ulong)offset,
-                Size = (ulong)size
+                Size = (ulong)size,
             };
 
             gd.Api.CmdPipelineBarrier(

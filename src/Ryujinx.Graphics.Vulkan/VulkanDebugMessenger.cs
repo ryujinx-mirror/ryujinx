@@ -10,8 +10,7 @@ namespace Ryujinx.Graphics.Vulkan
 {
     class VulkanDebugMessenger : IDisposable
     {
-        private static string[] _excludedMessages = new string[]
-        {
+        private static readonly string[] _excludedMessages = {
             // NOTE: Done on purpose right now.
             "UNASSIGNED-CoreValidation-Shader-OutputNotConsumed",
             // TODO: Figure out if fixable
@@ -19,7 +18,7 @@ namespace Ryujinx.Graphics.Vulkan
             // TODO: Might be worth looking into making this happy to possibly optimize copies.
             "UNASSIGNED-CoreValidation-DrawState-InvalidImageLayout",
             // TODO: Fix this, it's causing too much noise right now.
-            "VUID-VkSubpassDependency-srcSubpass-00867"
+            "VUID-VkSubpassDependency-srcSubpass-00867",
         };
 
         private readonly Vk _api;
@@ -48,7 +47,7 @@ namespace Ryujinx.Graphics.Vulkan
         private Result TryInitialize(out DebugUtilsMessengerEXT? debugUtilsMessengerHandle)
         {
             debugUtilsMessengerHandle = null;
-            
+
             if (_debugUtils != null && _logLevel != GraphicsDebugLevel.None)
             {
                 var messageType = _logLevel switch
@@ -59,7 +58,7 @@ namespace Ryujinx.Graphics.Vulkan
                     GraphicsDebugLevel.All => DebugUtilsMessageTypeFlagsEXT.GeneralBitExt |
                                               DebugUtilsMessageTypeFlagsEXT.ValidationBitExt |
                                               DebugUtilsMessageTypeFlagsEXT.PerformanceBitExt,
-                    _ => throw new ArgumentException($"Invalid log level \"{_logLevel}\".")
+                    _ => throw new ArgumentException($"Invalid log level \"{_logLevel}\"."),
                 };
 
                 var messageSeverity = _logLevel switch
@@ -71,14 +70,14 @@ namespace Ryujinx.Graphics.Vulkan
                                               DebugUtilsMessageSeverityFlagsEXT.WarningBitExt |
                                               DebugUtilsMessageSeverityFlagsEXT.VerboseBitExt |
                                               DebugUtilsMessageSeverityFlagsEXT.ErrorBitExt,
-                    _ => throw new ArgumentException($"Invalid log level \"{_logLevel}\".")
+                    _ => throw new ArgumentException($"Invalid log level \"{_logLevel}\"."),
                 };
 
-                var debugUtilsMessengerCreateInfo = new DebugUtilsMessengerCreateInfoEXT()
+                var debugUtilsMessengerCreateInfo = new DebugUtilsMessengerCreateInfoEXT
                 {
                     SType = StructureType.DebugUtilsMessengerCreateInfoExt,
                     MessageType = messageType,
-                    MessageSeverity = messageSeverity
+                    MessageSeverity = messageSeverity,
                 };
 
                 unsafe

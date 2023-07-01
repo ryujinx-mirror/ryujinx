@@ -8,16 +8,16 @@ namespace Ryujinx.Graphics.Vulkan
     internal class AutoFlushCounter
     {
         // How often to flush on framebuffer change.
-        private readonly static long FramebufferFlushTimer = Stopwatch.Frequency / 1000; // (1ms)
+        private readonly static long _framebufferFlushTimer = Stopwatch.Frequency / 1000; // (1ms)
 
         // How often to flush on draw when fast flush mode is enabled.
-        private readonly static long DrawFlushTimer = Stopwatch.Frequency / 666; // (1.5ms)
+        private readonly static long _drawFlushTimer = Stopwatch.Frequency / 666; // (1.5ms)
 
         // Average wait time that triggers fast flush mode to be entered.
-        private readonly static long FastFlushEnterThreshold = Stopwatch.Frequency / 666; // (1.5ms)
+        private readonly static long _fastFlushEnterThreshold = Stopwatch.Frequency / 666; // (1.5ms)
 
         // Average wait time that triggers fast flush mode to be exited.
-        private readonly static long FastFlushExitThreshold = Stopwatch.Frequency / 10000; // (0.1ms)
+        private readonly static long _fastFlushExitThreshold = Stopwatch.Frequency / 10000; // (0.1ms)
 
         // Number of frames to average waiting times over.
         private const int SyncWaitAverageCount = 20;
@@ -34,11 +34,11 @@ namespace Ryujinx.Graphics.Vulkan
         private int _consecutiveQueries;
         private int _queryCount;
 
-        private int[] _queryCountHistory = new int[3];
+        private readonly int[] _queryCountHistory = new int[3];
         private int _queryCountHistoryIndex;
         private int _remainingQueries;
 
-        private long[] _syncWaitHistory = new long[SyncWaitAverageCount];
+        private readonly long[] _syncWaitHistory = new long[SyncWaitAverageCount];
         private int _syncWaitHistoryIndex;
 
         private bool _fastFlushMode;
@@ -110,7 +110,7 @@ namespace Ryujinx.Graphics.Vulkan
                     return false;
                 }
 
-                long flushTimeout = DrawFlushTimer;
+                long flushTimeout = _drawFlushTimer;
 
                 long now = Stopwatch.GetTimestamp();
 
@@ -144,7 +144,7 @@ namespace Ryujinx.Graphics.Vulkan
                 return false;
             }
 
-            long flushTimeout = FramebufferFlushTimer;
+            long flushTimeout = _framebufferFlushTimer;
 
             long now = Stopwatch.GetTimestamp();
 
@@ -169,7 +169,7 @@ namespace Ryujinx.Graphics.Vulkan
 
             long averageWait = (long)_syncWaitHistory.Average();
 
-            if (_fastFlushMode ? averageWait < FastFlushExitThreshold : averageWait > FastFlushEnterThreshold)
+            if (_fastFlushMode ? averageWait < _fastFlushExitThreshold : averageWait > _fastFlushEnterThreshold)
             {
                 _fastFlushMode = !_fastFlushMode;
                 Logger.Debug?.PrintMsg(LogClass.Gpu, $"Switched fast flush mode: ({_fastFlushMode})");

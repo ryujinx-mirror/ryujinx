@@ -12,7 +12,7 @@ namespace Ryujinx.Graphics.Vulkan
         private readonly Auto<DisposableImageView>[] _attachments;
         private readonly TextureView[] _colors;
         private readonly TextureView _depthStencil;
-        private uint _validColorAttachments;
+        private readonly uint _validColorAttachments;
 
         public uint Width { get; }
         public uint Height { get; }
@@ -24,7 +24,7 @@ namespace Ryujinx.Graphics.Vulkan
         public uint AttachmentIntegerFormatMask { get; }
 
         public int AttachmentsCount { get; }
-        public int MaxColorAttachmentIndex => AttachmentIndices.Length > 0 ? AttachmentIndices[AttachmentIndices.Length - 1] : -1;
+        public int MaxColorAttachmentIndex => AttachmentIndices.Length > 0 ? AttachmentIndices[^1] : -1;
         public bool HasDepthStencil { get; }
         public int ColorAttachmentsCount => AttachmentsCount - (HasDepthStencil ? 1 : 0);
 
@@ -158,7 +158,8 @@ namespace Ryujinx.Graphics.Vulkan
                 {
                     return ComponentType.SignedInteger;
                 }
-                else if (format.IsUint())
+
+                if (format.IsUint())
                 {
                     return ComponentType.UnsignedInteger;
                 }
@@ -196,7 +197,7 @@ namespace Ryujinx.Graphics.Vulkan
                 attachments[i] = _attachments[i].Get(cbs).Value;
             }
 
-            var framebufferCreateInfo = new FramebufferCreateInfo()
+            var framebufferCreateInfo = new FramebufferCreateInfo
             {
                 SType = StructureType.FramebufferCreateInfo,
                 RenderPass = renderPass.Get(cbs).Value,
@@ -204,7 +205,7 @@ namespace Ryujinx.Graphics.Vulkan
                 PAttachments = attachments,
                 Width = Width,
                 Height = Height,
-                Layers = Layers
+                Layers = Layers,
             };
 
             api.CreateFramebuffer(_device, framebufferCreateInfo, null, out var framebuffer).ThrowOnError();

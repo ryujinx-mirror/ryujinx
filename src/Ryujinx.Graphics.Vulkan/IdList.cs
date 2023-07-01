@@ -85,11 +85,9 @@ namespace Ryujinx.Graphics.Vulkan
                     value = _list[id];
                     return value != null;
                 }
-                else
-                {
-                    value = null;
-                    return false;
-                }
+
+                value = null;
+                return false;
             }
             catch (ArgumentOutOfRangeException)
             {

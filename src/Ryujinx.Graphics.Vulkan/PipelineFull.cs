@@ -17,7 +17,7 @@ namespace Ryujinx.Graphics.Vulkan
 
         private ulong _byteWeight;
 
-        private List<BufferHolder> _backingSwaps;
+        private readonly List<BufferHolder> _backingSwaps;
 
         public PipelineFull(VulkanRenderer gd, Device device) : base(gd, device)
         {
@@ -116,15 +116,15 @@ namespace Ryujinx.Graphics.Vulkan
 
                     if (Gd.Capabilities.SupportsConditionalRendering)
                     {
-                        var buffer = evt.GetBuffer().Get(Cbs, 0, sizeof(long)).Value;
-                        var flags = isEqual ? ConditionalRenderingFlagsEXT.InvertedBitExt : 0;
+                        // var buffer = evt.GetBuffer().Get(Cbs, 0, sizeof(long)).Value;
+                        // var flags = isEqual ? ConditionalRenderingFlagsEXT.InvertedBitExt : 0;
 
-                        var conditionalRenderingBeginInfo = new ConditionalRenderingBeginInfoEXT()
-                        {
-                            SType = StructureType.ConditionalRenderingBeginInfoExt,
-                            Buffer = buffer,
-                            Flags = flags
-                        };
+                        // var conditionalRenderingBeginInfo = new ConditionalRenderingBeginInfoEXT
+                        // {
+                        //     SType = StructureType.ConditionalRenderingBeginInfoExt,
+                        //     Buffer = buffer,
+                        //     Flags = flags,
+                        // };
 
                         // Gd.ConditionalRenderingApi.CmdBeginConditionalRendering(CommandBuffer, conditionalRenderingBeginInfo);
                     }
@@ -156,10 +156,7 @@ namespace Ryujinx.Graphics.Vulkan
 
         public CommandBufferScoped GetPreloadCommandBuffer()
         {
-            if (PreloadCbs == null)
-            {
-                PreloadCbs = Gd.CommandBufferPool.Rent();
-            }
+            PreloadCbs ??= Gd.CommandBufferPool.Rent();
 
             return PreloadCbs.Value;
         }
@@ -192,7 +189,7 @@ namespace Ryujinx.Graphics.Vulkan
         {
             CommandBufferScoped? cbs = null;
 
-            _backingSwaps.RemoveAll((holder) => holder.TryBackingSwap(ref cbs));
+            _backingSwaps.RemoveAll(holder => holder.TryBackingSwap(ref cbs));
 
             cbs?.Dispose();
         }

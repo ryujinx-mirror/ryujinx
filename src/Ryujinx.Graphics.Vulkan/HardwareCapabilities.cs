@@ -11,7 +11,7 @@ namespace Ryujinx.Graphics.Vulkan
         NoTriangleFans = 1,
         NoPointMode = 1 << 1,
         No3DImageView = 1 << 2,
-        NoLodBias = 1 << 3
+        NoLodBias = 1 << 3,
     }
 
     readonly struct HardwareCapabilities

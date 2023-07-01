@@ -10,7 +10,7 @@ namespace Ryujinx.Graphics.Vulkan
         private readonly HostMemoryAllocator _hostMemory;
 
         public DeviceMemory Memory { get; }
-        public IntPtr HostPointer { get;}
+        public IntPtr HostPointer { get; }
         public ulong Offset { get; }
         public ulong Size { get; }
 

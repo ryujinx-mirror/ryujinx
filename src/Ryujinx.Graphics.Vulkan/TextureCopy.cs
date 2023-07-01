@@ -80,12 +80,12 @@ namespace Ryujinx.Graphics.Vulkan
                 (srcOffsets.Element0, srcOffsets.Element1) = ExtentsToOffset3D(srcRegion, srcInfo.Width, srcInfo.Height, level);
                 (dstOffsets.Element0, dstOffsets.Element1) = ExtentsToOffset3D(dstRegion, dstInfo.Width, dstInfo.Height, level);
 
-                var region = new ImageBlit()
+                var region = new ImageBlit
                 {
                     SrcSubresource = srcSl,
                     SrcOffsets = srcOffsets,
                     DstSubresource = dstSl,
-                    DstOffsets = dstOffsets
+                    DstOffsets = dstOffsets,
                 };
 
                 api.CmdBlitImage(commandBuffer, srcImage, ImageLayout.General, dstImage, ImageLayout.General, 1, region, filter);
@@ -219,21 +219,18 @@ namespace Ryujinx.Graphics.Vulkan
 
             int dstZ;
             int dstLayer;
-            int dstDepth;
             int dstLayers;
 
             if (dstInfo.Target == Target.Texture3D)
             {
                 dstZ = dstDepthOrLayer;
                 dstLayer = 0;
-                dstDepth = depthOrLayers;
                 dstLayers = 1;
             }
             else
             {
                 dstZ = 0;
                 dstLayer = dstDepthOrLayer;
-                dstDepth = 1;
                 dstLayers = depthOrLayers;
             }
 
@@ -366,20 +363,20 @@ namespace Ryujinx.Graphics.Vulkan
             var dsAttachmentReference = new AttachmentReference2(StructureType.AttachmentReference2, null, 0, ImageLayout.General);
             var dsResolveAttachmentReference = new AttachmentReference2(StructureType.AttachmentReference2, null, 1, ImageLayout.General);
 
-            var subpassDsResolve = new SubpassDescriptionDepthStencilResolve()
+            var subpassDsResolve = new SubpassDescriptionDepthStencilResolve
             {
                 SType = StructureType.SubpassDescriptionDepthStencilResolve,
                 PDepthStencilResolveAttachment = &dsResolveAttachmentReference,
                 DepthResolveMode = ResolveModeFlags.SampleZeroBit,
-                StencilResolveMode = ResolveModeFlags.SampleZeroBit
+                StencilResolveMode = ResolveModeFlags.SampleZeroBit,
             };
 
-            var subpass = new SubpassDescription2()
+            var subpass = new SubpassDescription2
             {
                 SType = StructureType.SubpassDescription2,
                 PipelineBindPoint = PipelineBindPoint.Graphics,
                 PDepthStencilAttachment = &dsAttachmentReference,
-                PNext = &subpassDsResolve
+                PNext = &subpassDsResolve,
             };
 
             AttachmentDescription2[] attachmentDescs = new AttachmentDescription2[2];
@@ -414,7 +411,7 @@ namespace Ryujinx.Graphics.Vulkan
 
             fixed (AttachmentDescription2* pAttachmentDescs = attachmentDescs)
             {
-                var renderPassCreateInfo = new RenderPassCreateInfo2()
+                var renderPassCreateInfo = new RenderPassCreateInfo2
                 {
                     SType = StructureType.RenderPassCreateInfo2,
                     PAttachments = pAttachmentDescs,
@@ -422,7 +419,7 @@ namespace Ryujinx.Graphics.Vulkan
                     PSubpasses = &subpass,
                     SubpassCount = 1,
                     PDependencies = &subpassDependency,
-                    DependencyCount = 1
+                    DependencyCount = 1,
                 };
 
                 gd.Api.CreateRenderPass2(device, renderPassCreateInfo, null, out var renderPass).ThrowOnError();
@@ -437,7 +434,7 @@ namespace Ryujinx.Graphics.Vulkan
                 attachments[0] = srcView.Get(cbs).Value;
                 attachments[1] = dstView.Get(cbs).Value;
 
-                var framebufferCreateInfo = new FramebufferCreateInfo()
+                var framebufferCreateInfo = new FramebufferCreateInfo
                 {
                     SType = StructureType.FramebufferCreateInfo,
                     RenderPass = rp.Get(cbs).Value,
@@ -445,23 +442,23 @@ namespace Ryujinx.Graphics.Vulkan
                     PAttachments = attachments,
                     Width = (uint)src.Width,
                     Height = (uint)src.Height,
-                    Layers = (uint)src.Layers
+                    Layers = (uint)src.Layers,
                 };
 
                 gd.Api.CreateFramebuffer(device, framebufferCreateInfo, null, out var framebuffer).ThrowOnError();
-                using var fb = new Auto<DisposableFramebuffer>(new DisposableFramebuffer(gd.Api, device, framebuffer), null, new[] { srcView, dstView });
+                using var fb = new Auto<DisposableFramebuffer>(new DisposableFramebuffer(gd.Api, device, framebuffer), null, srcView, dstView);
 
                 var renderArea = new Rect2D(null, new Extent2D((uint)src.Info.Width, (uint)src.Info.Height));
                 var clearValue = new ClearValue();
 
-                var renderPassBeginInfo = new RenderPassBeginInfo()
+                var renderPassBeginInfo = new RenderPassBeginInfo
                 {
                     SType = StructureType.RenderPassBeginInfo,
                     RenderPass = rp.Get(cbs).Value,
                     Framebuffer = fb.Get(cbs).Value,
                     RenderArea = renderArea,
                     PClearValues = &clearValue,
-                    ClearValueCount = 1
+                    ClearValueCount = 1,
                 };
 
                 // The resolve operation happens at the end of the subpass, so let's just do a begin/end

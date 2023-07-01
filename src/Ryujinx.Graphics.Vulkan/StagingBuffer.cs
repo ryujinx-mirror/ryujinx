@@ -37,7 +37,7 @@ namespace Ryujinx.Graphics.Vulkan
             _freeSize = BufferSize;
         }
 
-        public unsafe void PushData(CommandBufferPool cbp, CommandBufferScoped? cbs, Action endRenderPass, BufferHolder dst, int dstOffset, ReadOnlySpan<byte> data)
+        public void PushData(CommandBufferPool cbp, CommandBufferScoped? cbs, Action endRenderPass, BufferHolder dst, int dstOffset, ReadOnlySpan<byte> data)
         {
             bool isRender = cbs != null;
             CommandBufferScoped scoped = cbs ?? cbp.Rent();
@@ -72,10 +72,10 @@ namespace Ryujinx.Graphics.Vulkan
 
                 int chunkSize = Math.Min(_freeSize, data.Length);
 
-                PushDataImpl(scoped, dst, dstOffset, data.Slice(0, chunkSize));
+                PushDataImpl(scoped, dst, dstOffset, data[..chunkSize]);
 
                 dstOffset += chunkSize;
-                data = data.Slice(chunkSize);
+                data = data[chunkSize..];
             }
 
             if (!isRender)
@@ -93,8 +93,8 @@ namespace Ryujinx.Graphics.Vulkan
             int capacity = BufferSize - offset;
             if (capacity < data.Length)
             {
-                _buffer.SetDataUnchecked(offset, data.Slice(0, capacity));
-                _buffer.SetDataUnchecked(0, data.Slice(capacity));
+                _buffer.SetDataUnchecked(offset, data[..capacity]);
+                _buffer.SetDataUnchecked(0, data[capacity..]);
 
                 BufferHolder.Copy(_gd, cbs, srcBuffer, dstBuffer, offset, dstOffset, capacity);
                 BufferHolder.Copy(_gd, cbs, srcBuffer, dstBuffer, 0, dstOffset + capacity, data.Length - capacity);
@@ -113,7 +113,7 @@ namespace Ryujinx.Graphics.Vulkan
             _pendingCopies.Enqueue(new PendingCopy(cbs.GetFence(), data.Length));
         }
 
-        public unsafe bool TryPushData(CommandBufferScoped cbs, Action endRenderPass, BufferHolder dst, int dstOffset, ReadOnlySpan<byte> data)
+        public bool TryPushData(CommandBufferScoped cbs, Action endRenderPass, BufferHolder dst, int dstOffset, ReadOnlySpan<byte> data)
         {
             if (data.Length > BufferSize)
             {

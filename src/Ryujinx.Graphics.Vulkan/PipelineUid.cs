@@ -22,12 +22,10 @@ namespace Ryujinx.Graphics.Vulkan
         public ulong Id8;
         public ulong Id9;
 
-        private uint VertexAttributeDescriptionsCount => (byte)((Id6 >> 38) & 0xFF);
-        private uint VertexBindingDescriptionsCount => (byte)((Id6 >> 46) & 0xFF);
-        private uint ViewportsCount => (byte)((Id6 >> 54) & 0xFF);
-        private uint ScissorsCount => (byte)(Id7 & 0xFF);
-        private uint ColorBlendAttachmentStateCount => (byte)((Id7 >> 8) & 0xFF);
-        private bool HasDepthStencil => ((Id7 >> 63) & 0x1) != 0UL;
+        private readonly uint VertexAttributeDescriptionsCount => (byte)((Id6 >> 38) & 0xFF);
+        private readonly uint VertexBindingDescriptionsCount => (byte)((Id6 >> 46) & 0xFF);
+        private readonly uint ColorBlendAttachmentStateCount => (byte)((Id7 >> 8) & 0xFF);
+        private readonly bool HasDepthStencil => ((Id7 >> 63) & 0x1) != 0UL;
 
         public Array32<VertexInputAttributeDescription> VertexAttributeDescriptions;
         public Array33<VertexInputBindingDescription> VertexBindingDescriptions;
@@ -37,7 +35,7 @@ namespace Ryujinx.Graphics.Vulkan
         public Array9<Format> AttachmentFormats;
         public uint AttachmentIntegerFormatMask;
 
-        public override bool Equals(object obj)
+        public readonly override bool Equals(object obj)
         {
             return obj is PipelineUid other && Equals(other);
         }
@@ -76,7 +74,7 @@ namespace Ryujinx.Graphics.Vulkan
 
         private static bool SequenceEqual<T>(ReadOnlySpan<T> x, ReadOnlySpan<T> y, uint count) where T : unmanaged
         {
-            return MemoryMarshal.Cast<T, byte>(x.Slice(0, (int)count)).SequenceEqual(MemoryMarshal.Cast<T, byte>(y.Slice(0, (int)count)));
+            return MemoryMarshal.Cast<T, byte>(x[..(int)count]).SequenceEqual(MemoryMarshal.Cast<T, byte>(y[..(int)count]));
         }
 
         public override int GetHashCode()

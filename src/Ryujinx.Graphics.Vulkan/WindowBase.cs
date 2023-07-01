@@ -3,7 +3,7 @@ using System;
 
 namespace Ryujinx.Graphics.Vulkan
 {
-    internal abstract class WindowBase: IWindow
+    internal abstract class WindowBase : IWindow
     {
         public bool ScreenCaptureRequested { get; set; }
 

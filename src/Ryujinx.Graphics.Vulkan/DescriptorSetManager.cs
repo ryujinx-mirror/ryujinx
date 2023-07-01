@@ -24,14 +24,14 @@ namespace Ryujinx.Graphics.Vulkan
                 Api = api;
                 Device = device;
 
-                var poolSizes = new DescriptorPoolSize[]
+                var poolSizes = new[]
                 {
                     new DescriptorPoolSize(DescriptorType.UniformBuffer, (1 + Constants.MaxUniformBufferBindings) * DescriptorPoolMultiplier),
                     new DescriptorPoolSize(DescriptorType.StorageBuffer, Constants.MaxStorageBufferBindings * DescriptorPoolMultiplier),
                     new DescriptorPoolSize(DescriptorType.CombinedImageSampler, Constants.MaxTextureBindings * DescriptorPoolMultiplier),
                     new DescriptorPoolSize(DescriptorType.StorageImage, Constants.MaxImageBindings * DescriptorPoolMultiplier),
                     new DescriptorPoolSize(DescriptorType.UniformTexelBuffer, Constants.MaxTextureBindings * DescriptorPoolMultiplier),
-                    new DescriptorPoolSize(DescriptorType.StorageTexelBuffer, Constants.MaxImageBindings * DescriptorPoolMultiplier)
+                    new DescriptorPoolSize(DescriptorType.StorageTexelBuffer, Constants.MaxImageBindings * DescriptorPoolMultiplier),
                 };
 
                 uint maxSets = (uint)poolSizes.Length * DescriptorPoolMultiplier;
@@ -40,19 +40,19 @@ namespace Ryujinx.Graphics.Vulkan
 
                 fixed (DescriptorPoolSize* pPoolsSize = poolSizes)
                 {
-                    var descriptorPoolCreateInfo = new DescriptorPoolCreateInfo()
+                    var descriptorPoolCreateInfo = new DescriptorPoolCreateInfo
                     {
                         SType = StructureType.DescriptorPoolCreateInfo,
                         MaxSets = maxSets,
                         PoolSizeCount = (uint)poolSizes.Length,
-                        PPoolSizes = pPoolsSize
+                        PPoolSizes = pPoolsSize,
                     };
 
                     Api.CreateDescriptorPool(device, descriptorPoolCreateInfo, null, out _pool).ThrowOnError();
                 }
             }
 
-            public unsafe DescriptorSetCollection AllocateDescriptorSets(ReadOnlySpan<DescriptorSetLayout> layouts)
+            public DescriptorSetCollection AllocateDescriptorSets(ReadOnlySpan<DescriptorSetLayout> layouts)
             {
                 TryAllocateDescriptorSets(layouts, isTry: false, out var dsc);
                 return dsc;
@@ -73,12 +73,12 @@ namespace Ryujinx.Graphics.Vulkan
                 {
                     fixed (DescriptorSetLayout* pLayouts = layouts)
                     {
-                        var descriptorSetAllocateInfo = new DescriptorSetAllocateInfo()
+                        var descriptorSetAllocateInfo = new DescriptorSetAllocateInfo
                         {
                             SType = StructureType.DescriptorSetAllocateInfo,
                             DescriptorPool = _pool,
                             DescriptorSetCount = (uint)layouts.Length,
-                            PSetLayouts = pLayouts
+                            PSetLayouts = pLayouts,
                         };
 
                         var result = Api.AllocateDescriptorSets(Device, &descriptorSetAllocateInfo, pDescriptorSets);
@@ -142,6 +142,7 @@ namespace Ryujinx.Graphics.Vulkan
 
             public void Dispose()
             {
+                GC.SuppressFinalize(this);
                 Dispose(true);
             }
         }
@@ -186,15 +187,13 @@ namespace Ryujinx.Graphics.Vulkan
         {
             if (disposing)
             {
-                unsafe
-                {
-                    _currentPool?.Dispose();
-                }
+                _currentPool?.Dispose();
             }
         }
 
         public void Dispose()
         {
+            GC.SuppressFinalize(this);
             Dispose(true);
         }
     }

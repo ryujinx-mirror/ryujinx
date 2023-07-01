@@ -47,13 +47,13 @@ namespace Ryujinx.Graphics.Vulkan
         private HashTableSlim<PipelineUid, Auto<DisposablePipeline>> _graphicsPipelineCache;
         private HashTableSlim<SpecData, Auto<DisposablePipeline>> _computePipelineCache;
 
-        private VulkanRenderer _gd;
+        private readonly VulkanRenderer _gd;
         private Device _device;
         private bool _initialized;
 
         private ProgramPipelineState _state;
         private DisposableRenderPass _dummyRenderPass;
-        private Task _compileTask;
+        private readonly Task _compileTask;
         private bool _firstBackgroundUse;
 
         public ShaderCollection(
@@ -94,7 +94,7 @@ namespace Ryujinx.Graphics.Vulkan
                     ShaderStageFlags.GeometryBit => 2,
                     ShaderStageFlags.TessellationControlBit => 3,
                     ShaderStageFlags.TessellationEvaluationBit => 4,
-                    _ => 0
+                    _ => 0,
                 };
 
                 if (shader.StageFlags == ShaderStageFlags.ComputeBit)
@@ -143,7 +143,7 @@ namespace Ryujinx.Graphics.Vulkan
 
             for (int setIndex = 0; setIndex < sets.Count; setIndex++)
             {
-                List<ResourceBindingSegment> currentSegments = new List<ResourceBindingSegment>();
+                List<ResourceBindingSegment> currentSegments = new();
 
                 ResourceDescriptor currentDescriptor = default;
                 int currentCount = 0;
@@ -197,7 +197,7 @@ namespace Ryujinx.Graphics.Vulkan
 
             for (int setIndex = 0; setIndex < setUsages.Count; setIndex++)
             {
-                List<ResourceBindingSegment> currentSegments = new List<ResourceBindingSegment>();
+                List<ResourceBindingSegment> currentSegments = new();
 
                 ResourceUsage currentUsage = default;
                 int currentCount = 0;
@@ -319,7 +319,7 @@ namespace Ryujinx.Graphics.Vulkan
             return _infos;
         }
 
-        protected unsafe DisposableRenderPass CreateDummyRenderPass()
+        protected DisposableRenderPass CreateDummyRenderPass()
         {
             if (_dummyRenderPass.Value.Handle != 0)
             {
@@ -331,7 +331,7 @@ namespace Ryujinx.Graphics.Vulkan
 
         public void CreateBackgroundComputePipeline()
         {
-            PipelineState pipeline = new PipelineState();
+            PipelineState pipeline = new();
             pipeline.Initialize();
 
             pipeline.Stages[0] = _shaders[0].GetInfo();
@@ -484,7 +484,7 @@ namespace Ryujinx.Graphics.Vulkan
             return _plce.GetNewDescriptorSetCollection(gd, commandBufferIndex, setIndex, out isNew);
         }
 
-        protected virtual unsafe void Dispose(bool disposing)
+        protected virtual void Dispose(bool disposing)
         {
             if (disposing)
             {

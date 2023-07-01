@@ -7,6 +7,6 @@
         HostMappedNoCache,
         HostMapped,
         DeviceLocal,
-        DeviceLocalMapped
+        DeviceLocalMapped,
     }
 }

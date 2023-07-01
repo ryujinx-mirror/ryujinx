@@ -131,7 +131,7 @@
         public void Clear(int bit)
         {
             int wordIndex = bit >> IntShift;
-            int wordBit   = bit & IntMask;
+            int wordBit = bit & IntMask;
 
             long wordMask = 1L << wordBit;
 

@@ -11,16 +11,16 @@ namespace Ryujinx.Graphics.Vulkan
         private readonly Device _device;
         private VkSemaphore _semaphore;
         private int _referenceCount;
-        public bool _disposed;
+        private bool _disposed;
 
         public unsafe SemaphoreHolder(Vk api, Device device)
         {
             _api = api;
             _device = device;
 
-            var semaphoreCreateInfo = new SemaphoreCreateInfo()
+            var semaphoreCreateInfo = new SemaphoreCreateInfo
             {
-                SType = StructureType.SemaphoreCreateInfo
+                SType = StructureType.SemaphoreCreateInfo,
             };
 
             api.CreateSemaphore(device, in semaphoreCreateInfo, null, out _semaphore).ThrowOnError();
