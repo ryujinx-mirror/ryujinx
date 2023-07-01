@@ -3,7 +3,7 @@ using System;
 
 namespace Ryujinx.Cpu
 {
-    struct PrivateMemoryAllocation : IDisposable
+    readonly struct PrivateMemoryAllocation : IDisposable
     {
         private readonly PrivateMemoryAllocator _owner;
         private readonly PrivateMemoryAllocator.Block _block;
@@ -27,8 +27,8 @@ namespace Ryujinx.Cpu
 
         public (PrivateMemoryAllocation, PrivateMemoryAllocation) Split(ulong splitOffset)
         {
-            PrivateMemoryAllocation left = new PrivateMemoryAllocation(_owner, _block, Offset, splitOffset);
-            PrivateMemoryAllocation right = new PrivateMemoryAllocation(_owner, _block, Offset + splitOffset, Size - splitOffset);
+            PrivateMemoryAllocation left = new(_owner, _block, Offset, splitOffset);
+            PrivateMemoryAllocation right = new(_owner, _block, Offset + splitOffset, Size - splitOffset);
 
             return (left, right);
         }

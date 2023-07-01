@@ -2,7 +2,7 @@ using ARMeilleure.State;
 
 namespace Ryujinx.Cpu.AppleHv
 {
-    unsafe class HvExecutionContextShadow : IHvExecutionContext
+    class HvExecutionContextShadow : IHvExecutionContext
     {
         public ulong Pc { get; set; }
         public ulong ElrEl1 { get; set; }

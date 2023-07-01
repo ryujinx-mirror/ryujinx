@@ -3,7 +3,7 @@ using System;
 
 namespace Ryujinx.Cpu.AppleHv
 {
-    struct HvMemoryBlockAllocation : IDisposable
+    readonly struct HvMemoryBlockAllocation : IDisposable
     {
         private readonly HvMemoryBlockAllocator _owner;
         private readonly HvMemoryBlockAllocator.Block _block;

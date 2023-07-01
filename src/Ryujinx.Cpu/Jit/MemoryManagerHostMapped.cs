@@ -31,7 +31,7 @@ namespace Ryujinx.Cpu.Jit
 
             MappedReplicated = 0x5555555555555555,
             WriteTrackedReplicated = 0xaaaaaaaaaaaaaaaa,
-            ReadWriteTrackedReplicated = ulong.MaxValue
+            ReadWriteTrackedReplicated = ulong.MaxValue,
         }
 
         private readonly InvalidAccessHandler _invalidAccessHandler;
@@ -404,7 +404,7 @@ namespace Ryujinx.Cpu.Jit
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void GetPageBlockRange(ulong pageStart, ulong pageEnd, out ulong startMask, out ulong endMask, out int pageIndex, out int pageEndIndex)
+        private static void GetPageBlockRange(ulong pageStart, ulong pageEnd, out ulong startMask, out ulong endMask, out int pageIndex, out int pageEndIndex)
         {
             startMask = ulong.MaxValue << ((int)(pageStart & 31) << 1);
             endMask = ulong.MaxValue >> (64 - ((int)(pageEnd & 31) << 1));
@@ -606,7 +606,7 @@ namespace Ryujinx.Cpu.Jit
         /// <param name="startVa">The virtual address of the beginning of the first page</param>
         /// <remarks>This function does not differentiate between allocated and unallocated pages.</remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private int GetPagesCount(ulong va, ulong size, out ulong startVa)
+        private static int GetPagesCount(ulong va, ulong size, out ulong startVa)
         {
             // WARNING: Always check if ulong does not overflow during the operations.
             startVa = va & ~(ulong)PageMask;
@@ -697,7 +697,7 @@ namespace Ryujinx.Cpu.Jit
             {
                 MemoryPermission.None => MemoryPermission.ReadAndWrite,
                 MemoryPermission.Write => MemoryPermission.Read,
-                _ => MemoryPermission.None
+                _ => MemoryPermission.None,
             };
 
             _addressSpace.Base.Reprotect(va, size, protection, false);

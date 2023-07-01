@@ -7,6 +7,6 @@ namespace Ryujinx.Cpu
     {
         Unloaded,
         Loading,
-        Loaded
+        Loaded,
     }
 }

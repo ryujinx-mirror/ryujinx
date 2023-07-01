@@ -23,7 +23,7 @@ namespace Ryujinx.Cpu.Jit
                 PtcLoadingState.Start => LoadState.Unloaded,
                 PtcLoadingState.Loading => LoadState.Loading,
                 PtcLoadingState.Loaded => LoadState.Loaded,
-                _ => throw new ArgumentException($"Invalid load state \"{newState}\".")
+                _ => throw new ArgumentException($"Invalid load state \"{newState}\"."),
             };
 
             StateChanged?.Invoke(state, current, total);

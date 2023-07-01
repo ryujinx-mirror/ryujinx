@@ -2,7 +2,6 @@
 using Ryujinx.Common.Memory;
 using Ryujinx.Memory;
 using System;
-using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -26,12 +25,12 @@ namespace Ryujinx.Cpu
             }
         }
 
-        public unsafe static T Read<T>(IVirtualMemoryManager memory, ulong position) where T : unmanaged
+        public static T Read<T>(IVirtualMemoryManager memory, ulong position) where T : unmanaged
         {
             return MemoryMarshal.Cast<byte, T>(memory.GetSpan(position, Unsafe.SizeOf<T>()))[0];
         }
 
-        public unsafe static ulong Write<T>(IVirtualMemoryManager memory, ulong position, T value) where T : unmanaged
+        public static ulong Write<T>(IVirtualMemoryManager memory, ulong position, T value) where T : unmanaged
         {
             ReadOnlySpan<byte> data = MemoryMarshal.Cast<T, byte>(MemoryMarshal.CreateReadOnlySpan(ref value, 1));
 
@@ -42,22 +41,21 @@ namespace Ryujinx.Cpu
 
         public static string ReadAsciiString(IVirtualMemoryManager memory, ulong position, long maxSize = -1)
         {
-            using (RecyclableMemoryStream ms = MemoryStreamManager.Shared.GetStream())
+            using RecyclableMemoryStream ms = MemoryStreamManager.Shared.GetStream();
+
+            for (long offs = 0; offs < maxSize || maxSize == -1; offs++)
             {
-                for (long offs = 0; offs < maxSize || maxSize == -1; offs++)
+                byte value = memory.Read<byte>(position + (ulong)offs);
+
+                if (value == 0)
                 {
-                    byte value = memory.Read<byte>(position + (ulong)offs);
-
-                    if (value == 0)
-                    {
-                        break;
-                    }
-
-                    ms.WriteByte(value);
+                    break;
                 }
 
-                return Encoding.ASCII.GetString(ms.GetReadOnlySequence());
+                ms.WriteByte(value);
             }
+
+            return Encoding.ASCII.GetString(ms.GetReadOnlySequence());
         }
     }
 }

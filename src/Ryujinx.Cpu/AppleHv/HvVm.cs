@@ -10,7 +10,7 @@ namespace Ryujinx.Cpu.AppleHv
 
         private static int _addressSpaces;
         private static HvIpaAllocator _ipaAllocator;
-        private static object _lock = new object();
+        private static readonly object _lock = new();
 
         public static (ulong, HvIpaAllocator) CreateAddressSpace(MemoryBlock block)
         {
@@ -36,7 +36,7 @@ namespace Ryujinx.Cpu.AppleHv
                 baseAddress = ipaAllocator.Allocate(block.Size, AsIpaAlignment);
             }
 
-            var rwx = hv_memory_flags_t.HV_MEMORY_READ | hv_memory_flags_t.HV_MEMORY_WRITE | hv_memory_flags_t.HV_MEMORY_EXEC;
+            var rwx = HvMemoryFlags.Read | HvMemoryFlags.Write | HvMemoryFlags.Exec;
 
             HvApi.hv_vm_map((ulong)block.Pointer, baseAddress, block.Size, rwx).ThrowOnError();
 

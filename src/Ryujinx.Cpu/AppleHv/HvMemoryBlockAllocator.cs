@@ -1,12 +1,9 @@
 using Ryujinx.Memory;
-using System.Collections.Generic;
 
 namespace Ryujinx.Cpu.AppleHv
 {
     class HvMemoryBlockAllocator : PrivateMemoryAllocatorImpl<HvMemoryBlockAllocator.Block>
     {
-        private const ulong InvalidOffset = ulong.MaxValue;
-
         public class Block : PrivateMemoryAllocator.Block
         {
             private readonly HvIpaAllocator _ipaAllocator;
@@ -21,7 +18,7 @@ namespace Ryujinx.Cpu.AppleHv
                     Ipa = ipaAllocator.Allocate(size);
                 }
 
-                HvApi.hv_vm_map((ulong)Memory.Pointer, Ipa, size, hv_memory_flags_t.HV_MEMORY_READ | hv_memory_flags_t.HV_MEMORY_WRITE).ThrowOnError();
+                HvApi.hv_vm_map((ulong)Memory.Pointer, Ipa, size, HvMemoryFlags.Read | HvMemoryFlags.Write).ThrowOnError();
             }
 
             public override void Destroy()
@@ -44,7 +41,7 @@ namespace Ryujinx.Cpu.AppleHv
             _ipaAllocator = ipaAllocator;
         }
 
-        public unsafe HvMemoryBlockAllocation Allocate(ulong size, ulong alignment)
+        public HvMemoryBlockAllocation Allocate(ulong size, ulong alignment)
         {
             var allocation = Allocate(size, alignment, CreateBlock);
 

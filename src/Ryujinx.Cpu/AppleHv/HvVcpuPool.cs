@@ -17,10 +17,10 @@ namespace Ryujinx.Cpu.AppleHv
 
         private const int MaxActiveVcpus = 4;
 
-        public static readonly HvVcpuPool Instance = new HvVcpuPool();
+        public static readonly HvVcpuPool Instance = new();
 
         private int _totalVcpus;
-        private int _maxVcpus;
+        private readonly int _maxVcpus;
 
         public HvVcpuPool()
         {
@@ -69,17 +69,17 @@ namespace Ryujinx.Cpu.AppleHv
             bool isEphemeral = newCount > _maxVcpus - MaxActiveVcpus;
 
             // Create VCPU.
-            hv_vcpu_exit_t* exitInfo = null;
+            HvVcpuExit* exitInfo = null;
             HvApi.hv_vcpu_create(out ulong vcpuHandle, ref exitInfo, IntPtr.Zero).ThrowOnError();
 
             // Enable FP and SIMD instructions.
-            HvApi.hv_vcpu_set_sys_reg(vcpuHandle, hv_sys_reg_t.HV_SYS_REG_CPACR_EL1, 0b11 << 20).ThrowOnError();
+            HvApi.hv_vcpu_set_sys_reg(vcpuHandle, HvSysReg.CPACR_EL1, 0b11 << 20).ThrowOnError();
 
             addressSpace.InitializeMmu(vcpuHandle);
 
-            HvExecutionContextVcpu nativeContext = new HvExecutionContextVcpu(vcpuHandle);
+            HvExecutionContextVcpu nativeContext = new(vcpuHandle);
 
-            HvVcpu vcpu = new HvVcpu(vcpuHandle, exitInfo, shadowContext, nativeContext, isEphemeral);
+            HvVcpu vcpu = new(vcpuHandle, exitInfo, shadowContext, nativeContext, isEphemeral);
 
             return vcpu;
         }

@@ -15,7 +15,7 @@ namespace Ryujinx.Cpu
             public MemoryBlock Memory { get; private set; }
             public ulong Size { get; }
 
-            private struct Range : IComparable<Range>
+            private readonly struct Range : IComparable<Range>
             {
                 public ulong Offset { get; }
                 public ulong Size { get; }
@@ -40,7 +40,7 @@ namespace Ryujinx.Cpu
                 Size = size;
                 _freeRanges = new List<Range>
                 {
-                    new Range(0, size)
+                    new Range(0, size),
                 };
             }
 
@@ -164,7 +164,7 @@ namespace Ryujinx.Cpu
     {
         private const ulong InvalidOffset = ulong.MaxValue;
 
-        public struct Allocation
+        public readonly struct Allocation
         {
             public T Block { get; }
             public ulong Offset { get; }

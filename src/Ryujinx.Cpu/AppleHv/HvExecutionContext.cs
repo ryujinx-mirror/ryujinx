@@ -125,17 +125,17 @@ namespace Ryujinx.Cpu.AppleHv
         {
             HvVcpu vcpu = HvVcpuPool.Instance.Create(memoryManager.AddressSpace, _shadowContext, SwapContext);
 
-            HvApi.hv_vcpu_set_reg(vcpu.Handle, hv_reg_t.HV_REG_PC, address).ThrowOnError();
+            HvApi.hv_vcpu_set_reg(vcpu.Handle, HvReg.PC, address).ThrowOnError();
 
             while (Running)
             {
                 HvApi.hv_vcpu_run(vcpu.Handle).ThrowOnError();
 
-                uint reason = vcpu.ExitInfo->reason;
+                uint reason = vcpu.ExitInfo->Reason;
 
                 if (reason == 1)
                 {
-                    uint hvEsr = (uint)vcpu.ExitInfo->exception.syndrome;
+                    uint hvEsr = (uint)vcpu.ExitInfo->Exception.Syndrome;
                     ExceptionClass hvEc = (ExceptionClass)(hvEsr >> 26);
 
                     if (hvEc != ExceptionClass.HvcAarch64)
@@ -144,7 +144,7 @@ namespace Ryujinx.Cpu.AppleHv
                     }
 
                     address = SynchronousException(memoryManager, ref vcpu);
-                    HvApi.hv_vcpu_set_reg(vcpu.Handle, hv_reg_t.HV_REG_PC, address).ThrowOnError();
+                    HvApi.hv_vcpu_set_reg(vcpu.Handle, HvReg.PC, address).ThrowOnError();
                 }
                 else if (reason == 0)
                 {
@@ -168,8 +168,8 @@ namespace Ryujinx.Cpu.AppleHv
         {
             ulong vcpuHandle = vcpu.Handle;
 
-            HvApi.hv_vcpu_get_sys_reg(vcpuHandle, hv_sys_reg_t.HV_SYS_REG_ELR_EL1, out ulong elr).ThrowOnError();
-            HvApi.hv_vcpu_get_sys_reg(vcpuHandle, hv_sys_reg_t.HV_SYS_REG_ESR_EL1, out ulong esr).ThrowOnError();
+            HvApi.hv_vcpu_get_sys_reg(vcpuHandle, HvSysReg.ELR_EL1, out ulong elr).ThrowOnError();
+            HvApi.hv_vcpu_get_sys_reg(vcpuHandle, HvSysReg.ESR_EL1, out ulong esr).ThrowOnError();
 
             ExceptionClass ec = (ExceptionClass)((uint)esr >> 26);
 
@@ -180,7 +180,7 @@ namespace Ryujinx.Cpu.AppleHv
                     break;
                 case ExceptionClass.TrappedMsrMrsSystem:
                     InstructionTrap((uint)esr);
-                    HvApi.hv_vcpu_set_sys_reg(vcpuHandle, hv_sys_reg_t.HV_SYS_REG_ELR_EL1, elr + 4UL).ThrowOnError();
+                    HvApi.hv_vcpu_set_sys_reg(vcpuHandle, HvSysReg.ELR_EL1, elr + 4UL).ThrowOnError();
                     break;
                 case ExceptionClass.SvcAarch64:
                     ReturnToPool(vcpu);
@@ -204,7 +204,7 @@ namespace Ryujinx.Cpu.AppleHv
             }
         }
 
-        private void DataAbort(MemoryTracking tracking, ulong vcpu, uint esr)
+        private static void DataAbort(MemoryTracking tracking, ulong vcpu, uint esr)
         {
             bool write = (esr & (1u << 6)) != 0;
             bool farValid = (esr & (1u << 10)) == 0;
@@ -212,7 +212,7 @@ namespace Ryujinx.Cpu.AppleHv
 
             if (farValid)
             {
-                HvApi.hv_vcpu_get_sys_reg(vcpu, hv_sys_reg_t.HV_SYS_REG_FAR_EL1, out ulong far).ThrowOnError();
+                HvApi.hv_vcpu_get_sys_reg(vcpu, HvSysReg.FAR_EL1, out ulong far).ThrowOnError();
 
                 ulong size = 1UL << accessSizeLog2;
 

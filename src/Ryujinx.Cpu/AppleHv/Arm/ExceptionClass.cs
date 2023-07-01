@@ -42,6 +42,6 @@ namespace Ryujinx.Cpu.AppleHv.Arm
         WatchpointSameEl = 0b110101,
         BkptAarch32 = 0b111000,
         VectorCatchAarch32 = 0b111010,
-        BrkAarch64 = 0b111100
+        BrkAarch64 = 0b111100,
     }
 }

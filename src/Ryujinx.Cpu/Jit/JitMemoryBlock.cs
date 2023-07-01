@@ -19,6 +19,10 @@ namespace Ryujinx.Cpu.Jit
         public void MapAsRx(ulong offset, ulong size) => _impl.Reprotect(offset, size, MemoryPermission.ReadAndExecute);
         public void MapAsRwx(ulong offset, ulong size) => _impl.Reprotect(offset, size, MemoryPermission.ReadWriteExecute);
 
-        public void Dispose() => _impl.Dispose();
+        public void Dispose()
+        {
+            GC.SuppressFinalize(this);
+            _impl.Dispose();
+        }
     }
 }

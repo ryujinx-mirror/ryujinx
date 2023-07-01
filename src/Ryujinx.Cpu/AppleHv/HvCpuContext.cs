@@ -1,5 +1,4 @@
 using ARMeilleure.Memory;
-using System;
 
 namespace Ryujinx.Cpu.AppleHv
 {
@@ -12,10 +11,6 @@ namespace Ryujinx.Cpu.AppleHv
         {
             _tickSource = tickSource;
             _memoryManager = (HvMemoryManager)memory;
-        }
-
-        private void UnmapHandler(ulong address, ulong size)
-        {
         }
 
         /// <inheritdoc/>
