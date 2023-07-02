@@ -87,7 +87,7 @@ namespace Ryujinx.Ui.Windows
         [GUI] ToggleButton _rStick;
         [GUI] CheckButton _invertRStickX;
         [GUI] CheckButton _invertRStickY;
-        [GUI] CheckButton _rotateR90Cw;
+        [GUI] CheckButton _rotateR90CW;
         [GUI] ToggleButton _rStickUp;
         [GUI] ToggleButton _rStickDown;
         [GUI] ToggleButton _rStickLeft;
@@ -503,7 +503,7 @@ namespace Ryujinx.Ui.Windows
                     _rStick.Label = controllerConfig.RightJoyconStick.Joystick.ToString();
                     _invertRStickX.Active = controllerConfig.RightJoyconStick.InvertStickX;
                     _invertRStickY.Active = controllerConfig.RightJoyconStick.InvertStickY;
-                    _rotateR90Cw.Active = controllerConfig.RightJoyconStick.Rotate90CW;
+                    _rotateR90CW.Active = controllerConfig.RightJoyconStick.Rotate90CW;
                     _rStickButton.Label = controllerConfig.RightJoyconStick.StickButton.ToString();
                     _a.Label = controllerConfig.RightJoycon.ButtonA.ToString();
                     _b.Label = controllerConfig.RightJoycon.ButtonB.ToString();
@@ -743,7 +743,7 @@ namespace Ryujinx.Ui.Windows
                         Joystick = rStick,
                         InvertStickY = _invertRStickY.Active,
                         StickButton = rStickButton,
-                        Rotate90CW = _rotateR90Cw.Active,
+                        Rotate90CW = _rotateR90CW.Active,
                     },
                     Motion = motionConfig,
                     Rumble = new RumbleConfigController
