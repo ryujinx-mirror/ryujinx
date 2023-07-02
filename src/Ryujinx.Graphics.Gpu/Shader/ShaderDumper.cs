@@ -46,13 +46,13 @@ namespace Ryujinx.Graphics.Gpu.Shader
 
             CurrentDumpIndex++;
 
-            using MemoryStream stream = new MemoryStream(code);
-            BinaryReader codeReader = new BinaryReader(stream);
+            using MemoryStream stream = new(code);
+            BinaryReader codeReader = new(stream);
 
             using FileStream fullFile = File.Create(fullPath);
             using FileStream codeFile = File.Create(codePath);
-            BinaryWriter fullWriter = new BinaryWriter(fullFile);
-            BinaryWriter codeWriter = new BinaryWriter(codeFile);
+            BinaryWriter fullWriter = new(fullFile);
+            BinaryWriter codeWriter = new(codeFile);
 
             int headerSize = compute ? 0 : 0x50;
 

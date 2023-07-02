@@ -12,6 +12,6 @@
         MoveAndSend = 4,
         FetchAndSetMaddr = 5,
         MoveAndSetMaddrThenFetchAndSend = 6,
-        MoveAndSetMaddrThenSendHigh = 7
+        MoveAndSetMaddrThenSendHigh = 7,
     }
 }

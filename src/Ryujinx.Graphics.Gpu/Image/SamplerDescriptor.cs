@@ -43,17 +43,17 @@ namespace Ryujinx.Graphics.Gpu.Image
             0.45833334f,
             0.46153846f,
             0.4642857f,
-            0.46666667f
+            0.46666667f,
         };
 
         private static readonly float[] _maxAnisotropyLut = new float[]
         {
-            1, 2, 4, 6, 8, 10, 12, 16
+            1, 2, 4, 6, 8, 10, 12, 16,
         };
 
         private const float Frac8ToF32 = 1.0f / 256.0f;
 
-#pragma warning disable CS0649
+#pragma warning disable CS0649 // Field is never assigned to
         public uint Word0;
         public uint Word1;
         public uint Word2;
@@ -68,7 +68,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// Unpacks the texture wrap mode along the X axis.
         /// </summary>
         /// <returns>The texture wrap mode enum</returns>
-        public AddressMode UnpackAddressU()
+        public readonly AddressMode UnpackAddressU()
         {
             return (AddressMode)(Word0 & 7);
         }
@@ -77,7 +77,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// Unpacks the texture wrap mode along the Y axis.
         /// </summary>
         /// <returns>The texture wrap mode enum</returns>
-        public AddressMode UnpackAddressV()
+        public readonly AddressMode UnpackAddressV()
         {
             return (AddressMode)((Word0 >> 3) & 7);
         }
@@ -86,7 +86,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// Unpacks the texture wrap mode along the Z axis.
         /// </summary>
         /// <returns>The texture wrap mode enum</returns>
-        public AddressMode UnpackAddressP()
+        public readonly AddressMode UnpackAddressP()
         {
             return (AddressMode)((Word0 >> 6) & 7);
         }
@@ -97,7 +97,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// This is only relevant for shaders with shadow samplers.
         /// </summary>
         /// <returns>The depth comparison mode enum</returns>
-        public CompareMode UnpackCompareMode()
+        public readonly CompareMode UnpackCompareMode()
         {
             return (CompareMode)((Word0 >> 9) & 1);
         }
@@ -108,7 +108,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// This is only relevant for shaders with shadow samplers.
         /// </summary>
         /// <returns>The depth comparison operation enum</returns>
-        public CompareOp UnpackCompareOp()
+        public readonly CompareOp UnpackCompareOp()
         {
             return (CompareOp)(((Word0 >> 10) & 7) + 1);
         }
@@ -117,7 +117,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// Unpacks and converts the maximum anisotropy value used for texture anisotropic filtering.
         /// </summary>
         /// <returns>The maximum anisotropy</returns>
-        public float UnpackMaxAnisotropy()
+        public readonly float UnpackMaxAnisotropy()
         {
             return _maxAnisotropyLut[(Word0 >> 20) & 7];
         }
@@ -128,7 +128,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// that is larger than the texture size.
         /// </summary>
         /// <returns>The magnification filter</returns>
-        public MagFilter UnpackMagFilter()
+        public readonly MagFilter UnpackMagFilter()
         {
             return (MagFilter)(Word1 & 3);
         }
@@ -139,7 +139,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// that is smaller than the texture size.
         /// </summary>
         /// <returns>The minification filter</returns>
-        public MinFilter UnpackMinFilter()
+        public readonly MinFilter UnpackMinFilter()
         {
             SamplerMinFilter minFilter = (SamplerMinFilter)((Word1 >> 4) & 3);
             SamplerMipFilter mipFilter = (SamplerMipFilter)((Word1 >> 6) & 3);
@@ -161,24 +161,30 @@ namespace Ryujinx.Graphics.Gpu.Image
                 case SamplerMipFilter.None:
                     switch (minFilter)
                     {
-                        case SamplerMinFilter.Nearest: return MinFilter.Nearest;
-                        case SamplerMinFilter.Linear:  return MinFilter.Linear;
+                        case SamplerMinFilter.Nearest:
+                            return MinFilter.Nearest;
+                        case SamplerMinFilter.Linear:
+                            return MinFilter.Linear;
                     }
                     break;
 
                 case SamplerMipFilter.Nearest:
                     switch (minFilter)
                     {
-                        case SamplerMinFilter.Nearest: return MinFilter.NearestMipmapNearest;
-                        case SamplerMinFilter.Linear:  return MinFilter.LinearMipmapNearest;
+                        case SamplerMinFilter.Nearest:
+                            return MinFilter.NearestMipmapNearest;
+                        case SamplerMinFilter.Linear:
+                            return MinFilter.LinearMipmapNearest;
                     }
                     break;
 
                 case SamplerMipFilter.Linear:
                     switch (minFilter)
                     {
-                        case SamplerMinFilter.Nearest: return MinFilter.NearestMipmapLinear;
-                        case SamplerMinFilter.Linear:  return MinFilter.LinearMipmapLinear;
+                        case SamplerMinFilter.Nearest:
+                            return MinFilter.NearestMipmapLinear;
+                        case SamplerMinFilter.Linear:
+                            return MinFilter.LinearMipmapLinear;
                     }
                     break;
             }
@@ -190,7 +196,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// Unpacks the seamless cubemap flag.
         /// </summary>
         /// <returns>The seamless cubemap flag</returns>
-        public bool UnpackSeamlessCubemap()
+        public readonly bool UnpackSeamlessCubemap()
         {
             return (Word1 & (1 << 9)) != 0;
         }
@@ -200,7 +206,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// This describes how the final value will be computed from neighbouring pixels.
         /// </summary>
         /// <returns>The reduction filter</returns>
-        public ReductionFilter UnpackReductionFilter()
+        public readonly ReductionFilter UnpackReductionFilter()
         {
             return (ReductionFilter)((Word1 >> 10) & 3);
         }
@@ -211,7 +217,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// which mipmap level to use from a given texture.
         /// </summary>
         /// <returns>The level-of-detail bias value</returns>
-        public float UnpackMipLodBias()
+        public readonly float UnpackMipLodBias()
         {
             int fixedValue = (int)(Word1 >> 12) & 0x1fff;
 
@@ -224,7 +230,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// Unpacks the level-of-detail snap value.
         /// </summary>
         /// <returns>The level-of-detail snap value</returns>
-        public float UnpackLodSnap()
+        public readonly float UnpackLodSnap()
         {
             return _f5ToF32ConversionLut[(Word1 >> 26) & 0x1f];
         }
@@ -233,7 +239,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// Unpacks the minimum level-of-detail value.
         /// </summary>
         /// <returns>The minimum level-of-detail value</returns>
-        public float UnpackMinLod()
+        public readonly float UnpackMinLod()
         {
             return (Word2 & 0xfff) * Frac8ToF32;
         }
@@ -242,7 +248,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// Unpacks the maximum level-of-detail value.
         /// </summary>
         /// <returns>The maximum level-of-detail value</returns>
-        public float UnpackMaxLod()
+        public readonly float UnpackMaxLod()
         {
             return ((Word2 >> 12) & 0xfff) * Frac8ToF32;
         }

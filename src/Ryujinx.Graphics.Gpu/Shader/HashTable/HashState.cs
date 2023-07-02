@@ -21,7 +21,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.HashTable
         /// <returns>Hash of the given data</returns>
         public static uint CalcHash(ReadOnlySpan<byte> data)
         {
-            HashState state = new HashState();
+            HashState state = new();
 
             state.Initialize();
             state.Continue(data);
@@ -50,7 +50,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.HashTable
         {
             ulong h = _hash;
 
-            ReadOnlySpan<ulong> dataAsUlong = MemoryMarshal.Cast<byte, ulong>(data.Slice(_start));
+            ReadOnlySpan<ulong> dataAsUlong = MemoryMarshal.Cast<byte, ulong>(data[_start..]);
 
             for (int i = 0; i < dataAsUlong.Length; i++)
             {
@@ -75,7 +75,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.HashTable
         /// </remarks>
         /// <param name="data">Data to be hashed</param>
         /// <returns>Hash of all the data hashed with this <see cref="HashState"/></returns>
-        public uint Finalize(ReadOnlySpan<byte> data)
+        public readonly uint Finalize(ReadOnlySpan<byte> data)
         {
             ulong h = _hash;
 

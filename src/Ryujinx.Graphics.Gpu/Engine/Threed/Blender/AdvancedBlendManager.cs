@@ -54,12 +54,12 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed.Blender
         /// <returns>True if the function was found, false otherwise</returns>
         public bool TryGetAdvancedBlend(out AdvancedBlendDescriptor descriptor)
         {
-            Span<uint> currentCode = new Span<uint>(_code);
+            Span<uint> currentCode = new(_code);
             byte codeLength = (byte)_state.State.BlendUcodeSize;
 
             if (currentCode.Length > codeLength)
             {
-                currentCode = currentCode.Slice(0, codeLength);
+                currentCode = currentCode[..codeLength];
             }
 
             Hash128 hash = XXHash128.ComputeHash(MemoryMarshal.Cast<uint, byte>(currentCode));

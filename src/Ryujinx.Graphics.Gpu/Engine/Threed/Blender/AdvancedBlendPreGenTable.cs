@@ -8,7 +8,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed.Blender
     /// <summary>
     /// Advanced blend function entry.
     /// </summary>
-    struct AdvancedBlendEntry
+    readonly struct AdvancedBlendEntry
     {
         /// <summary>
         /// Advanced blend operation.

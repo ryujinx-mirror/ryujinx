@@ -9,7 +9,7 @@ namespace Ryujinx.Graphics.Gpu.Image
     /// </summary>
     struct TextureDescriptor : ITextureDescriptor, IEquatable<TextureDescriptor>
     {
-#pragma warning disable CS0649
+#pragma warning disable CS0649 // Field is never assigned to
         public uint Word0;
         public uint Word1;
         public uint Word2;
@@ -24,7 +24,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// Unpacks Maxwell texture format integer.
         /// </summary>
         /// <returns>The texture format integer</returns>
-        public uint UnpackFormat()
+        public readonly uint UnpackFormat()
         {
             return Word0 & 0x8007ffff;
         }
@@ -33,43 +33,43 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// Unpacks the swizzle component for the texture red color channel.
         /// </summary>
         /// <returns>The swizzle component</returns>
-        public TextureComponent UnpackSwizzleR()
+        public readonly TextureComponent UnpackSwizzleR()
         {
-            return(TextureComponent)((Word0 >> 19) & 7);
+            return (TextureComponent)((Word0 >> 19) & 7);
         }
 
         /// <summary>
         /// Unpacks the swizzle component for the texture green color channel.
         /// </summary>
         /// <returns>The swizzle component</returns>
-        public TextureComponent UnpackSwizzleG()
+        public readonly TextureComponent UnpackSwizzleG()
         {
-            return(TextureComponent)((Word0 >> 22) & 7);
+            return (TextureComponent)((Word0 >> 22) & 7);
         }
 
         /// <summary>
         /// Unpacks the swizzle component for the texture blue color channel.
         /// </summary>
         /// <returns>The swizzle component</returns>
-        public TextureComponent UnpackSwizzleB()
+        public readonly TextureComponent UnpackSwizzleB()
         {
-            return(TextureComponent)((Word0 >> 25) & 7);
+            return (TextureComponent)((Word0 >> 25) & 7);
         }
 
         /// <summary>
         /// Unpacks the swizzle component for the texture alpha color channel.
         /// </summary>
         /// <returns>The swizzle component</returns>
-        public TextureComponent UnpackSwizzleA()
+        public readonly TextureComponent UnpackSwizzleA()
         {
-            return(TextureComponent)((Word0 >> 28) & 7);
+            return (TextureComponent)((Word0 >> 28) & 7);
         }
 
         /// <summary>
         /// Unpacks the 40-bits texture GPU virtual address.
         /// </summary>
         /// <returns>The GPU virtual address</returns>
-        public ulong UnpackAddress()
+        public readonly ulong UnpackAddress()
         {
             return Word1 | ((ulong)(Word2 & 0xffff) << 32);
         }
@@ -79,7 +79,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// This defines the texture layout, among other things.
         /// </summary>
         /// <returns>The texture descriptor type</returns>
-        public TextureDescriptorType UnpackTextureDescriptorType()
+        public readonly TextureDescriptorType UnpackTextureDescriptorType()
         {
             return (TextureDescriptorType)((Word2 >> 21) & 7);
         }
@@ -89,7 +89,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// Always 32-bytes aligned.
         /// </summary>
         /// <returns>The linear texture stride</returns>
-        public int UnpackStride()
+        public readonly int UnpackStride()
         {
             return (int)(Word3 & 0xffff) << 5;
         }
@@ -99,7 +99,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// Must be always 1, ignored by the GPU.
         /// </summary>
         /// <returns>THe GOB block X size</returns>
-        public int UnpackGobBlocksInX()
+        public readonly int UnpackGobBlocksInX()
         {
             return 1 << (int)(Word3 & 7);
         }
@@ -109,7 +109,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// Must be always a power of 2, with a maximum value of 32.
         /// </summary>
         /// <returns>THe GOB block Y size</returns>
-        public int UnpackGobBlocksInY()
+        public readonly int UnpackGobBlocksInY()
         {
             return 1 << (int)((Word3 >> 3) & 7);
         }
@@ -120,7 +120,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// Must be 1 for any texture target other than 3D textures.
         /// </summary>
         /// <returns>The GOB block Z size</returns>
-        public int UnpackGobBlocksInZ()
+        public readonly int UnpackGobBlocksInZ()
         {
             return 1 << (int)((Word3 >> 6) & 7);
         }
@@ -130,7 +130,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// This is only used for sparse textures, should be 1 otherwise.
         /// </summary>
         /// <returns>The number of GOB blocks per tile</returns>
-        public int UnpackGobBlocksInTileX()
+        public readonly int UnpackGobBlocksInTileX()
         {
             return 1 << (int)((Word3 >> 10) & 7);
         }
@@ -139,7 +139,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// Unpacks the number of mipmap levels of the texture.
         /// </summary>
         /// <returns>The number of mipmap levels</returns>
-        public int UnpackLevels()
+        public readonly int UnpackLevels()
         {
             return (int)(Word3 >> 28) + 1;
         }
@@ -148,7 +148,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// Unpack the base level texture width size.
         /// </summary>
         /// <returns>The texture width</returns>
-        public int UnpackWidth()
+        public readonly int UnpackWidth()
         {
             return (int)(Word4 & 0xffff) + 1;
         }
@@ -157,7 +157,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// Unpack the width of a buffer texture.
         /// </summary>
         /// <returns>The texture width</returns>
-        public int UnpackBufferTextureWidth()
+        public readonly int UnpackBufferTextureWidth()
         {
             return (int)((Word4 & 0xffff) | (Word3 << 16)) + 1;
         }
@@ -166,7 +166,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// Unpacks the texture sRGB format flag.
         /// </summary>
         /// <returns>True if the texture is sRGB, false otherwise</returns>
-        public bool UnpackSrgb()
+        public readonly bool UnpackSrgb()
         {
             return (Word4 & (1 << 22)) != 0;
         }
@@ -175,7 +175,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// Unpacks the texture target.
         /// </summary>
         /// <returns>The texture target</returns>
-        public TextureTarget UnpackTextureTarget()
+        public readonly TextureTarget UnpackTextureTarget()
         {
             return (TextureTarget)((Word4 >> 23) & 0xf);
         }
@@ -185,7 +185,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// Should be ignored for 1D or buffer textures.
         /// </summary>
         /// <returns>The texture height or layers count</returns>
-        public int UnpackHeight()
+        public readonly int UnpackHeight()
         {
             return (int)(Word5 & 0xffff) + 1;
         }
@@ -195,7 +195,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// The meaning of this value depends on the texture target.
         /// </summary>
         /// <returns>The texture depth, layer or faces count</returns>
-        public int UnpackDepth()
+        public readonly int UnpackDepth()
         {
             return (int)((Word5 >> 16) & 0x3fff) + 1;
         }
@@ -207,7 +207,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// It must be set to false (by the guest driver) for rectangle textures.
         /// </summary>
         /// <returns>The texture coordinates normalized flag</returns>
-        public bool UnpackTextureCoordNormalized()
+        public readonly bool UnpackTextureCoordNormalized()
         {
             return (Word5 & (1 << 31)) != 0;
         }
@@ -216,7 +216,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// Unpacks the base mipmap level of the texture.
         /// </summary>
         /// <returns>The base mipmap level of the texture</returns>
-        public int UnpackBaseLevel()
+        public readonly int UnpackBaseLevel()
         {
             return (int)(Word7 & 0xf);
         }
@@ -226,7 +226,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// Usually equal to Levels minus 1.
         /// </summary>
         /// <returns>The maximum mipmap level (inclusive) of the texture</returns>
-        public int UnpackMaxLevelInclusive()
+        public readonly int UnpackMaxLevelInclusive()
         {
             return (int)((Word7 >> 4) & 0xf);
         }
@@ -236,7 +236,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// Must be ignored for non-multisample textures.
         /// </summary>
         /// <returns>The multisample counts enum</returns>
-        public TextureMsaaMode UnpackTextureMsaaMode()
+        public readonly TextureMsaaMode UnpackTextureMsaaMode()
         {
             return (TextureMsaaMode)((Word7 >> 8) & 0xf);
         }
@@ -268,6 +268,11 @@ namespace Ryujinx.Graphics.Gpu.Image
         public override int GetHashCode()
         {
             return Unsafe.As<TextureDescriptor, Vector256<byte>>(ref this).GetHashCode();
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is TextureDescriptor descriptor && Equals(descriptor);
         }
     }
 }

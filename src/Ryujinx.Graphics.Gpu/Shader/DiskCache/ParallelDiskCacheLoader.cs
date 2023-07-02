@@ -190,7 +190,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
         private readonly BlockingCollection<AsyncProgramTranslation> _asyncTranslationQueue;
         private readonly SortedList<int, (CachedShaderProgram, byte[])> _programList;
 
-        private int _backendParallelCompileThreads;
+        private readonly int _backendParallelCompileThreads;
         private int _compiledCount;
         private int _totalCount;
 
@@ -201,22 +201,21 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
         /// <param name="graphicsCache">Graphics shader cache</param>
         /// <param name="computeCache">Compute shader cache</param>
         /// <param name="hostStorage">Disk cache host storage</param>
-        /// <param name="cancellationToken">Cancellation token</param>
         /// <param name="stateChangeCallback">Function to be called when there is a state change, reporting state, compiled and total shaders count</param>
-        public ParallelDiskCacheLoader(
-            GpuContext context,
+        /// <param name="cancellationToken">Cancellation token</param>
+        public ParallelDiskCacheLoader(GpuContext context,
             ShaderCacheHashTable graphicsCache,
             ComputeShaderCacheHashTable computeCache,
             DiskCacheHostStorage hostStorage,
-            CancellationToken cancellationToken,
-            Action<ShaderCacheState, int, int> stateChangeCallback)
+            Action<ShaderCacheState, int, int> stateChangeCallback,
+            CancellationToken cancellationToken)
         {
             _context = context;
             _graphicsCache = graphicsCache;
             _computeCache = computeCache;
             _hostStorage = hostStorage;
-            _cancellationToken = cancellationToken;
             _stateChangeCallback = stateChangeCallback;
+            _cancellationToken = cancellationToken;
             _validationQueue = new Queue<ProgramEntry>();
             _compilationQueue = new ConcurrentQueue<ProgramCompilation>();
             _asyncTranslationQueue = new BlockingCollection<AsyncProgramTranslation>(ThreadCount);
@@ -235,7 +234,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
             {
                 workThreads[index] = new Thread(ProcessAsyncQueue)
                 {
-                    Name = $"GPU.AsyncTranslationThread.{index}"
+                    Name = $"GPU.AsyncTranslationThread.{index}",
                 };
             }
 
@@ -367,7 +366,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
         {
             try
             {
-                AsyncProgramTranslation asyncTranslation = new AsyncProgramTranslation(guestShaders, specState, programIndex, isCompute);
+                AsyncProgramTranslation asyncTranslation = new(guestShaders, specState, programIndex, isCompute);
                 _asyncTranslationQueue.Add(asyncTranslation, _cancellationToken);
             }
             catch (OperationCanceledException)
@@ -491,7 +490,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
             {
                 ShaderSource[] shaderSources = new ShaderSource[compilation.TranslatedStages.Length];
 
-                ShaderInfoBuilder shaderInfoBuilder = new ShaderInfoBuilder(_context, compilation.SpecializationState.TransformFeedbackDescriptors != null);
+                ShaderInfoBuilder shaderInfoBuilder = new(_context, compilation.SpecializationState.TransformFeedbackDescriptors != null);
 
                 for (int index = 0; index < compilation.TranslatedStages.Length; index++)
                 {
@@ -502,7 +501,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
 
                 ShaderInfo shaderInfo = shaderInfoBuilder.Build(compilation.SpecializationState.PipelineState, fromCache: true);
                 IProgram hostProgram = _context.Renderer.CreateProgram(shaderSources, shaderInfo);
-                CachedShaderProgram program = new CachedShaderProgram(hostProgram, compilation.SpecializationState, compilation.Shaders);
+                CachedShaderProgram program = new(hostProgram, compilation.SpecializationState, compilation.Shaders);
 
                 // Vulkan's binary code is the SPIR-V used for compilation, so it is ready immediately. Other APIs get this after compilation.
                 byte[] binaryCode = _context.Capabilities.Api == TargetApi.Vulkan ? ShaderBinarySerializer.Pack(shaderSources) : null;
@@ -589,12 +588,12 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
         /// <param name="programIndex">Program index</param>
         private void RecompileGraphicsFromGuestCode(GuestCodeAndCbData?[] guestShaders, ShaderSpecializationState specState, int programIndex)
         {
-            ShaderSpecializationState newSpecState = new ShaderSpecializationState(
+            ShaderSpecializationState newSpecState = new(
                 ref specState.GraphicsState,
                 specState.PipelineState,
                 specState.TransformFeedbackDescriptors);
 
-            ResourceCounts counts = new ResourceCounts();
+            ResourceCounts counts = new();
 
             TranslatorContext[] translatorContexts = new TranslatorContext[Constants.ShaderStages + 1];
             TranslatorContext nextStage = null;
@@ -610,7 +609,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
                     byte[] guestCode = shader.Code;
                     byte[] cb1Data = shader.Cb1Data;
 
-                    DiskCacheGpuAccessor gpuAccessor = new DiskCacheGpuAccessor(_context, guestCode, cb1Data, specState, newSpecState, counts, stageIndex);
+                    DiskCacheGpuAccessor gpuAccessor = new(_context, guestCode, cb1Data, specState, newSpecState, counts, stageIndex);
                     TranslatorContext currentStage = DecodeGraphicsShader(gpuAccessor, api, DefaultFlags, 0);
 
                     if (nextStage != null)
@@ -623,7 +622,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
                         byte[] guestCodeA = guestShaders[0].Value.Code;
                         byte[] cb1DataA = guestShaders[0].Value.Cb1Data;
 
-                        DiskCacheGpuAccessor gpuAccessorA = new DiskCacheGpuAccessor(_context, guestCodeA, cb1DataA, specState, newSpecState, counts, 0);
+                        DiskCacheGpuAccessor gpuAccessorA = new(_context, guestCodeA, cb1DataA, specState, newSpecState, counts, 0);
                         translatorContexts[0] = DecodeGraphicsShader(gpuAccessorA, api, DefaultFlags | TranslationFlags.VertexA, 0);
                     }
 
@@ -638,7 +637,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
             }
 
             CachedShaderStage[] shaders = new CachedShaderStage[guestShaders.Length];
-            List<ShaderProgram> translatedStages = new List<ShaderProgram>();
+            List<ShaderProgram> translatedStages = new();
 
             TranslatorContext previousStage = null;
 
@@ -699,9 +698,9 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
         private void RecompileComputeFromGuestCode(GuestCodeAndCbData?[] guestShaders, ShaderSpecializationState specState, int programIndex)
         {
             GuestCodeAndCbData shader = guestShaders[0].Value;
-            ResourceCounts counts = new ResourceCounts();
-            ShaderSpecializationState newSpecState = new ShaderSpecializationState(ref specState.ComputeState);
-            DiskCacheGpuAccessor gpuAccessor = new DiskCacheGpuAccessor(_context, shader.Code, shader.Cb1Data, specState, newSpecState, counts, 0);
+            ResourceCounts counts = new();
+            ShaderSpecializationState newSpecState = new(ref specState.ComputeState);
+            DiskCacheGpuAccessor gpuAccessor = new(_context, shader.Code, shader.Cb1Data, specState, newSpecState, counts, 0);
 
             TranslatorContext translatorContext = DecodeComputeShader(gpuAccessor, _context.Capabilities.Api, 0);
 

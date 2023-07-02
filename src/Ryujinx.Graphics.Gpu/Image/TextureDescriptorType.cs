@@ -11,6 +11,6 @@ namespace Ryujinx.Graphics.Gpu.Image
         LinearColorKey,
         Linear,
         BlockLinear,
-        BlockLinearColorKey
+        BlockLinearColorKey,
     }
 }

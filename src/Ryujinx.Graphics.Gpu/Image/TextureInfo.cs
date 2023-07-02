@@ -134,45 +134,45 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <param name="swizzleB">Swizzle for the blue color channel</param>
         /// <param name="swizzleA">Swizzle for the alpha color channel</param>
         public TextureInfo(
-            ulong            gpuAddress,
-            int              width,
-            int              height,
-            int              depthOrLayers,
-            int              levels,
-            int              samplesInX,
-            int              samplesInY,
-            int              stride,
-            bool             isLinear,
-            int              gobBlocksInY,
-            int              gobBlocksInZ,
-            int              gobBlocksInTileX,
-            Target           target,
-            FormatInfo       formatInfo,
+            ulong gpuAddress,
+            int width,
+            int height,
+            int depthOrLayers,
+            int levels,
+            int samplesInX,
+            int samplesInY,
+            int stride,
+            bool isLinear,
+            int gobBlocksInY,
+            int gobBlocksInZ,
+            int gobBlocksInTileX,
+            Target target,
+            FormatInfo formatInfo,
             DepthStencilMode depthStencilMode = DepthStencilMode.Depth,
-            SwizzleComponent swizzleR         = SwizzleComponent.Red,
-            SwizzleComponent swizzleG         = SwizzleComponent.Green,
-            SwizzleComponent swizzleB         = SwizzleComponent.Blue,
-            SwizzleComponent swizzleA         = SwizzleComponent.Alpha)
+            SwizzleComponent swizzleR = SwizzleComponent.Red,
+            SwizzleComponent swizzleG = SwizzleComponent.Green,
+            SwizzleComponent swizzleB = SwizzleComponent.Blue,
+            SwizzleComponent swizzleA = SwizzleComponent.Alpha)
         {
-            GpuAddress       = gpuAddress;
-            Width            = width;
-            Height           = height;
-            DepthOrLayers    = depthOrLayers;
-            Levels           = levels;
-            SamplesInX       = samplesInX;
-            SamplesInY       = samplesInY;
-            Stride           = stride;
-            IsLinear         = isLinear;
-            GobBlocksInY     = gobBlocksInY;
-            GobBlocksInZ     = gobBlocksInZ;
+            GpuAddress = gpuAddress;
+            Width = width;
+            Height = height;
+            DepthOrLayers = depthOrLayers;
+            Levels = levels;
+            SamplesInX = samplesInX;
+            SamplesInY = samplesInY;
+            Stride = stride;
+            IsLinear = isLinear;
+            GobBlocksInY = gobBlocksInY;
+            GobBlocksInZ = gobBlocksInZ;
             GobBlocksInTileX = gobBlocksInTileX;
-            Target           = target;
-            FormatInfo       = formatInfo;
+            Target = target;
+            FormatInfo = formatInfo;
             DepthStencilMode = depthStencilMode;
-            SwizzleR         = swizzleR;
-            SwizzleG         = swizzleG;
-            SwizzleB         = swizzleB;
-            SwizzleA         = swizzleA;
+            SwizzleR = swizzleR;
+            SwizzleG = swizzleG;
+            SwizzleB = swizzleB;
+            SwizzleA = swizzleA;
         }
 
         /// <summary>
@@ -318,17 +318,17 @@ namespace Ryujinx.Graphics.Gpu.Image
             // - If the parent format is not compressed, and the view is, the view
             // size is calculated as described on the first point, but the width and height
             // of the view must be also multiplied by the block width and height.
-            int width  = Math.Max(1, parent.Info.Width  >> firstLevel);
+            int width = Math.Max(1, parent.Info.Width >> firstLevel);
             int height = Math.Max(1, parent.Info.Height >> firstLevel);
 
             if (parent.Info.FormatInfo.IsCompressed && !FormatInfo.IsCompressed)
             {
-                width  = BitUtils.DivRoundUp(width,  parent.Info.FormatInfo.BlockWidth);
+                width = BitUtils.DivRoundUp(width, parent.Info.FormatInfo.BlockWidth);
                 height = BitUtils.DivRoundUp(height, parent.Info.FormatInfo.BlockHeight);
             }
             else if (!parent.Info.FormatInfo.IsCompressed && FormatInfo.IsCompressed)
             {
-                width  *= FormatInfo.BlockWidth;
+                width *= FormatInfo.BlockWidth;
                 height *= FormatInfo.BlockHeight;
             }
 

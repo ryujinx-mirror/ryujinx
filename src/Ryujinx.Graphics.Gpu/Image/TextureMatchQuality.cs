@@ -4,6 +4,6 @@
     {
         NoMatch,
         FormatAlias,
-        Perfect
+        Perfect,
     }
 }

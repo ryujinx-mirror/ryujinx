@@ -13,6 +13,6 @@
         BitwiseOr = 9,
         BitwiseAnd = 10,
         BitwiseAndNot = 11,
-        BitwiseNotAnd = 12
+        BitwiseNotAnd = 12,
     }
 }

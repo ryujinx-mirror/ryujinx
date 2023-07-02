@@ -9,7 +9,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
     [StructLayout(LayoutKind.Sequential, Size = 1024)]
     struct MmeShadowScratch
     {
-#pragma warning disable CS0169
+#pragma warning disable CS0169 // The private field is never used
         private uint _e0;
 #pragma warning restore CS0169
         public ref uint this[int index] => ref AsSpan()[index];

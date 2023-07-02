@@ -48,7 +48,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.MME
         /// <returns>Delegate of the host compiled code</returns>
         public MacroExecute Compile(ReadOnlySpan<int> code)
         {
-            Dictionary<int, Label> labels = new Dictionary<int, Label>();
+            Dictionary<int, Label> labels = new();
 
             int lastTarget = 0;
             int i;

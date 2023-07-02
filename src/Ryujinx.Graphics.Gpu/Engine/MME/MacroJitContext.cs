@@ -12,7 +12,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.MME
         /// <summary>
         /// Arguments FIFO.
         /// </summary>
-        public Queue<FifoWord> Fifo { get; } = new Queue<FifoWord>();
+        public Queue<FifoWord> Fifo { get; } = new();
 
         /// <summary>
         /// Fetches a arguments from the arguments FIFO.

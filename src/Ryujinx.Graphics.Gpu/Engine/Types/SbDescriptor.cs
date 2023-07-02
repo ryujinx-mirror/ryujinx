@@ -5,14 +5,14 @@
     /// </summary>
     struct SbDescriptor
     {
-#pragma warning disable CS0649
+#pragma warning disable CS0649 // Field is never assigned to
         public uint AddressLow;
         public uint AddressHigh;
         public int Size;
         public int Padding;
 #pragma warning restore CS0649
 
-        public ulong PackAddress()
+        public readonly ulong PackAddress()
         {
             return AddressLow | ((ulong)AddressHigh << 32);
         }

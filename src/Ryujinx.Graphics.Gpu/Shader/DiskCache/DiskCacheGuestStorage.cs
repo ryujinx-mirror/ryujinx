@@ -205,10 +205,10 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
 
             if (guestCode == null || cb1Data == null)
             {
-                BinarySerializer tocReader = new BinarySerializer(tocFileStream);
+                BinarySerializer tocReader = new(tocFileStream);
                 tocFileStream.Seek(Unsafe.SizeOf<TocHeader>() + index * Unsafe.SizeOf<TocEntry>(), SeekOrigin.Begin);
 
-                TocEntry entry = new TocEntry();
+                TocEntry entry = new();
                 tocReader.Read(ref entry);
 
                 guestCode = new byte[entry.CodeSize];
@@ -261,7 +261,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
             using var tocFileStream = DiskCacheCommon.OpenFile(_basePath, TocFileName, writable: true);
             using var dataFileStream = DiskCacheCommon.OpenFile(_basePath, DataFileName, writable: true);
 
-            TocHeader header = new TocHeader();
+            TocHeader header = new();
 
             LoadOrCreateToc(tocFileStream, ref header);
 
@@ -299,7 +299,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
         /// <param name="header">Set to the TOC file header</param>
         private void LoadOrCreateToc(Stream tocFileStream, ref TocHeader header)
         {
-            BinarySerializer reader = new BinarySerializer(tocFileStream);
+            BinarySerializer reader = new(tocFileStream);
 
             if (!reader.TryRead(ref header) || header.Magic != TocMagic || header.Version != VersionPacked)
             {
@@ -322,9 +322,9 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
         /// </summary>
         /// <param name="tocFileStream">Guest TOC file stream</param>
         /// <param name="header">Set to the TOC header</param>
-        private void CreateToc(Stream tocFileStream, ref TocHeader header)
+        private static void CreateToc(Stream tocFileStream, ref TocHeader header)
         {
-            BinarySerializer writer = new BinarySerializer(tocFileStream);
+            BinarySerializer writer = new(tocFileStream);
 
             header.Magic = TocMagic;
             header.Version = VersionPacked;
@@ -352,7 +352,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
         {
             _toc = new Dictionary<uint, List<TocMemoryEntry>>();
 
-            TocEntry entry = new TocEntry();
+            TocEntry entry = new();
             int index = 0;
 
             while (tocFileStream.Position < tocFileStream.Length)
@@ -386,7 +386,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
             ReadOnlySpan<byte> cb1Data,
             uint hash)
         {
-            BinarySerializer tocWriter = new BinarySerializer(tocFileStream);
+            BinarySerializer tocWriter = new(tocFileStream);
 
             dataFileStream.Seek(0, SeekOrigin.End);
             uint dataOffset = checked((uint)dataFileStream.Position);
@@ -399,12 +399,12 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
             tocFileStream.Seek(0, SeekOrigin.Begin);
             tocWriter.Write(ref header);
 
-            TocEntry entry = new TocEntry()
+            TocEntry entry = new()
             {
                 Offset = dataOffset,
                 CodeSize = codeSize,
                 Cb1DataSize = cb1DataSize,
-                Hash = hash
+                Hash = hash,
             };
 
             tocFileStream.Seek(0, SeekOrigin.End);

@@ -41,8 +41,8 @@ namespace Ryujinx.Graphics.Gpu.Image
             _context = context;
             _channel = channel;
 
-            TexturePoolCache texturePoolCache = new TexturePoolCache(context);
-            SamplerPoolCache samplerPoolCache = new SamplerPoolCache(context);
+            TexturePoolCache texturePoolCache = new(context);
+            SamplerPoolCache samplerPoolCache = new(context);
 
             float[] scales = new float[64];
             new Span<float>(scales).Fill(1f);
@@ -139,7 +139,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// </summary>
         /// <param name="texture">The texture to check</param>
         /// <returns>True if the scale needs updating, false if the scale is up to date</returns>
-        private bool ScaleNeedsUpdated(Texture texture)
+        private static bool ScaleNeedsUpdated(Texture texture)
         {
             return texture != null && !(texture.ScaleMode == TextureScaleMode.Blacklisted || texture.ScaleMode == TextureScaleMode.Undesired) && texture.ScaleFactor != GraphicsConfig.ResScale;
         }
@@ -234,7 +234,11 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             void ConsiderTarget(Texture target)
             {
-                if (target == null) return;
+                if (target == null)
+                {
+                    return;
+                }
+
                 float scale = target.ScaleFactor;
 
                 switch (target.ScaleMode)
@@ -445,7 +449,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// </remarks>
         public void UpdateRenderTargetDepthStencil()
         {
-            new Span<ITexture>(_rtHostColors).Fill(null);
+            new Span<ITexture>(_rtHostColors).Clear();
             _rtHostDs = _rtDepthStencil?.HostTexture;
 
             _context.Renderer.Pipeline.SetRenderTargets(_rtHostColors, _rtHostDs);

@@ -60,6 +60,6 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         /// <summary>
         /// Index buffer data streamer for inline index buffer updates, such as those used in legacy OpenGL.
         /// </summary>
-        public IbStreamer IbStreamer = new IbStreamer();
+        public IbStreamer IbStreamer = new();
     }
 }

@@ -1,6 +1,5 @@
 ﻿using Ryujinx.Common;
 using Ryujinx.Graphics.GAL;
-using System;
 using System.Runtime.InteropServices;
 
 namespace Ryujinx.Graphics.Gpu.Engine.Threed
@@ -17,33 +16,35 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         private int _inlineIndexBufferSize;
         private int _inlineIndexCount;
         private uint[] _buffer;
-        private int _bufferOffset;
+#pragma warning disable IDE0051 // Remove unused private member
+        private readonly int _bufferOffset;
+#pragma warning restore IDE0051
 
         /// <summary>
         /// Indicates if any index buffer data has been pushed.
         /// </summary>
-        public bool HasInlineIndexData => _inlineIndexCount != 0;
+        public readonly bool HasInlineIndexData => _inlineIndexCount != 0;
 
         /// <summary>
         /// Total numbers of indices that have been pushed.
         /// </summary>
-        public int InlineIndexCount => _inlineIndexCount;
+        public readonly int InlineIndexCount => _inlineIndexCount;
 
         /// <summary>
         /// Gets the handle for the host buffer currently holding the inline index buffer data.
         /// </summary>
         /// <returns>Host buffer handle</returns>
-        public BufferHandle GetInlineIndexBuffer()
+        public readonly BufferHandle GetInlineIndexBuffer()
         {
             return _inlineIndexBuffer;
         }
 
         /// <summary>
         /// Gets the number of elements on the current inline index buffer,
-        /// while also reseting it to zero for the next draw.
+        /// while also resetting it to zero for the next draw.
         /// </summary>
         /// <param name="renderer">Host renderer</param>
-        /// <returns>Inline index bufffer count</returns>
+        /// <returns>Inline index buffer count</returns>
         public int GetAndResetInlineIndexCount(IRenderer renderer)
         {
             UpdateRemaining(renderer);
@@ -114,10 +115,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         /// <param name="value">Index value to be written</param>
         private void PushData(IRenderer renderer, int offset, uint value)
         {
-            if (_buffer == null)
-            {
-                _buffer = new uint[BufferCapacity];
-            }
+            _buffer ??= new uint[BufferCapacity];
 
             // We upload data in chunks.
             // If we are at the start of a chunk, then the buffer might be full,
@@ -155,7 +153,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             int baseOffset = (offset - count) * sizeof(uint);
             int length = count * sizeof(uint);
             BufferHandle buffer = GetInlineIndexBuffer(renderer, baseOffset, length);
-            renderer.SetBufferData(buffer, baseOffset, MemoryMarshal.Cast<uint, byte>(_buffer).Slice(0, length));
+            renderer.SetBufferData(buffer, baseOffset, MemoryMarshal.Cast<uint, byte>(_buffer)[..length]);
         }
 
         /// <summary>

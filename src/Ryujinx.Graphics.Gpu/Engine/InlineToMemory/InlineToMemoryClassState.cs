@@ -1,5 +1,7 @@
 ﻿// This file was auto-generated from NVIDIA official Maxwell definitions.
 
+using Ryujinx.Common.Memory;
+
 namespace Ryujinx.Graphics.Gpu.Engine.InlineToMemory
 {
     /// <summary>
@@ -111,24 +113,24 @@ namespace Ryujinx.Graphics.Gpu.Engine.InlineToMemory
     /// </summary>
     unsafe struct InlineToMemoryClassState
     {
-#pragma warning disable CS0649
+#pragma warning disable CS0649 // Field is never assigned to
         public uint SetObject;
-        public int SetObjectClassId => (int)(SetObject & 0xFFFF);
-        public int SetObjectEngineId => (int)((SetObject >> 16) & 0x1F);
+        public readonly int SetObjectClassId => (int)(SetObject & 0xFFFF);
+        public readonly int SetObjectEngineId => (int)((SetObject >> 16) & 0x1F);
         public fixed uint Reserved04[63];
         public uint NoOperation;
         public uint SetNotifyA;
-        public int SetNotifyAAddressUpper => (int)(SetNotifyA & 0xFF);
+        public readonly int SetNotifyAAddressUpper => (int)(SetNotifyA & 0xFF);
         public uint SetNotifyB;
         public uint Notify;
-        public NotifyType NotifyType => (NotifyType)(Notify);
+        public readonly NotifyType NotifyType => (NotifyType)(Notify);
         public uint WaitForIdle;
         public fixed uint Reserved114[7];
         public uint SetGlobalRenderEnableA;
-        public int SetGlobalRenderEnableAOffsetUpper => (int)(SetGlobalRenderEnableA & 0xFF);
+        public readonly int SetGlobalRenderEnableAOffsetUpper => (int)(SetGlobalRenderEnableA & 0xFF);
         public uint SetGlobalRenderEnableB;
         public uint SetGlobalRenderEnableC;
-        public int SetGlobalRenderEnableCMode => (int)(SetGlobalRenderEnableC & 0x7);
+        public readonly int SetGlobalRenderEnableCMode => (int)(SetGlobalRenderEnableC & 0x7);
         public uint SendGoIdle;
         public uint PmTrigger;
         public uint PmTriggerWfi;
@@ -139,34 +141,34 @@ namespace Ryujinx.Graphics.Gpu.Engine.InlineToMemory
         public uint LineLengthIn;
         public uint LineCount;
         public uint OffsetOutUpper;
-        public int OffsetOutUpperValue => (int)(OffsetOutUpper & 0xFF);
+        public readonly int OffsetOutUpperValue => (int)(OffsetOutUpper & 0xFF);
         public uint OffsetOut;
         public uint PitchOut;
         public uint SetDstBlockSize;
-        public SetDstBlockSizeWidth SetDstBlockSizeWidth => (SetDstBlockSizeWidth)(SetDstBlockSize & 0xF);
-        public SetDstBlockSizeHeight SetDstBlockSizeHeight => (SetDstBlockSizeHeight)((SetDstBlockSize >> 4) & 0xF);
-        public SetDstBlockSizeDepth SetDstBlockSizeDepth => (SetDstBlockSizeDepth)((SetDstBlockSize >> 8) & 0xF);
+        public readonly SetDstBlockSizeWidth SetDstBlockSizeWidth => (SetDstBlockSizeWidth)(SetDstBlockSize & 0xF);
+        public readonly SetDstBlockSizeHeight SetDstBlockSizeHeight => (SetDstBlockSizeHeight)((SetDstBlockSize >> 4) & 0xF);
+        public readonly SetDstBlockSizeDepth SetDstBlockSizeDepth => (SetDstBlockSizeDepth)((SetDstBlockSize >> 8) & 0xF);
         public uint SetDstWidth;
         public uint SetDstHeight;
         public uint SetDstDepth;
         public uint SetDstLayer;
         public uint SetDstOriginBytesX;
-        public int SetDstOriginBytesXV => (int)(SetDstOriginBytesX & 0xFFFFF);
+        public readonly int SetDstOriginBytesXV => (int)(SetDstOriginBytesX & 0xFFFFF);
         public uint SetDstOriginSamplesY;
-        public int SetDstOriginSamplesYV => (int)(SetDstOriginSamplesY & 0xFFFF);
+        public readonly int SetDstOriginSamplesYV => (int)(SetDstOriginSamplesY & 0xFFFF);
         public uint LaunchDma;
-        public LaunchDmaDstMemoryLayout LaunchDmaDstMemoryLayout => (LaunchDmaDstMemoryLayout)(LaunchDma & 0x1);
-        public LaunchDmaCompletionType LaunchDmaCompletionType => (LaunchDmaCompletionType)((LaunchDma >> 4) & 0x3);
-        public LaunchDmaInterruptType LaunchDmaInterruptType => (LaunchDmaInterruptType)((LaunchDma >> 8) & 0x3);
-        public LaunchDmaSemaphoreStructSize LaunchDmaSemaphoreStructSize => (LaunchDmaSemaphoreStructSize)((LaunchDma >> 12) & 0x1);
-        public bool LaunchDmaReductionEnable => (LaunchDma & 0x2) != 0;
-        public LaunchDmaReductionOp LaunchDmaReductionOp => (LaunchDmaReductionOp)((LaunchDma >> 13) & 0x7);
-        public LaunchDmaReductionFormat LaunchDmaReductionFormat => (LaunchDmaReductionFormat)((LaunchDma >> 2) & 0x3);
-        public bool LaunchDmaSysmembarDisable => (LaunchDma & 0x40) != 0;
+        public readonly LaunchDmaDstMemoryLayout LaunchDmaDstMemoryLayout => (LaunchDmaDstMemoryLayout)(LaunchDma & 0x1);
+        public readonly LaunchDmaCompletionType LaunchDmaCompletionType => (LaunchDmaCompletionType)((LaunchDma >> 4) & 0x3);
+        public readonly LaunchDmaInterruptType LaunchDmaInterruptType => (LaunchDmaInterruptType)((LaunchDma >> 8) & 0x3);
+        public readonly LaunchDmaSemaphoreStructSize LaunchDmaSemaphoreStructSize => (LaunchDmaSemaphoreStructSize)((LaunchDma >> 12) & 0x1);
+        public readonly bool LaunchDmaReductionEnable => (LaunchDma & 0x2) != 0;
+        public readonly LaunchDmaReductionOp LaunchDmaReductionOp => (LaunchDmaReductionOp)((LaunchDma >> 13) & 0x7);
+        public readonly LaunchDmaReductionFormat LaunchDmaReductionFormat => (LaunchDmaReductionFormat)((LaunchDma >> 2) & 0x3);
+        public readonly bool LaunchDmaSysmembarDisable => (LaunchDma & 0x40) != 0;
         public uint LoadInlineData;
         public fixed uint Reserved1B8[9];
         public uint SetI2mSemaphoreA;
-        public int SetI2mSemaphoreAOffsetUpper => (int)(SetI2mSemaphoreA & 0xFF);
+        public readonly int SetI2mSemaphoreAOffsetUpper => (int)(SetI2mSemaphoreA & 0xFF);
         public uint SetI2mSemaphoreB;
         public uint SetI2mSemaphoreC;
         public fixed uint Reserved1E8[2];
@@ -175,7 +177,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.InlineToMemory
         public uint SetI2mSpareNoop02;
         public uint SetI2mSpareNoop03;
         public fixed uint Reserved200[3200];
-        public MmeShadowScratch SetMmeShadowScratch;
+        public Array256<uint> SetMmeShadowScratch;
 #pragma warning restore CS0649
     }
 }

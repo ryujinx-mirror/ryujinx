@@ -50,8 +50,9 @@ namespace Ryujinx.Graphics.Gpu.Shader
             out byte[] cachedGuestCode)
         {
             program = null;
-            ShaderCodeAccessor codeAccessor = new ShaderCodeAccessor(channel.MemoryManager, gpuVa);
+            ShaderCodeAccessor codeAccessor = new(channel.MemoryManager, gpuVa);
             bool hasSpecList = _cache.TryFindItem(codeAccessor, out var specList, out cachedGuestCode);
+
             return hasSpecList && specList.TryFindForCompute(channel, poolState, computeState, out program);
         }
 

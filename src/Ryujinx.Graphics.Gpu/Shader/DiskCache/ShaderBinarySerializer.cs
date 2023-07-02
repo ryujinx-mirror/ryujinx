@@ -3,7 +3,6 @@ using Ryujinx.Common.Memory;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.Shader;
 using Ryujinx.Graphics.Shader.Translation;
-using System;
 using System.Collections.Generic;
 using System.IO;
 
@@ -29,10 +28,10 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
 
         public static ShaderSource[] Unpack(CachedShaderStage[] stages, byte[] code)
         {
-            using MemoryStream input = new MemoryStream(code);
-            using BinaryReader reader = new BinaryReader(input);
+            using MemoryStream input = new(code);
+            using BinaryReader reader = new(input);
 
-            List<ShaderSource> output = new List<ShaderSource>();
+            List<ShaderSource> output = new();
 
             int count = reader.ReadInt32();
 

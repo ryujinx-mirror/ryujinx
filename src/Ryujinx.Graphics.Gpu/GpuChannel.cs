@@ -125,6 +125,7 @@ namespace Ryujinx.Graphics.Gpu
         /// </summary>
         public void Dispose()
         {
+            GC.SuppressFinalize(this);
             _context.DeferredActions.Enqueue(Destroy);
         }
 

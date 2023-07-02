@@ -92,7 +92,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 ShaderStage.TessellationEvaluation => 2,
                 ShaderStage.Geometry => 3,
                 ShaderStage.Fragment => 4,
-                _ => 0
+                _ => 0,
             });
 
             ResourceStages stages = info.Stage switch
@@ -103,7 +103,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 ShaderStage.TessellationEvaluation => ResourceStages.TessellationEvaluation,
                 ShaderStage.Geometry => ResourceStages.Geometry,
                 ShaderStage.Fragment => ResourceStages.Fragment,
-                _ => ResourceStages.None
+                _ => ResourceStages.None,
             };
 
             int uniformsPerStage = (int)_context.Capabilities.MaximumUniformBuffersPerStage;
@@ -236,7 +236,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 usages[index] = new ResourceUsageCollection(_resourceUsages[index].ToArray().AsReadOnly());
             }
 
-            ResourceLayout resourceLayout = new ResourceLayout(descriptors.AsReadOnly(), usages.AsReadOnly());
+            ResourceLayout resourceLayout = new(descriptors.AsReadOnly(), usages.AsReadOnly());
 
             if (pipeline.HasValue)
             {
@@ -262,7 +262,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
             ProgramPipelineState? pipeline,
             bool tfEnabled)
         {
-            ShaderInfoBuilder builder = new ShaderInfoBuilder(context, tfEnabled);
+            ShaderInfoBuilder builder = new(context, tfEnabled);
 
             foreach (CachedShaderStage program in programs)
             {
@@ -284,7 +284,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// <returns>Shader information</returns>
         public static ShaderInfo BuildForCompute(GpuContext context, ShaderProgramInfo info, bool fromCache = false)
         {
-            ShaderInfoBuilder builder = new ShaderInfoBuilder(context, tfEnabled: false);
+            ShaderInfoBuilder builder = new(context, tfEnabled: false);
 
             builder.AddStageInfo(info);
 

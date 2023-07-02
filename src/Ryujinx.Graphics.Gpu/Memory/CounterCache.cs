@@ -34,11 +34,12 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// Adds a new counter to the counter cache, or updates a existing one.
         /// </summary>
         /// <param name="gpuVa">GPU virtual address where the counter will be written in memory</param>
+        /// <param name="evt">The new counter</param>
         public void AddOrUpdate(ulong gpuVa, ICounterEvent evt)
         {
             int index = BinarySearch(gpuVa);
 
-            CounterEntry entry = new CounterEntry(gpuVa, evt);
+            CounterEntry entry = new(gpuVa, evt);
 
             if (index < 0)
             {
@@ -127,7 +128,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
                 _items[index].Event?.Flush();
 
                 return true;
-            } 
+            }
             else
             {
                 return false;
@@ -168,7 +169,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
                 int middle = left + (range >> 1);
 
-               CounterEntry item = _items[middle];
+                CounterEntry item = _items[middle];
 
                 if (item.Address == address)
                 {

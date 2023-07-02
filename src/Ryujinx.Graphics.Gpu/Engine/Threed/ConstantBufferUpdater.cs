@@ -19,7 +19,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         private ulong _ubFollowUpAddress = 0;
         private ulong _ubByteCount = 0;
         private int _ubIndex = 0;
-        private int[] _ubData = new int[UniformDataCacheSize];
+        private readonly int[] _ubData = new int[UniformDataCacheSize];
 
         /// <summary>
         /// Creates a new instance of the constant buffer updater.

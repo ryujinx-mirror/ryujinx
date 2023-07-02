@@ -62,7 +62,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
         private int _sequenceNumber;
 
-        private bool _useGranular;
+        private readonly bool _useGranular;
         private bool _syncActionRegistered;
 
         private int _referenceCount = 1;
@@ -80,10 +80,10 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// <param name="baseBuffers">Buffers which this buffer contains, and will inherit tracking handles from</param>
         public Buffer(GpuContext context, PhysicalMemory physicalMemory, ulong address, ulong size, IEnumerable<Buffer> baseBuffers = null)
         {
-            _context        = context;
+            _context = context;
             _physicalMemory = physicalMemory;
-            Address         = address;
-            Size            = size;
+            Address = address;
+            Size = size;
 
             Handle = context.Renderer.CreateBuffer((int)size, baseBuffers?.MaxBy(x => x.Size).Handle ?? BufferHandle.Null);
 
@@ -252,10 +252,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// </summary>
         private void EnsureRangeList()
         {
-            if (_modifiedRanges == null)
-            {
-                _modifiedRanges = new BufferModifiedRangeList(_context, this, Flush);
-            }
+            _modifiedRanges ??= new BufferModifiedRangeList(_context, this, Flush);
         }
 
         /// <summary>
@@ -326,7 +323,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
                     _syncActionRegistered = true;
                 }
 
-                Action<ulong, ulong> registerRangeAction = (ulong address, ulong size) =>
+                void registerRangeAction(ulong address, ulong size)
                 {
                     if (_useGranular)
                     {
@@ -336,7 +333,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
                     {
                         _memoryTracking.RegisterAction(_externalFlushDelegate);
                     }
-                };
+                }
 
                 EnsureRangeList();
 

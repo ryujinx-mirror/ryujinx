@@ -40,16 +40,16 @@ namespace Ryujinx.Graphics.Gpu.Image
             AddressMode addressP = descriptor.UnpackAddressP();
 
             CompareMode compareMode = descriptor.UnpackCompareMode();
-            CompareOp   compareOp   = descriptor.UnpackCompareOp();
+            CompareOp compareOp = descriptor.UnpackCompareOp();
 
-            ColorF color = new ColorF(
+            ColorF color = new(
                 descriptor.BorderColorR,
                 descriptor.BorderColorG,
                 descriptor.BorderColorB,
                 descriptor.BorderColorA);
 
-            float minLod     = descriptor.UnpackMinLod();
-            float maxLod     = descriptor.UnpackMaxLod();
+            float minLod = descriptor.UnpackMinLod();
+            float maxLod = descriptor.UnpackMaxLod();
             float mipLodBias = descriptor.UnpackMipLodBias();
 
             float maxRequestedAnisotropy = descriptor.UnpackMaxAnisotropy();

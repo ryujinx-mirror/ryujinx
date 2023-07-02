@@ -149,12 +149,12 @@ namespace Ryujinx.Graphics.Gpu.Shader.HashTable
                 }
             }
 
-            HashState hashState = new HashState();
+            HashState hashState = new();
             hashState.Initialize();
 
             for (int i = 0; i < index; i++)
             {
-                ReadOnlySpan<byte> dataSlice = new ReadOnlySpan<byte>(data).Slice(0, _sizeTable[i].Size);
+                ReadOnlySpan<byte> dataSlice = new ReadOnlySpan<byte>(data)[.._sizeTable[i].Size];
                 hashState.Continue(dataSlice);
                 _sizeTable[i].AddPartial(data, hashState.Finalize(dataSlice));
             }
@@ -208,7 +208,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.HashTable
         /// <returns>True if the item was found on the table, false otherwise</returns>
         public bool TryFindItem(IDataAccessor dataAccessor, out T item, out byte[] data)
         {
-            SmartDataAccessor sda = new SmartDataAccessor(dataAccessor);
+            SmartDataAccessor sda = new(dataAccessor);
 
             item = default;
             data = null;

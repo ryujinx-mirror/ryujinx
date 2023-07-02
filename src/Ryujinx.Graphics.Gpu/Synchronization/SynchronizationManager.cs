@@ -17,7 +17,7 @@ namespace Ryujinx.Graphics.Gpu.Synchronization
         /// <summary>
         /// Array containing all hardware syncpoints.
         /// </summary>
-        private Syncpoint[] _syncpoints;
+        private readonly Syncpoint[] _syncpoints;
 
         public SynchronizationManager()
         {
@@ -118,26 +118,24 @@ namespace Ryujinx.Graphics.Gpu.Synchronization
                 timeout = TimeSpan.FromSeconds(1);
             }
 
-            using (ManualResetEvent waitEvent = new ManualResetEvent(false))
+            using ManualResetEvent waitEvent = new(false);
+            var info = _syncpoints[id].RegisterCallback(threshold, (x) => waitEvent.Set());
+
+            if (info == null)
             {
-                var info = _syncpoints[id].RegisterCallback(threshold, (x) => waitEvent.Set());
-
-                if (info == null)
-                {
-                    return false;
-                }
-
-                bool signaled = waitEvent.WaitOne(timeout);
-
-                if (!signaled && info != null)
-                {
-                    Logger.Error?.Print(LogClass.Gpu, $"Wait on syncpoint {id} for threshold {threshold} took more than {timeout.TotalMilliseconds}ms, resuming execution...");
-
-                    _syncpoints[id].UnregisterCallback(info);
-                }
-
-                return !signaled;
+                return false;
             }
+
+            bool signaled = waitEvent.WaitOne(timeout);
+
+            if (!signaled && info != null)
+            {
+                Logger.Error?.Print(LogClass.Gpu, $"Wait on syncpoint {id} for threshold {threshold} took more than {timeout.TotalMilliseconds}ms, resuming execution...");
+
+                _syncpoints[id].UnregisterCallback(info);
+            }
+
+            return !signaled;
         }
     }
 }

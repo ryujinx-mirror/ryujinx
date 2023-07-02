@@ -10,6 +10,6 @@ namespace Ryujinx.Graphics.Gpu.Image
     {
         Average,
         Minimum,
-        Maximum
+        Maximum,
     }
 }

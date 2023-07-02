@@ -119,7 +119,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         private bool _modifiedStale = true;
 
         private ITexture _arrayViewTexture;
-        private Target   _arrayViewTarget;
+        private Target _arrayViewTarget;
 
         private ITexture _flushHostTexture;
         private ITexture _setHostTexture;
@@ -334,7 +334,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <returns>The child texture</returns>
         public Texture CreateView(TextureInfo info, SizeInfo sizeInfo, MultiRange range, int firstLayer, int firstLevel)
         {
-            Texture texture = new Texture(
+            Texture texture = new(
                 _context,
                 _physicalMemory,
                 info,
@@ -523,7 +523,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             if (ScaleFactor != scale)
             {
-                Logger.Debug?.Print(LogClass.Gpu, $"Rescaling {Info.Width}x{Info.Height} {Info.FormatInfo.Format.ToString()} to ({ScaleFactor} to {scale}). ");
+                Logger.Debug?.Print(LogClass.Gpu, $"Rescaling {Info.Width}x{Info.Height} {Info.FormatInfo.Format} to ({ScaleFactor} to {scale}). ");
 
                 ScaleFactor = scale;
 
@@ -537,7 +537,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                 foreach (var view in _views)
                 {
-                    Logger.Debug?.Print(LogClass.Gpu, $"  Recreating view {Info.Width}x{Info.Height} {Info.FormatInfo.Format.ToString()}.");
+                    Logger.Debug?.Print(LogClass.Gpu, $"  Recreating view {Info.Width}x{Info.Height} {Info.FormatInfo.Format}.");
                     view.ScaleFactor = scale;
 
                     TextureCreateInfo viewCreateInfo = TextureCache.GetCreateInfo(view.Info, _context.Capabilities, scale);
@@ -1254,7 +1254,7 @@ namespace Ryujinx.Graphics.Gpu.Image
             {
                 FormatInfo formatInfo = TextureCompatibility.ToHostCompatibleFormat(Info, _context.Capabilities);
 
-                TextureCreateInfo createInfo = new TextureCreateInfo(
+                TextureCreateInfo createInfo = new(
                     Info.Width,
                     Info.Height,
                     target == Target.CubemapArray ? 6 : 1,
@@ -1274,7 +1274,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                 ITexture viewTexture = HostTexture.CreateView(createInfo, 0, 0);
 
                 _arrayViewTexture = viewTexture;
-                _arrayViewTarget  = target;
+                _arrayViewTarget = target;
 
                 return viewTexture;
             }
@@ -1317,29 +1317,21 @@ namespace Ryujinx.Graphics.Gpu.Image
             {
                 case Target.Texture1D:
                 case Target.Texture1DArray:
-                    return target == Target.Texture1D ||
-                           target == Target.Texture1DArray;
-
+                    return target == Target.Texture1D || target == Target.Texture1DArray;
                 case Target.Texture2D:
                 case Target.Texture2DArray:
-                    return target == Target.Texture2D ||
-                           target == Target.Texture2DArray;
-
+                    return target == Target.Texture2D || target == Target.Texture2DArray;
                 case Target.Cubemap:
                 case Target.CubemapArray:
-                    return target == Target.Cubemap ||
-                           target == Target.CubemapArray;
-
+                    return target == Target.Cubemap || target == Target.CubemapArray;
                 case Target.Texture2DMultisample:
                 case Target.Texture2DMultisampleArray:
-                    return target == Target.Texture2DMultisample ||
-                           target == Target.Texture2DMultisampleArray;
-
+                    return target == Target.Texture2DMultisample || target == Target.Texture2DMultisampleArray;
                 case Target.Texture3D:
                     return target == Target.Texture3D;
+                default:
+                    return false;
             }
-
-            return false;
         }
 
         /// <summary>
@@ -1398,7 +1390,7 @@ namespace Ryujinx.Graphics.Gpu.Image
             Height = info.Height;
             CanForceAnisotropy = CanTextureForceAnisotropy();
 
-            _depth  = info.GetDepth();
+            _depth = info.GetDepth();
             _layers = info.GetLayers();
         }
 

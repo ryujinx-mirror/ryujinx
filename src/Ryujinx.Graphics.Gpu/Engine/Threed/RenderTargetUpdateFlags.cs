@@ -36,6 +36,6 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         /// <summary>
         /// Default update flags for draw.
         /// </summary>
-        UpdateAll = UseControl | UpdateDepthStencil
+        UpdateAll = UseControl | UpdateDepthStencil,
     }
 }

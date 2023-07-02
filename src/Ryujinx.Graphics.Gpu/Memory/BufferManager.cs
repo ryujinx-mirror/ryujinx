@@ -105,7 +105,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
         private readonly BuffersPerStage[] _gpUniformBuffers;
 
         private BufferHandle _tfInfoBuffer;
-        private int[] _tfInfoData;
+        private readonly int[] _tfInfoData;
 
         private bool _gpStorageBuffersDirty;
         private bool _gpUniformBuffersDirty;
@@ -777,11 +777,11 @@ namespace Ryujinx.Graphics.Gpu.Memory
         {
             if (isStorage)
             {
-                _context.Renderer.Pipeline.SetStorageBuffers(ranges.Slice(0, count));
+                _context.Renderer.Pipeline.SetStorageBuffers(ranges[..count]);
             }
             else
             {
-                _context.Renderer.Pipeline.SetUniformBuffers(ranges.Slice(0, count));
+                _context.Renderer.Pipeline.SetUniformBuffers(ranges[..count]);
             }
         }
 

@@ -48,7 +48,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.MME
 
             if (_executionEngine == null)
             {
-                if (GraphicsConfig.EnableMacroHLE && MacroHLETable.TryGetMacroHLEFunction(code.Slice(Position), context.Capabilities, out _hleFunction))
+                if (GraphicsConfig.EnableMacroHLE && MacroHLETable.TryGetMacroHLEFunction(code[Position..], context.Capabilities, out _hleFunction))
                 {
                     _executionEngine = new MacroHLE(processor, _hleFunction);
                 }
@@ -84,7 +84,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.MME
             if (_executionPending)
             {
                 _executionPending = false;
-                _executionEngine?.Execute(code.Slice(Position), state, _argument);
+                _executionEngine?.Execute(code[Position..], state, _argument);
             }
         }
 
@@ -93,7 +93,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.MME
         /// </summary>
         /// <param name="gpuVa">GPU virtual address where the command word is located</param>
         /// <param name="argument">Argument to be pushed</param>
-        public void PushArgument(ulong gpuVa, int argument)
+        public readonly void PushArgument(ulong gpuVa, int argument)
         {
             _executionEngine?.Fifo.Enqueue(new FifoWord(gpuVa, argument));
         }

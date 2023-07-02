@@ -10,6 +10,6 @@ namespace Ryujinx.Graphics.Gpu
         Compute = 0xb1c0,
         InlineToMemory = 0xa140,
         Dma = 0xb0b5,
-        GPFifo = 0xb06f
+        GPFifo = 0xb06f,
     }
 }

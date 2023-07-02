@@ -30,7 +30,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Twod
             _channel = channel;
             _state = new DeviceState<TwodClassState>(new Dictionary<string, RwCallback>
             {
-                { nameof(TwodClassState.PixelsFromMemorySrcY0Int), new RwCallback(PixelsFromMemorySrcY0Int, null) }
+                { nameof(TwodClassState.PixelsFromMemorySrcY0Int), new RwCallback(PixelsFromMemorySrcY0Int, null) },
             });
         }
 
@@ -57,7 +57,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Twod
         /// <param name="lhsFormat">Format of the first texture</param>
         /// <param name="rhsFormat">Format of the second texture</param>
         /// <returns>True if the data is compatible, false otherwise</returns>
-        private bool IsDataCompatible(TwodTexture lhs, TwodTexture rhs, FormatInfo lhsFormat, FormatInfo rhsFormat)
+        private static bool IsDataCompatible(TwodTexture lhs, TwodTexture rhs, FormatInfo lhsFormat, FormatInfo rhsFormat)
         {
             if (lhsFormat.BytesPerPixel != rhsFormat.BytesPerPixel ||
                 lhs.Height != rhs.Height ||
@@ -88,7 +88,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Twod
         /// <param name="x2">Region end x</param>
         /// <param name="y2">Region end y</param>
         /// <returns>True if the region covers the full texture, false otherwise</returns>
-        private bool IsCopyRegionComplete(TwodTexture texture, FormatInfo formatInfo, int x1, int y1, int x2, int y2)
+        private static bool IsCopyRegionComplete(TwodTexture texture, FormatInfo formatInfo, int x1, int y1, int x2, int y2)
         {
             if (x1 != 0 || y1 != 0 || y2 != texture.Height)
             {
@@ -172,7 +172,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Twod
 
                     for (int y = 0; y < height; y++)
                     {
-                        srcSpan.Slice(offset, lineSize).CopyTo(dstSpan.Slice(offset));
+                        srcSpan.Slice(offset, lineSize).CopyTo(dstSpan[offset..]);
 
                         offset += stride;
                     }
@@ -364,13 +364,13 @@ namespace Ryujinx.Graphics.Gpu.Engine.Twod
             float scale = srcTexture.ScaleFactor;
             float dstScale = dstTexture.ScaleFactor;
 
-            Extents2D srcRegion = new Extents2D(
+            Extents2D srcRegion = new(
                 (int)Math.Ceiling(scale * (srcX1 / srcTexture.Info.SamplesInX)),
                 (int)Math.Ceiling(scale * (srcY1 / srcTexture.Info.SamplesInY)),
                 (int)Math.Ceiling(scale * (srcX2 / srcTexture.Info.SamplesInX)),
                 (int)Math.Ceiling(scale * (srcY2 / srcTexture.Info.SamplesInY)));
 
-            Extents2D dstRegion = new Extents2D(
+            Extents2D dstRegion = new(
                 (int)Math.Ceiling(dstScale * (dstX1 / dstTexture.Info.SamplesInX)),
                 (int)Math.Ceiling(dstScale * (dstY1 / dstTexture.Info.SamplesInY)),
                 (int)Math.Ceiling(dstScale * (dstX2 / dstTexture.Info.SamplesInX)),

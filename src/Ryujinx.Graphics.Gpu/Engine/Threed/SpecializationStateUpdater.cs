@@ -227,7 +227,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                 {
                     VertexAttribType.Sint => AttributeType.Sint,
                     VertexAttribType.Uint => AttributeType.Uint,
-                    _ => AttributeType.Float
+                    _ => AttributeType.Float,
                 };
 
                 if (attributeTypes[location] != value)

@@ -93,10 +93,10 @@ namespace Ryujinx.Graphics.Gpu.Image
             int stages = isCompute ? 1 : Constants.ShaderStages;
 
             _textureBindings = new TextureBindingInfo[stages][];
-            _imageBindings   = new TextureBindingInfo[stages][];
+            _imageBindings = new TextureBindingInfo[stages][];
 
             _textureState = new TextureState[InitialTextureStateSize];
-            _imageState   = new TextureState[InitialImageStateSize];
+            _imageState = new TextureState[InitialImageStateSize];
 
             for (int stage = 0; stage < stages; stage++)
             {
@@ -418,6 +418,7 @@ namespace Ryujinx.Graphics.Gpu.Image
             }
         }
 
+#pragma warning disable IDE0051 // Remove unused private member
         /// <summary>
         /// Counts the total number of texture bindings used by all shader stages.
         /// </summary>
@@ -426,16 +427,17 @@ namespace Ryujinx.Graphics.Gpu.Image
         {
             int count = 0;
 
-            for (int i = 0; i < _textureBindings.Length; i++)
+            foreach (TextureBindingInfo[] textureInfo in _textureBindings)
             {
-                if (_textureBindings[i] != null)
+                if (textureInfo != null)
                 {
-                    count += _textureBindings[i].Length;
+                    count += textureInfo.Length;
                 }
             }
 
             return count;
         }
+#pragma warning restore IDE0051
 
         /// <summary>
         /// Ensures that the texture bindings are visible to the host GPU.

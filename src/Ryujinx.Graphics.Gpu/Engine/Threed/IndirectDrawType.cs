@@ -1,8 +1,11 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace Ryujinx.Graphics.Gpu.Engine.Threed
 {
     /// <summary>
     /// Indirect draw type, which can be indexed or non-indexed, with or without a draw count.
     /// </summary>
+    [SuppressMessage("Design", "CA1069: Enums values should not be duplicated")]
     enum IndirectDrawType
     {
         /// <summary>
@@ -33,6 +36,6 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         /// <summary>
         /// Draw count flag.
         /// </summary>
-        Count = 1 << 1
+        Count = 1 << 1,
     }
 }

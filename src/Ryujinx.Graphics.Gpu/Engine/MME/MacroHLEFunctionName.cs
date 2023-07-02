@@ -11,6 +11,6 @@
         DrawArraysInstanced,
         DrawElementsInstanced,
         DrawElementsIndirect,
-        MultiDrawElementsIndirectCount
+        MultiDrawElementsIndirectCount,
     }
 }

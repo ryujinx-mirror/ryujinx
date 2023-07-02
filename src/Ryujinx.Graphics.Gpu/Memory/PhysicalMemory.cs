@@ -19,7 +19,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
     class PhysicalMemory : IDisposable
     {
         private readonly GpuContext _context;
-        private IVirtualMemoryManagerTracked _cpuMemory;
+        private readonly IVirtualMemoryManagerTracked _cpuMemory;
         private int _referenceCount;
 
         /// <summary>

@@ -5,7 +5,7 @@
     /// </summary>
     struct GpuVa
     {
-#pragma warning disable CS0649
+#pragma warning disable CS0649 // Field is never assigned to
         public uint High;
         public uint Low;
 #pragma warning restore CS0649
@@ -14,7 +14,7 @@
         /// Packs the split address into a 64-bits address value.
         /// </summary>
         /// <returns>The 64-bits address value</returns>
-        public ulong Pack()
+        public readonly ulong Pack()
         {
             return Low | ((ulong)High << 32);
         }

@@ -19,7 +19,6 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
         private readonly ShaderSpecializationState _newSpecState;
         private readonly int _stageIndex;
         private readonly bool _isVulkan;
-        private readonly ResourceCounts _resourceCounts;
 
         /// <summary>
         /// Creates a new instance of the cached GPU state accessor for shader translation.
@@ -45,7 +44,6 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
             _newSpecState = newSpecState;
             _stageIndex = stageIndex;
             _isVulkan = context.Capabilities.Api == TargetApi.Vulkan;
-            _resourceCounts = counts;
         }
 
         /// <inheritdoc/>
@@ -56,7 +54,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
                 throw new DiskCacheLoadException(DiskCacheLoadResult.InvalidCb1DataLength);
             }
 
-            return MemoryMarshal.Cast<byte, uint>(_cb1Data.Span.Slice(offset))[0];
+            return MemoryMarshal.Cast<byte, uint>(_cb1Data.Span[offset..])[0];
         }
 
         /// <inheritdoc/>
@@ -68,7 +66,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
         /// <inheritdoc/>
         public ReadOnlySpan<ulong> GetCode(ulong address, int minimumSize)
         {
-            return MemoryMarshal.Cast<byte, ulong>(_data.Span.Slice((int)address));
+            return MemoryMarshal.Cast<byte, ulong>(_data.Span[(int)address..]);
         }
 
         /// <inheritdoc/>
@@ -94,7 +92,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
                 CompareOp.Greater or CompareOp.GreaterGl => AlphaTestOp.Greater,
                 CompareOp.NotEqual or CompareOp.NotEqualGl => AlphaTestOp.NotEqual,
                 CompareOp.GreaterOrEqual or CompareOp.GreaterOrEqualGl => AlphaTestOp.GreaterOrEqual,
-                _ => AlphaTestOp.Always
+                _ => AlphaTestOp.Always,
             };
         }
 

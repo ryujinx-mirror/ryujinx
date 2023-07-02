@@ -243,7 +243,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
                 {
                     0 => _3dClass,
                     3 => _2dClass,
-                    _ => null
+                    _ => null,
                 };
 
                 if (state != null)

@@ -12,7 +12,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
     class BufferCache : IDisposable
     {
         private const int OverlapsBufferInitialCapacity = 10;
-        private const int OverlapsBufferMaxCapacity     = 10000;
+        private const int OverlapsBufferMaxCapacity = 10000;
 
         private const ulong BufferAlignmentSize = 0x1000;
         private const ulong BufferAlignmentMask = BufferAlignmentSize - 1;
@@ -246,7 +246,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
                     {
                         Buffer buffer = _bufferOverlaps[index];
 
-                        address    = Math.Min(address,    buffer.Address);
+                        address = Math.Min(address, buffer.Address);
                         endAddress = Math.Max(endAddress, buffer.EndAddress);
 
                         lock (_buffers)
@@ -257,7 +257,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
                     ulong newSize = endAddress - address;
 
-                    Buffer newBuffer = new Buffer(_context, _physicalMemory, address, newSize, _bufferOverlaps.Take(overlapsCount));
+                    Buffer newBuffer = new(_context, _physicalMemory, address, newSize, _bufferOverlaps.Take(overlapsCount));
 
                     lock (_buffers)
                     {
@@ -285,7 +285,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
             else
             {
                 // No overlap, just create a new buffer.
-                Buffer buffer = new Buffer(_context, _physicalMemory, address, size);
+                Buffer buffer = new(_context, _physicalMemory, address, size);
 
                 lock (_buffers)
                 {
@@ -446,7 +446,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// </summary>
         /// <param name="dictionary">Dictionary to prune</param>
         /// <param name="toDelete">List used to track entries to delete</param>
-        private void Prune(Dictionary<ulong, BufferCacheEntry> dictionary, ref List<ulong> toDelete)
+        private static void Prune(Dictionary<ulong, BufferCacheEntry> dictionary, ref List<ulong> toDelete)
         {
             foreach (var entry in dictionary)
             {

@@ -23,7 +23,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// </summary>
         /// <param name="stageIndex">Index of the shader stage</param>
         /// <returns>Guest code, or null if not present</returns>
-        public byte[] GetByIndex(int stageIndex)
+        public readonly byte[] GetByIndex(int stageIndex)
         {
             return stageIndex switch
             {
@@ -31,7 +31,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 2 => TessEvaluationCode,
                 3 => GeometryCode,
                 4 => FragmentCode,
-                _ => VertexBCode
+                _ => VertexBCode,
             };
         }
     }
@@ -85,7 +85,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
             /// <param name="id">ID of the guest code, if found</param>
             /// <param name="data">Cached guest code, if found</param>
             /// <returns>True if found, false otherwise</returns>
-            public bool TryFind(IDataAccessor dataAccessor, out int id, out byte[] data)
+            public readonly bool TryFind(IDataAccessor dataAccessor, out int id, out byte[] data)
             {
                 return _cache.TryFindItem(dataAccessor, out id, out data);
             }
@@ -103,12 +103,12 @@ namespace Ryujinx.Graphics.Gpu.Shader
             public int GeometryId;
             public int FragmentId;
 
-            public override bool Equals(object obj)
+            public readonly override bool Equals(object obj)
             {
                 return obj is IdTable other && Equals(other);
             }
 
-            public bool Equals(IdTable other)
+            public readonly bool Equals(IdTable other)
             {
                 return other.VertexAId == VertexAId &&
                        other.VertexBId == VertexBId &&
@@ -118,7 +118,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
                        other.FragmentId == FragmentId;
             }
 
-            public override int GetHashCode()
+            public readonly override int GetHashCode()
             {
                 return HashCode.Combine(VertexAId, VertexBId, TessControlId, TessEvaluationId, GeometryId, FragmentId);
             }
@@ -154,7 +154,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// <param name="program">Program to be added</param>
         public void Add(CachedShaderProgram program)
         {
-            IdTable idTable = new IdTable();
+            IdTable idTable = new();
 
             foreach (var shader in program.Shaders)
             {
@@ -222,7 +222,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
             out CachedGraphicsGuestCode guestCode)
         {
             var memoryManager = channel.MemoryManager;
-            IdTable idTable = new IdTable();
+            IdTable idTable = new();
             guestCode = new CachedGraphicsGuestCode();
 
             program = null;
@@ -260,7 +260,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 return true;
             }
 
-            ShaderCodeAccessor codeAccessor = new ShaderCodeAccessor(memoryManager, baseAddress);
+            ShaderCodeAccessor codeAccessor = new(memoryManager, baseAddress);
             return idCache.TryFind(codeAccessor, out id, out data);
         }
 

@@ -78,11 +78,11 @@ namespace Ryujinx.Graphics.Gpu.Image
 
         private int[] _allOffsets;
         private int[] _sliceSizes;
-        private bool _is3D;
+        private readonly bool _is3D;
         private bool _hasMipViews;
         private bool _hasLayerViews;
-        private int _layers;
-        private int _levels;
+        private readonly int _layers;
+        private readonly int _levels;
 
         private MultiRange TextureRange => Storage.Range;
 
@@ -96,9 +96,9 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <summary>
         /// Other texture groups that have incompatible overlaps with this one.
         /// </summary>
-        private List<TextureIncompatibleOverlap> _incompatibleOverlaps;
+        private readonly List<TextureIncompatibleOverlap> _incompatibleOverlaps;
         private bool _incompatibleOverlapsDirty = true;
-        private bool _flushIncompatibleOverlaps;
+        private readonly bool _flushIncompatibleOverlaps;
 
         private BufferHandle _flushBuffer;
         private bool _flushBufferImported;
@@ -423,7 +423,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                             int offsetIndex = GetOffsetIndex(info.BaseLayer + layer, info.BaseLevel + level);
                             int offset = _allOffsets[offsetIndex];
 
-                            ReadOnlySpan<byte> data = dataSpan.Slice(offset - spanBase);
+                            ReadOnlySpan<byte> data = dataSpan[(offset - spanBase)..];
 
                             SpanOrArray<byte> result = Storage.ConvertToHostCompatibleFormat(data, info.BaseLevel + level, true);
 
@@ -1500,13 +1500,13 @@ namespace Ryujinx.Graphics.Gpu.Image
         {
             for (int i = 0; i < _allOffsets.Length; i++)
             {
-                (int layer, int level) = GetLayerLevelForView(i);
+                (_, int level) = GetLayerLevelForView(i);
                 MultiRange handleRange = Storage.Range.Slice((ulong)_allOffsets[i], 1);
                 ulong handleBase = handleRange.GetSubRange(0).Address;
 
                 for (int j = 0; j < other._handles.Length; j++)
                 {
-                    (int otherLayer, int otherLevel) = other.GetLayerLevelForView(j);
+                    (_, int otherLevel) = other.GetLayerLevelForView(j);
                     MultiRange otherHandleRange = other.Storage.Range.Slice((ulong)other._allOffsets[j], 1);
                     ulong otherHandleBase = otherHandleRange.GetSubRange(0).Address;
 

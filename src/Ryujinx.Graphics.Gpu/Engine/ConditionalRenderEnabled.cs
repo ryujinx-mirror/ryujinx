@@ -7,6 +7,6 @@
     {
         False,
         True,
-        Host
+        Host,
     }
 }

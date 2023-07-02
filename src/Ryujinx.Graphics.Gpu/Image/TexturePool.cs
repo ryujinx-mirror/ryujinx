@@ -18,7 +18,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <summary>
         /// A request to dereference a texture from a pool.
         /// </summary>
-        private struct DereferenceRequest
+        private readonly struct DereferenceRequest
         {
             /// <summary>
             /// Whether the dereference is due to a mapping change or not.
@@ -71,7 +71,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         }
 
         private readonly GpuChannel _channel;
-        private readonly ConcurrentQueue<DereferenceRequest> _dereferenceQueue = new ConcurrentQueue<DereferenceRequest>();
+        private readonly ConcurrentQueue<DereferenceRequest> _dereferenceQueue = new();
         private TextureDescriptor _defaultDescriptor;
 
         /// <summary>
@@ -379,10 +379,10 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <param name="descriptor">The texture descriptor</param>
         /// <param name="layerSize">Layer size for textures using a sub-range of mipmap levels, otherwise 0</param>
         /// <returns>The texture information</returns>
-        private TextureInfo GetInfo(in TextureDescriptor descriptor, out int layerSize)
+        private static TextureInfo GetInfo(in TextureDescriptor descriptor, out int layerSize)
         {
             int depthOrLayers = descriptor.UnpackDepth();
-            int levels        = descriptor.UnpackLevels();
+            int levels = descriptor.UnpackLevels();
 
             TextureMsaaMode msaaMode = descriptor.UnpackTextureMsaaMode();
 
@@ -424,7 +424,7 @@ namespace Ryujinx.Graphics.Gpu.Image
             }
 
             uint format = descriptor.UnpackFormat();
-            bool srgb   = descriptor.UnpackSrgb();
+            bool srgb = descriptor.UnpackSrgb();
 
             ulong gpuVa = descriptor.UnpackAddress();
 
@@ -451,7 +451,7 @@ namespace Ryujinx.Graphics.Gpu.Image
             // Linear textures don't support mipmaps, so we don't handle this case here.
             if ((minLod != 0 || maxLod + 1 != levels) && target != Target.TextureBuffer && !isLinear)
             {
-                int depth  = TextureInfo.GetDepth(target, depthOrLayers);
+                int depth = TextureInfo.GetDepth(target, depthOrLayers);
                 int layers = TextureInfo.GetLayers(target, depthOrLayers);
 
                 SizeInfo sizeInfo = SizeCalculator.GetBlockLinearTextureSize(
@@ -476,7 +476,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                     // address if there is a overlapping texture on the cache that can contain the new texture.
                     gpuVa += (ulong)sizeInfo.GetMipOffset(minLod);
 
-                    width  = Math.Max(1, width  >> minLod);
+                    width = Math.Max(1, width >> minLod);
                     height = Math.Max(1, height >> minLod);
 
                     if (target == Target.Texture3D)

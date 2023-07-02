@@ -7,6 +7,6 @@ namespace Ryujinx.Graphics.Gpu.Image
     {
         None = 1,
         Nearest,
-        Linear
+        Linear,
     }
 }

@@ -25,6 +25,6 @@ namespace Ryujinx.Graphics.Gpu.Synchronization
         /// </summary>
         Force = 1 << 2,
 
-        StrictSyncpoint = Strict | Syncpoint
+        StrictSyncpoint = Strict | Syncpoint,
     }
 }

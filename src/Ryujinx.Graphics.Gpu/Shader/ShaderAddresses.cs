@@ -9,7 +9,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
     /// </summary>
     struct ShaderAddresses : IEquatable<ShaderAddresses>
     {
-#pragma warning disable CS0649
+#pragma warning disable CS0649 // Field is never assigned to
         public ulong VertexA;
         public ulong VertexB;
         public ulong TessControl;
@@ -23,7 +23,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// </summary>
         /// <param name="other">Shader addresses structure to compare with</param>
         /// <returns>True if they are equal, false otherwise</returns>
-        public override bool Equals(object other)
+        public readonly override bool Equals(object other)
         {
             return other is ShaderAddresses addresses && Equals(addresses);
         }
@@ -33,21 +33,21 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// </summary>
         /// <param name="other">Shader addresses structure to compare with</param>
         /// <returns>True if they are equal, false otherwise</returns>
-        public bool Equals(ShaderAddresses other)
+        public readonly bool Equals(ShaderAddresses other)
         {
-            return VertexA        == other.VertexA &&
-                   VertexB        == other.VertexB &&
-                   TessControl    == other.TessControl &&
+            return VertexA == other.VertexA &&
+                   VertexB == other.VertexB &&
+                   TessControl == other.TessControl &&
                    TessEvaluation == other.TessEvaluation &&
-                   Geometry       == other.Geometry &&
-                   Fragment       == other.Fragment;
+                   Geometry == other.Geometry &&
+                   Fragment == other.Fragment;
         }
 
         /// <summary>
         /// Computes hash code from the addresses.
         /// </summary>
         /// <returns>Hash code</returns>
-        public override int GetHashCode()
+        public readonly override int GetHashCode()
         {
             return HashCode.Combine(VertexA, VertexB, TessControl, TessEvaluation, Geometry, Fragment);
         }

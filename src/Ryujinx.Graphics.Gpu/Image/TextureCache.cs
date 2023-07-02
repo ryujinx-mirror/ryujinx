@@ -31,7 +31,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         }
 
         private const int OverlapsBufferInitialCapacity = 10;
-        private const int OverlapsBufferMaxCapacity     = 10000;
+        private const int OverlapsBufferMaxCapacity = 10000;
 
         private readonly GpuContext _context;
         private readonly PhysicalMemory _physicalMemory;
@@ -224,7 +224,7 @@ namespace Ryujinx.Graphics.Gpu.Image
             for (int i = 0; i < overlapCount; i++)
             {
                 var other = _textureOverlaps[i];
-                
+
                 if (texture != other &&
                     (texture.IsViewCompatible(other.Info, other.Range, true, other.LayerSize, _context.Capabilities, out _, out _) != TextureViewCompatibility.Incompatible ||
                     other.IsViewCompatible(texture.Info, texture.Range, true, texture.LayerSize, _context.Capabilities, out _, out _) != TextureViewCompatibility.Incompatible))
@@ -278,7 +278,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                 width = copyTexture.Width;
             }
 
-            TextureInfo info = new TextureInfo(
+            TextureInfo info = new(
                 copyTexture.Address.Pack() + offset,
                 GetMinimumWidthInGob(width, sizeHint.Width, formatInfo.BytesPerPixel, copyTexture.LinearLayout),
                 copyTexture.Height,
@@ -371,16 +371,16 @@ namespace Ryujinx.Graphics.Gpu.Image
             // so the width we get here is the aligned width.
             if (isLinear)
             {
-                width  = colorState.WidthOrStride / formatInfo.BytesPerPixel;
+                width = colorState.WidthOrStride / formatInfo.BytesPerPixel;
                 stride = colorState.WidthOrStride;
             }
             else
             {
-                width  = colorState.WidthOrStride;
+                width = colorState.WidthOrStride;
                 stride = 0;
             }
 
-            TextureInfo info = new TextureInfo(
+            TextureInfo info = new(
                 colorState.Address.Pack(),
                 GetMinimumWidthInGob(width, sizeHint.Width, formatInfo.BytesPerPixel, isLinear),
                 colorState.Height,
@@ -449,7 +449,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             FormatInfo formatInfo = dsState.Format.Convert();
 
-            TextureInfo info = new TextureInfo(
+            TextureInfo info = new(
                 dsState.Address.Pack(),
                 GetMinimumWidthInGob(size.Width, sizeHint.Width, formatInfo.BytesPerPixel, false),
                 size.Height,
@@ -1136,14 +1136,14 @@ namespace Ryujinx.Graphics.Gpu.Image
                 }
             }
 
-            int width  = info.Width  / info.SamplesInX;
+            int width = info.Width / info.SamplesInX;
             int height = info.Height / info.SamplesInY;
 
             int depth = info.GetDepth() * info.GetLayers();
 
             if (scale != 1f)
             {
-                width  = (int)MathF.Ceiling(width  * scale);
+                width = (int)MathF.Ceiling(width * scale);
                 height = (int)MathF.Ceiling(height * scale);
             }
 

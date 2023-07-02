@@ -9,7 +9,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.MME
     /// </summary>
     class MacroJit : IMacroEE
     {
-        private readonly MacroJitContext _context = new MacroJitContext();
+        private readonly MacroJitContext _context = new();
 
         /// <summary>
         /// Arguments FIFO.
@@ -28,7 +28,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.MME
         {
             if (_execute == null)
             {
-                MacroJitCompiler compiler = new MacroJitCompiler();
+                MacroJitCompiler compiler = new();
 
                 _execute = compiler.Compile(code);
             }

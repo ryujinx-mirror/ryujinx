@@ -15,7 +15,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.MME
         /// </summary>
         public Queue<FifoWord> Fifo { get; }
 
-        private int[] _gprs;
+        private readonly int[] _gprs;
 
         private int _methAddr;
         private int _methIncr;
@@ -291,11 +291,16 @@ namespace Ryujinx.Graphics.Gpu.Engine.MME
 
                     return (int)result;
 
-                case AluRegOperation.BitwiseExclusiveOr: return a ^ b;
-                case AluRegOperation.BitwiseOr: return a | b;
-                case AluRegOperation.BitwiseAnd: return a & b;
-                case AluRegOperation.BitwiseAndNot: return a & ~b;
-                case AluRegOperation.BitwiseNotAnd: return ~(a & b);
+                case AluRegOperation.BitwiseExclusiveOr:
+                    return a ^ b;
+                case AluRegOperation.BitwiseOr:
+                    return a | b;
+                case AluRegOperation.BitwiseAnd:
+                    return a & b;
+                case AluRegOperation.BitwiseAndNot:
+                    return a & ~b;
+                case AluRegOperation.BitwiseNotAnd:
+                    return ~(a & b);
             }
 
             throw new InvalidOperationException($"Invalid operation \"{aluOp}\" on instruction 0x{_opCode:X8}.");
@@ -380,7 +385,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.MME
         /// <param name="state">Current GPU state</param>
         /// <param name="reg">Register offset to read</param>
         /// <returns>GPU register value</returns>
-        private int Read(IDeviceState state, int reg)
+        private static int Read(IDeviceState state, int reg)
         {
             return state.Read(reg * 4);
         }

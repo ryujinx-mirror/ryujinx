@@ -48,7 +48,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.HashTable
             /// Partial entries have no items associated with them. They just indicates that the data might be present on
             /// the table, and one must keep looking for the full entry on other tables of larger data size.
             /// </remarks>
-            public bool IsPartial => OwnSize != 0;
+            public readonly bool IsPartial => OwnSize != 0;
 
             /// <summary>
             /// Creates a new partial hash table entry.
@@ -82,11 +82,11 @@ namespace Ryujinx.Graphics.Gpu.Shader.HashTable
             /// Gets the data for this entry, either full or partial.
             /// </summary>
             /// <returns>Data sub-region</returns>
-            public ReadOnlySpan<byte> GetData()
+            public readonly ReadOnlySpan<byte> GetData()
             {
                 if (OwnSize != 0)
                 {
-                    return new ReadOnlySpan<byte>(Data).Slice(0, OwnSize);
+                    return new ReadOnlySpan<byte>(Data)[..OwnSize];
                 }
 
                 return Data;
@@ -139,7 +139,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.HashTable
                 return existingItem;
             }
 
-            Entry entry = new Entry(dataHash, data, item);
+            Entry entry = new(dataHash, data, item);
 
             AddToBucket(dataHash, ref entry);
 
@@ -160,7 +160,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.HashTable
                 return false;
             }
 
-            Entry entry = new Entry(dataHash, data, item);
+            Entry entry = new(dataHash, data, item);
 
             AddToBucket(dataHash, ref entry);
 
@@ -175,7 +175,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.HashTable
         /// <returns>True if added, false otherwise</returns>
         public bool AddPartial(byte[] ownerData, int ownSize)
         {
-            ReadOnlySpan<byte> data = new ReadOnlySpan<byte>(ownerData).Slice(0, ownSize);
+            ReadOnlySpan<byte> data = new ReadOnlySpan<byte>(ownerData)[..ownSize];
 
             return AddPartial(ownerData, HashState.CalcHash(data), ownSize);
         }
@@ -189,14 +189,14 @@ namespace Ryujinx.Graphics.Gpu.Shader.HashTable
         /// <returns>True if added, false otherwise</returns>
         public bool AddPartial(byte[] ownerData, uint dataHash, int ownSize)
         {
-            ReadOnlySpan<byte> data = new ReadOnlySpan<byte>(ownerData).Slice(0, ownSize);
+            ReadOnlySpan<byte> data = new ReadOnlySpan<byte>(ownerData)[..ownSize];
 
             if (TryFindItem(dataHash, data, out _))
             {
                 return false;
             }
 
-            Entry entry = new Entry(dataHash, ownerData, ownSize);
+            Entry entry = new(dataHash, ownerData, ownSize);
 
             AddToBucket(dataHash, ref entry);
 
@@ -226,7 +226,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.HashTable
         /// </summary>
         /// <param name="bucket">Bucket to add the entry into</param>
         /// <param name="entry">Entry to be added</param>
-        private void AddToBucket(ref Bucket bucket, ref Entry entry)
+        private static void AddToBucket(ref Bucket bucket, ref Entry entry)
         {
             if (bucket.InlineEntry.Data == null)
             {
@@ -339,7 +339,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.HashTable
             /// <summary>
             /// A full entry was found, the search was concluded and the item can be retrieved.
             /// </summary>
-            FoundFull
+            FoundFull,
         }
 
         /// <summary>

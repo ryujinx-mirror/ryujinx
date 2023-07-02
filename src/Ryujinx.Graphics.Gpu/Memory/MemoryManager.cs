@@ -14,15 +14,15 @@ namespace Ryujinx.Graphics.Gpu.Memory
     {
         private const int PtLvl0Bits = 14;
         private const int PtLvl1Bits = 14;
-        public  const int PtPageBits = 12;
+        public const int PtPageBits = 12;
 
         private const ulong PtLvl0Size = 1UL << PtLvl0Bits;
         private const ulong PtLvl1Size = 1UL << PtLvl1Bits;
-        public  const ulong PageSize   = 1UL << PtPageBits;
+        public const ulong PageSize = 1UL << PtPageBits;
 
         private const ulong PtLvl0Mask = PtLvl0Size - 1;
         private const ulong PtLvl1Mask = PtLvl1Size - 1;
-        public  const ulong PageMask   = PageSize   - 1;
+        public const ulong PageMask = PageSize - 1;
 
         private const int PtLvl0Bit = PtPageBits + PtLvl1Bits;
         private const int PtLvl1Bit = PtPageBits;
@@ -203,7 +203,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
                 size = Math.Min(data.Length, (int)PageSize - (int)(va & PageMask));
 
-                Physical.GetSpan(pa, size, tracked).CopyTo(data.Slice(0, size));
+                Physical.GetSpan(pa, size, tracked).CopyTo(data[..size]);
 
                 offset += size;
             }
@@ -306,7 +306,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
                     size = Math.Min(data.Length, (int)PageSize - (int)(va & PageMask));
 
-                    writeCallback(pa, data.Slice(0, size));
+                    writeCallback(pa, data[..size]);
 
                     offset += size;
                 }
@@ -345,7 +345,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
                     if (pa != PteUnmapped && Physical.IsMapped(pa))
                     {
-                        Physical.Write(pa, data.Slice(0, size));
+                        Physical.Write(pa, data[..size]);
                     }
 
                     offset += size;
@@ -370,7 +370,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// These must run after the mapping completes.
         /// </summary>
         /// <param name="e">Event with remap actions</param>
-        private void RunRemapActions(UnmapEventArgs e)
+        private static void RunRemapActions(UnmapEventArgs e)
         {
             if (e.RemapActions != null)
             {

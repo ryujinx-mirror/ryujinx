@@ -4,7 +4,6 @@ using Ryujinx.Graphics.Gpu.Engine.Threed;
 using Ryujinx.Graphics.Gpu.Image;
 using Ryujinx.Graphics.Shader;
 using Ryujinx.Graphics.Shader.Translation;
-using System;
 
 namespace Ryujinx.Graphics.Gpu.Shader
 {
@@ -125,7 +124,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 3 => 2, // Geometry
                 1 => 3, // Tessellation control
                 2 => 4, // Tessellation evaluation
-                _ => 0 // Vertex/Compute
+                _ => 0, // Vertex/Compute
             };
         }
 
@@ -188,6 +187,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
 
             return formatInfo.Format switch
             {
+#pragma warning disable IDE0055 // Disable formatting
                 Format.R8Unorm           => TextureFormat.R8Unorm,
                 Format.R8Snorm           => TextureFormat.R8Snorm,
                 Format.R8Uint            => TextureFormat.R8Uint,
@@ -228,7 +228,8 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 Format.R10G10B10A2Unorm  => TextureFormat.R10G10B10A2Unorm,
                 Format.R10G10B10A2Uint   => TextureFormat.R10G10B10A2Uint,
                 Format.R11G11B10Float    => TextureFormat.R11G11B10Float,
-                _                        => TextureFormat.Unknown
+                _                        => TextureFormat.Unknown,
+#pragma warning restore IDE0055
             };
         }
 
@@ -256,7 +257,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 PrimitiveTopology.Patches => tessellationMode.UnpackPatchType() == TessPatchType.Isolines
                     ? InputTopology.Lines
                     : InputTopology.Triangles,
-                _ => InputTopology.Points
+                _ => InputTopology.Points,
             };
         }
     }

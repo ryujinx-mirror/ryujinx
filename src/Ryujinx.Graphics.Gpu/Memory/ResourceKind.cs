@@ -8,6 +8,6 @@ namespace Ryujinx.Graphics.Gpu.Memory
         None,
         Buffer,
         Texture,
-        Pool
+        Pool,
     }
 }

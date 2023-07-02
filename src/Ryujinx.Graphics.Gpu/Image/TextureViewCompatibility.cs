@@ -10,6 +10,6 @@
         LayoutIncompatible,
         CopyOnly,
         FormatAlias,
-        Full
+        Full,
     }
 }

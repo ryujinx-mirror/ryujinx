@@ -250,7 +250,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
         X8C24 = 0xfc,
         PitchNoSwizzle = 0xfd,
         SmSkedMessage = 0xca,
-        SmHostMessage = 0xcb
+        SmHostMessage = 0xcb,
     }
 
     static class PteKindExtensions

@@ -11,6 +11,6 @@
         Eligible = 0,
         Scaled = 1,
         Blacklisted = 2,
-        Undesired = 3
+        Undesired = 3,
     }
 }

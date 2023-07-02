@@ -10,6 +10,6 @@
         BitfieldReplace = 2,
         BitfieldExtractLslImm = 3,
         BitfieldExtractLslReg = 4,
-        ReadImmediate = 5
+        ReadImmediate = 5,
     }
 }

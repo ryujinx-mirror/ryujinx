@@ -1,5 +1,6 @@
 using Ryujinx.Graphics.GAL;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Ryujinx.Graphics.Gpu.Image
 {
@@ -8,6 +9,8 @@ namespace Ryujinx.Graphics.Gpu.Image
     /// </summary>
     static class FormatTable
     {
+#pragma warning disable IDE0055 // Disable formatting
+        [SuppressMessage("Design", "CA1069: Enums values should not be duplicated")]
         private enum TextureFormat : uint
         {
             // Formats
@@ -244,6 +247,7 @@ namespace Ryujinx.Graphics.Gpu.Image
             A5B5G5R1Unorm                    = A5B5G5R1          | RUnorm | GUnorm | BUnorm | AUnorm,        // 0x24913
         }
 
+        [SuppressMessage("Design", "CA1069: Enums values should not be duplicated")]
         private enum VertexAttributeFormat : uint
         {
             // Width
@@ -357,7 +361,7 @@ namespace Ryujinx.Graphics.Gpu.Image
             A2B10G10R10Sscaled  = (A2B10G10R10 << 21)  | (Sscaled << 27), // 0x36000000
         }
 
-        private static readonly Dictionary<TextureFormat, FormatInfo> _textureFormats = new Dictionary<TextureFormat, FormatInfo>()
+        private static readonly Dictionary<TextureFormat, FormatInfo> _textureFormats = new()
         {
             { TextureFormat.R8Unorm,                          new FormatInfo(Format.R8Unorm,           1,  1,  1,  1) },
             { TextureFormat.R8Snorm,                          new FormatInfo(Format.R8Snorm,           1,  1,  1,  1) },
@@ -464,10 +468,10 @@ namespace Ryujinx.Graphics.Gpu.Image
             { TextureFormat.Astc2D10x10UnormSrgb,             new FormatInfo(Format.Astc10x10Srgb,     10, 10, 16, 4) },
             { TextureFormat.Astc2D12x10UnormSrgb,             new FormatInfo(Format.Astc12x10Srgb,     12, 10, 16, 4) },
             { TextureFormat.Astc2D12x12UnormSrgb,             new FormatInfo(Format.Astc12x12Srgb,     12, 12, 16, 4) },
-            { TextureFormat.A5B5G5R1Unorm,                    new FormatInfo(Format.A1B5G5R5Unorm,     1,  1,  2,  4) }
+            { TextureFormat.A5B5G5R1Unorm,                    new FormatInfo(Format.A1B5G5R5Unorm,     1,  1,  2,  4) },
         };
 
-        private static readonly Dictionary<VertexAttributeFormat, Format> _attribFormats = new Dictionary<VertexAttributeFormat, Format>()
+        private static readonly Dictionary<VertexAttributeFormat, Format> _attribFormats = new()
         {
             { VertexAttributeFormat.R8Unorm,             Format.R8Unorm             },
             { VertexAttributeFormat.R8Snorm,             Format.R8Snorm             },
@@ -547,8 +551,9 @@ namespace Ryujinx.Graphics.Gpu.Image
             { VertexAttributeFormat.A2B10G10R10Snorm,    Format.R10G10B10A2Snorm    },
             { VertexAttributeFormat.A2B10G10R10Sint,     Format.R10G10B10A2Sint     },
             { VertexAttributeFormat.A2B10G10R10Uscaled,  Format.R10G10B10A2Uscaled  },
-            { VertexAttributeFormat.A2B10G10R10Sscaled,  Format.R10G10B10A2Sscaled  }
+            { VertexAttributeFormat.A2B10G10R10Sscaled,  Format.R10G10B10A2Sscaled  },
         };
+#pragma warning restore IDE0055
 
         /// <summary>
         /// Try getting the texture format from an encoded format integer from the Maxwell texture descriptor.
