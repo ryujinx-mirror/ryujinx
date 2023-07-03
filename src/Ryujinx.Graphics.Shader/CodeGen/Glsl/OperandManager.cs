@@ -11,9 +11,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 {
     class OperandManager
     {
-        private static readonly string[] _stagePrefixes = new string[] { "cp", "vp", "tcp", "tep", "gp", "fp" };
-
-        private readonly Dictionary<AstOperand, string> _locals;
+        private Dictionary<AstOperand, string> _locals;
 
         public OperandManager()
         {
@@ -39,60 +37,6 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                 OperandType.Undefined => DefaultNames.UndefinedName,
                 _ => throw new ArgumentException($"Invalid operand type \"{operand.Type}\"."),
             };
-        }
-
-        public static string GetSamplerName(ShaderStage stage, AstTextureOperation texOp, string indexExpr)
-        {
-            return GetSamplerName(stage, texOp.CbufSlot, texOp.Handle, texOp.Type.HasFlag(SamplerType.Indexed), indexExpr);
-        }
-
-        public static string GetSamplerName(ShaderStage stage, int cbufSlot, int handle, bool indexed, string indexExpr)
-        {
-            string suffix = cbufSlot < 0 ? $"_tcb_{handle:X}" : $"_cb{cbufSlot}_{handle:X}";
-
-            if (indexed)
-            {
-                suffix += $"a[{indexExpr}]";
-            }
-
-            return GetShaderStagePrefix(stage) + "_" + DefaultNames.SamplerNamePrefix + suffix;
-        }
-
-        public static string GetImageName(ShaderStage stage, AstTextureOperation texOp, string indexExpr)
-        {
-            return GetImageName(stage, texOp.CbufSlot, texOp.Handle, texOp.Format, texOp.Type.HasFlag(SamplerType.Indexed), indexExpr);
-        }
-
-        public static string GetImageName(
-            ShaderStage stage,
-            int cbufSlot,
-            int handle,
-            TextureFormat format,
-            bool indexed,
-            string indexExpr)
-        {
-            string suffix = cbufSlot < 0
-                ? $"_tcb_{handle:X}_{format.ToGlslFormat()}"
-                : $"_cb{cbufSlot}_{handle:X}_{format.ToGlslFormat()}";
-
-            if (indexed)
-            {
-                suffix += $"a[{indexExpr}]";
-            }
-
-            return GetShaderStagePrefix(stage) + "_" + DefaultNames.ImageNamePrefix + suffix;
-        }
-
-        public static string GetShaderStagePrefix(ShaderStage stage)
-        {
-            int index = (int)stage;
-
-            if ((uint)index >= _stagePrefixes.Length)
-            {
-                return "invalid";
-            }
-
-            return _stagePrefixes[index];
         }
 
         public static string GetArgumentName(int argIndex)

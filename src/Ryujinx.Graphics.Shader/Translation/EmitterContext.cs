@@ -115,36 +115,6 @@ namespace Ryujinx.Graphics.Shader.Translation
             _operations.Add(operation);
         }
 
-        public TextureOperation CreateTextureOperation(
-            Instruction inst,
-            SamplerType type,
-            TextureFlags flags,
-            int handle,
-            int compIndex,
-            Operand[] dests,
-            params Operand[] sources)
-        {
-            return CreateTextureOperation(inst, type, TextureFormat.Unknown, flags, handle, compIndex, dests, sources);
-        }
-
-        public TextureOperation CreateTextureOperation(
-            Instruction inst,
-            SamplerType type,
-            TextureFormat format,
-            TextureFlags flags,
-            int handle,
-            int compIndex,
-            Operand[] dests,
-            params Operand[] sources)
-        {
-            if (!flags.HasFlag(TextureFlags.Bindless))
-            {
-                Config.SetUsedTexture(inst, type, format, flags, TextureOperation.DefaultCbufSlot, handle);
-            }
-
-            return new TextureOperation(inst, type, format, flags, handle, compIndex, dests, sources);
-        }
-
         public void FlagAttributeRead(int attribute)
         {
             if (Config.Stage == ShaderStage.Vertex && attribute == AttributeConsts.InstanceId)

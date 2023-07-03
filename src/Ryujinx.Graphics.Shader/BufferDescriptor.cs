@@ -8,7 +8,7 @@ namespace Ryujinx.Graphics.Shader
         public readonly byte Slot;
         public readonly byte SbCbSlot;
         public readonly ushort SbCbOffset;
-        public BufferUsageFlags Flags;
+        public readonly BufferUsageFlags Flags;
 
         public BufferDescriptor(int binding, int slot)
         {
@@ -16,25 +16,16 @@ namespace Ryujinx.Graphics.Shader
             Slot = (byte)slot;
             SbCbSlot = 0;
             SbCbOffset = 0;
-
             Flags = BufferUsageFlags.None;
         }
 
-        public BufferDescriptor(int binding, int slot, int sbCbSlot, int sbCbOffset)
+        public BufferDescriptor(int binding, int slot, int sbCbSlot, int sbCbOffset, BufferUsageFlags flags)
         {
             Binding = binding;
             Slot = (byte)slot;
             SbCbSlot = (byte)sbCbSlot;
             SbCbOffset = (ushort)sbCbOffset;
-
-            Flags = BufferUsageFlags.None;
-        }
-
-        public BufferDescriptor SetFlag(BufferUsageFlags flag)
-        {
-            Flags |= flag;
-
-            return this;
+            Flags = flags;
         }
     }
 }

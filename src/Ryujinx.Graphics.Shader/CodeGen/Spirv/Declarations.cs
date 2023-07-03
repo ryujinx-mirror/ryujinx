@@ -72,8 +72,8 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             DeclareStorageBuffers(context, context.Config.Properties.StorageBuffers.Values);
             DeclareMemories(context, context.Config.Properties.LocalMemories, context.LocalMemories, StorageClass.Private);
             DeclareMemories(context, context.Config.Properties.SharedMemories, context.SharedMemories, StorageClass.Workgroup);
-            DeclareSamplers(context, context.Config.GetTextureDescriptors());
-            DeclareImages(context, context.Config.GetImageDescriptors());
+            DeclareSamplers(context, context.Config.Properties.Textures.Values);
+            DeclareImages(context, context.Config.Properties.Images.Values);
             DeclareInputsAndOutputs(context, info);
         }
 
@@ -110,6 +110,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
 
             foreach (BufferDefinition buffer in buffers)
             {
+                int setIndex = context.Config.Options.TargetApi == TargetApi.Vulkan ? buffer.Set : 0;
                 int alignment = buffer.Layout == BufferLayout.Std140 ? 16 : 4;
                 int alignmentMask = alignment - 1;
                 int offset = 0;
@@ -163,7 +164,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                 var variable = context.Variable(pointerType, StorageClass.Uniform);
 
                 context.Name(variable, buffer.Name);
-                context.Decorate(variable, Decoration.DescriptorSet, (LiteralInteger)buffer.Set);
+                context.Decorate(variable, Decoration.DescriptorSet, (LiteralInteger)setIndex);
                 context.Decorate(variable, Decoration.Binding, (LiteralInteger)buffer.Binding);
                 context.AddGlobalVariable(variable);
 
@@ -178,92 +179,72 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             }
         }
 
-        private static void DeclareSamplers(CodeGenContext context, TextureDescriptor[] descriptors)
+        private static void DeclareSamplers(CodeGenContext context, IEnumerable<TextureDefinition> samplers)
         {
-            foreach (var descriptor in descriptors)
+            foreach (var sampler in samplers)
             {
-                var meta = new TextureMeta(descriptor.CbufSlot, descriptor.HandleIndex, descriptor.Format);
+                int setIndex = context.Config.Options.TargetApi == TargetApi.Vulkan ? sampler.Set : 0;
 
-                if (context.Samplers.ContainsKey(meta))
-                {
-                    continue;
-                }
-
-                int setIndex = context.Config.Options.TargetApi == TargetApi.Vulkan ? 2 : 0;
-
-                var dim = (descriptor.Type & SamplerType.Mask) switch
+                var dim = (sampler.Type & SamplerType.Mask) switch
                 {
                     SamplerType.Texture1D => Dim.Dim1D,
                     SamplerType.Texture2D => Dim.Dim2D,
                     SamplerType.Texture3D => Dim.Dim3D,
                     SamplerType.TextureCube => Dim.Cube,
                     SamplerType.TextureBuffer => Dim.Buffer,
-                    _ => throw new InvalidOperationException($"Invalid sampler type \"{descriptor.Type & SamplerType.Mask}\"."),
+                    _ => throw new InvalidOperationException($"Invalid sampler type \"{sampler.Type & SamplerType.Mask}\".")
                 };
 
                 var imageType = context.TypeImage(
                     context.TypeFP32(),
                     dim,
-                    descriptor.Type.HasFlag(SamplerType.Shadow),
-                    descriptor.Type.HasFlag(SamplerType.Array),
-                    descriptor.Type.HasFlag(SamplerType.Multisample),
+                    sampler.Type.HasFlag(SamplerType.Shadow),
+                    sampler.Type.HasFlag(SamplerType.Array),
+                    sampler.Type.HasFlag(SamplerType.Multisample),
                     1,
                     ImageFormat.Unknown);
-
-                var nameSuffix = meta.CbufSlot < 0 ? $"_tcb_{meta.Handle:X}" : $"_cb{meta.CbufSlot}_{meta.Handle:X}";
 
                 var sampledImageType = context.TypeSampledImage(imageType);
                 var sampledImagePointerType = context.TypePointer(StorageClass.UniformConstant, sampledImageType);
                 var sampledImageVariable = context.Variable(sampledImagePointerType, StorageClass.UniformConstant);
 
-                context.Samplers.Add(meta, (imageType, sampledImageType, sampledImageVariable));
-                context.SamplersTypes.Add(meta, descriptor.Type);
+                context.Samplers.Add(sampler.Binding, (imageType, sampledImageType, sampledImageVariable));
+                context.SamplersTypes.Add(sampler.Binding, sampler.Type);
 
-                context.Name(sampledImageVariable, $"{GetStagePrefix(context.Config.Stage)}_tex{nameSuffix}");
+                context.Name(sampledImageVariable, sampler.Name);
                 context.Decorate(sampledImageVariable, Decoration.DescriptorSet, (LiteralInteger)setIndex);
-                context.Decorate(sampledImageVariable, Decoration.Binding, (LiteralInteger)descriptor.Binding);
+                context.Decorate(sampledImageVariable, Decoration.Binding, (LiteralInteger)sampler.Binding);
                 context.AddGlobalVariable(sampledImageVariable);
             }
         }
 
-        private static void DeclareImages(CodeGenContext context, TextureDescriptor[] descriptors)
+        private static void DeclareImages(CodeGenContext context, IEnumerable<TextureDefinition> images)
         {
-            foreach (var descriptor in descriptors)
+            foreach (var image in images)
             {
-                var meta = new TextureMeta(descriptor.CbufSlot, descriptor.HandleIndex, descriptor.Format);
+                int setIndex = context.Config.Options.TargetApi == TargetApi.Vulkan ? image.Set : 0;
 
-                if (context.Images.ContainsKey(meta))
-                {
-                    continue;
-                }
-
-                int setIndex = context.Config.Options.TargetApi == TargetApi.Vulkan ? 3 : 0;
-
-                var dim = GetDim(descriptor.Type);
+                var dim = GetDim(image.Type);
 
                 var imageType = context.TypeImage(
-                    context.GetType(meta.Format.GetComponentType()),
+                    context.GetType(image.Format.GetComponentType()),
                     dim,
-                    descriptor.Type.HasFlag(SamplerType.Shadow),
-                    descriptor.Type.HasFlag(SamplerType.Array),
-                    descriptor.Type.HasFlag(SamplerType.Multisample),
+                    image.Type.HasFlag(SamplerType.Shadow),
+                    image.Type.HasFlag(SamplerType.Array),
+                    image.Type.HasFlag(SamplerType.Multisample),
                     AccessQualifier.ReadWrite,
-                    GetImageFormat(meta.Format));
-
-                var nameSuffix = meta.CbufSlot < 0 ?
-                    $"_tcb_{meta.Handle:X}_{meta.Format.ToGlslFormat()}" :
-                    $"_cb{meta.CbufSlot}_{meta.Handle:X}_{meta.Format.ToGlslFormat()}";
+                    GetImageFormat(image.Format));
 
                 var imagePointerType = context.TypePointer(StorageClass.UniformConstant, imageType);
                 var imageVariable = context.Variable(imagePointerType, StorageClass.UniformConstant);
 
-                context.Images.Add(meta, (imageType, imageVariable));
+                context.Images.Add(image.Binding, (imageType, imageVariable));
 
-                context.Name(imageVariable, $"{GetStagePrefix(context.Config.Stage)}_img{nameSuffix}");
+                context.Name(imageVariable, image.Name);
                 context.Decorate(imageVariable, Decoration.DescriptorSet, (LiteralInteger)setIndex);
-                context.Decorate(imageVariable, Decoration.Binding, (LiteralInteger)descriptor.Binding);
+                context.Decorate(imageVariable, Decoration.Binding, (LiteralInteger)image.Binding);
 
-                if (descriptor.Flags.HasFlag(TextureUsageFlags.ImageCoherent))
+                if (image.Flags.HasFlag(TextureUsageFlags.ImageCoherent))
                 {
                     context.Decorate(imageVariable, Decoration.Coherent);
                 }

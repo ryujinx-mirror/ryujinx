@@ -222,8 +222,6 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
 
         private static void SetHandle(ShaderConfig config, TextureOperation texOp, int cbufOffset, int cbufSlot, bool rewriteSamplerType, bool isImage)
         {
-            texOp.SetHandle(cbufOffset, cbufSlot);
-
             if (rewriteSamplerType)
             {
                 SamplerType newType = config.GpuAccessor.QuerySamplerType(cbufOffset, cbufSlot);
@@ -234,7 +232,7 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
                 }
                 else if (texOp.Type == SamplerType.TextureBuffer && newType == SamplerType.Texture1D)
                 {
-                    int coordsCount = 1;
+                    int coordsCount = 2;
 
                     if (InstEmit.Sample1DAs2D)
                     {
@@ -255,7 +253,15 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
                 }
             }
 
-            config.SetUsedTexture(texOp.Inst, texOp.Type, texOp.Format, texOp.Flags, cbufSlot, cbufOffset);
+            int binding = config.ResourceManager.GetTextureOrImageBinding(
+                texOp.Inst,
+                texOp.Type,
+                texOp.Format,
+                texOp.Flags & ~TextureFlags.Bindless,
+                cbufSlot,
+                cbufOffset);
+
+            texOp.SetBinding(binding);
         }
     }
 }

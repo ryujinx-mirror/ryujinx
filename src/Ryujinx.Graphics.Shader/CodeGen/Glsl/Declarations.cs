@@ -75,22 +75,8 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             DeclareStorageBuffers(context, context.Config.Properties.StorageBuffers.Values);
             DeclareMemories(context, context.Config.Properties.LocalMemories.Values, isShared: false);
             DeclareMemories(context, context.Config.Properties.SharedMemories.Values, isShared: true);
-
-            var textureDescriptors = context.Config.GetTextureDescriptors();
-            if (textureDescriptors.Length != 0)
-            {
-                DeclareSamplers(context, textureDescriptors);
-
-                context.AppendLine();
-            }
-
-            var imageDescriptors = context.Config.GetImageDescriptors();
-            if (imageDescriptors.Length != 0)
-            {
-                DeclareImages(context, imageDescriptors);
-
-                context.AppendLine();
-            }
+            DeclareSamplers(context, context.Config.Properties.Textures.Values);
+            DeclareImages(context, context.Config.Properties.Images.Values);
 
             if (context.Config.Stage != ShaderStage.Compute)
             {
@@ -369,80 +355,71 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             }
         }
 
-        private static void DeclareSamplers(CodeGenContext context, TextureDescriptor[] descriptors)
+        private static void DeclareSamplers(CodeGenContext context, IEnumerable<TextureDefinition> definitions)
         {
             int arraySize = 0;
-            foreach (var descriptor in descriptors)
+
+            foreach (var definition in definitions)
             {
-                if (descriptor.Type.HasFlag(SamplerType.Indexed))
+                string indexExpr = string.Empty;
+
+                if (definition.Type.HasFlag(SamplerType.Indexed))
                 {
                     if (arraySize == 0)
                     {
-                        arraySize = ShaderConfig.SamplerArraySize;
+                        arraySize = ResourceManager.SamplerArraySize;
                     }
                     else if (--arraySize != 0)
                     {
                         continue;
                     }
+
+                    indexExpr = $"[{NumberFormatter.FormatInt(arraySize)}]";
                 }
 
-                string indexExpr = NumberFormatter.FormatInt(arraySize);
-
-                string samplerName = OperandManager.GetSamplerName(
-                    context.Config.Stage,
-                    descriptor.CbufSlot,
-                    descriptor.HandleIndex,
-                    descriptor.Type.HasFlag(SamplerType.Indexed),
-                    indexExpr);
-
-                string samplerTypeName = descriptor.Type.ToGlslSamplerType();
+                string samplerTypeName = definition.Type.ToGlslSamplerType();
 
                 string layout = string.Empty;
 
                 if (context.Config.Options.TargetApi == TargetApi.Vulkan)
                 {
-                    layout = ", set = 2";
+                    layout = $", set = {definition.Set}";
                 }
 
-                context.AppendLine($"layout (binding = {descriptor.Binding}{layout}) uniform {samplerTypeName} {samplerName};");
+                context.AppendLine($"layout (binding = {definition.Binding}{layout}) uniform {samplerTypeName} {definition.Name}{indexExpr};");
             }
         }
 
-        private static void DeclareImages(CodeGenContext context, TextureDescriptor[] descriptors)
+        private static void DeclareImages(CodeGenContext context, IEnumerable<TextureDefinition> definitions)
         {
             int arraySize = 0;
-            foreach (var descriptor in descriptors)
+
+            foreach (var definition in definitions)
             {
-                if (descriptor.Type.HasFlag(SamplerType.Indexed))
+                string indexExpr = string.Empty;
+
+                if (definition.Type.HasFlag(SamplerType.Indexed))
                 {
                     if (arraySize == 0)
                     {
-                        arraySize = ShaderConfig.SamplerArraySize;
+                        arraySize = ResourceManager.SamplerArraySize;
                     }
                     else if (--arraySize != 0)
                     {
                         continue;
                     }
+
+                    indexExpr = $"[{NumberFormatter.FormatInt(arraySize)}]";
                 }
 
-                string indexExpr = NumberFormatter.FormatInt(arraySize);
+                string imageTypeName = definition.Type.ToGlslImageType(definition.Format.GetComponentType());
 
-                string imageName = OperandManager.GetImageName(
-                    context.Config.Stage,
-                    descriptor.CbufSlot,
-                    descriptor.HandleIndex,
-                    descriptor.Format,
-                    descriptor.Type.HasFlag(SamplerType.Indexed),
-                    indexExpr);
-
-                string imageTypeName = descriptor.Type.ToGlslImageType(descriptor.Format.GetComponentType());
-
-                if (descriptor.Flags.HasFlag(TextureUsageFlags.ImageCoherent))
+                if (definition.Flags.HasFlag(TextureUsageFlags.ImageCoherent))
                 {
                     imageTypeName = "coherent " + imageTypeName;
                 }
 
-                string layout = descriptor.Format.ToGlslFormat();
+                string layout = definition.Format.ToGlslFormat();
 
                 if (!string.IsNullOrEmpty(layout))
                 {
@@ -451,10 +428,10 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
                 if (context.Config.Options.TargetApi == TargetApi.Vulkan)
                 {
-                    layout = $", set = 3{layout}";
+                    layout = $", set = {definition.Set}{layout}";
                 }
 
-                context.AppendLine($"layout (binding = {descriptor.Binding}{layout}) uniform {imageTypeName} {imageName};");
+                context.AppendLine($"layout (binding = {definition.Binding}{layout}) uniform {imageTypeName} {definition.Name}{indexExpr};");
             }
         }
 

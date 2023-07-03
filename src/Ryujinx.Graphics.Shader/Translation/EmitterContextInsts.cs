@@ -604,6 +604,45 @@ namespace Ryujinx.Graphics.Shader.Translation
             return context.Add(Instruction.Subtract, Local(), a, b);
         }
 
+        public static Operand ImageAtomic(
+            this EmitterContext context,
+            SamplerType type,
+            TextureFormat format,
+            TextureFlags flags,
+            int binding,
+            Operand[] sources)
+        {
+            Operand dest = Local();
+
+            context.Add(new TextureOperation(Instruction.ImageAtomic, type, format, flags, binding, 0, new[] { dest }, sources));
+
+            return dest;
+        }
+
+        public static void ImageLoad(
+            this EmitterContext context,
+            SamplerType type,
+            TextureFormat format,
+            TextureFlags flags,
+            int binding,
+            int compMask,
+            Operand[] dests,
+            Operand[] sources)
+        {
+            context.Add(new TextureOperation(Instruction.ImageLoad, type, format, flags, binding, compMask, dests, sources));
+        }
+
+        public static void ImageStore(
+            this EmitterContext context,
+            SamplerType type,
+            TextureFormat format,
+            TextureFlags flags,
+            int binding,
+            Operand[] sources)
+        {
+            context.Add(new TextureOperation(Instruction.ImageStore, type, format, flags, binding, 0, null, sources));
+        }
+
         public static Operand IsNan(this EmitterContext context, Operand a, Instruction fpType = Instruction.FP32)
         {
             return context.Add(fpType | Instruction.IsNan, Local(), a);
@@ -664,6 +703,21 @@ namespace Ryujinx.Graphics.Shader.Translation
             return primVertex != null
                 ? context.Load(storageKind, (int)ioVariable, primVertex, arrayIndex, elemIndex)
                 : context.Load(storageKind, (int)ioVariable, arrayIndex, elemIndex);
+        }
+
+        public static Operand Lod(
+            this EmitterContext context,
+            SamplerType type,
+            TextureFlags flags,
+            int binding,
+            int compIndex,
+            Operand[] sources)
+        {
+            Operand dest = Local();
+
+            context.Add(new TextureOperation(Instruction.Lod, type, TextureFormat.Unknown, flags, binding, compIndex, new[] { dest }, sources));
+
+            return dest;
         }
 
         public static Operand MemoryBarrier(this EmitterContext context)
@@ -795,6 +849,33 @@ namespace Ryujinx.Graphics.Shader.Translation
             return invocationId != null
                 ? context.Add(Instruction.Store, storageKind, null, Const((int)ioVariable), invocationId, arrayIndex, elemIndex, value)
                 : context.Add(Instruction.Store, storageKind, null, Const((int)ioVariable), arrayIndex, elemIndex, value);
+        }
+
+        public static void TextureSample(
+            this EmitterContext context,
+            SamplerType type,
+            TextureFlags flags,
+            int binding,
+            int compMask,
+            Operand[] dests,
+            Operand[] sources)
+        {
+            context.Add(new TextureOperation(Instruction.TextureSample, type, TextureFormat.Unknown, flags, binding, compMask, dests, sources));
+        }
+
+        public static Operand TextureSize(
+            this EmitterContext context,
+            SamplerType type,
+            TextureFlags flags,
+            int binding,
+            int compIndex,
+            Operand[] sources)
+        {
+            Operand dest = Local();
+
+            context.Add(new TextureOperation(Instruction.TextureSize, type, TextureFormat.Unknown, flags, binding, compIndex, new[] { dest }, sources));
+
+            return dest;
         }
 
         public static Operand UnpackDouble2x32High(this EmitterContext context, Operand a)

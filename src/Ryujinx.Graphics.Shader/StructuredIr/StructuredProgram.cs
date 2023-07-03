@@ -125,15 +125,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
 
             AstTextureOperation GetAstTextureOperation(TextureOperation texOp)
             {
-                return new AstTextureOperation(
-                    inst,
-                    texOp.Type,
-                    texOp.Format,
-                    texOp.Flags,
-                    texOp.CbufSlot,
-                    texOp.Handle,
-                    texOp.Index,
-                    sources);
+                return new AstTextureOperation(inst, texOp.Type, texOp.Format, texOp.Flags, texOp.Binding, texOp.Index, sources);
             }
 
             int componentsCount = BitOperations.PopCount((uint)operation.Index);
