@@ -1035,8 +1035,6 @@ namespace Ryujinx.Ui.Windows
                 }
                 else if (_inputDevice.ActiveId.StartsWith("controller"))
                 {
-                    bool isNintendoStyle = _inputDevice.ActiveText.Contains("Nintendo");
-
                     config = new StandardControllerInputConfig
                     {
                         Version = InputConfig.CurrentVersion,
@@ -1072,10 +1070,10 @@ namespace Ryujinx.Ui.Windows
 
                         RightJoycon = new RightJoyconCommonConfig<ConfigGamepadInputId>
                         {
-                            ButtonA = isNintendoStyle ? ConfigGamepadInputId.A : ConfigGamepadInputId.B,
-                            ButtonB = isNintendoStyle ? ConfigGamepadInputId.B : ConfigGamepadInputId.A,
-                            ButtonX = isNintendoStyle ? ConfigGamepadInputId.X : ConfigGamepadInputId.Y,
-                            ButtonY = isNintendoStyle ? ConfigGamepadInputId.Y : ConfigGamepadInputId.X,
+                            ButtonA = ConfigGamepadInputId.B,
+                            ButtonB = ConfigGamepadInputId.A,
+                            ButtonX = ConfigGamepadInputId.Y,
+                            ButtonY = ConfigGamepadInputId.X,
                             ButtonPlus = ConfigGamepadInputId.Plus,
                             ButtonR = ConfigGamepadInputId.RightShoulder,
                             ButtonZr = ConfigGamepadInputId.RightTrigger,
