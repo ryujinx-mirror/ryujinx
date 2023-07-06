@@ -597,6 +597,8 @@ namespace Ryujinx.Ava.UI.ViewModels
             }
             else if (activeDevice.Type == DeviceType.Controller)
             {
+                bool isNintendoStyle = Devices.ToList().Find(x => x.Id == activeDevice.Id).Name.Contains("Nintendo");
+
                 string id = activeDevice.Id.Split(" ")[0];
 
                 config = new StandardControllerInputConfig
@@ -631,10 +633,10 @@ namespace Ryujinx.Ava.UI.ViewModels
                     },
                     RightJoycon = new RightJoyconCommonConfig<ConfigGamepadInputId>
                     {
-                        ButtonA = ConfigGamepadInputId.B,
-                        ButtonB = ConfigGamepadInputId.A,
-                        ButtonX = ConfigGamepadInputId.Y,
-                        ButtonY = ConfigGamepadInputId.X,
+                        ButtonA = isNintendoStyle ? ConfigGamepadInputId.A : ConfigGamepadInputId.B,
+                        ButtonB = isNintendoStyle ? ConfigGamepadInputId.B : ConfigGamepadInputId.A,
+                        ButtonX = isNintendoStyle ? ConfigGamepadInputId.X : ConfigGamepadInputId.Y,
+                        ButtonY = isNintendoStyle ? ConfigGamepadInputId.Y : ConfigGamepadInputId.X,
                         ButtonPlus = ConfigGamepadInputId.Plus,
                         ButtonR = ConfigGamepadInputId.RightShoulder,
                         ButtonZr = ConfigGamepadInputId.RightTrigger,
