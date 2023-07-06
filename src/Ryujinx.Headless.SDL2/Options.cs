@@ -14,6 +14,9 @@ namespace Ryujinx.Headless.SDL2
         [Option("profile", Required = false, HelpText = "Set the user profile to launch the game with.")]
         public string UserProfile { get; set; }
 
+        [Option("fullscreen", Required = false, HelpText = "Launch the game in fullscreen mode.")]
+        public bool IsFullscreen { get; set; }
+
         // Input
 
         [Option("input-profile-1", Required = false, HelpText = "Set the input profile in use for Player 1.")]
