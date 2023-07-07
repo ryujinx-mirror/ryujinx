@@ -38,26 +38,26 @@ namespace Ryujinx.Ava.UI.Views.Main
         {
             List<CheckBox> checkBoxes = new();
 
-            foreach (var item in Enum.GetValues(typeof (FileTypes)))
+            foreach (var item in Enum.GetValues(typeof(FileTypes)))
             {
-                string fileName = Enum.GetName(typeof (FileTypes), item);
-                checkBoxes.Add(new CheckBox()
+                string fileName = Enum.GetName(typeof(FileTypes), item);
+                checkBoxes.Add(new CheckBox
                 {
                     Content = $".{fileName}",
                     IsChecked = ((FileTypes)item).GetConfigValue(ConfigurationState.Instance.Ui.ShownFileTypes),
-                    Command = MiniCommand.Create(() => ViewModel.ToggleFileType(fileName))
+                    Command = MiniCommand.Create(() => ViewModel.ToggleFileType(fileName)),
                 });
             }
 
             return checkBoxes.ToArray();
         }
 
-        private MenuItem[] GenerateLanguageMenuItems()
+        private static MenuItem[] GenerateLanguageMenuItems()
         {
             List<MenuItem> menuItems = new();
 
             string localePath = "Ryujinx.Ava/Assets/Locales";
-            string localeExt  = ".json";
+            string localeExt = ".json";
 
             string[] localesPath = EmbeddedResources.GetAllAvailableResources(localePath, localeExt);
 
@@ -67,7 +67,7 @@ namespace Ryujinx.Ava.UI.Views.Main
             {
                 string languageCode = Path.GetFileNameWithoutExtension(locale).Split('.').Last();
                 string languageJson = EmbeddedResources.ReadAllText($"{localePath}/{languageCode}{localeExt}");
-                var    strings      = JsonHelper.Deserialize(languageJson, CommonJsonContext.Default.StringDictionary);
+                var strings = JsonHelper.Deserialize(languageJson, CommonJsonContext.Default.StringDictionary);
 
                 if (!strings.TryGetValue("Language", out string languageName))
                 {
@@ -76,11 +76,11 @@ namespace Ryujinx.Ava.UI.Views.Main
 
                 MenuItem menuItem = new()
                 {
-                    Header  = languageName,
+                    Header = languageName,
                     Command = MiniCommand.Create(() =>
                     {
-                        ViewModel.ChangeLanguage(languageCode);
-                    })
+                        MainWindowViewModel.ChangeLanguage(languageCode);
+                    }),
                 };
 
                 menuItems.Add(menuItem);

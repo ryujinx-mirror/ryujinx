@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Threading;
 using FluentAvalonia.Core;
@@ -32,17 +33,16 @@ namespace Ryujinx.Ava.UI.Helpers
 
             ContentDialog contentDialog = new()
             {
-                Title               = title,
-                PrimaryButtonText   = primaryButton,
+                Title = title,
+                PrimaryButtonText = primaryButton,
                 SecondaryButtonText = secondaryButton,
-                CloseButtonText     = closeButton,
-                Content             = content
+                CloseButtonText = closeButton,
+                Content = content,
+                PrimaryButtonCommand = MiniCommand.Create(() =>
+                {
+                    result = primaryButtonResult;
+                }),
             };
-
-            contentDialog.PrimaryButtonCommand = MiniCommand.Create(() =>
-            {
-                result = primaryButtonResult;
-            });
 
             contentDialog.SecondaryButtonCommand = MiniCommand.Create(() =>
             {
@@ -96,7 +96,6 @@ namespace Ryujinx.Ava.UI.Helpers
             Func<Window, Task> doWhileDeferred = null)
         {
             bool startedDeferring = false;
-            UserResult result = UserResult.None;
 
             return await ShowTextDialog(
                 title,
@@ -123,8 +122,6 @@ namespace Ryujinx.Ava.UI.Helpers
 
                 var deferral = args.GetDeferral();
 
-                result = primaryButton == LocaleManager.Instance[LocaleKeys.InputDialogYes] ? UserResult.Yes : UserResult.Ok;
-
                 sender.PrimaryButtonClick -= DeferClose;
 
                 _ = Task.Run(() =>
@@ -150,18 +147,18 @@ namespace Ryujinx.Ava.UI.Helpers
         {
             Grid content = new()
             {
-                RowDefinitions    = new RowDefinitions()    { new RowDefinition(), new RowDefinition() },
-                ColumnDefinitions = new ColumnDefinitions() { new ColumnDefinition(GridLength.Auto), new ColumnDefinition() },
+                RowDefinitions = new RowDefinitions { new(), new() },
+                ColumnDefinitions = new ColumnDefinitions { new(GridLength.Auto), new() },
 
-                MinHeight = 80
+                MinHeight = 80,
             };
 
             SymbolIcon icon = new()
             {
-                Symbol            = (Symbol)symbol,
-                Margin            = new Thickness(10),
-                FontSize          = 40,
-                VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
+                Symbol = (Symbol)symbol,
+                Margin = new Thickness(10),
+                FontSize = 40,
+                VerticalAlignment = VerticalAlignment.Center,
             };
 
             Grid.SetColumn(icon, 0);
@@ -170,18 +167,18 @@ namespace Ryujinx.Ava.UI.Helpers
 
             TextBlock primaryLabel = new()
             {
-                Text         = primaryText,
-                Margin       = new Thickness(5),
+                Text = primaryText,
+                Margin = new Thickness(5),
                 TextWrapping = TextWrapping.Wrap,
-                MaxWidth     = 450
+                MaxWidth = 450,
             };
 
             TextBlock secondaryLabel = new()
             {
-                Text         = secondaryText,
-                Margin       = new Thickness(5),
+                Text = secondaryText,
+                Margin = new Thickness(5),
                 TextWrapping = TextWrapping.Wrap,
-                MaxWidth     = 450
+                MaxWidth = 450,
             };
 
             Grid.SetColumn(primaryLabel, 1);
@@ -318,14 +315,14 @@ namespace Ryujinx.Ava.UI.Helpers
 
             Window parent = GetMainWindow();
 
-            if (parent != null && parent.IsActive && (parent as MainWindow).ViewModel.IsGameRunning)
+            if (parent is { IsActive: true } and MainWindow window && window.ViewModel.IsGameRunning)
             {
                 contentDialogOverlayWindow = new()
                 {
-                    Height        = parent.Bounds.Height,
-                    Width         = parent.Bounds.Width,
-                    Position      = parent.PointToScreen(new Point()),
-                    ShowInTaskbar = false
+                    Height = parent.Bounds.Height,
+                    Width = parent.Bounds.Width,
+                    Position = parent.PointToScreen(new Point()),
+                    ShowInTaskbar = false,
                 };
 
                 parent.PositionChanged += OverlayOnPositionChanged;
@@ -389,7 +386,7 @@ namespace Ryujinx.Ava.UI.Helpers
 
         private static Window GetMainWindow()
         {
-            if (Application.Current.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime al)
+            if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime al)
             {
                 foreach (Window item in al.Windows)
                 {

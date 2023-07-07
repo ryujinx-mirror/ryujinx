@@ -22,16 +22,16 @@ namespace Ryujinx.Ava
 {
     internal partial class Program
     {
-        public static double WindowScaleFactor  { get; set; }
+        public static double WindowScaleFactor { get; set; }
         public static double DesktopScaleFactor { get; set; } = 1.0;
-        public static string Version            { get; private set; }
-        public static string ConfigurationPath  { get; private set; }
-        public static bool   PreviewerDetached  { get; private set; }
+        public static string Version { get; private set; }
+        public static string ConfigurationPath { get; private set; }
+        public static bool PreviewerDetached { get; private set; }
 
         [LibraryImport("user32.dll", SetLastError = true)]
         public static partial int MessageBoxA(IntPtr hWnd, [MarshalAs(UnmanagedType.LPStr)] string text, [MarshalAs(UnmanagedType.LPStr)] string caption, uint type);
 
-        private const uint MB_ICONWARNING = 0x30;
+        private const uint MbIconwarning = 0x30;
 
         public static void Main(string[] args)
         {
@@ -39,7 +39,7 @@ namespace Ryujinx.Ava
 
             if (OperatingSystem.IsWindows() && !OperatingSystem.IsWindowsVersionAtLeast(10, 0, 17134))
             {
-                _ = MessageBoxA(IntPtr.Zero, "You are running an outdated version of Windows.\n\nStarting on June 1st 2022, Ryujinx will only support Windows 10 1803 and newer.\n", $"Ryujinx {Version}", MB_ICONWARNING);
+                _ = MessageBoxA(IntPtr.Zero, "You are running an outdated version of Windows.\n\nStarting on June 1st 2022, Ryujinx will only support Windows 10 1803 and newer.\n", $"Ryujinx {Version}", MbIconwarning);
             }
 
             PreviewerDetached = true;
@@ -58,15 +58,15 @@ namespace Ryujinx.Ava
                 .With(new X11PlatformOptions
                 {
                     EnableMultiTouch = true,
-                    EnableIme        = true,
-                    UseEGL           = false,
-                    UseGpu           = true
+                    EnableIme = true,
+                    UseEGL = false,
+                    UseGpu = true,
                 })
                 .With(new Win32PlatformOptions
                 {
-                    EnableMultitouch                = true,
-                    UseWgl                          = false,
-                    AllowEglInitialization          = false,
+                    EnableMultitouch = true,
+                    UseWgl = false,
+                    AllowEglInitialization = false,
                     CompositionBackdropCornerRadius = 8.0f,
                 })
                 .UseSkia();
@@ -84,7 +84,7 @@ namespace Ryujinx.Ava
 
             // Hook unhandled exception and process exit events.
             AppDomain.CurrentDomain.UnhandledException += (sender, e) => ProcessUnhandledException(e.ExceptionObject as Exception, e.IsTerminating);
-            AppDomain.CurrentDomain.ProcessExit        += (sender, e) => Exit();
+            AppDomain.CurrentDomain.ProcessExit += (sender, e) => Exit();
 
             // Setup base data directory.
             AppDataManager.Initialize(CommandLineState.BaseDirPathArg);
@@ -130,7 +130,7 @@ namespace Ryujinx.Ava
 
         public static void ReloadConfig()
         {
-            string localConfigurationPath   = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Config.json");
+            string localConfigurationPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Config.json");
             string appDataConfigurationPath = Path.Combine(AppDataManager.BaseDirPath, "Config.json");
 
             // Now load the configuration as the other subsystems are now registered
@@ -192,7 +192,7 @@ namespace Ryujinx.Ava
                     "never" => HideCursorMode.Never,
                     "onidle" => HideCursorMode.OnIdle,
                     "always" => HideCursorMode.Always,
-                    _ => ConfigurationState.Instance.HideCursor.Value
+                    _ => ConfigurationState.Instance.HideCursor.Value,
                 };
             }
         }

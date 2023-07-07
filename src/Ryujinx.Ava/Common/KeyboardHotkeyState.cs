@@ -11,6 +11,6 @@
         ResScaleUp,
         ResScaleDown,
         VolumeUp,
-        VolumeDown
+        VolumeDown,
     }
 }

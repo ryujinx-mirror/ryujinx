@@ -10,12 +10,12 @@ namespace Ryujinx.Ava.Input
     {
         private AvaloniaMouseDriver _driver;
 
-        public string Id   => "0";
+        public string Id => "0";
         public string Name => "AvaloniaMouse";
 
-        public bool                IsConnected => true;
-        public GamepadFeaturesFlag Features    => throw new NotImplementedException();
-        public bool[]              Buttons     => _driver.PressedButtons;
+        public bool IsConnected => true;
+        public GamepadFeaturesFlag Features => throw new NotImplementedException();
+        public bool[] Buttons => _driver.PressedButtons;
 
         public AvaloniaMouse(AvaloniaMouseDriver driver)
         {

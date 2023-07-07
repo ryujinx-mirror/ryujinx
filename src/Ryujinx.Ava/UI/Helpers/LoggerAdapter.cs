@@ -1,15 +1,17 @@
+using Avalonia.Logging;
 using Avalonia.Utilities;
+using Ryujinx.Common.Logging;
 using System;
 using System.Text;
 
 namespace Ryujinx.Ava.UI.Helpers
 {
-    using AvaLogger   = Avalonia.Logging.Logger;
-    using AvaLogLevel = Avalonia.Logging.LogEventLevel;
-    using RyuLogClass = Ryujinx.Common.Logging.LogClass;
-    using RyuLogger   = Ryujinx.Common.Logging.Logger;
+    using AvaLogger = Avalonia.Logging.Logger;
+    using AvaLogLevel = LogEventLevel;
+    using RyuLogClass = LogClass;
+    using RyuLogger = Ryujinx.Common.Logging.Logger;
 
-    internal class LoggerAdapter : Avalonia.Logging.ILogSink
+    internal class LoggerAdapter : ILogSink
     {
         public static void Register()
         {
@@ -20,13 +22,13 @@ namespace Ryujinx.Ava.UI.Helpers
         {
             return level switch
             {
-                AvaLogLevel.Verbose     => RyuLogger.Debug,
-                AvaLogLevel.Debug       => RyuLogger.Debug,
+                AvaLogLevel.Verbose => RyuLogger.Debug,
+                AvaLogLevel.Debug => RyuLogger.Debug,
                 AvaLogLevel.Information => RyuLogger.Debug,
-                AvaLogLevel.Warning     => RyuLogger.Debug,
-                AvaLogLevel.Error       => RyuLogger.Error,
-                AvaLogLevel.Fatal       => RyuLogger.Error,
-                _ => throw new ArgumentOutOfRangeException(nameof(level), level, null)
+                AvaLogLevel.Warning => RyuLogger.Debug,
+                AvaLogLevel.Error => RyuLogger.Error,
+                AvaLogLevel.Fatal => RyuLogger.Error,
+                _ => throw new ArgumentOutOfRangeException(nameof(level), level, null),
             };
         }
 
@@ -45,7 +47,7 @@ namespace Ryujinx.Ava.UI.Helpers
             GetLog(level)?.PrintMsg(RyuLogClass.Ui, Format(level, area, messageTemplate, source, new object[] { propertyValue0 }));
         }
 
-        public void Log<T0, T1>(AvaLogLevel level, string area, object source, string messageTemplate, T0 propertyValue0,  T1 propertyValue1)
+        public void Log<T0, T1>(AvaLogLevel level, string area, object source, string messageTemplate, T0 propertyValue0, T1 propertyValue1)
         {
             GetLog(level)?.PrintMsg(RyuLogClass.Ui, Format(level, area, messageTemplate, source, new object[] { propertyValue0, propertyValue1 }));
         }

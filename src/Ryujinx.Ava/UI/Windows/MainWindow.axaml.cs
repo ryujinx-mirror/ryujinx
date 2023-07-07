@@ -155,7 +155,7 @@ namespace Ryujinx.Ava.UI.Windows
 
             Dispatcher.UIThread.Post(() =>
             {
-                ViewModel.StatusBarProgressValue   = e.NumAppsLoaded;
+                ViewModel.StatusBarProgressValue = e.NumAppsLoaded;
                 ViewModel.StatusBarProgressMaximum = e.NumAppsFound;
 
                 if (e.NumAppsFound == 0)
@@ -323,7 +323,7 @@ namespace Ryujinx.Ava.UI.Windows
                 ShowKeyErrorOnLoad = false;
 
                 Dispatcher.UIThread.Post(async () => await
-                    UserErrorDialog.ShowUserErrorDialog(UserError.NoKeys, this));
+                    UserErrorDialog.ShowUserErrorDialog(UserError.NoKeys));
             }
 
             if (OperatingSystem.IsLinux() && LinuxHelper.VmMaxMapCount < LinuxHelper.RecommendedVmMaxMapCount)
@@ -373,24 +373,26 @@ namespace Ryujinx.Ava.UI.Windows
 
         private void SetWindowSizePosition()
         {
-            PixelPoint SavedPoint = new PixelPoint(ConfigurationState.Instance.Ui.WindowStartup.WindowPositionX, 
+            PixelPoint savedPoint = new(ConfigurationState.Instance.Ui.WindowStartup.WindowPositionX,
                                                    ConfigurationState.Instance.Ui.WindowStartup.WindowPositionY);
 
             ViewModel.WindowHeight = ConfigurationState.Instance.Ui.WindowStartup.WindowSizeHeight * Program.WindowScaleFactor;
             ViewModel.WindowWidth = ConfigurationState.Instance.Ui.WindowStartup.WindowSizeWidth * Program.WindowScaleFactor;
 
             ViewModel.WindowState = ConfigurationState.Instance.Ui.WindowStartup.WindowMaximized.Value is true ? WindowState.Maximized : WindowState.Normal;
-        
-            if (CheckScreenBounds(SavedPoint))
-            {
-                Position = SavedPoint;
-            }
 
-            else WindowStartupLocation = WindowStartupLocation.CenterScreen;
+            if (CheckScreenBounds(savedPoint))
+            {
+                Position = savedPoint;
+            }
+            else
+            {
+                WindowStartupLocation = WindowStartupLocation.CenterScreen;
+            }
         }
 
         private bool CheckScreenBounds(PixelPoint configPoint)
-        {   
+        {
             for (int i = 0; i < Screens.ScreenCount; i++)
             {
                 if (Screens.All[i].Bounds.Contains(configPoint))
@@ -399,7 +401,7 @@ namespace Ryujinx.Ava.UI.Windows
                 }
             }
 
-            Logger.Warning?.Print(LogClass.Application, $"Failed to find valid start-up coordinates. Defaulting to primary monitor center.");
+            Logger.Warning?.Print(LogClass.Application, "Failed to find valid start-up coordinates. Defaulting to primary monitor center.");
             return false;
         }
 
@@ -425,10 +427,7 @@ namespace Ryujinx.Ava.UI.Windows
 
         private void SetMainContent(Control content = null)
         {
-            if (content == null)
-            {
-                content = GameLibrary;
-            }
+            content ??= GameLibrary;
 
             if (MainContent.Content != content)
             {
@@ -438,21 +437,25 @@ namespace Ryujinx.Ava.UI.Windows
 
         public static void UpdateGraphicsConfig()
         {
+#pragma warning disable IDE0055 // Disable formatting
             GraphicsConfig.ResScale                   = ConfigurationState.Instance.Graphics.ResScale == -1 ? ConfigurationState.Instance.Graphics.ResScaleCustom : ConfigurationState.Instance.Graphics.ResScale;
             GraphicsConfig.MaxAnisotropy              = ConfigurationState.Instance.Graphics.MaxAnisotropy;
             GraphicsConfig.ShadersDumpPath            = ConfigurationState.Instance.Graphics.ShadersDumpPath;
             GraphicsConfig.EnableShaderCache          = ConfigurationState.Instance.Graphics.EnableShaderCache;
             GraphicsConfig.EnableTextureRecompression = ConfigurationState.Instance.Graphics.EnableTextureRecompression;
             GraphicsConfig.EnableMacroHLE             = ConfigurationState.Instance.Graphics.EnableMacroHLE;
+#pragma warning restore IDE0055
         }
 
         public void LoadHotKeys()
         {
+#pragma warning disable IDE0055 // Disable formatting
             HotKeyManager.SetHotKey(FullscreenHotKey,      new KeyGesture(Key.Enter, KeyModifiers.Alt));
             HotKeyManager.SetHotKey(FullscreenHotKey2,     new KeyGesture(Key.F11));
             HotKeyManager.SetHotKey(FullscreenHotKeyMacOS, new KeyGesture(Key.F, KeyModifiers.Control | KeyModifiers.Meta));
             HotKeyManager.SetHotKey(DockToggleHotKey,      new KeyGesture(Key.F9));
             HotKeyManager.SetHotKey(ExitHotKey,            new KeyGesture(Key.Escape));
+#pragma warning restore IDE0055
         }
 
         private void VolumeStatus_CheckedChanged(object sender, SplitButtonClickEventArgs e)
@@ -536,8 +539,8 @@ namespace Ryujinx.Ava.UI.Windows
                 ViewModel.Applications.Clear();
 
                 StatusBarView.LoadProgressBar.IsVisible = true;
-                ViewModel.StatusBarProgressMaximum      = 0;
-                ViewModel.StatusBarProgressValue        = 0;
+                ViewModel.StatusBarProgressMaximum = 0;
+                ViewModel.StatusBarProgressValue = 0;
 
                 LocaleManager.Instance.UpdateAndGetDynamicValue(LocaleKeys.StatusBarGamesLoaded, 0, 0);
             });

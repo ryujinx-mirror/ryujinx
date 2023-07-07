@@ -4,6 +4,6 @@ namespace Ryujinx.Ava.UI.Models
     {
         None,
         Keyboard,
-        Controller
+        Controller,
     }
 }

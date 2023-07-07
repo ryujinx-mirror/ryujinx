@@ -21,20 +21,20 @@ namespace Ryujinx.Ava.UI.Renderer
     public class EmbeddedWindow : NativeControlHost
     {
         private WindowProc _wndProcDelegate;
-        private string     _className;
+        private string _className;
 
         protected GLXWindow X11Window { get; set; }
 
         protected IntPtr WindowHandle { get; set; }
-        protected IntPtr X11Display   { get; set; }
-        protected IntPtr NsView       { get; set; }
-        protected IntPtr MetalLayer   { get; set; }
+        protected IntPtr X11Display { get; set; }
+        protected IntPtr NsView { get; set; }
+        protected IntPtr MetalLayer { get; set; }
 
         public delegate void UpdateBoundsCallbackDelegate(Rect rect);
         private UpdateBoundsCallbackDelegate _updateBoundsCallback;
 
         public event EventHandler<IntPtr> WindowCreated;
-        public event EventHandler<Size>   SizeChanged;
+        public event EventHandler<Size> SizeChanged;
 
         public EmbeddedWindow()
         {
@@ -50,9 +50,9 @@ namespace Ryujinx.Ava.UI.Renderer
         protected virtual void OnWindowDestroying()
         {
             WindowHandle = IntPtr.Zero;
-            X11Display   = IntPtr.Zero;
-            NsView       = IntPtr.Zero;
-            MetalLayer   = IntPtr.Zero;
+            X11Display = IntPtr.Zero;
+            NsView = IntPtr.Zero;
+            MetalLayer = IntPtr.Zero;
         }
 
         private void OnNativeEmbeddedWindowCreated(object sender, EventArgs e)
@@ -77,11 +77,13 @@ namespace Ryujinx.Ava.UI.Renderer
             {
                 return CreateLinux(control);
             }
-            else if (OperatingSystem.IsWindows())
+
+            if (OperatingSystem.IsWindows())
             {
                 return CreateWin32(control);
             }
-            else if (OperatingSystem.IsMacOS())
+
+            if (OperatingSystem.IsMacOS())
             {
                 return CreateMacOS();
             }
@@ -127,7 +129,7 @@ namespace Ryujinx.Ava.UI.Renderer
             }
 
             WindowHandle = X11Window.WindowHandle.RawHandle;
-            X11Display   = X11Window.DisplayHandle.RawHandle;
+            X11Display = X11Window.DisplayHandle.RawHandle;
 
             return new PlatformHandle(WindowHandle, "X11");
         }
@@ -141,23 +143,23 @@ namespace Ryujinx.Ava.UI.Renderer
             {
                 if (VisualRoot != null)
                 {
-                    if (msg == WindowsMessages.LBUTTONDOWN ||
-                        msg == WindowsMessages.RBUTTONDOWN ||
-                        msg == WindowsMessages.LBUTTONUP   ||
-                        msg == WindowsMessages.RBUTTONUP   ||
-                        msg == WindowsMessages.MOUSEMOVE)
+                    if (msg == WindowsMessages.Lbuttondown ||
+                        msg == WindowsMessages.Rbuttondown ||
+                        msg == WindowsMessages.Lbuttonup ||
+                        msg == WindowsMessages.Rbuttonup ||
+                        msg == WindowsMessages.Mousemove)
                     {
-                        Point   rootVisualPosition = this.TranslatePoint(new Point((long)lParam & 0xFFFF, (long)lParam >> 16 & 0xFFFF), VisualRoot).Value;
-                        Pointer pointer            = new(0, PointerType.Mouse, true);
+                        Point rootVisualPosition = this.TranslatePoint(new Point((long)lParam & 0xFFFF, (long)lParam >> 16 & 0xFFFF), VisualRoot).Value;
+                        Pointer pointer = new(0, PointerType.Mouse, true);
 
                         switch (msg)
                         {
-                            case WindowsMessages.LBUTTONDOWN:
-                            case WindowsMessages.RBUTTONDOWN:
+                            case WindowsMessages.Lbuttondown:
+                            case WindowsMessages.Rbuttondown:
                                 {
-                                    bool                   isLeft               = msg == WindowsMessages.LBUTTONDOWN;
-                                    RawInputModifiers      pointerPointModifier = isLeft ? RawInputModifiers.LeftMouseButton : RawInputModifiers.RightMouseButton;
-                                    PointerPointProperties properties           = new(pointerPointModifier, isLeft ? PointerUpdateKind.LeftButtonPressed : PointerUpdateKind.RightButtonPressed);
+                                    bool isLeft = msg == WindowsMessages.Lbuttondown;
+                                    RawInputModifiers pointerPointModifier = isLeft ? RawInputModifiers.LeftMouseButton : RawInputModifiers.RightMouseButton;
+                                    PointerPointProperties properties = new(pointerPointModifier, isLeft ? PointerUpdateKind.LeftButtonPressed : PointerUpdateKind.RightButtonPressed);
 
                                     var evnt = new PointerPressedEventArgs(
                                         this,
@@ -172,12 +174,12 @@ namespace Ryujinx.Ava.UI.Renderer
 
                                     break;
                                 }
-                            case WindowsMessages.LBUTTONUP:
-                            case WindowsMessages.RBUTTONUP:
+                            case WindowsMessages.Lbuttonup:
+                            case WindowsMessages.Rbuttonup:
                                 {
-                                    bool                   isLeft               = msg == WindowsMessages.LBUTTONUP;
-                                    RawInputModifiers      pointerPointModifier = isLeft ? RawInputModifiers.LeftMouseButton : RawInputModifiers.RightMouseButton;
-                                    PointerPointProperties properties           = new(pointerPointModifier, isLeft ? PointerUpdateKind.LeftButtonReleased : PointerUpdateKind.RightButtonReleased);
+                                    bool isLeft = msg == WindowsMessages.Lbuttonup;
+                                    RawInputModifiers pointerPointModifier = isLeft ? RawInputModifiers.LeftMouseButton : RawInputModifiers.RightMouseButton;
+                                    PointerPointProperties properties = new(pointerPointModifier, isLeft ? PointerUpdateKind.LeftButtonReleased : PointerUpdateKind.RightButtonReleased);
 
                                     var evnt = new PointerReleasedEventArgs(
                                         this,
@@ -193,7 +195,7 @@ namespace Ryujinx.Ava.UI.Renderer
 
                                     break;
                                 }
-                            case WindowsMessages.MOUSEMOVE:
+                            case WindowsMessages.Mousemove:
                                 {
                                     var evnt = new PointerEventArgs(
                                         PointerMovedEvent,
@@ -216,19 +218,19 @@ namespace Ryujinx.Ava.UI.Renderer
                 return DefWindowProc(hWnd, msg, wParam, lParam);
             };
 
-            WNDCLASSEX wndClassEx = new()
+            WndClassEx wndClassEx = new()
             {
-                cbSize        = Marshal.SizeOf<WNDCLASSEX>(),
-                hInstance     = GetModuleHandle(null),
-                lpfnWndProc   = Marshal.GetFunctionPointerForDelegate(_wndProcDelegate),
-                style         = ClassStyles.CS_OWNDC,
+                cbSize = Marshal.SizeOf<WndClassEx>(),
+                hInstance = GetModuleHandle(null),
+                lpfnWndProc = Marshal.GetFunctionPointerForDelegate(_wndProcDelegate),
+                style = ClassStyles.CsOwndc,
                 lpszClassName = Marshal.StringToHGlobalUni(_className),
-                hCursor       = CreateArrowCursor()
+                hCursor = CreateArrowCursor(),
             };
 
             RegisterClassEx(ref wndClassEx);
 
-            WindowHandle = CreateWindowEx(0, _className, "NativeWindow", WindowStyles.WS_CHILD, 0, 0, 640, 480, control.Handle, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero);
+            WindowHandle = CreateWindowEx(0, _className, "NativeWindow", WindowStyles.WsChild, 0, 0, 640, 480, control.Handle, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero);
 
             Marshal.FreeHGlobal(wndClassEx.lpszClassName);
 
@@ -280,9 +282,11 @@ namespace Ryujinx.Ava.UI.Renderer
         }
 
         [SupportedOSPlatform("macos")]
+#pragma warning disable CA1822 // Mark member as static
         void DestroyMacOS()
         {
             // TODO
         }
+#pragma warning restore CA1822
     }
 }

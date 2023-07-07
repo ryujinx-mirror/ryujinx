@@ -12,12 +12,12 @@ namespace Ryujinx.Ava.UI.Helpers
 {
     public static class NotificationHelper
     {
-        private const int MaxNotifications      = 4;
+        private const int MaxNotifications = 4;
         private const int NotificationDelayInMs = 5000;
 
         private static WindowNotificationManager _notificationManager;
 
-        private static readonly BlockingCollection<Notification> _notifications        = new();
+        private static readonly BlockingCollection<Notification> _notifications = new();
 
         public static void SetNotificationManager(Window host)
         {
@@ -25,7 +25,7 @@ namespace Ryujinx.Ava.UI.Helpers
             {
                 Position = NotificationPosition.BottomRight,
                 MaxItems = MaxNotifications,
-                Margin   = new Thickness(0, 0, 15, 40)
+                Margin = new Thickness(0, 0, 15, 40),
             };
 
             var maybeAsyncWorkQueue = new Lazy<AsyncWorkQueue<Notification>>(

@@ -10,13 +10,13 @@ namespace Ryujinx.Ava.UI.Models
         public CheatsList(string buildId, string path)
         {
             BuildId = buildId;
-            Path    = path;
+            Path = path;
 
             CollectionChanged += CheatsList_CollectionChanged;
         }
 
         public string BuildId { get; }
-        public string Path    { get; }
+        public string Path { get; }
 
         public bool IsEnabled
         {

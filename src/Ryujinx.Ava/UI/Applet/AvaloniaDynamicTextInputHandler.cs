@@ -3,13 +3,11 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Threading;
 using Ryujinx.Ava.Input;
-using Ryujinx.Ava.UI.Controls;
 using Ryujinx.Ava.UI.Helpers;
 using Ryujinx.Ava.UI.Windows;
 using Ryujinx.HLE.Ui;
 using System;
 using System.Threading;
-
 using HidKey = Ryujinx.Common.Configuration.Hid.Key;
 
 namespace Ryujinx.Ava.UI.Applet
@@ -17,7 +15,7 @@ namespace Ryujinx.Ava.UI.Applet
     class AvaloniaDynamicTextInputHandler : IDynamicTextInputHandler
     {
         private MainWindow _parent;
-        private OffscreenTextBox _hiddenTextBox;
+        private readonly OffscreenTextBox _hiddenTextBox;
         private bool _canProcessInput;
         private IDisposable _textChangedSubscription;
         private IDisposable _selectionStartChangedSubscription;
@@ -76,7 +74,7 @@ namespace Ryujinx.Ava.UI.Applet
                 return;
             }
 
-            e.RoutedEvent = _hiddenTextBox.GetKeyUpRoutedEvent();
+            e.RoutedEvent = OffscreenTextBox.GetKeyUpRoutedEvent();
 
             Dispatcher.UIThread.InvokeAsync(() =>
             {
@@ -96,7 +94,7 @@ namespace Ryujinx.Ava.UI.Applet
                 return;
             }
 
-            e.RoutedEvent = _hiddenTextBox.GetKeyUpRoutedEvent();
+            e.RoutedEvent = OffscreenTextBox.GetKeyUpRoutedEvent();
 
             Dispatcher.UIThread.InvokeAsync(() =>
             {

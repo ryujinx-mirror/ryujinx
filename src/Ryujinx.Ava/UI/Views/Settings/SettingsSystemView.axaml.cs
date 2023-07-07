@@ -15,7 +15,7 @@ namespace Ryujinx.Ava.UI.Views.Settings
         public SettingsSystemView()
         {
             InitializeComponent();
-        
+
             FuncMultiValueConverter<string, string> converter = new(parts => string.Format("{0}  {1}   {2}", parts.ToArray()).Trim());
             MultiBinding tzMultiBinding = new() { Converter = converter };
 

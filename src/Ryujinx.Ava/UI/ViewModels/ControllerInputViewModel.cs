@@ -1,3 +1,4 @@
+using Avalonia;
 using Avalonia.Collections;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -44,15 +45,14 @@ namespace Ryujinx.Ava.UI.ViewModels
 
         private PlayerIndex _playerId;
         private int _controller;
-        private int _controllerNumber = 0;
+        private int _controllerNumber;
         private string _controllerImage;
         private int _device;
         private object _configuration;
         private string _profileName;
         private bool _isLoaded;
-        private readonly UserControl _owner;
 
-        private static readonly InputConfigJsonSerializerContext SerializerContext = new(JsonHelper.GetDefaultSerializerOptions());
+        private static readonly InputConfigJsonSerializerContext _serializerContext = new(JsonHelper.GetDefaultSerializerOptions());
 
         public IGamepadDriver AvaloniaKeyboardDriver { get; }
         public IGamepad SelectedGamepad { get; private set; }
@@ -176,11 +176,11 @@ namespace Ryujinx.Ava.UI.ViewModels
         {
             get
             {
-                SvgImage image = new SvgImage();
+                SvgImage image = new();
 
                 if (!string.IsNullOrWhiteSpace(_controllerImage))
                 {
-                    SvgSource source = new SvgSource();
+                    SvgSource source = new();
 
                     source.Load(EmbeddedResources.GetStream(_controllerImage));
 
@@ -234,22 +234,18 @@ namespace Ryujinx.Ava.UI.ViewModels
 
         public ControllerInputViewModel(UserControl owner) : this()
         {
-            _owner = owner;
-
             if (Program.PreviewerDetached)
             {
                 _mainWindow =
-                    (MainWindow)((IClassicDesktopStyleApplicationLifetime)Avalonia.Application.Current
+                    (MainWindow)((IClassicDesktopStyleApplicationLifetime)Application.Current
                         .ApplicationLifetime).MainWindow;
 
                 AvaloniaKeyboardDriver = new AvaloniaKeyboardDriver(owner);
 
                 _mainWindow.InputManager.GamepadDriver.OnGamepadConnected += HandleOnGamepadConnected;
                 _mainWindow.InputManager.GamepadDriver.OnGamepadDisconnected += HandleOnGamepadDisconnected;
-                if (_mainWindow.ViewModel.AppHost != null)
-                {
-                    _mainWindow.ViewModel.AppHost.NpadManager.BlockInputUpdates();
-                }
+
+                _mainWindow.ViewModel.AppHost?.NpadManager.BlockInputUpdates();
 
                 _isLoaded = false;
 
@@ -351,7 +347,8 @@ namespace Ryujinx.Ava.UI.ViewModels
             {
                 return;
             }
-            else if (type == DeviceType.Keyboard)
+
+            if (type == DeviceType.Keyboard)
             {
                 if (_mainWindow.InputManager.KeyboardDriver is AvaloniaKeyboardDriver)
                 {
@@ -448,7 +445,7 @@ namespace Ryujinx.Ava.UI.ViewModels
             const string Hyphen = "-";
             const int Offset = 1;
 
-            return str.Substring(str.IndexOf(Hyphen) + Offset);
+            return str[(str.IndexOf(Hyphen) + Offset)..];
         }
 
         public void LoadDevices()
@@ -562,7 +559,7 @@ namespace Ryujinx.Ava.UI.ViewModels
                         ButtonL = Key.E,
                         ButtonZl = Key.Q,
                         ButtonSl = Key.Unbound,
-                        ButtonSr = Key.Unbound
+                        ButtonSr = Key.Unbound,
                     },
                     LeftJoyconStick =
                         new JoyconConfigKeyboardStick<Key>
@@ -571,7 +568,7 @@ namespace Ryujinx.Ava.UI.ViewModels
                             StickDown = Key.S,
                             StickLeft = Key.A,
                             StickRight = Key.D,
-                            StickButton = Key.F
+                            StickButton = Key.F,
                         },
                     RightJoycon = new RightJoyconCommonConfig<Key>
                     {
@@ -583,7 +580,7 @@ namespace Ryujinx.Ava.UI.ViewModels
                         ButtonR = Key.U,
                         ButtonZr = Key.O,
                         ButtonSl = Key.Unbound,
-                        ButtonSr = Key.Unbound
+                        ButtonSr = Key.Unbound,
                     },
                     RightJoyconStick = new JoyconConfigKeyboardStick<Key>
                     {
@@ -591,8 +588,8 @@ namespace Ryujinx.Ava.UI.ViewModels
                         StickDown = Key.K,
                         StickLeft = Key.J,
                         StickRight = Key.L,
-                        StickButton = Key.H
-                    }
+                        StickButton = Key.H,
+                    },
                 };
             }
             else if (activeDevice.Type == DeviceType.Controller)
@@ -622,14 +619,14 @@ namespace Ryujinx.Ava.UI.ViewModels
                         ButtonL = ConfigGamepadInputId.LeftShoulder,
                         ButtonZl = ConfigGamepadInputId.LeftTrigger,
                         ButtonSl = ConfigGamepadInputId.Unbound,
-                        ButtonSr = ConfigGamepadInputId.Unbound
+                        ButtonSr = ConfigGamepadInputId.Unbound,
                     },
                     LeftJoyconStick = new JoyconConfigControllerStick<ConfigGamepadInputId, ConfigStickInputId>
                     {
                         Joystick = ConfigStickInputId.Left,
                         StickButton = ConfigGamepadInputId.LeftStick,
                         InvertStickX = false,
-                        InvertStickY = false
+                        InvertStickY = false,
                     },
                     RightJoycon = new RightJoyconCommonConfig<ConfigGamepadInputId>
                     {
@@ -641,28 +638,28 @@ namespace Ryujinx.Ava.UI.ViewModels
                         ButtonR = ConfigGamepadInputId.RightShoulder,
                         ButtonZr = ConfigGamepadInputId.RightTrigger,
                         ButtonSl = ConfigGamepadInputId.Unbound,
-                        ButtonSr = ConfigGamepadInputId.Unbound
+                        ButtonSr = ConfigGamepadInputId.Unbound,
                     },
                     RightJoyconStick = new JoyconConfigControllerStick<ConfigGamepadInputId, ConfigStickInputId>
                     {
                         Joystick = ConfigStickInputId.Right,
                         StickButton = ConfigGamepadInputId.RightStick,
                         InvertStickX = false,
-                        InvertStickY = false
+                        InvertStickY = false,
                     },
                     Motion = new StandardMotionConfigController
                     {
                         MotionBackend = MotionInputBackendType.GamepadDriver,
                         EnableMotion = true,
                         Sensitivity = 100,
-                        GyroDeadzone = 1
+                        GyroDeadzone = 1,
                     },
                     Rumble = new RumbleConfigController
                     {
                         StrongRumble = 1f,
                         WeakRumble = 1f,
-                        EnableRumble = false
-                    }
+                        EnableRumble = false,
+                    },
                 };
             }
             else
@@ -709,7 +706,7 @@ namespace Ryujinx.Ava.UI.ViewModels
 
                 try
                 {
-                    config = JsonHelper.DeserializeFromFile(path, SerializerContext.InputConfig);
+                    config = JsonHelper.DeserializeFromFile(path, _serializerContext.InputConfig);
                 }
                 catch (JsonException) { }
                 catch (InvalidOperationException)
@@ -754,37 +751,35 @@ namespace Ryujinx.Ava.UI.ViewModels
 
                 return;
             }
+
+            bool validFileName = ProfileName.IndexOfAny(Path.GetInvalidFileNameChars()) == -1;
+
+            if (validFileName)
+            {
+                string path = Path.Combine(GetProfileBasePath(), ProfileName + ".json");
+
+                InputConfig config = null;
+
+                if (IsKeyboard)
+                {
+                    config = (Configuration as InputConfiguration<Key, ConfigStickInputId>).GetConfig();
+                }
+                else if (IsController)
+                {
+                    config = (Configuration as InputConfiguration<GamepadInputId, ConfigStickInputId>).GetConfig();
+                }
+
+                config.ControllerType = Controllers[_controller].Type;
+
+                string jsonString = JsonHelper.Serialize(config, _serializerContext.InputConfig);
+
+                await File.WriteAllTextAsync(path, jsonString);
+
+                LoadProfiles();
+            }
             else
             {
-                bool validFileName = ProfileName.IndexOfAny(Path.GetInvalidFileNameChars()) == -1;
-
-                if (validFileName)
-                {
-                    string path = Path.Combine(GetProfileBasePath(), ProfileName + ".json");
-
-                    InputConfig config = null;
-
-                    if (IsKeyboard)
-                    {
-                        config = (Configuration as InputConfiguration<Key, ConfigStickInputId>).GetConfig();
-                    }
-                    else if (IsController)
-                    {
-                        config = (Configuration as InputConfiguration<GamepadInputId, ConfigStickInputId>).GetConfig();
-                    }
-
-                    config.ControllerType = Controllers[_controller].Type;
-
-                    string jsonString = JsonHelper.Serialize(config, SerializerContext.InputConfig);
-
-                    await File.WriteAllTextAsync(path, jsonString);
-
-                    LoadProfiles();
-                }
-                else
-                {
-                    await ContentDialogHelper.CreateErrorDialog(LocaleManager.Instance[LocaleKeys.DialogProfileInvalidProfileNameErrorMessage]);
-                }
+                await ContentDialogHelper.CreateErrorDialog(LocaleManager.Instance[LocaleKeys.DialogProfileInvalidProfileNameErrorMessage]);
             }
         }
 
@@ -887,6 +882,8 @@ namespace Ryujinx.Ava.UI.ViewModels
 
         public void Dispose()
         {
+            GC.SuppressFinalize(this);
+
             _mainWindow.InputManager.GamepadDriver.OnGamepadConnected -= HandleOnGamepadConnected;
             _mainWindow.InputManager.GamepadDriver.OnGamepadDisconnected -= HandleOnGamepadDisconnected;
 

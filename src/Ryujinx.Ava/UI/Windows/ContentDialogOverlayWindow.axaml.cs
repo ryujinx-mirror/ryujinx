@@ -1,7 +1,8 @@
-using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Markup.Xaml;
 using Avalonia.Media;
+#if DEBUG
+using Avalonia;
+#endif
 
 namespace Ryujinx.Ava.UI.Windows
 {

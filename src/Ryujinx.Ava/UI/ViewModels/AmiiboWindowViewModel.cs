@@ -18,7 +18,6 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
-using AmiiboJsonSerializerContext = Ryujinx.Ui.Common.Models.Amiibo.AmiiboJsonSerializerContext;
 
 namespace Ryujinx.Ava.UI.ViewModels
 {
@@ -44,7 +43,7 @@ namespace Ryujinx.Ava.UI.ViewModels
         private bool _useRandomUuid;
         private string _usage;
 
-        private static readonly AmiiboJsonSerializerContext SerializerContext = new(JsonHelper.GetDefaultSerializerOptions());
+        private static readonly AmiiboJsonSerializerContext _serializerContext = new(JsonHelper.GetDefaultSerializerOptions());
 
         public AmiiboWindowViewModel(StyleableWindow owner, string lastScannedAmiiboId, string titleId)
         {
@@ -52,7 +51,7 @@ namespace Ryujinx.Ava.UI.ViewModels
 
             _httpClient = new HttpClient
             {
-                Timeout = TimeSpan.FromSeconds(30)
+                Timeout = TimeSpan.FromSeconds(30),
             };
 
             LastScannedAmiiboId = lastScannedAmiiboId;
@@ -185,6 +184,7 @@ namespace Ryujinx.Ava.UI.ViewModels
 
         public void Dispose()
         {
+            GC.SuppressFinalize(this);
             _httpClient.Dispose();
         }
 
@@ -196,7 +196,7 @@ namespace Ryujinx.Ava.UI.ViewModels
             {
                 amiiboJsonString = await File.ReadAllTextAsync(_amiiboJsonPath);
 
-                if (await NeedsUpdate(JsonHelper.Deserialize(amiiboJsonString, SerializerContext.AmiiboJson).LastUpdated))
+                if (await NeedsUpdate(JsonHelper.Deserialize(amiiboJsonString, _serializerContext.AmiiboJson).LastUpdated))
                 {
                     amiiboJsonString = await DownloadAmiiboJson();
                 }
@@ -215,7 +215,7 @@ namespace Ryujinx.Ava.UI.ViewModels
                 }
             }
 
-            _amiiboList = JsonHelper.Deserialize(amiiboJsonString, SerializerContext.AmiiboJson).Amiibo;
+            _amiiboList = JsonHelper.Deserialize(amiiboJsonString, _serializerContext.AmiiboJson).Amiibo;
             _amiiboList = _amiiboList.OrderBy(amiibo => amiibo.AmiiboSeries).ToList();
 
             ParseAmiiboData();
@@ -426,18 +426,17 @@ namespace Ryujinx.Ava.UI.ViewModels
             if (response.IsSuccessStatusCode)
             {
                 byte[] amiiboPreviewBytes = await response.Content.ReadAsByteArrayAsync();
-                using (MemoryStream memoryStream = new(amiiboPreviewBytes))
-                {
-                    Bitmap bitmap = new(memoryStream);
+                using MemoryStream memoryStream = new(amiiboPreviewBytes);
 
-                    double ratio = Math.Min(AmiiboImageSize / bitmap.Size.Width,
+                Bitmap bitmap = new(memoryStream);
+
+                double ratio = Math.Min(AmiiboImageSize / bitmap.Size.Width,
                         AmiiboImageSize / bitmap.Size.Height);
 
-                    int resizeHeight = (int)(bitmap.Size.Height * ratio);
-                    int resizeWidth = (int)(bitmap.Size.Width * ratio);
+                int resizeHeight = (int)(bitmap.Size.Height * ratio);
+                int resizeWidth = (int)(bitmap.Size.Width * ratio);
 
-                    AmiiboImage = bitmap.CreateScaledBitmap(new PixelSize(resizeWidth, resizeHeight));
-                }
+                AmiiboImage = bitmap.CreateScaledBitmap(new PixelSize(resizeWidth, resizeHeight));
             }
             else
             {
@@ -447,15 +446,14 @@ namespace Ryujinx.Ava.UI.ViewModels
 
         private void ResetAmiiboPreview()
         {
-            using (MemoryStream memoryStream = new(_amiiboLogoBytes))
-            {
-                Bitmap bitmap = new(memoryStream);
+            using MemoryStream memoryStream = new(_amiiboLogoBytes);
 
-                AmiiboImage = bitmap;
-            }
+            Bitmap bitmap = new(memoryStream);
+
+            AmiiboImage = bitmap;
         }
 
-        private async void ShowInfoDialog()
+        private static async void ShowInfoDialog()
         {
             await ContentDialogHelper.CreateInfoDialog(LocaleManager.Instance[LocaleKeys.DialogAmiiboApiTitle],
                 LocaleManager.Instance[LocaleKeys.DialogAmiiboApiConnectErrorMessage],

@@ -1,13 +1,10 @@
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
-using FluentAvalonia.Core;
 using FluentAvalonia.UI.Controls;
 using Ryujinx.Ava.Common.Locale;
 using Ryujinx.Ava.UI.Helpers;
-using Ryujinx.Ava.UI.Windows;
 using Ryujinx.HLE.HOS.Applets;
 using Ryujinx.HLE.HOS.Applets.SoftwareKeyboard;
 using System;
@@ -22,7 +19,7 @@ namespace Ryujinx.Ava.UI.Controls
         private Predicate<string> _checkInput = _ => true;
         private int _inputMax;
         private int _inputMin;
-        private string _placeholder;
+        private readonly string _placeholder;
 
         private ContentDialog _host;
 
@@ -57,13 +54,13 @@ namespace Ryujinx.Ava.UI.Controls
         public string MainText { get; set; } = "";
         public string SecondaryText { get; set; } = "";
 
-        public static async Task<(UserResult Result, string Input)> ShowInputDialog(StyleableWindow window, string title, SoftwareKeyboardUiArgs args)
+        public static async Task<(UserResult Result, string Input)> ShowInputDialog(string title, SoftwareKeyboardUiArgs args)
         {
-            ContentDialog contentDialog = new ContentDialog();
+            ContentDialog contentDialog = new();
 
             UserResult result = UserResult.Cancel;
 
-            SwkbdAppletDialog content = new SwkbdAppletDialog(args.HeaderText, args.SubtitleText, args.GuideText, args.InitialText);
+            SwkbdAppletDialog content = new(args.HeaderText, args.SubtitleText, args.GuideText, args.InitialText);
 
             string input = string.Empty;
 
@@ -78,15 +75,16 @@ namespace Ryujinx.Ava.UI.Controls
             contentDialog.CloseButtonText = LocaleManager.Instance[LocaleKeys.InputDialogCancel];
             contentDialog.Content = content;
 
-            TypedEventHandler<ContentDialog, ContentDialogClosedEventArgs> handler = (sender, eventArgs) =>
+            void Handler(ContentDialog sender, ContentDialogClosedEventArgs eventArgs)
             {
                 if (eventArgs.Result == ContentDialogResult.Primary)
                 {
                     result = UserResult.Ok;
                     input = content.Input.Text;
                 }
-            };
-            contentDialog.Closed += handler;
+            }
+
+            contentDialog.Closed += Handler;
 
             await ContentDialogHelper.ShowAsync(contentDialog);
 

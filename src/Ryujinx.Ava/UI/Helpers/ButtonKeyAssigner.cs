@@ -23,7 +23,7 @@ namespace Ryujinx.Ava.UI.Helpers
                 IsAssigned = isAssigned;
             }
         }
-        
+
         public ToggleButton ToggledButton { get; set; }
 
         private bool _isWaitingForInput;

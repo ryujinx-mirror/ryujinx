@@ -11,16 +11,16 @@ namespace Ryujinx.Ava.Input
 {
     internal class AvaloniaMouseDriver : IGamepadDriver
     {
-        private Control           _widget;
-        private bool              _isDisposed;
-        private Size              _size;
+        private Control _widget;
+        private bool _isDisposed;
+        private Size _size;
         private readonly TopLevel _window;
 
-        public bool[]  PressedButtons  { get; }
+        public bool[] PressedButtons { get; }
         public Vector2 CurrentPosition { get; private set; }
-        public Vector2 Scroll          { get; private set; }
+        public Vector2 Scroll { get; private set; }
 
-        public string               DriverName  => "AvaloniaMouseDriver";
+        public string DriverName => "AvaloniaMouseDriver";
         public ReadOnlySpan<string> GamepadsIds => new[] { "0" };
 
         public AvaloniaMouseDriver(TopLevel window, Control parent)
@@ -28,14 +28,14 @@ namespace Ryujinx.Ava.Input
             _widget = parent;
             _window = window;
 
-            _widget.PointerMoved        += Parent_PointerMovedEvent;
-            _widget.PointerPressed      += Parent_PointerPressedEvent;
-            _widget.PointerReleased     += Parent_PointerReleasedEvent;
+            _widget.PointerMoved += Parent_PointerMovedEvent;
+            _widget.PointerPressed += Parent_PointerPressedEvent;
+            _widget.PointerReleased += Parent_PointerReleasedEvent;
             _widget.PointerWheelChanged += Parent_PointerWheelChanged;
-            
-            _window.PointerMoved        += Parent_PointerMovedEvent;
-            _window.PointerPressed      += Parent_PointerPressedEvent;
-            _window.PointerReleased     += Parent_PointerReleasedEvent;
+
+            _window.PointerMoved += Parent_PointerMovedEvent;
+            _window.PointerPressed += Parent_PointerPressedEvent;
+            _window.PointerReleased += Parent_PointerReleasedEvent;
             _window.PointerWheelChanged += Parent_PointerWheelChanged;
 
             PressedButtons = new bool[(int)MouseButton.Count];
@@ -47,13 +47,13 @@ namespace Ryujinx.Ava.Input
 
         public event Action<string> OnGamepadConnected
         {
-            add    { }
+            add { }
             remove { }
         }
 
         public event Action<string> OnGamepadDisconnected
         {
-            add    { }
+            add { }
             remove { }
         }
 
@@ -143,14 +143,14 @@ namespace Ryujinx.Ava.Input
 
             _isDisposed = true;
 
-            _widget.PointerMoved        -= Parent_PointerMovedEvent;
-            _widget.PointerPressed      -= Parent_PointerPressedEvent;
-            _widget.PointerReleased     -= Parent_PointerReleasedEvent;
+            _widget.PointerMoved -= Parent_PointerMovedEvent;
+            _widget.PointerPressed -= Parent_PointerPressedEvent;
+            _widget.PointerReleased -= Parent_PointerReleasedEvent;
             _widget.PointerWheelChanged -= Parent_PointerWheelChanged;
 
-            _window.PointerMoved        -= Parent_PointerMovedEvent;
-            _window.PointerPressed      -= Parent_PointerPressedEvent;
-            _window.PointerReleased     -= Parent_PointerReleasedEvent;
+            _window.PointerMoved -= Parent_PointerMovedEvent;
+            _window.PointerPressed -= Parent_PointerPressedEvent;
+            _window.PointerReleased -= Parent_PointerReleasedEvent;
             _window.PointerWheelChanged -= Parent_PointerWheelChanged;
 
             _widget = null;

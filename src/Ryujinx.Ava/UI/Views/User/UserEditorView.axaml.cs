@@ -20,7 +20,7 @@ namespace Ryujinx.Ava.UI.Views.User
         private bool _isNewUser;
 
         public TempProfile TempProfile { get; set; }
-        public uint MaxProfileNameLength => 0x20;
+        public static uint MaxProfileNameLength => 0x20;
         public bool IsDeletable => _profile.UserId != AccountManager.DefaultUserId;
 
         public UserEditorView()
@@ -39,17 +39,17 @@ namespace Ryujinx.Ava.UI.Views.User
                 switch (arg.NavigationMode)
                 {
                     case NavigationMode.New:
-                        var args = ((NavigationDialogHost parent, UserProfile profile, bool isNewUser))arg.Parameter;
-                        _isNewUser = args.isNewUser;
-                        _profile = args.profile;
+                        var (parent, profile, isNewUser) = ((NavigationDialogHost parent, UserProfile profile, bool isNewUser))arg.Parameter;
+                        _isNewUser = isNewUser;
+                        _profile = profile;
                         TempProfile = new TempProfile(_profile);
 
-                        _parent = args.parent;
+                        _parent = parent;
                         break;
                 }
 
                 ((ContentDialog)_parent.Parent).Title = $"{LocaleManager.Instance[LocaleKeys.UserProfileWindowTitle]} - " +
-                                                        $"{ (_isNewUser ? LocaleManager.Instance[LocaleKeys.UserEditorTitleCreate] : LocaleManager.Instance[LocaleKeys.UserEditorTitle])}";
+                                                        $"{(_isNewUser ? LocaleManager.Instance[LocaleKeys.UserEditorTitleCreate] : LocaleManager.Instance[LocaleKeys.UserEditorTitle])}";
 
                 DataContext = TempProfile;
 

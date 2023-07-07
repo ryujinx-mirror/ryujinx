@@ -1,11 +1,12 @@
-﻿using Avalonia;
-using Avalonia.Collections;
+﻿using Avalonia.Collections;
 using Ryujinx.Ava.Common.Locale;
 using Ryujinx.Ava.UI.Models;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.HOS;
 using Ryujinx.Ui.App.Common;
+using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 
@@ -36,16 +37,16 @@ namespace Ryujinx.Ava.UI.Windows
 
             Heading = LocaleManager.Instance.UpdateAndGetDynamicValue(LocaleKeys.CheatWindowHeading, titleName, titleId.ToUpper());
             BuildId = ApplicationData.GetApplicationBuildId(virtualFileSystem, titlePath);
-            
+
             InitializeComponent();
 
             string modsBasePath = ModLoader.GetModsBasePath();
             string titleModsPath = ModLoader.GetTitleDir(modsBasePath, titleId);
-            ulong titleIdValue = ulong.Parse(titleId, System.Globalization.NumberStyles.HexNumber);
+            ulong titleIdValue = ulong.Parse(titleId, NumberStyles.HexNumber);
 
             _enabledCheatsPath = Path.Combine(titleModsPath, "cheats", "enabled.txt");
 
-            string[] enabled = { };
+            string[] enabled = Array.Empty<string>();
 
             if (File.Exists(_enabledCheatsPath))
             {
@@ -60,7 +61,6 @@ namespace Ryujinx.Ava.UI.Windows
 
             string currentCheatFile = string.Empty;
             string buildId = string.Empty;
-            string parentPath = string.Empty;
 
             CheatsList currentGroup = null;
 
@@ -69,7 +69,7 @@ namespace Ryujinx.Ava.UI.Windows
                 if (cheat.Path.FullName != currentCheatFile)
                 {
                     currentCheatFile = cheat.Path.FullName;
-                    parentPath = currentCheatFile.Replace(titleModsPath, "");
+                    string parentPath = currentCheatFile.Replace(titleModsPath, "");
 
                     buildId = Path.GetFileNameWithoutExtension(currentCheatFile).ToUpper();
                     currentGroup = new CheatsList(buildId, parentPath);
@@ -89,7 +89,7 @@ namespace Ryujinx.Ava.UI.Windows
             }
 
             DataContext = this;
-            
+
             Title = $"Ryujinx {Program.Version} - " + LocaleManager.Instance[LocaleKeys.CheatWindowTitle];
         }
 
@@ -100,7 +100,7 @@ namespace Ryujinx.Ava.UI.Windows
                 return;
             }
 
-            List<string> enabledCheats = new List<string>();
+            List<string> enabledCheats = new();
 
             foreach (var cheats in LoadedCheats)
             {

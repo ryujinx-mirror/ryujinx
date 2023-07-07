@@ -15,7 +15,7 @@ namespace Ryujinx.Ava.UI.ViewModels
         private string _search;
         private ObservableCollection<SaveModel> _saves = new();
         private ObservableCollection<SaveModel> _views = new();
-        private AccountManager _accountManager;
+        private readonly AccountManager _accountManager;
 
         public string SaveManagerHeading => LocaleManager.Instance.UpdateAndGetDynamicValue(LocaleKeys.SaveManagerHeading, _accountManager.LastOpenedUser.Name, _accountManager.LastOpenedUser.UserId);
 
@@ -102,19 +102,16 @@ namespace Ryujinx.Ava.UI.ViewModels
 
         private IComparer<SaveModel> GetComparer()
         {
-            switch (SortIndex)
+            return SortIndex switch
             {
-                case 0:
-                    return OrderIndex == 0
-                        ? SortExpressionComparer<SaveModel>.Ascending(save => save.Title)
-                        : SortExpressionComparer<SaveModel>.Descending(save => save.Title);
-                case 1:
-                    return OrderIndex == 0
-                        ? SortExpressionComparer<SaveModel>.Ascending(save => save.Size)
-                        : SortExpressionComparer<SaveModel>.Descending(save => save.Size);
-                default:
-                    return null;
-            }
+                0 => OrderIndex == 0
+                    ? SortExpressionComparer<SaveModel>.Ascending(save => save.Title)
+                    : SortExpressionComparer<SaveModel>.Descending(save => save.Title),
+                1 => OrderIndex == 0
+                    ? SortExpressionComparer<SaveModel>.Ascending(save => save.Size)
+                    : SortExpressionComparer<SaveModel>.Descending(save => save.Size),
+                _ => null,
+            };
         }
     }
 }

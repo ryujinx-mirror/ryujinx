@@ -1,4 +1,5 @@
-﻿using Avalonia.Controls;
+﻿using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Interactivity;
 using Ryujinx.Ava.Common.Locale;
@@ -9,11 +10,11 @@ using System.Linq;
 
 namespace Ryujinx.Ava.UI.Views.Settings
 {
-    public partial class SettingsUIView : UserControl
+    public partial class SettingsUiView : UserControl
     {
         public SettingsViewModel ViewModel;
 
-        public SettingsUIView()
+        public SettingsUiView()
         {
             InitializeComponent();
         }
@@ -29,7 +30,7 @@ namespace Ryujinx.Ava.UI.Views.Settings
             }
             else
             {
-                if (Avalonia.Application.Current.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+                if (Application.Current.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
                 {
                     path = await new OpenFolderDialog().ShowAsync(desktop.MainWindow);
 
@@ -60,15 +61,15 @@ namespace Ryujinx.Ava.UI.Views.Settings
 
         public async void BrowseTheme(object sender, RoutedEventArgs e)
         {
-            var dialog = new OpenFileDialog()
+            var dialog = new OpenFileDialog
             {
                 Title = LocaleManager.Instance[LocaleKeys.SettingsSelectThemeFileDialogTitle],
-                AllowMultiple = false
+                AllowMultiple = false,
             };
 
-            dialog.Filters.Add(new FileDialogFilter() { Extensions = { "xaml" }, Name = LocaleManager.Instance[LocaleKeys.SettingsXamlThemeFile] });
+            dialog.Filters.Add(new FileDialogFilter { Extensions = { "xaml" }, Name = LocaleManager.Instance[LocaleKeys.SettingsXamlThemeFile] });
 
-            if (Avalonia.Application.Current.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            if (Application.Current.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
                 var file = await dialog.ShowAsync(desktop.MainWindow);
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 
@@ -10,46 +11,47 @@ namespace Ryujinx.Ava.UI.Helpers
         [Flags]
         public enum ClassStyles : uint
         {
-            CS_CLASSDC = 0x40,
-            CS_OWNDC = 0x20,
+            CsClassdc = 0x40,
+            CsOwndc = 0x20,
         }
 
         [Flags]
         public enum WindowStyles : uint
         {
-            WS_CHILD = 0x40000000
+            WsChild = 0x40000000,
         }
 
         public enum Cursors : uint
         {
-            IDC_ARROW = 32512
+            IdcArrow = 32512,
         }
 
+        [SuppressMessage("Design", "CA1069: Enums values should not be duplicated")]
         public enum WindowsMessages : uint
         {
-            MOUSEMOVE = 0x0200,
-            LBUTTONDOWN = 0x0201,
-            LBUTTONUP = 0x0202,
-            LBUTTONDBLCLK = 0x0203,
-            RBUTTONDOWN = 0x0204,
-            RBUTTONUP = 0x0205,
-            RBUTTONDBLCLK = 0x0206,
-            MBUTTONDOWN = 0x0207,
-            MBUTTONUP = 0x0208,
-            MBUTTONDBLCLK = 0x0209,
-            MOUSEWHEEL = 0x020A,
-            XBUTTONDOWN = 0x020B,
-            XBUTTONUP = 0x020C,
-            XBUTTONDBLCLK = 0x020D,
-            MOUSEHWHEEL = 0x020E,
-            MOUSELAST = 0x020E
+            Mousemove = 0x0200,
+            Lbuttondown = 0x0201,
+            Lbuttonup = 0x0202,
+            Lbuttondblclk = 0x0203,
+            Rbuttondown = 0x0204,
+            Rbuttonup = 0x0205,
+            Rbuttondblclk = 0x0206,
+            Mbuttondown = 0x0207,
+            Mbuttonup = 0x0208,
+            Mbuttondblclk = 0x0209,
+            Mousewheel = 0x020A,
+            Xbuttondown = 0x020B,
+            Xbuttonup = 0x020C,
+            Xbuttondblclk = 0x020D,
+            Mousehwheel = 0x020E,
+            Mouselast = 0x020E,
         }
 
         [UnmanagedFunctionPointer(CallingConvention.Winapi)]
         internal delegate IntPtr WindowProc(IntPtr hWnd, WindowsMessages msg, IntPtr wParam, IntPtr lParam);
 
         [StructLayout(LayoutKind.Sequential)]
-        public struct WNDCLASSEX
+        public struct WndClassEx
         {
             public int cbSize;
             public ClassStyles style;
@@ -64,9 +66,9 @@ namespace Ryujinx.Ava.UI.Helpers
             public IntPtr lpszClassName;
             public IntPtr hIconSm;
 
-            public WNDCLASSEX()
+            public WndClassEx()
             {
-                cbSize = Marshal.SizeOf<WNDCLASSEX>();
+                cbSize = Marshal.SizeOf<WndClassEx>();
             }
         }
 
@@ -77,17 +79,17 @@ namespace Ryujinx.Ava.UI.Helpers
 
         public static IntPtr CreateArrowCursor()
         {
-            return LoadCursor(IntPtr.Zero, (IntPtr)Cursors.IDC_ARROW);
+            return LoadCursor(IntPtr.Zero, (IntPtr)Cursors.IdcArrow);
         }
 
         [LibraryImport("user32.dll")]
         public static partial IntPtr SetCursor(IntPtr handle);
 
         [LibraryImport("user32.dll")]
-        public static partial IntPtr CreateCursor(IntPtr hInst, int xHotSpot, int yHotSpot, int nWidth, int nHeight, byte[] pvANDPlane, byte[] pvXORPlane);
+        public static partial IntPtr CreateCursor(IntPtr hInst, int xHotSpot, int yHotSpot, int nWidth, int nHeight, byte[] pvAndPlane, byte[] pvXorPlane);
 
         [LibraryImport("user32.dll", SetLastError = true, EntryPoint = "RegisterClassExW")]
-        public static partial ushort RegisterClassEx(ref WNDCLASSEX param);
+        public static partial ushort RegisterClassEx(ref WndClassEx param);
 
         [LibraryImport("user32.dll", SetLastError = true, EntryPoint = "UnregisterClassW")]
         public static partial short UnregisterClass([MarshalAs(UnmanagedType.LPWStr)] string lpClassName, IntPtr instance);

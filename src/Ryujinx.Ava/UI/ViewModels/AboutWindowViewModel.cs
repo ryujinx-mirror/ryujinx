@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Media.Imaging;
+using Avalonia.Platform;
 using Avalonia.Threading;
 using Ryujinx.Ava.Common.Locale;
 using Ryujinx.Common.Utilities;
@@ -87,7 +88,7 @@ namespace Ryujinx.Ava.UI.ViewModels
         {
             Version = Program.Version;
 
-            var assets = AvaloniaLocator.Current.GetService<Avalonia.Platform.IAssetLoader>();
+            var assets = AvaloniaLocator.Current.GetService<IAssetLoader>();
 
             if (ConfigurationState.Instance.Ui.BaseStyle.Value == "Light")
             {

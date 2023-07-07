@@ -10,6 +10,6 @@ namespace Ryujinx.Ava.Common
         FileType,
         FileSize,
         Path,
-        Favorite
+        Favorite,
     }
 }

@@ -16,7 +16,7 @@ namespace Ryujinx.Ava.UI.Controls
 
         public event EventHandler<ApplicationOpenedEventArgs> ApplicationOpened
         {
-            add    { AddHandler(ApplicationOpenedEvent,    value); }
+            add { AddHandler(ApplicationOpenedEvent, value); }
             remove { RemoveHandler(ApplicationOpenedEvent, value); }
         }
 

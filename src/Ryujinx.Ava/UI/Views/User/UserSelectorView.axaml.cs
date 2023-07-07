@@ -5,8 +5,9 @@ using FluentAvalonia.UI.Controls;
 using FluentAvalonia.UI.Navigation;
 using Ryujinx.Ava.Common.Locale;
 using Ryujinx.Ava.UI.Controls;
+using Ryujinx.Ava.UI.Models;
 using Ryujinx.Ava.UI.ViewModels;
-using UserProfile = Ryujinx.Ava.UI.Models.UserProfile;
+using Button = Avalonia.Controls.Button;
 
 namespace Ryujinx.Ava.UI.Views.User
 {
@@ -101,7 +102,7 @@ namespace Ryujinx.Ava.UI.Views.User
 
         private void EditUser(object sender, RoutedEventArgs e)
         {
-            if (sender is Avalonia.Controls.Button button)
+            if (sender is Button button)
             {
                 if (button.DataContext is UserProfile userProfile)
                 {

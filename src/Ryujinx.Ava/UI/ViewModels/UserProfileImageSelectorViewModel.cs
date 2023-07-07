@@ -7,7 +7,7 @@ namespace Ryujinx.Ava.UI.ViewModels
         public bool FirmwareFound
         {
             get => _firmwareFound;
-        
+
             set
             {
                 _firmwareFound = value;

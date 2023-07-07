@@ -34,7 +34,7 @@
             IsVisible="False"
             KeyboardNavigation.IsTabStop="False"/>
         <Grid Name="Pages" IsVisible="False" Grid.Row="2">
-            <settings:SettingsUIView Name="UiPage" />
+            <settings:SettingsUiView Name="UiPage" />
             <settings:SettingsInputView Name="InputPage" />
             <settings:SettingsHotkeysView Name="HotkeysPage" />
             <settings:SettingsSystemView Name="SystemPage" />

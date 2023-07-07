@@ -5,7 +5,6 @@ using Avalonia.Styling;
 using Avalonia.Threading;
 using FluentAvalonia.Styling;
 using Ryujinx.Ava.Common.Locale;
-using Ryujinx.Ava.UI.Controls;
 using Ryujinx.Ava.UI.Helpers;
 using Ryujinx.Ava.UI.Windows;
 using Ryujinx.Common;
@@ -67,7 +66,7 @@ namespace Ryujinx.Ava
 
                     if (result == UserResult.Yes)
                     {
-                        var path = Process.GetCurrentProcess().MainModule.FileName;
+                        var path = Environment.ProcessPath;
                         var proc = Process.Start(path, CommandLineState.Arguments);
                         desktop.Shutdown();
                         Environment.Exit(0);

@@ -9,9 +9,10 @@ namespace Ryujinx.Ava.UI.Windows
     {
         public AmiiboWindow(bool showAll, string lastScannedAmiiboId, string titleId)
         {
-            ViewModel = new AmiiboWindowViewModel(this, lastScannedAmiiboId, titleId);
-
-            ViewModel.ShowAllAmiibo = showAll;
+            ViewModel = new AmiiboWindowViewModel(this, lastScannedAmiiboId, titleId)
+            {
+                ShowAllAmiibo = showAll,
+            };
 
             DataContext = ViewModel;
 

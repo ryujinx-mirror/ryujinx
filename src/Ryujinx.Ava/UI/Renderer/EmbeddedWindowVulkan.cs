@@ -34,7 +34,7 @@ namespace Ryujinx.Ava.UI.Renderer
             return new SurfaceKHR((ulong?)VulkanHelper.CreateWindowSurface(instance.Handle, nativeWindowBase));
         }
 
-        public SurfaceKHR CreateSurface(Instance instance, Vk api)
+        public SurfaceKHR CreateSurface(Instance instance, Vk _)
         {
             return CreateSurface(instance);
         }

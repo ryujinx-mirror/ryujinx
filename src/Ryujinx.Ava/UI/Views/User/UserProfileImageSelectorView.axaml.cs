@@ -67,7 +67,7 @@ namespace Ryujinx.Ava.UI.Views.User
             dialog.Filters.Add(new FileDialogFilter
             {
                 Name = LocaleManager.Instance[LocaleKeys.AllSupportedFormats],
-                Extensions = { "jpg", "jpeg", "png", "bmp" }
+                Extensions = { "jpg", "jpeg", "png", "bmp" },
             });
             dialog.Filters.Add(new FileDialogFilter { Name = "JPEG", Extensions = { "jpg", "jpeg" } });
             dialog.Filters.Add(new FileDialogFilter { Name = "PNG", Extensions = { "png" } });
@@ -108,17 +108,15 @@ namespace Ryujinx.Ava.UI.Views.User
 
         private static byte[] ProcessProfileImage(byte[] buffer)
         {
-            using (Image image = Image.Load(buffer))
-            {
-                image.Mutate(x => x.Resize(256, 256));
+            using Image image = Image.Load(buffer);
 
-                using (MemoryStream streamJpg = new())
-                {
-                    image.SaveAsJpeg(streamJpg);
+            image.Mutate(x => x.Resize(256, 256));
 
-                    return streamJpg.ToArray();
-                }
-            }
+            using MemoryStream streamJpg = new();
+
+            image.SaveAsJpeg(streamJpg);
+
+            return streamJpg.ToArray();
         }
     }
 }

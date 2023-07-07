@@ -1,3 +1,4 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input;
@@ -12,6 +13,7 @@ using Ryujinx.Ava.Input;
 using Ryujinx.Ava.UI.Controls;
 using Ryujinx.Ava.UI.Helpers;
 using Ryujinx.Ava.UI.Models;
+using Ryujinx.Ava.UI.Models.Generic;
 using Ryujinx.Ava.UI.Renderer;
 using Ryujinx.Ava.UI.Windows;
 using Ryujinx.Common;
@@ -23,6 +25,7 @@ using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.HOS;
 using Ryujinx.HLE.HOS.Services.Account.Acc;
 using Ryujinx.HLE.Ui;
+using Ryujinx.Modules;
 using Ryujinx.Ui.App.Common;
 using Ryujinx.Ui.Common;
 using Ryujinx.Ui.Common.Configuration;
@@ -34,7 +37,10 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using Path = System.IO.Path;
+using Image = SixLabors.ImageSharp.Image;
+using InputManager = Ryujinx.Input.HLE.InputManager;
+using Key = Ryujinx.Input.Key;
+using MissingKeyException = LibHac.Common.Keys.MissingKeyException;
 using ShaderCacheLoadingState = Ryujinx.Graphics.Gpu.Shader.ShaderCacheState;
 
 namespace Ryujinx.Ava.UI.ViewModels
@@ -89,7 +95,7 @@ namespace Ryujinx.Ava.UI.ViewModels
         private Cursor _cursor;
         private string _title;
         private string _currentEmulatedGamePath;
-        private AutoResetEvent _rendererWaitEvent;
+        private readonly AutoResetEvent _rendererWaitEvent;
         private WindowState _windowState;
         private double _windowWidth;
         private double _windowHeight;
@@ -128,7 +134,7 @@ namespace Ryujinx.Ava.UI.ViewModels
             ApplicationLibrary applicationLibrary,
             VirtualFileSystem virtualFileSystem,
             AccountManager accountManager,
-            Ryujinx.Input.HLE.InputManager inputManager,
+            InputManager inputManager,
             UserChannelPersistence userChannelPersistence,
             LibHacHorizonManager libHacHorizonManager,
             IHostUiHandler uiHandler,
@@ -152,7 +158,7 @@ namespace Ryujinx.Ava.UI.ViewModels
             TopLevel = topLevel;
         }
 
-#region Properties
+        #region Properties
 
         public string SearchText
         {
@@ -177,7 +183,7 @@ namespace Ryujinx.Ava.UI.ViewModels
 
         public bool CanUpdate
         {
-            get => _canUpdate && EnableNonGameRunningControls && Modules.Updater.CanUpdate(false);
+            get => _canUpdate && EnableNonGameRunningControls && Updater.CanUpdate(false);
             set
             {
                 _canUpdate = value;
@@ -343,11 +349,11 @@ namespace Ryujinx.Ava.UI.ViewModels
             }
         }
 
-        public bool OpenUserSaveDirectoryEnabled => !Utilities.IsZeros(SelectedApplication.ControlHolder.ByteSpan) && SelectedApplication.ControlHolder.Value.UserAccountSaveDataSize > 0;
+        public bool OpenUserSaveDirectoryEnabled => !SelectedApplication.ControlHolder.ByteSpan.IsZeros() && SelectedApplication.ControlHolder.Value.UserAccountSaveDataSize > 0;
 
-        public bool OpenDeviceSaveDirectoryEnabled => !Utilities.IsZeros(SelectedApplication.ControlHolder.ByteSpan) && SelectedApplication.ControlHolder.Value.DeviceSaveDataSize > 0;
+        public bool OpenDeviceSaveDirectoryEnabled => !SelectedApplication.ControlHolder.ByteSpan.IsZeros() && SelectedApplication.ControlHolder.Value.DeviceSaveDataSize > 0;
 
-        public bool OpenBcatSaveDirectoryEnabled => !Utilities.IsZeros(SelectedApplication.ControlHolder.ByteSpan) && SelectedApplication.ControlHolder.Value.BcatDeliveryCacheStorageSize > 0;
+        public bool OpenBcatSaveDirectoryEnabled => !SelectedApplication.ControlHolder.ByteSpan.IsZeros() && SelectedApplication.ControlHolder.Value.BcatDeliveryCacheStorageSize > 0;
 
         public string LoadHeading
         {
@@ -888,7 +894,7 @@ namespace Ryujinx.Ava.UI.ViewModels
         public ApplicationLibrary ApplicationLibrary { get; private set; }
         public VirtualFileSystem VirtualFileSystem { get; private set; }
         public AccountManager AccountManager { get; private set; }
-        public Ryujinx.Input.HLE.InputManager InputManager { get; private set; }
+        public InputManager InputManager { get; private set; }
         public UserChannelPersistence UserChannelPersistence { get; private set; }
         public Action<bool> ShowLoading { get; private set; }
         public Action<bool> SwitchToGameControl { get; private set; }
@@ -911,15 +917,16 @@ namespace Ryujinx.Ava.UI.ViewModels
         public bool IsGridLarge => ConfigurationState.Instance.Ui.GridSize == 3;
         public bool IsGridHuge => ConfigurationState.Instance.Ui.GridSize == 4;
 
-#endregion
+        #endregion
 
-#region PrivateMethods
+        #region PrivateMethods
 
         private IComparer<ApplicationData> GetComparer()
         {
             return SortMode switch
             {
-                ApplicationSort.LastPlayed      => new Models.Generic.LastPlayedSortComparer(IsAscending),
+#pragma warning disable IDE0055 // Disable formatting
+                ApplicationSort.LastPlayed      => new LastPlayedSortComparer(IsAscending),
                 ApplicationSort.FileSize        => IsAscending  ? SortExpressionComparer<ApplicationData>.Ascending(app => app.FileSizeBytes)
                                                                 : SortExpressionComparer<ApplicationData>.Descending(app => app.FileSizeBytes),
                 ApplicationSort.TotalTimePlayed => IsAscending  ? SortExpressionComparer<ApplicationData>.Ascending(app => app.TimePlayedNum)
@@ -935,6 +942,7 @@ namespace Ryujinx.Ava.UI.ViewModels
                 ApplicationSort.Path            => IsAscending  ? SortExpressionComparer<ApplicationData>.Ascending(app => app.Path)
                                                                 : SortExpressionComparer<ApplicationData>.Descending(app => app.Path),
                 _ => null,
+#pragma warning restore IDE0055
             };
         }
 
@@ -1023,7 +1031,7 @@ namespace Ryujinx.Ava.UI.ViewModels
 
                                 // Purge Applet Cache.
 
-                                DirectoryInfo miiEditorCacheFolder = new DirectoryInfo(Path.Combine(AppDataManager.GamesDirPath, "0100000000001009", "cache"));
+                                DirectoryInfo miiEditorCacheFolder = new(Path.Combine(AppDataManager.GamesDirPath, "0100000000001009", "cache"));
 
                                 if (miiEditorCacheFolder.Exists)
                                 {
@@ -1044,18 +1052,21 @@ namespace Ryujinx.Ava.UI.ViewModels
                         {
                             RefreshFirmwareStatus();
                         }
-                    }) { Name = "GUI.FirmwareInstallerThread" };
+                    })
+                    {
+                        Name = "GUI.FirmwareInstallerThread",
+                    };
 
                     thread.Start();
                 }
             }
-            catch (LibHac.Common.Keys.MissingKeyException ex)
+            catch (MissingKeyException ex)
             {
-                if (Avalonia.Application.Current.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+                if (Application.Current.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
                 {
                     Logger.Error?.Print(LogClass.Application, ex.ToString());
 
-                    async void Action() => await UserErrorDialog.ShowUserErrorDialog(UserError.NoKeys, (desktop.MainWindow as MainWindow));
+                    static async void Action() => await UserErrorDialog.ShowUserErrorDialog(UserError.NoKeys);
 
                     Dispatcher.UIThread.Post(Action);
                 }
@@ -1120,7 +1131,7 @@ namespace Ryujinx.Ava.UI.ViewModels
         private void PrepareLoadScreen()
         {
             using MemoryStream stream = new(SelectedIcon);
-            using var gameIconBmp = SixLabors.ImageSharp.Image.Load<Bgra32>(stream);
+            using var gameIconBmp = Image.Load<Bgra32>(stream);
 
             var dominantColor = IconColorPicker.GetFilteredColor(gameIconBmp).ToPixel<Bgra32>();
 
@@ -1175,7 +1186,7 @@ namespace Ryujinx.Ava.UI.ViewModels
             {
                 Dispatcher.UIThread.InvokeAsync(() =>
                 {
-                    Avalonia.Application.Current.Styles.TryGetResource(args.VSyncEnabled
+                    Application.Current.Styles.TryGetResource(args.VSyncEnabled
                         ? "VsyncEnabled"
                         : "VsyncDisabled", out object color);
 
@@ -1204,11 +1215,11 @@ namespace Ryujinx.Ava.UI.ViewModels
             _rendererWaitEvent.Set();
         }
 
-#endregion
+        #endregion
 
-#region PublicMethods
+        #region PublicMethods
 
-        public void SetUIProgressHandlers(Switch emulationContext)
+        public void SetUiProgressHandlers(Switch emulationContext)
         {
             if (emulationContext.Processes.ActiveApplication.DiskCacheLoadState != null)
             {
@@ -1222,17 +1233,17 @@ namespace Ryujinx.Ava.UI.ViewModels
 
         public void LoadConfigurableHotKeys()
         {
-            if (AvaloniaKeyboardMappingHelper.TryGetAvaKey((Ryujinx.Input.Key)ConfigurationState.Instance.Hid.Hotkeys.Value.ShowUi, out var showUiKey))
+            if (AvaloniaKeyboardMappingHelper.TryGetAvaKey((Key)ConfigurationState.Instance.Hid.Hotkeys.Value.ShowUi, out var showUiKey))
             {
                 ShowUiKey = new KeyGesture(showUiKey);
             }
 
-            if (AvaloniaKeyboardMappingHelper.TryGetAvaKey((Ryujinx.Input.Key)ConfigurationState.Instance.Hid.Hotkeys.Value.Screenshot, out var screenshotKey))
+            if (AvaloniaKeyboardMappingHelper.TryGetAvaKey((Key)ConfigurationState.Instance.Hid.Hotkeys.Value.Screenshot, out var screenshotKey))
             {
                 ScreenshotKey = new KeyGesture(screenshotKey);
             }
 
-            if (AvaloniaKeyboardMappingHelper.TryGetAvaKey((Ryujinx.Input.Key)ConfigurationState.Instance.Hid.Hotkeys.Value.Pause, out var pauseKey))
+            if (AvaloniaKeyboardMappingHelper.TryGetAvaKey((Key)ConfigurationState.Instance.Hid.Hotkeys.Value.Pause, out var pauseKey))
             {
                 PauseKey = new KeyGesture(pauseKey);
             }
@@ -1260,12 +1271,12 @@ namespace Ryujinx.Ava.UI.ViewModels
 
         public async void InstallFirmwareFromFile()
         {
-            if (Avalonia.Application.Current.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            if (Application.Current.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
                 OpenFileDialog dialog = new() { AllowMultiple = false };
                 dialog.Filters.Add(new FileDialogFilter { Name = LocaleManager.Instance[LocaleKeys.FileDialogAllTypes], Extensions = { "xci", "zip" } });
-                dialog.Filters.Add(new FileDialogFilter { Name = "XCI",                                                 Extensions = { "xci" } });
-                dialog.Filters.Add(new FileDialogFilter { Name = "ZIP",                                                 Extensions = { "zip" } });
+                dialog.Filters.Add(new FileDialogFilter { Name = "XCI", Extensions = { "xci" } });
+                dialog.Filters.Add(new FileDialogFilter { Name = "ZIP", Extensions = { "zip" } });
 
                 string[] file = await dialog.ShowAsync(desktop.MainWindow);
 
@@ -1278,7 +1289,7 @@ namespace Ryujinx.Ava.UI.ViewModels
 
         public async void InstallFirmwareFromFolder()
         {
-            if (Avalonia.Application.Current.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            if (Application.Current.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
                 OpenFolderDialog dialog = new();
 
@@ -1327,7 +1338,7 @@ namespace Ryujinx.Ava.UI.ViewModels
             }
         }
 
-        public void ChangeLanguage(object languageCode)
+        public static void ChangeLanguage(object languageCode)
         {
             LocaleManager.Instance.LoadLanguage((string)languageCode);
 
@@ -1342,6 +1353,7 @@ namespace Ryujinx.Ava.UI.ViewModels
         {
             _ = fileType switch
             {
+#pragma warning disable IDE0055 // Disable formatting
                 "NSP"  => ConfigurationState.Instance.Ui.ShownFileTypes.NSP.Value  = !ConfigurationState.Instance.Ui.ShownFileTypes.NSP,
                 "PFS0" => ConfigurationState.Instance.Ui.ShownFileTypes.PFS0.Value = !ConfigurationState.Instance.Ui.ShownFileTypes.PFS0,
                 "XCI"  => ConfigurationState.Instance.Ui.ShownFileTypes.XCI.Value  = !ConfigurationState.Instance.Ui.ShownFileTypes.XCI,
@@ -1349,6 +1361,7 @@ namespace Ryujinx.Ava.UI.ViewModels
                 "NRO"  => ConfigurationState.Instance.Ui.ShownFileTypes.NRO.Value  = !ConfigurationState.Instance.Ui.ShownFileTypes.NRO,
                 "NSO"  => ConfigurationState.Instance.Ui.ShownFileTypes.NSO.Value  = !ConfigurationState.Instance.Ui.ShownFileTypes.NSO,
                     _  => throw new ArgumentOutOfRangeException(fileType),
+#pragma warning restore IDE0055
             };
 
             ConfigurationState.Instance.ToFileFormat().SaveConfig(Program.ConfigurationPath);
@@ -1371,9 +1384,9 @@ namespace Ryujinx.Ava.UI.ViewModels
             {
                 Applications.Clear();
 
-                StatusBarVisible         = true;
+                StatusBarVisible = true;
                 StatusBarProgressMaximum = 0;
-                StatusBarProgressValue   = 0;
+                StatusBarProgressValue = 0;
 
                 LocaleManager.Instance.UpdateAndGetDynamicValue(LocaleKeys.StatusBarGamesLoaded, 0, 0);
             });
@@ -1383,11 +1396,11 @@ namespace Ryujinx.Ava.UI.ViewModels
 
         public async void OpenFile()
         {
-            if (Avalonia.Application.Current.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            if (Application.Current.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
                 OpenFileDialog dialog = new()
                 {
-                    Title = LocaleManager.Instance[LocaleKeys.OpenFileDialogTitle]
+                    Title = LocaleManager.Instance[LocaleKeys.OpenFileDialogTitle],
                 };
 
                 dialog.Filters.Add(new FileDialogFilter
@@ -1400,16 +1413,18 @@ namespace Ryujinx.Ava.UI.ViewModels
                         "xci",
                         "nca",
                         "nro",
-                        "nso"
-                    }
+                        "nso",
+                    },
                 });
 
+#pragma warning disable IDE0055 // Disable formatting
                 dialog.Filters.Add(new FileDialogFilter { Name = "NSP",  Extensions = { "nsp" } });
                 dialog.Filters.Add(new FileDialogFilter { Name = "PFS0", Extensions = { "pfs0" } });
                 dialog.Filters.Add(new FileDialogFilter { Name = "XCI",  Extensions = { "xci" } });
                 dialog.Filters.Add(new FileDialogFilter { Name = "NCA",  Extensions = { "nca" } });
                 dialog.Filters.Add(new FileDialogFilter { Name = "NRO",  Extensions = { "nro" } });
                 dialog.Filters.Add(new FileDialogFilter { Name = "NSO",  Extensions = { "nso" } });
+#pragma warning restore IDE0055
 
                 string[] files = await dialog.ShowAsync(desktop.MainWindow);
 
@@ -1422,11 +1437,11 @@ namespace Ryujinx.Ava.UI.ViewModels
 
         public async void OpenFolder()
         {
-            if (Avalonia.Application.Current.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            if (Application.Current.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
                 OpenFolderDialog dialog = new()
                 {
-                    Title = LocaleManager.Instance[LocaleKeys.OpenFolderDialogTitle]
+                    Title = LocaleManager.Instance[LocaleKeys.OpenFolderDialogTitle],
                 };
 
                 string folder = await dialog.ShowAsync(desktop.MainWindow);
@@ -1458,10 +1473,7 @@ namespace Ryujinx.Ava.UI.ViewModels
 
             Logger.RestartTime();
 
-            if (SelectedIcon == null)
-            {
-                SelectedIcon = ApplicationLibrary.GetApplicationIcon(path);
-            }
+            SelectedIcon ??= ApplicationLibrary.GetApplicationIcon(path);
 
             PrepareLoadScreen();
 
@@ -1495,7 +1507,7 @@ namespace Ryujinx.Ava.UI.ViewModels
                 if (string.IsNullOrWhiteSpace(titleName))
                 {
                     LoadHeading = LocaleManager.Instance.UpdateAndGetDynamicValue(LocaleKeys.LoadingHeading, AppHost.Device.Processes.ActiveApplication.Name);
-                    TitleName   = AppHost.Device.Processes.ActiveApplication.Name;
+                    TitleName = AppHost.Device.Processes.ActiveApplication.Name;
                 }
 
                 SwitchToRenderer(startFullscreen);
@@ -1521,7 +1533,7 @@ namespace Ryujinx.Ava.UI.ViewModels
             });
         }
 
-        public void UpdateGameMetadata(string titleId)
+        public static void UpdateGameMetadata(string titleId)
         {
             ApplicationLibrary.LoadAndSaveMetaData(titleId, appMetadata =>
             {
@@ -1675,6 +1687,6 @@ namespace Ryujinx.Ava.UI.ViewModels
             }
         }
 
-#endregion
+        #endregion
     }
 }

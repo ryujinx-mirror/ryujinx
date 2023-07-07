@@ -12,12 +12,12 @@ namespace Ryujinx.Ava.UI.Views.Settings
     public partial class SettingsHotkeysView : UserControl
     {
         private ButtonKeyAssigner _currentAssigner;
-        private IGamepadDriver AvaloniaKeyboardDriver;
-    
+        private readonly IGamepadDriver _avaloniaKeyboardDriver;
+
         public SettingsHotkeysView()
         {
             InitializeComponent();
-            AvaloniaKeyboardDriver = new AvaloniaKeyboardDriver(this);
+            _avaloniaKeyboardDriver = new AvaloniaKeyboardDriver(this);
         }
 
         private void MouseClick(object sender, PointerPressedEventArgs e)
@@ -28,7 +28,7 @@ namespace Ryujinx.Ava.UI.Views.Settings
 
             PointerPressed -= MouseClick;
         }
-    
+
         private void Button_Checked(object sender, RoutedEventArgs e)
         {
             if (sender is ToggleButton button)
@@ -46,7 +46,7 @@ namespace Ryujinx.Ava.UI.Views.Settings
 
                     PointerPressed += MouseClick;
 
-                    var keyboard = (IKeyboard)AvaloniaKeyboardDriver.GetGamepad(AvaloniaKeyboardDriver.GamepadsIds[0]);
+                    var keyboard = (IKeyboard)_avaloniaKeyboardDriver.GetGamepad(_avaloniaKeyboardDriver.GamepadsIds[0]);
                     IButtonAssigner assigner = new KeyboardKeyAssigner(keyboard);
 
                     _currentAssigner.GetInputAndAssign(assigner);

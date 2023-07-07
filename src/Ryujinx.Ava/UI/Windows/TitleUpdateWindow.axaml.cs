@@ -24,9 +24,9 @@ namespace Ryujinx.Ava.UI.Windows
             InitializeComponent();
         }
 
-        public TitleUpdateWindow(VirtualFileSystem virtualFileSystem, ulong titleId, string titleName)
+        public TitleUpdateWindow(VirtualFileSystem virtualFileSystem, ulong titleId)
         {
-            DataContext = ViewModel = new TitleUpdateViewModel(virtualFileSystem, titleId, titleName);
+            DataContext = ViewModel = new TitleUpdateViewModel(virtualFileSystem, titleId);
 
             InitializeComponent();
         }
@@ -35,11 +35,11 @@ namespace Ryujinx.Ava.UI.Windows
         {
             ContentDialog contentDialog = new()
             {
-                PrimaryButtonText   = "",
+                PrimaryButtonText = "",
                 SecondaryButtonText = "",
-                CloseButtonText     = "",
-                Content             = new TitleUpdateWindow(virtualFileSystem, titleId, titleName),
-                Title               = LocaleManager.Instance.UpdateAndGetDynamicValue(LocaleKeys.GameUpdateWindowHeading, titleName, titleId.ToString("X16"))
+                CloseButtonText = "",
+                Content = new TitleUpdateWindow(virtualFileSystem, titleId),
+                Title = LocaleManager.Instance.UpdateAndGetDynamicValue(LocaleKeys.GameUpdateWindowHeading, titleName, titleId.ToString("X16")),
             };
 
             Style bottomBorder = new(x => x.OfType<Grid>().Name("DialogSpace").Child().OfType<Border>());

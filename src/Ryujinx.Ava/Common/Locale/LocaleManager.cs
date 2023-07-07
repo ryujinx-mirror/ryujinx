@@ -13,17 +13,17 @@ namespace Ryujinx.Ava.Common.Locale
     {
         private const string DefaultLanguageCode = "en_US";
 
-        private Dictionary<LocaleKeys, string>                      _localeStrings;
-        private Dictionary<LocaleKeys, string>                      _localeDefaultStrings;
+        private readonly Dictionary<LocaleKeys, string> _localeStrings;
+        private Dictionary<LocaleKeys, string> _localeDefaultStrings;
         private readonly ConcurrentDictionary<LocaleKeys, object[]> _dynamicValues;
 
-        public static LocaleManager Instance { get; } = new LocaleManager();
+        public static LocaleManager Instance { get; } = new();
 
         public LocaleManager()
         {
-            _localeStrings        = new Dictionary<LocaleKeys, string>();
+            _localeStrings = new Dictionary<LocaleKeys, string>();
             _localeDefaultStrings = new Dictionary<LocaleKeys, string>();
-            _dynamicValues        = new ConcurrentDictionary<LocaleKeys, object[]>();
+            _dynamicValues = new ConcurrentDictionary<LocaleKeys, object[]>();
 
             Load();
         }
@@ -126,11 +126,11 @@ namespace Ryujinx.Ava.Common.Locale
             }
         }
 
-        private Dictionary<LocaleKeys, string> LoadJsonLanguage(string languageCode = DefaultLanguageCode)
+        private static Dictionary<LocaleKeys, string> LoadJsonLanguage(string languageCode = DefaultLanguageCode)
         {
-            var    localeStrings = new Dictionary<LocaleKeys, string>();
-            string languageJson  = EmbeddedResources.ReadAllText($"Ryujinx.Ava/Assets/Locales/{languageCode}.json");
-            var    strings       = JsonHelper.Deserialize(languageJson, CommonJsonContext.Default.StringDictionary);
+            var localeStrings = new Dictionary<LocaleKeys, string>();
+            string languageJson = EmbeddedResources.ReadAllText($"Ryujinx.Ava/Assets/Locales/{languageCode}.json");
+            var strings = JsonHelper.Deserialize(languageJson, CommonJsonContext.Default.StringDictionary);
 
             foreach (var item in strings)
             {

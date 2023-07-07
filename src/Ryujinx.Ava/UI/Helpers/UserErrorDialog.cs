@@ -1,5 +1,4 @@
 ﻿using Ryujinx.Ava.Common.Locale;
-using Ryujinx.Ava.UI.Windows;
 using Ryujinx.Ui.Common;
 using Ryujinx.Ui.Common.Helper;
 using System.Threading.Tasks;
@@ -24,7 +23,7 @@ namespace Ryujinx.Ava.UI.Helpers
                 UserError.FirmwareParsingFailed => LocaleManager.Instance[LocaleKeys.UserErrorFirmwareParsingFailed],
                 UserError.ApplicationNotFound => LocaleManager.Instance[LocaleKeys.UserErrorApplicationNotFound],
                 UserError.Unknown => LocaleManager.Instance[LocaleKeys.UserErrorUnknown],
-                _ => LocaleManager.Instance[LocaleKeys.UserErrorUndefined]
+                _ => LocaleManager.Instance[LocaleKeys.UserErrorUndefined],
             };
         }
 
@@ -37,7 +36,7 @@ namespace Ryujinx.Ava.UI.Helpers
                 UserError.FirmwareParsingFailed => LocaleManager.Instance[LocaleKeys.UserErrorFirmwareParsingFailedDescription],
                 UserError.ApplicationNotFound => LocaleManager.Instance[LocaleKeys.UserErrorApplicationNotFoundDescription],
                 UserError.Unknown => LocaleManager.Instance[LocaleKeys.UserErrorUnknownDescription],
-                _ => LocaleManager.Instance[LocaleKeys.UserErrorUndefinedDescription]
+                _ => LocaleManager.Instance[LocaleKeys.UserErrorUndefinedDescription],
             };
         }
 
@@ -48,7 +47,7 @@ namespace Ryujinx.Ava.UI.Helpers
                 UserError.NoKeys or
                     UserError.NoFirmware or
                     UserError.FirmwareParsingFailed => true,
-                _ => false
+                _ => false,
             };
         }
 
@@ -63,11 +62,11 @@ namespace Ryujinx.Ava.UI.Helpers
             {
                 UserError.NoKeys => SetupGuideUrl + "#initial-setup---placement-of-prodkeys",
                 UserError.NoFirmware => SetupGuideUrl + "#initial-setup-continued---installation-of-firmware",
-                _ => SetupGuideUrl
+                _ => SetupGuideUrl,
             };
         }
 
-        public static async Task ShowUserErrorDialog(UserError error, StyleableWindow owner)
+        public static async Task ShowUserErrorDialog(UserError error)
         {
             string errorCode = GetErrorCode(error);
 

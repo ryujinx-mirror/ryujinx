@@ -12,7 +12,7 @@ namespace Ryujinx.Ava.UI.Views.Main
     public partial class MainViewControls : UserControl
     {
         public MainWindowViewModel ViewModel;
-    
+
         public MainViewControls()
         {
             InitializeComponent();
@@ -37,7 +37,7 @@ namespace Ryujinx.Ava.UI.Views.Main
                 ViewModel.Sort(Enum.Parse<ApplicationSort>(button.Tag.ToString()));
             }
         }
-    
+
         public void Order_Checked(object sender, RoutedEventArgs args)
         {
             if (sender is RadioButton button)
@@ -45,7 +45,7 @@ namespace Ryujinx.Ava.UI.Views.Main
                 ViewModel.Sort(button.Tag.ToString() != "Descending");
             }
         }
-    
+
         private void SearchBox_OnKeyUp(object sender, KeyEventArgs e)
         {
             ViewModel.SearchText = SearchBox.Text;

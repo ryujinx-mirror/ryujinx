@@ -143,7 +143,7 @@ namespace Ryujinx.Ava.Input
             AvaKey.OemBackslash,
 
             // NOTE: invalid
-            AvaKey.None
+            AvaKey.None,
         };
 
         private static readonly Dictionary<AvaKey, Key> _avaKeyMapping;

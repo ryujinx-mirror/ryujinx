@@ -18,6 +18,7 @@ using Ryujinx.HLE.HOS.Services.Account.Acc;
 using System;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
+using Button = Avalonia.Controls.Button;
 using UserId = LibHac.Fs.UserId;
 
 namespace Ryujinx.Ava.UI.Views.User
@@ -47,12 +48,12 @@ namespace Ryujinx.Ava.UI.Views.User
                 switch (arg.NavigationMode)
                 {
                     case NavigationMode.New:
-                        var args = ((NavigationDialogHost parent, AccountManager accountManager, HorizonClient client, VirtualFileSystem virtualFileSystem))arg.Parameter;
-                        _accountManager = args.accountManager;
-                        _horizonClient = args.client;
-                        _virtualFileSystem = args.virtualFileSystem;
+                        var (parent, accountManager, client, virtualFileSystem) = ((NavigationDialogHost parent, AccountManager accountManager, HorizonClient client, VirtualFileSystem virtualFileSystem))arg.Parameter;
+                        _accountManager = accountManager;
+                        _horizonClient = client;
+                        _virtualFileSystem = virtualFileSystem;
 
-                        _parent = args.parent;
+                        _parent = parent;
                         break;
                 }
 
@@ -94,7 +95,7 @@ namespace Ryujinx.Ava.UI.Views.User
                     var save = saveDataInfo[i];
                     if (save.ProgramId.Value != 0)
                     {
-                        var saveModel = new SaveModel(save, _virtualFileSystem);
+                        var saveModel = new SaveModel(save);
                         saves.Add(saveModel);
                     }
                 }
@@ -114,7 +115,7 @@ namespace Ryujinx.Ava.UI.Views.User
 
         private void OpenLocation(object sender, RoutedEventArgs e)
         {
-            if (sender is Avalonia.Controls.Button button)
+            if (sender is Button button)
             {
                 if (button.DataContext is SaveModel saveModel)
                 {
@@ -125,7 +126,7 @@ namespace Ryujinx.Ava.UI.Views.User
 
         private async void Delete(object sender, RoutedEventArgs e)
         {
-            if (sender is Avalonia.Controls.Button button)
+            if (sender is Button button)
             {
                 if (button.DataContext is SaveModel saveModel)
                 {

@@ -21,7 +21,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
 using Path = System.IO.Path;
-using RightsId = LibHac.Fs.RightsId;
 
 namespace Ryujinx.HLE.FileSystem
 {

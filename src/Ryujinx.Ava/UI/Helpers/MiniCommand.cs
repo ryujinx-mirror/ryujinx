@@ -8,7 +8,7 @@ namespace Ryujinx.Ava.UI.Helpers
     {
         private readonly Action<T> _callback;
         private bool _busy;
-        private Func<T, Task> _asyncCallback;
+        private readonly Func<T, Task> _asyncCallback;
 
         public MiniCommand(Action<T> callback)
         {

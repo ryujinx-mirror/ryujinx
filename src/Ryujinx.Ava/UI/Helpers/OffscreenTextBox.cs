@@ -6,12 +6,12 @@ namespace Ryujinx.Ava.UI.Helpers
 {
     public class OffscreenTextBox : TextBox
     {
-        public RoutedEvent<KeyEventArgs> GetKeyDownRoutedEvent()
+        public static RoutedEvent<KeyEventArgs> GetKeyDownRoutedEvent()
         {
             return KeyDownEvent;
         }
 
-        public RoutedEvent<KeyEventArgs> GetKeyUpRoutedEvent()
+        public static RoutedEvent<KeyEventArgs> GetKeyUpRoutedEvent()
         {
             return KeyUpEvent;
         }
@@ -28,12 +28,12 @@ namespace Ryujinx.Ava.UI.Helpers
 
         public void SendText(string text)
         {
-            OnTextInput(new TextInputEventArgs()
+            OnTextInput(new TextInputEventArgs
             {
                 Text = text,
                 Device = KeyboardDevice.Instance,
                 Source = this,
-                RoutedEvent = TextInputEvent
+                RoutedEvent = TextInputEvent,
             });
         }
     }

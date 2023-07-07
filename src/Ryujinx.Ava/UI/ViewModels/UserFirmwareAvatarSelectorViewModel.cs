@@ -28,7 +28,6 @@ namespace Ryujinx.Ava.UI.ViewModels
         private Color _backgroundColor = Colors.White;
 
         private int _selectedIndex;
-        private byte[] _selectedImage;
 
         public UserFirmwareAvatarSelectorViewModel()
         {
@@ -78,11 +77,7 @@ namespace Ryujinx.Ava.UI.ViewModels
             }
         }
 
-        public byte[] SelectedImage
-        {
-            get => _selectedImage;
-            private set => _selectedImage = value;
-        }
+        public byte[] SelectedImage { get; private set; }
 
         private void LoadImagesFromStore()
         {
@@ -114,34 +109,32 @@ namespace Ryujinx.Ava.UI.ViewModels
 
             if (!string.IsNullOrWhiteSpace(avatarPath))
             {
-                using (IStorage ncaFileStream = new LocalStorage(avatarPath, FileAccess.Read, FileMode.Open))
+                using IStorage ncaFileStream = new LocalStorage(avatarPath, FileAccess.Read, FileMode.Open);
+
+                Nca nca = new(virtualFileSystem.KeySet, ncaFileStream);
+                IFileSystem romfs = nca.OpenFileSystem(NcaSectionType.Data, IntegrityCheckLevel.ErrorOnInvalid);
+
+                foreach (DirectoryEntryEx item in romfs.EnumerateEntries())
                 {
-                    Nca nca = new(virtualFileSystem.KeySet, ncaFileStream);
-                    IFileSystem romfs = nca.OpenFileSystem(NcaSectionType.Data, IntegrityCheckLevel.ErrorOnInvalid);
-
-                    foreach (DirectoryEntryEx item in romfs.EnumerateEntries())
+                    // TODO: Parse DatabaseInfo.bin and table.bin files for more accuracy.
+                    if (item.Type == DirectoryEntryType.File && item.FullPath.Contains("chara") && item.FullPath.Contains("szs"))
                     {
-                        // TODO: Parse DatabaseInfo.bin and table.bin files for more accuracy.
-                        if (item.Type == DirectoryEntryType.File && item.FullPath.Contains("chara") && item.FullPath.Contains("szs"))
-                        {
-                            using var file = new UniqueRef<IFile>();
+                        using var file = new UniqueRef<IFile>();
 
-                            romfs.OpenFile(ref file.Ref, ("/" + item.FullPath).ToU8Span(), OpenMode.Read).ThrowIfFailure();
+                        romfs.OpenFile(ref file.Ref, ("/" + item.FullPath).ToU8Span(), OpenMode.Read).ThrowIfFailure();
 
-                            using (MemoryStream stream = new())
-                            using (MemoryStream streamPng = new())
-                            {
-                                file.Get.AsStream().CopyTo(stream);
+                        using MemoryStream stream = new();
+                        using MemoryStream streamPng = new();
 
-                                stream.Position = 0;
+                        file.Get.AsStream().CopyTo(stream);
 
-                                Image avatarImage = Image.LoadPixelData<Rgba32>(DecompressYaz0(stream), 256, 256);
+                        stream.Position = 0;
 
-                                avatarImage.SaveAsPng(streamPng);
+                        Image avatarImage = Image.LoadPixelData<Rgba32>(DecompressYaz0(stream), 256, 256);
 
-                                _avatarStore.Add(item.FullPath, streamPng.ToArray());
-                            }
-                        }
+                        avatarImage.SaveAsPng(streamPng);
+
+                        _avatarStore.Add(item.FullPath, streamPng.ToArray());
                     }
                 }
             }
@@ -149,82 +142,81 @@ namespace Ryujinx.Ava.UI.ViewModels
 
         private static byte[] DecompressYaz0(Stream stream)
         {
-            using (BinaryReader reader = new(stream))
+            using BinaryReader reader = new(stream);
+
+            reader.ReadInt32(); // Magic
+
+            uint decodedLength = BinaryPrimitives.ReverseEndianness(reader.ReadUInt32());
+
+            reader.ReadInt64(); // Padding
+
+            byte[] input = new byte[stream.Length - stream.Position];
+            stream.Read(input, 0, input.Length);
+
+            uint inputOffset = 0;
+
+            byte[] output = new byte[decodedLength];
+            uint outputOffset = 0;
+
+            ushort mask = 0;
+            byte header = 0;
+
+            while (outputOffset < decodedLength)
             {
-                reader.ReadInt32(); // Magic
-
-                uint decodedLength = BinaryPrimitives.ReverseEndianness(reader.ReadUInt32());
-
-                reader.ReadInt64(); // Padding
-
-                byte[] input = new byte[stream.Length - stream.Position];
-                stream.Read(input, 0, input.Length);
-
-                uint inputOffset = 0;
-
-                byte[] output = new byte[decodedLength];
-                uint outputOffset = 0;
-
-                ushort mask = 0;
-                byte header = 0;
-
-                while (outputOffset < decodedLength)
+                if ((mask >>= 1) == 0)
                 {
-                    if ((mask >>= 1) == 0)
+                    header = input[inputOffset++];
+                    mask = 0x80;
+                }
+
+                if ((header & mask) != 0)
+                {
+                    if (outputOffset == output.Length)
                     {
-                        header = input[inputOffset++];
-                        mask = 0x80;
+                        break;
                     }
 
-                    if ((header & mask) != 0)
-                    {
-                        if (outputOffset == output.Length)
-                        {
-                            break;
-                        }
+                    output[outputOffset++] = input[inputOffset++];
+                }
+                else
+                {
+                    byte byte1 = input[inputOffset++];
+                    byte byte2 = input[inputOffset++];
 
-                        output[outputOffset++] = input[inputOffset++];
+                    uint dist = (uint)((byte1 & 0xF) << 8) | byte2;
+                    uint position = outputOffset - (dist + 1);
+
+                    uint length = (uint)byte1 >> 4;
+                    if (length == 0)
+                    {
+                        length = (uint)input[inputOffset++] + 0x12;
                     }
                     else
                     {
-                        byte byte1 = input[inputOffset++];
-                        byte byte2 = input[inputOffset++];
+                        length += 2;
+                    }
 
-                        uint dist = (uint)((byte1 & 0xF) << 8) | byte2;
-                        uint position = outputOffset - (dist + 1);
+                    uint gap = outputOffset - position;
+                    uint nonOverlappingLength = length;
 
-                        uint length = (uint)byte1 >> 4;
-                        if (length == 0)
-                        {
-                            length = (uint)input[inputOffset++] + 0x12;
-                        }
-                        else
-                        {
-                            length += 2;
-                        }
+                    if (nonOverlappingLength > gap)
+                    {
+                        nonOverlappingLength = gap;
+                    }
 
-                        uint gap = outputOffset - position;
-                        uint nonOverlappingLength = length;
+                    Buffer.BlockCopy(output, (int)position, output, (int)outputOffset, (int)nonOverlappingLength);
+                    outputOffset += nonOverlappingLength;
+                    position += nonOverlappingLength;
+                    length -= nonOverlappingLength;
 
-                        if (nonOverlappingLength > gap)
-                        {
-                            nonOverlappingLength = gap;
-                        }
-
-                        Buffer.BlockCopy(output, (int)position, output, (int)outputOffset, (int)nonOverlappingLength);
-                        outputOffset += nonOverlappingLength;
-                        position += nonOverlappingLength;
-                        length -= nonOverlappingLength;
-
-                        while (length-- > 0)
-                        {
-                            output[outputOffset++] = output[position++];
-                        }
+                    while (length-- > 0)
+                    {
+                        output[outputOffset++] = output[position++];
                     }
                 }
-
-                return output;
             }
+
+            return output;
         }
     }
 }
