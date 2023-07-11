@@ -680,7 +680,8 @@ namespace Ryujinx.Graphics.Vulkan
 
             IsAmdWindows = Vendor == Vendor.Amd && OperatingSystem.IsWindows();
             IsIntelWindows = Vendor == Vendor.Intel && OperatingSystem.IsWindows();
-            IsTBDR = IsMoltenVk ||
+            IsTBDR =
+                Vendor == Vendor.Apple ||
                 Vendor == Vendor.Qualcomm ||
                 Vendor == Vendor.ARM ||
                 Vendor == Vendor.Broadcom ||

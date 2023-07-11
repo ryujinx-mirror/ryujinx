@@ -144,9 +144,9 @@ namespace Ryujinx.Graphics.Vulkan
             {
                 _drawCountSinceBarrier = DrawCount;
 
-                // Barriers apparently have no effect inside a render pass on MoltenVK.
+                // Barriers are not supported inside a render pass on Apple GPUs.
                 // As a workaround, end the render pass.
-                if (Gd.IsMoltenVk)
+                if (Gd.Vendor == Vendor.Apple)
                 {
                     EndRenderPass();
                 }
