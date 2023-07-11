@@ -95,7 +95,7 @@ namespace Ryujinx.Graphics.OpenGL
             return new Sampler(info);
         }
 
-        public ITexture CreateTexture(TextureCreateInfo info, float scaleFactor)
+        public ITexture CreateTexture(TextureCreateInfo info)
         {
             if (info.Target == Target.TextureBuffer)
             {
@@ -103,7 +103,7 @@ namespace Ryujinx.Graphics.OpenGL
             }
             else
             {
-                return ResourcePool.GetTextureOrNull(info, scaleFactor) ?? new TextureStorage(this, info, scaleFactor).CreateDefaultView();
+                return ResourcePool.GetTextureOrNull(info) ?? new TextureStorage(this, info).CreateDefaultView();
             }
         }
 
@@ -194,9 +194,9 @@ namespace Ryujinx.Graphics.OpenGL
             ResourcePool.Tick();
         }
 
-        public ICounterEvent ReportCounter(CounterType type, EventHandler<ulong> resultHandler, bool hostReserved)
+        public ICounterEvent ReportCounter(CounterType type, EventHandler<ulong> resultHandler, float divisor, bool hostReserved)
         {
-            return _counters.QueueReport(type, resultHandler, _pipeline.DrawCount, hostReserved);
+            return _counters.QueueReport(type, resultHandler, divisor, _pipeline.DrawCount, hostReserved);
         }
 
         public void Initialize(GraphicsDebugLevel glLogLevel)
@@ -210,7 +210,6 @@ namespace Ryujinx.Graphics.OpenGL
                 GL.Arb.MaxShaderCompilerThreads(Math.Min(Environment.ProcessorCount, 8));
             }
 
-            _pipeline.Initialize(this);
             _counters.Initialize(_pipeline);
 
             // This is required to disable [0, 1] clamping for SNorm outputs on compatibility profiles.

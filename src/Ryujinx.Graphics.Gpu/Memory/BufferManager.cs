@@ -478,6 +478,8 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
             // Force rebind after doing compute work.
             Rebind();
+
+            _context.SupportBufferUpdater.Commit();
         }
 
         /// <summary>
@@ -686,6 +688,8 @@ namespace Ryujinx.Graphics.Gpu.Memory
             CommitBufferTextureBindings();
 
             _rebind = false;
+
+            _context.SupportBufferUpdater.Commit();
         }
 
         /// <summary>

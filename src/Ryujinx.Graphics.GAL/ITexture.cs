@@ -6,7 +6,6 @@ namespace Ryujinx.Graphics.GAL
     {
         int Width { get; }
         int Height { get; }
-        float ScaleFactor { get; }
 
         void CopyTo(ITexture destination, int firstLayer, int firstLevel);
         void CopyTo(ITexture destination, int srcLayer, int dstLayer, int srcLevel, int dstLevel);

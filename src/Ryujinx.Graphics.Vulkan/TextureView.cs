@@ -32,7 +32,6 @@ namespace Ryujinx.Graphics.Vulkan
         public int Layers => Info.GetDepthOrLayers();
         public int FirstLayer { get; }
         public int FirstLevel { get; }
-        public float ScaleFactor => Storage.ScaleFactor;
         public VkFormat VkFormat { get; }
         public bool Valid { get; private set; }
 

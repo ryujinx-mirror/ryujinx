@@ -25,15 +25,12 @@ namespace Ryujinx.Graphics.Vulkan
 
         public VkFormat VkFormat { get; }
 
-        public float ScaleFactor { get; }
-
-        public TextureBuffer(VulkanRenderer gd, TextureCreateInfo info, float scale)
+        public TextureBuffer(VulkanRenderer gd, TextureCreateInfo info)
         {
             _gd = gd;
             Width = info.Width;
             Height = info.Height;
             VkFormat = FormatTable.GetFormat(info.Format);
-            ScaleFactor = scale;
 
             gd.Textures.Add(this);
         }

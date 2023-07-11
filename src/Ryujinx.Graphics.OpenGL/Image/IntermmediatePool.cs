@@ -87,7 +87,7 @@ namespace Ryujinx.Graphics.OpenGL.Image
                 SwizzleComponent.Red,
                 SwizzleComponent.Green,
                 SwizzleComponent.Blue,
-                SwizzleComponent.Alpha), 1f);
+                SwizzleComponent.Alpha));
         }
 
         public void Dispose()

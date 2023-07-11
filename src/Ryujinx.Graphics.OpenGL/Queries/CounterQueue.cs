@@ -107,7 +107,7 @@ namespace Ryujinx.Graphics.OpenGL.Queries
             }
         }
 
-        public CounterQueueEvent QueueReport(EventHandler<ulong> resultHandler, ulong lastDrawIndex, bool hostReserved)
+        public CounterQueueEvent QueueReport(EventHandler<ulong> resultHandler, float divisor, ulong lastDrawIndex, bool hostReserved)
         {
             CounterQueueEvent result;
             ulong draws = lastDrawIndex - _current.DrawIndex;
@@ -123,7 +123,7 @@ namespace Ryujinx.Graphics.OpenGL.Queries
                     _current.ReserveForHostAccess();
                 }
 
-                _current.Complete(draws > 0, _pipeline.GetCounterDivisor(Type));
+                _current.Complete(draws > 0, divisor);
                 _events.Enqueue(_current);
 
                 _current.OnResult += resultHandler;

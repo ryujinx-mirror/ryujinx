@@ -125,7 +125,6 @@ namespace Ryujinx.Graphics.GAL.Multithreading
             Register<SetProgramCommand>(CommandType.SetProgram);
             Register<SetRasterizerDiscardCommand>(CommandType.SetRasterizerDiscard);
             Register<SetRenderTargetColorMasksCommand>(CommandType.SetRenderTargetColorMasks);
-            Register<SetRenderTargetScaleCommand>(CommandType.SetRenderTargetScale);
             Register<SetRenderTargetsCommand>(CommandType.SetRenderTargets);
             Register<SetScissorsCommand>(CommandType.SetScissor);
             Register<SetStencilTestCommand>(CommandType.SetStencilTest);
@@ -138,7 +137,6 @@ namespace Ryujinx.Graphics.GAL.Multithreading
             Register<TextureBarrierTiledCommand>(CommandType.TextureBarrierTiled);
             Register<TryHostConditionalRenderingCommand>(CommandType.TryHostConditionalRendering);
             Register<TryHostConditionalRenderingFlushCommand>(CommandType.TryHostConditionalRenderingFlush);
-            Register<UpdateRenderScaleCommand>(CommandType.UpdateRenderScale);
 
             return maxCommandSize;
         }

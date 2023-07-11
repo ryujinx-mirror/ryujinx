@@ -11,15 +11,13 @@ namespace Ryujinx.Graphics.OpenGL.Image
 
         public int Width => Info.Width;
         public int Height => Info.Height;
-        public float ScaleFactor { get; }
 
         public Target Target => Info.Target;
         public Format Format => Info.Format;
 
-        public TextureBase(TextureCreateInfo info, float scaleFactor = 1f)
+        public TextureBase(TextureCreateInfo info)
         {
             Info = info;
-            ScaleFactor = scaleFactor;
 
             Handle = GL.GenTexture();
         }

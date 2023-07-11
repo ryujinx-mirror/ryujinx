@@ -57,7 +57,7 @@ namespace Ryujinx.Graphics.Vulkan.Effects
             if (_texture == null || _texture.Width != view.Width || _texture.Height != view.Height)
             {
                 _texture?.Dispose();
-                _texture = _renderer.CreateTexture(view.Info, view.ScaleFactor) as TextureView;
+                _texture = _renderer.CreateTexture(view.Info) as TextureView;
             }
 
             _pipeline.SetCommandBuffer(cbs);

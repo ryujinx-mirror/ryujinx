@@ -54,19 +54,16 @@ namespace Ryujinx.Graphics.Vulkan
         private readonly ulong _size;
 
         public VkFormat VkFormat { get; }
-        public float ScaleFactor { get; }
 
         public unsafe TextureStorage(
             VulkanRenderer gd,
             Device device,
             TextureCreateInfo info,
-            float scaleFactor,
             Auto<MemoryAllocation> foreignAllocation = null)
         {
             _gd = gd;
             _device = device;
             _info = info;
-            ScaleFactor = scaleFactor;
 
             var format = _gd.FormatCapabilities.ConvertToVkFormat(info.Format);
             var levels = (uint)info.Levels;
@@ -175,7 +172,7 @@ namespace Ryujinx.Graphics.Vulkan
 
                 var info = NewCreateInfoWith(ref _info, format, _info.BytesPerPixel);
 
-                storage = new TextureStorage(_gd, _device, info, ScaleFactor, _allocationAuto);
+                storage = new TextureStorage(_gd, _device, info, _allocationAuto);
 
                 _aliasedStorages.Add(format, storage);
             }

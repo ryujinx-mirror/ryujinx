@@ -70,10 +70,10 @@ namespace Ryujinx.Graphics.GAL.Multithreading.Resources
             }
         }
 
-        public void Create(IRenderer renderer, CounterType type, System.EventHandler<ulong> eventHandler, bool hostReserved)
+        public void Create(IRenderer renderer, CounterType type, System.EventHandler<ulong> eventHandler, float divisor, bool hostReserved)
         {
             ThreadedHelpers.SpinUntilExchange(ref _createLock, 1, 0);
-            Base = renderer.ReportCounter(type, eventHandler, hostReserved || _reserved);
+            Base = renderer.ReportCounter(type, eventHandler, divisor, hostReserved || _reserved);
             Volatile.Write(ref _createLock, 0);
         }
     }

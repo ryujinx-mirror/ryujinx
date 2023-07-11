@@ -115,7 +115,7 @@ namespace Ryujinx.Graphics.Vulkan.Effects
                     originalInfo.SwizzleB,
                     originalInfo.SwizzleA);
                 _intermediaryTexture?.Dispose();
-                _intermediaryTexture = _renderer.CreateTexture(info, view.ScaleFactor) as TextureView;
+                _intermediaryTexture = _renderer.CreateTexture(info) as TextureView;
             }
 
             _pipeline.SetCommandBuffer(cbs);

@@ -17,13 +17,10 @@ namespace Ryujinx.Graphics.GAL.Multithreading.Resources
 
         public int Height => _info.Height;
 
-        public float ScaleFactor { get; }
-
-        public ThreadedTexture(ThreadedRenderer renderer, TextureCreateInfo info, float scale)
+        public ThreadedTexture(ThreadedRenderer renderer, TextureCreateInfo info)
         {
             _renderer = renderer;
             _info = info;
-            ScaleFactor = scale;
         }
 
         private TableRef<T> Ref<T>(T reference)
@@ -64,7 +61,7 @@ namespace Ryujinx.Graphics.GAL.Multithreading.Resources
 
         public ITexture CreateView(TextureCreateInfo info, int firstLayer, int firstLevel)
         {
-            ThreadedTexture newTex = new(_renderer, info, ScaleFactor);
+            ThreadedTexture newTex = new(_renderer, info);
             _renderer.New<TextureCreateViewCommand>().Set(Ref(this), Ref(newTex), info, firstLayer, firstLevel);
             _renderer.QueueCommand();
 

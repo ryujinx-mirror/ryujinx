@@ -495,6 +495,11 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                     {
                         clipRegionHeight = color.Height / samplesInY;
                     }
+
+                    if (!_context.Capabilities.SupportsBgraFormat)
+                    {
+                        _context.SupportBufferUpdater.SetRenderTargetIsBgra(index, color.Format.IsBgr());
+                    }
                 }
             }
 
@@ -539,7 +544,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
 
                 if (oldScale != _channel.TextureManager.RenderTargetScale)
                 {
-                    _context.Renderer.Pipeline.SetRenderTargetScale(_channel.TextureManager.RenderTargetScale);
+                    _context.SupportBufferUpdater.SetRenderTargetScale(_channel.TextureManager.RenderTargetScale);
 
                     UpdateViewportTransform();
                     UpdateScissorState();
@@ -758,9 +763,15 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             }
 
             _context.Renderer.Pipeline.SetDepthMode(GetDepthMode());
-            _context.Renderer.Pipeline.SetViewports(viewports, disableTransform);
+            _context.Renderer.Pipeline.SetViewports(viewports);
 
-            _currentSpecState.SetViewportTransformDisable(_state.State.ViewportTransformEnable == 0);
+            _context.SupportBufferUpdater.SetViewportTransformDisable(
+                viewports[0].Region.Width,
+                viewports[0].Region.Height,
+                _channel.TextureManager.RenderTargetScale,
+                disableTransform);
+
+            _currentSpecState.SetViewportTransformDisable(disableTransform);
             _currentSpecState.SetDepthMode(GetDepthMode() == DepthMode.MinusOneToOne);
         }
 

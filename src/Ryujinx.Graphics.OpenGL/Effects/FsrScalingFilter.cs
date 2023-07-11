@@ -114,7 +114,7 @@ namespace Ryujinx.Graphics.OpenGL.Effects
                     originalInfo.SwizzleB,
                     originalInfo.SwizzleA);
 
-                _intermediaryTexture = new TextureStorage(_renderer, info, view.ScaleFactor);
+                _intermediaryTexture = new TextureStorage(_renderer, info);
                 _intermediaryTexture.CreateDefaultView();
             }
 

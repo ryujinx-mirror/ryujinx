@@ -79,7 +79,6 @@ namespace Ryujinx.Graphics.GAL
 
         void SetRasterizerDiscard(bool discard);
 
-        void SetRenderTargetScale(float scale);
         void SetRenderTargetColorMasks(ReadOnlySpan<uint> componentMask);
         void SetRenderTargets(ITexture[] colors, ITexture depthStencil);
 
@@ -99,7 +98,7 @@ namespace Ryujinx.Graphics.GAL
         void SetVertexAttribs(ReadOnlySpan<VertexAttribDescriptor> vertexAttribs);
         void SetVertexBuffers(ReadOnlySpan<VertexBufferDescriptor> vertexBuffers);
 
-        void SetViewports(ReadOnlySpan<Viewport> viewports, bool disableTransform);
+        void SetViewports(ReadOnlySpan<Viewport> viewports);
 
         void TextureBarrier();
         void TextureBarrierTiled();
@@ -107,7 +106,5 @@ namespace Ryujinx.Graphics.GAL
         bool TryHostConditionalRendering(ICounterEvent value, ulong compare, bool isEqual);
         bool TryHostConditionalRendering(ICounterEvent value, ICounterEvent compare, bool isEqual);
         void EndHostConditionalRendering();
-
-        void UpdateRenderScale(ReadOnlySpan<float> scales, int totalCount, int fragmentCount);
     }
 }

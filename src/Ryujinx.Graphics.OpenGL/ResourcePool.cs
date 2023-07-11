@@ -9,7 +9,6 @@ namespace Ryujinx.Graphics.OpenGL
     {
         public TextureCreateInfo Info;
         public TextureView View;
-        public float ScaleFactor;
         public int RemainingFrames;
     }
 
@@ -42,7 +41,6 @@ namespace Ryujinx.Graphics.OpenGL
                 {
                     Info = view.Info,
                     View = view,
-                    ScaleFactor = view.ScaleFactor,
                     RemainingFrames = DisposedLiveFrames
                 });
             }
@@ -52,9 +50,8 @@ namespace Ryujinx.Graphics.OpenGL
         /// Attempt to obtain a texture from the resource cache with the desired parameters.
         /// </summary>
         /// <param name="info">The creation info for the desired texture</param>
-        /// <param name="scaleFactor">The scale factor for the desired texture</param>
         /// <returns>A TextureView with the description specified, or null if one was not found.</returns>
-        public TextureView GetTextureOrNull(TextureCreateInfo info, float scaleFactor)
+        public TextureView GetTextureOrNull(TextureCreateInfo info)
         {
             lock (_lock)
             {
@@ -65,11 +62,8 @@ namespace Ryujinx.Graphics.OpenGL
 
                 foreach (DisposedTexture texture in list)
                 {
-                    if (scaleFactor == texture.ScaleFactor)
-                    {
-                        list.Remove(texture);
-                        return texture.View;
-                    }
+                    list.Remove(texture);
+                    return texture.View;
                 }
 
                 return null;

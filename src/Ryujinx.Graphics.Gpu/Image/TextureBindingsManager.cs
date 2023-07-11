@@ -302,7 +302,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                 _lastFragmentTotal = fragmentTotal;
 
-                _context.Renderer.Pipeline.UpdateRenderScale(_scales, total, fragmentTotal);
+                _context.SupportBufferUpdater.UpdateRenderScale(_scales, total, fragmentTotal);
 
                 _scaleChanged = false;
             }

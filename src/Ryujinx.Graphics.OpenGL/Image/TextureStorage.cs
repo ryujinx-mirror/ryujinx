@@ -8,7 +8,6 @@ namespace Ryujinx.Graphics.OpenGL.Image
     {
         public ITextureInfo Storage => this;
         public int Handle { get; private set; }
-        public float ScaleFactor { get; private set; }
 
         public TextureCreateInfo Info { get; }
 
@@ -18,13 +17,12 @@ namespace Ryujinx.Graphics.OpenGL.Image
 
         internal ITexture DefaultView { get; private set; }
 
-        public TextureStorage(OpenGLRenderer renderer, TextureCreateInfo info, float scaleFactor)
+        public TextureStorage(OpenGLRenderer renderer, TextureCreateInfo info)
         {
             _renderer = renderer;
             Info = info;
 
             Handle = GL.GenTexture();
-            ScaleFactor = scaleFactor;
 
             CreateImmutableStorage();
         }

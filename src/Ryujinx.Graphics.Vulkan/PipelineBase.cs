@@ -50,9 +50,6 @@ namespace Ryujinx.Graphics.Vulkan
 
         private ShaderCollection _program;
 
-        private readonly Vector4<float>[] _renderScale = new Vector4<float>[73];
-        private int _fragmentScaleCount;
-
         protected FramebufferParams FramebufferParams;
         private Auto<DisposableFramebuffer> _framebuffer;
         private Auto<DisposableRenderPass> _renderPass;
@@ -74,7 +71,6 @@ namespace Ryujinx.Graphics.Vulkan
 
         private readonly VertexBufferUpdater _vertexBufferUpdater;
 
-        public SupportBufferUpdater SupportBufferUpdater;
         public IndexBufferPattern QuadsToTrisPattern;
         public IndexBufferPattern TriFanToTrisPattern;
 
@@ -119,9 +115,6 @@ namespace Ryujinx.Graphics.Vulkan
 
             ClearScissor = new Rectangle<int>(0, 0, 0xffff, 0xffff);
 
-            var defaultScale = new Vector4<float> { X = 1f, Y = 0f, Z = 0f, W = 0f };
-            new Span<Vector4<float>>(_renderScale).Fill(defaultScale);
-
             _storedBlend = new PipelineColorBlendAttachmentState[Constants.MaxRenderTargets];
 
             _newState.Initialize();
@@ -130,9 +123,6 @@ namespace Ryujinx.Graphics.Vulkan
         public void Initialize()
         {
             _descriptorSetUpdater.Initialize();
-
-            SupportBufferUpdater = new SupportBufferUpdater(Gd);
-            SupportBufferUpdater.UpdateRenderScale(_renderScale, 0, SupportBuffer.RenderScaleMaxCount);
 
             QuadsToTrisPattern = new IndexBufferPattern(Gd, 4, 6, 0, new[] { 0, 1, 2, 0, 2, 3 }, 4, false);
             TriFanToTrisPattern = new IndexBufferPattern(Gd, 3, 3, 2, new[] { int.MinValue, -1, 0 }, 1, true);
@@ -666,8 +656,6 @@ namespace Ryujinx.Graphics.Vulkan
         {
             if (texture is TextureView srcTexture)
             {
-                SupportBufferUpdater.Commit();
-
                 var oldCullMode = _newState.CullMode;
                 var oldStencilTestEnable = _newState.StencilTestEnable;
                 var oldDepthTestEnable = _newState.DepthTestEnable;
@@ -707,16 +695,6 @@ namespace Ryujinx.Graphics.Vulkan
         {
             PauseTransformFeedbackInternal();
             _tfEnabled = false;
-        }
-
-        public double GetCounterDivisor(CounterType type)
-        {
-            if (type == CounterType.SamplesPassed)
-            {
-                return _renderScale[0].X * _renderScale[0].X;
-            }
-
-            return 1;
         }
 
         public bool IsCommandBufferActive(CommandBuffer cb)
@@ -1050,12 +1028,6 @@ namespace Ryujinx.Graphics.Vulkan
             SetRenderTargetsInternal(colors, depthStencil, Gd.IsTBDR);
         }
 
-        public void SetRenderTargetScale(float scale)
-        {
-            _renderScale[0].X = scale;
-            SupportBufferUpdater.UpdateRenderScale(_renderScale, 0, 1); // Just the first element.
-        }
-
         public void SetScissors(ReadOnlySpan<Rectangle<int>> regions)
         {
             int maxScissors = Gd.Capabilities.SupportsMultiView ? Constants.MaxViewports : 1;
@@ -1303,7 +1275,7 @@ namespace Ryujinx.Graphics.Vulkan
             SignalStateChange();
         }
 
-        public void SetViewports(ReadOnlySpan<Viewport> viewports, bool disableTransform)
+        public void SetViewports(ReadOnlySpan<Viewport> viewports)
         {
             int maxViewports = Gd.Capabilities.SupportsMultiView ? Constants.MaxViewports : 1;
             int count = Math.Min(maxViewports, viewports.Length);
@@ -1326,19 +1298,6 @@ namespace Ryujinx.Graphics.Vulkan
                     viewport.Region.Height == 0f ? 1f : viewport.Region.Height,
                     Clamp(viewport.DepthNear),
                     Clamp(viewport.DepthFar)));
-            }
-
-            float disableTransformF = disableTransform ? 1.0f : 0.0f;
-            if (SupportBufferUpdater.Data.ViewportInverse.W != disableTransformF || disableTransform)
-            {
-                float scale = _renderScale[0].X;
-                SupportBufferUpdater.UpdateViewportInverse(new Vector4<float>
-                {
-                    X = scale * 2f / viewports[0].Region.Width,
-                    Y = scale * 2f / viewports[0].Region.Height,
-                    Z = 1,
-                    W = disableTransformF,
-                });
             }
 
             _newState.ViewportsCount = (uint)count;
@@ -1389,32 +1348,6 @@ namespace Ryujinx.Graphics.Vulkan
         public void TextureBarrierTiled()
         {
             TextureBarrier();
-        }
-
-        public void UpdateRenderScale(ReadOnlySpan<float> scales, int totalCount, int fragmentCount)
-        {
-            bool changed = false;
-
-            for (int index = 0; index < totalCount; index++)
-            {
-                if (_renderScale[1 + index].X != scales[index])
-                {
-                    _renderScale[1 + index].X = scales[index];
-                    changed = true;
-                }
-            }
-
-            // Only update fragment count if there are scales after it for the vertex stage.
-            if (fragmentCount != totalCount && fragmentCount != _fragmentScaleCount)
-            {
-                _fragmentScaleCount = fragmentCount;
-                SupportBufferUpdater.UpdateFragmentRenderScaleCount(_fragmentScaleCount);
-            }
-
-            if (changed)
-            {
-                SupportBufferUpdater.UpdateRenderScale(_renderScale, 0, 1 + totalCount);
-            }
         }
 
         protected void SignalCommandBufferChange()
@@ -1614,9 +1547,6 @@ namespace Ryujinx.Graphics.Vulkan
 
             DynamicState.ReplayIfDirty(Gd.Api, CommandBuffer);
 
-            // Commit changes to the support buffer before drawing.
-            SupportBufferUpdater.Commit();
-
             if (_needsIndexBufferRebind && _indexBufferPattern == null)
             {
                 _indexBuffer.BindIndexBuffer(Gd, Cbs);
@@ -1777,8 +1707,6 @@ namespace Ryujinx.Graphics.Vulkan
                 {
                     Gd.Api.DestroyPipelineCache(Device, PipelineCache, null);
                 }
-
-                SupportBufferUpdater.Dispose();
             }
         }
 

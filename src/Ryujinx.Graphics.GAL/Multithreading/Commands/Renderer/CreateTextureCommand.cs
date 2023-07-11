@@ -8,18 +8,16 @@ namespace Ryujinx.Graphics.GAL.Multithreading.Commands.Renderer
         public readonly CommandType CommandType => CommandType.CreateTexture;
         private TableRef<ThreadedTexture> _texture;
         private TextureCreateInfo _info;
-        private float _scale;
 
-        public void Set(TableRef<ThreadedTexture> texture, TextureCreateInfo info, float scale)
+        public void Set(TableRef<ThreadedTexture> texture, TextureCreateInfo info)
         {
             _texture = texture;
             _info = info;
-            _scale = scale;
         }
 
         public static void Run(ref CreateTextureCommand command, ThreadedRenderer threaded, IRenderer renderer)
         {
-            command._texture.Get(threaded).Base = renderer.CreateTexture(command._info, command._scale);
+            command._texture.Get(threaded).Base = renderer.CreateTexture(command._info);
         }
     }
 }

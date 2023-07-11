@@ -177,8 +177,8 @@ namespace Ryujinx.Graphics.Vulkan.Effects
             var areaTexture = EmbeddedResources.Read("Ryujinx.Graphics.Vulkan/Effects/Textures/SmaaAreaTexture.bin");
             var searchTexture = EmbeddedResources.Read("Ryujinx.Graphics.Vulkan/Effects/Textures/SmaaSearchTexture.bin");
 
-            _areaTexture = _renderer.CreateTexture(areaInfo, 1) as TextureView;
-            _searchTexture = _renderer.CreateTexture(searchInfo, 1) as TextureView;
+            _areaTexture = _renderer.CreateTexture(areaInfo) as TextureView;
+            _searchTexture = _renderer.CreateTexture(searchInfo) as TextureView;
 
             _areaTexture.SetData(areaTexture);
             _searchTexture.SetData(searchTexture);
@@ -193,9 +193,9 @@ namespace Ryujinx.Graphics.Vulkan.Effects
                 _edgeOutputTexture?.Dispose();
                 _blendOutputTexture?.Dispose();
 
-                _outputTexture = _renderer.CreateTexture(view.Info, view.ScaleFactor) as TextureView;
-                _edgeOutputTexture = _renderer.CreateTexture(view.Info, view.ScaleFactor) as TextureView;
-                _blendOutputTexture = _renderer.CreateTexture(view.Info, view.ScaleFactor) as TextureView;
+                _outputTexture = _renderer.CreateTexture(view.Info) as TextureView;
+                _edgeOutputTexture = _renderer.CreateTexture(view.Info) as TextureView;
+                _blendOutputTexture = _renderer.CreateTexture(view.Info) as TextureView;
             }
 
             _pipeline.SetCommandBuffer(cbs);

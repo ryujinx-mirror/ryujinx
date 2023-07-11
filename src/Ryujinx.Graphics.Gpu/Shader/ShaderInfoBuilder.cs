@@ -58,6 +58,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
             }
 
             AddDescriptor(SupportBufferStages, ResourceType.UniformBuffer, UniformSetIndex, 0, 1);
+            AddUsage(SupportBufferStages, ResourceType.UniformBuffer, ResourceAccess.Read, UniformSetIndex, 0, 1);
 
             _reservedConstantBuffers = 1; // For the support buffer.
 

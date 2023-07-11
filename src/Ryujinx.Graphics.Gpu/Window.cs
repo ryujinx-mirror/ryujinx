@@ -208,7 +208,16 @@ namespace Ryujinx.Graphics.Gpu
 
                 texture.SynchronizeMemory();
 
-                ImageCrop crop = pt.Crop;
+                ImageCrop crop = new ImageCrop(
+                    (int)(pt.Crop.Left * texture.ScaleFactor),
+                    (int)MathF.Ceiling(pt.Crop.Right * texture.ScaleFactor),
+                    (int)(pt.Crop.Top * texture.ScaleFactor),
+                    (int)MathF.Ceiling(pt.Crop.Bottom * texture.ScaleFactor),
+                    pt.Crop.FlipX,
+                    pt.Crop.FlipY,
+                    pt.Crop.IsStretched,
+                    pt.Crop.AspectRatioX,
+                    pt.Crop.AspectRatioY);
 
                 if (texture.Info.Width > pt.Info.Width || texture.Info.Height > pt.Info.Height)
                 {

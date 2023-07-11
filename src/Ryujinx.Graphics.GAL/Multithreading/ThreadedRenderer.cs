@@ -320,21 +320,21 @@ namespace Ryujinx.Graphics.GAL.Multithreading
             QueueCommand();
         }
 
-        public ITexture CreateTexture(TextureCreateInfo info, float scale)
+        public ITexture CreateTexture(TextureCreateInfo info)
         {
             if (IsGpuThread())
             {
-                var texture = new ThreadedTexture(this, info, scale);
-                New<CreateTextureCommand>().Set(Ref(texture), info, scale);
+                var texture = new ThreadedTexture(this, info);
+                New<CreateTextureCommand>().Set(Ref(texture), info);
                 QueueCommand();
 
                 return texture;
             }
             else
             {
-                var texture = new ThreadedTexture(this, info, scale)
+                var texture = new ThreadedTexture(this, info)
                 {
-                    Base = _baseRenderer.CreateTexture(info, scale),
+                    Base = _baseRenderer.CreateTexture(info),
                 };
 
                 return texture;
@@ -410,10 +410,10 @@ namespace Ryujinx.Graphics.GAL.Multithreading
             QueueCommand();
         }
 
-        public ICounterEvent ReportCounter(CounterType type, EventHandler<ulong> resultHandler, bool hostReserved)
+        public ICounterEvent ReportCounter(CounterType type, EventHandler<ulong> resultHandler, float divisor, bool hostReserved)
         {
-            ThreadedCounterEvent evt = new(this, type, _lastSampleCounterClear);
-            New<ReportCounterCommand>().Set(Ref(evt), type, Ref(resultHandler), hostReserved);
+            ThreadedCounterEvent evt = new ThreadedCounterEvent(this, type, _lastSampleCounterClear);
+            New<ReportCounterCommand>().Set(Ref(evt), type, Ref(resultHandler), divisor, hostReserved);
             QueueCommand();
 
             if (type == CounterType.SamplesPassed)

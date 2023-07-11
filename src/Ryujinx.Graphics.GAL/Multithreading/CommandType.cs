@@ -87,7 +87,6 @@
         SetProgram,
         SetRasterizerDiscard,
         SetRenderTargetColorMasks,
-        SetRenderTargetScale,
         SetRenderTargets,
         SetScissor,
         SetStencilTest,
@@ -100,6 +99,5 @@
         TextureBarrierTiled,
         TryHostConditionalRendering,
         TryHostConditionalRenderingFlush,
-        UpdateRenderScale,
     }
 }

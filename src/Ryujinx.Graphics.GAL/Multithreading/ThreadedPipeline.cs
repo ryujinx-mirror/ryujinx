@@ -261,12 +261,6 @@ namespace Ryujinx.Graphics.GAL.Multithreading
             _renderer.QueueCommand();
         }
 
-        public void SetRenderTargetScale(float scale)
-        {
-            _renderer.New<SetRenderTargetScaleCommand>().Set(scale);
-            _renderer.QueueCommand();
-        }
-
         public void SetScissors(ReadOnlySpan<Rectangle<int>> scissors)
         {
             _renderer.New<SetScissorsCommand>().Set(_renderer.CopySpan(scissors));
@@ -321,9 +315,9 @@ namespace Ryujinx.Graphics.GAL.Multithreading
             _renderer.QueueCommand();
         }
 
-        public void SetViewports(ReadOnlySpan<Viewport> viewports, bool disableTransform)
+        public void SetViewports(ReadOnlySpan<Viewport> viewports)
         {
-            _renderer.New<SetViewportsCommand>().Set(_renderer.CopySpan(viewports), disableTransform);
+            _renderer.New<SetViewportsCommand>().Set(_renderer.CopySpan(viewports));
             _renderer.QueueCommand();
         }
 
@@ -367,12 +361,6 @@ namespace Ryujinx.Graphics.GAL.Multithreading
             _renderer.New<TryHostConditionalRenderingFlushCommand>().Set(Ref(value as ThreadedCounterEvent), Ref(compare as ThreadedCounterEvent), isEqual);
             _renderer.QueueCommand();
             return false;
-        }
-
-        public void UpdateRenderScale(ReadOnlySpan<float> scales, int totalCount, int fragmentCount)
-        {
-            _renderer.New<UpdateRenderScaleCommand>().Set(_renderer.CopySpan(scales[..totalCount]), totalCount, fragmentCount);
-            _renderer.QueueCommand();
         }
     }
 }

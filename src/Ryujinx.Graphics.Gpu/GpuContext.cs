@@ -86,6 +86,11 @@ namespace Ryujinx.Graphics.Gpu
         internal ConcurrentDictionary<ulong, PhysicalMemory> PhysicalMemoryRegistry { get; }
 
         /// <summary>
+        /// Support buffer updater.
+        /// </summary>
+        internal SupportBufferUpdater SupportBufferUpdater { get; }
+
+        /// <summary>
         /// Host hardware capabilities.
         /// </summary>
         internal Capabilities Capabilities;
@@ -124,6 +129,8 @@ namespace Ryujinx.Graphics.Gpu
             DeferredActions = new Queue<Action>();
 
             PhysicalMemoryRegistry = new ConcurrentDictionary<ulong, PhysicalMemory>();
+
+            SupportBufferUpdater = new SupportBufferUpdater(renderer);
 
             _firstTimestamp = ConvertNanosecondsToTicks((ulong)PerformanceCounter.ElapsedNanoseconds);
         }
@@ -398,6 +405,8 @@ namespace Ryujinx.Graphics.Gpu
             {
                 physicalMemory.Dispose();
             }
+
+            SupportBufferUpdater.Dispose();
 
             PhysicalMemoryRegistry.Clear();
 

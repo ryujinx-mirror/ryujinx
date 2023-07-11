@@ -147,8 +147,8 @@ namespace Ryujinx.Graphics.OpenGL.Effects.Smaa
                 SwizzleComponent.Blue,
                 SwizzleComponent.Alpha);
 
-            _areaTexture = new TextureStorage(_renderer, areaInfo, 1);
-            _searchTexture = new TextureStorage(_renderer, searchInfo, 1);
+            _areaTexture = new TextureStorage(_renderer, areaInfo);
+            _searchTexture = new TextureStorage(_renderer, searchInfo);
 
             var areaTexture = EmbeddedResources.Read("Ryujinx.Graphics.OpenGL/Effects/Textures/SmaaAreaTexture.bin");
             var searchTexture = EmbeddedResources.Read("Ryujinx.Graphics.OpenGL/Effects/Textures/SmaaSearchTexture.bin");
@@ -165,11 +165,11 @@ namespace Ryujinx.Graphics.OpenGL.Effects.Smaa
             if (_outputTexture == null || _outputTexture.Info.Width != view.Width || _outputTexture.Info.Height != view.Height)
             {
                 _outputTexture?.Dispose();
-                _outputTexture = new TextureStorage(_renderer, view.Info, view.ScaleFactor);
+                _outputTexture = new TextureStorage(_renderer, view.Info);
                 _outputTexture.CreateDefaultView();
-                _edgeOutputTexture = new TextureStorage(_renderer, view.Info, view.ScaleFactor);
+                _edgeOutputTexture = new TextureStorage(_renderer, view.Info);
                 _edgeOutputTexture.CreateDefaultView();
-                _blendOutputTexture = new TextureStorage(_renderer, view.Info, view.ScaleFactor);
+                _blendOutputTexture = new TextureStorage(_renderer, view.Info);
                 _blendOutputTexture.CreateDefaultView();
 
                 DeleteShaders();

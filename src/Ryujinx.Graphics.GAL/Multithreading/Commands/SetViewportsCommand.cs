@@ -7,18 +7,16 @@ namespace Ryujinx.Graphics.GAL.Multithreading.Commands
     {
         public readonly CommandType CommandType => CommandType.SetViewports;
         private SpanRef<Viewport> _viewports;
-        private bool _disableTransform;
 
-        public void Set(SpanRef<Viewport> viewports, bool disableTransform)
+        public void Set(SpanRef<Viewport> viewports)
         {
             _viewports = viewports;
-            _disableTransform = disableTransform;
         }
 
         public static void Run(ref SetViewportsCommand command, ThreadedRenderer threaded, IRenderer renderer)
         {
             ReadOnlySpan<Viewport> viewports = command._viewports.Get(threaded);
-            renderer.Pipeline.SetViewports(viewports, command._disableTransform);
+            renderer.Pipeline.SetViewports(viewports);
             command._viewports.Dispose(threaded);
         }
     }
