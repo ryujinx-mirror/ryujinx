@@ -12,43 +12,23 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Grab sources to get update_reviewers.py and reviewers.yml
+      - name: Fetch sources
+        uses: actions/checkout@v3
+        with:
+          # Ensure we pin the source origin as pull_request_target run under forks.
+          fetch-depth: 0
+          repository: Ryujinx/Ryujinx
+          ref: master
+
       - name: Update labels based on changes
         uses: actions/labeler@v4
         with:
           sync-labels: true
           dot: true
 
-      - name: Auto Assign [Audio]
-        uses: kentaro-m/auto-assign-action@v1.2.5
-        with:
-          configuration-path: '.github/assign/audio.yml'
-
-      - name: Auto Assign [CPU]
-        uses: kentaro-m/auto-assign-action@v1.2.5
-        with:
-          configuration-path: '.github/assign/cpu.yml'
-
-      - name: Auto Assign [GPU]
-        uses: kentaro-m/auto-assign-action@v1.2.5
-        with:
-          configuration-path: '.github/assign/gpu.yml'
-
-      - name: Auto Assign [GUI]
-        uses: kentaro-m/auto-assign-action@v1.2.5
-        with:
-          configuration-path: '.github/assign/gui.yml'
-
-      - name: Auto Assign [Horizon]
-        uses: kentaro-m/auto-assign-action@v1.2.5
-        with:
-          configuration-path: '.github/assign/horizon.yml'
-
-      - name: Auto Assign [Infra]
-        uses: kentaro-m/auto-assign-action@v1.2.5
-        with:
-          configuration-path: '.github/assign/infra.yml'
-
-      - name: Auto Assign [Global]
-        uses: kentaro-m/auto-assign-action@v1.2.5
-        with:
-          configuration-path: '.github/assign/global.yml'
+      - name: Assign reviewers
+        run: |
+          pip3 install PyGithub
+          python3 .github/update_reviewers.py ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} ${{ github.event.pull_request.number }} .github/reviewers.yml
+        shell: bash

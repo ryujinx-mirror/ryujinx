@@ -1,0 +1,32 @@
+audio:
+  - marysaka
+
+cpu:
+  - gdkchan
+  - riperiperi
+  - marysaka
+  - LDj3SNuD
+
+gpu:
+  - gdkchan
+  - riperiperi
+  - marysaka
+
+gui:
+  - Ack77
+  - emmauss
+  - TSRBerry
+  - marysaka
+
+horizon:
+  - gdkchan
+  - Ack77
+  - marysaka
+  - TSRBerry
+
+infra:
+  - marysaka
+  - TSRBerry
+
+default:
+  - "@Ryujinx/developers"
