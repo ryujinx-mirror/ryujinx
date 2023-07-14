@@ -168,6 +168,16 @@ namespace Ryujinx.Graphics.Vulkan
             return ComponentType.Float;
         }
 
+        public ImageAspectFlags GetDepthStencilAspectFlags()
+        {
+            if (_depthStencil == null)
+            {
+                return ImageAspectFlags.None;
+            }
+
+            return _depthStencil.Info.Format.ConvertAspectFlags();
+        }
+
         public bool IsValidColorAttachment(int bindIndex)
         {
             return (uint)bindIndex < Constants.MaxRenderTargets && (_validColorAttachments & (1u << bindIndex)) != 0;
@@ -226,7 +236,7 @@ namespace Ryujinx.Graphics.Vulkan
 
             _depthStencil?.Storage.SetModification(
                 AccessFlags.DepthStencilAttachmentWriteBit,
-                PipelineStageFlags.ColorAttachmentOutputBit);
+                PipelineStageFlags.LateFragmentTestsBit);
         }
 
         public void InsertClearBarrier(CommandBufferScoped cbs, int index)

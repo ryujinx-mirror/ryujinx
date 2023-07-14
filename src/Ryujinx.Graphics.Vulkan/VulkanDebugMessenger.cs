@@ -10,17 +10,6 @@ namespace Ryujinx.Graphics.Vulkan
 {
     class VulkanDebugMessenger : IDisposable
     {
-        private static readonly string[] _excludedMessages = {
-            // NOTE: Done on purpose right now.
-            "UNASSIGNED-CoreValidation-Shader-OutputNotConsumed",
-            // TODO: Figure out if fixable
-            "VUID-vkCmdDrawIndexed-None-04584",
-            // TODO: Might be worth looking into making this happy to possibly optimize copies.
-            "UNASSIGNED-CoreValidation-DrawState-InvalidImageLayout",
-            // TODO: Fix this, it's causing too much noise right now.
-            "VUID-VkSubpassDependency-srcSubpass-00867",
-        };
-
         private readonly Vk _api;
         private readonly Instance _instance;
         private readonly GraphicsDebugLevel _logLevel;
@@ -107,14 +96,6 @@ namespace Ryujinx.Graphics.Vulkan
             void* pUserData)
         {
             var msg = Marshal.PtrToStringAnsi((IntPtr)pCallbackData->PMessage);
-
-            foreach (string excludedMessagePart in _excludedMessages)
-            {
-                if (msg.Contains(excludedMessagePart))
-                {
-                    return 0;
-                }
-            }
 
             if (messageSeverity.HasFlag(DebugUtilsMessageSeverityFlagsEXT.ErrorBitExt))
             {

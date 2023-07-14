@@ -245,9 +245,24 @@ namespace Ryujinx.Graphics.Vulkan
 
         public unsafe void ClearRenderTargetDepthStencil(int layer, int layerCount, float depthValue, bool depthMask, int stencilValue, int stencilMask)
         {
-            // TODO: Use stencilMask (fully)
+            // TODO: Use stencilMask (fully).
 
             if (FramebufferParams == null || !FramebufferParams.HasDepthStencil)
+            {
+                return;
+            }
+
+            var clearValue = new ClearValue(null, new ClearDepthStencilValue(depthValue, (uint)stencilValue));
+            var flags = depthMask ? ImageAspectFlags.DepthBit : 0;
+
+            if (stencilMask != 0)
+            {
+                flags |= ImageAspectFlags.StencilBit;
+            }
+
+            flags &= FramebufferParams.GetDepthStencilAspectFlags();
+
+            if (flags == ImageAspectFlags.None)
             {
                 return;
             }
@@ -258,14 +273,6 @@ namespace Ryujinx.Graphics.Vulkan
             }
 
             BeginRenderPass();
-
-            var clearValue = new ClearValue(null, new ClearDepthStencilValue(depthValue, (uint)stencilValue));
-            var flags = depthMask ? ImageAspectFlags.DepthBit : 0;
-
-            if (stencilMask != 0)
-            {
-                flags |= ImageAspectFlags.StencilBit;
-            }
 
             var attachment = new ClearAttachment(flags, 0, clearValue);
             var clearRect = FramebufferParams.GetClearRect(ClearScissor, layer, layerCount);
@@ -935,7 +942,7 @@ namespace Ryujinx.Graphics.Vulkan
 
             SignalStateChange();
 
-            if (_program.IsCompute)
+            if (internalProgram.IsCompute)
             {
                 EndRenderPass();
             }

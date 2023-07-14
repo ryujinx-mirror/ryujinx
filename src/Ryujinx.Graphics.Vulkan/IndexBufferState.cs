@@ -152,9 +152,6 @@ namespace Ryujinx.Graphics.Vulkan
         {
             if (_buffer == from)
             {
-                _buffer.DecrementReferenceCount();
-                to.IncrementReferenceCount();
-
                 _buffer = to;
             }
         }

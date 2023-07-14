@@ -116,7 +116,14 @@ namespace Ryujinx.Graphics.Vulkan
                 return new Auto<DisposableImageView>(new DisposableImageView(gd.Api, device, imageView), null, storage.GetImage());
             }
 
-            _imageView = CreateImageView(componentMapping, subresourceRange, type, ImageUsageFlags.SampledBit);
+            ImageUsageFlags shaderUsage = ImageUsageFlags.SampledBit;
+
+            if (info.Format.IsImageCompatible())
+            {
+                shaderUsage |= ImageUsageFlags.StorageBit;
+            }
+
+            _imageView = CreateImageView(componentMapping, subresourceRange, type, shaderUsage);
 
             // Framebuffer attachments and storage images requires a identity component mapping.
             var identityComponentMapping = new ComponentMapping(
@@ -378,7 +385,7 @@ namespace Ryujinx.Graphics.Vulkan
 
             bool isDepthOrStencil = dst.Info.Format.IsDepthOrStencil();
 
-            if (VulkanConfiguration.UseSlowSafeBlitOnAmd && (_gd.Vendor == Vendor.Amd || _gd.IsMoltenVk))
+            if (!VulkanConfiguration.UseUnsafeBlit || (_gd.Vendor != Vendor.Nvidia && _gd.Vendor != Vendor.Intel))
             {
                 _gd.HelperShader.Blit(
                     _gd,
