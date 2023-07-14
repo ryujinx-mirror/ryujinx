@@ -29,4 +29,4 @@ infra:
   - TSRBerry
 
 default:
-  - "@developers"
+  - marysaka
