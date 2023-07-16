@@ -1448,6 +1448,7 @@ namespace ARMeilleure.Instructions
             {
                 var overflowToInf = fpcr.GetRoundingMode() switch
                 {
+                    FPRoundingMode.ToNearest => true,
                     FPRoundingMode.TowardsPlusInfinity => !sign,
                     FPRoundingMode.TowardsMinusInfinity => sign,
                     FPRoundingMode.TowardsZero => false,
@@ -2879,6 +2880,7 @@ namespace ARMeilleure.Instructions
             {
                 var overflowToInf = fpcr.GetRoundingMode() switch
                 {
+                    FPRoundingMode.ToNearest => true,
                     FPRoundingMode.TowardsPlusInfinity => !sign,
                     FPRoundingMode.TowardsMinusInfinity => sign,
                     FPRoundingMode.TowardsZero => false,
