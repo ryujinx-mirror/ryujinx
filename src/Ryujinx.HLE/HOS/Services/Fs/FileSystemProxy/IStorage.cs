@@ -1,7 +1,6 @@
 using LibHac;
 using LibHac.Common;
 using LibHac.Sf;
-using Ryujinx.HLE.HOS.Ipc;
 
 namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
 {
@@ -19,7 +18,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
         public ResultCode Read(ServiceCtx context)
         {
             ulong offset = context.RequestData.ReadUInt64();
-            ulong size   = context.RequestData.ReadUInt64();
+            ulong size = context.RequestData.ReadUInt64();
 
             if (context.Request.ReceiveBuff.Count > 0)
             {
@@ -32,12 +31,10 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
                     size = bufferLen;
                 }
 
-                using (var region = context.Memory.GetWritableRegion(bufferAddress, (int)bufferLen, true))
-                {
-                    Result result = _baseStorage.Get.Read((long)offset, new OutBuffer(region.Memory.Span), (long)size);
+                using var region = context.Memory.GetWritableRegion(bufferAddress, (int)bufferLen, true);
+                Result result = _baseStorage.Get.Read((long)offset, new OutBuffer(region.Memory.Span), (long)size);
 
-                    return (ResultCode)result.Value;
-                }
+                return (ResultCode)result.Value;
             }
 
             return ResultCode.Success;

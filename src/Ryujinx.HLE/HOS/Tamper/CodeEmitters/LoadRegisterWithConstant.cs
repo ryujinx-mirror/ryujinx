@@ -20,7 +20,7 @@ namespace Ryujinx.HLE.HOS.Tamper.CodeEmitters
 
             Register destinationRegister = context.GetRegister(instruction[RegisterIndex]);
             ulong immediate = InstructionHelper.GetImmediate(instruction, ValueImmediateIndex, ValueImmediateSize);
-            Value<ulong> sourceValue = new Value<ulong>(immediate);
+            Value<ulong> sourceValue = new(immediate);
 
             context.CurrentOperations.Add(new OpMov<ulong>(destinationRegister, sourceValue));
         }

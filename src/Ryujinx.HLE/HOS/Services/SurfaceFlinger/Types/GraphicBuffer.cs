@@ -9,14 +9,14 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
     struct GraphicBuffer : IFlattenable
     {
         public GraphicBufferHeader Header;
-        public NvGraphicBuffer     Buffer;
+        public NvGraphicBuffer Buffer;
 
-        public int Width => Header.Width;
-        public int Height => Header.Height;
-        public PixelFormat Format => Header.Format;
-        public int Usage => Header.Usage;
+        public readonly int Width => Header.Width;
+        public readonly int Height => Header.Height;
+        public readonly PixelFormat Format => Header.Format;
+        public readonly int Usage => Header.Usage;
 
-        public Rect ToRect()
+        public readonly Rect ToRect()
         {
             return new Rect(Width, Height);
         }
@@ -41,32 +41,32 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
             Buffer = parcel.ReadUnmanagedType<NvGraphicBuffer>();
         }
 
-        public void IncrementNvMapHandleRefCount(ulong pid)
+        public readonly void IncrementNvMapHandleRefCount(ulong pid)
         {
             NvMapDeviceFile.IncrementMapRefCount(pid, Buffer.NvMapId);
 
-            for (int i = 0; i < Buffer.Surfaces.Length; i++)
+            for (int i = 0; i < NvGraphicBufferSurfaceArray.Length; i++)
             {
                 NvMapDeviceFile.IncrementMapRefCount(pid, Buffer.Surfaces[i].NvMapHandle);
             }
         }
 
-        public void DecrementNvMapHandleRefCount(ulong pid)
+        public readonly void DecrementNvMapHandleRefCount(ulong pid)
         {
             NvMapDeviceFile.DecrementMapRefCount(pid, Buffer.NvMapId);
 
-            for (int i = 0; i < Buffer.Surfaces.Length; i++)
+            for (int i = 0; i < NvGraphicBufferSurfaceArray.Length; i++)
             {
                 NvMapDeviceFile.DecrementMapRefCount(pid, Buffer.Surfaces[i].NvMapHandle);
             }
         }
 
-        public uint GetFlattenedSize()
+        public readonly uint GetFlattenedSize()
         {
             return (uint)Unsafe.SizeOf<GraphicBuffer>();
         }
 
-        public uint GetFdCount()
+        public readonly uint GetFdCount()
         {
             return 0;
         }

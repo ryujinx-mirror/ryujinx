@@ -5,6 +5,6 @@
         Screenshot,
         Movie,
         ExtraMovie,
-        Unknown
+        Unknown,
     }
 }

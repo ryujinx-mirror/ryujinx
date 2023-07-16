@@ -7,6 +7,6 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostCtrl.Types
     struct SyncptWaitArguments
     {
         public NvFence Fence;
-        public int     Timeout;
+        public int Timeout;
     }
 }

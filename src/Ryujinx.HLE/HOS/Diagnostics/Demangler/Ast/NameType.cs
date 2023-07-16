@@ -4,7 +4,7 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
 {
     public class NameType : BaseNode
     {
-        private string _nameValue;
+        private readonly string _nameValue;
 
         public NameType(string nameValue, NodeType type) : base(type)
         {

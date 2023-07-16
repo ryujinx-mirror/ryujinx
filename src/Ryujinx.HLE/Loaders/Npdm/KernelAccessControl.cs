@@ -12,7 +12,7 @@ namespace Ryujinx.HLE.Loaders.Npdm
 
             Capabilities = new int[size / 4];
 
-            BinaryReader reader = new BinaryReader(stream);
+            BinaryReader reader = new(stream);
 
             for (int index = 0; index < Capabilities.Length; index++)
             {

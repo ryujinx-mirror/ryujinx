@@ -27,8 +27,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
         public KPageTableBase MemoryManager { get; private set; }
 
-        private SortedDictionary<ulong, KTlsPageInfo> _fullTlsPages;
-        private SortedDictionary<ulong, KTlsPageInfo> _freeTlsPages;
+        private readonly SortedDictionary<ulong, KTlsPageInfo> _fullTlsPages;
+        private readonly SortedDictionary<ulong, KTlsPageInfo> _freeTlsPages;
 
         public int DefaultCpuCore { get; set; }
 
@@ -66,19 +66,17 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
         public bool IsApplication { get; private set; }
         public ulong Pid { get; private set; }
 
-        private long _creationTimestamp;
         private ulong _entrypoint;
         private ThreadStart _customThreadStart;
         private ulong _imageSize;
         private ulong _mainThreadStackSize;
         private ulong _memoryUsageCapacity;
-        private int _version;
 
         public KHandleTable HandleTable { get; private set; }
 
         public ulong UserExceptionContextAddress { get; private set; }
 
-        private LinkedList<KThread> _threads;
+        private readonly LinkedList<KThread> _threads;
 
         public bool IsPaused { get; private set; }
 
@@ -107,7 +105,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
             PinnedThreads = new KThread[KScheduler.CpuCoresCount];
 
             // TODO: Remove once we no longer need to initialize it externally.
-            HandleTable = new KHandleTable(context);
+            HandleTable = new KHandleTable();
 
             _threads = new LinkedList<KThread>();
 
@@ -347,10 +345,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
             State = ProcessState.Created;
 
-            _creationTimestamp = PerformanceCounter.ElapsedMilliseconds;
-
             Flags = creationInfo.Flags;
-            _version = creationInfo.Version;
             TitleId = creationInfo.TitleId;
             _entrypoint = creationInfo.CodeAddress;
             _imageSize = (ulong)creationInfo.CodePagesCount * KPageTableBase.PageSize;
@@ -370,8 +365,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
                                            MemoryManager.AliasRegionEnd -
                                            MemoryManager.AliasRegionStart;
                     break;
-
-                default: throw new InvalidOperationException($"Invalid MMU flags value 0x{Flags:x2}.");
+                default:
+                    throw new InvalidOperationException($"Invalid MMU flags value 0x{Flags:x2}.");
             }
 
             GenerateRandomEntropy();
@@ -476,9 +471,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
             Result result = Result.Success;
 
-            KTlsPageInfo pageInfo;
 
-            if (_fullTlsPages.TryGetValue(tlsPageAddr, out pageInfo))
+            if (_fullTlsPages.TryGetValue(tlsPageAddr, out KTlsPageInfo pageInfo))
             {
                 // TLS page was full, free slot and move to free pages tree.
                 _fullTlsPages.Remove(tlsPageAddr);
@@ -525,10 +519,12 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
             return result;
         }
 
+#pragma warning disable CA1822 // Mark member as static
         private void GenerateRandomEntropy()
         {
             // TODO.
         }
+#pragma warning restore CA1822
 
         public Result Start(int mainThreadPriority, ulong stackSize)
         {
@@ -549,7 +545,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
                 if (_mainThreadStackSize != 0)
                 {
-                    throw new InvalidOperationException("Trying to start a process with a invalid state!");
+                    throw new InvalidOperationException("Trying to start a process with an invalid state!");
                 }
 
                 ulong stackSizeRounded = BitUtils.AlignUp<ulong>(stackSize, KPageTableBase.PageSize);
@@ -648,7 +644,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
                     return result;
                 }
 
-                HandleTable = new KHandleTable(KernelContext);
+                HandleTable = new KHandleTable();
 
                 result = HandleTable.Initialize(Capabilities.HandleTableSize);
 
@@ -1018,22 +1014,19 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
             }
         }
 
-        private void SignalExitToDebugTerminated()
+        private static void SignalExitToDebugTerminated()
         {
             // TODO: Debug events.
         }
 
-        private void SignalExitToDebugExited()
+        private static void SignalExitToDebugExited()
         {
             // TODO: Debug events.
         }
 
         private void SignalExit()
         {
-            if (ResourceLimit != null)
-            {
-                ResourceLimit.Release(LimitableResource.Memory, GetMemoryUsage());
-            }
+            ResourceLimit?.Release(LimitableResource.Memory, GetMemoryUsage());
 
             KernelContext.CriticalSection.Enter();
 
@@ -1075,7 +1068,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
                 ProcessCreationFlags.AddressSpace64BitDeprecated => 36,
                 ProcessCreationFlags.AddressSpace32BitWithoutAlias => 32,
                 ProcessCreationFlags.AddressSpace64Bit => 39,
-                _ => 39
+                _ => 39,
             };
 
             bool for64Bit = flags.HasFlag(ProcessCreationFlags.Is64Bit);
@@ -1184,7 +1177,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
             }
         }
 
-        public bool IsExceptionUserThread(KThread thread)
+        public static bool IsExceptionUserThread(KThread thread)
         {
             // TODO
             return false;

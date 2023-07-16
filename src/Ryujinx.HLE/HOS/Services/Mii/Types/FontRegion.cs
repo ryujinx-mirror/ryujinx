@@ -5,6 +5,6 @@
         Standard,
         China,
         Korea,
-        Taiwan
+        Taiwan,
     }
 }

@@ -15,17 +15,17 @@ namespace Ryujinx.HLE
 {
     public class Switch : IDisposable
     {
-        public HLEConfiguration      Configuration     { get; }
+        public HLEConfiguration Configuration { get; }
         public IHardwareDeviceDriver AudioDeviceDriver { get; }
-        public MemoryBlock           Memory            { get; }
-        public GpuContext            Gpu               { get; }
-        public VirtualFileSystem     FileSystem        { get; }
-        public HOS.Horizon           System            { get; }
-        public ProcessLoader         Processes         { get; }
-        public PerformanceStatistics Statistics        { get; }
-        public Hid                   Hid               { get; }
-        public TamperMachine         TamperMachine     { get; }
-        public IHostUiHandler        UiHandler         { get; }
+        public MemoryBlock Memory { get; }
+        public GpuContext Gpu { get; }
+        public VirtualFileSystem FileSystem { get; }
+        public HOS.Horizon System { get; }
+        public ProcessLoader Processes { get; }
+        public PerformanceStatistics Statistics { get; }
+        public Hid Hid { get; }
+        public TamperMachine TamperMachine { get; }
+        public IHostUiHandler UiHandler { get; }
 
         public bool EnableDeviceVsync { get; set; } = true;
 
@@ -38,13 +38,14 @@ namespace Ryujinx.HLE
             ArgumentNullException.ThrowIfNull(configuration.UserChannelPersistence);
 
             Configuration = configuration;
-            FileSystem    = Configuration.VirtualFileSystem;
-            UiHandler     = Configuration.HostUiHandler;
+            FileSystem = Configuration.VirtualFileSystem;
+            UiHandler = Configuration.HostUiHandler;
 
             MemoryAllocationFlags memoryAllocationFlags = configuration.MemoryManagerMode == MemoryManagerMode.SoftwarePageTable
                 ? MemoryAllocationFlags.Reserve
                 : MemoryAllocationFlags.Reserve | MemoryAllocationFlags.Mirrorable;
 
+#pragma warning disable IDE0055 // Disable formatting
             AudioDeviceDriver = new CompatLayerHardwareDeviceDriver(Configuration.AudioDeviceDriver);
             Memory            = new MemoryBlock(Configuration.MemoryConfiguration.ToDramSize(), memoryAllocationFlags);
             Gpu               = new GpuContext(Configuration.GpuRenderer);
@@ -63,6 +64,7 @@ namespace Ryujinx.HLE
             System.EnablePtc                        = Configuration.EnablePtc;
             System.FsIntegrityCheckLevel            = Configuration.FsIntegrityCheckLevel;
             System.GlobalAccessLogMode              = Configuration.FsGlobalAccessLogMode;
+#pragma warning restore IDE0055
         }
 
         public bool LoadCart(string exeFsDir, string romFsFile = null)
@@ -124,7 +126,7 @@ namespace Ryujinx.HLE
 
         public void EnableCheats()
         {
-            FileSystem.ModLoader.EnableCheats(Processes.ActiveApplication.ProgramId, TamperMachine);
+            ModLoader.EnableCheats(Processes.ActiveApplication.ProgramId, TamperMachine);
         }
 
         public bool IsAudioMuted()
@@ -139,6 +141,7 @@ namespace Ryujinx.HLE
 
         public void Dispose()
         {
+            GC.SuppressFinalize(this);
             Dispose(true);
         }
 

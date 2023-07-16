@@ -9,7 +9,7 @@
         Normal,
         Toothbrush,
 
-        Min = 0,
-        Max = 5
+        Min = None,
+        Max = Toothbrush,
     }
 }

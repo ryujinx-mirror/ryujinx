@@ -4,7 +4,7 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
 {
     public class SpecialName : ParentNode
     {
-        private string _specialValue;
+        private readonly string _specialValue;
 
         public SpecialName(string specialValue, BaseNode type) : base(NodeType.SpecialName, type)
         {

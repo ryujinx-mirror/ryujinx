@@ -77,30 +77,28 @@ namespace Ryujinx.HLE.Utilities
         public static string ReadUtf8String(ServiceCtx context, int index = 0)
         {
             ulong position = context.Request.PtrBuff[index].Position;
-            ulong size     = context.Request.PtrBuff[index].Size;
+            ulong size = context.Request.PtrBuff[index].Size;
 
-            using (RecyclableMemoryStream ms = MemoryStreamManager.Shared.GetStream())
+            using RecyclableMemoryStream ms = MemoryStreamManager.Shared.GetStream();
+            while (size-- > 0)
             {
-                while (size-- > 0)
+                byte value = context.Memory.Read<byte>(position++);
+
+                if (value == 0)
                 {
-                    byte value = context.Memory.Read<byte>(position++);
-
-                    if (value == 0)
-                    {
-                        break;
-                    }
-
-                    ms.WriteByte(value);
+                    break;
                 }
 
-                return Encoding.UTF8.GetString(ms.GetReadOnlySequence());
+                ms.WriteByte(value);
             }
+
+            return Encoding.UTF8.GetString(ms.GetReadOnlySequence());
         }
 
         public static U8Span ReadUtf8Span(ServiceCtx context, int index = 0)
         {
             ulong position = context.Request.PtrBuff[index].Position;
-            ulong size     = context.Request.PtrBuff[index].Size;
+            ulong size = context.Request.PtrBuff[index].Size;
 
             ReadOnlySpan<byte> buffer = context.Memory.GetSpan(position, (int)size);
 
@@ -110,24 +108,23 @@ namespace Ryujinx.HLE.Utilities
         public static string ReadUtf8StringSend(ServiceCtx context, int index = 0)
         {
             ulong position = context.Request.SendBuff[index].Position;
-            ulong size     = context.Request.SendBuff[index].Size;
+            ulong size = context.Request.SendBuff[index].Size;
 
-            using (RecyclableMemoryStream ms = MemoryStreamManager.Shared.GetStream())
+            using RecyclableMemoryStream ms = MemoryStreamManager.Shared.GetStream();
+
+            while (size-- > 0)
             {
-                while (size-- > 0)
+                byte value = context.Memory.Read<byte>(position++);
+
+                if (value == 0)
                 {
-                    byte value = context.Memory.Read<byte>(position++);
-
-                    if (value == 0)
-                    {
-                        break;
-                    }
-
-                    ms.WriteByte(value);
+                    break;
                 }
 
-                return Encoding.UTF8.GetString(ms.GetReadOnlySequence());
+                ms.WriteByte(value);
             }
+
+            return Encoding.UTF8.GetString(ms.GetReadOnlySequence());
         }
 
         public static int CompareCStr(ReadOnlySpan<byte> s1, ReadOnlySpan<byte> s2)

@@ -2,6 +2,7 @@ using LibHac.Fs;
 using LibHac.Ncm;
 using Ryujinx.Ava.UI.ViewModels;
 using Ryujinx.Ava.UI.Windows;
+using Ryujinx.HLE.FileSystem;
 using Ryujinx.Ui.App.Common;
 using System;
 using System.IO;
@@ -81,7 +82,7 @@ namespace Ryujinx.Ava.UI.Models
 
             Task.Run(() =>
             {
-                var saveRoot = Path.Combine(MainWindow.MainWindowViewModel.VirtualFileSystem.GetNandPath(), $"user/save/{info.SaveDataId:x16}");
+                var saveRoot = Path.Combine(VirtualFileSystem.GetNandPath(), $"user/save/{info.SaveDataId:x16}");
 
                 long totalSize = GetDirectorySize(saveRoot);
 

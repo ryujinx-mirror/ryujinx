@@ -55,7 +55,7 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
         ConversionOperatorType,
         LocalName,
         CtorVtableSpecialName,
-        ArrayType
+        ArrayType,
     }
 
     public abstract class BaseNode
@@ -99,11 +99,11 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
             return null;
         }
 
-        public virtual void PrintRight(TextWriter writer) {}
+        public virtual void PrintRight(TextWriter writer) { }
 
         public override string ToString()
         {
-            StringWriter writer = new StringWriter();
+            StringWriter writer = new();
 
             Print(writer);
 

@@ -6,6 +6,6 @@
         BackButton,
         Requested,
         LastUrl,
-        ErrorDialog = 7
+        ErrorDialog = 7,
     }
 }

@@ -7,10 +7,10 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp.NfpManager
     struct TagInfo
     {
         public Array10<byte> Uuid;
-        public byte          UuidLength;
+        public byte UuidLength;
         public Array21<byte> Reserved1;
-        public uint          Protocol;
-        public uint          TagType;
-        public Array6<byte>  Reserved2;
+        public uint Protocol;
+        public uint TagType;
+        public Array6<byte> Reserved2;
     }
 }

@@ -7,7 +7,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE
 {
     internal class AppletFifo<T> : IAppletFifo<T>
     {
-        private ConcurrentQueue<T> _dataQueue;
+        private readonly ConcurrentQueue<T> _dataQueue;
 
         public event EventHandler DataAvailable;
 

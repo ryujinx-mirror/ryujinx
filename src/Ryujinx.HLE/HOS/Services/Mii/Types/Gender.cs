@@ -6,7 +6,7 @@
         Female,
         All,
 
-        Min = 0,
-        Max = 1
+        Min = Male,
+        Max = Female,
     }
 }

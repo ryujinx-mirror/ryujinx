@@ -58,8 +58,10 @@ namespace Ryujinx.HLE.HOS.Services.Spl
         {
             configValue = default;
 
-            SystemVersion version    = context.Device.System.ContentManager.GetCurrentFirmwareVersion();
-            MemorySize    memorySize = context.Device.Configuration.MemoryConfiguration.ToKernelMemorySize();
+#pragma warning disable IDE0059 // Remove unnecessary value assignment
+            SystemVersion version = context.Device.System.ContentManager.GetCurrentFirmwareVersion();
+#pragma warning restore IDE0059
+            MemorySize memorySize = context.Device.Configuration.MemoryConfiguration.ToKernelMemorySize();
 
             switch (configItem)
             {
@@ -80,9 +82,9 @@ namespace Ryujinx.HLE.HOS.Services.Spl
                         configValue = (ulong)DramId.IcosaSamsung4GiB;
                     }
                     break;
-                case ConfigItem.SecurityEngineInterruptNumber: 
+                case ConfigItem.SecurityEngineInterruptNumber:
                     return SmcResult.NotImplemented;
-                case ConfigItem.FuseVersion: 
+                case ConfigItem.FuseVersion:
                     return SmcResult.NotImplemented;
                 case ConfigItem.HardwareType:
                     configValue = (ulong)HardwareType.Icosa;
@@ -93,7 +95,7 @@ namespace Ryujinx.HLE.HOS.Services.Spl
                 case ConfigItem.IsRecoveryBoot:
                     configValue = 0;
                     break;
-                case ConfigItem.DeviceId: 
+                case ConfigItem.DeviceId:
                     return SmcResult.NotImplemented;
                 case ConfigItem.BootReason:
                     // This was removed in firmware 4.0.0.

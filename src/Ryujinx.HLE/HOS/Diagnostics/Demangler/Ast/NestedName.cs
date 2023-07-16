@@ -4,7 +4,7 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
 {
     public class NestedName : ParentNode
     {
-        private BaseNode _name;
+        private readonly BaseNode _name;
 
         public NestedName(BaseNode name, BaseNode type) : base(NodeType.NestedName, type)
         {

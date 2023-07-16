@@ -19,9 +19,11 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostChannel
 
         private const uint MaxModuleSyncpoint = 16;
 
+#pragma warning disable IDE0052 // Remove unread private member
         private uint _timeout;
         private uint _submitTimeout;
         private uint _timeslice;
+#pragma warning restore IDE0052
 
         private readonly Switch _device;
 
@@ -34,7 +36,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostChannel
         public enum ResourcePolicy
         {
             Device,
-            Channel
+            Channel,
         }
 
         protected static uint[] DeviceSyncpoints = new uint[MaxModuleSyncpoint];
@@ -47,14 +49,14 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostChannel
 
         public NvHostChannelDeviceFile(ServiceCtx context, IVirtualMemoryManager memory, ulong owner) : base(context, owner)
         {
-            _device        = context.Device;
-            _memory        = memory;
-            _timeout       = 3000;
+            _device = context.Device;
+            _memory = memory;
+            _timeout = 3000;
             _submitTimeout = 0;
-            _timeslice     = 0;
+            _timeslice = 0;
             _host1xContext = GetHost1XContext(context.Device.Gpu, owner);
-            _contextId     = _host1xContext.Host1x.CreateContext();
-            Channel        = _device.Gpu.CreateChannel();
+            _contextId = _host1xContext.Host1x.CreateContext();
+            Channel = _device.Gpu.CreateChannel();
 
             ChannelInitialization.InitializeState(Channel);
 
@@ -143,12 +145,14 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostChannel
 
         private NvInternalResult Submit(Span<byte> arguments)
         {
-            SubmitArguments     submitHeader    = GetSpanAndSkip<SubmitArguments>(ref arguments, 1)[0];
-            Span<CommandBuffer> commandBuffers  = GetSpanAndSkip<CommandBuffer>(ref arguments, submitHeader.CmdBufsCount);
-            Span<Reloc>         relocs          = GetSpanAndSkip<Reloc>(ref arguments, submitHeader.RelocsCount);
-            Span<uint>          relocShifts     = GetSpanAndSkip<uint>(ref arguments, submitHeader.RelocsCount);
-            Span<SyncptIncr>    syncptIncrs     = GetSpanAndSkip<SyncptIncr>(ref arguments, submitHeader.SyncptIncrsCount);
-            Span<uint>          fenceThresholds = GetSpanAndSkip<uint>(ref arguments, submitHeader.FencesCount);
+            SubmitArguments submitHeader = GetSpanAndSkip<SubmitArguments>(ref arguments, 1)[0];
+            Span<CommandBuffer> commandBuffers = GetSpanAndSkip<CommandBuffer>(ref arguments, submitHeader.CmdBufsCount);
+#pragma warning disable IDE0059 // Remove unnecessary value assignment
+            Span<Reloc> relocs = GetSpanAndSkip<Reloc>(ref arguments, submitHeader.RelocsCount);
+            Span<uint> relocShifts = GetSpanAndSkip<uint>(ref arguments, submitHeader.RelocsCount);
+#pragma warning restore IDE0059
+            Span<SyncptIncr> syncptIncrs = GetSpanAndSkip<SyncptIncr>(ref arguments, submitHeader.SyncptIncrsCount);
+            Span<uint> fenceThresholds = GetSpanAndSkip<uint>(ref arguments, submitHeader.FencesCount);
 
             lock (_device)
             {
@@ -176,9 +180,9 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostChannel
 
         private Span<T> GetSpanAndSkip<T>(ref Span<byte> arguments, int count) where T : unmanaged
         {
-            Span<T> output = MemoryMarshal.Cast<byte, T>(arguments).Slice(0, count);
+            Span<T> output = MemoryMarshal.Cast<byte, T>(arguments)[..count];
 
-            arguments = arguments.Slice(Unsafe.SizeOf<T>() * count);
+            arguments = arguments[(Unsafe.SizeOf<T>() * count)..];
 
             return output;
         }
@@ -227,9 +231,9 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostChannel
 
         private NvInternalResult MapCommandBuffer(Span<byte> arguments)
         {
-            int                       headerSize           = Unsafe.SizeOf<MapCommandBufferArguments>();
-            MapCommandBufferArguments commandBufferHeader  = MemoryMarshal.Cast<byte, MapCommandBufferArguments>(arguments)[0];
-            Span<CommandBufferHandle> commandBufferEntries = MemoryMarshal.Cast<byte, CommandBufferHandle>(arguments.Slice(headerSize)).Slice(0, commandBufferHeader.NumEntries);
+            int headerSize = Unsafe.SizeOf<MapCommandBufferArguments>();
+            MapCommandBufferArguments commandBufferHeader = MemoryMarshal.Cast<byte, MapCommandBufferArguments>(arguments)[0];
+            Span<CommandBufferHandle> commandBufferEntries = MemoryMarshal.Cast<byte, CommandBufferHandle>(arguments[headerSize..])[..commandBufferHeader.NumEntries];
 
             foreach (ref CommandBufferHandle commandBufferEntry in commandBufferEntries)
             {
@@ -269,9 +273,9 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostChannel
 
         private NvInternalResult UnmapCommandBuffer(Span<byte> arguments)
         {
-            int                       headerSize           = Unsafe.SizeOf<MapCommandBufferArguments>();
-            MapCommandBufferArguments commandBufferHeader  = MemoryMarshal.Cast<byte, MapCommandBufferArguments>(arguments)[0];
-            Span<CommandBufferHandle> commandBufferEntries = MemoryMarshal.Cast<byte, CommandBufferHandle>(arguments.Slice(headerSize)).Slice(0, commandBufferHeader.NumEntries);
+            int headerSize = Unsafe.SizeOf<MapCommandBufferArguments>();
+            MapCommandBufferArguments commandBufferHeader = MemoryMarshal.Cast<byte, MapCommandBufferArguments>(arguments)[0];
+            Span<CommandBufferHandle> commandBufferEntries = MemoryMarshal.Cast<byte, CommandBufferHandle>(arguments[headerSize..])[..commandBufferHeader.NumEntries];
 
             foreach (ref CommandBufferHandle commandBufferEntry in commandBufferEntries)
             {
@@ -320,9 +324,9 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostChannel
 
         private NvInternalResult SubmitGpfifo(Span<byte> arguments)
         {
-            int                   headerSize             = Unsafe.SizeOf<SubmitGpfifoArguments>();
+            int headerSize = Unsafe.SizeOf<SubmitGpfifoArguments>();
             SubmitGpfifoArguments gpfifoSubmissionHeader = MemoryMarshal.Cast<byte, SubmitGpfifoArguments>(arguments)[0];
-            Span<ulong>           gpfifoEntries          = MemoryMarshal.Cast<byte, ulong>(arguments.Slice(headerSize)).Slice(0, gpfifoSubmissionHeader.NumEntries);
+            Span<ulong> gpfifoEntries = MemoryMarshal.Cast<byte, ulong>(arguments[headerSize..])[..gpfifoSubmissionHeader.NumEntries];
 
             return SubmitGpfifo(ref gpfifoSubmissionHeader, gpfifoEntries);
         }
@@ -473,7 +477,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostChannel
             return ChannelSyncpoints[index];
         }
 
-        public static uint GetSyncpointDevice(NvHostSyncpt syncpointManager, uint index, bool isClientManaged)
+        public uint GetSyncpointDevice(NvHostSyncpt syncpointManager, uint index, bool isClientManaged)
         {
             if (DeviceSyncpoints[index] != 0)
             {

@@ -22,10 +22,10 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
 
         public KResourceLimit(KernelContext context) : base(context)
         {
-            _current  = new long[(int)LimitableResource.Count];
-            _limit    = new long[(int)LimitableResource.Count];
+            _current = new long[(int)LimitableResource.Count];
+            _limit = new long[(int)LimitableResource.Count];
             _current2 = new long[(int)LimitableResource.Count];
-            _peak     = new long[(int)LimitableResource.Count];
+            _peak = new long[(int)LimitableResource.Count];
 
             _lock = new object();
 

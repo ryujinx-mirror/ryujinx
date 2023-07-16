@@ -8,13 +8,13 @@ namespace Ryujinx.HLE.HOS.Services.Mii
     [Service("mii:u", false)]
     class IStaticService : IpcService
     {
-        private DatabaseImpl _databaseImpl;
+        private readonly DatabaseImpl _databaseImpl;
 
-        private bool _isSystem;
+        private readonly bool _isSystem;
 
         public IStaticService(ServiceCtx context, bool isSystem)
         {
-            _isSystem     = isSystem;
+            _isSystem = isSystem;
             _databaseImpl = DatabaseImpl.Instance;
         }
 

@@ -3,6 +3,6 @@
     enum NpadJoyAssignmentMode : uint
     {
         Dual,
-        Single
+        Single,
     }
 }

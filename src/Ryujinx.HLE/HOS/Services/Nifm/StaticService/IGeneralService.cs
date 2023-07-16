@@ -11,7 +11,7 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService
 {
     class IGeneralService : DisposableIpcService
     {
-        private GeneralServiceDetail _generalServiceDetail;
+        private readonly GeneralServiceDetail _generalServiceDetail;
 
         private IPInterfaceProperties _targetPropertiesCache = null;
         private UnicastIPAddressInformation _targetAddressInfoCache = null;
@@ -21,11 +21,11 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService
         {
             _generalServiceDetail = new GeneralServiceDetail
             {
-                ClientId                     = GeneralServiceManager.Count,
-                IsAnyInternetRequestAccepted = true // NOTE: Why not accept any internet request?
+                ClientId = GeneralServiceManager.Count,
+                IsAnyInternetRequestAccepted = true, // NOTE: Why not accept any internet request?
             };
 
-            NetworkChange.NetworkAddressChanged += new NetworkAddressChangedEventHandler(LocalInterfaceCacheHandler);
+            NetworkChange.NetworkAddressChanged += LocalInterfaceCacheHandler;
 
             GeneralServiceManager.Add(_generalServiceDetail);
         }
@@ -76,13 +76,13 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService
 
             context.Response.PtrBuff[0] = context.Response.PtrBuff[0].WithSize((uint)Unsafe.SizeOf<NetworkProfileData>());
 
-            NetworkProfileData networkProfile = new NetworkProfileData
+            NetworkProfileData networkProfile = new()
             {
-                Uuid = UInt128Utils.CreateRandom()
+                Uuid = UInt128Utils.CreateRandom(),
             };
 
             networkProfile.IpSettingData.IpAddressSetting = new IpAddressSetting(interfaceProperties, unicastAddress);
-            networkProfile.IpSettingData.DnsSetting       = new DnsSetting(interfaceProperties);
+            networkProfile.IpSettingData.DnsSetting = new DnsSetting(interfaceProperties);
 
             "RyujinxNetwork"u8.CopyTo(networkProfile.Name.AsSpan());
 
@@ -137,11 +137,11 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService
                 return ResultCode.NoInternetConnection;
             }
 
-            InternetConnectionStatus internetConnectionStatus = new InternetConnectionStatus
+            InternetConnectionStatus internetConnectionStatus = new()
             {
-                Type         = InternetConnectionType.WiFi,
+                Type = InternetConnectionType.WiFi,
                 WifiStrength = 3,
-                State        = InternetConnectionState.Connected,
+                State = InternetConnectionState.Connected,
             };
 
             context.ResponseData.WriteStruct(internetConnectionStatus);
@@ -154,7 +154,9 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService
         public ResultCode IsAnyInternetRequestAccepted(ServiceCtx context)
         {
             ulong position = context.Request.PtrBuff[0].Position;
-            ulong size     = context.Request.PtrBuff[0].Size;
+#pragma warning disable IDE0059 // Remove unnecessary value assignment
+            ulong size = context.Request.PtrBuff[0].Size;
+#pragma warning restore IDE0059
 
             int clientId = context.Memory.Read<int>(position);
 
@@ -184,9 +186,9 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService
 
         private void LocalInterfaceCacheHandler(object sender, EventArgs e)
         {
-            Logger.Info?.Print(LogClass.ServiceNifm, $"NetworkAddress changed, invalidating cached data.");
+            Logger.Info?.Print(LogClass.ServiceNifm, "NetworkAddress changed, invalidating cached data.");
 
-            _targetPropertiesCache  = null;
+            _targetPropertiesCache = null;
             _targetAddressInfoCache = null;
         }
 

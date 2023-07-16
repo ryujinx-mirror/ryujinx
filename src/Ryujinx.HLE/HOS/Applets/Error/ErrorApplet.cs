@@ -22,11 +22,11 @@ namespace Ryujinx.HLE.HOS.Applets.Error
     {
         private const long ErrorMessageBinaryTitleId = 0x0100000000000801;
 
-        private Horizon           _horizon;
-        private AppletSession     _normalSession;
-        private CommonArguments   _commonArguments;
+        private readonly Horizon _horizon;
+        private AppletSession _normalSession;
+        private CommonArguments _commonArguments;
         private ErrorCommonHeader _errorCommonHeader;
-        private byte[]            _errorStorage;
+        private byte[] _errorStorage;
 
         public event EventHandler AppletStateChanged;
 
@@ -40,14 +40,14 @@ namespace Ryujinx.HLE.HOS.Applets.Error
 
         public ResultCode Start(AppletSession normalSession, AppletSession interactiveSession)
         {
-            _normalSession   = normalSession;
+            _normalSession = normalSession;
             _commonArguments = IApplet.ReadStruct<CommonArguments>(_normalSession.Pop());
 
             Logger.Info?.PrintMsg(LogClass.ServiceAm, $"ErrorApplet version: 0x{_commonArguments.AppletVersion:x8}");
 
-            _errorStorage      = _normalSession.Pop();
+            _errorStorage = _normalSession.Pop();
             _errorCommonHeader = IApplet.ReadStruct<ErrorCommonHeader>(_errorStorage);
-            _errorStorage      = _errorStorage.Skip(Marshal.SizeOf<ErrorCommonHeader>()).ToArray();
+            _errorStorage = _errorStorage.Skip(Marshal.SizeOf<ErrorCommonHeader>()).ToArray();
 
             switch (_errorCommonHeader.Type)
             {
@@ -63,7 +63,8 @@ namespace Ryujinx.HLE.HOS.Applets.Error
 
                         break;
                     }
-                default: throw new NotImplementedException($"ErrorApplet type {_errorCommonHeader.Type} is not implemented.");
+                default:
+                    throw new NotImplementedException($"ErrorApplet type {_errorCommonHeader.Type} is not implemented.");
             }
 
             AppletStateChanged?.Invoke(this, null);
@@ -71,15 +72,16 @@ namespace Ryujinx.HLE.HOS.Applets.Error
             return ResultCode.Success;
         }
 
-        private (uint module, uint description) HexToResultCode(uint resultCode)
+        private static (uint module, uint description) HexToResultCode(uint resultCode)
         {
             return ((resultCode & 0x1FF) + 2000, (resultCode >> 9) & 0x3FFF);
         }
 
-        private string SystemLanguageToLanguageKey(SystemLanguage systemLanguage)
+        private static string SystemLanguageToLanguageKey(SystemLanguage systemLanguage)
         {
             return systemLanguage switch
             {
+#pragma warning disable IDE0055 // Disable formatting
                 SystemLanguage.Japanese             => "ja",
                 SystemLanguage.AmericanEnglish      => "en-US",
                 SystemLanguage.French               => "fr",
@@ -98,7 +100,8 @@ namespace Ryujinx.HLE.HOS.Applets.Error
                 SystemLanguage.SimplifiedChinese    => "zh-Hans",
                 SystemLanguage.TraditionalChinese   => "zh-Hant",
                 SystemLanguage.BrazilianPortuguese  => "pt-BR",
-                _                                   => "en-US"
+                _                                   => "en-US",
+#pragma warning restore IDE0055
             };
         }
 
@@ -111,26 +114,24 @@ namespace Ryujinx.HLE.HOS.Applets.Error
         {
             string binaryTitleContentPath = _horizon.ContentManager.GetInstalledContentPath(ErrorMessageBinaryTitleId, StorageId.BuiltInSystem, NcaContentType.Data);
 
-            using (LibHac.Fs.IStorage ncaFileStream = new LocalStorage(_horizon.Device.FileSystem.SwitchPathToSystemPath(binaryTitleContentPath), FileAccess.Read, FileMode.Open))
+            using LibHac.Fs.IStorage ncaFileStream = new LocalStorage(FileSystem.VirtualFileSystem.SwitchPathToSystemPath(binaryTitleContentPath), FileAccess.Read, FileMode.Open);
+            Nca nca = new(_horizon.Device.FileSystem.KeySet, ncaFileStream);
+            IFileSystem romfs = nca.OpenFileSystem(NcaSectionType.Data, _horizon.FsIntegrityCheckLevel);
+            string languageCode = SystemLanguageToLanguageKey(_horizon.State.DesiredSystemLanguage);
+            string filePath = $"/{module}/{description:0000}/{languageCode}_{key}";
+
+            if (romfs.FileExists(filePath))
             {
-                Nca         nca          = new Nca(_horizon.Device.FileSystem.KeySet, ncaFileStream);
-                IFileSystem romfs        = nca.OpenFileSystem(NcaSectionType.Data, _horizon.FsIntegrityCheckLevel);
-                string      languageCode = SystemLanguageToLanguageKey(_horizon.State.DesiredSystemLanguage);
-                string      filePath     = $"/{module}/{description:0000}/{languageCode}_{key}";
+                using var binaryFile = new UniqueRef<IFile>();
 
-                if (romfs.FileExists(filePath))
-                {
-                    using var binaryFile = new UniqueRef<IFile>();
+                romfs.OpenFile(ref binaryFile.Ref, filePath.ToU8Span(), OpenMode.Read).ThrowIfFailure();
+                StreamReader reader = new(binaryFile.Get.AsStream(), Encoding.Unicode);
 
-                    romfs.OpenFile(ref binaryFile.Ref, filePath.ToU8Span(), OpenMode.Read).ThrowIfFailure();
-                    StreamReader reader = new StreamReader(binaryFile.Get.AsStream(), Encoding.Unicode);
-
-                    return CleanText(reader.ReadToEnd());
-                }
-                else
-                {
-                    return "";
-                }
+                return CleanText(reader.ReadToEnd());
+            }
+            else
+            {
+                return "";
             }
         }
 
@@ -145,7 +146,7 @@ namespace Ryujinx.HLE.HOS.Applets.Error
         {
             ErrorCommonArg errorCommonArg = IApplet.ReadStruct<ErrorCommonArg>(_errorStorage);
 
-            uint module      = errorCommonArg.Module;
+            uint module = errorCommonArg.Module;
             uint description = errorCommonArg.Description;
 
             if (_errorCommonHeader.MessageFlag == 0)
@@ -188,7 +189,7 @@ namespace Ryujinx.HLE.HOS.Applets.Error
             string messageText = Encoding.ASCII.GetString(messageTextBuffer.TakeWhile(b => !b.Equals(0)).ToArray());
             string detailsText = Encoding.ASCII.GetString(detailsTextBuffer.TakeWhile(b => !b.Equals(0)).ToArray());
 
-            List<string> buttons = new List<string>();
+            List<string> buttons = new();
 
             // TODO: Handle the LanguageCode to return the translated "OK" and "Details".
 

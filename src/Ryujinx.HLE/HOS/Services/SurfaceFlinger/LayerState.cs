@@ -5,6 +5,6 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
         NotInitialized,
         ManagedClosed,
         ManagedOpened,
-        Stray
+        Stray,
     }
 }

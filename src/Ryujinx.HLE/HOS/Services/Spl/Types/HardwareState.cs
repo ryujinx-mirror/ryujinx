@@ -3,6 +3,6 @@
     enum HardwareState
     {
         Development,
-        Production
+        Production,
     }
 }

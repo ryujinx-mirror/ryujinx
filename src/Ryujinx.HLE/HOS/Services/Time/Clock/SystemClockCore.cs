@@ -5,19 +5,19 @@ namespace Ryujinx.HLE.HOS.Services.Time.Clock
 {
     abstract class SystemClockCore
     {
-        private SteadyClockCore                  _steadyClockCore;
-        private SystemClockContext               _context;
-        private bool                             _isInitialized;
+        private readonly SteadyClockCore _steadyClockCore;
+        private SystemClockContext _context;
+        private bool _isInitialized;
         private SystemClockContextUpdateCallback _systemClockContextUpdateCallback;
 
         public SystemClockCore(SteadyClockCore steadyClockCore)
         {
             _steadyClockCore = steadyClockCore;
-            _context         = new SystemClockContext();
-            _isInitialized   = false;
+            _context = new SystemClockContext();
+            _isInitialized = false;
 
             _context.SteadyTimePoint.ClockSourceId = steadyClockCore.GetClockSourceId();
-            _systemClockContextUpdateCallback      = null;
+            _systemClockContextUpdateCallback = null;
         }
 
         public virtual SteadyClockCore GetSteadyClockCore()
@@ -52,10 +52,10 @@ namespace Ryujinx.HLE.HOS.Services.Time.Clock
         {
             SteadyClockTimePoint currentTimePoint = _steadyClockCore.GetCurrentTimePoint(tickSource);
 
-            SystemClockContext clockContext = new SystemClockContext()
+            SystemClockContext clockContext = new()
             {
-                Offset          = posixTime - currentTimePoint.TimePoint,
-                SteadyTimePoint = currentTimePoint
+                Offset = posixTime - currentTimePoint.TimePoint,
+                SteadyTimePoint = currentTimePoint,
             };
 
             ResultCode result = SetClockContext(clockContext);
@@ -99,10 +99,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.Clock
 
         public void RegisterOperationEvent(KWritableEvent writableEvent)
         {
-            if (_systemClockContextUpdateCallback != null)
-            {
-                _systemClockContextUpdateCallback.RegisterOperationEvent(writableEvent);
-            }
+            _systemClockContextUpdateCallback?.RegisterOperationEvent(writableEvent);
         }
 
         public ResultCode SetSystemClockContext(SystemClockContext context)

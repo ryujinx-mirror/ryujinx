@@ -11,9 +11,9 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Lib
         public ResultCode GetLaunchReason(ServiceCtx context)
         {
             // NOTE: Flag is set by using an internal field.
-            AppletProcessLaunchReason appletProcessLaunchReason = new AppletProcessLaunchReason()
+            AppletProcessLaunchReason appletProcessLaunchReason = new()
             {
-                Flag = 0
+                Flag = 0,
             };
 
             context.ResponseData.WriteStruct(appletProcessLaunchReason);

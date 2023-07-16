@@ -4,6 +4,6 @@
     {
         Loose,
         Standard,
-        Tight
+        Tight,
     }
 }

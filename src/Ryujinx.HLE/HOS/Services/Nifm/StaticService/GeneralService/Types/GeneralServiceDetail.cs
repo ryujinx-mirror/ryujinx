@@ -2,7 +2,7 @@
 {
     class GeneralServiceDetail
     {
-        public int  ClientId;
+        public int ClientId;
         public bool IsAnyInternetRequestAccepted;
     }
 }

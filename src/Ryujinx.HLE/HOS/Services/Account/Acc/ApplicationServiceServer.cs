@@ -58,7 +58,7 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
             }
 
             ulong outputPosition = context.Request.RecvListBuff[0].Position;
-            ulong outputSize     = context.Request.RecvListBuff[0].Size;
+            ulong outputSize = context.Request.RecvListBuff[0].Size;
 
             MemoryHelper.FillWithZeros(context.Memory, outputPosition, (int)outputSize);
 
@@ -71,7 +71,7 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
                     break;
                 }
 
-                context.Memory.Write(outputPosition + offset,     userProfile.UserId.High);
+                context.Memory.Write(outputPosition + offset, userProfile.UserId.High);
                 context.Memory.Write(outputPosition + offset + 8, userProfile.UserId.Low);
 
                 offset += 0x10;
@@ -148,7 +148,7 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
 
         public ResultCode CheckNetworkServiceAvailabilityAsync(ServiceCtx context, out IAsyncContext asyncContext)
         {
-            KEvent         asyncEvent     = new(context.Device.System.KernelContext);
+            KEvent asyncEvent = new(context.Device.System.KernelContext);
             AsyncExecution asyncExecution = new(asyncEvent);
 
             asyncExecution.Initialize(1000, CheckNetworkServiceAvailabilityAsyncImpl);
@@ -183,7 +183,7 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
             }
 
             ulong inputPosition = context.Request.SendBuff[0].Position;
-            ulong inputSize     = context.Request.SendBuff[0].Size;
+            ulong inputSize = context.Request.SendBuff[0].Size;
 
             if (inputSize != 0x24000)
             {

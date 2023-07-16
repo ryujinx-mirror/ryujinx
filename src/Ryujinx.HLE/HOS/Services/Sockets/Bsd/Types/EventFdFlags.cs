@@ -7,6 +7,6 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd.Types
     {
         None = 0,
         Semaphore = 1 << 0,
-        NonBlocking = 1 << 2
+        NonBlocking = 1 << 2,
     }
 }

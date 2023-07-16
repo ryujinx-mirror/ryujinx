@@ -123,7 +123,7 @@ namespace Ryujinx.HLE.HOS.Services.Settings
         public ResultCode GetDeviceNickName(ServiceCtx context)
         {
             ulong deviceNickNameBufferPosition = context.Request.ReceiveBuff[0].Position;
-            ulong deviceNickNameBufferSize     = context.Request.ReceiveBuff[0].Size;
+            ulong deviceNickNameBufferSize = context.Request.ReceiveBuff[0].Size;
 
             if (deviceNickNameBufferPosition == 0)
             {

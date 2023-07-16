@@ -11,49 +11,47 @@ using System.Threading;
 
 namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 {
-    using ResultCode = Ryujinx.HLE.HOS.Services.Vi.ResultCode;
-
     class SurfaceFlinger : IConsumerListener, IDisposable
     {
         private const int TargetFps = 60;
 
-        private Switch _device;
+        private readonly Switch _device;
 
-        private Dictionary<long, Layer> _layers;
+        private readonly Dictionary<long, Layer> _layers;
 
         private bool _isRunning;
 
-        private Thread _composerThread;
+        private readonly Thread _composerThread;
 
-        private Stopwatch _chrono;
+        private readonly Stopwatch _chrono;
 
-        private ManualResetEvent _event = new ManualResetEvent(false);
-        private AutoResetEvent _nextFrameEvent = new AutoResetEvent(true);
+        private readonly ManualResetEvent _event = new(false);
+        private readonly AutoResetEvent _nextFrameEvent = new(true);
         private long _ticks;
         private long _ticksPerFrame;
-        private long _spinTicks;
-        private long _1msTicks;
+        private readonly long _spinTicks;
+        private readonly long _1msTicks;
 
         private int _swapInterval;
         private int _swapIntervalDelay;
 
-        private readonly object Lock = new();
+        private readonly object _lock = new();
 
         public long RenderLayerId { get; private set; }
 
         private class Layer
         {
-            public int                    ProducerBinderId;
+            public int ProducerBinderId;
             public IGraphicBufferProducer Producer;
-            public BufferItemConsumer     Consumer;
-            public BufferQueueCore        Core;
-            public ulong                  Owner;
-            public LayerState             State;
+            public BufferItemConsumer Consumer;
+            public BufferQueueCore Core;
+            public ulong Owner;
+            public LayerState State;
         }
 
         private class TextureCallbackInformation
         {
-            public Layer      Layer;
+            public Layer Layer;
             public BufferItem Item;
         }
 
@@ -65,7 +63,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 
             _composerThread = new Thread(HandleComposition)
             {
-                Name = "SurfaceFlinger.Composer"
+                Name = "SurfaceFlinger.Composer",
             };
 
             _chrono = new Stopwatch();
@@ -100,7 +98,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
         {
             layerId = 1;
 
-            lock (Lock)
+            lock (_lock)
             {
                 foreach (KeyValuePair<long, Layer> pair in _layers)
                 {
@@ -118,7 +116,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 
         private void CreateLayerFromId(ulong pid, long layerId, LayerState initialState)
         {
-            lock (Lock)
+            lock (_lock)
             {
                 Logger.Info?.Print(LogClass.SurfaceFlinger, $"Creating layer {layerId}");
 
@@ -132,16 +130,16 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
                 _layers.Add(layerId, new Layer
                 {
                     ProducerBinderId = HOSBinderDriverServer.RegisterBinderObject(producer),
-                    Producer         = producer,
-                    Consumer         = new BufferItemConsumer(_device, consumer, 0, -1, false, this),
-                    Core             = core,
-                    Owner            = pid,
-                    State            = initialState
+                    Producer = producer,
+                    Consumer = new BufferItemConsumer(_device, consumer, 0, -1, false, this),
+                    Core = core,
+                    Owner = pid,
+                    State = initialState,
                 });
             }
         }
 
-        public ResultCode OpenLayer(ulong pid, long layerId, out IBinder producer)
+        public Vi.ResultCode OpenLayer(ulong pid, long layerId, out IBinder producer)
         {
             Layer layer = GetLayerByIdLocked(layerId);
 
@@ -149,18 +147,18 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
             {
                 producer = null;
 
-                return ResultCode.InvalidArguments;
+                return Vi.ResultCode.InvalidArguments;
             }
 
             layer.State = LayerState.ManagedOpened;
             producer = layer.Producer;
 
-            return ResultCode.Success;
+            return Vi.ResultCode.Success;
         }
 
-        public ResultCode CloseLayer(long layerId)
+        public Vi.ResultCode CloseLayer(long layerId)
         {
-            lock (Lock)
+            lock (_lock)
             {
                 Layer layer = GetLayerByIdLocked(layerId);
 
@@ -168,18 +166,18 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
                 {
                     Logger.Error?.Print(LogClass.SurfaceFlinger, $"Failed to close layer {layerId}");
 
-                    return ResultCode.InvalidValue;
+                    return Vi.ResultCode.InvalidValue;
                 }
 
                 CloseLayer(layerId, layer);
 
-                return ResultCode.Success;
+                return Vi.ResultCode.Success;
             }
         }
 
-        public ResultCode DestroyManagedLayer(long layerId)
+        public Vi.ResultCode DestroyManagedLayer(long layerId)
         {
-            lock (Lock)
+            lock (_lock)
             {
                 Layer layer = GetLayerByIdLocked(layerId);
 
@@ -187,14 +185,14 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
                 {
                     Logger.Error?.Print(LogClass.SurfaceFlinger, $"Failed to destroy managed layer {layerId} (not found)");
 
-                    return ResultCode.InvalidValue;
+                    return Vi.ResultCode.InvalidValue;
                 }
 
                 if (layer.State != LayerState.ManagedClosed && layer.State != LayerState.ManagedOpened)
                 {
                     Logger.Error?.Print(LogClass.SurfaceFlinger, $"Failed to destroy managed layer {layerId} (permission denied)");
 
-                    return ResultCode.PermissionDenied;
+                    return Vi.ResultCode.PermissionDenied;
                 }
 
                 HOSBinderDriverServer.UnregisterBinderObject(layer.ProducerBinderId);
@@ -204,13 +202,13 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
                     CloseLayer(layerId, layer);
                 }
 
-                return ResultCode.Success;
+                return Vi.ResultCode.Success;
             }
         }
 
-        public ResultCode DestroyStrayLayer(long layerId)
+        public Vi.ResultCode DestroyStrayLayer(long layerId)
         {
-            lock (Lock)
+            lock (_lock)
             {
                 Layer layer = GetLayerByIdLocked(layerId);
 
@@ -218,14 +216,14 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
                 {
                     Logger.Error?.Print(LogClass.SurfaceFlinger, $"Failed to destroy stray layer {layerId} (not found)");
 
-                    return ResultCode.InvalidValue;
+                    return Vi.ResultCode.InvalidValue;
                 }
 
                 if (layer.State != LayerState.Stray)
                 {
                     Logger.Error?.Print(LogClass.SurfaceFlinger, $"Failed to destroy stray layer {layerId} (permission denied)");
 
-                    return ResultCode.PermissionDenied;
+                    return Vi.ResultCode.PermissionDenied;
                 }
 
                 HOSBinderDriverServer.UnregisterBinderObject(layer.ProducerBinderId);
@@ -235,7 +233,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
                     CloseLayer(layerId, layer);
                 }
 
-                return ResultCode.Success;
+                return Vi.ResultCode.Success;
             }
         }
 
@@ -263,7 +261,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 
         public void SetRenderLayer(long layerId)
         {
-            lock (Lock)
+            lock (_lock)
             {
                 RenderLayerId = layerId;
             }
@@ -284,7 +282,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 
         public IGraphicBufferProducer GetProducerByLayerId(long layerId)
         {
-            lock (Lock)
+            lock (_lock)
             {
                 Layer layer = GetLayerByIdLocked(layerId);
 
@@ -365,7 +363,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 
         public void Compose()
         {
-            lock (Lock)
+            lock (_lock)
             {
                 // TODO: support multilayers (& multidisplay ?)
                 if (RenderLayerId == 0)
@@ -403,7 +401,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 
         private void PostFrameBuffer(Layer layer, BufferItem item)
         {
-            int frameBufferWidth  = item.GraphicBuffer.Object.Width;
+            int frameBufferWidth = item.GraphicBuffer.Object.Width;
             int frameBufferHeight = item.GraphicBuffer.Object.Height;
 
             int nvMapHandle = item.GraphicBuffer.Object.Buffer.Surfaces[0].NvMapHandle;
@@ -434,9 +432,9 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
             bool flipY = item.Transform.HasFlag(NativeWindowTransform.FlipY);
 
             AspectRatio aspectRatio = _device.Configuration.AspectRatio;
-            bool        isStretched = aspectRatio == AspectRatio.Stretched;
+            bool isStretched = aspectRatio == AspectRatio.Stretched;
 
-            ImageCrop crop = new ImageCrop(
+            ImageCrop crop = new(
                 cropRect.Left,
                 cropRect.Right,
                 cropRect.Top,
@@ -447,10 +445,10 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
                 aspectRatio.ToFloatX(),
                 aspectRatio.ToFloatY());
 
-            TextureCallbackInformation textureCallbackInformation = new TextureCallbackInformation
+            TextureCallbackInformation textureCallbackInformation = new()
             {
                 Layer = layer,
-                Item  = item
+                Item = item,
             };
 
             if (_device.Gpu.Window.EnqueueFrameThreadSafe(
@@ -543,6 +541,6 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
             _device.Statistics.RecordGameFrameTime();
         }
 
-        public void OnBuffersReleased() {}
+        public void OnBuffersReleased() { }
     }
 }

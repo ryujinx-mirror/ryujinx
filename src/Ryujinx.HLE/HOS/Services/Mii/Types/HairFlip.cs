@@ -5,7 +5,7 @@
         Left,
         Right,
 
-        Min = 0,
-        Max = 1
+        Min = Left,
+        Max = Right,
     }
 }

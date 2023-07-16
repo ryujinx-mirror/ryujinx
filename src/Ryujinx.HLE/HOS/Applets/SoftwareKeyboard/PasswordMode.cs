@@ -13,6 +13,6 @@
         /// <summary>
         /// Hide input characters.
         /// </summary>
-        Enabled
+        Enabled,
     }
 }

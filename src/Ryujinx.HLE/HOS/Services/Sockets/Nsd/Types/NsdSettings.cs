@@ -2,8 +2,8 @@
 {
     class NsdSettings
     {
-        public bool   Initialized;
-        public bool   TestMode;
+        public bool Initialized;
+        public bool TestMode;
         public string Environment;
     }
 }

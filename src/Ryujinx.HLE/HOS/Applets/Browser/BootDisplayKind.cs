@@ -6,6 +6,6 @@
         Offline,
         Black,
         Share,
-        Lobby
+        Lobby,
     }
 }

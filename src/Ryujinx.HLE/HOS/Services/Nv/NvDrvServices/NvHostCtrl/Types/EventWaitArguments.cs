@@ -7,7 +7,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostCtrl.Types
     struct EventWaitArguments
     {
         public NvFence Fence;
-        public int     Timeout;
-        public uint    Value;
+        public int Timeout;
+        public uint Value;
     }
 }

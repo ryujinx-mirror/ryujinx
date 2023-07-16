@@ -10,9 +10,9 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioOut
 {
     class AudioOut : IAudioOut
     {
-        private AudioOutputSystem _system;
-        private uint _processHandle;
-        private KernelContext _kernelContext;
+        private readonly AudioOutputSystem _system;
+        private readonly uint _processHandle;
+        private readonly KernelContext _kernelContext;
 
         public AudioOut(AudioOutputSystem system, KernelContext kernelContext, uint processHandle)
         {
@@ -80,9 +80,9 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioOut
         {
             IWritableEvent outEvent = _system.RegisterBufferEvent();
 
-            if (outEvent is AudioKernelEvent)
+            if (outEvent is AudioKernelEvent kernelEvent)
             {
-                return ((AudioKernelEvent)outEvent).Event;
+                return kernelEvent.Event;
             }
             else
             {

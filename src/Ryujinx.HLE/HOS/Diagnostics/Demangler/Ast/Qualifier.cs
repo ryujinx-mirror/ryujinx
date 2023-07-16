@@ -7,14 +7,14 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
         None,
         Const,
         Volatile,
-        Restricted = 4
+        Restricted = 4,
     }
 
     public enum Reference
     {
         None,
         RValue,
-        LValue
+        LValue,
     }
 
     public class CvType : ParentNode
@@ -46,10 +46,7 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
 
         public override void PrintLeft(TextWriter writer)
         {
-            if (Child != null)
-            {
-                Child.PrintLeft(writer);
-            }
+            Child?.PrintLeft(writer);
 
             PrintQualifier(writer);
         }
@@ -61,10 +58,7 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
 
         public override void PrintRight(TextWriter writer)
         {
-            if (Child != null)
-            {
-                Child.PrintRight(writer);
-            }
+            Child?.PrintRight(writer);
         }
     }
 
@@ -111,10 +105,7 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
 
         public override void PrintRight(TextWriter writer)
         {
-            if (Child != null)
-            {
-                Child.PrintRight(writer);
-            }
+            Child?.PrintRight(writer);
         }
     }
 }

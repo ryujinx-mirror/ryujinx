@@ -29,6 +29,6 @@
         IsApplication,
         FreeThreadCount,
         ThreadTickCount,
-        MesosphereCurrentProcess = 65001
+        MesosphereCurrentProcess = 65001,
     }
 }

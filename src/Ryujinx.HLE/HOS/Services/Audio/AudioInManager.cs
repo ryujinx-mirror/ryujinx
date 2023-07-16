@@ -7,7 +7,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio
 {
     class AudioInManager : IAudioInManager
     {
-        private AudioInManagerImpl _impl;
+        private readonly AudioInManagerImpl _impl;
 
         public AudioInManager(AudioInManagerImpl impl)
         {

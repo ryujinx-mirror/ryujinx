@@ -5,7 +5,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
 {
     class KServerPort : KSynchronizationObject
     {
-        private readonly LinkedList<KServerSession>      _incomingConnections;
+        private readonly LinkedList<KServerSession> _incomingConnections;
         private readonly LinkedList<KLightServerSession> _lightIncomingConnections;
 
         private readonly KPort _parent;
@@ -16,7 +16,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
         {
             _parent = parent;
 
-            _incomingConnections      = new LinkedList<KServerSession>();
+            _incomingConnections = new LinkedList<KServerSession>();
             _lightIncomingConnections = new LinkedList<KLightServerSession>();
         }
 

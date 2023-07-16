@@ -14,7 +14,7 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
             IOStream
         }
 
-        private SpecialType _specialSubstitutionKey;
+        private readonly SpecialType _specialSubstitutionKey;
 
         public SpecialSubstitution(SpecialType specialSubstitutionKey) : base(NodeType.SpecialSubstitution)
         {
@@ -54,23 +54,16 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
 
         private string GetExtendedName()
         {
-            switch (_specialSubstitutionKey)
+            return _specialSubstitutionKey switch
             {
-                case SpecialType.Allocator:
-                    return "std::allocator";
-                case SpecialType.BasicString:
-                    return "std::basic_string";
-                case SpecialType.String:
-                    return "std::basic_string<char, std::char_traits<char>, std::allocator<char> >";
-                case SpecialType.IStream:
-                    return "std::basic_istream<char, std::char_traits<char> >";
-                case SpecialType.OStream:
-                    return "std::basic_ostream<char, std::char_traits<char> >";
-                case SpecialType.IOStream:
-                    return "std::basic_iostream<char, std::char_traits<char> >";
-            }
-
-            return null;
+                SpecialType.Allocator => "std::allocator",
+                SpecialType.BasicString => "std::basic_string",
+                SpecialType.String => "std::basic_string<char, std::char_traits<char>, std::allocator<char> >",
+                SpecialType.IStream => "std::basic_istream<char, std::char_traits<char> >",
+                SpecialType.OStream => "std::basic_ostream<char, std::char_traits<char> >",
+                SpecialType.IOStream => "std::basic_iostream<char, std::char_traits<char> >",
+                _ => null,
+            };
         }
 
         public override void PrintLeft(TextWriter writer)

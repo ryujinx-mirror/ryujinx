@@ -13,6 +13,6 @@
         /// <summary>
         /// Position the cursor at the end of the text
         /// </summary>
-        End
+        End,
     }
 }

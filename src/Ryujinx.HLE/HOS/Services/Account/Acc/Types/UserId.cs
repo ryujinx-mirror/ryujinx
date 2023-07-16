@@ -15,18 +15,18 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
 
         public bool IsNull => (Low | High) == 0;
 
-        public static UserId Null => new UserId(0, 0);
+        public static UserId Null => new(0, 0);
 
         public UserId(long low, long high)
         {
-            Low  = low;
+            Low = low;
             High = high;
         }
 
         public UserId(byte[] bytes)
         {
             High = BitConverter.ToInt64(bytes, 0);
-            Low  = BitConverter.ToInt64(bytes, 8);
+            Low = BitConverter.ToInt64(bytes, 8);
         }
 
         public UserId(string hex)
@@ -36,7 +36,7 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
                 throw new ArgumentException("Invalid Hex value!", nameof(hex));
             }
 
-            Low  = long.Parse(hex.AsSpan(16), NumberStyles.HexNumber);
+            Low = long.Parse(hex.AsSpan(16), NumberStyles.HexNumber);
             High = long.Parse(hex.AsSpan(0, 16), NumberStyles.HexNumber);
         }
 

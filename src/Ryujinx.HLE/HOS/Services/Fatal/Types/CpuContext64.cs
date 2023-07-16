@@ -19,6 +19,6 @@ namespace Ryujinx.HLE.HOS.Services.Fatal.Types
         public Array32<ulong> StackTrace;
         public ulong StartAddress;
         public ulong RegisterSetFlags;
-        public uint  StackTraceSize;
+        public uint StackTraceSize;
     }
 }

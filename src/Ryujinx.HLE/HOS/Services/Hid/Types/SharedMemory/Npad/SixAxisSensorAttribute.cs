@@ -7,6 +7,6 @@ namespace Ryujinx.HLE.HOS.Services.Hid.Types.SharedMemory.Npad
     {
         None = 0,
         IsConnected = 1 << 0,
-        IsInterpolated = 1 << 1
+        IsInterpolated = 1 << 1,
     }
 }

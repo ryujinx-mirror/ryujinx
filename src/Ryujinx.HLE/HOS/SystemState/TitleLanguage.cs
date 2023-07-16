@@ -17,6 +17,6 @@
         Korean,
         TraditionalChinese,
         SimplifiedChinese,
-        BrazilianPortuguese
+        BrazilianPortuguese,
     }
 }

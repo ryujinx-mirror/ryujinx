@@ -2,9 +2,9 @@ namespace Ryujinx.HLE.HOS.Tamper.Operations
 {
     class OpOr<T> : IOperation where T : unmanaged
     {
-        IOperand _destination;
-        IOperand _lhs;
-        IOperand _rhs;
+        readonly IOperand _destination;
+        readonly IOperand _lhs;
+        readonly IOperand _rhs;
 
         public OpOr(IOperand destination, IOperand lhs, IOperand rhs)
         {

@@ -4,6 +4,6 @@
     {
         None,
         WhiteList,
-        All
+        All,
     }
 }

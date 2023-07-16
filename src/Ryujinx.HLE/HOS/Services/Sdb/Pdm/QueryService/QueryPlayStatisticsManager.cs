@@ -9,17 +9,17 @@ using System.Runtime.CompilerServices;
 
 namespace Ryujinx.HLE.HOS.Services.Sdb.Pdm.QueryService
 {
-    static class QueryPlayStatisticsManager
+    class QueryPlayStatisticsManager
     {
-        private static Dictionary<UserId, ApplicationPlayStatistics> applicationPlayStatistics = new Dictionary<UserId, ApplicationPlayStatistics>();
+        private static readonly Dictionary<UserId, ApplicationPlayStatistics> _applicationPlayStatistics = new();
 
         internal static ResultCode GetPlayStatistics(ServiceCtx context, bool byUserId = false)
         {
             ulong inputPosition = context.Request.SendBuff[0].Position;
-            ulong inputSize     = context.Request.SendBuff[0].Size;
+            ulong inputSize = context.Request.SendBuff[0].Size;
 
             ulong outputPosition = context.Request.ReceiveBuff[0].Position;
-            ulong outputSize     = context.Request.ReceiveBuff[0].Size;
+            ulong outputSize = context.Request.ReceiveBuff[0].Size;
 
             UserId userId = byUserId ? context.RequestData.ReadStruct<UserId>() : new UserId();
 
@@ -33,7 +33,7 @@ namespace Ryujinx.HLE.HOS.Services.Sdb.Pdm.QueryService
 
             PlayLogQueryCapability queryCapability = (PlayLogQueryCapability)context.Device.Processes.ActiveApplication.ApplicationControlProperties.PlayLogQueryCapability;
 
-            List<ulong> titleIds = new List<ulong>();
+            List<ulong> titleIds = new();
 
             for (ulong i = 0; i < inputSize / sizeof(ulong); i++)
             {
@@ -55,7 +55,7 @@ namespace Ryujinx.HLE.HOS.Services.Sdb.Pdm.QueryService
             MemoryHelper.FillWithZeros(context.Memory, outputPosition, (int)outputSize);
 
             // Return ResultCode.ServiceUnavailable if data is locked by another process.
-            var filteredApplicationPlayStatistics = applicationPlayStatistics.AsEnumerable();
+            var filteredApplicationPlayStatistics = _applicationPlayStatistics.AsEnumerable();
 
             if (queryCapability == PlayLogQueryCapability.None)
             {

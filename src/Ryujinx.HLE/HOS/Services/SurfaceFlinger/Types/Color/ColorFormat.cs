@@ -1,7 +1,11 @@
-﻿namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 {
+    [SuppressMessage("Design", "CA1069: Enums values should not be duplicated")]
     enum ColorFormat : ulong
     {
+#pragma warning disable IDE0055 // Disable formatting
         NonColor8                       = ColorSpace.NonColor      | ColorSwizzle.X000  | ColorComponent.X8           | ColorDataType.Integer,
         NonColor16                      = ColorSpace.NonColor      | ColorSwizzle.X000  | ColorComponent.X16          | ColorDataType.Integer,
         NonColor24                      = ColorSpace.NonColor      | ColorSwizzle.X000  | ColorComponent.X24          | ColorDataType.Integer,
@@ -231,5 +235,6 @@
         X4Bayer12GBRG                   = ColorSpace.BayerGBRG     | ColorSwizzle.Y000  | ColorComponent.Y4X12        | ColorDataType.Integer,
         X6Bayer10GBRG                   = ColorSpace.BayerGBRG     | ColorSwizzle.Y000  | ColorComponent.Y6X10        | ColorDataType.Integer,
         XYZ                             = ColorSpace.XYZ           | ColorSwizzle.XYZ1  | ColorComponent.X20Y20Z20    | ColorDataType.Float,
+#pragma warning restore IDE0055
     }
 }

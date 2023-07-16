@@ -10,16 +10,16 @@ namespace Ryujinx.HLE.HOS.Applets.SoftwareKeyboard
     /// </summary>
     internal class SoftwareKeyboardRenderer : IDisposable
     {
-        private const int TextBoxBlinkSleepMilliseconds   = 100;
+        private const int TextBoxBlinkSleepMilliseconds = 100;
         private const int RendererWaitTimeoutMilliseconds = 100;
 
-        private readonly object _stateLock  = new();
+        private readonly object _stateLock = new();
 
-        private SoftwareKeyboardUiState      _state = new SoftwareKeyboardUiState();
-        private SoftwareKeyboardRendererBase _renderer;
+        private readonly SoftwareKeyboardUiState _state = new();
+        private readonly SoftwareKeyboardRendererBase _renderer;
 
-        private TimedAction _textBoxBlinkTimedAction = new TimedAction();
-        private TimedAction _renderAction            = new TimedAction();
+        private readonly TimedAction _textBoxBlinkTimedAction = new();
+        private readonly TimedAction _renderAction = new();
 
         public SoftwareKeyboardRenderer(IHostUiTheme uiTheme)
         {
@@ -47,10 +47,10 @@ namespace Ryujinx.HLE.HOS.Applets.SoftwareKeyboard
 
         private static void StartRenderer(TimedAction timedAction, SoftwareKeyboardRendererBase renderer, SoftwareKeyboardUiState state, object stateLock)
         {
-            SoftwareKeyboardUiState internalState = new SoftwareKeyboardUiState();
+            SoftwareKeyboardUiState internalState = new();
 
             bool canCreateSurface = false;
-            bool needsUpdate      = true;
+            bool needsUpdate = true;
 
             timedAction.Reset(() =>
             {
@@ -61,6 +61,7 @@ namespace Ryujinx.HLE.HOS.Applets.SoftwareKeyboard
                         return;
                     }
 
+#pragma warning disable IDE0055 // Disable formatting
                     needsUpdate  = UpdateStateField(ref state.InputText,           ref internalState.InputText);
                     needsUpdate |= UpdateStateField(ref state.CursorBegin,         ref internalState.CursorBegin);
                     needsUpdate |= UpdateStateField(ref state.CursorEnd,           ref internalState.CursorEnd);
@@ -70,6 +71,7 @@ namespace Ryujinx.HLE.HOS.Applets.SoftwareKeyboard
                     needsUpdate |= UpdateStateField(ref state.TypingEnabled,       ref internalState.TypingEnabled);
                     needsUpdate |= UpdateStateField(ref state.ControllerEnabled,   ref internalState.ControllerEnabled);
                     needsUpdate |= UpdateStateField(ref state.TextBoxBlinkCounter, ref internalState.TextBoxBlinkCounter);
+#pragma warning restore IDE0055
 
                     canCreateSurface = state.SurfaceInfo != null && internalState.SurfaceInfo == null;
 
@@ -104,16 +106,14 @@ namespace Ryujinx.HLE.HOS.Applets.SoftwareKeyboard
             return false;
         }
 
-#pragma warning disable CS8632
-        public void UpdateTextState(string? inputText, int? cursorBegin, int? cursorEnd, bool? overwriteMode, bool? typingEnabled)
-#pragma warning restore CS8632
+        public void UpdateTextState(string inputText, int? cursorBegin, int? cursorEnd, bool? overwriteMode, bool? typingEnabled)
         {
             lock (_stateLock)
             {
                 // Update the parameters that were provided.
-                _state.InputText     = inputText != null ? inputText : _state.InputText;
-                _state.CursorBegin   = cursorBegin.GetValueOrDefault(_state.CursorBegin);
-                _state.CursorEnd     = cursorEnd.GetValueOrDefault(_state.CursorEnd);
+                _state.InputText = inputText ?? _state.InputText;
+                _state.CursorBegin = cursorBegin.GetValueOrDefault(_state.CursorBegin);
+                _state.CursorEnd = cursorEnd.GetValueOrDefault(_state.CursorEnd);
                 _state.OverwriteMode = overwriteMode.GetValueOrDefault(_state.OverwriteMode);
                 _state.TypingEnabled = typingEnabled.GetValueOrDefault(_state.TypingEnabled);
 
@@ -130,8 +130,8 @@ namespace Ryujinx.HLE.HOS.Applets.SoftwareKeyboard
             lock (_stateLock)
             {
                 // Update the parameters that were provided.
-                _state.AcceptPressed     = acceptPressed.GetValueOrDefault(_state.AcceptPressed);
-                _state.CancelPressed     = cancelPressed.GetValueOrDefault(_state.CancelPressed);
+                _state.AcceptPressed = acceptPressed.GetValueOrDefault(_state.AcceptPressed);
+                _state.CancelPressed = cancelPressed.GetValueOrDefault(_state.CancelPressed);
                 _state.ControllerEnabled = controllerEnabled.GetValueOrDefault(_state.ControllerEnabled);
 
                 // Tell the render thread there is something new to render.

@@ -133,6 +133,6 @@
         RightControl = 228,
         RightShift = 229,
         RightAlt = 230,
-        RightGui = 231
+        RightGui = 231,
     }
 }

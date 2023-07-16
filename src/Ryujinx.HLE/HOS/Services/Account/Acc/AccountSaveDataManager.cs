@@ -13,7 +13,7 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
     {
         private readonly string _profilesJsonPath = Path.Join(AppDataManager.BaseDirPath, "system", "Profiles.json");
 
-        private static readonly ProfilesJsonSerializerContext SerializerContext = new(JsonHelper.GetDefaultSerializerOptions());
+        private static readonly ProfilesJsonSerializerContext _serializerContext = new(JsonHelper.GetDefaultSerializerOptions());
 
         public UserId LastOpened { get; set; }
 
@@ -23,22 +23,22 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
 
             if (File.Exists(_profilesJsonPath))
             {
-                try 
+                try
                 {
-                    ProfilesJson profilesJson = JsonHelper.DeserializeFromFile(_profilesJsonPath, SerializerContext.ProfilesJson);
+                    ProfilesJson profilesJson = JsonHelper.DeserializeFromFile(_profilesJsonPath, _serializerContext.ProfilesJson);
 
                     foreach (var profile in profilesJson.Profiles)
                     {
-                        UserProfile addedProfile = new UserProfile(new UserId(profile.UserId), profile.Name, profile.Image, profile.LastModifiedTimestamp);
+                        UserProfile addedProfile = new(new UserId(profile.UserId), profile.Name, profile.Image, profile.LastModifiedTimestamp);
 
                         profiles.AddOrUpdate(profile.UserId, addedProfile, (key, old) => addedProfile);
                     }
 
                     LastOpened = new UserId(profilesJson.LastOpened);
                 }
-                catch (Exception e) 
+                catch (Exception ex)
                 {
-                    Logger.Error?.Print(LogClass.Application, $"Failed to parse {_profilesJsonPath}: {e.Message} Loading default profile!");
+                    Logger.Error?.Print(LogClass.Application, $"Failed to parse {_profilesJsonPath}: {ex.Message} Loading default profile!");
 
                     LastOpened = AccountManager.DefaultUserId;
                 }
@@ -51,26 +51,26 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
 
         public void Save(ConcurrentDictionary<string, UserProfile> profiles)
         {
-            ProfilesJson profilesJson = new ProfilesJson()
+            ProfilesJson profilesJson = new()
             {
-                Profiles   = new List<UserProfileJson>(),
-                LastOpened = LastOpened.ToString()
+                Profiles = new List<UserProfileJson>(),
+                LastOpened = LastOpened.ToString(),
             };
 
             foreach (var profile in profiles)
             {
                 profilesJson.Profiles.Add(new UserProfileJson()
                 {
-                    UserId                = profile.Value.UserId.ToString(),
-                    Name                  = profile.Value.Name,
-                    AccountState          = profile.Value.AccountState,
-                    OnlinePlayState       = profile.Value.OnlinePlayState,
+                    UserId = profile.Value.UserId.ToString(),
+                    Name = profile.Value.Name,
+                    AccountState = profile.Value.AccountState,
+                    OnlinePlayState = profile.Value.OnlinePlayState,
                     LastModifiedTimestamp = profile.Value.LastModifiedTimestamp,
-                    Image                 = profile.Value.Image,
+                    Image = profile.Value.Image,
                 });
             }
 
-            JsonHelper.SerializeToFile(_profilesJsonPath, profilesJson, SerializerContext.ProfilesJson);
+            JsonHelper.SerializeToFile(_profilesJsonPath, profilesJson, _serializerContext.ProfilesJson);
         }
     }
 }

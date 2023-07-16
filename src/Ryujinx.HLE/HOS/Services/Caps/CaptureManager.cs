@@ -11,19 +11,21 @@ namespace Ryujinx.HLE.HOS.Services.Caps
 {
     class CaptureManager
     {
-        private string _sdCardPath;
+        private readonly string _sdCardPath;
 
         private uint _shimLibraryVersion;
 
         public CaptureManager(Switch device)
         {
-            _sdCardPath = device.FileSystem.GetSdCardPath();
+            _sdCardPath = FileSystem.VirtualFileSystem.GetSdCardPath();
         }
 
         public ResultCode SetShimLibraryVersion(ServiceCtx context)
         {
-            ulong shimLibraryVersion   = context.RequestData.ReadUInt64();
+            ulong shimLibraryVersion = context.RequestData.ReadUInt64();
+#pragma warning disable IDE0059 // Remove unnecessary value assignment
             ulong appletResourceUserId = context.RequestData.ReadUInt64();
+#pragma warning restore IDE0059
 
             // TODO: Service checks if the pid is present in an internal list and returns ResultCode.BlacklistedPid if it is.
             //       The list contents needs to be determined.
@@ -82,28 +84,28 @@ namespace Ryujinx.HLE.HOS.Services.Caps
 
                 applicationAlbumEntry = new ApplicationAlbumEntry()
                 {
-                    Size              = (ulong)Unsafe.SizeOf<ApplicationAlbumEntry>(),
-                    TitleId           = titleId,
+                    Size = (ulong)Unsafe.SizeOf<ApplicationAlbumEntry>(),
+                    TitleId = titleId,
                     AlbumFileDateTime = new AlbumFileDateTime()
                     {
-                        Year     = (ushort)currentDateTime.Year,
-                        Month    = (byte)currentDateTime.Month,
-                        Day      = (byte)currentDateTime.Day,
-                        Hour     = (byte)currentDateTime.Hour,
-                        Minute   = (byte)currentDateTime.Minute,
-                        Second   = (byte)currentDateTime.Second,
-                        UniqueId = 0
+                        Year = (ushort)currentDateTime.Year,
+                        Month = (byte)currentDateTime.Month,
+                        Day = (byte)currentDateTime.Day,
+                        Hour = (byte)currentDateTime.Hour,
+                        Minute = (byte)currentDateTime.Minute,
+                        Second = (byte)currentDateTime.Second,
+                        UniqueId = 0,
                     },
-                    AlbumStorage      = AlbumStorage.Sd,
-                    ContentType       = ContentType.Screenshot,
-                    Padding           = new Array5<byte>(),
-                    Unknown0x1f       = 1
+                    AlbumStorage = AlbumStorage.Sd,
+                    ContentType = ContentType.Screenshot,
+                    Padding = new Array5<byte>(),
+                    Unknown0x1f = 1,
                 };
 
                 // NOTE: The hex hash is a HMAC-SHA256 (first 32 bytes) using a hardcoded secret key over the titleId, we can simulate it by hashing the titleId instead.
-                string hash       = Convert.ToHexString(SHA256.HashData(BitConverter.GetBytes(titleId))).Remove(0x20);
+                string hash = Convert.ToHexString(SHA256.HashData(BitConverter.GetBytes(titleId))).Remove(0x20);
                 string folderPath = Path.Combine(_sdCardPath, "Nintendo", "Album", currentDateTime.Year.ToString("00"), currentDateTime.Month.ToString("00"), currentDateTime.Day.ToString("00"));
-                string filePath   = GenerateFilePath(folderPath, applicationAlbumEntry, currentDateTime, hash);
+                string filePath = GenerateFilePath(folderPath, applicationAlbumEntry, currentDateTime, hash);
 
                 // TODO: Handle that using the FS service implementation and return the right error code instead of throwing exceptions.
                 Directory.CreateDirectory(folderPath);

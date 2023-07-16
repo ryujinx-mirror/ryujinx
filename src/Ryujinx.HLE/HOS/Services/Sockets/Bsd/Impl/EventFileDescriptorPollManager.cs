@@ -13,10 +13,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd.Impl
         {
             get
             {
-                if (_instance == null)
-                {
-                    _instance = new EventFileDescriptorPollManager();
-                }
+                _instance ??= new EventFileDescriptorPollManager();
 
                 return _instance;
             }
@@ -31,7 +28,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd.Impl
         {
             updatedCount = 0;
 
-            List<ManualResetEvent> waiters = new List<ManualResetEvent>();
+            List<ManualResetEvent> waiters = new();
 
             for (int i = 0; i < events.Count; i++)
             {

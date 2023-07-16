@@ -2,9 +2,9 @@
 {
     enum MultiMediaOperationType : uint
     {
-        Ram   = 2,
+        Ram = 2,
         NvEnc = 5,
         NvDec = 6,
-        NvJpg = 7
+        NvJpg = 7,
     }
 }

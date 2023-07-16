@@ -11,7 +11,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioOut
 {
     class AudioOutServer : DisposableIpcService
     {
-        private IAudioOut _impl;
+        private readonly IAudioOut _impl;
 
         public AudioOutServer(IAudioOut impl)
         {
@@ -77,14 +77,12 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioOut
             ulong position = context.Request.ReceiveBuff[0].Position;
             ulong size = context.Request.ReceiveBuff[0].Size;
 
-            using (WritableRegion outputRegion = context.Memory.GetWritableRegion(position, (int)size))
-            {
-                ResultCode result = _impl.GetReleasedBuffers(MemoryMarshal.Cast<byte, ulong>(outputRegion.Memory.Span), out uint releasedCount);
+            using WritableRegion outputRegion = context.Memory.GetWritableRegion(position, (int)size);
+            ResultCode result = _impl.GetReleasedBuffers(MemoryMarshal.Cast<byte, ulong>(outputRegion.Memory.Span), out uint releasedCount);
 
-                context.ResponseData.Write(releasedCount);
+            context.ResponseData.Write(releasedCount);
 
-                return result;
-            }
+            return result;
         }
 
         [CommandCmif(6)]
@@ -117,14 +115,12 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioOut
         {
             (ulong position, ulong size) = context.Request.GetBufferType0x22();
 
-            using (WritableRegion outputRegion = context.Memory.GetWritableRegion(position, (int)size))
-            {
-                ResultCode result = _impl.GetReleasedBuffers(MemoryMarshal.Cast<byte, ulong>(outputRegion.Memory.Span), out uint releasedCount);
+            using WritableRegion outputRegion = context.Memory.GetWritableRegion(position, (int)size);
+            ResultCode result = _impl.GetReleasedBuffers(MemoryMarshal.Cast<byte, ulong>(outputRegion.Memory.Span), out uint releasedCount);
 
-                context.ResponseData.Write(releasedCount);
+            context.ResponseData.Write(releasedCount);
 
-                return result;
-            }
+            return result;
         }
 
         [CommandCmif(9)] // 4.0.0+

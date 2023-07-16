@@ -15,6 +15,6 @@ namespace Ryujinx.HLE.HOS.Services.Hid.Types.SharedMemory.Keyboard
         ScrollLock = 1 << 9,
         NumLock = 1 << 10,
         Katakana = 1 << 11,
-        Hiragana = 1 << 12
+        Hiragana = 1 << 12,
     }
 }

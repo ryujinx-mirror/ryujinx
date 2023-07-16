@@ -5,6 +5,6 @@
         Degrees0,
         Degrees90,
         Degrees180,
-        Degrees270
+        Degrees270,
     }
 }

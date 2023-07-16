@@ -6,12 +6,12 @@ namespace Ryujinx.HLE.HOS.Applets.Error
     struct ErrorCommonHeader
     {
         public ErrorType Type;
-        public byte      JumpFlag;
-        public byte      ReservedFlag1;
-        public byte      ReservedFlag2;
-        public byte      ReservedFlag3;
-        public byte      ContextFlag;
-        public byte      MessageFlag;
-        public byte      ContextFlag2;
+        public byte JumpFlag;
+        public byte ReservedFlag1;
+        public byte ReservedFlag2;
+        public byte ReservedFlag3;
+        public byte ContextFlag;
+        public byte MessageFlag;
+        public byte ContextFlag2;
     }
 }

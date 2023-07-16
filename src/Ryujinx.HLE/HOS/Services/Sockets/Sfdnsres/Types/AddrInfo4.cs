@@ -10,17 +10,17 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres.Types
     [StructLayout(LayoutKind.Sequential, Pack = 1, Size = 0x10)]
     struct AddrInfo4
     {
-        public byte         Length;
-        public byte         Family;
-        public short        Port;
+        public byte Length;
+        public byte Family;
+        public short Port;
         public Array4<byte> Address;
         public Array8<byte> Padding;
 
         public AddrInfo4(IPAddress address, short port)
         {
-            Length  = (byte)Unsafe.SizeOf<Array4<byte>>();
-            Family  = (byte)AddressFamily.InterNetwork;
-            Port    = IPAddress.HostToNetworkOrder(port);
+            Length = (byte)Unsafe.SizeOf<Array4<byte>>();
+            Family = (byte)AddressFamily.InterNetwork;
+            Port = IPAddress.HostToNetworkOrder(port);
             Address = new Array4<byte>();
 
             address.TryWriteBytes(Address.AsSpan(), out _);

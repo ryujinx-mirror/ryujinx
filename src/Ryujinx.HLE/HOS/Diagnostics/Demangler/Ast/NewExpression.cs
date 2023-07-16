@@ -4,20 +4,20 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
 {
     public class NewExpression : BaseNode
     {
-        private NodeArray _expressions;
-        private BaseNode  _typeNode;
-        private NodeArray _initializers;
+        private readonly NodeArray _expressions;
+        private readonly BaseNode _typeNode;
+        private readonly NodeArray _initializers;
 
-        private bool _isGlobal;
-        private bool _isArrayExpression;
+        private readonly bool _isGlobal;
+        private readonly bool _isArrayExpression;
 
         public NewExpression(NodeArray expressions, BaseNode typeNode, NodeArray initializers, bool isGlobal, bool isArrayExpression) : base(NodeType.NewExpression)
         {
-            _expressions       = expressions;
-            _typeNode          = typeNode;
-            _initializers      = initializers;
+            _expressions = expressions;
+            _typeNode = typeNode;
+            _initializers = initializers;
 
-            _isGlobal          = isGlobal;
+            _isGlobal = isGlobal;
             _isArrayExpression = isArrayExpression;
         }
 

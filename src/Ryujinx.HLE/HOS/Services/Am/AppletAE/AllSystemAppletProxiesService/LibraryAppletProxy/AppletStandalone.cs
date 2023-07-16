@@ -4,9 +4,9 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Lib
 {
     class AppletStandalone
     {
-        public AppletId          AppletId;
+        public AppletId AppletId;
         public LibraryAppletMode LibraryAppletMode;
-        public Queue<byte[]>     InputData;
+        public Queue<byte[]> InputData;
 
         public AppletStandalone()
         {

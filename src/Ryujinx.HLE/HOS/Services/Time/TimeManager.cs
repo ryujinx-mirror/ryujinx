@@ -16,41 +16,38 @@ namespace Ryujinx.HLE.HOS.Services.Time
         {
             get
             {
-                if (_instance == null)
-                {
-                    _instance = new TimeManager();
-                }
+                _instance ??= new TimeManager();
 
                 return _instance;
             }
         }
 
-        public StandardSteadyClockCore                  StandardSteadyClock         { get; }
-        public TickBasedSteadyClockCore                 TickBasedSteadyClock        { get; }
-        public StandardLocalSystemClockCore             StandardLocalSystemClock    { get; }
-        public StandardNetworkSystemClockCore           StandardNetworkSystemClock  { get; }
-        public StandardUserSystemClockCore              StandardUserSystemClock     { get; }
-        public TimeZoneContentManager                   TimeZone                    { get; }
-        public EphemeralNetworkSystemClockCore          EphemeralNetworkSystemClock { get; }
-        public TimeSharedMemory                         SharedMemory                { get; }
-        public LocalSystemClockContextWriter            LocalClockContextWriter     { get; }
-        public NetworkSystemClockContextWriter          NetworkClockContextWriter   { get; }
+        public StandardSteadyClockCore StandardSteadyClock { get; }
+        public TickBasedSteadyClockCore TickBasedSteadyClock { get; }
+        public StandardLocalSystemClockCore StandardLocalSystemClock { get; }
+        public StandardNetworkSystemClockCore StandardNetworkSystemClock { get; }
+        public StandardUserSystemClockCore StandardUserSystemClock { get; }
+        public TimeZoneContentManager TimeZone { get; }
+        public EphemeralNetworkSystemClockCore EphemeralNetworkSystemClock { get; }
+        public TimeSharedMemory SharedMemory { get; }
+        public LocalSystemClockContextWriter LocalClockContextWriter { get; }
+        public NetworkSystemClockContextWriter NetworkClockContextWriter { get; }
         public EphemeralNetworkSystemClockContextWriter EphemeralClockContextWriter { get; }
 
         // TODO: 9.0.0+ power states and alarms
 
         public TimeManager()
         {
-            StandardSteadyClock         = new StandardSteadyClockCore();
-            TickBasedSteadyClock        = new TickBasedSteadyClockCore();
-            StandardLocalSystemClock    = new StandardLocalSystemClockCore(StandardSteadyClock);
-            StandardNetworkSystemClock  = new StandardNetworkSystemClockCore(StandardSteadyClock);
-            StandardUserSystemClock     = new StandardUserSystemClockCore(StandardLocalSystemClock, StandardNetworkSystemClock);
-            TimeZone                    = new TimeZoneContentManager();
+            StandardSteadyClock = new StandardSteadyClockCore();
+            TickBasedSteadyClock = new TickBasedSteadyClockCore();
+            StandardLocalSystemClock = new StandardLocalSystemClockCore(StandardSteadyClock);
+            StandardNetworkSystemClock = new StandardNetworkSystemClockCore(StandardSteadyClock);
+            StandardUserSystemClock = new StandardUserSystemClockCore(StandardLocalSystemClock, StandardNetworkSystemClock);
+            TimeZone = new TimeZoneContentManager();
             EphemeralNetworkSystemClock = new EphemeralNetworkSystemClockCore(TickBasedSteadyClock);
-            SharedMemory                = new TimeSharedMemory();
-            LocalClockContextWriter     = new LocalSystemClockContextWriter(SharedMemory);
-            NetworkClockContextWriter   = new NetworkSystemClockContextWriter(SharedMemory);
+            SharedMemory = new TimeSharedMemory();
+            LocalClockContextWriter = new LocalSystemClockContextWriter(SharedMemory);
+            NetworkClockContextWriter = new NetworkSystemClockContextWriter(SharedMemory);
             EphemeralClockContextWriter = new EphemeralNetworkSystemClockContextWriter();
         }
 

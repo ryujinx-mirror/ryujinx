@@ -3,6 +3,6 @@
     enum CertificateFormat : uint
     {
         Pem = 1,
-        Der = 2
+        Der = 2,
     }
 }

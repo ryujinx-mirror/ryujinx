@@ -11,7 +11,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator
         // TODO(Ac_K): Determine what the hardcoded unknown value is.
         private const int UnknownValue = 90;
 
-        private NetworkInterface _networkInterface;
+        private readonly NetworkInterface _networkInterface;
 
         private int _stateChangeEventHandle = 0;
 
@@ -79,8 +79,8 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator
         public ResultCode Initialize(ServiceCtx context)
         {
             // TODO(Ac_K): Determine what addresses are.
-            IPAddress unknownAddress1 = new IPAddress(context.RequestData.ReadUInt32());
-            IPAddress unknownAddress2 = new IPAddress(context.RequestData.ReadUInt32());
+            IPAddress unknownAddress1 = new(context.RequestData.ReadUInt32());
+            IPAddress unknownAddress2 = new(context.RequestData.ReadUInt32());
 
             return _networkInterface.Initialize(UnknownValue, version: 1, unknownAddress1, unknownAddress2);
         }

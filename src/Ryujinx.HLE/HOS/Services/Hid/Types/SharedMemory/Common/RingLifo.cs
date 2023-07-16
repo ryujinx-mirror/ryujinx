@@ -5,16 +5,16 @@ using System.Threading;
 
 namespace Ryujinx.HLE.HOS.Services.Hid.Types.SharedMemory.Common
 {
-    struct RingLifo<T> where T: unmanaged, ISampledDataStruct
+    struct RingLifo<T> where T : unmanaged, ISampledDataStruct
     {
         private const ulong MaxEntries = 17;
 
-#pragma warning disable CS0169
-        private ulong _unused;
-#pragma warning restore CS0169
-#pragma warning disable CS0414
+#pragma warning disable IDE0051, CS0169 // Remove unused private member
+        private readonly ulong _unused;
+#pragma warning restore IDE0051, CS0169
+#pragma warning disable CS0414, IDE0052 // Remove unread private member
         private ulong _bufferCount;
-#pragma warning restore CS0414
+#pragma warning restore CS0414, IDE0052
         private ulong _index;
         private ulong _count;
         private Array17<AtomicStorage<T>> _storage;
@@ -32,7 +32,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid.Types.SharedMemory.Common
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static ulong GetNextIndexForWrite(ulong index)
+        private readonly ulong GetNextIndexForWrite(ulong index)
         {
             return (index + 1) % MaxEntries;
         }
@@ -142,7 +142,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid.Types.SharedMemory.Common
         {
             return new RingLifo<T>
             {
-                _bufferCount = MaxEntries
+                _bufferCount = MaxEntries,
             };
         }
     }

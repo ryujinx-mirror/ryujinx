@@ -6,6 +6,6 @@
         InterNetwork = 2,
         InterNetworkV6 = 28,
 
-        Unknown = uint.MaxValue
+        Unknown = uint.MaxValue,
     }
 }

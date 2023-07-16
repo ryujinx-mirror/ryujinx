@@ -7,7 +7,7 @@ namespace Ryujinx.HLE.HOS.Tamper
 {
     class TamperedKProcess : ITamperedProcess
     {
-        private KProcess _process;
+        private readonly KProcess _process;
 
         public ProcessState State => _process.State;
 

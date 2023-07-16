@@ -28,6 +28,6 @@
         /// <summary>
         /// software keyboard is transitioning to a hidden state because the user pressed either OK or Cancel.
         /// </summary>
-        Disappearing = 0x4
+        Disappearing = 0x4,
     }
 }

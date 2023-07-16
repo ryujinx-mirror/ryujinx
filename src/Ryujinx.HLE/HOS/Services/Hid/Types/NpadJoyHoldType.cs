@@ -3,6 +3,6 @@
     enum NpadJoyHoldType
     {
         Vertical,
-        Horizontal
+        Horizontal,
     }
 }

@@ -15,7 +15,7 @@
         CrowsFeet,
         FoldsCrowsFrown,
 
-        Min = 0,
-        Max = 11
+        Min = None,
+        Max = FoldsCrowsFrown,
     }
 }

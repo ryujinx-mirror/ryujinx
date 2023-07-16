@@ -2,11 +2,11 @@ using Ryujinx.HLE.HOS.Tamper.Operations;
 
 namespace Ryujinx.HLE.HOS.Tamper
 {
-    class Value<P> : IOperand where P : unmanaged
+    class Value<TP> : IOperand where TP : unmanaged
     {
-        private P _value;
+        private TP _value;
 
-        public Value(P value)
+        public Value(TP value)
         {
             _value = value;
         }
@@ -18,7 +18,7 @@ namespace Ryujinx.HLE.HOS.Tamper
 
         public void Set<T>(T value) where T : unmanaged
         {
-            _value = (P)(dynamic)value;
+            _value = (TP)(dynamic)value;
         }
     }
 }

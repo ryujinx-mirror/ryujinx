@@ -135,7 +135,7 @@
         TwoLongSidedPonyTails,
         LongFrontTwoBackPonyTails,
 
-        Min = 0,
-        Max = 131
+        Min = NormalLong,
+        Max = LongFrontTwoBackPonyTails,
     }
 }

@@ -4,8 +4,8 @@ namespace Ryujinx.HLE.HOS.Tamper.Conditions
 {
     class CondNE<T> : ICondition where T : unmanaged
     {
-        private IOperand _lhs;
-        private IOperand _rhs;
+        private readonly IOperand _lhs;
+        private readonly IOperand _rhs;
 
         public CondNE(IOperand lhs, IOperand rhs)
         {

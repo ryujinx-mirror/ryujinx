@@ -3,6 +3,6 @@
     enum NfcPermissionLevel
     {
         User,
-        System
+        System,
     }
 }

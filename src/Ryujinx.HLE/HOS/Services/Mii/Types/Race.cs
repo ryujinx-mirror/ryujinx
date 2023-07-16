@@ -5,6 +5,6 @@
         Black,
         White,
         Asian,
-        All
+        All,
     }
 }

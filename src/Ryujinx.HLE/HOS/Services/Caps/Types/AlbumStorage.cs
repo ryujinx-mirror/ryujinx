@@ -3,6 +3,6 @@
     enum AlbumStorage : byte
     {
         Nand,
-        Sd
+        Sd,
     }
 }

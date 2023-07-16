@@ -4,6 +4,6 @@
     {
         public ushort Type;
         public ushort Size;
-        public uint   Padding;
+        public uint Padding;
     }
 }

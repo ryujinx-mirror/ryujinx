@@ -9,35 +9,35 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 {
     class BufferQueueCore
     {
-        public BufferSlotArray       Slots;
-        public int                   OverrideMaxBufferCount;
-        public bool                  UseAsyncBuffer;
-        public bool                  DequeueBufferCannotBlock;
-        public PixelFormat           DefaultBufferFormat;
-        public int                   DefaultWidth;
-        public int                   DefaultHeight;
-        public int                   DefaultMaxBufferCount;
-        public int                   MaxAcquiredBufferCount;
-        public bool                  BufferHasBeenQueued;
-        public ulong                 FrameCounter;
+        public BufferSlotArray Slots;
+        public int OverrideMaxBufferCount;
+        public bool UseAsyncBuffer;
+        public bool DequeueBufferCannotBlock;
+        public PixelFormat DefaultBufferFormat;
+        public int DefaultWidth;
+        public int DefaultHeight;
+        public int DefaultMaxBufferCount;
+        public int MaxAcquiredBufferCount;
+        public bool BufferHasBeenQueued;
+        public ulong FrameCounter;
         public NativeWindowTransform TransformHint;
-        public bool                  IsAbandoned;
-        public NativeWindowApi       ConnectedApi;
-        public bool                  IsAllocating;
-        public IProducerListener     ProducerListener;
-        public IConsumerListener     ConsumerListener;
-        public bool                  ConsumerControlledByApp;
-        public uint                  ConsumerUsageBits;
-        public List<BufferItem>      Queue;
-        public BufferInfo[]          BufferHistory;
-        public uint                  BufferHistoryPosition;
-        public bool                  EnableExternalEvent;
-        public int                   MaxBufferCountCached;
+        public bool IsAbandoned;
+        public NativeWindowApi ConnectedApi;
+        public bool IsAllocating;
+        public IProducerListener ProducerListener;
+        public IConsumerListener ConsumerListener;
+        public bool ConsumerControlledByApp;
+        public uint ConsumerUsageBits;
+        public List<BufferItem> Queue;
+        public BufferInfo[] BufferHistory;
+        public uint BufferHistoryPosition;
+        public bool EnableExternalEvent;
+        public int MaxBufferCountCached;
 
         public readonly object Lock = new();
 
-        private KEvent _waitBufferFreeEvent;
-        private KEvent _frameAvailableEvent;
+        private readonly KEvent _waitBufferFreeEvent;
+        private readonly KEvent _frameAvailableEvent;
 
         public ulong Owner { get; }
 
@@ -49,36 +49,36 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 
         public BufferQueueCore(Switch device, ulong pid)
         {
-            Slots                    = new BufferSlotArray();
-            IsAbandoned              = false;
-            OverrideMaxBufferCount   = 0;
+            Slots = new BufferSlotArray();
+            IsAbandoned = false;
+            OverrideMaxBufferCount = 0;
             DequeueBufferCannotBlock = false;
-            UseAsyncBuffer           = false;
-            DefaultWidth             = 1;
-            DefaultHeight            = 1;
-            DefaultMaxBufferCount    = 2;
-            MaxAcquiredBufferCount   = 1;
-            FrameCounter             = 0;
-            TransformHint            = 0;
-            DefaultBufferFormat      = PixelFormat.Rgba8888;
-            IsAllocating             = false;
-            ProducerListener         = null;
-            ConsumerListener         = null;
-            ConsumerUsageBits        = 0;
+            UseAsyncBuffer = false;
+            DefaultWidth = 1;
+            DefaultHeight = 1;
+            DefaultMaxBufferCount = 2;
+            MaxAcquiredBufferCount = 1;
+            FrameCounter = 0;
+            TransformHint = 0;
+            DefaultBufferFormat = PixelFormat.Rgba8888;
+            IsAllocating = false;
+            ProducerListener = null;
+            ConsumerListener = null;
+            ConsumerUsageBits = 0;
 
             Queue = new List<BufferItem>();
 
             // TODO: CreateGraphicBufferAlloc?
 
-            _waitBufferFreeEvent  = new KEvent(device.System.KernelContext);
+            _waitBufferFreeEvent = new KEvent(device.System.KernelContext);
             _frameAvailableEvent = new KEvent(device.System.KernelContext);
 
             Owner = pid;
 
             Active = true;
 
-            BufferHistory        = new BufferInfo[BufferHistoryArraySize];
-            EnableExternalEvent  = true;
+            BufferHistory = new BufferInfo[BufferHistoryArraySize];
+            EnableExternalEvent = true;
             MaxBufferCountCached = 0;
         }
 
@@ -220,9 +220,9 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
                 Slots[slot].NeedsCleanupOnRelease = true;
             }
 
-            Slots[slot].BufferState      = BufferState.Free;
-            Slots[slot].FrameNumber      = uint.MaxValue;
-            Slots[slot].AcquireCalled    = false;
+            Slots[slot].BufferState = BufferState.Free;
+            Slots[slot].FrameNumber = uint.MaxValue;
+            Slots[slot].AcquireCalled = false;
             Slots[slot].Fence.FenceCount = 0;
         }
 
@@ -259,7 +259,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
                 return;
             }
 
-            bool needBufferReleaseSignal  = false;
+            bool needBufferReleaseSignal = false;
             bool needFrameAvailableSignal = false;
 
             if (maxBufferCount > 1)

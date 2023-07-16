@@ -86,7 +86,7 @@ namespace Ryujinx.HLE.Loaders.Processes.Extensions
             bool enablePtc = device.System.EnablePtc && !modLoadResult.Modified;
             if (!enablePtc)
             {
-                Logger.Warning?.Print(LogClass.Ptc, $"Detected unsupported ExeFs modifications. PTC disabled.");
+                Logger.Warning?.Print(LogClass.Ptc, "Detected unsupported ExeFs modifications. PTC disabled.");
             }
 
             // We allow it for nx-hbloader because it can be used to launch homebrew.

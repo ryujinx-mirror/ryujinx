@@ -47,7 +47,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid.Types.SharedMemory
 
         public static SharedMemory Create()
         {
-            SharedMemory result = new SharedMemory
+            SharedMemory result = new()
             {
                 DebugPad = RingLifo<DebugPadState>.Create(),
                 TouchScreen = RingLifo<TouchScreenState>.Create(),

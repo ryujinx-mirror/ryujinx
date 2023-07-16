@@ -4,7 +4,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE
 {
     class IStorageAccessor : IpcService
     {
-        private IStorage _storage;
+        private readonly IStorage _storage;
 
         public IStorageAccessor(IStorage storage)
         {

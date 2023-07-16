@@ -3,7 +3,7 @@ using System;
 
 namespace Ryujinx.HLE.HOS.Services.Ssl.SslService
 {
-    interface ISslConnectionBase: IDisposable
+    interface ISslConnectionBase : IDisposable
     {
         int SocketFd { get; }
 

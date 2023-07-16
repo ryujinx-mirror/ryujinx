@@ -6,7 +6,7 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
     [Service("acc:u1", AccountServiceFlag.SystemService)] // Max Sessions: 16
     class IAccountServiceForSystemService : IpcService
     {
-        private ApplicationServiceServer _applicationServiceServer;
+        private readonly ApplicationServiceServer _applicationServiceServer;
 
         public IAccountServiceForSystemService(ServiceCtx context, AccountServiceFlag serviceFlag)
         {

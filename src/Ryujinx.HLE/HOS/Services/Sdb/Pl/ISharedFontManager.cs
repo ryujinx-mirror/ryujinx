@@ -17,7 +17,9 @@ namespace Ryujinx.HLE.HOS.Services.Sdb.Pl
         // RequestLoad(u32)
         public ResultCode RequestLoad(ServiceCtx context)
         {
+#pragma warning disable IDE0059 // Remove unnecessary value assignment
             SharedFontType fontType = (SharedFontType)context.RequestData.ReadInt32();
+#pragma warning restore IDE0059
 
             // We don't need to do anything here because we do lazy initialization
             // on SharedFontManager (the font is loaded when necessary).
@@ -28,7 +30,9 @@ namespace Ryujinx.HLE.HOS.Services.Sdb.Pl
         // GetLoadState(u32) -> u32
         public ResultCode GetLoadState(ServiceCtx context)
         {
+#pragma warning disable IDE0059 // Remove unnecessary value assignment
             SharedFontType fontType = (SharedFontType)context.RequestData.ReadInt32();
+#pragma warning restore IDE0059
 
             // 1 (true) indicates that the font is already loaded.
             // All fonts are already loaded.
@@ -82,8 +86,10 @@ namespace Ryujinx.HLE.HOS.Services.Sdb.Pl
         // GetSharedFontInOrderOfPriority(bytes<8, 1>) -> (u8, u32, buffer<unknown, 6>, buffer<unknown, 6>, buffer<unknown, 6>)
         public ResultCode GetSharedFontInOrderOfPriority(ServiceCtx context)
         {
+#pragma warning disable IDE0059 // Remove unnecessary value assignment
             long languageCode = context.RequestData.ReadInt64();
-            int  loadedCount  = 0;
+#pragma warning restore IDE0059
+            int loadedCount = 0;
 
             for (SharedFontType type = 0; type < SharedFontType.Count; type++)
             {
@@ -115,15 +121,15 @@ namespace Ryujinx.HLE.HOS.Services.Sdb.Pl
         private bool AddFontToOrderOfPriorityList(ServiceCtx context, SharedFontType fontType, uint offset)
         {
             ulong typesPosition = context.Request.ReceiveBuff[0].Position;
-            ulong typesSize     = context.Request.ReceiveBuff[0].Size;
+            ulong typesSize = context.Request.ReceiveBuff[0].Size;
 
             ulong offsetsPosition = context.Request.ReceiveBuff[1].Position;
-            ulong offsetsSize     = context.Request.ReceiveBuff[1].Size;
+            ulong offsetsSize = context.Request.ReceiveBuff[1].Size;
 
             ulong fontSizeBufferPosition = context.Request.ReceiveBuff[2].Position;
-            ulong fontSizeBufferSize     = context.Request.ReceiveBuff[2].Size;
+            ulong fontSizeBufferSize = context.Request.ReceiveBuff[2].Size;
 
-            if (offset + 4 > (uint)typesSize   ||
+            if (offset + 4 > (uint)typesSize ||
                 offset + 4 > (uint)offsetsSize ||
                 offset + 4 > (uint)fontSizeBufferSize)
             {

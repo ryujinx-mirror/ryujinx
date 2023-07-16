@@ -18,8 +18,10 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
 {
     class INfp : IpcService
     {
-        private ulong  _appletResourceUserId;
-        private ulong  _mcuVersionData;
+#pragma warning disable IDE0052 // Remove unread private member
+        private ulong _appletResourceUserId;
+        private ulong _mcuVersionData;
+#pragma warning restore IDE0052
         private byte[] _mcuData;
 
         private State _state = State.NonInitialized;
@@ -28,7 +30,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
 
         private CancellationTokenSource _cancelTokenSource;
 
-        private NfpPermissionLevel _permissionLevel;
+        private readonly NfpPermissionLevel _permissionLevel;
 
         public INfp(NfpPermissionLevel permissionLevel)
         {
@@ -40,10 +42,10 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
         public ResultCode Initialize(ServiceCtx context)
         {
             _appletResourceUserId = context.RequestData.ReadUInt64();
-            _mcuVersionData       = context.RequestData.ReadUInt64();
+            _mcuVersionData = context.RequestData.ReadUInt64();
 
             ulong inputPosition = context.Request.SendBuff[0].Position;
-            ulong inputSize     = context.Request.SendBuff[0].Size;
+            ulong inputSize = context.Request.SendBuff[0].Size;
 
             _mcuData = new byte[inputSize];
 
@@ -53,11 +55,11 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
 
             // TODO: Handle this in a controller class directly.
             //       Every functions which use the Handle call nn::hid::system::GetXcdHandleForNpadWithNfc().
-            NfpDevice devicePlayer1 = new NfpDevice
+            NfpDevice devicePlayer1 = new()
             {
                 NpadIdType = NpadIdType.Player1,
-                Handle     = HidUtils.GetIndexFromNpadIdType(NpadIdType.Player1),
-                State      = NfpDeviceState.Initialized
+                Handle = HidUtils.GetIndexFromNpadIdType(NpadIdType.Player1),
+                State = NfpDeviceState.Initialized,
             };
 
             context.Device.System.NfpDevices.Add(devicePlayer1);
@@ -75,10 +77,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
         {
             if (_state == State.Initialized)
             {
-                if (_cancelTokenSource != null)
-                {
-                    _cancelTokenSource.Cancel();
-                }
+                _cancelTokenSource?.Cancel();
 
                 // NOTE: All events are destroyed here.
                 context.Device.System.NfpDevices.Clear();
@@ -99,7 +98,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
             }
 
             ulong outputPosition = context.Request.RecvListBuff[0].Position;
-            ulong outputSize      = context.Request.RecvListBuff[0].Size;
+            ulong outputSize = context.Request.RecvListBuff[0].Size;
 
             if (context.Device.System.NfpDevices.Count == 0)
             {
@@ -187,10 +186,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
                 return resultCode;
             }
 
-            if (_cancelTokenSource != null)
-            {
-                _cancelTokenSource.Cancel();
-            }
+            _cancelTokenSource?.Cancel();
 
             uint deviceHandle = (uint)context.RequestData.ReadUInt64();
 
@@ -218,9 +214,9 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
                 return resultCode;
             }
 
-            uint        deviceHandle = (uint)context.RequestData.ReadUInt64();
-            DeviceType  deviceType   = (DeviceType)context.RequestData.ReadUInt32();
-            MountTarget mountTarget  = (MountTarget)context.RequestData.ReadUInt32();
+            uint deviceHandle = (uint)context.RequestData.ReadUInt64();
+            DeviceType deviceType = (DeviceType)context.RequestData.ReadUInt32();
+            MountTarget mountTarget = (MountTarget)context.RequestData.ReadUInt32();
 
             if (deviceType != 0)
             {
@@ -382,7 +378,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
             }
 
             ulong outputPosition = context.Request.ReceiveBuff[0].Position;
-            ulong outputSize     = context.Request.ReceiveBuff[0].Size;
+            ulong outputSize = context.Request.ReceiveBuff[0].Size;
 
             MemoryHelper.FillWithZeros(context.Memory, outputPosition, (int)outputSize);
 
@@ -450,7 +446,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
             }
 
             ulong inputPosition = context.Request.SendBuff[0].Position;
-            ulong inputSize     = context.Request.SendBuff[0].Size;
+            ulong inputSize = context.Request.SendBuff[0].Size;
 
             byte[] applicationArea = new byte[inputSize];
 
@@ -489,7 +485,9 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
         // Flush(bytes<8, 4>)
         public ResultCode Flush(ServiceCtx context)
         {
+#pragma warning disable IDE0059 // Remove unnecessary value assignment
             uint deviceHandle = (uint)context.RequestData.ReadUInt64();
+#pragma warning restore IDE0059
 
             if (context.Device.System.NfpDevices.Count == 0)
             {
@@ -529,7 +527,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
             uint applicationAreaId = context.RequestData.ReadUInt32();
 
             ulong inputPosition = context.Request.SendBuff[0].Position;
-            ulong inputSize     = context.Request.SendBuff[0].Size;
+            ulong inputSize = context.Request.SendBuff[0].Size;
 
             byte[] applicationArea = new byte[inputSize];
 
@@ -612,23 +610,23 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
                     {
                         if (context.Device.System.NfpDevices[i].State == NfpDeviceState.TagMounted || context.Device.System.NfpDevices[i].State == NfpDeviceState.TagFound)
                         {
-                            byte[] Uuid = VirtualAmiibo.GenerateUuid(context.Device.System.NfpDevices[i].AmiiboId, context.Device.System.NfpDevices[i].UseRandomUuid);
+                            byte[] uuid = VirtualAmiibo.GenerateUuid(context.Device.System.NfpDevices[i].AmiiboId, context.Device.System.NfpDevices[i].UseRandomUuid);
 
-                            if (Uuid.Length > AmiiboConstants.UuidMaxLength)
+                            if (uuid.Length > AmiiboConstants.UuidMaxLength)
                             {
-                                throw new ArgumentOutOfRangeException();
+                                throw new InvalidOperationException($"{nameof(uuid)} is too long: {uuid.Length}");
                             }
 
-                            TagInfo tagInfo = new TagInfo
+                            TagInfo tagInfo = new()
                             {
-                                UuidLength = (byte)Uuid.Length,
-                                Reserved1  = new Array21<byte>(),
-                                Protocol   = uint.MaxValue, // All Protocol
-                                TagType    = uint.MaxValue, // All Type
-                                Reserved2  = new Array6<byte>()
+                                UuidLength = (byte)uuid.Length,
+                                Reserved1 = new Array21<byte>(),
+                                Protocol = uint.MaxValue, // All Protocol
+                                TagType = uint.MaxValue, // All Type
+                                Reserved2 = new Array6<byte>(),
                             };
 
-                            Uuid.CopyTo(tagInfo.Uuid.AsSpan());
+                            uuid.CopyTo(tagInfo.Uuid.AsSpan());
 
                             context.Memory.Write(outputPosition, tagInfo);
 
@@ -811,16 +809,15 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
                     {
                         if (context.Device.System.NfpDevices[i].State == NfpDeviceState.TagMounted)
                         {
-                            ModelInfo modelInfo = new ModelInfo
+                            ModelInfo modelInfo = new()
                             {
-                                Reserved = new Array57<byte>()
+                                Reserved = new Array57<byte>(),
+                                CharacterId = BinaryPrimitives.ReverseEndianness(ushort.Parse(context.Device.System.NfpDevices[i].AmiiboId.AsSpan(0, 4), NumberStyles.HexNumber)),
+                                CharacterVariant = byte.Parse(context.Device.System.NfpDevices[i].AmiiboId.AsSpan(4, 2), NumberStyles.HexNumber),
+                                Series = byte.Parse(context.Device.System.NfpDevices[i].AmiiboId.AsSpan(12, 2), NumberStyles.HexNumber),
+                                ModelNumber = ushort.Parse(context.Device.System.NfpDevices[i].AmiiboId.AsSpan(8, 4), NumberStyles.HexNumber),
+                                Type = byte.Parse(context.Device.System.NfpDevices[i].AmiiboId.AsSpan(6, 2), NumberStyles.HexNumber),
                             };
-
-                            modelInfo.CharacterId      = BinaryPrimitives.ReverseEndianness(ushort.Parse(context.Device.System.NfpDevices[i].AmiiboId.AsSpan(0, 4), NumberStyles.HexNumber));
-                            modelInfo.CharacterVariant = byte.Parse(context.Device.System.NfpDevices[i].AmiiboId.AsSpan(4, 2), NumberStyles.HexNumber);
-                            modelInfo.Series           = byte.Parse(context.Device.System.NfpDevices[i].AmiiboId.AsSpan(12, 2), NumberStyles.HexNumber);
-                            modelInfo.ModelNumber      = ushort.Parse(context.Device.System.NfpDevices[i].AmiiboId.AsSpan(8, 4), NumberStyles.HexNumber);
-                            modelInfo.Type             = byte.Parse(context.Device.System.NfpDevices[i].AmiiboId.AsSpan(6, 2), NumberStyles.HexNumber);
 
                             context.Memory.Write(outputPosition, modelInfo);
 
@@ -912,7 +909,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
                 {
                     if (context.Device.System.NfpDevices[i].State > NfpDeviceState.Finalized)
                     {
-                        throw new ArgumentOutOfRangeException();
+                        throw new InvalidOperationException($"{nameof(context.Device.System.NfpDevices)} contains an invalid state for device {i}: {context.Device.System.NfpDevices[i].State}");
                     }
 
                     context.ResponseData.Write((uint)context.Device.System.NfpDevices[i].State);

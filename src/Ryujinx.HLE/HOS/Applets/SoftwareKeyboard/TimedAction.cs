@@ -19,8 +19,8 @@ namespace Ryujinx.HLE.HOS.Applets.SoftwareKeyboard
 
             public SleepSubstepData(int sleepMilliseconds)
             {
-                SleepMilliseconds          = Math.Min(sleepMilliseconds, MaxThreadSleep);
-                SleepCount                 = sleepMilliseconds / SleepMilliseconds;
+                SleepMilliseconds = Math.Min(sleepMilliseconds, MaxThreadSleep);
+                SleepCount = sleepMilliseconds / SleepMilliseconds;
                 SleepRemainderMilliseconds = sleepMilliseconds - SleepCount * SleepMilliseconds;
             }
         }

@@ -4,8 +4,8 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE
 {
     internal class AppletSession
     {
-        private IAppletFifo<byte[]> _inputData;
-        private IAppletFifo<byte[]> _outputData;
+        private readonly IAppletFifo<byte[]> _inputData;
+        private readonly IAppletFifo<byte[]> _outputData;
 
         public event EventHandler DataAvailable;
 
@@ -23,7 +23,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE
             IAppletFifo<byte[]> inputData,
             IAppletFifo<byte[]> outputData)
         {
-            _inputData  = inputData;
+            _inputData = inputData;
             _outputData = outputData;
 
             _inputData.DataAvailable += OnDataAvailable;

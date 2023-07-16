@@ -8,9 +8,11 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostChannel
 {
     internal class NvHostGpuDeviceFile : NvHostChannelDeviceFile
     {
-        private KEvent _smExceptionBptIntReportEvent;
-        private KEvent _smExceptionBptPauseReportEvent;
-        private KEvent _errorNotifierEvent;
+#pragma warning disable IDE0052 // Remove unread private member
+        private readonly KEvent _smExceptionBptIntReportEvent;
+        private readonly KEvent _smExceptionBptPauseReportEvent;
+        private readonly KEvent _errorNotifierEvent;
+#pragma warning restore IDE0052
 
         private int _smExceptionBptIntReportEventHandle;
         private int _smExceptionBptPauseReportEventHandle;
@@ -18,14 +20,14 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostChannel
 
         public NvHostGpuDeviceFile(ServiceCtx context, IVirtualMemoryManager memory, ulong owner) : base(context, memory, owner)
         {
-            _smExceptionBptIntReportEvent   = CreateEvent(context, out _smExceptionBptIntReportEventHandle);
+            _smExceptionBptIntReportEvent = CreateEvent(context, out _smExceptionBptIntReportEventHandle);
             _smExceptionBptPauseReportEvent = CreateEvent(context, out _smExceptionBptPauseReportEventHandle);
-            _errorNotifierEvent             = CreateEvent(context, out _errorNotifierEventHandle);
+            _errorNotifierEvent = CreateEvent(context, out _errorNotifierEventHandle);
         }
 
-        private static KEvent CreateEvent(ServiceCtx context, out int handle)
+        private KEvent CreateEvent(ServiceCtx context, out int handle)
         {
-            KEvent evnt = new KEvent(context.Device.System.KernelContext);
+            KEvent evnt = new(context.Device.System.KernelContext);
 
             if (context.Process.HandleTable.GenerateHandle(evnt.ReadableEvent, out handle) != Result.Success)
             {
@@ -55,22 +57,13 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostChannel
         public override NvInternalResult QueryEvent(out int eventHandle, uint eventId)
         {
             // TODO: accurately represent and implement those events.
-            switch (eventId)
+            eventHandle = eventId switch
             {
-                case 0x1:
-                    eventHandle = _smExceptionBptIntReportEventHandle;
-                    break;
-                case 0x2:
-                    eventHandle = _smExceptionBptPauseReportEventHandle;
-                    break;
-                case 0x3:
-                    eventHandle = _errorNotifierEventHandle;
-                    break;
-                default:
-                    eventHandle = 0;
-                    break;
-            }
-
+                0x1 => _smExceptionBptIntReportEventHandle,
+                0x2 => _smExceptionBptPauseReportEventHandle,
+                0x3 => _errorNotifierEventHandle,
+                _ => 0,
+            };
             return eventHandle != 0 ? NvInternalResult.Success : NvInternalResult.InvalidInput;
         }
 

@@ -4,6 +4,6 @@ namespace Ryujinx.HLE.HOS.Applets
     {
         ShowControllerSupport = 0,
         ShowControllerStrapGuide = 1,
-        ShowControllerFirmwareUpdate = 2
+        ShowControllerFirmwareUpdate = 2,
     }
 }

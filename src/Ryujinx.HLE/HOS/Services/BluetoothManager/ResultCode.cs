@@ -2,9 +2,9 @@
 {
     enum ResultCode
     {
-        ModuleId       = 143,
+        ModuleId = 143,
         ErrorCodeShift = 9,
 
-        Success = 0
+        Success = 0,
     }
 }

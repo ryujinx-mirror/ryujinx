@@ -4,6 +4,6 @@
     {
         None,
         LinearResonantActuator,
-        GcErm
+        GcErm,
     }
 }

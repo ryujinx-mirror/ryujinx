@@ -20,7 +20,7 @@ namespace Ryujinx.HLE.Loaders.Processes.Extensions
         public static ProcessResult Load(this Nca nca, Switch device, Nca patchNca, Nca controlNca)
         {
             // Extract RomFs and ExeFs from NCA.
-            IStorage    romFs = nca.GetRomFs(device, patchNca);
+            IStorage romFs = nca.GetRomFs(device, patchNca);
             IFileSystem exeFs = nca.GetExeFs(device, patchNca);
 
             if (exeFs == null)

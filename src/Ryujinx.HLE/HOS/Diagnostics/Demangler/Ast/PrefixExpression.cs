@@ -4,7 +4,7 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
 {
     public class PrefixExpression : ParentNode
     {
-        private string _prefix;
+        private readonly string _prefix;
 
         public PrefixExpression(string prefix, BaseNode child) : base(NodeType.PrefixExpression, child)
         {

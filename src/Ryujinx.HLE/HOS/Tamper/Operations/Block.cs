@@ -4,7 +4,7 @@ namespace Ryujinx.HLE.HOS.Tamper.Operations
 {
     class Block : IOperation
     {
-        private IEnumerable<IOperation> _operations;
+        private readonly IEnumerable<IOperation> _operations;
 
         public Block(IEnumerable<IOperation> operations)
         {

@@ -7,9 +7,6 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
     {
         public ulong Pc => 0UL;
 
-        public ulong CntfrqEl0 { get; set; }
-        public ulong CntpctEl0 => 0UL;
-
         public long TpidrEl0 { get; set; }
         public long TpidrroEl0 { get; set; }
 

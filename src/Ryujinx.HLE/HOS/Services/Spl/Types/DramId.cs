@@ -30,6 +30,6 @@
         IowaMicron1y4GiB,
         HoagMicron1y4GiB,
         AulaMicron1y4GiB,
-        AulaSamsung1y8GiBX
+        AulaSamsung1y8GiBX,
     }
 }

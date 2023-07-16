@@ -10,6 +10,6 @@
         Less = 3,
         LessOrEqual = 4,
         Equal = 5,
-        NotEqual = 6
+        NotEqual = 6,
     }
 }

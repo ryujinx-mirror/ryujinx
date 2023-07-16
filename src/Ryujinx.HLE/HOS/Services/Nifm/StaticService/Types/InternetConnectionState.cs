@@ -6,6 +6,6 @@
         ConnectingType1 = 1,
         ConnectingType2 = 2,
         ConnectingType3 = 3,
-        Connected       = 4,
+        Connected = 4,
     }
 }

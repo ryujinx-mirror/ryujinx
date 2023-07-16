@@ -5,7 +5,7 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
 {
     public class CallExpression : NodeArray
     {
-        private BaseNode _callee;
+        private readonly BaseNode _callee;
 
         public CallExpression(BaseNode callee, List<BaseNode> nodes) : base(nodes, NodeType.CallExpression)
         {

@@ -8,10 +8,12 @@ namespace Ryujinx.HLE.HOS.Applets
 {
     internal class PlayerSelectApplet : IApplet
     {
-        private Horizon _system;
+        private readonly Horizon _system;
 
         private AppletSession _normalSession;
+#pragma warning disable IDE0052 // Remove unread private member
         private AppletSession _interactiveSession;
+#pragma warning restore IDE0052
 
         public event EventHandler AppletStateChanged;
 
@@ -22,7 +24,7 @@ namespace Ryujinx.HLE.HOS.Applets
 
         public ResultCode Start(AppletSession normalSession, AppletSession interactiveSession)
         {
-            _normalSession      = normalSession;
+            _normalSession = normalSession;
             _interactiveSession = interactiveSession;
 
             // TODO(jduncanator): Parse PlayerSelectConfig from input data
@@ -44,15 +46,14 @@ namespace Ryujinx.HLE.HOS.Applets
         {
             UserProfile currentUser = _system.AccountManager.LastOpenedUser;
 
-            using (MemoryStream stream = MemoryStreamManager.Shared.GetStream())
-            using (BinaryWriter writer = new BinaryWriter(stream))
-            {
-                writer.Write((ulong)PlayerSelectResult.Success);
+            using MemoryStream stream = MemoryStreamManager.Shared.GetStream();
+            using BinaryWriter writer = new(stream);
 
-                currentUser.UserId.Write(writer);
+            writer.Write((ulong)PlayerSelectResult.Success);
 
-                return stream.ToArray();
-            }
+            currentUser.UserId.Write(writer);
+
+            return stream.ToArray();
         }
     }
 }

@@ -63,7 +63,7 @@
         RoundTired,
         WhiteLarge,
 
-        Min = 0,
-        Max = 59
+        Min = Normal,
+        Max = WhiteLarge,
     }
 }

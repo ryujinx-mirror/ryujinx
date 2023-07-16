@@ -6,6 +6,6 @@ namespace Ryujinx.HLE.HOS.Services.Hid.Types.SharedMemory.Npad
     enum NpadSystemButtonProperties : uint
     {
         None = 0,
-        IsUnintendedHomeButtonInputProtectionEnabled = 1 << 0
+        IsUnintendedHomeButtonInputProtectionEnabled = 1 << 0,
     }
 }

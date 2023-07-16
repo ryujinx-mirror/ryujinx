@@ -4,7 +4,9 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService.ApplicationDisplayService
 {
     class IManagerDisplayService : IpcService
     {
-        private IApplicationDisplayService _applicationDisplayService;
+#pragma warning disable IDE0052 // Remove unread private member
+        private readonly IApplicationDisplayService _applicationDisplayService;
+#pragma warning restore IDE0052
 
         public IManagerDisplayService(IApplicationDisplayService applicationDisplayService)
         {
@@ -29,8 +31,10 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService.ApplicationDisplayService
         // CreateManagedLayer(u32, u64, nn::applet::AppletResourceUserId) -> u64
         public ResultCode CreateManagedLayer(ServiceCtx context)
         {
-            long layerFlags           = context.RequestData.ReadInt64();
-            long displayId            = context.RequestData.ReadInt64();
+#pragma warning disable IDE0059 // Remove unnecessary value assignment
+            long layerFlags = context.RequestData.ReadInt64();
+            long displayId = context.RequestData.ReadInt64();
+#pragma warning restore IDE0059
             long appletResourceUserId = context.RequestData.ReadInt64();
 
             ulong pid = context.Device.System.AppletState.AppletResourceUserIds.GetData<ulong>((int)appletResourceUserId);

@@ -6,7 +6,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostChannel.Types
     struct ZcullBindArguments
     {
         public ulong GpuVirtualAddress;
-        public uint  Mode;
-        public uint  Reserved;
+        public uint Mode;
+        public uint Reserved;
     }
 }

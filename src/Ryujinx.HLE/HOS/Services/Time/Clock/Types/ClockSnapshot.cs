@@ -7,23 +7,23 @@ namespace Ryujinx.HLE.HOS.Services.Time.Clock
     [StructLayout(LayoutKind.Sequential, Size = 0xD0)]
     struct ClockSnapshot
     {
-        public SystemClockContext     UserContext;
-        public SystemClockContext     NetworkContext;
-        public long                   UserTime;
-        public long                   NetworkTime;
-        public CalendarTime           UserCalendarTime;
-        public CalendarTime           NetworkCalendarTime;
+        public SystemClockContext UserContext;
+        public SystemClockContext NetworkContext;
+        public long UserTime;
+        public long NetworkTime;
+        public CalendarTime UserCalendarTime;
+        public CalendarTime NetworkCalendarTime;
         public CalendarAdditionalInfo UserCalendarAdditionalTime;
         public CalendarAdditionalInfo NetworkCalendarAdditionalTime;
-        public SteadyClockTimePoint   SteadyClockTimePoint;
+        public SteadyClockTimePoint SteadyClockTimePoint;
 
         private LocationNameStorageHolder _locationName;
 
         public Span<byte> LocationName => MemoryMarshal.Cast<LocationNameStorageHolder, byte>(MemoryMarshal.CreateSpan(ref _locationName, LocationNameStorageHolder.Size));
 
         [MarshalAs(UnmanagedType.I1)]
-        public bool   IsAutomaticCorrectionEnabled;
-        public byte   Type;
+        public bool IsAutomaticCorrectionEnabled;
+        public byte Type;
         public ushort Unknown;
 
 

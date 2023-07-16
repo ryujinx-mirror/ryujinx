@@ -115,7 +115,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
 
             if (result.IsSuccess())
             {
-                IFile fileInterface = new IFile(ref file.Ref);
+                IFile fileInterface = new(ref file.Ref);
 
                 MakeObject(context, fileInterface);
             }
@@ -136,7 +136,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
 
             if (result.IsSuccess())
             {
-                IDirectory dirInterface = new IDirectory(ref dir.Ref);
+                IDirectory dirInterface = new(ref dir.Ref);
 
                 MakeObject(context, dirInterface);
             }

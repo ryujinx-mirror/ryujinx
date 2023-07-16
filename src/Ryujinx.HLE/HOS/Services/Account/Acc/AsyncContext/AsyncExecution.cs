@@ -1,4 +1,4 @@
-﻿﻿using Ryujinx.Common.Logging;
+﻿using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using System;
 using System.Threading;
@@ -9,18 +9,18 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc.AsyncContext
     class AsyncExecution
     {
         private readonly CancellationTokenSource _tokenSource;
-        private readonly CancellationToken       _token;
+        private readonly CancellationToken _token;
 
-        public KEvent SystemEvent   { get; }
-        public bool   IsInitialized { get; private set; }
-        public bool   IsRunning     { get; private set; }
+        public KEvent SystemEvent { get; }
+        public bool IsInitialized { get; private set; }
+        public bool IsRunning { get; private set; }
 
         public AsyncExecution(KEvent asyncEvent)
         {
             SystemEvent = asyncEvent;
 
             _tokenSource = new CancellationTokenSource();
-            _token       = _tokenSource.Token;
+            _token = _tokenSource.Token;
         }
 
         public void Initialize(int timeout, Func<CancellationToken, Task> taskAsync)

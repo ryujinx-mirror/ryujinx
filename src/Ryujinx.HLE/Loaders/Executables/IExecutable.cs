@@ -6,13 +6,13 @@ namespace Ryujinx.HLE.Loaders.Executables
     {
         byte[] Program { get; }
         Span<byte> Text { get; }
-        Span<byte> Ro   { get; }
+        Span<byte> Ro { get; }
         Span<byte> Data { get; }
 
         uint TextOffset { get; }
-        uint RoOffset   { get; }
+        uint RoOffset { get; }
         uint DataOffset { get; }
-        uint BssOffset  { get; }
-        uint BssSize    { get; }
+        uint BssOffset { get; }
+        uint BssSize { get; }
     }
 }

@@ -4,6 +4,6 @@
     {
         Ok,
         ReadError,
-        NoController
+        NoController,
     }
 }

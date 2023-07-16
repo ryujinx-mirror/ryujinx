@@ -39,7 +39,7 @@
         SmileDownLine,
         Kiss,
 
-        Min = 0,
-        Max = 35
+        Min = Neutral,
+        Max = Kiss,
     }
 }

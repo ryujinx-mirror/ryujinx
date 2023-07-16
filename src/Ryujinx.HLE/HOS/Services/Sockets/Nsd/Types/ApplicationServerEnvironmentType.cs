@@ -6,6 +6,6 @@
         Lp,
         Sd,
         Sp,
-        Dp
+        Dp,
     }
 }

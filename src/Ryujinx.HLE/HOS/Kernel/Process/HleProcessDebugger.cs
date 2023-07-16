@@ -14,7 +14,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
     {
         private const int Mod0 = 'M' << 0 | 'O' << 8 | 'D' << 16 | '0' << 24;
 
-        private KProcess _owner;
+        private readonly KProcess _owner;
 
         private class Image
         {
@@ -27,12 +27,12 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
             public Image(ulong baseAddress, ulong size, ElfSymbol[] symbols)
             {
                 BaseAddress = baseAddress;
-                Size        = size;
-                Symbols     = symbols;
+                Size = size;
+                Symbols = symbols;
             }
         }
 
-        private List<Image> _images;
+        private readonly List<Image> _images;
 
         private int _loaded;
 
@@ -49,7 +49,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
             var context = thread.Context;
 
-            StringBuilder trace = new StringBuilder();
+            StringBuilder trace = new();
 
             trace.AppendLine($"Process: {_owner.Name}, PID: {_owner.Pid}");
 
@@ -111,7 +111,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
             var context = thread.Context;
 
-            StringBuilder sb = new StringBuilder();
+            StringBuilder sb = new();
 
             string GetReg(int x)
             {
@@ -145,11 +145,11 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
             return sb.ToString();
         }
 
-        private bool TryGetSubName(Image image, ulong address, out ElfSymbol symbol)
+        private static bool TryGetSubName(Image image, ulong address, out ElfSymbol symbol)
         {
             address -= image.BaseAddress;
 
-            int left  = 0;
+            int left = 0;
             int right = image.Symbols.Length - 1;
 
             while (left <= right)
@@ -190,9 +190,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
             public ulong Offset;
             public ulong SubOffset;
 
-            public string ImageDisplay => $"{ImageName}:0x{Offset:x4}";
-            public string SubDisplay => SubOffset == 0 ? SubName : $"{SubName}:0x{SubOffset:x4}";
-            public string SpDisplay => SubOffset == 0 ? "SP" : $"SP:-0x{SubOffset:x4}";
+            public readonly string ImageDisplay => $"{ImageName}:0x{Offset:x4}";
+            public readonly string SubDisplay => SubOffset == 0 ? SubName : $"{SubName}:0x{SubOffset:x4}";
+            public readonly string SpDisplay => SubOffset == 0 ? "SP" : $"SP:-0x{SubOffset:x4}";
         }
 
         private bool AnalyzePointer(out PointerInfo info, ulong address, KThread thread)
@@ -324,7 +324,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
         private void ScanMemoryForTextSegments()
         {
             ulong oldAddress = 0;
-            ulong address    = 0;
+            ulong address = 0;
 
             while (address >= oldAddress)
             {
@@ -355,7 +355,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
                 return;
             }
 
-            Dictionary<ElfDynamicTag, ulong> dynamic = new Dictionary<ElfDynamicTag, ulong>();
+            Dictionary<ElfDynamicTag, ulong> dynamic = new();
 
             int mod0Magic = memory.Read<int>(mod0Offset + 0x0);
 
@@ -364,12 +364,12 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
                 return;
             }
 
-            ulong dynamicOffset    = memory.Read<uint>(mod0Offset + 0x4)  + mod0Offset;
-            ulong bssStartOffset   = memory.Read<uint>(mod0Offset + 0x8)  + mod0Offset;
-            ulong bssEndOffset     = memory.Read<uint>(mod0Offset + 0xc)  + mod0Offset;
+            ulong dynamicOffset = memory.Read<uint>(mod0Offset + 0x4) + mod0Offset;
+            ulong bssStartOffset = memory.Read<uint>(mod0Offset + 0x8) + mod0Offset;
+            ulong bssEndOffset = memory.Read<uint>(mod0Offset + 0xc) + mod0Offset;
             ulong ehHdrStartOffset = memory.Read<uint>(mod0Offset + 0x10) + mod0Offset;
-            ulong ehHdrEndOffset   = memory.Read<uint>(mod0Offset + 0x14) + mod0Offset;
-            ulong modObjOffset     = memory.Read<uint>(mod0Offset + 0x18) + mod0Offset;
+            ulong ehHdrEndOffset = memory.Read<uint>(mod0Offset + 0x14) + mod0Offset;
+            ulong modObjOffset = memory.Read<uint>(mod0Offset + 0x18) + mod0Offset;
 
             bool isAArch32 = memory.Read<ulong>(dynamicOffset) > 0xFFFFFFFF || memory.Read<ulong>(dynamicOffset + 0x10) > 0xFFFFFFFF;
 
@@ -381,14 +381,14 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
                 if (isAArch32)
                 {
                     tagVal = memory.Read<uint>(dynamicOffset + 0);
-                    value  = memory.Read<uint>(dynamicOffset + 4);
+                    value = memory.Read<uint>(dynamicOffset + 4);
 
                     dynamicOffset += 0x8;
                 }
                 else
                 {
                     tagVal = memory.Read<ulong>(dynamicOffset + 0);
-                    value  = memory.Read<ulong>(dynamicOffset + 8);
+                    value = memory.Read<ulong>(dynamicOffset + 8);
 
                     dynamicOffset += 0x10;
                 }
@@ -413,7 +413,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
             ulong strTblAddr = textOffset + strTab;
             ulong symTblAddr = textOffset + symTab;
 
-            List<ElfSymbol> symbols = new List<ElfSymbol>();
+            List<ElfSymbol> symbols = new();
 
             while (symTblAddr < strTblAddr)
             {
@@ -430,7 +430,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
             }
         }
 
-        private ElfSymbol GetSymbol64(IVirtualMemoryManager memory, ulong address, ulong strTblAddr)
+        private static ElfSymbol GetSymbol64(IVirtualMemoryManager memory, ulong address, ulong strTblAddr)
         {
             ElfSymbol64 sym = memory.Read<ElfSymbol64>(address);
 
@@ -446,7 +446,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
             return new ElfSymbol(name, sym.Info, sym.Other, sym.SectionIndex, sym.ValueAddress, sym.Size);
         }
 
-        private ElfSymbol GetSymbol32(IVirtualMemoryManager memory, ulong address, ulong strTblAddr)
+        private static ElfSymbol GetSymbol32(IVirtualMemoryManager memory, ulong address, ulong strTblAddr)
         {
             ElfSymbol32 sym = memory.Read<ElfSymbol32>(address);
 

@@ -8,6 +8,6 @@
         TryAgain,
         NoRecovery,
         NoData,
-        NoAddress = NoData
+        NoAddress = NoData,
     }
 }

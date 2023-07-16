@@ -12,7 +12,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio
     {
         private const int AudioOutNameSize = 0x100;
 
-        private IAudioOutManager _impl;
+        private readonly IAudioOutManager _impl;
 
         public AudioOutManagerServer(ServiceCtx context) : this(context, new AudioOutManager(context.Device.System.AudioOutputManager)) { }
 
@@ -69,7 +69,9 @@ namespace Ryujinx.HLE.HOS.Services.Audio
             ulong deviceNameInputSize = context.Request.SendBuff[0].Size;
 
             ulong deviceNameOutputPosition = context.Request.ReceiveBuff[0].Position;
+#pragma warning disable IDE0059 // Remove unnecessary value assignment
             ulong deviceNameOutputSize = context.Request.ReceiveBuff[0].Size;
+#pragma warning restore IDE0059
 
             uint processHandle = (uint)context.Request.HandleDesc.ToCopy[0];
 
@@ -136,7 +138,9 @@ namespace Ryujinx.HLE.HOS.Services.Audio
             ulong appletResourceUserId = context.RequestData.ReadUInt64();
 
             (ulong deviceNameInputPosition, ulong deviceNameInputSize) = context.Request.GetBufferType0x21();
+#pragma warning disable IDE0059 // Remove unnecessary value assignment
             (ulong deviceNameOutputPosition, ulong deviceNameOutputSize) = context.Request.GetBufferType0x22();
+#pragma warning restore IDE0059
 
             uint processHandle = (uint)context.Request.HandleDesc.ToCopy[0];
 

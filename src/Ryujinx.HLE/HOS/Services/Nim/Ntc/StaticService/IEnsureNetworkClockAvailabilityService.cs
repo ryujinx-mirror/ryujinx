@@ -8,13 +8,13 @@ namespace Ryujinx.HLE.HOS.Services.Nim.Ntc.StaticService
 {
     class IEnsureNetworkClockAvailabilityService : IpcService
     {
-        private KEvent     _finishNotificationEvent;
+        private readonly KEvent _finishNotificationEvent;
         private ResultCode _taskResultCode;
 
         public IEnsureNetworkClockAvailabilityService(ServiceCtx context)
         {
             _finishNotificationEvent = new KEvent(context.Device.System.KernelContext);
-            _taskResultCode          = ResultCode.Success;
+            _taskResultCode = ResultCode.Success;
 
             // NOTE: The service starts a thread that polls Nintendo NTP server and syncs the time with it.
             //       Additionnally it gets and uses some settings too:

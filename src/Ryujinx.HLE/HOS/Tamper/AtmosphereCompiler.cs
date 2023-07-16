@@ -9,29 +9,28 @@ namespace Ryujinx.HLE.HOS.Tamper
 {
     class AtmosphereCompiler
     {
-        private ulong            _exeAddress;
-        private ulong            _heapAddress;
-        private ulong            _aliasAddress;
-        private ulong            _aslrAddress;
-        private ITamperedProcess _process;
+        private readonly ulong _exeAddress;
+        private readonly ulong _heapAddress;
+        private readonly ulong _aliasAddress;
+        private readonly ulong _aslrAddress;
+        private readonly ITamperedProcess _process;
 
         public AtmosphereCompiler(ulong exeAddress, ulong heapAddress, ulong aliasAddress, ulong aslrAddress, ITamperedProcess process)
         {
-            _exeAddress   = exeAddress;
-            _heapAddress  = heapAddress;
+            _exeAddress = exeAddress;
+            _heapAddress = heapAddress;
             _aliasAddress = aliasAddress;
-            _aslrAddress  = aslrAddress;
-            _process      = process;
+            _aslrAddress = aslrAddress;
+            _process = process;
         }
 
         public ITamperProgram Compile(string name, IEnumerable<string> rawInstructions)
         {
-            string[] addresses = new string[]
-            {
+            string[] addresses = {
                 $"    Executable address: 0x{_exeAddress:X16}",
                 $"    Heap address      : 0x{_heapAddress:X16}",
                 $"    Alias address     : 0x{_aliasAddress:X16}",
-                $"    Aslr address      : 0x{_aslrAddress:X16}"
+                $"    Aslr address      : 0x{_aslrAddress:X16}",
             };
 
             Logger.Debug?.Print(LogClass.TamperMachine, $"Compiling Atmosphere cheat {name}...\n{string.Join('\n', addresses)}");
@@ -40,14 +39,14 @@ namespace Ryujinx.HLE.HOS.Tamper
             {
                 return CompileImpl(name, rawInstructions);
             }
-            catch(TamperCompilationException exception)
+            catch (TamperCompilationException ex)
             {
                 // Just print the message without the stack trace.
-                Logger.Error?.Print(LogClass.TamperMachine, exception.Message);
+                Logger.Error?.Print(LogClass.TamperMachine, ex.Message);
             }
-            catch (Exception exception)
+            catch (Exception ex)
             {
-                Logger.Error?.Print(LogClass.TamperMachine, exception.ToString());
+                Logger.Error?.Print(LogClass.TamperMachine, ex.ToString());
             }
 
             Logger.Error?.Print(LogClass.TamperMachine, "There was a problem while compiling the Atmosphere cheat");
@@ -57,7 +56,7 @@ namespace Ryujinx.HLE.HOS.Tamper
 
         private ITamperProgram CompileImpl(string name, IEnumerable<string> rawInstructions)
         {
-            CompilationContext context = new CompilationContext(_exeAddress, _heapAddress, _aliasAddress, _aslrAddress, _process);
+            CompilationContext context = new(_exeAddress, _heapAddress, _aliasAddress, _aslrAddress, _process);
             context.BlockStack.Push(new OperationBlock(null));
 
             // Parse the instructions.
@@ -132,7 +131,7 @@ namespace Ryujinx.HLE.HOS.Tamper
 
             // Initialize only the registers used.
 
-            Value<ulong> zero = new Value<ulong>(0UL);
+            Value<ulong> zero = new(0UL);
             int position = 0;
 
             foreach (Register register in context.Registers.Values)
@@ -143,7 +142,7 @@ namespace Ryujinx.HLE.HOS.Tamper
 
             if (context.BlockStack.Count != 1)
             {
-                throw new TamperCompilationException($"Reached end of compilation with unmatched conditional(s) or loop(s)");
+                throw new TamperCompilationException("Reached end of compilation with unmatched conditional(s) or loop(s)");
             }
 
             return new AtmosphereProgram(name, _process, context.PressedKeys, new Block(context.CurrentOperations));

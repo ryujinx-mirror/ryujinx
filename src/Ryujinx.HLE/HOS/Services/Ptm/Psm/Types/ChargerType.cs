@@ -4,6 +4,6 @@
     {
         None,
         ChargerOrDock,
-        UsbC
+        UsbC,
     }
 }

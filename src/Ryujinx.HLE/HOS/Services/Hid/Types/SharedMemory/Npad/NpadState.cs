@@ -11,7 +11,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid.Types.SharedMemory.Npad
         {
             return new NpadState
             {
-                InternalState = NpadInternalState.Create()
+                InternalState = NpadInternalState.Create(),
             };
         }
     }

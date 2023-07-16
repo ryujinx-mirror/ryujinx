@@ -1,6 +1,6 @@
 ﻿namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger.Types
 {
-    class AndroidStrongPointer<T> where T: unmanaged, IFlattenable
+    class AndroidStrongPointer<T> where T : unmanaged, IFlattenable
     {
         public T Object;
 
@@ -20,13 +20,13 @@
 
         public void Set(AndroidStrongPointer<T> other)
         {
-            Object     = other.Object;
+            Object = other.Object;
             _hasObject = other._hasObject;
         }
 
         public void Set(T obj)
         {
-            Object     = obj;
+            Object = obj;
             _hasObject = true;
         }
 

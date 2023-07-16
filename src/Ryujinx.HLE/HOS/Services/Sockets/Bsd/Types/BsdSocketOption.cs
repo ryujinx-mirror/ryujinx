@@ -1,5 +1,8 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd.Types
 {
+    [SuppressMessage("Design", "CA1069: Enums values should not be duplicated")]
     enum BsdSocketOption
     {
         SoDebug = 0x1,
@@ -114,6 +117,6 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd.Types
         TcpKeepInit = 128,
         TcpKeepIdle = 256,
         TcpKeepIntvl = 512,
-        TcpKeepCnt = 1024
+        TcpKeepCnt = 1024,
     }
 }

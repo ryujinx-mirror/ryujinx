@@ -3,6 +3,6 @@
     enum State
     {
         NonInitialized = 0,
-        Initialized    = 1
+        Initialized = 1,
     }
 }

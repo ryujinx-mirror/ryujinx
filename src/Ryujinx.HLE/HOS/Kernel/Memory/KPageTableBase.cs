@@ -12,14 +12,13 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 {
     abstract class KPageTableBase
     {
-        private static readonly int[] MappingUnitSizes = new int[]
-        {
+        private static readonly int[] _mappingUnitSizes = {
             0x1000,
             0x10000,
             0x200000,
             0x400000,
             0x2000000,
-            0x40000000
+            0x40000000,
         };
 
         private const ulong RegionAlignment = 0x200000;
@@ -58,7 +57,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
         public ulong AslrRegionStart { get; private set; }
         public ulong AslrRegionEnd { get; private set; }
 
+#pragma warning disable IDE0052 // Remove unread private member
         private ulong _heapCapacity;
+#pragma warning restore IDE0052
 
         public ulong PhysicalMemoryUsage { get; private set; }
 
@@ -67,7 +68,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
         private MemoryRegion _memRegion;
 
         private bool _allocateFromBack;
-        private bool _isKernel;
+        private readonly bool _isKernel;
 
         private bool _aslrEnabled;
 
@@ -77,10 +78,10 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
         private MersenneTwister _randomNumberGenerator;
 
-        private MemoryFillValue _heapFillValue;
-        private MemoryFillValue _ipcFillValue;
+        private readonly MemoryFillValue _heapFillValue;
+        private readonly MemoryFillValue _ipcFillValue;
 
-        private ulong _reservedAddressSpaceSize;
+        private readonly ulong _reservedAddressSpaceSize;
 
         public KPageTableBase(KernelContext context, ulong reservedAddressSpaceSize)
         {
@@ -96,7 +97,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             _reservedAddressSpaceSize = reservedAddressSpaceSize;
         }
 
-        private static readonly int[] AddrSpaceSizes = new int[] { 32, 36, 32, 39 };
+        private static readonly int[] _addrSpaceSizes = { 32, 36, 32, 39 };
 
         public Result InitializeForProcess(
             AddressSpaceType addrSpaceType,
@@ -109,13 +110,13 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
         {
             if ((uint)addrSpaceType > (uint)AddressSpaceType.Addr39Bits)
             {
-                throw new ArgumentException(nameof(addrSpaceType));
+                throw new ArgumentException($"AddressSpaceType bigger than {(uint)AddressSpaceType.Addr39Bits}: {(uint)addrSpaceType}", nameof(addrSpaceType));
             }
 
             _contextId = Context.ContextIdManager.GetId();
 
             ulong addrSpaceBase = 0;
-            ulong addrSpaceSize = 1UL << AddrSpaceSizes[(int)addrSpaceType];
+            ulong addrSpaceSize = 1UL << _addrSpaceSizes[(int)addrSpaceType];
 
             Result result = CreateUserAddressSpace(
                 addrSpaceType,
@@ -157,10 +158,10 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
         {
             ulong endAddr = address + size;
 
-            Region aliasRegion = new Region();
-            Region heapRegion = new Region();
-            Region stackRegion = new Region();
-            Region tlsIoRegion = new Region();
+            Region aliasRegion = new();
+            Region heapRegion = new();
+            Region stackRegion = new();
+            Region tlsIoRegion = new();
 
             ulong codeRegionSize;
             ulong stackAndTlsIoStart;
@@ -238,8 +239,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                         stackAndTlsIoEnd = 0;
                     }
                     break;
-
-                default: throw new ArgumentException(nameof(addrSpaceType));
+                default:
+                    throw new ArgumentException($"AddressSpaceType bigger than {(uint)AddressSpaceType.Addr39Bits}: {(uint)addrSpaceType}", nameof(addrSpaceType));
             }
 
             CodeRegionEnd = CodeRegionStart + codeRegionSize;
@@ -374,10 +375,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
         private long GetRandomValue(long min, long max)
         {
-            if (_randomNumberGenerator == null)
-            {
-                _randomNumberGenerator = new MersenneTwister(0);
-            }
+            _randomNumberGenerator ??= new MersenneTwister(0);
 
             return _randomNumberGenerator.GenRandomNumber(min, max);
         }
@@ -442,7 +440,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
             lock (_blockManager)
             {
-                KPageList currentPageList = new KPageList();
+                KPageList currentPageList = new();
 
                 GetPhysicalRegions(address, size, currentPageList);
 
@@ -486,13 +484,13 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             }
         }
 
-        public Result MapNormalMemory(long address, long size, KMemoryPermission permission)
+        public static Result MapNormalMemory(long address, long size, KMemoryPermission permission)
         {
             // TODO.
             return Result.Success;
         }
 
-        public Result MapIoMemory(long address, long size, KMemoryPermission permission)
+        public static Result MapIoMemory(long address, long size, KMemoryPermission permission)
         {
             // TODO.
             return Result.Success;
@@ -1174,8 +1172,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                         return KernelResult.InvalidMemState;
                     }
 
-                    KPageList srcPageList = new KPageList();
-                    KPageList dstPageList = new KPageList();
+                    KPageList srcPageList = new();
+                    KPageList dstPageList = new();
 
                     srcPageTable.GetPhysicalRegions(src, size, srcPageList);
                     GetPhysicalRegions(dst, size, dstPageList);
@@ -1681,11 +1679,17 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
             switch (state)
             {
-                case MemoryState.IpcBuffer0: stateMask = MemoryState.IpcSendAllowedType0; break;
-                case MemoryState.IpcBuffer1: stateMask = MemoryState.IpcSendAllowedType1; break;
-                case MemoryState.IpcBuffer3: stateMask = MemoryState.IpcSendAllowedType3; break;
-
-                default: return KernelResult.InvalidCombination;
+                case MemoryState.IpcBuffer0:
+                    stateMask = MemoryState.IpcSendAllowedType0;
+                    break;
+                case MemoryState.IpcBuffer1:
+                    stateMask = MemoryState.IpcSendAllowedType1;
+                    break;
+                case MemoryState.IpcBuffer3:
+                    stateMask = MemoryState.IpcSendAllowedType3;
+                    break;
+                default:
+                    return KernelResult.InvalidCombination;
             }
 
             KMemoryPermission permissionMask = permission == KMemoryPermission.ReadAndWrite
@@ -1822,9 +1826,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
             ulong va = 0;
 
-            for (int unit = MappingUnitSizes.Length - 1; unit >= 0 && va == 0; unit--)
+            for (int unit = _mappingUnitSizes.Length - 1; unit >= 0 && va == 0; unit--)
             {
-                int alignment = MappingUnitSizes[unit];
+                int alignment = _mappingUnitSizes[unit];
 
                 va = AllocateVa(AliasRegionStart, regionPagesCount, neededPagesCount, alignment);
             }
@@ -1937,7 +1941,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
                 if (srcPageTable.Supports4KBPages)
                 {
-                    KPageList pageList = new KPageList();
+                    KPageList pageList = new();
                     srcPageTable.GetPhysicalRegions(addressRounded, alignedSize, pageList);
 
                     result = MapPages(currentVa, pageList, permission, MemoryMapFlags.None);
@@ -2075,11 +2079,17 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
             switch (state)
             {
-                case MemoryState.IpcBuffer0: stateMask = MemoryState.IpcSendAllowedType0; break;
-                case MemoryState.IpcBuffer1: stateMask = MemoryState.IpcSendAllowedType1; break;
-                case MemoryState.IpcBuffer3: stateMask = MemoryState.IpcSendAllowedType3; break;
-
-                default: return KernelResult.InvalidCombination;
+                case MemoryState.IpcBuffer0:
+                    stateMask = MemoryState.IpcSendAllowedType0;
+                    break;
+                case MemoryState.IpcBuffer1:
+                    stateMask = MemoryState.IpcSendAllowedType1;
+                    break;
+                case MemoryState.IpcBuffer3:
+                    stateMask = MemoryState.IpcSendAllowedType3;
+                    break;
+                default:
+                    return KernelResult.InvalidCombination;
             }
 
             MemoryAttribute attributeMask =
@@ -2392,7 +2402,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
                     if (pageList != null)
                     {
-                        KPageList currentPageList = new KPageList();
+                        KPageList currentPageList = new();
 
                         GetPhysicalRegions(address, pagesCount * PageSize, currentPageList);
 

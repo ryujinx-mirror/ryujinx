@@ -3,6 +3,6 @@
     enum PlayerSelectResult : ulong
     {
         Success = 0,
-        Failure = 2
+        Failure = 2,
     }
 }

@@ -19,7 +19,7 @@ namespace Ryujinx.HLE.HOS.Services.Pcv.Clkrst
         public ResultCode OpenSession(ServiceCtx context)
         {
             DeviceCode deviceCode = (DeviceCode)context.RequestData.ReadUInt32();
-            uint       unknown    = context.RequestData.ReadUInt32();
+            uint unknown = context.RequestData.ReadUInt32();
 
             // TODO: Service checks the deviceCode and the unk value.
 

@@ -8,8 +8,8 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
         public class Slot
         {
             public AndroidStrongPointer<GraphicBuffer> GraphicBuffer;
-            public AndroidFence                        Fence;
-            public ulong                               FrameNumber;
+            public AndroidFence Fence;
+            public ulong FrameNumber;
 
             public Slot()
             {
@@ -25,7 +25,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 
         protected readonly object Lock = new();
 
-        private IConsumerListener _listener;
+        private readonly IConsumerListener _listener;
 
         public ConsumerBase(BufferQueueConsumer consumer, bool controlledByApp, IConsumerListener listener)
         {
@@ -35,8 +35,8 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
             }
 
             IsAbandoned = false;
-            Consumer    = consumer;
-            _listener   = listener;
+            Consumer = consumer;
+            _listener = listener;
 
             Status connectStatus = consumer.Connect(this, controlledByApp);
 
@@ -81,7 +81,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
         {
             Slots[slotIndex].GraphicBuffer.Reset();
 
-            Slots[slotIndex].Fence       = AndroidFence.NoFence;
+            Slots[slotIndex].Fence = AndroidFence.NoFence;
             Slots[slotIndex].FrameNumber = 0;
         }
 
@@ -123,7 +123,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
             }
 
             Slots[bufferItem.Slot].FrameNumber = bufferItem.FrameNumber;
-            Slots[bufferItem.Slot].Fence       = bufferItem.Fence;
+            Slots[bufferItem.Slot].Fence = bufferItem.Fence;
 
             return Status.Success;
         }

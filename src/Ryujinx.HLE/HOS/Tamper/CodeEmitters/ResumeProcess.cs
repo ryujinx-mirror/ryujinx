@@ -8,7 +8,6 @@ namespace Ryujinx.HLE.HOS.Tamper.CodeEmitters
     class ResumeProcess
     {
         // FF1?????
-
         public static void Emit(byte[] instruction, CompilationContext context)
         {
             context.CurrentOperations.Add(new OpProcCtrl(context.Process, false));

@@ -2,8 +2,8 @@ namespace Ryujinx.HLE.HOS.Tamper.Operations
 {
     class OpMov<T> : IOperation where T : unmanaged
     {
-        IOperand _destination;
-        IOperand _source;
+        readonly IOperand _destination;
+        readonly IOperand _source;
 
         public OpMov(IOperand destination, IOperand source)
         {

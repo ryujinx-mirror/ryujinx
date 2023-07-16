@@ -13,7 +13,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
             ref DebugPadState previousEntry = ref lifo.GetCurrentEntryRef();
 
-            DebugPadState newState = new DebugPadState();
+            DebugPadState newState = new();
 
             if (Active)
             {

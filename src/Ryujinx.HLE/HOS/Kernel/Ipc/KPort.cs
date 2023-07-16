@@ -8,9 +8,11 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
         public KServerPort ServerPort { get; }
         public KClientPort ClientPort { get; }
 
-        private string _name;
+#pragma warning disable IDE0052 // Remove unread private member
+        private readonly string _name;
+#pragma warning restore IDE0052
 
-        private ChannelState _state;
+        private readonly ChannelState _state;
 
         public bool IsLight { get; private set; }
 

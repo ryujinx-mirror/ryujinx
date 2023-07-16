@@ -2,6 +2,7 @@
 {
     enum ColorSwizzle
     {
+#pragma warning disable IDE0055 // Disable formatting
         XYZW = 0x688 << ColorShift.Swizzle,
         ZYXW = 0x60a << ColorShift.Swizzle,
         WZYX = 0x053 << ColorShift.Swizzle,
@@ -26,6 +27,7 @@
        _000X = 0x124 << ColorShift.Swizzle,
        _0XY0 = 0x844 << ColorShift.Swizzle,
         XXXY = 0x200 << ColorShift.Swizzle,
-        YYYX = 0x049 << ColorShift.Swizzle
+        YYYX = 0x049 << ColorShift.Swizzle,
+#pragma warning restore IDE0055
     }
 }

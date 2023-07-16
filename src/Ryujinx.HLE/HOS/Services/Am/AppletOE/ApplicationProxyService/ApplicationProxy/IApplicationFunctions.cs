@@ -1,5 +1,4 @@
 using LibHac.Account;
-using LibHac.Common;
 using LibHac.Fs;
 using LibHac.Ncm;
 using LibHac.Ns;
@@ -18,20 +17,20 @@ using Ryujinx.Horizon.Common;
 using System;
 using System.Numerics;
 using System.Threading;
-using AccountUid    = Ryujinx.HLE.HOS.Services.Account.Acc.UserId;
+using AccountUid = Ryujinx.HLE.HOS.Services.Account.Acc.UserId;
 using ApplicationId = LibHac.Ncm.ApplicationId;
 
 namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.ApplicationProxy
 {
     class IApplicationFunctions : IpcService
     {
-        private long _defaultSaveDataSize        = 200000000;
+        private long _defaultSaveDataSize = 200000000;
         private long _defaultJournalSaveDataSize = 200000000;
 
-        private KEvent _gpuErrorDetectedSystemEvent;
-        private KEvent _friendInvitationStorageChannelEvent;
-        private KEvent _notificationStorageChannelEvent;
-        private KEvent _healthWarningDisappearedSystemEvent;
+        private readonly KEvent _gpuErrorDetectedSystemEvent;
+        private readonly KEvent _friendInvitationStorageChannelEvent;
+        private readonly KEvent _notificationStorageChannelEvent;
+        private readonly KEvent _healthWarningDisappearedSystemEvent;
 
         private int _gpuErrorDetectedSystemEventHandle;
         private int _friendInvitationStorageChannelEventHandle;
@@ -42,14 +41,14 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
 
         private int _jitLoaded;
 
-        private LibHac.HorizonClient _horizon;
+        private readonly LibHac.HorizonClient _horizon;
 
         public IApplicationFunctions(Horizon system)
         {
             // TODO: Find where they are signaled.
-            _gpuErrorDetectedSystemEvent         = new KEvent(system.KernelContext);
+            _gpuErrorDetectedSystemEvent = new KEvent(system.KernelContext);
             _friendInvitationStorageChannelEvent = new KEvent(system.KernelContext);
-            _notificationStorageChannelEvent     = new KEvent(system.KernelContext);
+            _notificationStorageChannelEvent = new KEvent(system.KernelContext);
             _healthWarningDisappearedSystemEvent = new KEvent(system.KernelContext);
 
             _horizon = system.LibHacHorizonManager.AmClient;
@@ -115,7 +114,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
             Uid userId = context.RequestData.ReadStruct<AccountUid>().ToLibHacUid();
 
             // Mask out the low nibble of the program ID to get the application ID
-            ApplicationId applicationId = new ApplicationId(context.Device.Processes.ActiveApplication.ProgramId & ~0xFul);
+            ApplicationId applicationId = new(context.Device.Processes.ActiveApplication.ProgramId & ~0xFul);
 
             ApplicationControlProperty nacp = context.Device.Processes.ActiveApplication.ApplicationControlProperties;
 
@@ -137,8 +136,8 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
             // TODO: When above calls are implemented, switch to using ns:am
 
             long desiredLanguageCode = context.Device.System.State.DesiredLanguageCode;
-            int  supportedLanguages  = (int)context.Device.Processes.ActiveApplication.ApplicationControlProperties.SupportedLanguageFlag;
-            int  firstSupported      = BitOperations.TrailingZeroCount(supportedLanguages);
+            int supportedLanguages = (int)context.Device.Processes.ActiveApplication.ApplicationControlProperties.SupportedLanguageFlag;
+            int firstSupported = BitOperations.TrailingZeroCount(supportedLanguages);
 
             if (firstSupported > (int)TitleLanguage.BrazilianPortuguese)
             {
@@ -168,7 +167,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
         // SetTerminateResult(u32)
         public ResultCode SetTerminateResult(ServiceCtx context)
         {
-            LibHac.Result result = new LibHac.Result(context.RequestData.ReadUInt32());
+            LibHac.Result result = new(context.RequestData.ReadUInt32());
 
             Logger.Info?.Print(LogClass.ServiceAm, $"Result = 0x{result.Value:x8} ({result.ToStringWithName()}).");
 
@@ -190,14 +189,14 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
         public ResultCode ExtendSaveData(ServiceCtx context)
         {
             SaveDataType saveDataType = (SaveDataType)context.RequestData.ReadUInt64();
-            Uid          userId       = context.RequestData.ReadStruct<Uid>();
-            long        saveDataSize  = context.RequestData.ReadInt64();
-            long        journalSize   = context.RequestData.ReadInt64();
+            Uid userId = context.RequestData.ReadStruct<Uid>();
+            long saveDataSize = context.RequestData.ReadInt64();
+            long journalSize = context.RequestData.ReadInt64();
 
             // NOTE: Service calls nn::fs::ExtendApplicationSaveData.
             //       Since LibHac currently doesn't support this method, we can stub it for now.
 
-            _defaultSaveDataSize        = saveDataSize;
+            _defaultSaveDataSize = saveDataSize;
             _defaultJournalSaveDataSize = journalSize;
 
             context.ResponseData.Write((uint)ResultCode.Success);
@@ -212,7 +211,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
         public ResultCode GetSaveDataSize(ServiceCtx context)
         {
             SaveDataType saveDataType = (SaveDataType)context.RequestData.ReadUInt64();
-            Uid          userId       = context.RequestData.ReadStruct<Uid>();
+            Uid userId = context.RequestData.ReadStruct<Uid>();
 
             // NOTE: Service calls nn::fs::FindSaveDataWithFilter with SaveDataType = 1 hardcoded.
             //       Then it calls nn::fs::GetSaveDataAvailableSize and nn::fs::GetSaveDataJournalSize to get the sizes.
@@ -235,14 +234,17 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
             long journalSize = context.RequestData.ReadInt64();
 
             // Mask out the low nibble of the program ID to get the application ID
-            ApplicationId applicationId = new ApplicationId(context.Device.Processes.ActiveApplication.ProgramId & ~0xFul);
+            ApplicationId applicationId = new(context.Device.Processes.ActiveApplication.ProgramId & ~0xFul);
 
             ApplicationControlProperty nacp = context.Device.Processes.ActiveApplication.ApplicationControlProperties;
 
             LibHac.Result result = _horizon.Fs.CreateApplicationCacheStorage(out long requiredSize,
                 out CacheStorageTargetMedia storageTarget, applicationId, in nacp, index, saveSize, journalSize);
 
-            if (result.IsFailure()) return (ResultCode)result.Value;
+            if (result.IsFailure())
+            {
+                return (ResultCode)result.Value;
+            }
 
             context.ResponseData.Write((ulong)storageTarget);
             context.ResponseData.Write(requiredSize);
@@ -391,10 +393,10 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
         // InitializeApplicationCopyrightFrameBuffer(s32 width, s32 height, handle<copy, transfer_memory> transfer_memory, u64 transfer_memory_size)
         public ResultCode InitializeApplicationCopyrightFrameBuffer(ServiceCtx context)
         {
-            int   width                 = context.RequestData.ReadInt32();
-            int   height                = context.RequestData.ReadInt32();
-            ulong transferMemorySize    = context.RequestData.ReadUInt64();
-            int   transferMemoryHandle  = context.Request.HandleDesc.ToCopy[0];
+            int width = context.RequestData.ReadInt32();
+            int height = context.RequestData.ReadInt32();
+            ulong transferMemorySize = context.RequestData.ReadUInt64();
+            int transferMemoryHandle = context.Request.HandleDesc.ToCopy[0];
             ulong transferMemoryAddress = context.Process.HandleTable.GetObject<KTransferMemory>(transferMemoryHandle).Address;
 
             ResultCode resultCode = ResultCode.InvalidParameters;
@@ -437,13 +439,13 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
         // SetApplicationCopyrightImage(buffer<bytes, 0x45> frame_buffer, s32 x, s32 y, s32 width, s32 height, s32 window_origin_mode)
         public ResultCode SetApplicationCopyrightImage(ServiceCtx context)
         {
-            ulong frameBufferPos   = context.Request.SendBuff[0].Position;
-            ulong frameBufferSize  = context.Request.SendBuff[0].Size;
-            int   x                = context.RequestData.ReadInt32();
-            int   y                = context.RequestData.ReadInt32();
-            int   width            = context.RequestData.ReadInt32();
-            int   height           = context.RequestData.ReadInt32();
-            uint  windowOriginMode = context.RequestData.ReadUInt32();
+            ulong frameBufferPos = context.Request.SendBuff[0].Position;
+            ulong frameBufferSize = context.Request.SendBuff[0].Size;
+            int x = context.RequestData.ReadInt32();
+            int y = context.RequestData.ReadInt32();
+            int width = context.RequestData.ReadInt32();
+            int height = context.RequestData.ReadInt32();
+            uint windowOriginMode = context.RequestData.ReadUInt32();
 
             ResultCode resultCode = ResultCode.InvalidParameters;
 
@@ -653,11 +655,11 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
             if (Interlocked.Exchange(ref _jitLoaded, 1) == 0)
             {
                 string jitPath = context.Device.System.ContentManager.GetInstalledContentPath(0x010000000000003B, StorageId.BuiltInSystem, NcaContentType.Program);
-                string filePath = context.Device.FileSystem.SwitchPathToSystemPath(jitPath);
+                string filePath = FileSystem.VirtualFileSystem.SwitchPathToSystemPath(jitPath);
 
                 if (string.IsNullOrWhiteSpace(filePath))
                 {
-                    throw new InvalidSystemResourceException($"JIT (010000000000003B) system title not found! The JIT will not work, provide the system archive to fix this error. (See https://github.com/Ryujinx/Ryujinx#requirements for more information)");
+                    throw new InvalidSystemResourceException("JIT (010000000000003B) system title not found! The JIT will not work, provide the system archive to fix this error. (See https://github.com/Ryujinx/Ryujinx#requirements for more information)");
                 }
 
                 context.Device.LoadNca(filePath);

@@ -8,13 +8,13 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp.NfpManager
         public KEvent ActivateEvent;
         public KEvent DeactivateEvent;
 
-        public void SignalActivate()   => ActivateEvent.ReadableEvent.Signal();
+        public void SignalActivate() => ActivateEvent.ReadableEvent.Signal();
         public void SignalDeactivate() => DeactivateEvent.ReadableEvent.Signal();
 
         public NfpDeviceState State = NfpDeviceState.Unavailable;
 
         public PlayerIndex Handle;
-        public NpadIdType  NpadIdType;
+        public NpadIdType NpadIdType;
 
         public string AmiiboId;
 

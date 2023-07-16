@@ -12,7 +12,7 @@ namespace Ryujinx.HLE.HOS.Services.Apm
         // SetPerformanceConfiguration(nn::apm::PerformanceMode, nn::apm::PerformanceConfiguration)
         public ResultCode SetPerformanceConfiguration(ServiceCtx context)
         {
-            PerformanceMode          performanceMode          = (PerformanceMode)context.RequestData.ReadInt32();
+            PerformanceMode performanceMode = (PerformanceMode)context.RequestData.ReadInt32();
             PerformanceConfiguration performanceConfiguration = (PerformanceConfiguration)context.RequestData.ReadInt32();
 
             return SetPerformanceConfiguration(performanceMode, performanceConfiguration);

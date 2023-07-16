@@ -3,6 +3,6 @@
     enum LeftStickMode
     {
         Pointer = 0,
-        Cursor
+        Cursor,
     }
 }

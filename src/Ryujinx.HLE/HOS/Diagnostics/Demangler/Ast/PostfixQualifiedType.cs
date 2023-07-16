@@ -4,7 +4,7 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
 {
     public class PostfixQualifiedType : ParentNode
     {
-        private string _postfixQualifier;
+        private readonly string _postfixQualifier;
 
         public PostfixQualifiedType(string postfixQualifier, BaseNode type) : base(NodeType.PostfixQualifiedType, type)
         {

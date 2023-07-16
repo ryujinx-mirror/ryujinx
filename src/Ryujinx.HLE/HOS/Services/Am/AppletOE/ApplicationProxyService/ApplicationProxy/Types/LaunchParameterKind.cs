@@ -4,6 +4,6 @@
     {
         UserChannel = 1,
         PreselectedUser,
-        Unknown
+        Unknown,
     }
 }

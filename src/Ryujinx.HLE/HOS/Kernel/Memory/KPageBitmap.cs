@@ -224,7 +224,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
         {
             while (depth >= 0)
             {
-                int ind   = (int)(offset / UInt64BitSize);
+                int ind = (int)(offset / UInt64BitSize);
                 int which = (int)(offset % UInt64BitSize);
 
                 ulong mask = 1UL << which;
@@ -247,7 +247,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
         {
             while (depth >= 0)
             {
-                int ind   = (int)(offset / UInt64BitSize);
+                int ind = (int)(offset / UInt64BitSize);
                 int which = (int)(offset % UInt64BitSize);
 
                 ulong mask = 1UL << which;

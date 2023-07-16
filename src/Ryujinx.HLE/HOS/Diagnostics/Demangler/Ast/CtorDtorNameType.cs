@@ -4,7 +4,7 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
 {
     public class CtorDtorNameType : ParentNode
     {
-        private bool _isDestructor;
+        private readonly bool _isDestructor;
 
         public CtorDtorNameType(BaseNode name, bool isDestructor) : base(NodeType.CtorDtorNameType, name)
         {

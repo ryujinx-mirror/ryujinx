@@ -7,13 +7,15 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRenderer
 {
     class AudioDevice : IAudioDevice
     {
-        private VirtualDeviceSession[] _sessions;
-        private ulong _appletResourceId;
-        private int _revision;
-        private bool _isUsbDeviceSupported;
+        private readonly VirtualDeviceSession[] _sessions;
+#pragma warning disable IDE0052 // Remove unread private member
+        private readonly ulong _appletResourceId;
+        private readonly int _revision;
+#pragma warning restore IDE0052
+        private readonly bool _isUsbDeviceSupported;
 
-        private VirtualDeviceSessionRegistry _registry;
-        private KEvent _systemEvent;
+        private readonly VirtualDeviceSessionRegistry _registry;
+        private readonly KEvent _systemEvent;
 
         public AudioDevice(VirtualDeviceSessionRegistry registry, KernelContext context, ulong appletResourceId, int revision)
         {
@@ -21,7 +23,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRenderer
             _appletResourceId = appletResourceId;
             _revision = revision;
 
-            BehaviourContext behaviourContext = new BehaviourContext();
+            BehaviourContext behaviourContext = new();
             behaviourContext.SetUserRevision(revision);
 
             _isUsbDeviceSupported = behaviourContext.IsAudioUsbDeviceOutputSupported();

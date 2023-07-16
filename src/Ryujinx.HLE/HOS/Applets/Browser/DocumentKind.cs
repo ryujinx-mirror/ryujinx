@@ -4,6 +4,6 @@
     {
         OfflineHtmlPage = 1,
         ApplicationLegalInformation,
-        SystemDataPage
+        SystemDataPage,
     }
 }

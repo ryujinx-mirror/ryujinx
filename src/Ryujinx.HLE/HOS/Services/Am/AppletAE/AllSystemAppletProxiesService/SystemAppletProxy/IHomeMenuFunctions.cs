@@ -8,8 +8,8 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
 {
     class IHomeMenuFunctions : IpcService
     {
-        private KEvent _channelEvent;
-        private int    _channelEventHandle;
+        private readonly KEvent _channelEvent;
+        private int _channelEventHandle;
 
         public IHomeMenuFunctions(Horizon system)
         {

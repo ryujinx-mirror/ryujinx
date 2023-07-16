@@ -63,6 +63,6 @@
         GTSRootR4,
         SecurityCommunicationRootCA,
 
-        All = uint.MaxValue
+        All = uint.MaxValue,
     }
 }

@@ -2,8 +2,8 @@ namespace Ryujinx.HLE.HOS.Tamper.Conditions
 {
     class InputMask : ICondition
     {
-        private long _mask;
-        private Parameter<long> _input;
+        private readonly long _mask;
+        private readonly Parameter<long> _input;
 
         public InputMask(long mask, Parameter<long> input)
         {

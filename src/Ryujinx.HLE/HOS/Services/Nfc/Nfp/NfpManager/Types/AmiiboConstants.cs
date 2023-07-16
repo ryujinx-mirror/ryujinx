@@ -2,7 +2,7 @@
 {
     static class AmiiboConstants
     {
-        public const int UuidMaxLength       = 10;
+        public const int UuidMaxLength = 10;
         public const int ApplicationAreaSize = 0xD8;
     }
 }

@@ -10,8 +10,10 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
         // SetExpectedMasterVolume(f32, f32)
         public ResultCode SetExpectedMasterVolume(ServiceCtx context)
         {
-            float appletVolume        = context.RequestData.ReadSingle();
+#pragma warning disable IDE0059 // Remove unnecessary value assignment
+            float appletVolume = context.RequestData.ReadSingle();
             float libraryAppletVolume = context.RequestData.ReadSingle();
+#pragma warning restore IDE0059
 
             Logger.Stub?.PrintStub(LogClass.ServiceAm);
 
@@ -44,8 +46,10 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
         // ChangeMainAppletMasterVolume(f32, u64)
         public ResultCode ChangeMainAppletMasterVolume(ServiceCtx context)
         {
+#pragma warning disable IDE0059 // Remove unnecessary value assignment
             float unknown0 = context.RequestData.ReadSingle();
-            long  unknown1 = context.RequestData.ReadInt64();
+            long unknown1 = context.RequestData.ReadInt64();
+#pragma warning restore IDE0059
 
             Logger.Stub?.PrintStub(LogClass.ServiceAm);
 
@@ -56,7 +60,9 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
         // SetTransparentVolumeRate(f32)
         public ResultCode SetTransparentVolumeRate(ServiceCtx context)
         {
+#pragma warning disable IDE0059 // Remove unnecessary value assignment
             float unknown0 = context.RequestData.ReadSingle();
+#pragma warning restore IDE0059
 
             Logger.Stub?.PrintStub(LogClass.ServiceAm);
 

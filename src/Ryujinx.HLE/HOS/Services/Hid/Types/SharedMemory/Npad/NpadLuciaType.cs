@@ -5,6 +5,6 @@
         Invalid,
         J,
         E,
-        U
+        U,
     }
 }

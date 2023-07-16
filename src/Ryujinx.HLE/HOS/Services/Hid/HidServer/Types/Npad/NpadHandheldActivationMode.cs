@@ -4,6 +4,6 @@
     {
         Dual,
         Single,
-        None
+        None,
     }
 }

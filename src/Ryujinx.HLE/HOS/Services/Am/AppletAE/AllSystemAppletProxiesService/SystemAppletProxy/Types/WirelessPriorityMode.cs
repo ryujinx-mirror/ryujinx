@@ -4,6 +4,6 @@
     {
         Default,
         OptimizedForWlan,
-        Unknown2
+        Unknown2,
     }
 }

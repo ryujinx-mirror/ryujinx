@@ -13,6 +13,6 @@
         /// <summary>
         /// Displays the text entry area as a multi-line field.
         /// </summary>
-        MultiLine
+        MultiLine,
     }
 }

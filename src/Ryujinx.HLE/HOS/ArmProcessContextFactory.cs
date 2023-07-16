@@ -96,7 +96,7 @@ namespace Ryujinx.HLE.HOS
                         break;
 
                     default:
-                        throw new ArgumentOutOfRangeException();
+                        throw new InvalidOperationException($"{nameof(mode)} contains an invalid value: {mode}");
                 }
             }
 

@@ -3,6 +3,6 @@
     enum Location : byte
     {
         Internal,
-        External
+        External,
     }
 }

@@ -8,7 +8,7 @@ namespace Ryujinx.HLE.HOS.Services.Olsc
     [Service("olsc:u")] // 10.0.0+
     class IOlscServiceForApplication : IpcService
     {
-        private bool                     _initialized;
+        private bool _initialized;
         private Dictionary<UserId, bool> _saveDataBackupSettingDatabase;
 
         public IOlscServiceForApplication(ServiceCtx context) { }
@@ -65,8 +65,8 @@ namespace Ryujinx.HLE.HOS.Services.Olsc
         // SetSaveDataBackupSettingEnabled(nn::account::Uid, bool)
         public ResultCode SetSaveDataBackupSettingEnabled(ServiceCtx context)
         {
-            bool   saveDataBackupSettingEnabled = context.RequestData.ReadUInt64() != 0;
-            UserId userId                       = context.RequestData.ReadStruct<UserId>();
+            bool saveDataBackupSettingEnabled = context.RequestData.ReadUInt64() != 0;
+            UserId userId = context.RequestData.ReadStruct<UserId>();
 
             if (!_initialized)
             {

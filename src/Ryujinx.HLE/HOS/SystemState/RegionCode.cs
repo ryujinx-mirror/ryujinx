@@ -12,6 +12,6 @@ namespace Ryujinx.HLE.HOS.SystemState
         Taiwan,
 
         Min = Japan,
-        Max = Taiwan
+        Max = Taiwan,
     }
 }

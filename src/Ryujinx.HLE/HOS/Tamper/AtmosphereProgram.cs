@@ -5,8 +5,8 @@ namespace Ryujinx.HLE.HOS.Tamper
 {
     class AtmosphereProgram : ITamperProgram
     {
-        private Parameter<long> _pressedKeys;
-        private IOperation _entryPoint;
+        private readonly Parameter<long> _pressedKeys;
+        private readonly IOperation _entryPoint;
 
         public string Name { get; }
         public bool TampersCodeMemory { get; set; } = false;

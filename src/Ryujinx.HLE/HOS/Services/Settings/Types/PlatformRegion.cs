@@ -3,6 +3,6 @@
     enum PlatformRegion
     {
         Global = 1,
-        China  = 2
+        China = 2,
     }
 }

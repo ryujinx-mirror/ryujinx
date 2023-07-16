@@ -48,7 +48,7 @@ namespace Ryujinx.HLE.HOS.Services.Mii.Types
         public bool IsValid()
         {
             // Create a new unicode encoding instance with error checking enabled
-            UnicodeEncoding unicodeEncoding = new UnicodeEncoding(false, false, true);
+            UnicodeEncoding unicodeEncoding = new(false, false, true);
 
             try
             {
@@ -77,10 +77,10 @@ namespace Ryujinx.HLE.HOS.Services.Mii.Types
         {
             if (data.Length > SizeConst)
             {
-                data = data.Slice(0, SizeConst);
+                data = data[..SizeConst];
             }
 
-            Nickname result = new Nickname();
+            Nickname result = new();
 
             data.CopyTo(result.Raw);
 

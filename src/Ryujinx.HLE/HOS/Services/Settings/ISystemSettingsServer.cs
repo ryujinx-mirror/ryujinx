@@ -30,7 +30,7 @@ namespace Ryujinx.HLE.HOS.Services.Settings
         // GetFirmwareVersion2() -> buffer<nn::settings::system::FirmwareVersion, 0x1a, 0x100>
         public ResultCode GetFirmwareVersion2(ServiceCtx context)
         {
-            ulong replyPos  = context.Request.RecvListBuff[0].Position;
+            ulong replyPos = context.Request.RecvListBuff[0].Position;
 
             context.Response.PtrBuff[0] = context.Response.PtrBuff[0].WithSize(0x100L);
 
@@ -46,43 +46,42 @@ namespace Ryujinx.HLE.HOS.Services.Settings
             const byte MajorFwVersion = 0x03;
             const byte MinorFwVersion = 0x00;
             const byte MicroFwVersion = 0x00;
-            const byte Unknown        = 0x00; //Build?
+            const byte Unknown = 0x00; //Build?
 
             const int RevisionNumber = 0x0A;
 
-            const string Platform   = "NX";
+            const string Platform = "NX";
             const string UnknownHex = "7fbde2b0bba4d14107bf836e4643043d9f6c8e47";
-            const string Version    = "3.0.0";
-            const string Build      = "NintendoSDK Firmware for NX 3.0.0-10.0";
+            const string Version = "3.0.0";
+            const string Build = "NintendoSDK Firmware for NX 3.0.0-10.0";
 
             // http://switchbrew.org/index.php?title=System_Version_Title
-            using (MemoryStream ms = new MemoryStream(0x100))
-            {
-                BinaryWriter writer = new BinaryWriter(ms);
+            using MemoryStream ms = new(0x100);
 
-                writer.Write(MajorFwVersion);
-                writer.Write(MinorFwVersion);
-                writer.Write(MicroFwVersion);
-                writer.Write(Unknown);
+            BinaryWriter writer = new(ms);
 
-                writer.Write(RevisionNumber);
+            writer.Write(MajorFwVersion);
+            writer.Write(MinorFwVersion);
+            writer.Write(MicroFwVersion);
+            writer.Write(Unknown);
 
-                writer.Write(Encoding.ASCII.GetBytes(Platform));
+            writer.Write(RevisionNumber);
 
-                ms.Seek(0x28, SeekOrigin.Begin);
+            writer.Write(Encoding.ASCII.GetBytes(Platform));
 
-                writer.Write(Encoding.ASCII.GetBytes(UnknownHex));
+            ms.Seek(0x28, SeekOrigin.Begin);
 
-                ms.Seek(0x68, SeekOrigin.Begin);
+            writer.Write(Encoding.ASCII.GetBytes(UnknownHex));
 
-                writer.Write(Encoding.ASCII.GetBytes(Version));
+            ms.Seek(0x68, SeekOrigin.Begin);
 
-                ms.Seek(0x80, SeekOrigin.Begin);
+            writer.Write(Encoding.ASCII.GetBytes(Version));
 
-                writer.Write(Encoding.ASCII.GetBytes(Build));
+            ms.Seek(0x80, SeekOrigin.Begin);
 
-                context.Memory.Write(replyPos, ms.ToArray());
-            }
+            writer.Write(Encoding.ASCII.GetBytes(Build));
+
+            context.Memory.Write(replyPos, ms.ToArray());
 
             return ResultCode.Success;
         }
@@ -111,10 +110,10 @@ namespace Ryujinx.HLE.HOS.Services.Settings
         // GetSettingsItemValueSize(buffer<nn::settings::SettingsName, 0x19>, buffer<nn::settings::SettingsItemKey, 0x19>) -> u64
         public ResultCode GetSettingsItemValueSize(ServiceCtx context)
         {
-            ulong classPos  = context.Request.PtrBuff[0].Position;
+            ulong classPos = context.Request.PtrBuff[0].Position;
             ulong classSize = context.Request.PtrBuff[0].Size;
 
-            ulong namePos  = context.Request.PtrBuff[1].Position;
+            ulong namePos = context.Request.PtrBuff[1].Position;
             ulong nameSize = context.Request.PtrBuff[1].Size;
 
             byte[] classBuffer = new byte[classSize];
@@ -160,13 +159,13 @@ namespace Ryujinx.HLE.HOS.Services.Settings
         // GetSettingsItemValue(buffer<nn::settings::SettingsName, 0x19, 0x48>, buffer<nn::settings::SettingsItemKey, 0x19, 0x48>) -> (u64, buffer<unknown, 6, 0>)
         public ResultCode GetSettingsItemValue(ServiceCtx context)
         {
-            ulong classPos  = context.Request.PtrBuff[0].Position;
+            ulong classPos = context.Request.PtrBuff[0].Position;
             ulong classSize = context.Request.PtrBuff[0].Size;
 
-            ulong namePos  = context.Request.PtrBuff[1].Position;
+            ulong namePos = context.Request.PtrBuff[1].Position;
             ulong nameSize = context.Request.PtrBuff[1].Size;
 
-            ulong replyPos  = context.Request.ReceiveBuff[0].Position;
+            ulong replyPos = context.Request.ReceiveBuff[0].Position;
             ulong replySize = context.Request.ReceiveBuff[0].Size;
 
             byte[] classBuffer = new byte[classSize];
@@ -250,7 +249,7 @@ namespace Ryujinx.HLE.HOS.Services.Settings
         public ResultCode GetDeviceNickName(ServiceCtx context)
         {
             ulong deviceNickNameBufferPosition = context.Request.ReceiveBuff[0].Position;
-            ulong deviceNickNameBufferSize     = context.Request.ReceiveBuff[0].Size;
+            ulong deviceNickNameBufferSize = context.Request.ReceiveBuff[0].Size;
 
             if (deviceNickNameBufferPosition == 0)
             {
@@ -272,7 +271,7 @@ namespace Ryujinx.HLE.HOS.Services.Settings
         public ResultCode SetDeviceNickName(ServiceCtx context)
         {
             ulong deviceNickNameBufferPosition = context.Request.SendBuff[0].Position;
-            ulong deviceNickNameBufferSize     = context.Request.SendBuff[0].Size;
+            ulong deviceNickNameBufferSize = context.Request.SendBuff[0].Size;
 
             byte[] deviceNickNameBuffer = new byte[deviceNickNameBufferSize];
 
@@ -306,43 +305,41 @@ namespace Ryujinx.HLE.HOS.Services.Settings
                 return null;
             }
 
-            string firmwareTitlePath = device.FileSystem.SwitchPathToSystemPath(contentPath);
+            string firmwareTitlePath = FileSystem.VirtualFileSystem.SwitchPathToSystemPath(contentPath);
 
-            using(IStorage firmwareStorage = new LocalStorage(firmwareTitlePath, FileAccess.Read))
+            using IStorage firmwareStorage = new LocalStorage(firmwareTitlePath, FileAccess.Read);
+            Nca firmwareContent = new(device.System.KeySet, firmwareStorage);
+
+            if (!firmwareContent.CanOpenSection(NcaSectionType.Data))
             {
-                Nca firmwareContent = new Nca(device.System.KeySet, firmwareStorage);
-
-                if (!firmwareContent.CanOpenSection(NcaSectionType.Data))
-                {
-                    return null;
-                }
-
-                IFileSystem firmwareRomFs = firmwareContent.OpenFileSystem(NcaSectionType.Data, device.System.FsIntegrityCheckLevel);
-
-                using var firmwareFile = new UniqueRef<IFile>();
-
-                Result result = firmwareRomFs.OpenFile(ref firmwareFile.Ref, "/file".ToU8Span(), OpenMode.Read);
-                if (result.IsFailure())
-                {
-                    return null;
-                }
-
-                result = firmwareFile.Get.GetSize(out long fileSize);
-                if (result.IsFailure())
-                {
-                    return null;
-                }
-
-                byte[] data = new byte[fileSize];
-
-                result = firmwareFile.Get.Read(out _, 0, data);
-                if (result.IsFailure())
-                {
-                    return null;
-                }
-
-                return data;
+                return null;
             }
+
+            IFileSystem firmwareRomFs = firmwareContent.OpenFileSystem(NcaSectionType.Data, device.System.FsIntegrityCheckLevel);
+
+            using var firmwareFile = new UniqueRef<IFile>();
+
+            Result result = firmwareRomFs.OpenFile(ref firmwareFile.Ref, "/file".ToU8Span(), OpenMode.Read);
+            if (result.IsFailure())
+            {
+                return null;
+            }
+
+            result = firmwareFile.Get.GetSize(out long fileSize);
+            if (result.IsFailure())
+            {
+                return null;
+            }
+
+            byte[] data = new byte[fileSize];
+
+            result = firmwareFile.Get.Read(out _, 0, data);
+            if (result.IsFailure())
+            {
+                return null;
+            }
+
+            return data;
         }
     }
 }

@@ -2,7 +2,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 {
     class KMemoryBlockSlabManager
     {
-        private ulong _capacityElements;
+        private readonly ulong _capacityElements;
 
         public int Count { get; set; }
 

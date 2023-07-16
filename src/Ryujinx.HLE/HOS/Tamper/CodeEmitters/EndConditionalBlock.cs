@@ -12,7 +12,7 @@ namespace Ryujinx.HLE.HOS.Tamper.CodeEmitters
     {
         const int TerminationTypeIndex = 1;
 
-        private const byte End  = 0; // True end of the conditional.
+        private const byte End = 0; // True end of the conditional.
         private const byte Else = 1; // End of the 'then' block and beginning of 'else' block.
 
         public static void Emit(byte[] instruction, CompilationContext context)
@@ -51,7 +51,7 @@ namespace Ryujinx.HLE.HOS.Tamper.CodeEmitters
             // If the else operations are already set, then the upper block must not be another end.
             if (operationsElse != null && codeType == CodeType.EndConditionalBlock)
             {
-                throw new TamperCompilationException($"Expected an upper 'if' conditional instead of 'end conditional'");
+                throw new TamperCompilationException("Expected an upper 'if' conditional instead of 'end conditional'");
             }
 
             ICondition condition;
@@ -84,7 +84,7 @@ namespace Ryujinx.HLE.HOS.Tamper.CodeEmitters
             // Create a conditional block with the current operations and nest it in the upper
             // block of the stack.
 
-            IfBlock block = new IfBlock(condition, operations, operationsElse);
+            IfBlock block = new(condition, operations, operationsElse);
             context.CurrentOperations.Add(block);
         }
     }

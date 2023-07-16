@@ -77,9 +77,9 @@ namespace Ryujinx.HLE.HOS.Applets.SoftwareKeyboard
         [MarshalAs(UnmanagedType.I1)]
         public bool UseSaveData;
 
-        public uint   Reserved3;
+        public uint Reserved3;
         public ushort Reserved4;
-        public byte   Reserved5;
+        public byte Reserved5;
 
         /// <summary>
         /// The id of the user associated with the appear request.

@@ -7,10 +7,10 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService.ApplicationDisplayService.Type
     struct DisplayInfo
     {
         public Array64<byte> Name;
-        public bool          LayerLimitEnabled;
-        public Array7<byte>  Padding;
-        public ulong         LayerLimitMax;
-        public ulong         Width;
-        public ulong         Height;
+        public bool LayerLimitEnabled;
+        public Array7<byte> Padding;
+        public ulong LayerLimitMax;
+        public ulong Width;
+        public ulong Height;
     }
 }

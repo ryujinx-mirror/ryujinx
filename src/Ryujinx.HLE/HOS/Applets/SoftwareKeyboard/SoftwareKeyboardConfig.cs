@@ -8,10 +8,10 @@ namespace Ryujinx.HLE.HOS.Applets.SoftwareKeyboard
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
     struct SoftwareKeyboardConfig
     {
-        private const int SubmitTextLength   = 8;
-        private const int HeaderTextLength   = 64;        
+        private const int SubmitTextLength = 8;
+        private const int HeaderTextLength = 64;
         private const int SubtitleTextLength = 128;
-        private const int GuideTextLength    = 256;
+        private const int GuideTextLength = 256;
 
         /// <summary>
         /// Type of keyboard.

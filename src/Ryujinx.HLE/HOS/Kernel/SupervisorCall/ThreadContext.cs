@@ -11,9 +11,9 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
         public ulong Sp;
         public ulong Pc;
         public uint Pstate;
-#pragma warning disable CS0169
-        private uint _padding;
-#pragma warning restore CS0169
+#pragma warning disable CS0169, IDE0051 // Remove unused private member
+        private readonly uint _padding;
+#pragma warning restore CS0169, IDE0051
         public Array32<V128> FpuRegisters;
         public uint Fpcr;
         public uint Fpsr;

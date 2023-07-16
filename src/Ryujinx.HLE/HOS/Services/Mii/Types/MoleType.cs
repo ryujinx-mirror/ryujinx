@@ -5,7 +5,7 @@
         None,
         OneDot,
 
-        Min = 0,
-        Max = 1
+        Min = None,
+        Max = OneDot,
     }
 }

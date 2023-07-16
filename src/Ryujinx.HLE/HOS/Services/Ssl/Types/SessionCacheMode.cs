@@ -4,6 +4,6 @@
     {
         None,
         SessionId,
-        SessionTicket
+        SessionTicket,
     }
 }

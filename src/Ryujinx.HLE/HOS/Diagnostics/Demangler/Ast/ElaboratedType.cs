@@ -4,7 +4,7 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
 {
     public class ElaboratedType : ParentNode
     {
-        private string _elaborated;
+        private readonly string _elaborated;
 
         public ElaboratedType(string elaborated, BaseNode type) : base(NodeType.ElaboratedType, type)
         {

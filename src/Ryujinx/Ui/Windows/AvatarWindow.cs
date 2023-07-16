@@ -119,7 +119,7 @@ namespace Ryujinx.Ui.Windows
             }
 
             string contentPath = contentManager.GetInstalledContentPath(0x010000000000080A, StorageId.BuiltInSystem, NcaContentType.Data);
-            string avatarPath = virtualFileSystem.SwitchPathToSystemPath(contentPath);
+            string avatarPath = VirtualFileSystem.SwitchPathToSystemPath(contentPath);
 
             if (!string.IsNullOrWhiteSpace(avatarPath))
             {

@@ -32,33 +32,28 @@ namespace Ryujinx.HLE.HOS.Tamper
                 return (ICondition)InstructionHelper.Create(conditionType, width, lhs, rhs);
             }
 
-            switch (comparison)
+            return comparison switch
             {
-                case Comparison.Greater       : return Create(typeof(CondGT<>));
-                case Comparison.GreaterOrEqual: return Create(typeof(CondGE<>));
-                case Comparison.Less          : return Create(typeof(CondLT<>));
-                case Comparison.LessOrEqual   : return Create(typeof(CondLE<>));
-                case Comparison.Equal         : return Create(typeof(CondEQ<>));
-                case Comparison.NotEqual      : return Create(typeof(CondNE<>));
-                default:
-                    throw new TamperCompilationException($"Invalid comparison {comparison} in Atmosphere cheat");
-            }
+                Comparison.Greater => Create(typeof(CondGT<>)),
+                Comparison.GreaterOrEqual => Create(typeof(CondGE<>)),
+                Comparison.Less => Create(typeof(CondLT<>)),
+                Comparison.LessOrEqual => Create(typeof(CondLE<>)),
+                Comparison.Equal => Create(typeof(CondEQ<>)),
+                Comparison.NotEqual => Create(typeof(CondNE<>)),
+                _ => throw new TamperCompilationException($"Invalid comparison {comparison} in Atmosphere cheat"),
+            };
         }
 
         public static Object Create(Type instruction, byte width, params Object[] operands)
         {
-            Type realType;
-
-            switch (width)
+            Type realType = width switch
             {
-                case 1: realType = instruction.MakeGenericType(typeof(byte)); break;
-                case 2: realType = instruction.MakeGenericType(typeof(ushort)); break;
-                case 4: realType = instruction.MakeGenericType(typeof(uint)); break;
-                case 8: realType = instruction.MakeGenericType(typeof(ulong)); break;
-                default:
-                    throw new TamperCompilationException($"Invalid instruction width {width} in Atmosphere cheat");
-            }
-
+                1 => instruction.MakeGenericType(typeof(byte)),
+                2 => instruction.MakeGenericType(typeof(ushort)),
+                4 => instruction.MakeGenericType(typeof(uint)),
+                8 => instruction.MakeGenericType(typeof(ulong)),
+                _ => throw new TamperCompilationException($"Invalid instruction width {width} in Atmosphere cheat"),
+            };
             return Activator.CreateInstance(realType, operands);
         }
 

@@ -33,7 +33,7 @@
 
             int valueImmediateSize = operationWidth <= 4 ? ValueImmediateSize8 : ValueImmediateSize16;
             ulong valueImmediate = InstructionHelper.GetImmediate(instruction, ValueImmediateIndex, valueImmediateSize);
-            Value<ulong> storeValue = new Value<ulong>(valueImmediate);
+            Value<ulong> storeValue = new(valueImmediate);
 
             InstructionHelper.EmitMov(operationWidth, context, dstMem, storeValue);
         }

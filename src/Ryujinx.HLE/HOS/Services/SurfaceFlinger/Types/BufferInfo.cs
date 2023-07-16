@@ -6,9 +6,9 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger.Types
     [StructLayout(LayoutKind.Sequential, Size = 0x1C, Pack = 1)]
     struct BufferInfo
     {
-        public ulong        FrameNumber;
+        public ulong FrameNumber;
         public TimeSpanType QueueTime;
         public TimeSpanType PresentationTime;
-        public BufferState  State;
+        public BufferState State;
     }
 }

@@ -3,7 +3,6 @@ using LibHac.Common;
 using LibHac.Ncm;
 using LibHac.Ns;
 using System;
-
 using ApplicationId = LibHac.ApplicationId;
 
 namespace Ryujinx.HLE.HOS.Services.Arp
@@ -17,7 +16,7 @@ namespace Ryujinx.HLE.HOS.Services.Arp
             launchProperty = new LibHac.Arp.ApplicationLaunchProperty
             {
                 StorageId = StorageId.BuiltInUser,
-                ApplicationId = ApplicationId
+                ApplicationId = ApplicationId,
             };
 
             return Result.Success;
@@ -30,7 +29,7 @@ namespace Ryujinx.HLE.HOS.Services.Arp
             launchProperty = new LibHac.Arp.ApplicationLaunchProperty
             {
                 StorageId = StorageId.BuiltInUser,
-                ApplicationId = applicationId
+                ApplicationId = applicationId,
             };
 
             return Result.Success;

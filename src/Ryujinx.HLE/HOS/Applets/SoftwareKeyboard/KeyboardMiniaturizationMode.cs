@@ -5,8 +5,8 @@
     /// </summary>
     enum KeyboardMiniaturizationMode : byte
     {
-        None   = 0,
-        Auto   = 1,
-        Forced = 2
+        None = 0,
+        Auto = 1,
+        Forced = 2,
     }
 }

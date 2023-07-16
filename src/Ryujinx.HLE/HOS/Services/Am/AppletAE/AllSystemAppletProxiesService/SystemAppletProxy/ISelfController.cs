@@ -11,30 +11,34 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
     {
         private readonly ulong _pid;
 
-        private KEvent _libraryAppletLaunchableEvent;
-        private int    _libraryAppletLaunchableEventHandle;
+        private readonly KEvent _libraryAppletLaunchableEvent;
+        private int _libraryAppletLaunchableEventHandle;
 
         private KEvent _accumulatedSuspendedTickChangedEvent;
-        private int    _accumulatedSuspendedTickChangedEventHandle;
+        private int _accumulatedSuspendedTickChangedEventHandle;
 
         private readonly object _fatalSectionLock = new();
         private int _fatalSectionCount;
 
         // TODO: Set this when the game goes in suspension (go back to home menu ect), we currently don't support that so we can keep it set to 0.
-        private ulong _accumulatedSuspendedTickValue = 0;
+        private readonly ulong _accumulatedSuspendedTickValue = 0;
 
         // TODO: Determine where those fields are used.
-        private bool _screenShotPermission               = false;
-        private bool _operationModeChangedNotification   = false;
+#pragma warning disable IDE0052 // Remove unread private member
+        private bool _screenShotPermission = false;
+        private bool _operationModeChangedNotification = false;
         private bool _performanceModeChangedNotification = false;
-        private bool _restartMessageEnabled              = false;
-        private bool _outOfFocusSuspendingEnabled        = false;
-        private bool _handlesRequestToDisplay            = false;
-        private bool _autoSleepDisabled                  = false;
+        private bool _restartMessageEnabled = false;
+        private bool _outOfFocusSuspendingEnabled = false;
+        private bool _handlesRequestToDisplay = false;
+#pragma warning restore IDE0052
+        private bool _autoSleepDisabled = false;
+#pragma warning disable IDE0052 // Remove unread private member
         private bool _albumImageTakenNotificationEnabled = false;
         private bool _recordVolumeMuted = false;
 
         private uint _screenShotImageOrientation = 0;
+#pragma warning restore IDE0052
         private uint _idleTimeDetectionExtension = 0;
 
         public ISelfController(ServiceCtx context, ulong pid)

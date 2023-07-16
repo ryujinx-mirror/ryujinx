@@ -37,7 +37,7 @@ namespace Ryujinx.HLE.HOS.Tamper.CodeEmitters
 
             int valueSize = operationWidth <= 4 ? ValueImmediateSize4 : ValueImmediateSize8;
             ulong value = InstructionHelper.GetImmediate(instruction, ValueImmediateIndex, valueSize);
-            Value<ulong> compareToValue = new Value<ulong>(value);
+            Value<ulong> compareToValue = new(value);
 
             return InstructionHelper.CreateCondition(comparison, operationWidth, sourceMemory, compareToValue);
         }

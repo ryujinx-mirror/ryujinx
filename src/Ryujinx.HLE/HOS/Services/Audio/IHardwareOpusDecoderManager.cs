@@ -14,7 +14,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio
         // Initialize(bytes<8, 4>, u32, handle<copy>) -> object<nn::codec::detail::IHardwareOpusDecoder>
         public ResultCode Initialize(ServiceCtx context)
         {
-            int sampleRate    = context.RequestData.ReadInt32();
+            int sampleRate = context.RequestData.ReadInt32();
             int channelsCount = context.RequestData.ReadInt32();
 
             MakeObject(context, new IHardwareOpusDecoder(sampleRate, channelsCount, OpusDecoderFlags.None));
@@ -29,7 +29,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio
         // GetWorkBufferSize(bytes<8, 4>) -> u32
         public ResultCode GetWorkBufferSize(ServiceCtx context)
         {
-            int sampleRate    = context.RequestData.ReadInt32();
+            int sampleRate = context.RequestData.ReadInt32();
             int channelsCount = context.RequestData.ReadInt32();
 
             int opusDecoderSize = GetOpusDecoderSize(channelsCount);
@@ -196,8 +196,8 @@ namespace Ryujinx.HLE.HOS.Services.Audio
         private static int GetCeltDecoderSize(int channelsCount)
         {
             const int DecodeBufferSize = 0x2030;
-            const int Overlap          = 120;
-            const int EBandsCount      = 21;
+            const int Overlap = 120;
+            const int EBandsCount = 21;
 
             return (DecodeBufferSize + Overlap * 4) * channelsCount + EBandsCount * 16 + 0x50;
         }

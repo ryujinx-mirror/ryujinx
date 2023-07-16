@@ -18,7 +18,7 @@ namespace Ryujinx.HLE.HOS.Services.Caps
 
         [CommandCmif(102)]
         // GetAlbumFileList0AafeAruidDeprecated(pid, u16 content_type, u64 start_time, u64 end_time, nn::applet::AppletResourceUserId) -> (u64 count, buffer<ApplicationAlbumFileEntry, 0x6>)
-        public ResultCode GetAlbumFileList0AafeAruidDeprecated(ServiceCtx context) 
+        public ResultCode GetAlbumFileList0AafeAruidDeprecated(ServiceCtx context)
         {
             // NOTE: ApplicationAlbumFileEntry size is 0x30.
             return GetAlbumFileList(context);
@@ -35,18 +35,18 @@ namespace Ryujinx.HLE.HOS.Services.Caps
         private ResultCode GetAlbumFileList(ServiceCtx context)
         {
             ResultCode resultCode = ResultCode.Success;
-            ulong      count      = 0;
+            ulong count = 0;
 
             ContentType contentType = (ContentType)context.RequestData.ReadUInt16();
-            ulong       startTime   = context.RequestData.ReadUInt64();
-            ulong       endTime     = context.RequestData.ReadUInt64();
+            ulong startTime = context.RequestData.ReadUInt64();
+            ulong endTime = context.RequestData.ReadUInt64();
 
             context.RequestData.ReadUInt16(); // Alignment.
 
             ulong appletResourceUserId = context.RequestData.ReadUInt64();
 
             ulong applicationAlbumFileEntryPosition = context.Request.ReceiveBuff[0].Position;
-            ulong applicationAlbumFileEntrySize     = context.Request.ReceiveBuff[0].Size;
+            ulong applicationAlbumFileEntrySize = context.Request.ReceiveBuff[0].Size;
 
             MemoryHelper.FillWithZeros(context.Memory, applicationAlbumFileEntryPosition, (int)applicationAlbumFileEntrySize);
 

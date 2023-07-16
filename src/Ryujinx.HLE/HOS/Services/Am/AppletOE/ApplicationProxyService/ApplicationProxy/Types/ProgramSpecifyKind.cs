@@ -4,6 +4,6 @@
     {
         ExecuteProgram,
         SubApplicationProgram,
-        RestartProgram
+        RestartProgram,
     }
 }

@@ -4,7 +4,7 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
 {
     public class PointerType : BaseNode
     {
-        private BaseNode _child;
+        private readonly BaseNode _child;
 
         public PointerType(BaseNode child) : base(NodeType.PointerType)
         {

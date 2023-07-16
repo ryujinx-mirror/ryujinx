@@ -5,9 +5,9 @@ namespace Ryujinx.HLE.HOS.Tamper.Operations
 {
     class IfBlock : IOperation
     {
-        private ICondition _condition;
-        private IEnumerable<IOperation> _operationsThen;
-        private IEnumerable<IOperation> _operationsElse;
+        private readonly ICondition _condition;
+        private readonly IEnumerable<IOperation> _operationsThen;
+        private readonly IEnumerable<IOperation> _operationsElse;
 
         public IfBlock(ICondition condition, IEnumerable<IOperation> operationsThen, IEnumerable<IOperation> operationsElse)
         {

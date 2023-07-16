@@ -6,9 +6,9 @@ namespace Ryujinx.HLE.HOS.Services.Nv.Types
 {
     class NvQueryEventNotImplementedException : Exception
     {
-        public ServiceCtx   Context    { get; }
+        public ServiceCtx Context { get; }
         public NvDeviceFile DeviceFile { get; }
-        public uint         EventId    { get; }
+        public uint EventId { get; }
 
         public NvQueryEventNotImplementedException(ServiceCtx context, NvDeviceFile deviceFile, uint eventId)
             : this(context, deviceFile, eventId, "This query event is not implemented.")
@@ -17,9 +17,9 @@ namespace Ryujinx.HLE.HOS.Services.Nv.Types
         public NvQueryEventNotImplementedException(ServiceCtx context, NvDeviceFile deviceFile, uint eventId, string message)
             : base(message)
         {
-            Context    = context;
+            Context = context;
             DeviceFile = deviceFile;
-            EventId    = eventId;
+            EventId = eventId;
         }
 
         public override string Message
@@ -35,7 +35,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.Types
 
         private string BuildMessage()
         {
-            StringBuilder sb = new StringBuilder();
+            StringBuilder sb = new();
 
             sb.AppendLine($"Device File: {DeviceFile.GetType().Name}");
             sb.AppendLine();

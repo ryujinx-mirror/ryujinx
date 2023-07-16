@@ -6,6 +6,6 @@
         Percent25,
         Percent50,
         Percent75,
-        Percent100
+        Percent100,
     }
 }

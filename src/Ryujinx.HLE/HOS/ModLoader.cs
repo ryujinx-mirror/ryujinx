@@ -110,16 +110,16 @@ namespace Ryujinx.HLE.HOS
         private readonly Dictionary<ulong, ModCache> _appMods; // key is TitleId
         private PatchCache _patches;
 
-        private static readonly EnumerationOptions DirEnumOptions;
+        private static readonly EnumerationOptions _dirEnumOptions;
 
         static ModLoader()
         {
-            DirEnumOptions = new EnumerationOptions
+            _dirEnumOptions = new EnumerationOptions
             {
                 MatchCasing = MatchCasing.CaseInsensitive,
                 MatchType = MatchType.Simple,
                 RecurseSubdirectories = false,
-                ReturnSpecialDirectories = false
+                ReturnSpecialDirectories = false,
             };
         }
 
@@ -137,7 +137,7 @@ namespace Ryujinx.HLE.HOS
 
         private static bool StrEquals(string s1, string s2) => string.Equals(s1, s2, StringComparison.OrdinalIgnoreCase);
 
-        public static string GetModsBasePath()   => EnsureBaseDirStructure(AppDataManager.GetModsPath());
+        public static string GetModsBasePath() => EnsureBaseDirStructure(AppDataManager.GetModsPath());
         public static string GetSdModsBasePath() => EnsureBaseDirStructure(AppDataManager.GetSdModsPath());
 
         private static string EnsureBaseDirStructure(string modsBasePath)
@@ -154,7 +154,7 @@ namespace Ryujinx.HLE.HOS
         }
 
         private static DirectoryInfo FindTitleDir(DirectoryInfo contentsDir, string titleId)
-            => contentsDir.EnumerateDirectories(titleId, DirEnumOptions).FirstOrDefault();
+            => contentsDir.EnumerateDirectories(titleId, _dirEnumOptions).FirstOrDefault();
 
         private static void AddModsFromDirectory(ModCache mods, DirectoryInfo dir, string titleId)
         {
@@ -218,15 +218,18 @@ namespace Ryujinx.HLE.HOS
 
             if (StrEquals(AmsNsoPatchDir, patchDir.Name))
             {
-                patches = cache.NsoPatches; type = "NSO";
+                patches = cache.NsoPatches;
+                type = "NSO";
             }
             else if (StrEquals(AmsNroPatchDir, patchDir.Name))
             {
-                patches = cache.NroPatches; type = "NRO";
+                patches = cache.NroPatches;
+                type = "NRO";
             }
             else if (StrEquals(AmsKipPatchDir, patchDir.Name))
             {
-                patches = cache.KipPatches; type = "KIP";
+                patches = cache.KipPatches;
+                type = "KIP";
             }
             else
             {
@@ -352,7 +355,7 @@ namespace Ryujinx.HLE.HOS
                     }
 
                     // Start a new cheat section.
-                    cheatName = line.Substring(1, line.Length - 2);
+                    cheatName = line[1..^1];
                     instructions = new List<string>();
                 }
                 else if (line.Length > 0)
@@ -528,7 +531,7 @@ namespace Ryujinx.HLE.HOS
                 Logger.Warning?.Print(LogClass.ModLoader, "Multiple ExeFS partition replacements detected");
             }
 
-            Logger.Info?.Print(LogClass.ModLoader, $"Using replacement ExeFS partition");
+            Logger.Info?.Print(LogClass.ModLoader, "Using replacement ExeFS partition");
 
             exefs = new PartitionFileSystem(mods.ExefsContainers[0].Path.OpenRead().AsStorage());
 
@@ -549,7 +552,7 @@ namespace Ryujinx.HLE.HOS
             ModLoadResult modLoadResult = new()
             {
                 Stubs = new BitVector32(),
-                Replaces = new BitVector32()
+                Replaces = new BitVector32(),
             };
 
             if (!_appMods.TryGetValue(titleId, out ModCache mods) || mods.ExefsDirs.Count == 0)
@@ -559,7 +562,7 @@ namespace Ryujinx.HLE.HOS
 
             if (nsos.Length != ProcessConst.ExeFsPrefixes.Length)
             {
-                throw new ArgumentOutOfRangeException("NSO Count is incorrect");
+                throw new ArgumentOutOfRangeException(nameof(nsos), nsos.Length, "NSO Count is incorrect");
             }
 
             var exeMods = mods.ExefsDirs;
@@ -622,7 +625,10 @@ namespace Ryujinx.HLE.HOS
         {
             var nroPatches = _patches.NroPatches;
 
-            if (nroPatches.Count == 0) return;
+            if (nroPatches.Count == 0)
+            {
+                return;
+            }
 
             // NRO patches aren't offset relative to header unlike NSO
             // according to Atmosphere's ro patcher module
@@ -682,7 +688,7 @@ namespace Ryujinx.HLE.HOS
             EnableCheats(titleId, tamperMachine);
         }
 
-        internal void EnableCheats(ulong titleId, TamperMachine tamperMachine)
+        internal static void EnableCheats(ulong titleId, TamperMachine tamperMachine)
         {
             var contentDirectory = FindTitleDir(new DirectoryInfo(Path.Combine(GetModsBasePath(), AmsContentsDir)), $"{titleId:x16}");
             string enabledCheatsPath = Path.Combine(contentDirectory.FullName, CheatDir, "enabled.txt");
@@ -708,7 +714,7 @@ namespace Ryujinx.HLE.HOS
             {
                 NsoExecutable nso => Convert.ToHexString(nso.BuildId.ItemsRo.ToArray()).TrimEnd('0'),
                 NroExecutable nro => Convert.ToHexString(nro.Header.BuildId).TrimEnd('0'),
-                _ => string.Empty
+                _ => string.Empty,
             }).ToList();
 
             int GetIndex(string buildId) => buildIds.FindIndex(id => id == buildId); // O(n) but list is small

@@ -4,14 +4,14 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
 {
     public class MemberExpression : BaseNode
     {
-        private BaseNode _leftNode;
-        private string   _kind;
-        private BaseNode _rightNode;
+        private readonly BaseNode _leftNode;
+        private readonly string _kind;
+        private readonly BaseNode _rightNode;
 
         public MemberExpression(BaseNode leftNode, string kind, BaseNode rightNode) : base(NodeType.MemberExpression)
         {
-            _leftNode  = leftNode;
-            _kind      = kind;
+            _leftNode = leftNode;
+            _kind = kind;
             _rightNode = rightNode;
         }
 

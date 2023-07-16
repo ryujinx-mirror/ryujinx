@@ -13,10 +13,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd.Impl
         {
             get
             {
-                if (_instance == null)
-                {
-                    _instance = new ManagedSocketPollManager();
-                }
+                _instance ??= new ManagedSocketPollManager();
 
                 return _instance;
             }
@@ -29,9 +26,9 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd.Impl
 
         public LinuxError Poll(List<PollEvent> events, int timeoutMilliseconds, out int updatedCount)
         {
-            List<Socket> readEvents = new List<Socket>();
-            List<Socket> writeEvents = new List<Socket>();
-            List<Socket> errorEvents = new List<Socket>();
+            List<Socket> readEvents = new();
+            List<Socket> writeEvents = new();
+            List<Socket> errorEvents = new();
 
             updatedCount = 0;
 

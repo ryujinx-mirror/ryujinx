@@ -6,11 +6,11 @@ namespace Ryujinx.HLE.HOS.Services.Caps.Types
     struct AlbumFileDateTime
     {
         public ushort Year;
-        public byte   Month;
-        public byte   Day;
-        public byte   Hour;
-        public byte   Minute;
-        public byte   Second;
-        public byte   UniqueId;
+        public byte Month;
+        public byte Day;
+        public byte Hour;
+        public byte Minute;
+        public byte Second;
+        public byte UniqueId;
     }
 }

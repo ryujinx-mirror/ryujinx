@@ -24,6 +24,6 @@ namespace Ryujinx.HLE.HOS.Services.Hid.Types.SharedMemory.Npad
         HandheldLarkNesRight = 1 << 14,
         Lucia = 1 << 15,
 
-        System = 1 << 31
+        System = 1 << 31,
     }
 }

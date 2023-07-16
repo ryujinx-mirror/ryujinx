@@ -8,7 +8,7 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService.Types
     struct DnsSetting
     {
         [MarshalAs(UnmanagedType.U1)]
-        public bool        IsDynamicDnsEnabled;
+        public bool IsDynamicDnsEnabled;
         public IpV4Address PrimaryDns;
         public IpV4Address SecondaryDns;
 
@@ -18,12 +18,12 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService.Types
 
             if (interfaceProperties.DnsAddresses.Count == 0)
             {
-                PrimaryDns   = new IpV4Address();
+                PrimaryDns = new IpV4Address();
                 SecondaryDns = new IpV4Address();
             }
             else
             {
-                PrimaryDns   = new IpV4Address(interfaceProperties.DnsAddresses[0]);
+                PrimaryDns = new IpV4Address(interfaceProperties.DnsAddresses[0]);
                 SecondaryDns = new IpV4Address(interfaceProperties.DnsAddresses[interfaceProperties.DnsAddresses.Count > 1 ? 1 : 0]);
             }
         }

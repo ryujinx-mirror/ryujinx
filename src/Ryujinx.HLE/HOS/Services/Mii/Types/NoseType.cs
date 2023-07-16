@@ -21,7 +21,7 @@
         Droopy,
         ArrowLarge,
 
-        Min = 0,
-        Max = 17
+        Min = Normal,
+        Max = ArrowLarge,
     }
 }

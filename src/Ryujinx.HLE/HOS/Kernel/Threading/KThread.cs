@@ -68,10 +68,10 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
         public LinkedListNode<KThread> ProcessListNode { get; set; }
 
-        private LinkedList<KThread> _mutexWaiters;
+        private readonly LinkedList<KThread> _mutexWaiters;
         private LinkedListNode<KThread> _mutexWaiterNode;
 
-        private LinkedList<KThread> _pinnedWaiters;
+        private readonly LinkedList<KThread> _pinnedWaiters;
 
         public KThread MutexOwner { get; private set; }
 
@@ -659,7 +659,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
             const int MaxRegistersAArch32 = 15;
             const int MaxFpuRegistersAArch32 = 16;
 
-            ThreadContext context = new ThreadContext();
+            ThreadContext context = new();
 
             if (Owner.Flags.HasFlag(ProcessCreationFlags.Is64Bit))
             {

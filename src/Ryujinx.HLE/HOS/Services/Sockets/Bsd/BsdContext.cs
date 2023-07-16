@@ -8,11 +8,11 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
 {
     class BsdContext
     {
-        private static ConcurrentDictionary<ulong, BsdContext> _registry = new ConcurrentDictionary<ulong, BsdContext>();
+        private static readonly ConcurrentDictionary<ulong, BsdContext> _registry = new();
 
         private readonly object _lock = new();
 
-        private List<IFileDescriptor> _fds;
+        private readonly List<IFileDescriptor> _fds;
 
         private BsdContext()
         {

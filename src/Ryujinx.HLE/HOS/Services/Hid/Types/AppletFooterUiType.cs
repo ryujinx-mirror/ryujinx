@@ -25,6 +25,6 @@ namespace Ryujinx.HLE.HOS.Services.Hid.Types
         LarkNesLeft,
         LarkNesRight,
         Lucia,
-        Verification
+        Verification,
     }
 }

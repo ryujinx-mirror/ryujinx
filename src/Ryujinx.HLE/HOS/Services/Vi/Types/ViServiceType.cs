@@ -4,6 +4,6 @@
     {
         Application,
         Manager,
-        System
+        System,
     }
 }

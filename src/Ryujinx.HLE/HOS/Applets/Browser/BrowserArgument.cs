@@ -8,16 +8,16 @@ namespace Ryujinx.HLE.HOS.Applets.Browser
 {
     class BrowserArgument
     {
-        public WebArgTLVType Type  { get; }
-        public byte[]        Value { get; }
+        public WebArgTLVType Type { get; }
+        public byte[] Value { get; }
 
         public BrowserArgument(WebArgTLVType type, byte[] value)
         {
-            Type  = type;
+            Type = type;
             Value = value;
         }
 
-        private static readonly Dictionary<WebArgTLVType, Type> _typeRegistry = new Dictionary<WebArgTLVType, Type>
+        private static readonly Dictionary<WebArgTLVType, Type> _typeRegistry = new()
         {
             { WebArgTLVType.InitialURL,                     typeof(string) },
             { WebArgTLVType.CallbackUrl,                    typeof(string) },
@@ -64,11 +64,11 @@ namespace Ryujinx.HLE.HOS.Applets.Browser
 
         public static (ShimKind, List<BrowserArgument>) ParseArguments(ReadOnlySpan<byte> data)
         {
-            List<BrowserArgument> browserArguments = new List<BrowserArgument>();
+            List<BrowserArgument> browserArguments = new();
 
-            WebArgHeader header = IApplet.ReadStruct<WebArgHeader>(data.Slice(0, 8));
+            WebArgHeader header = IApplet.ReadStruct<WebArgHeader>(data[..8]);
 
-            ReadOnlySpan<byte> rawTLVs = data.Slice(8);
+            ReadOnlySpan<byte> rawTLVs = data[8..];
 
             for (int i = 0; i < header.Count; i++)
             {
@@ -77,7 +77,7 @@ namespace Ryujinx.HLE.HOS.Applets.Browser
 
                 browserArguments.Add(new BrowserArgument((WebArgTLVType)tlv.Type, tlvData.ToArray()));
 
-                rawTLVs = rawTLVs.Slice(Unsafe.SizeOf<WebArgTLV>() + tlv.Size);
+                rawTLVs = rawTLVs[(Unsafe.SizeOf<WebArgTLV>() + tlv.Size)..];
             }
 
             return (header.ShimKind, browserArguments);

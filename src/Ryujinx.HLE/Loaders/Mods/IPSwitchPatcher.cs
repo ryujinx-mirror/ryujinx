@@ -14,7 +14,7 @@ namespace Ryujinx.HLE.Loaders.Mods
             Normal,
             String,
             EscapeChar,
-            Comment
+            Comment,
         }
 
         private readonly StreamReader _reader;
@@ -31,13 +31,13 @@ namespace Ryujinx.HLE.Loaders.Mods
             }
 
             _reader = reader;
-            BuildId = header.Substring(BidHeader.Length).TrimEnd().TrimEnd('0');
+            BuildId = header[BidHeader.Length..].TrimEnd().TrimEnd('0');
         }
 
         // Uncomments line and unescapes C style strings within
         private static string PreprocessLine(string line)
         {
-            StringBuilder str = new StringBuilder();
+            StringBuilder str = new();
             Token state = Token.Normal;
 
             for (int i = 0; i < line.Length; ++i)
@@ -56,29 +56,32 @@ namespace Ryujinx.HLE.Loaders.Mods
                     case Token.String:
                         state = c switch
                         {
-                            '"'  => Token.Normal,
+                            '"' => Token.Normal,
                             '\\' => Token.EscapeChar,
-                            _    => Token.String
+                            _ => Token.String,
                         };
                         break;
                     case Token.EscapeChar:
                         state = Token.String;
                         c = c switch
                         {
-                            'a'  => '\a',
-                            'b'  => '\b',
-                            'f'  => '\f',
-                            'n'  => '\n',
-                            'r'  => '\r',
-                            't'  => '\t',
-                            'v'  => '\v',
+                            'a' => '\a',
+                            'b' => '\b',
+                            'f' => '\f',
+                            'n' => '\n',
+                            'r' => '\r',
+                            't' => '\t',
+                            'v' => '\v',
                             '\\' => '\\',
-                            _    => '?'
+                            _ => '?',
                         };
                         break;
                 }
 
-                if (state == Token.Comment) break;
+                if (state == Token.Comment)
+                {
+                    break;
+                }
 
                 if (state < Token.EscapeChar)
                 {
@@ -112,14 +115,17 @@ namespace Ryujinx.HLE.Loaders.Mods
         // Big Endian
         static byte[] Hex2ByteArrayBE(string hexstr)
         {
-            if ((hexstr.Length & 1) == 1) return null;
+            if ((hexstr.Length & 1) == 1)
+            {
+                return null;
+            }
 
             byte[] bytes = new byte[hexstr.Length >> 1];
 
             for (int i = 0; i < hexstr.Length; i += 2)
             {
                 int high = ParseHexByte((byte)hexstr[i]);
-                int low  = ParseHexByte((byte)hexstr[i + 1]);
+                int low = ParseHexByte((byte)hexstr[i + 1]);
 
                 bytes[i >> 1] = (byte)((high << 4) | low);
             }
@@ -147,11 +153,11 @@ namespace Ryujinx.HLE.Loaders.Mods
                 return null;
             }
 
-            MemPatch patches = new MemPatch();
+            MemPatch patches = new();
 
-            bool enabled     = false;
+            bool enabled = false;
             bool printValues = false;
-            int offset_shift = 0;
+            int offsetShift = 0;
 
             string line;
             int lineNum = 0;
@@ -205,7 +211,7 @@ namespace Ryujinx.HLE.Loaders.Mods
 
                     if (tokens[1] == "offset_shift")
                     {
-                        if (tokens.Length != 3 || !ParseInt(tokens[2], out offset_shift))
+                        if (tokens.Length != 3 || !ParseInt(tokens[2], out offsetShift))
                         {
                             ParseWarn();
 
@@ -244,7 +250,7 @@ namespace Ryujinx.HLE.Loaders.Mods
                         continue;
                     }
 
-                    offset += offset_shift;
+                    offset += offsetShift;
 
                     if (printValues)
                     {

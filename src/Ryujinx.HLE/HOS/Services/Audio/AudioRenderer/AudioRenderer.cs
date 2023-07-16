@@ -7,7 +7,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRenderer
 {
     class AudioRenderer : IAudioRenderer
     {
-        private AudioRenderSystem _impl;
+        private readonly AudioRenderSystem _impl;
 
         public AudioRenderer(AudioRenderSystem impl)
         {
@@ -55,9 +55,9 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRenderer
 
             if (resultCode == ResultCode.Success)
             {
-                if (outEvent is AudioKernelEvent)
+                if (outEvent is AudioKernelEvent kernelEvent)
                 {
-                    systemEvent = ((AudioKernelEvent)outEvent).Event;
+                    systemEvent = kernelEvent.Event;
                 }
                 else
                 {

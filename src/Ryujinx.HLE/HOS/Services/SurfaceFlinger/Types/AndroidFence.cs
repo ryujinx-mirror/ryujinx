@@ -16,17 +16,17 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 
         private byte _fenceStorageStart;
 
-        private Span<byte> _storage => MemoryMarshal.CreateSpan(ref _fenceStorageStart, Unsafe.SizeOf<NvFence>() * 4);
+        private Span<byte> Storage => MemoryMarshal.CreateSpan(ref _fenceStorageStart, Unsafe.SizeOf<NvFence>() * 4);
 
-        public Span<NvFence> NvFences => MemoryMarshal.Cast<byte, NvFence>(_storage);
+        public Span<NvFence> NvFences => MemoryMarshal.Cast<byte, NvFence>(Storage);
 
         public static AndroidFence NoFence
         {
             get
             {
-                AndroidFence fence = new AndroidFence
+                AndroidFence fence = new()
                 {
-                    FenceCount = 0
+                    FenceCount = 0,
                 };
 
                 fence.NvFences[0].Id = NvFence.InvalidSyncPointId;
@@ -81,12 +81,12 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
             }
         }
 
-        public uint GetFlattenedSize()
+        public readonly uint GetFlattenedSize()
         {
             return (uint)Unsafe.SizeOf<AndroidFence>();
         }
 
-        public uint GetFdCount()
+        public readonly uint GetFdCount()
         {
             return 0;
         }

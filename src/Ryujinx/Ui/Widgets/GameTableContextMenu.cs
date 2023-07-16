@@ -139,7 +139,7 @@ namespace Ryujinx.Ui.Widgets
                 return;
             }
 
-            string saveRootPath = System.IO.Path.Combine(_virtualFileSystem.GetNandPath(), $"user/save/{saveDataId:x16}");
+            string saveRootPath = System.IO.Path.Combine(VirtualFileSystem.GetNandPath(), $"user/save/{saveDataId:x16}");
 
             if (!Directory.Exists(saveRootPath))
             {

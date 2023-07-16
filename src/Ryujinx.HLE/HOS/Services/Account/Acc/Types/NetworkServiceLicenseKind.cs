@@ -3,6 +3,6 @@
     enum NetworkServiceLicenseKind : uint
     {
         NoSubscription,
-        Subscribed
+        Subscribed,
     }
 }

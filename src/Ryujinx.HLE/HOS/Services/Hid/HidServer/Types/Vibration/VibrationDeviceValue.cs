@@ -2,7 +2,7 @@
 {
     public struct VibrationDeviceValue
     {
-        public VibrationDeviceType     DeviceType;
+        public VibrationDeviceType DeviceType;
         public VibrationDevicePosition Position;
     }
 }

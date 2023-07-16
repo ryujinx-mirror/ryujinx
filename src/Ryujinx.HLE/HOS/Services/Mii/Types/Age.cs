@@ -5,6 +5,6 @@
         Young,
         Normal,
         Old,
-        All
+        All,
     }
 }

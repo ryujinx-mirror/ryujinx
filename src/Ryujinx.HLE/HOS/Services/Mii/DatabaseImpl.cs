@@ -13,17 +13,14 @@ namespace Ryujinx.HLE.HOS.Services.Mii
         {
             get
             {
-                if (_instance == null)
-                {
-                    _instance = new DatabaseImpl();
-                }
+                _instance ??= new DatabaseImpl();
 
                 return _instance;
             }
         }
 
         private UtilityImpl _utilityImpl;
-        private MiiDatabaseManager _miiDatabase;
+        private readonly MiiDatabaseManager _miiDatabase;
         private bool _isBroken;
 
         public DatabaseImpl()

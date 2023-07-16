@@ -4,6 +4,6 @@
     {
         Debug,
         User,
-        System
+        System,
     }
 }

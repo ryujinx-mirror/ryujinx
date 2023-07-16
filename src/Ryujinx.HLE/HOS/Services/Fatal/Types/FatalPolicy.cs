@@ -4,6 +4,6 @@
     {
         ErrorReportAndErrorScreen,
         ErrorReport,
-        ErrorScreen
+        ErrorScreen,
     }
 }

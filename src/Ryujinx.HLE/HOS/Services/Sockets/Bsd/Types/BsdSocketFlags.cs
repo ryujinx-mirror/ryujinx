@@ -17,6 +17,6 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd.Types
         Compat = 0x8000,
         SoCallbck = 0x10000,
         NoSignal = 0x20000,
-        CMsgCloExec = 0x40000
+        CMsgCloExec = 0x40000,
     }
 }

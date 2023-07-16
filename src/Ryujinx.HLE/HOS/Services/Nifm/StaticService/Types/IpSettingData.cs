@@ -6,8 +6,8 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService.Types
     struct IpSettingData
     {
         public IpAddressSetting IpAddressSetting;
-        public DnsSetting       DnsSetting;
-        public ProxySetting     ProxySetting;
-        public short            Mtu;
+        public DnsSetting DnsSetting;
+        public ProxySetting ProxySetting;
+        public short Mtu;
     }
 }

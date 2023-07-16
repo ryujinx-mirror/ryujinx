@@ -11,6 +11,6 @@ namespace Ryujinx.HLE.HOS.Services.Hid.Types.SharedMemory.Npad
         IsLeftConnected = 1 << 2,
         IsLeftWired = 1 << 3,
         IsRightConnected = 1 << 4,
-        IsRightWired = 1 << 5
+        IsRightWired = 1 << 5,
     }
 }

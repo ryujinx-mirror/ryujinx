@@ -13,7 +13,7 @@
         Almond,
         Espresso,
 
-        Min = 0,
-        Max = 9
+        Min = Beige,
+        Max = Espresso,
     }
 }

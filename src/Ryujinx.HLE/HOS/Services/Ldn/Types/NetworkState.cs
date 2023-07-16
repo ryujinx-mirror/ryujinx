@@ -8,6 +8,6 @@
         AccessPointCreated,
         Station,
         StationConnected,
-        Error
+        Error,
     }
 }

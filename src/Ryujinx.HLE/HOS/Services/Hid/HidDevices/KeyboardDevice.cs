@@ -21,7 +21,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
             ref KeyboardState previousEntry = ref lifo.GetCurrentEntryRef();
 
-            KeyboardState newState = new KeyboardState
+            KeyboardState newState = new()
             {
                 SamplingNumber = previousEntry.SamplingNumber + 1,
             };

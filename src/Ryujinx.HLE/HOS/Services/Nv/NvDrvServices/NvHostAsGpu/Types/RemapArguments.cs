@@ -7,9 +7,9 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostAsGpu.Types
     {
         public ushort Flags;
         public ushort Kind;
-        public int    NvMapHandle;
-        public uint   MapOffset;
-        public uint   GpuOffset;
-        public uint   Pages;
+        public int NvMapHandle;
+        public uint MapOffset;
+        public uint GpuOffset;
+        public uint Pages;
     }
 }

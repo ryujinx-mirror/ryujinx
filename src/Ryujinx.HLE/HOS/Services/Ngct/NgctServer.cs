@@ -12,10 +12,10 @@ namespace Ryujinx.HLE.HOS.Services.Ngct
             //       If both conditions are true, it does this following code. Since we currently stub it, it's fine to don't check settings service values.
 
             ulong bufferPosition = context.Request.PtrBuff[0].Position;
-            ulong bufferSize     = context.Request.PtrBuff[0].Size;
+            ulong bufferSize = context.Request.PtrBuff[0].Size;
 
-            bool   isMatch = false;
-            string text    = "";
+            bool isMatch = false;
+            string text = "";
 
             if (bufferSize != 0)
             {
@@ -53,11 +53,11 @@ namespace Ryujinx.HLE.HOS.Services.Ngct
             //       If both conditions are true, it does this following code. Since we currently stub it, it's fine to don't check settings service values.
 
             ulong bufferPosition = context.Request.PtrBuff[0].Position;
-            ulong bufferSize     = context.Request.PtrBuff[0].Size;
+            ulong bufferSize = context.Request.PtrBuff[0].Size;
 
             ulong bufferFilteredPosition = context.Request.RecvListBuff[0].Position;
 
-            string text         = "";
+            string text = "";
             string textFiltered = "";
 
             if (bufferSize != 0)

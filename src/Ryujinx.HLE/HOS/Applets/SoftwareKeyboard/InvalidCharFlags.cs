@@ -51,6 +51,6 @@ namespace Ryujinx.HLE.HOS.Applets.SoftwareKeyboard
         /// <summary>
         /// Prohibits characters outside of those allowed in Mii Nicknames.
         /// </summary>
-        Username = 1 << 8
+        Username = 1 << 8,
     }
 }

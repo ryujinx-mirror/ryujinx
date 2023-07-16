@@ -18,7 +18,7 @@ namespace Ryujinx.HLE.HOS.SystemState
 
         public AppletStateMgr(Horizon system)
         {
-            Messages     = new ConcurrentQueue<AppletMessage>();
+            Messages = new ConcurrentQueue<AppletMessage>();
             MessageEvent = new KEvent(system.KernelContext);
 
             AppletResourceUserIds = new IdDictionary();

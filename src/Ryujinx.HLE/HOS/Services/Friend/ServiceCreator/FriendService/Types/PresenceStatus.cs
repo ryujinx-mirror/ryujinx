@@ -4,6 +4,6 @@
     {
         Offline,
         Online,
-        OnlinePlay
+        OnlinePlay,
     }
 }

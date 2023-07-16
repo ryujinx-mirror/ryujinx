@@ -12,16 +12,18 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService
         {
             Error = 1,
             OnHold = 2,
-            Available = 3
+            Available = 3,
         }
 
-        private KEvent _event0;
-        private KEvent _event1;
+        private readonly KEvent _event0;
+        private readonly KEvent _event1;
 
         private int _event0Handle;
         private int _event1Handle;
 
-        private uint _version;
+#pragma warning disable IDE0052 // Remove unread private member
+        private readonly uint _version;
+#pragma warning restore IDE0052
 
         public IRequest(Horizon system, uint version)
         {
@@ -116,7 +118,9 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService
         // GetAppletInfo(u32) -> (u32, u32, u32, buffer<bytes, 6>)
         public ResultCode GetAppletInfo(ServiceCtx context)
         {
+#pragma warning disable IDE0059 // Remove unnecessary value assignment
             uint themeColor = context.RequestData.ReadUInt32();
+#pragma warning restore IDE0059
 
             Logger.Stub?.PrintStub(LogClass.ServiceNifm);
 

@@ -10,7 +10,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRenderer
 {
     class AudioRendererServer : DisposableIpcService
     {
-        private IAudioRenderer _impl;
+        private readonly IAudioRenderer _impl;
 
         public AudioRendererServer(IAudioRenderer impl)
         {
@@ -69,29 +69,27 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRenderer
 
             ReadOnlyMemory<byte> input = context.Memory.GetSpan(inputPosition, (int)inputSize).ToArray();
 
-            using (IMemoryOwner<byte> outputOwner = ByteMemoryPool.RentCleared(outputSize))
-            using (IMemoryOwner<byte> performanceOutputOwner = ByteMemoryPool.RentCleared(performanceOutputSize))
+            using IMemoryOwner<byte> outputOwner = ByteMemoryPool.RentCleared(outputSize);
+            using IMemoryOwner<byte> performanceOutputOwner = ByteMemoryPool.RentCleared(performanceOutputSize);
+            Memory<byte> output = outputOwner.Memory;
+            Memory<byte> performanceOutput = performanceOutputOwner.Memory;
+
+            using MemoryHandle outputHandle = output.Pin();
+            using MemoryHandle performanceOutputHandle = performanceOutput.Pin();
+
+            ResultCode result = _impl.RequestUpdate(output, performanceOutput, input);
+
+            if (result == ResultCode.Success)
             {
-                Memory<byte> output = outputOwner.Memory;
-                Memory<byte> performanceOutput = performanceOutputOwner.Memory;
-
-                using MemoryHandle outputHandle = output.Pin();
-                using MemoryHandle performanceOutputHandle = performanceOutput.Pin();
-
-                ResultCode result = _impl.RequestUpdate(output, performanceOutput, input);
-
-                if (result == ResultCode.Success)
-                {
-                    context.Memory.Write(outputPosition, output.Span);
-                    context.Memory.Write(performanceOutputPosition, performanceOutput.Span);
-                }
-                else
-                {
-                    Logger.Error?.Print(LogClass.ServiceAudio, $"Error while processing renderer update: 0x{(int)result:X}");
-                }
-
-                return result;
+                context.Memory.Write(outputPosition, output.Span);
+                context.Memory.Write(performanceOutputPosition, performanceOutput.Span);
             }
+            else
+            {
+                Logger.Error?.Print(LogClass.ServiceAudio, $"Error while processing renderer update: 0x{(int)result:X}");
+            }
+
+            return result;
         }
 
         [CommandCmif(5)]

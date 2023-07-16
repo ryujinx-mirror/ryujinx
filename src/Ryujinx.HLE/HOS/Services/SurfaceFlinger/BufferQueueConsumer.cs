@@ -54,10 +54,10 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 
                 if (Core.StillTracking(ref bufferItem))
                 {
-                    Core.Slots[bufferItem.Slot].AcquireCalled         = true;
+                    Core.Slots[bufferItem.Slot].AcquireCalled = true;
                     Core.Slots[bufferItem.Slot].NeedsCleanupOnRelease = true;
-                    Core.Slots[bufferItem.Slot].BufferState           = BufferState.Acquired;
-                    Core.Slots[bufferItem.Slot].Fence                 = AndroidFence.NoFence;
+                    Core.Slots[bufferItem.Slot].BufferState = BufferState.Acquired;
+                    Core.Slots[bufferItem.Slot].Fence = AndroidFence.NoFence;
 
                     ulong targetFrameNumber = Core.Slots[bufferItem.Slot].FrameNumber;
 
@@ -159,12 +159,12 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 
                 Core.Slots[slot].GraphicBuffer.Set(graphicBuffer);
 
-                Core.Slots[slot].BufferState           = BufferState.Acquired;
-                Core.Slots[slot].AttachedByConsumer    = true;
+                Core.Slots[slot].BufferState = BufferState.Acquired;
+                Core.Slots[slot].AttachedByConsumer = true;
                 Core.Slots[slot].NeedsCleanupOnRelease = false;
-                Core.Slots[slot].Fence                 = AndroidFence.NoFence;
-                Core.Slots[slot].FrameNumber           = 0;
-                Core.Slots[slot].AcquireCalled         = false;
+                Core.Slots[slot].Fence = AndroidFence.NoFence;
+                Core.Slots[slot].FrameNumber = 0;
+                Core.Slots[slot].AcquireCalled = false;
             }
 
             return Status.Success;
@@ -197,7 +197,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
                 if (Core.Slots[slot].BufferState == BufferState.Acquired)
                 {
                     Core.Slots[slot].BufferState = BufferState.Free;
-                    Core.Slots[slot].Fence       = fence;
+                    Core.Slots[slot].Fence = fence;
 
                     listener = Core.ProducerListener;
                 }
@@ -237,7 +237,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
                     return Status.NoInit;
                 }
 
-                Core.ConsumerListener        = consumerListener;
+                Core.ConsumerListener = consumerListener;
                 Core.ConsumerControlledByApp = controlledByApp;
             }
 
@@ -253,7 +253,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
                     return Status.BadValue;
                 }
 
-                Core.IsAbandoned      = true;
+                Core.IsAbandoned = true;
                 Core.ConsumerListener = null;
 
                 Core.Queue.Clear();
@@ -304,7 +304,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 
             lock (Core.Lock)
             {
-                Core.DefaultWidth  = (int)width;
+                Core.DefaultWidth = (int)width;
                 Core.DefaultHeight = (int)height;
             }
 

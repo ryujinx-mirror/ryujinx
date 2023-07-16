@@ -15,7 +15,7 @@ namespace Ryujinx.HLE.HOS.Services.Ssl.SslService
         private bool _skipDefaultVerify;
         private bool _enableAlpn;
 
-        private SslVersion _sslVersion;
+        private readonly SslVersion _sslVersion;
         private IoMode _ioMode;
         private VerifyOption _verifyOption;
         private SessionCacheMode _sessionCacheMode;
@@ -206,13 +206,12 @@ namespace Ryujinx.HLE.HOS.Services.Ssl.SslService
             {
                 if (_getServerCertChain)
                 {
-                    using (WritableRegion region = context.Memory.GetWritableRegion(context.Request.ReceiveBuff[0].Position, (int)context.Request.ReceiveBuff[0].Size))
-                    {
-                        result = _connection.GetServerCertificate(_hostName, region.Memory.Span, out uint bufferSize, out uint certificateCount);
+                    using WritableRegion region = context.Memory.GetWritableRegion(context.Request.ReceiveBuff[0].Position, (int)context.Request.ReceiveBuff[0].Size);
 
-                        context.ResponseData.Write(bufferSize);
-                        context.ResponseData.Write(certificateCount);
-                    }
+                    result = _connection.GetServerCertificate(_hostName, region.Memory.Span, out uint bufferSize, out uint certificateCount);
+
+                    context.ResponseData.Write(bufferSize);
+                    context.ResponseData.Write(certificateCount);
                 }
                 else
                 {
@@ -235,15 +234,13 @@ namespace Ryujinx.HLE.HOS.Services.Ssl.SslService
 
             ResultCode result;
 
-            using (WritableRegion region = context.Memory.GetWritableRegion(context.Request.ReceiveBuff[0].Position, (int)context.Request.ReceiveBuff[0].Size))
-            {
-                // TODO: Better error management.
-                result = _connection.Read(out int readCount, region.Memory);
+            using WritableRegion region = context.Memory.GetWritableRegion(context.Request.ReceiveBuff[0].Position, (int)context.Request.ReceiveBuff[0].Size);
+            // TODO: Better error management.
+            result = _connection.Read(out int readCount, region.Memory);
 
-                if (result == ResultCode.Success)
-                {
-                    context.ResponseData.Write(readCount);
-                }
+            if (result == ResultCode.Success)
+            {
+                context.ResponseData.Write(readCount);
             }
 
             return result;
@@ -297,15 +294,15 @@ namespace Ryujinx.HLE.HOS.Services.Ssl.SslService
 
             ResultCode result;
 
-            using (WritableRegion region = context.Memory.GetWritableRegion(context.Request.ReceiveBuff[0].Position, (int)context.Request.ReceiveBuff[0].Size))
-            {
-                // TODO: Better error management.
-                result = _connection.Peek(out int peekCount, region.Memory);
+            using WritableRegion region = context.Memory.GetWritableRegion(context.Request.ReceiveBuff[0].Position, (int)context.Request.ReceiveBuff[0].Size);
 
-                if (result == ResultCode.Success)
-                {
-                    context.ResponseData.Write(peekCount);
-                }
+
+            // TODO: Better error management.
+            result = _connection.Peek(out int peekCount, region.Memory);
+
+            if (result == ResultCode.Success)
+            {
+                context.ResponseData.Write(peekCount);
             }
 
             return result;
@@ -381,7 +378,7 @@ namespace Ryujinx.HLE.HOS.Services.Ssl.SslService
         // SetOption(b8 value, nn::ssl::sf::OptionType option)
         public ResultCode SetOption(ServiceCtx context)
         {
-            bool       value  = context.RequestData.ReadUInt32() != 0;
+            bool value = context.RequestData.ReadUInt32() != 0;
             OptionType option = (OptionType)context.RequestData.ReadUInt32();
 
             Logger.Stub?.PrintStub(LogClass.ServiceSsl, new { option, value });

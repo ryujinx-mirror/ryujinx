@@ -5,9 +5,7 @@ namespace Ryujinx.HLE.HOS.Services.Spl
     [Service("csrng")]
     class IRandomInterface : DisposableIpcService
     {
-        private RandomNumberGenerator _rng;
-
-        private readonly object _lock = new();
+        private readonly RandomNumberGenerator _rng;
 
         public IRandomInterface(ServiceCtx context)
         {

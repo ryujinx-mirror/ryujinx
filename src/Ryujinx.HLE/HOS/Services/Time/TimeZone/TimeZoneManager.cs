@@ -7,20 +7,20 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
 {
     class TimeZoneManager
     {
-        private bool                 _isInitialized;
-        private Box<TimeZoneRule>    _myRules;
-        private string               _deviceLocationName;
-        private UInt128              _timeZoneRuleVersion;
-        private uint                 _totalLocationNameCount;
+        private bool _isInitialized;
+        private Box<TimeZoneRule> _myRules;
+        private string _deviceLocationName;
+        private UInt128 _timeZoneRuleVersion;
+        private uint _totalLocationNameCount;
         private SteadyClockTimePoint _timeZoneUpdateTimePoint;
-        private readonly object      _lock = new();
+        private readonly object _lock = new();
 
         public TimeZoneManager()
         {
-            _isInitialized       = false;
-            _deviceLocationName  = "UTC";
+            _isInitialized = false;
+            _deviceLocationName = "UTC";
             _timeZoneRuleVersion = new UInt128();
-            _myRules             = new Box<TimeZoneRule>();
+            _myRules = new Box<TimeZoneRule>();
 
             _timeZoneUpdateTimePoint = SteadyClockTimePoint.GetRandom();
         }
@@ -56,7 +56,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
                 if (_isInitialized)
                 {
                     deviceLocationName = _deviceLocationName;
-                    result             = ResultCode.Success;
+                    result = ResultCode.Success;
                 }
             }
 
@@ -69,15 +69,15 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
 
             lock (_lock)
             {
-                Box<TimeZoneRule> rules = new Box<TimeZoneRule>();
+                Box<TimeZoneRule> rules = new();
 
                 bool timeZoneConversionSuccess = TimeZone.ParseTimeZoneBinary(ref rules.Data, timeZoneBinaryStream);
 
                 if (timeZoneConversionSuccess)
                 {
                     _deviceLocationName = locationName;
-                    _myRules            = rules;
-                    result              = ResultCode.Success;
+                    _myRules = rules;
+                    result = ResultCode.Success;
                 }
             }
 
@@ -103,7 +103,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
                 if (_isInitialized)
                 {
                     totalLocationNameCount = _totalLocationNameCount;
-                    result                 = ResultCode.Success;
+                    result = ResultCode.Success;
                 }
             }
 
@@ -119,7 +119,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
                 if (_isInitialized || bypassUninitialized)
                 {
                     _timeZoneUpdateTimePoint = timeZoneUpdatedTimePoint;
-                    result                   = ResultCode.Success;
+                    result = ResultCode.Success;
                 }
             }
 
@@ -135,12 +135,12 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
                 if (_isInitialized)
                 {
                     timeZoneUpdatedTimePoint = _timeZoneUpdateTimePoint;
-                    result                   = ResultCode.Success;
+                    result = ResultCode.Success;
                 }
                 else
                 {
                     timeZoneUpdatedTimePoint = SteadyClockTimePoint.GetRandom();
-                    result                   = ResultCode.UninitializedClock;
+                    result = ResultCode.UninitializedClock;
                 }
             }
 
@@ -181,12 +181,12 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
                 if (_isInitialized)
                 {
                     timeZoneRuleVersion = _timeZoneRuleVersion;
-                    result              = ResultCode.Success;
+                    result = ResultCode.Success;
                 }
                 else
                 {
                     timeZoneRuleVersion = new UInt128();
-                    result              = ResultCode.UninitializedClock;
+                    result = ResultCode.UninitializedClock;
                 }
             }
 
@@ -206,7 +206,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
                 else
                 {
                     calendar = new CalendarInfo();
-                    result   = ResultCode.UninitializedClock;
+                    result = ResultCode.UninitializedClock;
                 }
             }
 
@@ -238,7 +238,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
                 else
                 {
                     posixTime = 0;
-                    result    = ResultCode.UninitializedClock;
+                    result = ResultCode.UninitializedClock;
                 }
             }
 

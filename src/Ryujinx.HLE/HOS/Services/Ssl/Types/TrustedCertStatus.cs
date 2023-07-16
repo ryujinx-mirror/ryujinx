@@ -7,6 +7,6 @@
         EnabledNotTrusted,
         Revoked,
 
-        Invalid = uint.MaxValue
+        Invalid = uint.MaxValue,
     }
 }

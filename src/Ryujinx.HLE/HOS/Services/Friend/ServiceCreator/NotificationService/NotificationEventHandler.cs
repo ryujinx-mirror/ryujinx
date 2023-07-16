@@ -4,23 +4,20 @@ namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator.NotificationService
 {
     public sealed class NotificationEventHandler
     {
-        private static NotificationEventHandler instance;
-        private static object                   instanceLock = new object();
+        private static NotificationEventHandler _instance;
+        private static readonly object _instanceLock = new();
 
-        private INotificationService[] _registry;
+        private readonly INotificationService[] _registry;
 
         public static NotificationEventHandler Instance
         {
             get
             {
-                lock (instanceLock)
+                lock (_instanceLock)
                 {
-                    if (instance == null)
-                    {
-                        instance = new NotificationEventHandler();
-                    }
+                    _instance ??= new NotificationEventHandler();
 
-                    return instance;
+                    return _instance;
                 }
             }
         }
@@ -61,10 +58,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator.NotificationService
         {
             for (int i = 0; i < _registry.Length; i++)
             {
-                if (_registry[i] != null)
-                {
-                    _registry[i].SignalFriendListUpdate(targetId);
-                }
+                _registry[i]?.SignalFriendListUpdate(targetId);
             }
         }
 
@@ -73,10 +67,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator.NotificationService
         {
             for (int i = 0; i < _registry.Length; i++)
             {
-                if (_registry[i] != null)
-                {
-                    _registry[i].SignalNewFriendRequest(targetId);
-                }
+                _registry[i]?.SignalNewFriendRequest(targetId);
             }
         }
     }

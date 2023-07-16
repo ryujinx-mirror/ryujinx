@@ -8,6 +8,6 @@
         ErrorEulaArg,
         ErrorPctlArg,
         ErrorRecordArg,
-        SystemUpdateEulaArg = 8
+        SystemUpdateEulaArg = 8,
     }
 }

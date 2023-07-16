@@ -18,16 +18,16 @@ namespace Ryujinx.HLE.HOS.Services.Ro
     [Service("ro:1")] // 7.0.0+
     class IRoInterface : DisposableIpcService
     {
-        private const int MaxNrr         = 0x40;
-        private const int MaxNro         = 0x40;
-        private const int MaxMapRetries  = 0x200;
+        private const int MaxNrr = 0x40;
+        private const int MaxNro = 0x40;
+        private const int MaxMapRetries = 0x200;
         private const int GuardPagesSize = 0x4000;
 
         private const uint NrrMagic = 0x3052524E;
         private const uint NroMagic = 0x304F524E;
 
-        private List<NrrInfo> _nrrInfos;
-        private List<NroInfo> _nroInfos;
+        private readonly List<NrrInfo> _nrrInfos;
+        private readonly List<NroInfo> _nroInfos;
 
         private KProcess _owner;
         private IVirtualMemoryManager _ownerMm;
@@ -36,8 +36,8 @@ namespace Ryujinx.HLE.HOS.Services.Ro
         {
             _nrrInfos = new List<NrrInfo>(MaxNrr);
             _nroInfos = new List<NroInfo>(MaxNro);
-            _owner    = null;
-            _ownerMm  = null;
+            _owner = null;
+            _ownerMm = null;
         }
 
         private ResultCode ParseNrr(out NrrInfo nrrInfo, ServiceCtx context, ulong nrrAddress, ulong nrrSize)
@@ -64,7 +64,7 @@ namespace Ryujinx.HLE.HOS.Services.Ro
                 return ResultCode.InvalidSize;
             }
 
-            List<byte[]> hashes = new List<byte[]>();
+            List<byte[]> hashes = new();
 
             for (int i = 0; i < header.HashesCount; i++)
             {
@@ -130,7 +130,7 @@ namespace Ryujinx.HLE.HOS.Services.Ro
                 return ResultCode.InvalidAddress;
             }
 
-            uint magic       = _owner.CpuMemory.Read<uint>(nroAddress + 0x10);
+            uint magic = _owner.CpuMemory.Read<uint>(nroAddress + 0x10);
             uint nroFileSize = _owner.CpuMemory.Read<uint>(nroAddress + 0x18);
 
             if (magic != NroMagic || nroSize != nroFileSize)
@@ -142,7 +142,7 @@ namespace Ryujinx.HLE.HOS.Services.Ro
 
             _owner.CpuMemory.Read(nroAddress, nroData);
 
-            MemoryStream stream = new MemoryStream(nroData);
+            MemoryStream stream = new(nroData);
 
             byte[] nroHash = SHA256.HashData(stream);
 
@@ -158,19 +158,19 @@ namespace Ryujinx.HLE.HOS.Services.Ro
 
             stream.Position = 0;
 
-            NroExecutable nro = new NroExecutable(stream.AsStorage(), nroAddress, bssAddress);
+            NroExecutable nro = new(stream.AsStorage(), nroAddress, bssAddress);
 
             // Check if everything is page align.
             if ((nro.Text.Length & 0xFFF) != 0 || (nro.Ro.Length & 0xFFF) != 0 ||
-                (nro.Data.Length & 0xFFF) != 0 || (nro.BssSize & 0xFFF)   != 0)
+                (nro.Data.Length & 0xFFF) != 0 || (nro.BssSize & 0xFFF) != 0)
             {
                 return ResultCode.InvalidNro;
             }
 
             // Check if everything is contiguous.
-            if (nro.RoOffset   != nro.TextOffset + nro.Text.Length ||
-                nro.DataOffset != nro.RoOffset   + nro.Ro.Length   ||
-                nroFileSize    != nro.DataOffset + nro.Data.Length)
+            if (nro.RoOffset != nro.TextOffset + nro.Text.Length ||
+                nro.DataOffset != nro.RoOffset + nro.Ro.Length ||
+                nroFileSize != nro.DataOffset + nro.Data.Length)
             {
                 return ResultCode.InvalidNro;
             }
@@ -316,7 +316,7 @@ namespace Ryujinx.HLE.HOS.Services.Ro
         private Result SetNroMemoryPermissions(KProcess process, IExecutable relocatableObject, ulong baseAddress)
         {
             ulong textStart = baseAddress + relocatableObject.TextOffset;
-            ulong roStart   = baseAddress + relocatableObject.RoOffset;
+            ulong roStart = baseAddress + relocatableObject.RoOffset;
             ulong dataStart = baseAddress + relocatableObject.DataOffset;
 
             ulong bssStart = dataStart + (ulong)relocatableObject.Data.Length;
@@ -324,7 +324,7 @@ namespace Ryujinx.HLE.HOS.Services.Ro
             ulong bssEnd = BitUtils.AlignUp<ulong>(bssStart + relocatableObject.BssSize, KPageTableBase.PageSize);
 
             process.CpuMemory.Write(textStart, relocatableObject.Text);
-            process.CpuMemory.Write(roStart,   relocatableObject.Ro);
+            process.CpuMemory.Write(roStart, relocatableObject.Ro);
             process.CpuMemory.Write(dataStart, relocatableObject.Data);
 
             MemoryHelper.FillWithZeros(process.CpuMemory, bssStart, (int)(bssEnd - bssStart));
@@ -381,9 +381,9 @@ namespace Ryujinx.HLE.HOS.Services.Ro
         private ResultCode UnmapNroFromInfo(NroInfo info)
         {
             ulong textSize = (ulong)info.Executable.Text.Length;
-            ulong roSize   = (ulong)info.Executable.Ro.Length;
+            ulong roSize = (ulong)info.Executable.Ro.Length;
             ulong dataSize = (ulong)info.Executable.Data.Length;
-            ulong bssSize  = (ulong)info.Executable.BssSize;
+            ulong bssSize = (ulong)info.Executable.BssSize;
 
             Result result = Result.Success;
 
@@ -434,17 +434,16 @@ namespace Ryujinx.HLE.HOS.Services.Ro
             context.RequestData.ReadUInt64();
 
             ulong nroHeapAddress = context.RequestData.ReadUInt64();
-            ulong nroSize        = context.RequestData.ReadUInt64();
+            ulong nroSize = context.RequestData.ReadUInt64();
             ulong bssHeapAddress = context.RequestData.ReadUInt64();
-            ulong bssSize        = context.RequestData.ReadUInt64();
+            ulong bssSize = context.RequestData.ReadUInt64();
 
             ulong nroMappedAddress = 0;
 
             if (result == ResultCode.Success)
             {
-                NroInfo info;
 
-                result = ParseNro(out info, context, nroHeapAddress, nroSize, bssHeapAddress, bssSize);
+                result = ParseNro(out NroInfo info, context, nroHeapAddress, nroSize, bssHeapAddress, bssSize);
 
                 if (result == ResultCode.Success)
                 {
@@ -503,12 +502,11 @@ namespace Ryujinx.HLE.HOS.Services.Ro
             context.RequestData.ReadUInt64();
 
             ulong nrrAddress = context.RequestData.ReadUInt64();
-            ulong nrrSize    = context.RequestData.ReadUInt64();
+            ulong nrrSize = context.RequestData.ReadUInt64();
 
             if (result == ResultCode.Success)
             {
-                NrrInfo info;
-                result = ParseNrr(out info, context, nrrAddress, nrrSize);
+                result = ParseNrr(out NrrInfo info, context, nrrAddress, nrrSize);
 
                 if (result == ResultCode.Success)
                 {

@@ -1,31 +1,30 @@
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Services.Arp;
 using System;
-
 using static LibHac.Ns.ApplicationControlProperty;
 
 namespace Ryujinx.HLE.HOS.Services.Pctl.ParentalControlServiceFactory
 {
     class IParentalControlService : IpcService
     {
-        private ulong                    _pid;
-        private int                      _permissionFlag;
-        private ulong                    _titleId;
+        private readonly ulong _pid;
+        private readonly int _permissionFlag;
+        private ulong _titleId;
         private ParentalControlFlagValue _parentalControlFlag;
-        private int[]                    _ratingAge;
+#pragma warning disable IDE0052, CS0414 // Remove unread private member
+        private int[] _ratingAge;
 
-#pragma warning disable CS0414
         // TODO: Find where they are set.
-        private bool _restrictionEnabled                  = false;
-        private bool _featuresRestriction                 = false;
-        private bool _freeCommunicationEnabled            = false;
-        private bool _stereoVisionRestrictionConfigurable = true;
-        private bool _stereoVisionRestriction             = false;
-#pragma warning restore CS0414
+        private readonly bool _restrictionEnabled = false;
+        private readonly bool _featuresRestriction = false;
+        private bool _freeCommunicationEnabled = false;
+        private readonly bool _stereoVisionRestrictionConfigurable = true;
+        private bool _stereoVisionRestriction = false;
+#pragma warning restore IDE0052, CS0414
 
         public IParentalControlService(ServiceCtx context, ulong pid, bool withInitialize, int permissionFlag)
         {
-            _pid            = pid;
+            _pid = pid;
             _permissionFlag = permissionFlag;
 
             if (withInitialize)
@@ -56,19 +55,19 @@ namespace Ryujinx.HLE.HOS.Services.Pctl.ParentalControlServiceFactory
                         _titleId = titleId;
 
                         // TODO: Call nn::arp::GetApplicationControlProperty here when implemented, if it return ResultCode.Success we assign fields.
-                        _ratingAge           = Array.ConvertAll(context.Device.Processes.ActiveApplication.ApplicationControlProperties.RatingAge.ItemsRo.ToArray(), Convert.ToInt32);
+                        _ratingAge = Array.ConvertAll(context.Device.Processes.ActiveApplication.ApplicationControlProperties.RatingAge.ItemsRo.ToArray(), Convert.ToInt32);
                         _parentalControlFlag = context.Device.Processes.ActiveApplication.ApplicationControlProperties.ParentalControlFlag;
                     }
                 }
 
                 if (_titleId != 0)
                 {
-                    // TODO: Service store some private fields in another static object.
+                    // TODO: Service store some private fields in another object.
 
                     if ((_permissionFlag & 0x8040) == 0)
                     {
-                        // TODO: Service store TitleId and FreeCommunicationEnabled in another static object.
-                        //       When it's done it signal an event in this static object.
+                        // TODO: Service store TitleId and FreeCommunicationEnabled in another object.
+                        //       When it's done it signal an event in this object.
                         Logger.Stub?.PrintStub(LogClass.ServicePctl);
                     }
                 }
@@ -160,7 +159,9 @@ namespace Ryujinx.HLE.HOS.Services.Pctl.ParentalControlServiceFactory
             }
             else
             {
+#pragma warning disable CS0162 // Unreachable code
                 return ResultCode.StereoVisionRestrictionConfigurableDisabled;
+#pragma warning restore CS0162
             }
         }
 
@@ -173,7 +174,9 @@ namespace Ryujinx.HLE.HOS.Services.Pctl.ParentalControlServiceFactory
                 return ResultCode.PermissionDenied;
             }
 
+#pragma warning disable // Remove unnecessary value assignment
             bool stereoVisionRestriction = false;
+#pragma warning restore IDE0059
 
             if (_stereoVisionRestrictionConfigurable)
             {
@@ -202,7 +205,7 @@ namespace Ryujinx.HLE.HOS.Services.Pctl.ParentalControlServiceFactory
                 {
                     _stereoVisionRestriction = stereoVisionRestriction;
 
-                    // TODO: It signals an internal event of service. We have to determine where this event is used. 
+                    // TODO: It signals an internal event of service. We have to determine where this event is used.
                 }
             }
 

@@ -19,6 +19,6 @@ namespace Ryujinx.HLE.HOS.Services.Hid.Types.SharedMemory.Npad
         IsSlSrButtonOriented = 1 << 12,
         IsPlusAvailable = 1 << 13,
         IsMinusAvailable = 1 << 14,
-        IsDirectionalButtonsAvailable = 1 << 15
+        IsDirectionalButtonsAvailable = 1 << 15,
     }
 }

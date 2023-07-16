@@ -8,6 +8,6 @@
         Share,
         Web,
         Wifi,
-        Lobby
+        Lobby,
     }
 }

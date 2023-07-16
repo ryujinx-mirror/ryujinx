@@ -1,10 +1,10 @@
 ﻿using LibHac.Common;
 using LibHac.FsSystem;
 using LibHac.Loader;
+using LibHac.Ncm;
 using LibHac.Ns;
 using Ryujinx.HLE.HOS;
 using Ryujinx.HLE.Loaders.Processes.Extensions;
-using ApplicationId = LibHac.Ncm.ApplicationId;
 
 namespace Ryujinx.HLE.Loaders.Processes
 {
@@ -13,8 +13,8 @@ namespace Ryujinx.HLE.Loaders.Processes
         public static ProcessResult Load(this LocalFileSystem exeFs, Switch device, string romFsPath = "")
         {
             MetaLoader metaLoader = exeFs.GetNpdm();
-            var        nacpData   = new BlitStruct<ApplicationControlProperty>(1);
-            ulong      programId  = metaLoader.GetProgramId();
+            var nacpData = new BlitStruct<ApplicationControlProperty>(1);
+            ulong programId = metaLoader.GetProgramId();
 
             device.Configuration.VirtualFileSystem.ModLoader.CollectMods(
                 new[] { programId },

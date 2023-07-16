@@ -5,6 +5,6 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
         NotInitialized,
         Open,
         ClientDisconnected,
-        ServerDisconnected
+        ServerDisconnected,
     }
 }

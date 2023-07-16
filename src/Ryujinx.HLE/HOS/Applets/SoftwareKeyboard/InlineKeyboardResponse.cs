@@ -88,6 +88,6 @@
         /// <summary>
         /// Same as MovedCursorUtf8, but with additional fields.
         /// </summary>
-        MovedCursorUtf8V2 = 0x10
+        MovedCursorUtf8V2 = 0x10,
     }
 }

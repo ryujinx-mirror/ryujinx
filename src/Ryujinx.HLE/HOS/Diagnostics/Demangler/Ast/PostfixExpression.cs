@@ -4,7 +4,7 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
 {
     public class PostfixExpression : ParentNode
     {
-        private string _operator;
+        private readonly string _operator;
 
         public PostfixExpression(BaseNode type, string Operator) : base(NodeType.PostfixExpression, type)
         {

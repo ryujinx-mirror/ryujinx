@@ -5,6 +5,6 @@
         OverlayNotDisplayed,
         OverlayDisplayed,
         Unknown2,
-        Unknown3
+        Unknown3,
     }
 }

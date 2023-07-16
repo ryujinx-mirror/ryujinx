@@ -11,7 +11,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv
     {
         public MemoryManager Smmu { get; }
         public NvMemoryAllocator MemoryAllocator { get; }
-        public Host1xDevice Host1x { get;}
+        public Host1xDevice Host1x { get; }
 
         public Host1xContext(GpuContext gpu, ulong pid)
         {

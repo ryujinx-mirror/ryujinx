@@ -23,6 +23,6 @@
         /// <summary>
         /// swkbd has completed.
         /// </summary>
-        Complete
+        Complete,
     }
 }

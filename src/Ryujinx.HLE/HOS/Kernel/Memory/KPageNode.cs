@@ -7,7 +7,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
         public KPageNode(ulong address, ulong pagesCount)
         {
-            Address    = address;
+            Address = address;
             PagesCount = pagesCount;
         }
     }

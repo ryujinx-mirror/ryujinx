@@ -19,8 +19,10 @@ namespace Ryujinx.HLE.HOS.Services.Ssl
         // CreateContext(nn::ssl::sf::SslVersion, u64, pid) -> object<nn::ssl::sf::ISslContext>
         public ResultCode CreateContext(ServiceCtx context)
         {
-            SslVersion sslVersion     = (SslVersion)context.RequestData.ReadUInt32();
-            ulong      pidPlaceholder = context.RequestData.ReadUInt64();
+            SslVersion sslVersion = (SslVersion)context.RequestData.ReadUInt32();
+#pragma warning disable IDE0059 // Remove unnecessary value assignment
+            ulong pidPlaceholder = context.RequestData.ReadUInt64();
+#pragma warning restore IDE0059
 
             MakeObject(context, new ISslContext(context.Request.HandleDesc.PId, sslVersion));
 
@@ -71,7 +73,7 @@ namespace Ryujinx.HLE.HOS.Services.Ssl
                         Id = entries[i].Id,
                         Status = entries[i].Status,
                         CertificateDataSize = (ulong)entries[i].Data.Length,
-                        CertificateDataOffset = (ulong)(rawData.Length - certificatesData.Length)
+                        CertificateDataOffset = (ulong)(rawData.Length - certificatesData.Length),
                     };
 
                     certificatesData = certificatesData[entries[i].Data.Length..];
@@ -84,7 +86,7 @@ namespace Ryujinx.HLE.HOS.Services.Ssl
                         Id = CaCertificateId.All,
                         Status = TrustedCertStatus.Invalid,
                         CertificateDataSize = 0,
-                        CertificateDataOffset = 0
+                        CertificateDataOffset = 0,
                     };
                 }
             }

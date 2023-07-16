@@ -15,27 +15,20 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
         [FieldOffset(0xb0)]
         private NvGraphicBufferSurface Surface2;
 
-        public NvGraphicBufferSurface this[int index]
+        public readonly NvGraphicBufferSurface this[int index]
         {
             get
             {
-                if (index == 0)
+                return index switch
                 {
-                    return Surface0;
-                }
-                else if (index == 1)
-                {
-                    return Surface1;
-                }
-                else if (index == 2)
-                {
-                    return Surface2;
-                }
-
-                throw new IndexOutOfRangeException();
+                    0 => Surface0,
+                    1 => Surface1,
+                    2 => Surface2,
+                    _ => throw new IndexOutOfRangeException(),
+                };
             }
         }
 
-        public int Length => 3;
+        public static int Length => 3;
     }
 }

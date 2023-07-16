@@ -4,7 +4,7 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
 {
     public class ThrowExpression : BaseNode
     {
-        private BaseNode _expression;
+        private readonly BaseNode _expression;
 
         public ThrowExpression(BaseNode expression) : base(NodeType.ThrowExpression)
         {

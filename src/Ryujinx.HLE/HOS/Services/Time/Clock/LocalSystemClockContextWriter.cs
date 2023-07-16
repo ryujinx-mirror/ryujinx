@@ -2,7 +2,7 @@
 {
     class LocalSystemClockContextWriter : SystemClockContextUpdateCallback
     {
-        private TimeSharedMemory _sharedMemory;
+        private readonly TimeSharedMemory _sharedMemory;
 
         public LocalSystemClockContextWriter(TimeSharedMemory sharedMemory)
         {
@@ -11,7 +11,7 @@
 
         protected override ResultCode Update()
         {
-            _sharedMemory.UpdateLocalSystemClockContext(_context);
+            _sharedMemory.UpdateLocalSystemClockContext(Context);
 
             return ResultCode.Success;
         }

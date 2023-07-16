@@ -87,10 +87,10 @@ namespace Ryujinx.HLE.HOS.Services.Audio.HardwareOpusDecoderManager
 
         private ResultCode DecodeInterleavedInternal(ServiceCtx context, OpusDecoderFlags flags, bool reset, bool withPerf)
         {
-            ulong inPosition     = context.Request.SendBuff[0].Position;
-            ulong inSize         = context.Request.SendBuff[0].Size;
+            ulong inPosition = context.Request.SendBuff[0].Position;
+            ulong inSize = context.Request.SendBuff[0].Size;
             ulong outputPosition = context.Request.ReceiveBuff[0].Position;
-            ulong outputSize     = context.Request.ReceiveBuff[0].Size;
+            ulong outputSize = context.Request.ReceiveBuff[0].Size;
 
             ReadOnlySpan<byte> input = context.Memory.GetSpan(inPosition, (int)inSize);
 

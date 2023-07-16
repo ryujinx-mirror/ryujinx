@@ -25,13 +25,13 @@ namespace Ryujinx.HLE.HOS.Services.Nv
     [Service("nvdrv:t")]
     class INvDrvServices : IpcService
     {
-        private static readonly List<string> _deviceFileDebugRegistry = new List<string>()
+        private static readonly List<string> _deviceFileDebugRegistry = new()
         {
             "/dev/nvhost-dbg-gpu",
-            "/dev/nvhost-prof-gpu"
+            "/dev/nvhost-prof-gpu",
         };
 
-        private static readonly Dictionary<string, Type> _deviceFileRegistry = new Dictionary<string, Type>()
+        private static readonly Dictionary<string, Type> _deviceFileRegistry = new()
         {
             { "/dev/nvmap",           typeof(NvMapDeviceFile)         },
             { "/dev/nvhost-ctrl",     typeof(NvHostCtrlDeviceFile)    },
@@ -47,7 +47,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv
             { "/dev/nvhost-prof-gpu", typeof(NvHostProfGpuDeviceFile) },
         };
 
-        public static IdDictionary DeviceFileIdRegistry = new IdDictionary();
+        public static IdDictionary DeviceFileIdRegistry = new();
 
         private IVirtualMemoryManager _clientMemory;
         private ulong _owner;
@@ -55,7 +55,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv
         private bool _transferMemInitialized = false;
 
         // TODO: This should call set:sys::GetDebugModeFlag
-        private bool _debugModeEnabled = false;
+        private readonly bool _debugModeEnabled = false;
 
         public INvDrvServices(ServiceCtx context) : base(context.Device.System.NvDrvServer)
         {
@@ -73,7 +73,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv
 
             if (_deviceFileRegistry.TryGetValue(path, out Type deviceFileClass))
             {
-                ConstructorInfo constructor = deviceFileClass.GetConstructor(new Type[] { typeof(ServiceCtx), typeof(IVirtualMemoryManager), typeof(ulong) });
+                ConstructorInfo constructor = deviceFileClass.GetConstructor(new[] { typeof(ServiceCtx), typeof(IVirtualMemoryManager), typeof(ulong) });
 
                 NvDeviceFile deviceFile = (NvDeviceFile)constructor.Invoke(new object[] { context, _clientMemory, _owner });
 
@@ -91,13 +91,15 @@ namespace Ryujinx.HLE.HOS.Services.Nv
 
         private NvResult GetIoctlArgument(ServiceCtx context, NvIoctl ioctlCommand, out Span<byte> arguments)
         {
-            (ulong inputDataPosition,  ulong inputDataSize)  = context.Request.GetBufferType0x21(0);
+            (ulong inputDataPosition, ulong inputDataSize) = context.Request.GetBufferType0x21(0);
+#pragma warning disable IDE0059 // Remove unnecessary value assignment
             (ulong outputDataPosition, ulong outputDataSize) = context.Request.GetBufferType0x22(0);
+#pragma warning restore IDE0059
 
             NvIoctl.Direction ioctlDirection = ioctlCommand.DirectionValue;
-            uint              ioctlSize      = ioctlCommand.Size;
+            uint ioctlSize = ioctlCommand.Size;
 
-            bool isRead  = (ioctlDirection & NvIoctl.Direction.Read)  != 0;
+            bool isRead = (ioctlDirection & NvIoctl.Direction.Read) != 0;
             bool isWrite = (ioctlDirection & NvIoctl.Direction.Write) != 0;
 
             if ((isWrite && ioctlSize > outputDataSize) || (isRead && ioctlSize > inputDataSize))
@@ -186,53 +188,29 @@ namespace Ryujinx.HLE.HOS.Services.Nv
             return NvResult.Success;
         }
 
-        private static NvResult ConvertInternalErrorCode(NvInternalResult errorCode)
+        private NvResult ConvertInternalErrorCode(NvInternalResult errorCode)
         {
-            switch (errorCode)
+            return errorCode switch
             {
-                case NvInternalResult.Success:
-                    return NvResult.Success;
-                case NvInternalResult.Unknown0x72:
-                    return NvResult.AlreadyAllocated;
-                case NvInternalResult.TimedOut:
-                case NvInternalResult.TryAgain:
-                case NvInternalResult.Interrupted:
-                    return NvResult.Timeout;
-                case NvInternalResult.InvalidAddress:
-                    return NvResult.InvalidAddress;
-                case NvInternalResult.NotSupported:
-                case NvInternalResult.Unknown0x18:
-                    return NvResult.NotSupported;
-                case NvInternalResult.InvalidState:
-                    return NvResult.InvalidState;
-                case NvInternalResult.ReadOnlyAttribute:
-                    return NvResult.ReadOnlyAttribute;
-                case NvInternalResult.NoSpaceLeft:
-                case NvInternalResult.FileTooBig:
-                    return NvResult.InvalidSize;
-                case NvInternalResult.FileTableOverflow:
-                case NvInternalResult.BadFileNumber:
-                    return NvResult.FileOperationFailed;
-                case NvInternalResult.InvalidInput:
-                    return NvResult.InvalidValue;
-                case NvInternalResult.NotADirectory:
-                    return NvResult.DirectoryOperationFailed;
-                case NvInternalResult.Busy:
-                    return NvResult.Busy;
-                case NvInternalResult.BadAddress:
-                    return NvResult.InvalidAddress;
-                case NvInternalResult.AccessDenied:
-                case NvInternalResult.OperationNotPermitted:
-                    return NvResult.AccessDenied;
-                case NvInternalResult.OutOfMemory:
-                    return NvResult.InsufficientMemory;
-                case NvInternalResult.DeviceNotFound:
-                    return NvResult.ModuleNotPresent;
-                case NvInternalResult.IoError:
-                    return NvResult.ResourceError;
-                default:
-                    return NvResult.IoctlFailed;
-            }
+                NvInternalResult.Success => NvResult.Success,
+                NvInternalResult.Unknown0x72 => NvResult.AlreadyAllocated,
+                NvInternalResult.TimedOut or NvInternalResult.TryAgain or NvInternalResult.Interrupted => NvResult.Timeout,
+                NvInternalResult.InvalidAddress => NvResult.InvalidAddress,
+                NvInternalResult.NotSupported or NvInternalResult.Unknown0x18 => NvResult.NotSupported,
+                NvInternalResult.InvalidState => NvResult.InvalidState,
+                NvInternalResult.ReadOnlyAttribute => NvResult.ReadOnlyAttribute,
+                NvInternalResult.NoSpaceLeft or NvInternalResult.FileTooBig => NvResult.InvalidSize,
+                NvInternalResult.FileTableOverflow or NvInternalResult.BadFileNumber => NvResult.FileOperationFailed,
+                NvInternalResult.InvalidInput => NvResult.InvalidValue,
+                NvInternalResult.NotADirectory => NvResult.DirectoryOperationFailed,
+                NvInternalResult.Busy => NvResult.Busy,
+                NvInternalResult.BadAddress => NvResult.InvalidAddress,
+                NvInternalResult.AccessDenied or NvInternalResult.OperationNotPermitted => NvResult.AccessDenied,
+                NvInternalResult.OutOfMemory => NvResult.InsufficientMemory,
+                NvInternalResult.DeviceNotFound => NvResult.ModuleNotPresent,
+                NvInternalResult.IoError => NvResult.ResourceError,
+                _ => NvResult.IoctlFailed,
+            };
         }
 
         [CommandCmif(0)]
@@ -240,7 +218,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv
         public ResultCode Open(ServiceCtx context)
         {
             NvResult errorCode = EnsureInitialized();
-            int      fd        = -1;
+            int fd = -1;
 
             if (errorCode == NvResult.Success)
             {
@@ -266,7 +244,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv
 
             if (errorCode == NvResult.Success)
             {
-                int     fd           = context.RequestData.ReadInt32();
+                int fd = context.RequestData.ReadInt32();
                 NvIoctl ioctlCommand = context.RequestData.ReadStruct<NvIoctl>();
 
                 errorCode = GetIoctlArgument(context, ioctlCommand, out Span<byte> arguments);
@@ -328,8 +306,10 @@ namespace Ryujinx.HLE.HOS.Services.Nv
         // Initialize(u32 transfer_memory_size, handle<copy, process> current_process, handle<copy, transfer_memory> transfer_memory) -> u32 error_code
         public ResultCode Initialize(ServiceCtx context)
         {
-            long transferMemSize   = context.RequestData.ReadInt64();
-            int  transferMemHandle = context.Request.HandleDesc.ToCopy[1];
+#pragma warning disable IDE0059 // Remove unnecessary value assignment
+            long transferMemSize = context.RequestData.ReadInt64();
+#pragma warning restore IDE0059
+            int transferMemHandle = context.Request.HandleDesc.ToCopy[1];
 
             // TODO: When transfer memory will be implemented, this could be removed.
             _transferMemInitialized = true;
@@ -357,7 +337,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv
 
             if (errorCode == NvResult.Success)
             {
-                int  fd      = context.RequestData.ReadInt32();
+                int fd = context.RequestData.ReadInt32();
                 uint eventId = context.RequestData.ReadUInt32();
 
                 errorCode = GetDeviceFileFromFd(fd, out NvDeviceFile deviceFile);
@@ -393,9 +373,9 @@ namespace Ryujinx.HLE.HOS.Services.Nv
 
             if (errorCode == NvResult.Success)
             {
-                int  fd                 = context.RequestData.ReadInt32();
-                uint argument           = context.RequestData.ReadUInt32();
-                int  sharedMemoryHandle = context.Request.HandleDesc.ToCopy[0];
+                int fd = context.RequestData.ReadInt32();
+                uint argument = context.RequestData.ReadUInt32();
+                int sharedMemoryHandle = context.Request.HandleDesc.ToCopy[0];
 
                 errorCode = GetDeviceFileFromFd(fd, out NvDeviceFile deviceFile);
 
@@ -418,12 +398,12 @@ namespace Ryujinx.HLE.HOS.Services.Nv
             if (_transferMemInitialized)
             {
                 // TODO: Populate values when more RE will be done.
-                NvStatus nvStatus = new NvStatus
+                NvStatus nvStatus = new()
                 {
                     MemoryValue1 = 0, // GetMemStats(transfer_memory + 0x60, 3)
                     MemoryValue2 = 0, // GetMemStats(transfer_memory + 0x60, 5)
                     MemoryValue3 = 0, // transfer_memory + 0x78
-                    MemoryValue4 = 0  // transfer_memory + 0x80
+                    MemoryValue4 = 0, // transfer_memory + 0x80
                 };
 
                 context.ResponseData.WriteStruct(nvStatus);
@@ -450,7 +430,9 @@ namespace Ryujinx.HLE.HOS.Services.Nv
         // SetClientPID(u64, pid) -> u32 error_code
         public ResultCode SetClientPid(ServiceCtx context)
         {
+#pragma warning disable IDE0059 // Remove unnecessary value assignment
             long pid = context.RequestData.ReadInt64();
+#pragma warning restore IDE0059
 
             context.ResponseData.Write(0);
 
@@ -481,7 +463,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv
 
             if (errorCode == NvResult.Success)
             {
-                int     fd           = context.RequestData.ReadInt32();
+                int fd = context.RequestData.ReadInt32();
                 NvIoctl ioctlCommand = context.RequestData.ReadStruct<NvIoctl>();
 
                 (ulong inlineInBufferPosition, ulong inlineInBufferSize) = context.Request.GetBufferType0x21(1);
@@ -492,7 +474,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv
 
                 context.Memory.Read(inlineInBufferPosition, temp);
 
-                Span<byte> inlineInBuffer = new Span<byte>(temp);
+                Span<byte> inlineInBuffer = new(temp);
 
                 if (errorCode == NvResult.Success)
                 {
@@ -530,7 +512,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv
 
             if (errorCode == NvResult.Success)
             {
-                int     fd           = context.RequestData.ReadInt32();
+                int fd = context.RequestData.ReadInt32();
                 NvIoctl ioctlCommand = context.RequestData.ReadStruct<NvIoctl>();
 
                 (ulong inlineOutBufferPosition, ulong inlineOutBufferSize) = context.Request.GetBufferType0x22(1);
@@ -541,7 +523,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv
 
                 context.Memory.Read(inlineOutBufferPosition, temp);
 
-                Span<byte> inlineOutBuffer = new Span<byte>(temp);
+                Span<byte> inlineOutBuffer = new(temp);
 
                 if (errorCode == NvResult.Success)
                 {

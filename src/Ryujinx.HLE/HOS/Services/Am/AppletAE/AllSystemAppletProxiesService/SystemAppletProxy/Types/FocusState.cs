@@ -2,7 +2,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
 {
     enum FocusState
     {
-        InFocus    = 1,
-        OutOfFocus = 2
+        InFocus = 1,
+        OutOfFocus = 2,
     }
 }

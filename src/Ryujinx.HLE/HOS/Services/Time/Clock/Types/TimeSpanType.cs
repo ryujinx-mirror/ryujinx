@@ -8,7 +8,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.Clock
     {
         private const long NanoSecondsPerSecond = 1000000000;
 
-        public static readonly TimeSpanType Zero = new TimeSpanType(0);
+        public static readonly TimeSpanType Zero = new(0);
 
         public long NanoSeconds;
 
@@ -17,17 +17,17 @@ namespace Ryujinx.HLE.HOS.Services.Time.Clock
             NanoSeconds = nanoSeconds;
         }
 
-        public long ToSeconds()
+        public readonly long ToSeconds()
         {
             return NanoSeconds / NanoSecondsPerSecond;
         }
 
-        public TimeSpanType AddSeconds(long seconds)
+        public readonly TimeSpanType AddSeconds(long seconds)
         {
             return new TimeSpanType(NanoSeconds + (seconds * NanoSecondsPerSecond));
         }
 
-        public bool IsDaylightSavingTime()
+        public readonly bool IsDaylightSavingTime()
         {
             return DateTime.UnixEpoch.AddSeconds(ToSeconds()).ToLocalTime().IsDaylightSavingTime();
         }

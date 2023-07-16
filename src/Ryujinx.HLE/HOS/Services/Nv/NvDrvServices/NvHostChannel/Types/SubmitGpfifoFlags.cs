@@ -6,10 +6,10 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostChannel.Types
     enum SubmitGpfifoFlags : uint
     {
         None,
-        FenceWait          = 1 << 0,
-        FenceIncrement     = 1 << 1,
-        HwFormat           = 1 << 2,
-        SuppressWfi        = 1 << 4,
+        FenceWait = 1 << 0,
+        FenceIncrement = 1 << 1,
+        HwFormat = 1 << 2,
+        SuppressWfi = 1 << 4,
         IncrementWithValue = 1 << 8,
     }
 }

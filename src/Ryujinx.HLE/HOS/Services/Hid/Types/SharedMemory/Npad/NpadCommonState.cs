@@ -11,6 +11,6 @@ namespace Ryujinx.HLE.HOS.Services.Hid.Types.SharedMemory.Npad
         public AnalogStickState AnalogStickL;
         public AnalogStickState AnalogStickR;
         public NpadAttribute Attributes;
-        private uint _reserved;
+        private readonly uint _reserved;
     }
 }

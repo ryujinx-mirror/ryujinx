@@ -4,8 +4,8 @@ namespace Ryujinx.HLE.HOS.Tamper.Operations
 {
     class OpLog<T> : IOperation where T : unmanaged
     {
-        int _logId;
-        IOperand _source;
+        readonly int _logId;
+        readonly IOperand _source;
 
         public OpLog(int logId, IOperand source)
         {

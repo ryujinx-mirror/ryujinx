@@ -19,7 +19,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             _pageList = null;
         }
 
-        public void Dispose()
+        public readonly void Dispose()
         {
             _pageList?.DecrementPagesReferenceCount(_manager);
         }

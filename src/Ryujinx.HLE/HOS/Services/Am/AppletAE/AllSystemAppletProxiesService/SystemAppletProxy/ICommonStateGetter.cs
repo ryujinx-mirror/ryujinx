@@ -13,28 +13,28 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
     {
         private readonly ServiceCtx _context;
 
-        private Apm.ManagerServer       _apmManagerServer;
-        private Apm.SystemManagerServer _apmSystemManagerServer;
-        private Lbl.LblControllerServer _lblControllerServer;
+        private readonly Apm.ManagerServer _apmManagerServer;
+        private readonly Apm.SystemManagerServer _apmSystemManagerServer;
+        private readonly Lbl.LblControllerServer _lblControllerServer;
 
         private bool _vrModeEnabled;
-#pragma warning disable CS0414
+#pragma warning disable CS0414, IDE0052 // Remove unread private member
         private bool _lcdBacklighOffEnabled;
         private bool _requestExitToLibraryAppletAtExecuteNextProgramEnabled;
-#pragma warning restore CS0414
-        private int  _messageEventHandle;
-        private int  _displayResolutionChangedEventHandle;
+#pragma warning restore CS0414, IDE0052
+        private int _messageEventHandle;
+        private int _displayResolutionChangedEventHandle;
 
-        private KEvent _acquiredSleepLockEvent;
+        private readonly KEvent _acquiredSleepLockEvent;
         private int _acquiredSleepLockEventHandle;
 
         public ICommonStateGetter(ServiceCtx context)
         {
             _context = context;
 
-            _apmManagerServer       = new Apm.ManagerServer(context);
+            _apmManagerServer = new Apm.ManagerServer(context);
             _apmSystemManagerServer = new Apm.SystemManagerServer(context);
-            _lblControllerServer    = new Lbl.LblControllerServer(context);
+            _lblControllerServer = new Lbl.LblControllerServer(context);
 
             _acquiredSleepLockEvent = new KEvent(context.Device.System.KernelContext);
         }

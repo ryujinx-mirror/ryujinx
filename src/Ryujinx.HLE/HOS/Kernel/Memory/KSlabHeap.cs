@@ -4,7 +4,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 {
     class KSlabHeap
     {
-        private LinkedList<ulong> _items;
+        private readonly LinkedList<ulong> _items;
 
         public KSlabHeap(ulong pa, ulong itemSize, ulong size)
         {

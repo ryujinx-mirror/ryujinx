@@ -11,18 +11,18 @@ namespace Ryujinx.HLE.HOS.Services.Time.Clock
 
         public StandardSteadyClockCore()
         {
-            _setupValue         = TimeSpanType.Zero;
-            _testOffset         = TimeSpanType.Zero;
-            _internalOffset     = TimeSpanType.Zero;
+            _setupValue = TimeSpanType.Zero;
+            _testOffset = TimeSpanType.Zero;
+            _internalOffset = TimeSpanType.Zero;
             _cachedRawTimePoint = TimeSpanType.Zero;
         }
 
         public override SteadyClockTimePoint GetTimePoint(ITickSource tickSource)
         {
-            SteadyClockTimePoint result = new SteadyClockTimePoint
+            SteadyClockTimePoint result = new()
             {
-                TimePoint     = GetCurrentRawTimePoint(tickSource).ToSeconds(),
-                ClockSourceId = GetClockSourceId()
+                TimePoint = GetCurrentRawTimePoint(tickSource).ToSeconds(),
+                ClockSourceId = GetClockSourceId(),
             };
 
             return result;
@@ -52,7 +52,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.Clock
         {
             TimeSpanType ticksTimeSpan = TimeSpanType.FromTicks(tickSource.Counter, tickSource.Frequency);
 
-            TimeSpanType rawTimePoint = new TimeSpanType(_setupValue.NanoSeconds + ticksTimeSpan.NanoSeconds);
+            TimeSpanType rawTimePoint = new(_setupValue.NanoSeconds + ticksTimeSpan.NanoSeconds);
 
             if (rawTimePoint.NanoSeconds < _cachedRawTimePoint.NanoSeconds)
             {

@@ -39,6 +39,6 @@ namespace Ryujinx.HLE.HOS.Services.Hid.Types.SharedMemory.Npad
         // FIXME: Probably a button on Lark.
         Unknown29 = 1 << 29,
 
-        HandheldLeftB = 1 << 30
+        HandheldLeftB = 1 << 30,
     }
 }

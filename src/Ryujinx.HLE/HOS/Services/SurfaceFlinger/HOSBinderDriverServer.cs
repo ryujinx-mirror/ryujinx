@@ -7,11 +7,11 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 {
     class HOSBinderDriverServer : IHOSBinderDriver
     {
-        private static Dictionary<int, IBinder> _registeredBinderObjects = new Dictionary<int, IBinder>();
+        private static readonly Dictionary<int, IBinder> _registeredBinderObjects = new();
 
         private static int _lastBinderId = 0;
 
-        private static object _lock = new object();
+        private static readonly object _lock = new();
 
         public static int RegisterBinderObject(IBinder binder)
         {

@@ -13,7 +13,7 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
 {
     public class AccountManager
     {
-        public static readonly UserId DefaultUserId = new UserId("00000000000000010000000000000000");
+        public static readonly UserId DefaultUserId = new("00000000000000010000000000000000");
 
         private readonly AccountSaveDataManager _accountSaveDataManager;
 
@@ -51,7 +51,9 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
                 {
                     commandLineUserProfileOverride = _profiles.Values.FirstOrDefault(x => x.Name == initialProfileName)?.UserId ?? default;
                     if (commandLineUserProfileOverride.IsNull)
+                    {
                         Logger.Warning?.Print(LogClass.Application, $"The command line specified profile named '{initialProfileName}' was not found");
+                    }
                 }
                 OpenUser(commandLineUserProfileOverride.IsNull ? _accountSaveDataManager.LastOpened : commandLineUserProfileOverride);
             }
@@ -64,7 +66,7 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
                 userId = new UserId(Guid.NewGuid().ToString().Replace("-", ""));
             }
 
-            UserProfile profile = new UserProfile(userId, name, image);
+            UserProfile profile = new(userId, name, image);
 
             _profiles.AddOrUpdate(userId.ToString(), profile, (key, old) => profile);
 

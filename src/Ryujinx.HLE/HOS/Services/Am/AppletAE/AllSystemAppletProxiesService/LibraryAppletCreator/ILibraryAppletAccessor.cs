@@ -10,16 +10,16 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Lib
 {
     class ILibraryAppletAccessor : DisposableIpcService
     {
-        private KernelContext _kernelContext;
+        private readonly KernelContext _kernelContext;
 
-        private IApplet _applet;
+        private readonly IApplet _applet;
 
-        private AppletSession _normalSession;
-        private AppletSession _interactiveSession;
+        private readonly AppletSession _normalSession;
+        private readonly AppletSession _interactiveSession;
 
-        private KEvent _stateChangedEvent;
-        private KEvent _normalOutDataEvent;
-        private KEvent _interactiveOutDataEvent;
+        private readonly KEvent _stateChangedEvent;
+        private readonly KEvent _normalOutDataEvent;
+        private readonly KEvent _interactiveOutDataEvent;
 
         private int _stateChangedEventHandle;
         private int _normalOutDataEventHandle;
@@ -31,17 +31,17 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Lib
         {
             _kernelContext = system.KernelContext;
 
-            _stateChangedEvent       = new KEvent(system.KernelContext);
-            _normalOutDataEvent      = new KEvent(system.KernelContext);
+            _stateChangedEvent = new KEvent(system.KernelContext);
+            _normalOutDataEvent = new KEvent(system.KernelContext);
             _interactiveOutDataEvent = new KEvent(system.KernelContext);
 
             _applet = AppletManager.Create(appletId, system);
 
-            _normalSession      = new AppletSession();
+            _normalSession = new AppletSession();
             _interactiveSession = new AppletSession();
 
-            _applet.AppletStateChanged        += OnAppletStateChanged;
-            _normalSession.DataAvailable      += OnNormalOutData;
+            _applet.AppletStateChanged += OnAppletStateChanged;
+            _normalSession.DataAvailable += OnNormalOutData;
             _interactiveSession.DataAvailable += OnInteractiveOutData;
 
             Logger.Info?.Print(LogClass.ServiceAm, $"Applet '{appletId}' created.");

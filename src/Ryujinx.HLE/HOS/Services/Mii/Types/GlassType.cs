@@ -23,7 +23,7 @@
         OpaqueRectangle,
         OpaqueAviator,
 
-        Min = 0,
-        Max = 19
+        Min = None,
+        Max = OpaqueAviator,
     }
 }

@@ -3,6 +3,6 @@
     public enum NpadJoyDeviceType
     {
         Left,
-        Right
+        Right,
     }
 }

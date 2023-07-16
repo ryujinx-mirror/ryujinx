@@ -43,6 +43,6 @@
         /// <summary>
         /// [8.0.0+] Request the keyboard applet to use the MovedCursorV2 response when notifying changes in cursor position.
         /// </summary>
-        UseMovedCursorV2 = 0xE
+        UseMovedCursorV2 = 0xE,
     }
 }

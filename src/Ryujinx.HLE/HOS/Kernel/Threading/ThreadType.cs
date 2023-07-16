@@ -5,6 +5,6 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
         Dummy,
         Kernel,
         Kernel2,
-        User
+        User,
     }
 }

@@ -6,6 +6,6 @@
         ScaleToWindow,
         ScaleAndCrop,
         None,
-        PreserveAspectRatio
+        PreserveAspectRatio,
     }
 }

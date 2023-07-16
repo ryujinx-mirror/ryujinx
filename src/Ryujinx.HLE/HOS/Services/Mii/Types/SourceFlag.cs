@@ -6,7 +6,7 @@ namespace Ryujinx.HLE.HOS.Services.Mii.Types
     enum SourceFlag
     {
         Database = 1 << Source.Database,
-        Default  = 1 << Source.Default,
-        All      = Database | Default
+        Default = 1 << Source.Default,
+        All = Database | Default,
     }
 }

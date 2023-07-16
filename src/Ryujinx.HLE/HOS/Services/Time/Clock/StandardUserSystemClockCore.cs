@@ -6,19 +6,19 @@ namespace Ryujinx.HLE.HOS.Services.Time.Clock
 {
     class StandardUserSystemClockCore : SystemClockCore
     {
-        private StandardLocalSystemClockCore   _localSystemClockCore;
-        private StandardNetworkSystemClockCore _networkSystemClockCore;
-        private bool                           _autoCorrectionEnabled;
-        private SteadyClockTimePoint           _autoCorrectionTime;
-        private KEvent                         _autoCorrectionEvent;
+        private readonly StandardLocalSystemClockCore _localSystemClockCore;
+        private readonly StandardNetworkSystemClockCore _networkSystemClockCore;
+        private bool _autoCorrectionEnabled;
+        private SteadyClockTimePoint _autoCorrectionTime;
+        private KEvent _autoCorrectionEvent;
 
         public StandardUserSystemClockCore(StandardLocalSystemClockCore localSystemClockCore, StandardNetworkSystemClockCore networkSystemClockCore) : base(localSystemClockCore.GetSteadyClockCore())
         {
-            _localSystemClockCore   = localSystemClockCore;
+            _localSystemClockCore = localSystemClockCore;
             _networkSystemClockCore = networkSystemClockCore;
-            _autoCorrectionEnabled  = false;
-            _autoCorrectionTime     = SteadyClockTimePoint.GetRandom();
-            _autoCorrectionEvent    = null;
+            _autoCorrectionEnabled = false;
+            _autoCorrectionTime = SteadyClockTimePoint.GetRandom();
+            _autoCorrectionEvent = null;
         }
 
         protected override ResultCode Flush(SystemClockContext context)

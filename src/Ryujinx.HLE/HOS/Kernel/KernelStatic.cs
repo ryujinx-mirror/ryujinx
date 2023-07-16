@@ -10,10 +10,10 @@ namespace Ryujinx.HLE.HOS.Kernel
     static class KernelStatic
     {
         [ThreadStatic]
-        private static KernelContext Context;
+        private static KernelContext _context;
 
         [ThreadStatic]
-        private static KThread CurrentThread;
+        private static KThread _currentThread;
 
         public static Result StartInitialProcess(
             KernelContext context,
@@ -22,7 +22,7 @@ namespace Ryujinx.HLE.HOS.Kernel
             int mainThreadPriority,
             ThreadStart customThreadStart)
         {
-            KProcess process = new KProcess(context);
+            KProcess process = new(context);
 
             Result result = process.Initialize(
                 creationInfo,
@@ -46,13 +46,13 @@ namespace Ryujinx.HLE.HOS.Kernel
 
         internal static void SetKernelContext(KernelContext context, KThread thread)
         {
-            Context = context;
-            CurrentThread = thread;
+            _context = context;
+            _currentThread = thread;
         }
 
         internal static KThread GetCurrentThread()
         {
-            return CurrentThread;
+            return _currentThread;
         }
 
         internal static KProcess GetCurrentProcess()
@@ -62,7 +62,7 @@ namespace Ryujinx.HLE.HOS.Kernel
 
         internal static KProcess GetProcessByPid(ulong pid)
         {
-            if (Context.Processes.TryGetValue(pid, out KProcess process))
+            if (_context.Processes.TryGetValue(pid, out KProcess process))
             {
                 return process;
             }

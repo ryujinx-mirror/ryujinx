@@ -10,6 +10,6 @@ namespace Ryujinx.HLE.HOS.Services.Hid.Types.SharedMemory.Mouse
         Right = 1 << 1,
         Middle = 1 << 2,
         Forward = 1 << 3,
-        Back = 1 << 4
+        Back = 1 << 4,
     }
 }

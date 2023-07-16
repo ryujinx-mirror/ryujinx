@@ -64,7 +64,7 @@ namespace Ryujinx.HLE.HOS.Tamper.CodeEmitters
             // Create a loop block with the current operations and nest it in the upper
             // block of the stack.
 
-            ForBlock block = new ForBlock(immediate, iterationRegister, context.CurrentOperations);
+            ForBlock block = new(immediate, iterationRegister, context.CurrentOperations);
             context.BlockStack.Pop();
             context.CurrentOperations.Add(block);
         }

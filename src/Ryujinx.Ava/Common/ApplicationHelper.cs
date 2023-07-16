@@ -114,7 +114,7 @@ namespace Ryujinx.Ava.Common
 
         public static void OpenSaveDir(ulong saveDataId)
         {
-            string saveRootPath = Path.Combine(_virtualFileSystem.GetNandPath(), $"user/save/{saveDataId:x16}");
+            string saveRootPath = Path.Combine(VirtualFileSystem.GetNandPath(), $"user/save/{saveDataId:x16}");
 
             if (!Directory.Exists(saveRootPath))
             {

@@ -20,14 +20,12 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             ulong bufferAddress = context.Request.ReceiveBuff[0].Position;
             ulong bufferLen = context.Request.ReceiveBuff[0].Size;
 
-            using (var region = context.Memory.GetWritableRegion(bufferAddress, (int)bufferLen, true))
-            {
-                Result result = _baseReader.Get.Read(out long readCount, new OutBuffer(region.Memory.Span));
+            using var region = context.Memory.GetWritableRegion(bufferAddress, (int)bufferLen, true);
+            Result result = _baseReader.Get.Read(out long readCount, new OutBuffer(region.Memory.Span));
 
-                context.ResponseData.Write(readCount);
+            context.ResponseData.Write(readCount);
 
-                return (ResultCode)result.Value;
-            }
+            return (ResultCode)result.Value;
         }
 
         protected override void Dispose(bool isDisposing)

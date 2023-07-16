@@ -9,13 +9,13 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
 
         public override void PrintLeft(TextWriter writer)
         {
-            string Params = string.Join<BaseNode>(", ", Nodes.ToArray());
+            string paramsString = string.Join<BaseNode>(", ", Nodes.ToArray());
 
             writer.Write("<");
 
-            writer.Write(Params);
+            writer.Write(paramsString);
 
-            if (Params.EndsWith('>'))
+            if (paramsString.EndsWith('>'))
             {
                 writer.Write(" ");
             }

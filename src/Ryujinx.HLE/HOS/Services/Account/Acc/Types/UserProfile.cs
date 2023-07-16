@@ -47,7 +47,7 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
             }
         }
 
-        public AccountState _onlinePlayState;
+        private AccountState _onlinePlayState;
 
         public AccountState OnlinePlayState
         {
@@ -63,10 +63,10 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
         public UserProfile(UserId userId, string name, byte[] image, long lastModifiedTimestamp = 0)
         {
             UserId = userId;
-            Name   = name;
-            Image  = image;
+            Name = name;
+            Image = image;
 
-            AccountState    = AccountState.Closed;
+            AccountState = AccountState.Closed;
             OnlinePlayState = AccountState.Closed;
 
             if (lastModifiedTimestamp != 0)

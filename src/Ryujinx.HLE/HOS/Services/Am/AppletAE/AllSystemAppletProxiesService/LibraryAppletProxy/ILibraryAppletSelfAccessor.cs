@@ -5,7 +5,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Lib
 {
     class ILibraryAppletSelfAccessor : IpcService
     {
-        private AppletStandalone _appletStandalone = new AppletStandalone();
+        private readonly AppletStandalone _appletStandalone = new();
 
         public ILibraryAppletSelfAccessor(ServiceCtx context)
         {
@@ -14,8 +14,8 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Lib
                 // Create MiiEdit data.
                 _appletStandalone = new AppletStandalone()
                 {
-                    AppletId          = AppletId.MiiEdit,
-                    LibraryAppletMode = LibraryAppletMode.AllForeground
+                    AppletId = AppletId.MiiEdit,
+                    LibraryAppletMode = LibraryAppletMode.AllForeground,
                 };
 
                 byte[] miiEditInputData = new byte[0x100];
@@ -49,10 +49,10 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Lib
         // GetLibraryAppletInfo() -> nn::am::service::LibraryAppletInfo
         public ResultCode GetLibraryAppletInfo(ServiceCtx context)
         {
-            LibraryAppletInfo libraryAppletInfo = new LibraryAppletInfo()
+            LibraryAppletInfo libraryAppletInfo = new()
             {
-                AppletId          = _appletStandalone.AppletId,
-                LibraryAppletMode = _appletStandalone.LibraryAppletMode
+                AppletId = _appletStandalone.AppletId,
+                LibraryAppletMode = _appletStandalone.LibraryAppletMode,
             };
 
             context.ResponseData.WriteStruct(libraryAppletInfo);
@@ -64,10 +64,10 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Lib
         // GetCallerAppletIdentityInfo() -> nn::am::service::AppletIdentityInfo
         public ResultCode GetCallerAppletIdentityInfo(ServiceCtx context)
         {
-            AppletIdentifyInfo appletIdentifyInfo = new AppletIdentifyInfo()
+            AppletIdentifyInfo appletIdentifyInfo = new()
             {
                 AppletId = AppletId.QLaunch,
-                TitleId  = 0x0100000000001000
+                TitleId = 0x0100000000001000,
             };
 
             context.ResponseData.WriteStruct(appletIdentifyInfo);

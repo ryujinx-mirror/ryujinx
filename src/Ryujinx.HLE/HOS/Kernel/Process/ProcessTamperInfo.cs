@@ -13,12 +13,12 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
         public ProcessTamperInfo(KProcess process, IEnumerable<string> buildIds, IEnumerable<ulong> codeAddresses, ulong heapAddress, ulong aliasAddress, ulong aslrAddress)
         {
-            Process       = process;
-            BuildIds      = buildIds;
+            Process = process;
+            BuildIds = buildIds;
             CodeAddresses = codeAddresses;
-            HeapAddress   = heapAddress;
-            AliasAddress  = aliasAddress;
-            AslrAddress   = aslrAddress;
+            HeapAddress = heapAddress;
+            AliasAddress = aliasAddress;
+            AslrAddress = aslrAddress;
         }
     }
 }

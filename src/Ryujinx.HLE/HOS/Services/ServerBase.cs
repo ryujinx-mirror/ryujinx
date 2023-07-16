@@ -23,26 +23,25 @@ namespace Ryujinx.HLE.HOS.Services
         // not large enough.
         private const int PointerBufferSize = 0x8000;
 
-        private readonly static uint[] DefaultCapabilities = new uint[]
-        {
+        private readonly static uint[] _defaultCapabilities = {
             0x030363F7,
             0x1FFFFFCF,
             0x207FFFEF,
             0x47E0060F,
             0x0048BFFF,
-            0x01007FFF
+            0x01007FFF,
         };
 
         // The amount of time Dispose() will wait to Join() the thread executing the ServerLoop()
-        private static readonly TimeSpan ThreadJoinTimeout = TimeSpan.FromSeconds(3);
+        private static readonly TimeSpan _threadJoinTimeout = TimeSpan.FromSeconds(3);
 
         private readonly KernelContext _context;
         private KProcess _selfProcess;
         private KThread _selfThread;
 
-        private readonly ReaderWriterLockSlim _handleLock = new ReaderWriterLockSlim();
-        private readonly Dictionary<int, IpcService> _sessions = new Dictionary<int, IpcService>();
-        private readonly Dictionary<int, Func<IpcService>> _ports = new Dictionary<int, Func<IpcService>>();
+        private readonly ReaderWriterLockSlim _handleLock = new();
+        private readonly Dictionary<int, IpcService> _sessions = new();
+        private readonly Dictionary<int, Func<IpcService>> _ports = new();
 
         private readonly MemoryStream _requestDataStream;
         private readonly BinaryReader _requestDataReader;
@@ -76,9 +75,9 @@ namespace Ryujinx.HLE.HOS.Services
                 ProcessCreationFlags.Is64Bit |
                 ProcessCreationFlags.PoolPartitionSystem;
 
-            ProcessCreationInfo creationInfo = new ProcessCreationInfo("Service", 1, 0, 0x8000000, 1, Flags, 0, 0);
+            ProcessCreationInfo creationInfo = new("Service", 1, 0, 0x8000000, 1, Flags, 0, 0);
 
-            KernelStatic.StartInitialProcess(context, creationInfo, DefaultCapabilities, 44, Main);
+            KernelStatic.StartInitialProcess(context, creationInfo, _defaultCapabilities, 44, Main);
         }
 
         private void AddPort(int serverPortHandle, Func<IpcService> objectFactory)
@@ -281,7 +280,7 @@ namespace Ryujinx.HLE.HOS.Services
         {
             IpcMessage request = ReadRequest();
 
-            IpcMessage response = new IpcMessage();
+            IpcMessage response = new();
 
             ulong tempAddr = recvListAddr;
             int sizesOffset = request.RawData.Length - ((request.RecvListBuff.Count * 2 + 3) & ~3);
@@ -323,7 +322,7 @@ namespace Ryujinx.HLE.HOS.Services
 
                 _responseDataStream.SetLength(0);
 
-                ServiceCtx context = new ServiceCtx(
+                ServiceCtx context = new(
                     _context.Device,
                     _selfProcess,
                     _selfProcess.CpuMemory,
@@ -340,7 +339,9 @@ namespace Ryujinx.HLE.HOS.Services
             else if (request.Type == IpcMessageType.CmifControl ||
                         request.Type == IpcMessageType.CmifControlWithContext)
             {
+#pragma warning disable IDE0059 // Remove unnecessary value assignment
                 uint magic = (uint)_requestDataReader.ReadUInt64();
+#pragma warning restore IDE0059
                 uint cmdId = (uint)_requestDataReader.ReadUInt64();
 
                 switch (cmdId)
@@ -382,7 +383,8 @@ namespace Ryujinx.HLE.HOS.Services
                             break;
                         }
 
-                    default: throw new NotImplementedException(cmdId.ToString());
+                    default:
+                        throw new NotImplementedException(cmdId.ToString());
                 }
             }
             else if (request.Type == IpcMessageType.CmifCloseSession || request.Type == IpcMessageType.TipcCloseSession)
@@ -404,7 +406,7 @@ namespace Ryujinx.HLE.HOS.Services
 
                 _responseDataStream.SetLength(0);
 
-                ServiceCtx context = new ServiceCtx(
+                ServiceCtx context = new(
                     _context.Device,
                     _selfProcess,
                     _selfProcess.CpuMemory,
@@ -437,15 +439,15 @@ namespace Ryujinx.HLE.HOS.Services
 
         private IpcMessage ReadRequest()
         {
-            const int messageSize = 0x100;
+            const int MessageSize = 0x100;
 
-            using IMemoryOwner<byte> reqDataOwner = ByteMemoryPool.Rent(messageSize);
+            using IMemoryOwner<byte> reqDataOwner = ByteMemoryPool.Rent(MessageSize);
 
             Span<byte> reqDataSpan = reqDataOwner.Memory.Span;
 
             _selfProcess.CpuMemory.Read(_selfThread.TlsAddress, reqDataSpan);
 
-            IpcMessage request = new IpcMessage(reqDataSpan, (long)_selfThread.TlsAddress);
+            IpcMessage request = new(reqDataSpan, (long)_selfThread.TlsAddress);
 
             return request;
         }
@@ -480,9 +482,9 @@ namespace Ryujinx.HLE.HOS.Services
         {
             if (disposing && _selfThread != null)
             {
-                if (_selfThread.HostThread.ManagedThreadId != Environment.CurrentManagedThreadId && _selfThread.HostThread.Join(ThreadJoinTimeout) == false)
+                if (_selfThread.HostThread.ManagedThreadId != Environment.CurrentManagedThreadId && _selfThread.HostThread.Join(_threadJoinTimeout) == false)
                 {
-                    Logger.Warning?.Print(LogClass.Service, $"The ServerBase thread didn't terminate within {ThreadJoinTimeout:g}, waiting longer.");
+                    Logger.Warning?.Print(LogClass.Service, $"The ServerBase thread didn't terminate within {_threadJoinTimeout:g}, waiting longer.");
 
                     _selfThread.HostThread.Join(Timeout.Infinite);
                 }

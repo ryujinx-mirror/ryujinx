@@ -7,7 +7,7 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc.AccountService
 {
     class ProfileServer
     {
-        private UserProfile _profile;
+        private readonly UserProfile _profile;
 
         public ProfileServer(UserProfile profile)
         {
@@ -23,8 +23,8 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc.AccountService
             MemoryHelper.FillWithZeros(context.Memory, bufferPosition, 0x80);
 
             // TODO: Determine the struct.
-            context.Memory.Write(bufferPosition,           0); // Unknown
-            context.Memory.Write(bufferPosition + 4,       1); // Icon ID. 0 = Mii, the rest are character icon IDs.
+            context.Memory.Write(bufferPosition, 0); // Unknown
+            context.Memory.Write(bufferPosition + 4, 1); // Icon ID. 0 = Mii, the rest are character icon IDs.
             context.Memory.Write(bufferPosition + 8, (byte)1); // Profile icon background color ID
             // 0x07 bytes - Unknown
             // 0x10 bytes - Some ID related to the Mii? All zeros when a character icon is used.
@@ -58,7 +58,7 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc.AccountService
         public ResultCode LoadImage(ServiceCtx context)
         {
             ulong bufferPosition = context.Request.ReceiveBuff[0].Position;
-            ulong bufferLen      = context.Request.ReceiveBuff[0].Size;
+            ulong bufferLen = context.Request.ReceiveBuff[0].Size;
 
             if ((ulong)_profile.Image.Length > bufferLen)
             {
@@ -75,7 +75,7 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc.AccountService
         public ResultCode Store(ServiceCtx context)
         {
             ulong userDataPosition = context.Request.PtrBuff[0].Position;
-            ulong userDataSize     = context.Request.PtrBuff[0].Size;
+            ulong userDataSize = context.Request.PtrBuff[0].Size;
 
             byte[] userData = new byte[userDataSize];
 
@@ -91,14 +91,14 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc.AccountService
         public ResultCode StoreWithImage(ServiceCtx context)
         {
             ulong userDataPosition = context.Request.PtrBuff[0].Position;
-            ulong userDataSize     = context.Request.PtrBuff[0].Size;
+            ulong userDataSize = context.Request.PtrBuff[0].Size;
 
             byte[] userData = new byte[userDataSize];
 
             context.Memory.Read(userDataPosition, userData);
 
             ulong profileImagePosition = context.Request.SendBuff[0].Position;
-            ulong profileImageSize     = context.Request.SendBuff[0].Size;
+            ulong profileImageSize = context.Request.SendBuff[0].Size;
 
             byte[] profileImageData = new byte[profileImageSize];
 

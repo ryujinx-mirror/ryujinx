@@ -17,7 +17,7 @@
             "subsdk7",
             "subsdk8",
             "subsdk9",
-            "sdk"
+            "sdk",
         };
 
         public static readonly string MainNpdmPath = "/main.npdm";
@@ -27,7 +27,7 @@
         public const bool AslrEnabled = true;
 
         public const int NsoArgsHeaderSize = 8;
-        public const int NsoArgsDataSize   = 0x9000;
-        public const int NsoArgsTotalSize  = NsoArgsHeaderSize + NsoArgsDataSize;
+        public const int NsoArgsDataSize = 0x9000;
+        public const int NsoArgsTotalSize = NsoArgsHeaderSize + NsoArgsDataSize;
     }
 }

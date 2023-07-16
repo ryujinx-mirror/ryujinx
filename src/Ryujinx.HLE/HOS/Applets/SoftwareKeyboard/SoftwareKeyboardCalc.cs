@@ -174,45 +174,46 @@ namespace Ryujinx.HLE.HOS.Applets.SoftwareKeyboard
 
         public SoftwareKeyboardCalcEx ToExtended()
         {
-            SoftwareKeyboardCalcEx calc = new SoftwareKeyboardCalcEx();
-
-            calc.Unknown                 = Unknown;
-            calc.Size                    = Size;
-            calc.Unknown1                = Unknown1;
-            calc.Unknown2                = Unknown2;
-            calc.Flags                   = Flags;
-            calc.Initialize              = Initialize;
-            calc.Volume                  = Volume;
-            calc.CursorPos               = CursorPos;
-            calc.Appear                  = Appear.ToExtended();
-            calc.InputText               = InputText;
-            calc.UseUtf8                 = UseUtf8;
-            calc.Unknown3                = Unknown3;
-            calc.BackspaceEnabled        = BackspaceEnabled;
-            calc.Unknown4                = Unknown4;
-            calc.Unknown5                = Unknown5;
-            calc.KeytopAsFloating        = KeytopAsFloating;
-            calc.FooterScalable          = FooterScalable;
-            calc.AlphaEnabledInInputMode = AlphaEnabledInInputMode;
-            calc.InputModeFadeType        = InputModeFadeType;
-            calc.TouchDisabled            = TouchDisabled;
-            calc.HardwareKeyboardDisabled = HardwareKeyboardDisabled;
-            calc.Unknown6                 = Unknown6;
-            calc.Unknown7                 = Unknown7;
-            calc.KeytopScale0             = KeytopScale0;
-            calc.KeytopScale1             = KeytopScale1;
-            calc.KeytopTranslate0         = KeytopTranslate0;
-            calc.KeytopTranslate1         = KeytopTranslate1;
-            calc.KeytopBgAlpha            = KeytopBgAlpha;
-            calc.FooterBgAlpha            = FooterBgAlpha;
-            calc.BalloonScale             = BalloonScale;
-            calc.Unknown8                 = Unknown8;
-            calc.Unknown9                 = Unknown9;
-            calc.Unknown10                = Unknown10;
-            calc.Unknown11                = Unknown11;
-            calc.SeGroup                  = SeGroup;
-            calc.TriggerFlag              = TriggerFlag;
-            calc.Trigger                  = Trigger;
+            SoftwareKeyboardCalcEx calc = new()
+            {
+                Unknown = Unknown,
+                Size = Size,
+                Unknown1 = Unknown1,
+                Unknown2 = Unknown2,
+                Flags = Flags,
+                Initialize = Initialize,
+                Volume = Volume,
+                CursorPos = CursorPos,
+                Appear = Appear.ToExtended(),
+                InputText = InputText,
+                UseUtf8 = UseUtf8,
+                Unknown3 = Unknown3,
+                BackspaceEnabled = BackspaceEnabled,
+                Unknown4 = Unknown4,
+                Unknown5 = Unknown5,
+                KeytopAsFloating = KeytopAsFloating,
+                FooterScalable = FooterScalable,
+                AlphaEnabledInInputMode = AlphaEnabledInInputMode,
+                InputModeFadeType = InputModeFadeType,
+                TouchDisabled = TouchDisabled,
+                HardwareKeyboardDisabled = HardwareKeyboardDisabled,
+                Unknown6 = Unknown6,
+                Unknown7 = Unknown7,
+                KeytopScale0 = KeytopScale0,
+                KeytopScale1 = KeytopScale1,
+                KeytopTranslate0 = KeytopTranslate0,
+                KeytopTranslate1 = KeytopTranslate1,
+                KeytopBgAlpha = KeytopBgAlpha,
+                FooterBgAlpha = FooterBgAlpha,
+                BalloonScale = BalloonScale,
+                Unknown8 = Unknown8,
+                Unknown9 = Unknown9,
+                Unknown10 = Unknown10,
+                Unknown11 = Unknown11,
+                SeGroup = SeGroup,
+                TriggerFlag = TriggerFlag,
+                Trigger = Trigger,
+            };
 
             return calc;
         }

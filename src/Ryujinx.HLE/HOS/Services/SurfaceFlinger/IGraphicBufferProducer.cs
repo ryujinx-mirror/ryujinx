@@ -29,33 +29,33 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
             SetPreallocatedBuffer,
             Reserved15,
             GetBufferInfo,
-            GetBufferHistory
+            GetBufferHistory,
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1, Size = 0x54)]
         public struct QueueBufferInput : IFlattenable
         {
-            public long                    Timestamp;
-            public int                     IsAutoTimestamp;
-            public Rect                    Crop;
+            public long Timestamp;
+            public int IsAutoTimestamp;
+            public Rect Crop;
             public NativeWindowScalingMode ScalingMode;
-            public NativeWindowTransform   Transform;
-            public uint                    StickyTransform;
-            public int                     Async;
-            public int                     SwapInterval;
-            public AndroidFence            Fence;
+            public NativeWindowTransform Transform;
+            public uint StickyTransform;
+            public int Async;
+            public int SwapInterval;
+            public AndroidFence Fence;
 
             public void Flatten(Parcel parcel)
             {
                 parcel.WriteUnmanagedType(ref this);
             }
 
-            public uint GetFdCount()
+            public readonly uint GetFdCount()
             {
                 return 0;
             }
 
-            public uint GetFlattenedSize()
+            public readonly uint GetFlattenedSize()
             {
                 return (uint)Unsafe.SizeOf<QueueBufferInput>();
             }
@@ -68,11 +68,11 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 
         public struct QueueBufferOutput
         {
-            public uint                  Width;
-            public uint                  Height;
+            public uint Width;
+            public uint Height;
             public NativeWindowTransform TransformHint;
-            public uint                  NumPendingBuffers;
-            public ulong                 FrameNumber;
+            public uint NumPendingBuffers;
+            public ulong FrameNumber;
 
             public void WriteToParcel(Parcel parcel)
             {
@@ -108,15 +108,15 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 
         public void OnTransact(uint code, uint flags, Parcel inputParcel, Parcel outputParcel)
         {
-            Status            status = Status.Success;
-            int               slot;
-            AndroidFence      fence;
-            QueueBufferInput  queueInput;
+            Status status = Status.Success;
+            int slot;
+            AndroidFence fence;
+            QueueBufferInput queueInput;
             QueueBufferOutput queueOutput;
-            NativeWindowApi   api;
+            NativeWindowApi api;
 
             AndroidStrongPointer<GraphicBuffer> graphicBuffer;
-            AndroidStrongPointer<AndroidFence>  strongFence;
+            AndroidStrongPointer<AndroidFence> strongFence;
 
             switch ((TransactionCode)code)
             {
@@ -139,13 +139,13 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 
                     break;
                 case TransactionCode.DequeueBuffer:
-                    bool        async  = inputParcel.ReadBoolean();
-                    uint        width  = inputParcel.ReadUInt32();
-                    uint        height = inputParcel.ReadUInt32();
+                    bool async = inputParcel.ReadBoolean();
+                    uint width = inputParcel.ReadUInt32();
+                    uint height = inputParcel.ReadUInt32();
                     PixelFormat format = inputParcel.ReadUnmanagedType<PixelFormat>();
-                    uint        usage  = inputParcel.ReadUInt32();
+                    uint usage = inputParcel.ReadUInt32();
 
-                    status      = DequeueBuffer(out int dequeueSlot, out fence, async, width, height, format, usage);
+                    status = DequeueBuffer(out int dequeueSlot, out fence, async, width, height, format, usage);
                     strongFence = new AndroidStrongPointer<AndroidFence>(fence);
 
                     outputParcel.WriteInt32(dequeueSlot);
@@ -163,7 +163,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 
                     break;
                 case TransactionCode.DetachNextBuffer:
-                    status      = DetachNextBuffer(out graphicBuffer, out fence);
+                    status = DetachNextBuffer(out graphicBuffer, out fence);
                     strongFence = new AndroidStrongPointer<AndroidFence>(fence);
 
                     outputParcel.WriteStrongPointer(ref graphicBuffer);
@@ -183,7 +183,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 
                     break;
                 case TransactionCode.QueueBuffer:
-                    slot       = inputParcel.ReadInt32();
+                    slot = inputParcel.ReadInt32();
                     queueInput = inputParcel.ReadFlattenable<QueueBufferInput>();
 
                     status = QueueBuffer(slot, ref queueInput, out queueOutput);
@@ -194,7 +194,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 
                     break;
                 case TransactionCode.CancelBuffer:
-                    slot  = inputParcel.ReadInt32();
+                    slot = inputParcel.ReadInt32();
                     fence = inputParcel.ReadFlattenable<AndroidFence>();
 
                     CancelBuffer(slot, ref fence);

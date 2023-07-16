@@ -6,8 +6,8 @@ namespace Ryujinx.HLE.HOS.Tamper
 {
     class Pointer : IOperand
     {
-        private IOperand _position;
-        private ITamperedProcess _process;
+        private readonly IOperand _position;
+        private readonly ITamperedProcess _process;
 
         public Pointer(IOperand position, ITamperedProcess process)
         {

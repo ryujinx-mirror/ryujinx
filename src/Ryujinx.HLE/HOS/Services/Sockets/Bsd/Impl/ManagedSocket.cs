@@ -462,7 +462,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd.Impl
 
             if (!CanSupportMMsgHdr(message))
             {
-                Logger.Warning?.Print(LogClass.ServiceBsd, $"Unsupported BsdMMsgHdr");
+                Logger.Warning?.Print(LogClass.ServiceBsd, "Unsupported BsdMMsgHdr");
 
                 return LinuxError.EOPNOTSUPP;
             }
@@ -500,7 +500,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd.Impl
 
             if (!CanSupportMMsgHdr(message))
             {
-                Logger.Warning?.Print(LogClass.ServiceBsd, $"Unsupported BsdMMsgHdr");
+                Logger.Warning?.Print(LogClass.ServiceBsd, "Unsupported BsdMMsgHdr");
 
                 return LinuxError.EOPNOTSUPP;
             }

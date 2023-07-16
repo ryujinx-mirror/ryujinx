@@ -4,7 +4,7 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
 {
     public class IntegerCastExpression : ParentNode
     {
-        private string _number;
+        private readonly string _number;
 
         public IntegerCastExpression(BaseNode type, string number) : base(NodeType.IntegerCastExpression, type)
         {

@@ -3,7 +3,7 @@
     [Service("lbl")]
     class LblControllerServer : ILblController
     {
-        private bool  _vrModeEnabled;
+        private bool _vrModeEnabled;
         private float _currentBrightnessSettingForVrMode;
 
         public LblControllerServer(ServiceCtx context) : base(context) { }

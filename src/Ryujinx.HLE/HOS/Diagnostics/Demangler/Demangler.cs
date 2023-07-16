@@ -8,25 +8,25 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
 {
     class Demangler
     {
-        private static readonly string Base36     = "0123456789abcdefghijklmnopqrstuvwxyz";
-        private List<BaseNode> _substitutionList  = new List<BaseNode>();
-        private List<BaseNode> _templateParamList = new List<BaseNode>();
+        private static readonly string _base36 = "0123456789abcdefghijklmnopqrstuvwxyz";
+        private readonly List<BaseNode> _substitutionList = new();
+        private List<BaseNode> _templateParamList = new();
 
-        private List<ForwardTemplateReference> _forwardTemplateReferenceList = new List<ForwardTemplateReference>();
+        private readonly List<ForwardTemplateReference> _forwardTemplateReferenceList = new();
 
         public string Mangled { get; private set; }
 
         private int _position;
-        private int _length;
+        private readonly int _length;
 
         private bool _canForwardTemplateReference;
         private bool _canParseTemplateArgs;
 
         public Demangler(string mangled)
         {
-            Mangled               = mangled;
-            _position             = 0;
-            _length               = mangled.Length;
+            Mangled = mangled;
+            _position = 0;
+            _length = mangled.Length;
             _canParseTemplateArgs = true;
         }
 
@@ -87,7 +87,7 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
 
             for (int i = 0; i < reversedEncoded.Length; i++)
             {
-                int value = Base36.IndexOf(reversedEncoded[i]);
+                int value = _base36.IndexOf(reversedEncoded[i]);
                 if (value == -1)
                 {
                     return -1;
@@ -101,8 +101,8 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
 
         private int ParseSeqId()
         {
-            ReadOnlySpan<char> part     = Mangled.AsSpan(_position);
-            int                seqIdLen = 0;
+            ReadOnlySpan<char> part = Mangled.AsSpan(_position);
+            int seqIdLen = 0;
 
             for (; seqIdLen < part.Length; seqIdLen++)
             {
@@ -274,7 +274,7 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
             }
             else if (ConsumeIf("Dw"))
             {
-                List<BaseNode> types = new List<BaseNode>();
+                List<BaseNode> types = new();
 
                 while (!ConsumeIf("E"))
                 {
@@ -308,7 +308,7 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
             }
 
             Reference referenceQualifier = Reference.None;
-            List<BaseNode> Params = new List<BaseNode>();
+            List<BaseNode> paramsList = new();
 
             while (true)
             {
@@ -339,10 +339,10 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
                     return null;
                 }
 
-                Params.Add(type);
+                paramsList.Add(type);
             }
 
-            return new FunctionType(returnType, new NodeArray(Params), new CvType(cvQualifiers, null), new SimpleReferenceType(referenceQualifier, null), exceptionSpec);
+            return new FunctionType(returnType, new NodeArray(paramsList), new CvType(cvQualifiers, null), new SimpleReferenceType(referenceQualifier, null), exceptionSpec);
         }
 
         //   <array-type> ::= A <positive dimension number> _ <element type>
@@ -416,12 +416,9 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
         private BaseNode ParseType(NameParserContext context = null)
         {
             // Temporary context
-            if (context == null)
-            {
-                context = new NameParserContext();
-            }
+            context ??= new NameParserContext();
 
-            BaseNode result = null;
+            BaseNode result;
             switch (Peek())
             {
                 case 'r':
@@ -545,8 +542,7 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
                         case 'h':
                             _position += 2;
                             // FIXME: GNU c++flit returns this but that is not what is supposed to be returned.
-                            return new NameType("half");
-                            // return new NameType("decimal16");
+                            return new NameType("half"); // return new NameType("decimal16");
                         case 'i':
                             _position += 2;
                             return new NameType("char32_t");
@@ -559,8 +555,7 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
                         case 'n':
                             _position += 2;
                             // FIXME: GNU c++flit returns this but that is not what is supposed to be returned.
-                            return new NameType("decltype(nullptr)");
-                            // return new NameType("std::nullptr_t");
+                            return new NameType("decltype(nullptr)"); // return new NameType("std::nullptr_t");
                         case 't':
                         case 'T':
                             _position += 2;
@@ -882,7 +877,7 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
             return new SimpleReferenceType(result, null);
         }
 
-        private BaseNode CreateNameNode(BaseNode prev, BaseNode name, NameParserContext context)
+        private static BaseNode CreateNameNode(BaseNode prev, BaseNode name, NameParserContext context)
         {
             BaseNode result = name;
             if (prev != null)
@@ -900,8 +895,8 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
 
         private int ParsePositiveNumber()
         {
-            ReadOnlySpan<char> part         = Mangled.AsSpan(_position);
-            int                numberLength = 0;
+            ReadOnlySpan<char> part = Mangled.AsSpan(_position);
+            int numberLength = 0;
 
             for (; numberLength < part.Length; numberLength++)
             {
@@ -933,8 +928,8 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
                 return null;
             }
 
-            ReadOnlySpan<char> part         = Mangled.AsSpan(_position);
-            int                numberLength = 0;
+            ReadOnlySpan<char> part = Mangled.AsSpan(_position);
+            int numberLength = 0;
 
             for (; numberLength < part.Length; numberLength++)
             {
@@ -1057,15 +1052,15 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
                         case 'v':
                             _position += 2;
 
-                            bool canParseTemplateArgsBackup        = _canParseTemplateArgs;
+                            bool canParseTemplateArgsBackup = _canParseTemplateArgs;
                             bool canForwardTemplateReferenceBackup = _canForwardTemplateReference;
 
-                            _canParseTemplateArgs        = false;
+                            _canParseTemplateArgs = false;
                             _canForwardTemplateReference = canForwardTemplateReferenceBackup || context != null;
 
                             BaseNode type = ParseType();
 
-                            _canParseTemplateArgs        = canParseTemplateArgsBackup;
+                            _canParseTemplateArgs = canParseTemplateArgsBackup;
                             _canForwardTemplateReference = canForwardTemplateReferenceBackup;
 
                             if (type == null)
@@ -1324,17 +1319,17 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
         //                  ::= C3  # complete object allocating constructor
         //                  ::= D0  # deleting destructor
         //                  ::= D1  # complete object destructor
-        //                  ::= D2  # base object destructor 
+        //                  ::= D2  # base object destructor
         private BaseNode ParseCtorDtorName(NameParserContext context, BaseNode prev)
         {
-            if (prev.Type == NodeType.SpecialSubstitution && prev is SpecialSubstitution)
+            if (prev.Type == NodeType.SpecialSubstitution && prev is SpecialSubstitution substitution)
             {
-                ((SpecialSubstitution)prev).SetExtended();
+                substitution.SetExtended();
             }
 
             if (ConsumeIf("C"))
             {
-                bool isInherited  = ConsumeIf("I");
+                bool isInherited = ConsumeIf("I");
 
                 char ctorDtorType = Peek();
                 if (ctorDtorType != '1' && ctorDtorType != '2' && ctorDtorType != '3')
@@ -1434,9 +1429,9 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
                 return null;
             }
 
-            char foldKind       = Peek();
+            char foldKind = Peek();
             bool hasInitializer = foldKind == 'L' || foldKind == 'R';
-            bool isLeftFold     = foldKind == 'l' || foldKind == 'L';
+            bool isLeftFold = foldKind == 'l' || foldKind == 'L';
 
             if (!isLeftFold && !(foldKind == 'r' || foldKind == 'R'))
             {
@@ -1445,7 +1440,7 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
 
             _position++;
 
-            string operatorName = null;
+            string operatorName;
 
             switch (PeekString(0, 2))
             {
@@ -1567,9 +1562,7 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
 
             if (isLeftFold && initializer != null)
             {
-                BaseNode temp = expression;
-                expression    = initializer;
-                initializer   = temp;
+                (initializer, expression) = (expression, initializer);
             }
 
             return new FoldExpression(isLeftFold, operatorName, new PackedTemplateParameterExpansion(expression), initializer);
@@ -1586,16 +1579,16 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
             }
 
             bool canParseTemplateArgsBackup = _canParseTemplateArgs;
-            _canParseTemplateArgs           = false;
-            BaseNode type                   = ParseType();
-            _canParseTemplateArgs           = canParseTemplateArgsBackup;
+            _canParseTemplateArgs = false;
+            BaseNode type = ParseType();
+            _canParseTemplateArgs = canParseTemplateArgsBackup;
 
             if (type == null)
             {
                 return null;
             }
 
-            List<BaseNode> expressions = new List<BaseNode>();
+            List<BaseNode> expressions = new();
             if (ConsumeIf("_"))
             {
                 while (!ConsumeIf("E"))
@@ -1730,15 +1723,15 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
         private BaseNode ParseNewExpression()
         {
             bool isGlobal = ConsumeIf("gs");
-            bool isArray  = Peek(1) == 'a';
+            bool isArray = Peek(1) == 'a';
 
             if (!ConsumeIf("nw") || !ConsumeIf("na"))
             {
                 return null;
             }
 
-            List<BaseNode> expressions  = new List<BaseNode>();
-            List<BaseNode> initializers = new List<BaseNode>();
+            List<BaseNode> expressions = new();
+            List<BaseNode> initializers = new();
 
             while (!ConsumeIf("_"))
             {
@@ -1824,7 +1817,7 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
         private BaseNode ParseExpression()
         {
             bool isGlobal = ConsumeIf("gs");
-            BaseNode expression = null;
+            BaseNode expression;
             if (Count() < 2)
             {
                 return null;
@@ -1906,7 +1899,7 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
                                 return null;
                             }
 
-                            List<BaseNode> names = new List<BaseNode>();
+                            List<BaseNode> names = new();
                             while (!ConsumeIf("E"))
                             {
                                 expression = ParseExpression();
@@ -1929,8 +1922,8 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
                     }
                     return null;
                 case 'd':
-                    BaseNode leftNode = null;
-                    BaseNode rightNode = null;
+                    BaseNode leftNode;
+                    BaseNode rightNode;
                     switch (Peek(1))
                     {
                         case 'a':
@@ -2055,7 +2048,7 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
                         case 'l':
                             _position += 2;
 
-                            List<BaseNode> bracedExpressions = new List<BaseNode>();
+                            List<BaseNode> bracedExpressions = new();
                             while (!ConsumeIf("E"))
                             {
                                 expression = ParseBracedExpression();
@@ -2310,7 +2303,7 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
                             return new EnclosedExpression("sizeof (", expression, ")");
                         case 'Z':
                             _position += 2;
-                            BaseNode sizeofParamNode = null;
+                            BaseNode sizeofParamNode;
                             switch (Peek())
                             {
                                 case 'T':
@@ -2334,7 +2327,7 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
                             return null;
                         case 'P':
                             _position += 2;
-                            List<BaseNode> arguments = new List<BaseNode>();
+                            List<BaseNode> arguments = new();
                             while (!ConsumeIf("E"))
                             {
                                 BaseNode argument = ParseTemplateArgument();
@@ -2375,7 +2368,7 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
                                 return null;
                             }
 
-                            List<BaseNode> bracedExpressions = new List<BaseNode>();
+                            List<BaseNode> bracedExpressions = new();
                             while (!ConsumeIf("E"))
                             {
                                 expression = ParseBracedExpression();
@@ -2582,7 +2575,7 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
 
             if (_canForwardTemplateReference)
             {
-                ForwardTemplateReference forwardTemplateReference = new ForwardTemplateReference(index);
+                ForwardTemplateReference forwardTemplateReference = new(index);
                 _forwardTemplateReferenceList.Add(forwardTemplateReference);
                 return forwardTemplateReference;
             }
@@ -2607,12 +2600,12 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
                 _templateParamList.Clear();
             }
 
-            List<BaseNode> args = new List<BaseNode>();
+            List<BaseNode> args = new();
             while (!ConsumeIf("E"))
             {
                 if (hasContext)
                 {
-                    List<BaseNode> templateParamListTemp = new List<BaseNode>(_templateParamList);
+                    List<BaseNode> templateParamListTemp = new(_templateParamList);
                     BaseNode templateArgument = ParseTemplateArgument();
                     _templateParamList = templateParamListTemp;
                     if (templateArgument == null)
@@ -2666,7 +2659,7 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
                 // J <template-arg>* E
                 case 'J':
                     _position++;
-                    List<BaseNode> templateArguments = new List<BaseNode>();
+                    List<BaseNode> templateArguments = new();
                     while (!ConsumeIf("E"))
                     {
                         BaseNode templateArgument = ParseTemplateArgument();
@@ -2976,7 +2969,7 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
             }
 
             BaseNode result = null;
-            CvType cv = new CvType(ParseCvQualifiers(), null);
+            CvType cv = new(ParseCvQualifiers(), null);
             if (context != null)
             {
                 context.Cv = cv;
@@ -3269,7 +3262,7 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
         //            ::= <special-name>
         private BaseNode ParseEncoding()
         {
-            NameParserContext context = new NameParserContext();
+            NameParserContext context = new();
             if (Peek() == 'T' || (Peek() == 'G' && Peek(1) == 'V'))
             {
                 return ParseSpecialName(context);
@@ -3305,7 +3298,7 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
                 return new EncodedFunction(name, null, context.Cv, context.Ref, null, returnType);
             }
 
-            List<BaseNode> Params = new List<BaseNode>();
+            List<BaseNode> paramsList = new();
 
             // backup because that can be destroyed by parseType
             CvType cv = context.Cv;
@@ -3319,10 +3312,10 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
                     return null;
                 }
 
-                Params.Add(param);
+                paramsList.Add(param);
             }
 
-            return new EncodedFunction(name, new NodeArray(Params), cv, Ref, null, returnType);
+            return new EncodedFunction(name, new NodeArray(paramsList), cv, Ref, null, returnType);
         }
 
         // <mangled-name> ::= _Z <encoding>
@@ -3351,12 +3344,12 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
 
         public static string Parse(string originalMangled)
         {
-            Demangler instance = new Demangler(originalMangled);
-            BaseNode resNode   = instance.Parse();
+            Demangler instance = new(originalMangled);
+            BaseNode resNode = instance.Parse();
 
             if (resNode != null)
             {
-                StringWriter writer = new StringWriter();
+                StringWriter writer = new();
                 resNode.Print(writer);
                 return writer.ToString();
             }

@@ -1,11 +1,9 @@
-using System.IO;
-
 namespace Ryujinx.HLE.HOS.Ipc
 {
     struct IpcRecvListBuffDesc
     {
         public ulong Position { get; private set; }
-        public ulong Size     { get; private set; }
+        public ulong Size { get; private set; }
 
         public IpcRecvListBuffDesc(ulong position, ulong size)
         {

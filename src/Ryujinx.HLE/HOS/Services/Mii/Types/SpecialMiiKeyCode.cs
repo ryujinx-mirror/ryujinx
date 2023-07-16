@@ -9,7 +9,7 @@ namespace Ryujinx.HLE.HOS.Services.Mii.Types
 
         public uint RawValue;
 
-        public bool IsEnabledSpecialMii()
+        public readonly bool IsEnabledSpecialMii()
         {
             return RawValue == SpecialMiiMagic;
         }

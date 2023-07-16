@@ -25,7 +25,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
 
             try
             {
-                LocalStorage storage = new LocalStorage(pfsPath, FileAccess.Read, FileMode.Open);
+                LocalStorage storage = new(pfsPath, FileAccess.Read, FileMode.Open);
                 using SharedRef<LibHac.Fs.Fsa.IFileSystem> nsp = new(new PartitionFileSystem(storage));
 
                 ImportTitleKeysFromNsp(nsp.Get, context.Device.System.KeySet);
@@ -48,7 +48,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
 
             try
             {
-                Nca nca = new Nca(context.Device.System.KeySet, ncaStorage);
+                Nca nca = new(context.Device.System.KeySet, ncaStorage);
 
                 if (!nca.SectionExists(NcaSectionType.Data))
                 {
@@ -83,14 +83,14 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
 
             if (archivePath.Extension == ".nsp" && File.Exists(archivePath.FullName))
             {
-                FileStream pfsFile = new FileStream(
+                FileStream pfsFile = new(
                     archivePath.FullName.TrimEnd(Path.DirectorySeparatorChar),
                     FileMode.Open,
                     FileAccess.Read);
 
                 try
                 {
-                    PartitionFileSystem nsp = new PartitionFileSystem(pfsFile.AsStorage());
+                    PartitionFileSystem nsp = new(pfsFile.AsStorage());
 
                     ImportTitleKeysFromNsp(nsp, context.Device.System.KeySet);
 
@@ -125,7 +125,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
 
                 if (result.IsSuccess())
                 {
-                    Ticket ticket = new Ticket(ticketFile.Get.AsStream());
+                    Ticket ticket = new(ticketFile.Get.AsStream());
                     var titleKey = ticket.GetTitleKey(keySet);
 
                     if (titleKey != null)

@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 
 namespace Ryujinx.HLE.HOS.Applets
 {
-#pragma warning disable CS0649
+#pragma warning disable CS0649 // Field is never assigned to
     // (1.0.0+ version)
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     struct ControllerSupportArgVPre7

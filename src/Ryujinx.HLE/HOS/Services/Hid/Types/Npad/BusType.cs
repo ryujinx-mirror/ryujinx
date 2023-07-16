@@ -2,8 +2,8 @@
 {
     public enum BusType : long
     {
-        LeftJoyRail  = 0,
+        LeftJoyRail = 0,
         RightJoyRail = 1,
-        InternalBus  = 2
+        InternalBus = 2,
     }
 }

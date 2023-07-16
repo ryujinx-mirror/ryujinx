@@ -12,7 +12,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRenderer
     {
         private const int AudioDeviceNameSize = 0x100;
 
-        private IAudioDevice _impl;
+        private readonly IAudioDevice _impl;
 
         public AudioDeviceServer(IAudioDevice impl)
         {

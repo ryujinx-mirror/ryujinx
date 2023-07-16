@@ -8,7 +8,7 @@ namespace Ryujinx.HLE.Loaders.Elf
 
         public ElfDynamic(ElfDynamicTag tag, long value)
         {
-            Tag   = tag;
+            Tag = tag;
             Value = value;
         }
     }

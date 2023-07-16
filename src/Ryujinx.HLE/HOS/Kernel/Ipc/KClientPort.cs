@@ -17,7 +17,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
         public KClientPort(KernelContext context, KPort parent, int maxSessions) : base(context)
         {
             _maxSessions = maxSessions;
-            _parent      = parent;
+            _parent = parent;
         }
 
         public Result Connect(out KClientSession clientSession)
@@ -39,7 +39,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
                 return KernelResult.SessionCountExceeded;
             }
 
-            KSession session = new KSession(KernelContext, this);
+            KSession session = new(KernelContext, this);
 
             Result result = _parent.EnqueueIncomingSession(session.ServerSession);
 
@@ -75,7 +75,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
                 return KernelResult.SessionCountExceeded;
             }
 
-            KLightSession session = new KLightSession(KernelContext);
+            KLightSession session = new(KernelContext);
 
             Result result = _parent.EnqueueIncomingLightSession(session.ServerSession);
 
@@ -133,7 +133,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
         {
             KAutoObject foundObj = FindNamedObject(context, name);
 
-            if (!(foundObj is KClientPort))
+            if (foundObj is not KClientPort)
             {
                 return KernelResult.NotFound;
             }

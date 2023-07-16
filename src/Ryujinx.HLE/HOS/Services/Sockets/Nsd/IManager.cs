@@ -14,9 +14,11 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Nsd
     class IManager : IpcService
     {
         public static readonly NsdSettings NsdSettings;
+#pragma warning disable IDE0052 // Remove unread private member
         private readonly FqdnResolver _fqdnResolver;
+#pragma warning restore IDE0052
 
-        private bool _isInitialized = false;
+        private readonly bool _isInitialized = false;
 
         public IManager(ServiceCtx context)
         {
@@ -43,7 +45,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Nsd
             {
                 Initialized = true,
                 TestMode = (bool)testMode,
-                Environment = (string)environmentIdentifier
+                Environment = (string)environmentIdentifier,
             };
         }
 
@@ -158,7 +160,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Nsd
         public ResultCode Resolve(ServiceCtx context)
         {
             ulong outputPosition = context.Request.ReceiveBuff[0].Position;
-            ulong outputSize     = context.Request.ReceiveBuff[0].Size;
+            ulong outputSize = context.Request.ReceiveBuff[0].Size;
 
             ResultCode result = _fqdnResolver.ResolveEx(context, out _, out string resolvedAddress);
 
@@ -181,7 +183,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Nsd
         public ResultCode ResolveEx(ServiceCtx context)
         {
             ulong outputPosition = context.Request.ReceiveBuff[0].Position;
-            ulong outputSize     = context.Request.ReceiveBuff[0].Size;
+            ulong outputSize = context.Request.ReceiveBuff[0].Size;
 
             ResultCode result = _fqdnResolver.ResolveEx(context, out ResultCode errorCode, out string resolvedAddress);
 
@@ -377,7 +379,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Nsd
                 "sd" => (byte)ApplicationServerEnvironmentType.Sd,
                 "sp" => (byte)ApplicationServerEnvironmentType.Sp,
                 "dp" => (byte)ApplicationServerEnvironmentType.Dp,
-                _    => (byte)ApplicationServerEnvironmentType.None
+                _ => (byte)ApplicationServerEnvironmentType.None,
             };
 
             context.ResponseData.Write(environmentType);

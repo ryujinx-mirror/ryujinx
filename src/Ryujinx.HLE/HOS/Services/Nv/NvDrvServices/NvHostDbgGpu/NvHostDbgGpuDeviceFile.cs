@@ -1,5 +1,5 @@
 ﻿using Ryujinx.Memory;
-using System;
+
 namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostDbgGpu
 {
     class NvHostDbgGpuDeviceFile : NvDeviceFile

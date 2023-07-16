@@ -9,6 +9,6 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE
         PartialForeground,
         NoUi,
         PartialForegroundWithIndirectDisplay,
-        AllForegroundInitiallyHidden
+        AllForegroundInitiallyHidden,
     }
 }

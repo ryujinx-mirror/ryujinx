@@ -8,7 +8,6 @@ using Ryujinx.HLE.HOS.Services.Nfc.Nfp.NfpManager;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 
 namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
 {
@@ -16,7 +15,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
     {
         private static uint _openedApplicationAreaId;
 
-        private static readonly AmiiboJsonSerializerContext SerializerContext = AmiiboJsonSerializerContext.Default;
+        private static readonly AmiiboJsonSerializerContext _serializerContext = AmiiboJsonSerializerContext.Default;
 
         public static byte[] GenerateUuid(string amiiboId, bool useRandomUuid)
         {
@@ -43,7 +42,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
 
             Random.Shared.NextBytes(uuid);
 
-            uuid[3] = (byte)(0x88    ^ uuid[0] ^ uuid[1] ^ uuid[2]);
+            uuid[3] = (byte)(0x88 ^ uuid[0] ^ uuid[1] ^ uuid[2]);
             uuid[8] = (byte)(uuid[3] ^ uuid[4] ^ uuid[5] ^ uuid[6]);
 
             return uuid;
@@ -55,13 +54,13 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
 
             return new CommonInfo()
             {
-                LastWriteYear       = (ushort)amiiboFile.LastWriteDate.Year,
-                LastWriteMonth      = (byte)amiiboFile.LastWriteDate.Month,
-                LastWriteDay        = (byte)amiiboFile.LastWriteDate.Day,
-                WriteCounter        = amiiboFile.WriteCounter,
-                Version             = 1,
+                LastWriteYear = (ushort)amiiboFile.LastWriteDate.Year,
+                LastWriteMonth = (byte)amiiboFile.LastWriteDate.Month,
+                LastWriteDay = (byte)amiiboFile.LastWriteDate.Day,
+                WriteCounter = amiiboFile.WriteCounter,
+                Version = 1,
                 ApplicationAreaSize = AmiiboConstants.ApplicationAreaSize,
-                Reserved            = new Array52<byte>()
+                Reserved = new Array52<byte>(),
             };
         }
 
@@ -69,22 +68,22 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
         {
             VirtualAmiiboFile amiiboFile = LoadAmiiboFile(amiiboId);
 
-            UtilityImpl utilityImpl = new UtilityImpl(tickSource);
-            CharInfo    charInfo    = new CharInfo();
+            UtilityImpl utilityImpl = new(tickSource);
+            CharInfo charInfo = new();
 
             charInfo.SetFromStoreData(StoreData.BuildDefault(utilityImpl, 0));
 
             charInfo.Nickname = Nickname.FromString(nickname);
 
-            RegisterInfo registerInfo = new RegisterInfo()
+            RegisterInfo registerInfo = new()
             {
-                MiiCharInfo     = charInfo,
-                FirstWriteYear  = (ushort)amiiboFile.FirstWriteDate.Year,
+                MiiCharInfo = charInfo,
+                FirstWriteYear = (ushort)amiiboFile.FirstWriteDate.Year,
                 FirstWriteMonth = (byte)amiiboFile.FirstWriteDate.Month,
-                FirstWriteDay   = (byte)amiiboFile.FirstWriteDate.Day,
-                FontRegion      = 0,
-                Reserved1       = new Array64<byte>(),
-                Reserved2       = new Array58<byte>()
+                FirstWriteDay = (byte)amiiboFile.FirstWriteDate.Day,
+                FontRegion = 0,
+                Reserved1 = new Array64<byte>(),
+                Reserved2 = new Array58<byte>(),
             };
             "Ryujinx"u8.CopyTo(registerInfo.Nickname.AsSpan());
 
@@ -132,7 +131,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
             virtualAmiiboFile.ApplicationAreas.Add(new VirtualAmiiboApplicationArea()
             {
                 ApplicationAreaId = applicationAreaId,
-                ApplicationArea   = applicationAreaData
+                ApplicationArea = applicationAreaData,
             });
 
             SaveAmiiboFile(virtualAmiiboFile);
@@ -153,7 +152,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
                         virtualAmiiboFile.ApplicationAreas[i] = new VirtualAmiiboApplicationArea()
                         {
                             ApplicationAreaId = _openedApplicationAreaId,
-                            ApplicationArea   = applicationAreaData
+                            ApplicationArea = applicationAreaData,
                         };
 
                         break;
@@ -174,19 +173,19 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
 
             if (File.Exists(filePath))
             {
-                virtualAmiiboFile = JsonHelper.DeserializeFromFile(filePath, SerializerContext.VirtualAmiiboFile);
+                virtualAmiiboFile = JsonHelper.DeserializeFromFile(filePath, _serializerContext.VirtualAmiiboFile);
             }
             else
             {
                 virtualAmiiboFile = new VirtualAmiiboFile()
                 {
-                    FileVersion      = 0,
-                    TagUuid          = Array.Empty<byte>(),
-                    AmiiboId         = amiiboId,
-                    FirstWriteDate   = DateTime.Now,
-                    LastWriteDate    = DateTime.Now,
-                    WriteCounter     = 0,
-                    ApplicationAreas = new List<VirtualAmiiboApplicationArea>()
+                    FileVersion = 0,
+                    TagUuid = Array.Empty<byte>(),
+                    AmiiboId = amiiboId,
+                    FirstWriteDate = DateTime.Now,
+                    LastWriteDate = DateTime.Now,
+                    WriteCounter = 0,
+                    ApplicationAreas = new List<VirtualAmiiboApplicationArea>(),
                 };
 
                 SaveAmiiboFile(virtualAmiiboFile);
@@ -198,7 +197,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
         private static void SaveAmiiboFile(VirtualAmiiboFile virtualAmiiboFile)
         {
             string filePath = Path.Join(AppDataManager.BaseDirPath, "system", "amiibo", $"{virtualAmiiboFile.AmiiboId}.json");
-            JsonHelper.SerializeToFile(filePath, virtualAmiiboFile, SerializerContext.VirtualAmiiboFile);
+            JsonHelper.SerializeToFile(filePath, virtualAmiiboFile, _serializerContext.VirtualAmiiboFile);
         }
     }
 }

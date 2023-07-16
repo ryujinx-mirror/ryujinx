@@ -7,6 +7,6 @@ namespace Ryujinx.HLE.HOS.Services.Hid.Types.SharedMemory.Mouse
     {
         None = 0,
         Transferable = 1 << 0,
-        IsConnected = 1 << 1
+        IsConnected = 1 << 1,
     }
 }

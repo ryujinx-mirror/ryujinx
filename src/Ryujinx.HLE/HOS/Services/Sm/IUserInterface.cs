@@ -13,7 +13,7 @@ namespace Ryujinx.HLE.HOS.Services.Sm
 {
     class IUserInterface : IpcService
     {
-        private static Dictionary<string, Type> _services;
+        private static readonly Dictionary<string, Type> _services;
 
         private readonly SmRegistry _registry;
         private readonly ServerBase _commonServer;
@@ -68,7 +68,7 @@ namespace Ryujinx.HLE.HOS.Services.Sm
                 return ResultCode.InvalidName;
             }
 
-            KSession session = new KSession(context.Device.System.KernelContext);
+            KSession session = new(context.Device.System.KernelContext);
 
             if (_registry.TryGetService(name, out KPort port))
             {
@@ -182,7 +182,7 @@ namespace Ryujinx.HLE.HOS.Services.Sm
 
             Logger.Debug?.Print(LogClass.ServiceSm, $"Register \"{name}\".");
 
-            KPort port = new KPort(context.Device.System.KernelContext, maxSessions, isLight, null);
+            KPort port = new(context.Device.System.KernelContext, maxSessions, isLight, null);
 
             if (!_registry.TryRegister(name, port))
             {
@@ -215,9 +215,10 @@ namespace Ryujinx.HLE.HOS.Services.Sm
 
             context.RequestData.BaseStream.Seek(namePosition + 8, SeekOrigin.Begin);
 
+#pragma warning disable IDE0059 // Remove unnecessary value assignment
             bool isLight = (context.RequestData.ReadInt32() & 1) != 0;
-
             int maxSessions = context.RequestData.ReadInt32();
+#pragma warning restore IDE0059
 
             if (string.IsNullOrEmpty(name))
             {

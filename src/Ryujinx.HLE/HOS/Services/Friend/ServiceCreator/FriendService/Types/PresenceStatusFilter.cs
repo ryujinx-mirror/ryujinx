@@ -5,6 +5,6 @@
         None,
         Online,
         OnlinePlay,
-        OnlineOrOnlinePlay
+        OnlineOrOnlinePlay,
     }
 }

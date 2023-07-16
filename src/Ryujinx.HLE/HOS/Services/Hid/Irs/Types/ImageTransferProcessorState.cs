@@ -6,7 +6,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid.Irs.Types
     struct ImageTransferProcessorState
     {
         public ulong SamplingNumber;
-        public uint  AmbientNoiseLevel;
-        public uint  Reserved;
+        public uint AmbientNoiseLevel;
+        public uint Reserved;
     }
 }

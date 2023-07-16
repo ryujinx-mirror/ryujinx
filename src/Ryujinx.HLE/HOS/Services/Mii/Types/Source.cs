@@ -3,6 +3,6 @@
     enum Source
     {
         Database,
-        Default
+        Default,
     }
 }

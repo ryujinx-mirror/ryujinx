@@ -9,20 +9,20 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
         private readonly struct MemoryRegion
         {
             public ulong Address { get; }
-            public ulong Size    { get; }
+            public ulong Size { get; }
 
             public ulong EndAddress => Address + Size;
 
             public MemoryRegion(ulong address, ulong size)
             {
                 Address = address;
-                Size    = size;
+                Size = size;
             }
         }
 
         public static void InitializeResourceLimit(KResourceLimit resourceLimit, MemorySize size)
         {
-            void EnsureSuccess(Result result)
+            static void EnsureSuccess(Result result)
             {
                 if (result != Result.Success)
                 {
@@ -32,11 +32,11 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
 
             ulong ramSize = KSystemControl.GetDramSize(size);
 
-            EnsureSuccess(resourceLimit.SetLimitValue(LimitableResource.Memory,         (long)ramSize));
-            EnsureSuccess(resourceLimit.SetLimitValue(LimitableResource.Thread,         800));
-            EnsureSuccess(resourceLimit.SetLimitValue(LimitableResource.Event,          700));
+            EnsureSuccess(resourceLimit.SetLimitValue(LimitableResource.Memory, (long)ramSize));
+            EnsureSuccess(resourceLimit.SetLimitValue(LimitableResource.Thread, 800));
+            EnsureSuccess(resourceLimit.SetLimitValue(LimitableResource.Event, 700));
             EnsureSuccess(resourceLimit.SetLimitValue(LimitableResource.TransferMemory, 200));
-            EnsureSuccess(resourceLimit.SetLimitValue(LimitableResource.Session,        900));
+            EnsureSuccess(resourceLimit.SetLimitValue(LimitableResource.Session, 900));
 
             if (!resourceLimit.Reserve(LimitableResource.Memory, 0) ||
                 !resourceLimit.Reserve(LimitableResource.Memory, 0x60000))
@@ -47,9 +47,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
 
         public static KMemoryRegionManager[] GetMemoryRegions(MemorySize size, MemoryArrange arrange)
         {
-            ulong poolEnd             = KSystemControl.GetDramEndAddress(size);
+            ulong poolEnd = KSystemControl.GetDramEndAddress(size);
             ulong applicationPoolSize = KSystemControl.GetApplicationPoolSize(arrange);
-            ulong appletPoolSize      = KSystemControl.GetAppletPoolSize(arrange);
+            ulong appletPoolSize = KSystemControl.GetAppletPoolSize(arrange);
 
             MemoryRegion servicePool;
             MemoryRegion nvServicesPool;
@@ -63,7 +63,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
             ulong nvServicesPoolEnd = applicationPool.Address - appletPoolSize;
 
             nvServicesPool = new MemoryRegion(nvServicesPoolEnd - nvServicesPoolSize, nvServicesPoolSize);
-            appletPool     = new MemoryRegion(nvServicesPoolEnd, appletPoolSize);
+            appletPool = new MemoryRegion(nvServicesPoolEnd, appletPoolSize);
 
             // Note: There is an extra region used by the kernel, however
             // since we are doing HLE we are not going to use that memory, so give all
@@ -72,12 +72,12 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
 
             servicePool = new MemoryRegion(DramMemoryMap.SlabHeapEnd, servicePoolSize);
 
-            return new KMemoryRegionManager[]
+            return new[]
             {
                 GetMemoryRegion(applicationPool),
                 GetMemoryRegion(appletPool),
                 GetMemoryRegion(servicePool),
-                GetMemoryRegion(nvServicesPool)
+                GetMemoryRegion(nvServicesPool),
             };
         }
 

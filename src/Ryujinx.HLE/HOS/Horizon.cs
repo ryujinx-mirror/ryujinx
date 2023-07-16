@@ -10,7 +10,6 @@ using Ryujinx.Audio.Integration;
 using Ryujinx.Audio.Output;
 using Ryujinx.Audio.Renderer.Device;
 using Ryujinx.Audio.Renderer.Server;
-using Ryujinx.Common.Utilities;
 using Ryujinx.Cpu;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.HOS.Kernel;
@@ -42,7 +41,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using TimeSpanType = Ryujinx.HLE.HOS.Services.Time.Clock.TimeSpanType;
 
 namespace Ryujinx.HLE.HOS
 {
@@ -50,10 +48,10 @@ namespace Ryujinx.HLE.HOS
 
     public class Horizon : IDisposable
     {
-        internal const int HidSize                 = 0x40000;
-        internal const int FontSize                = 0x1100000;
-        internal const int IirsSize                = 0x8000;
-        internal const int TimeSize                = 0x1000;
+        internal const int HidSize = 0x40000;
+        internal const int FontSize = 0x1100000;
+        internal const int IirsSize = 0x8000;
+        internal const int TimeSize = 0x1000;
         internal const int AppletCaptureBufferSize = 0x384000;
 
         internal KernelContext KernelContext { get; }
@@ -91,16 +89,16 @@ namespace Ryujinx.HLE.HOS
         internal ServerBase ViServerM { get; private set; }
         internal ServerBase ViServerS { get; private set; }
 
-        internal KSharedMemory HidSharedMem  { get; private set; }
+        internal KSharedMemory HidSharedMem { get; private set; }
         internal KSharedMemory FontSharedMem { get; private set; }
         internal KSharedMemory IirsSharedMem { get; private set; }
 
         internal KTransferMemory AppletCaptureBufferTransfer { get; private set; }
 
         internal SharedFontManager SharedFontManager { get; private set; }
-        internal AccountManager    AccountManager    { get; private set; }
-        internal ContentManager    ContentManager    { get; private set; }
-        internal CaptureManager    CaptureManager    { get; private set; }
+        internal AccountManager AccountManager { get; private set; }
+        internal ContentManager ContentManager { get; private set; }
+        internal CaptureManager CaptureManager { get; private set; }
 
         internal KEvent VsyncEvent { get; private set; }
 
@@ -149,17 +147,17 @@ namespace Ryujinx.HLE.HOS
             // region used that is used is Application, so we can use the other ones for anything.
             KMemoryRegionManager region = KernelContext.MemoryManager.MemoryRegions[(int)MemoryRegion.NvServices];
 
-            ulong hidPa                 = region.Address;
-            ulong fontPa                = region.Address + HidSize;
-            ulong iirsPa                = region.Address + HidSize + FontSize;
-            ulong timePa                = region.Address + HidSize + FontSize + IirsSize;
+            ulong hidPa = region.Address;
+            ulong fontPa = region.Address + HidSize;
+            ulong iirsPa = region.Address + HidSize + FontSize;
+            ulong timePa = region.Address + HidSize + FontSize + IirsSize;
             ulong appletCaptureBufferPa = region.Address + HidSize + FontSize + IirsSize + TimeSize;
 
-            KPageList hidPageList                 = new KPageList();
-            KPageList fontPageList                = new KPageList();
-            KPageList iirsPageList                = new KPageList();
-            KPageList timePageList                = new KPageList();
-            KPageList appletCaptureBufferPageList = new KPageList();
+            KPageList hidPageList = new();
+            KPageList fontPageList = new();
+            KPageList iirsPageList = new();
+            KPageList timePageList = new();
+            KPageList appletCaptureBufferPageList = new();
 
             hidPageList.AddRange(hidPa, HidSize / KPageTableBase.PageSize);
             fontPageList.AddRange(fontPa, FontSize / KPageTableBase.PageSize);
@@ -175,11 +173,11 @@ namespace Ryujinx.HLE.HOS
 
             HidStorage = hidStorage;
 
-            HidSharedMem  = new KSharedMemory(KernelContext, hidStorage,  0, 0, KMemoryPermission.Read);
+            HidSharedMem = new KSharedMemory(KernelContext, hidStorage, 0, 0, KMemoryPermission.Read);
             FontSharedMem = new KSharedMemory(KernelContext, fontStorage, 0, 0, KMemoryPermission.Read);
             IirsSharedMem = new KSharedMemory(KernelContext, iirsStorage, 0, 0, KMemoryPermission.Read);
 
-            KSharedMemory timeSharedMemory = new KSharedMemory(KernelContext, timeStorage, 0, 0, KMemoryPermission.Read);
+            KSharedMemory timeSharedMemory = new(KernelContext, timeStorage, 0, 0, KMemoryPermission.Read);
 
             TimeServiceManager.Instance.Initialize(device, this, timeSharedMemory, timeStorage, TimeSize);
 
@@ -194,16 +192,16 @@ namespace Ryujinx.HLE.HOS
             DisplayResolutionChangeEvent = new KEvent(KernelContext);
 
             SharedFontManager = new SharedFontManager(device, fontStorage);
-            AccountManager    = device.Configuration.AccountManager;
-            ContentManager    = device.Configuration.ContentManager;
-            CaptureManager    = new CaptureManager(device);
+            AccountManager = device.Configuration.AccountManager;
+            ContentManager = device.Configuration.ContentManager;
+            CaptureManager = new CaptureManager(device);
 
             LibHacHorizonManager = device.Configuration.LibHacHorizonManager;
 
             // We hardcode a clock source id to avoid it changing between each start.
             // TODO: use set:sys (and get external clock source id from settings)
             // TODO: use "time!standard_steady_clock_rtc_update_interval_minutes" and implement a worker thread to be accurate.
-            UInt128 clockSourceId = new UInt128(0x36a0328702ce8bc1, 0x1608eaba02333284);
+            UInt128 clockSourceId = new(0x36a0328702ce8bc1, 0x1608eaba02333284);
             IRtcManager.GetExternalRtcValue(out ulong rtcValue);
 
             // We assume the rtc is system time.
@@ -212,7 +210,7 @@ namespace Ryujinx.HLE.HOS
             // Configure and setup internal offset
             TimeSpanType internalOffset = TimeSpanType.FromSeconds(device.Configuration.SystemTimeOffset);
 
-            TimeSpanType systemTimeOffset = new TimeSpanType(systemTime.NanoSeconds + internalOffset.NanoSeconds);
+            TimeSpanType systemTimeOffset = new(systemTime.NanoSeconds + internalOffset.NanoSeconds);
 
             if (systemTime.IsDaylightSavingTime() && !systemTimeOffset.IsDaylightSavingTime())
             {
@@ -232,7 +230,7 @@ namespace Ryujinx.HLE.HOS
 
             if (NxSettings.Settings.TryGetValue("time!standard_network_clock_sufficient_accuracy_minutes", out object standardNetworkClockSufficientAccuracyMinutes))
             {
-                TimeSpanType standardNetworkClockSufficientAccuracy = new TimeSpanType((int)standardNetworkClockSufficientAccuracyMinutes * 60000000000);
+                TimeSpanType standardNetworkClockSufficientAccuracy = new((int)standardNetworkClockSufficientAccuracyMinutes * 60000000000);
 
                 // The network system clock needs a valid system clock, as such we setup this system clock using the local system clock.
                 TimeServiceManager.Instance.SetupStandardNetworkSystemClock(localSytemClockContext, standardNetworkClockSufficientAccuracy);
@@ -267,7 +265,7 @@ namespace Ryujinx.HLE.HOS
 
             for (int i = 0; i < audioOutputRegisterBufferEvents.Length; i++)
             {
-                KEvent registerBufferEvent = new KEvent(KernelContext);
+                KEvent registerBufferEvent = new(KernelContext);
 
                 audioOutputRegisterBufferEvents[i] = new AudioKernelEvent(registerBufferEvent);
             }
@@ -279,7 +277,7 @@ namespace Ryujinx.HLE.HOS
 
             for (int i = 0; i < audioInputRegisterBufferEvents.Length; i++)
             {
-                KEvent registerBufferEvent = new KEvent(KernelContext);
+                KEvent registerBufferEvent = new(KernelContext);
 
                 audioInputRegisterBufferEvents[i] = new AudioKernelEvent(registerBufferEvent);
             }
@@ -290,7 +288,7 @@ namespace Ryujinx.HLE.HOS
 
             for (int i = 0; i < systemEvents.Length; i++)
             {
-                KEvent systemEvent = new KEvent(KernelContext);
+                KEvent systemEvent = new(KernelContext);
 
                 systemEvents[i] = new AudioKernelEvent(systemEvent);
             }
@@ -338,16 +336,15 @@ namespace Ryujinx.HLE.HOS
                     ProcessCreationFlags.Is64Bit |
                     ProcessCreationFlags.PoolPartitionSystem;
 
-                ProcessCreationInfo creationInfo = new ProcessCreationInfo("Service", 1, 0, 0x8000000, 1, Flags, 0, 0);
+                ProcessCreationInfo creationInfo = new("Service", 1, 0, 0x8000000, 1, Flags, 0, 0);
 
-                uint[] defaultCapabilities = new uint[]
-                {
+                uint[] defaultCapabilities = {
                     0x030363F7,
                     0x1FFFFFCF,
                     0x207FFFEF,
                     0x47E0060F,
                     0x0048BFFF,
-                    0x01007FFF
+                    0x01007FFF,
                 };
 
                 // TODO:
@@ -445,6 +442,7 @@ namespace Ryujinx.HLE.HOS
 
         public void Dispose()
         {
+            GC.SuppressFinalize(this);
             Dispose(true);
         }
 
@@ -464,8 +462,8 @@ namespace Ryujinx.HLE.HOS
                     AudioRendererManager.StopSendingCommands();
                 }
 
-                KProcess terminationProcess = new KProcess(KernelContext);
-                KThread terminationThread = new KThread(KernelContext);
+                KProcess terminationProcess = new(KernelContext);
+                KThread terminationThread = new(KernelContext);
 
                 terminationThread.Initialize(0, 0, 0, 3, 0, terminationProcess, ThreadType.Kernel, () =>
                 {

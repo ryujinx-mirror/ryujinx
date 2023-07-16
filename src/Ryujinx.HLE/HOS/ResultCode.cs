@@ -2,11 +2,11 @@
 {
     public enum ResultCode
     {
-        OsModuleId     = 3,
+        OsModuleId = 3,
         ErrorCodeShift = 9,
 
         Success = 0,
 
-        NotAllocated = (1023 << ErrorCodeShift) | OsModuleId
+        NotAllocated = (1023 << ErrorCodeShift) | OsModuleId,
     }
 }

@@ -11,13 +11,13 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
         public byte[] SvcAccessMask { get; }
         public byte[] IrqAccessMask { get; }
 
-        public ulong AllowedCpuCoresMask    { get; private set; }
+        public ulong AllowedCpuCoresMask { get; private set; }
         public ulong AllowedThreadPriosMask { get; private set; }
 
-        public uint DebuggingFlags       { get; private set; }
-        public uint HandleTableSize      { get; private set; }
+        public uint DebuggingFlags { get; private set; }
+        public uint HandleTableSize { get; private set; }
         public uint KernelReleaseVersion { get; private set; }
-        public uint ApplicationType      { get; private set; }
+        public uint ApplicationType { get; private set; }
 
         public KProcessCapabilities()
         {
@@ -28,10 +28,10 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
         public Result InitializeForKernel(ReadOnlySpan<uint> capabilities, KPageTableBase memoryManager)
         {
-            AllowedCpuCoresMask    = 0xf;
+            AllowedCpuCoresMask = 0xf;
             AllowedThreadPriosMask = ulong.MaxValue;
-            DebuggingFlags        &= ~3u;
-            KernelReleaseVersion   = KProcess.KernelVersionPacked;
+            DebuggingFlags &= ~3u;
+            KernelReleaseVersion = KProcess.KernelVersionPacked;
 
             return Parse(capabilities, memoryManager);
         }
@@ -86,7 +86,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
                     }
 
                     long address = ((long)prevCap << 5) & 0xffffff000;
-                    long size    = ((long)cap     << 5) & 0xfffff000;
+                    long size = ((long)cap << 5) & 0xfffff000;
 
                     if (((ulong)(address + size - 1) >> 36) != 0)
                     {
@@ -101,11 +101,11 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
                     if ((cap >> 31) != 0)
                     {
-                        result = memoryManager.MapNormalMemory(address, size, perm);
+                        result = KPageTableBase.MapNormalMemory(address, size, perm);
                     }
                     else
                     {
-                        result = memoryManager.MapIoMemory(address, size, perm);
+                        result = KPageTableBase.MapIoMemory(address, size, perm);
                     }
 
                     if (result != Result.Success)
@@ -144,168 +144,168 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
             switch (code)
             {
                 case CapabilityType.CorePriority:
-                {
-                    if (AllowedCpuCoresMask != 0 || AllowedThreadPriosMask != 0)
                     {
-                        return KernelResult.InvalidCapability;
+                        if (AllowedCpuCoresMask != 0 || AllowedThreadPriosMask != 0)
+                        {
+                            return KernelResult.InvalidCapability;
+                        }
+
+                        uint lowestCpuCore = (cap >> 16) & 0xff;
+                        uint highestCpuCore = (cap >> 24) & 0xff;
+
+                        if (lowestCpuCore > highestCpuCore)
+                        {
+                            return KernelResult.InvalidCombination;
+                        }
+
+                        uint highestThreadPrio = (cap >> 4) & 0x3f;
+                        uint lowestThreadPrio = (cap >> 10) & 0x3f;
+
+                        if (lowestThreadPrio > highestThreadPrio)
+                        {
+                            return KernelResult.InvalidCombination;
+                        }
+
+                        if (highestCpuCore >= KScheduler.CpuCoresCount)
+                        {
+                            return KernelResult.InvalidCpuCore;
+                        }
+
+                        AllowedCpuCoresMask = GetMaskFromMinMax(lowestCpuCore, highestCpuCore);
+                        AllowedThreadPriosMask = GetMaskFromMinMax(lowestThreadPrio, highestThreadPrio);
+
+                        break;
                     }
-
-                    uint lowestCpuCore  = (cap >> 16) & 0xff;
-                    uint highestCpuCore = (cap >> 24) & 0xff;
-
-                    if (lowestCpuCore > highestCpuCore)
-                    {
-                        return KernelResult.InvalidCombination;
-                    }
-
-                    uint highestThreadPrio = (cap >>  4) & 0x3f;
-                    uint lowestThreadPrio  = (cap >> 10) & 0x3f;
-
-                    if (lowestThreadPrio > highestThreadPrio)
-                    {
-                        return KernelResult.InvalidCombination;
-                    }
-
-                    if (highestCpuCore >= KScheduler.CpuCoresCount)
-                    {
-                        return KernelResult.InvalidCpuCore;
-                    }
-
-                    AllowedCpuCoresMask    = GetMaskFromMinMax(lowestCpuCore,    highestCpuCore);
-                    AllowedThreadPriosMask = GetMaskFromMinMax(lowestThreadPrio, highestThreadPrio);
-
-                    break;
-                }
 
                 case CapabilityType.SyscallMask:
-                {
-                    int slot = ((int)cap >> 29) & 7;
-
-                    int svcSlotMask = 1 << slot;
-
-                    if ((mask1 & svcSlotMask) != 0)
                     {
-                        return KernelResult.InvalidCombination;
-                    }
+                        int slot = ((int)cap >> 29) & 7;
 
-                    mask1 |= svcSlotMask;
+                        int svcSlotMask = 1 << slot;
 
-                    uint svcMask = (cap >> 5) & 0xffffff;
-
-                    int baseSvc = slot * 24;
-
-                    for (int index = 0; index < 24; index++)
-                    {
-                        if (((svcMask >> index) & 1) == 0)
+                        if ((mask1 & svcSlotMask) != 0)
                         {
-                            continue;
+                            return KernelResult.InvalidCombination;
                         }
 
-                        int svcId = baseSvc + index;
+                        mask1 |= svcSlotMask;
 
-                        if (svcId >= KernelConstants.SupervisorCallCount)
+                        uint svcMask = (cap >> 5) & 0xffffff;
+
+                        int baseSvc = slot * 24;
+
+                        for (int index = 0; index < 24; index++)
                         {
-                            return KernelResult.MaximumExceeded;
+                            if (((svcMask >> index) & 1) == 0)
+                            {
+                                continue;
+                            }
+
+                            int svcId = baseSvc + index;
+
+                            if (svcId >= KernelConstants.SupervisorCallCount)
+                            {
+                                return KernelResult.MaximumExceeded;
+                            }
+
+                            SvcAccessMask[svcId / 8] |= (byte)(1 << (svcId & 7));
                         }
 
-                        SvcAccessMask[svcId / 8] |= (byte)(1 << (svcId & 7));
+                        break;
                     }
-
-                    break;
-                }
 
                 case CapabilityType.MapIoPage:
-                {
-                    long address = ((long)cap << 4) & 0xffffff000;
+                    {
+                        long address = ((long)cap << 4) & 0xffffff000;
 
-                    memoryManager.MapIoMemory(address, KPageTableBase.PageSize, KMemoryPermission.ReadAndWrite);
+                        KPageTableBase.MapIoMemory(address, KPageTableBase.PageSize, KMemoryPermission.ReadAndWrite);
 
-                    break;
-                }
+                        break;
+                    }
 
                 case CapabilityType.MapRegion:
-                {
-                    // TODO: Implement capabilities for MapRegion
+                    {
+                        // TODO: Implement capabilities for MapRegion
 
-                    break;
-                }
+                        break;
+                    }
 
                 case CapabilityType.InterruptPair:
-                {
-                    // TODO: GIC distributor check.
-                    int irq0 = ((int)cap >> 12) & 0x3ff;
-                    int irq1 = ((int)cap >> 22) & 0x3ff;
-
-                    if (irq0 != 0x3ff)
                     {
-                        IrqAccessMask[irq0 / 8] |= (byte)(1 << (irq0 & 7));
-                    }
+                        // TODO: GIC distributor check.
+                        int irq0 = ((int)cap >> 12) & 0x3ff;
+                        int irq1 = ((int)cap >> 22) & 0x3ff;
 
-                    if (irq1 != 0x3ff)
-                    {
-                        IrqAccessMask[irq1 / 8] |= (byte)(1 << (irq1 & 7));
-                    }
+                        if (irq0 != 0x3ff)
+                        {
+                            IrqAccessMask[irq0 / 8] |= (byte)(1 << (irq0 & 7));
+                        }
 
-                    break;
-                }
+                        if (irq1 != 0x3ff)
+                        {
+                            IrqAccessMask[irq1 / 8] |= (byte)(1 << (irq1 & 7));
+                        }
+
+                        break;
+                    }
 
                 case CapabilityType.ProgramType:
-                {
-                    uint applicationType = (cap >> 14);
-
-                    if (applicationType > 7)
                     {
-                        return KernelResult.ReservedValue;
+                        uint applicationType = (cap >> 14);
+
+                        if (applicationType > 7)
+                        {
+                            return KernelResult.ReservedValue;
+                        }
+
+                        ApplicationType = applicationType;
+
+                        break;
                     }
-
-                    ApplicationType = applicationType;
-
-                    break;
-                }
 
                 case CapabilityType.KernelVersion:
-                {
-                    // Note: This check is bugged on kernel too, we are just replicating the bug here.
-                    if ((KernelReleaseVersion >> 17) != 0 || cap < 0x80000)
                     {
-                        return KernelResult.ReservedValue;
+                        // Note: This check is bugged on kernel too, we are just replicating the bug here.
+                        if ((KernelReleaseVersion >> 17) != 0 || cap < 0x80000)
+                        {
+                            return KernelResult.ReservedValue;
+                        }
+
+                        KernelReleaseVersion = cap;
+
+                        break;
                     }
-
-                    KernelReleaseVersion = cap;
-
-                    break;
-                }
 
                 case CapabilityType.HandleTable:
-                {
-                    uint handleTableSize = cap >> 26;
-
-                    if (handleTableSize > 0x3ff)
                     {
-                        return KernelResult.ReservedValue;
+                        uint handleTableSize = cap >> 26;
+
+                        if (handleTableSize > 0x3ff)
+                        {
+                            return KernelResult.ReservedValue;
+                        }
+
+                        HandleTableSize = handleTableSize;
+
+                        break;
                     }
-
-                    HandleTableSize = handleTableSize;
-
-                    break;
-                }
 
                 case CapabilityType.DebugFlags:
-                {
-                    uint debuggingFlags = cap >> 19;
-
-                    if (debuggingFlags > 3)
                     {
-                        return KernelResult.ReservedValue;
+                        uint debuggingFlags = cap >> 19;
+
+                        if (debuggingFlags > 3)
+                        {
+                            return KernelResult.ReservedValue;
+                        }
+
+                        DebuggingFlags &= ~3u;
+                        DebuggingFlags |= debuggingFlags;
+
+                        break;
                     }
-
-                    DebuggingFlags &= ~3u;
-                    DebuggingFlags |= debuggingFlags;
-
-                    break;
-                }
-
-                default: return KernelResult.InvalidCapability;
+                default:
+                    return KernelResult.InvalidCapability;
             }
 
             return Result.Success;

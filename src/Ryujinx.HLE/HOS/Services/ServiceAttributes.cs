@@ -10,7 +10,7 @@ namespace Ryujinx.HLE.HOS.Services
 
         public ServiceAttribute(string name, object parameter = null)
         {
-            Name      = name;
+            Name = name;
             Parameter = parameter;
         }
     }

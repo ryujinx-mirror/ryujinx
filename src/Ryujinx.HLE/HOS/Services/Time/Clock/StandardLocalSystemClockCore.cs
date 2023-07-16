@@ -2,6 +2,6 @@
 {
     class StandardLocalSystemClockCore : SystemClockCore
     {
-        public StandardLocalSystemClockCore(StandardSteadyClockCore steadyClockCore) : base(steadyClockCore) {}
+        public StandardLocalSystemClockCore(StandardSteadyClockCore steadyClockCore) : base(steadyClockCore) { }
     }
 }

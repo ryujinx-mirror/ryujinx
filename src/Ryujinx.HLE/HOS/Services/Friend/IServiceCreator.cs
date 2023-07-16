@@ -11,7 +11,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend
     [Service("friend:v", FriendServicePermissionLevel.Viewer)]
     class IServiceCreator : IpcService
     {
-        private FriendServicePermissionLevel _permissionLevel;
+        private readonly FriendServicePermissionLevel _permissionLevel;
 
         public IServiceCreator(ServiceCtx context, FriendServicePermissionLevel permissionLevel)
         {

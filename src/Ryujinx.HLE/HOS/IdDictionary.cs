@@ -6,7 +6,7 @@ namespace Ryujinx.HLE.HOS
 {
     class IdDictionary
     {
-        private ConcurrentDictionary<int, object> _objs;
+        private readonly ConcurrentDictionary<int, object> _objs;
 
         public ICollection<object> Values => _objs.Values;
 
@@ -45,12 +45,12 @@ namespace Ryujinx.HLE.HOS
 
         public T GetData<T>(int id)
         {
-            if (_objs.TryGetValue(id, out object data) && data is T)
+            if (_objs.TryGetValue(id, out object dataObject) && dataObject is T data)
             {
-                return (T)data;
+                return data;
             }
 
-            return default(T);
+            return default;
         }
 
         public object Delete(int id)
