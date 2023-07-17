@@ -586,7 +586,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres
 
             if (hostEntry != null)
             {
-                if (int.TryParse(service, out int port))
+                if (int.TryParse(service, out int port) || string.IsNullOrEmpty(service))
                 {
                     errno = GaiError.Success;
                     serializedSize = SerializeAddrInfos(context, responseBufferPosition, responseBufferSize, hostEntry, port);
