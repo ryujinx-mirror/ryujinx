@@ -1,4 +1,4 @@
-﻿using Ryujinx.Common.Utilities;
+﻿using Ryujinx.Common.Memory;
 using System;
 using System.Runtime.InteropServices;
 
@@ -6,14 +6,14 @@ namespace Ryujinx.HLE.HOS.Services.Mii.Types
 {
     static class RandomMiiConstants
     {
-        public static int[] EyeRotateTable = {
+        public static readonly int[] EyeRotateTable = {
             0x03, 0x04, 0x04, 0x04, 0x03, 0x04, 0x04, 0x04, 0x03, 0x04, 0x04, 0x04, 0x04, 0x03, 0x03, 0x04,
             0x04, 0x04, 0x03, 0x03, 0x04, 0x03, 0x04, 0x03, 0x03, 0x04, 0x03, 0x04, 0x04, 0x03, 0x04, 0x04,
             0x04, 0x03, 0x03, 0x03, 0x04, 0x04, 0x03, 0x03, 0x03, 0x04, 0x04, 0x03, 0x03, 0x03, 0x03, 0x03,
             0x03, 0x03, 0x03, 0x03, 0x04, 0x04, 0x04, 0x04, 0x03, 0x04, 0x04, 0x03, 0x04, 0x04,
         };
 
-        public static int[] EyebrowRotateTable =  {
+        public static readonly int[] EyebrowRotateTable =  {
             0x06, 0x06, 0x05, 0x07, 0x06, 0x07, 0x06, 0x07, 0x04, 0x07, 0x06, 0x08, 0x05, 0x05, 0x06, 0x06,
             0x07, 0x07, 0x06, 0x06, 0x05, 0x06, 0x07, 0x05,
         };
@@ -25,27 +25,17 @@ namespace Ryujinx.HLE.HOS.Services.Mii.Types
             Mustache,
         }
 
-        [StructLayout(LayoutKind.Sequential, Pack = 4, Size = ValuesArraySize)]
-        public struct RandomMiiValues
-        {
-            private const int ValuesArraySize = 0xbc;
-
-            private readonly int _firstValueByte;
-
-            public ReadOnlySpan<int> Values => SpanHelpers.AsSpan<RandomMiiValues, int>(ref this);
-        }
-
         [StructLayout(LayoutKind.Sequential, Pack = 4, Size = 0xCC)]
         public struct RandomMiiData4
         {
-            public int Gender;
-            public int Age;
-            public int Race;
-            public int ValuesCount;
+            public readonly int Gender;
+            public readonly int Age;
+            public readonly int Race;
+            public readonly int ValuesCount;
 
-            private readonly RandomMiiValues _values;
+            private Array47<int> _values;
 
-            public readonly ReadOnlySpan<int> Values => _values.Values[..ValuesCount];
+            public ReadOnlySpan<int> Values => _values.AsSpan()[..ValuesCount];
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 4, Size = 0xC8)]
@@ -54,22 +44,23 @@ namespace Ryujinx.HLE.HOS.Services.Mii.Types
             private readonly int _argument1;
             private readonly int _argument2;
 
-            public int ValuesCount;
+            public readonly int ValuesCount;
 
-            private readonly RandomMiiValues _values;
+            private Array47<int> _values;
 
-            public readonly ReadOnlySpan<int> Values => _values.Values[..ValuesCount];
+            public ReadOnlySpan<int> Values => _values.AsSpan()[..ValuesCount];
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 4, Size = 0xC4)]
         public struct RandomMiiData2
         {
             private readonly int _argument;
-            public int ValuesCount;
 
-            private readonly RandomMiiValues _values;
+            public readonly int ValuesCount;
 
-            public readonly ReadOnlySpan<int> Values => _values.Values[..ValuesCount];
+            private Array47<int> _values;
+
+            public ReadOnlySpan<int> Values => _values.AsSpan()[..ValuesCount];
         }
 
         public static ReadOnlySpan<RandomMiiData4> RandomMiiFacelineArray => MemoryMarshal.Cast<byte, RandomMiiData4>(RandomMiiFacelineRawArray);
