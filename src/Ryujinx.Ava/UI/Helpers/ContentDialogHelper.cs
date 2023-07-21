@@ -315,7 +315,7 @@ namespace Ryujinx.Ava.UI.Helpers
 
             Window parent = GetMainWindow();
 
-            if (parent is MainWindow window && window.ViewModel.IsGameRunning)
+            if (parent is MainWindow window)
             {
                 parent.Activate();
 
