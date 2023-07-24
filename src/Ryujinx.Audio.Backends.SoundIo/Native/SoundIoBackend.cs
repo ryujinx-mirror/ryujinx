@@ -8,6 +8,6 @@
         Alsa = 3,
         CoreAudio = 4,
         Wasapi = 5,
-        Dummy = 6
+        Dummy = 6,
     }
 }

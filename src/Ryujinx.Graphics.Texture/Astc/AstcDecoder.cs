@@ -889,7 +889,7 @@ namespace Ryujinx.Graphics.Texture.Astc
                                         0 => 0,
                                         1 => 32,
                                         2 => 63,
-                                        _ => 0
+                                        _ => 0,
                                     };
 
                                     break;
@@ -942,7 +942,7 @@ namespace Ryujinx.Graphics.Texture.Astc
                                         2 => 32,
                                         3 => 47,
                                         4 => 63,
-                                        _ => 0
+                                        _ => 0,
                                     };
 
                                     break;

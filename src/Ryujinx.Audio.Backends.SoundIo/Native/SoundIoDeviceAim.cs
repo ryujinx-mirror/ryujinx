@@ -3,6 +3,6 @@
     public enum SoundIoDeviceAim
     {
         SoundIoDeviceAimInput = 0,
-        SoundIoDeviceAimOutput = 1
+        SoundIoDeviceAimOutput = 1,
     }
 }

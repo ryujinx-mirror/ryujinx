@@ -234,7 +234,7 @@ namespace Spv.Generator
         {
             { Specification.Op.OpConstant, new [] { "Value" } },
             { Specification.Op.OpTypeInt, new [] { "Width", "Signed" } },
-            { Specification.Op.OpTypeFloat, new [] { "Width" } }
+            { Specification.Op.OpTypeFloat, new [] { "Width" } },
         };
 
         public override string ToString()

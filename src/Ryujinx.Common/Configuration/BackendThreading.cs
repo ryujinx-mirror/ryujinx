@@ -8,6 +8,6 @@ namespace Ryujinx.Common.Configuration
     {
         Auto,
         Off,
-        On
+        On,
     }
 }

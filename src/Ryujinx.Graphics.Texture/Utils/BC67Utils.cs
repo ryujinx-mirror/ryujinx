@@ -1199,7 +1199,7 @@ namespace Ryujinx.Graphics.Texture.Utils
 
             RgbaColor32 weightV = new(colorWeight)
             {
-                A = alphaWeight
+                A = alphaWeight,
             };
             RgbaColor32 invWeightV = new RgbaColor32(64) - weightV;
 

@@ -7,7 +7,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
 using System.Threading;
-
 using static Ryujinx.Audio.Integration.IHardwareDeviceDriver;
 using static SDL2.SDL;
 
@@ -111,7 +110,7 @@ namespace Ryujinx.Audio.Backends.SDL2
                 channels = (byte)requestedChannelCount,
                 format = GetSDL2Format(requestedSampleFormat),
                 freq = (int)requestedSampleRate,
-                samples = (ushort)sampleCount
+                samples = (ushort)sampleCount,
             };
         }
 

@@ -37,7 +37,7 @@ namespace Ryujinx.Graphics.OpenGL
             AmdUnix,
             IntelWindows,
             IntelUnix,
-            Nvidia
+            Nvidia,
         }
 
         private static readonly Lazy<GpuVendor> _gpuVendor = new(GetGpuVendor);

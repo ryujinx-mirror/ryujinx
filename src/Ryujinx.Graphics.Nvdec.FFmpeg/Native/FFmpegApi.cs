@@ -13,7 +13,7 @@ namespace Ryujinx.Graphics.Nvdec.FFmpeg.Native
         private static readonly Dictionary<string, (int, int)> _librariesWhitelist = new()
         {
             { AvCodecLibraryName, (58, 59) },
-            { AvUtilLibraryName, (56, 57) }
+            { AvUtilLibraryName, (56, 57) },
         };
 
         private static string FormatLibraryNameForCurrentOs(string libraryName, int version)

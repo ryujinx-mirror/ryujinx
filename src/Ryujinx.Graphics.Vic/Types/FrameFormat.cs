@@ -15,7 +15,7 @@ namespace Ryujinx.Graphics.Vic.Types
         TopFieldChromaBottom,
         BottomFieldChromaTop,
         SubPicTopFieldChromaBottom,
-        SubPicBottomFieldChromaTop
+        SubPicBottomFieldChromaTop,
     }
 
     static class FrameFormatExtensions

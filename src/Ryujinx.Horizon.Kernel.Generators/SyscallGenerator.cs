@@ -40,7 +40,7 @@ namespace Ryujinx.Horizon.Kernel.Generators
             $"{TypeKernelResultName}.TimedOut",
             $"{TypeKernelResultName}.Cancelled",
             $"{TypeKernelResultName}.PortRemoteClosed",
-            $"{TypeKernelResultName}.InvalidState"
+            $"{TypeKernelResultName}.InvalidState",
         };
 
         private readonly struct OutParameter

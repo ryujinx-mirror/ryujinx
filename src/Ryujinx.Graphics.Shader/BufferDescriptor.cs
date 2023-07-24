@@ -1,6 +1,6 @@
 namespace Ryujinx.Graphics.Shader
 {
-    public struct BufferDescriptor
+    public readonly struct BufferDescriptor
     {
         // New fields should be added to the end of the struct to keep disk shader cache compatibility.
 

@@ -2,6 +2,6 @@
 {
     enum DeviceType : uint
     {
-        Amiibo
+        Amiibo,
     }
 }

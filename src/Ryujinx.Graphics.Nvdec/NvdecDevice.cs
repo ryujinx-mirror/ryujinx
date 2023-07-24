@@ -22,7 +22,7 @@ namespace Ryujinx.Graphics.Nvdec
             _rm = new ResourceManager(gmm, new SurfaceCache(gmm));
             _state = new DeviceState<NvdecRegisters>(new Dictionary<string, RwCallback>
             {
-                { nameof(NvdecRegisters.Execute), new RwCallback(Execute, null) }
+                { nameof(NvdecRegisters.Execute), new RwCallback(Execute, null) },
             });
             _contexts = new ConcurrentDictionary<long, NvdecDecoderContext>();
         }

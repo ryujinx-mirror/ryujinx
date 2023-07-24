@@ -56,7 +56,7 @@ namespace Ryujinx.Graphics.Device
                 TypeCode.Double => sizeof(double),
                 TypeCode.Decimal => sizeof(decimal),
                 TypeCode.Boolean => sizeof(bool),
-                _ => throw new ArgumentException($"Length for type \"{type.Name}\" is unknown.")
+                _ => throw new ArgumentException($"Length for type \"{type.Name}\" is unknown."),
             };
         }
     }

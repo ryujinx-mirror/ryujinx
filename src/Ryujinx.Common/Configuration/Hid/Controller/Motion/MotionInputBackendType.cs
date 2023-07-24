@@ -8,6 +8,6 @@ namespace Ryujinx.Common.Configuration.Hid.Controller.Motion
     {
         Invalid,
         GamepadDriver,
-        CemuHook
+        CemuHook,
     }
 }

@@ -133,7 +133,7 @@ void main()
                     1 => SizedInternalFormat.R8ui,
                     2 => SizedInternalFormat.Rg8ui,
                     4 => SizedInternalFormat.Rgba8ui,
-                    _ => throw new ArgumentException($"Invalid components count {componentsCount}.")
+                    _ => throw new ArgumentException($"Invalid components count {componentsCount}."),
                 };
             }
             else if (componentSize == 2)
@@ -143,7 +143,7 @@ void main()
                     1 => SizedInternalFormat.R16ui,
                     2 => SizedInternalFormat.Rg16ui,
                     4 => SizedInternalFormat.Rgba16ui,
-                    _ => throw new ArgumentException($"Invalid components count {componentsCount}.")
+                    _ => throw new ArgumentException($"Invalid components count {componentsCount}."),
                 };
             }
             else if (componentSize == 4)
@@ -153,7 +153,7 @@ void main()
                     1 => SizedInternalFormat.R32ui,
                     2 => SizedInternalFormat.Rg32ui,
                     4 => SizedInternalFormat.Rgba32ui,
-                    _ => throw new ArgumentException($"Invalid components count {componentsCount}.")
+                    _ => throw new ArgumentException($"Invalid components count {componentsCount}."),
                 };
             }
             else

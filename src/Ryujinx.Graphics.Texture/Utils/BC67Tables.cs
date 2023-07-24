@@ -11,21 +11,21 @@
             new BC7ModeInfo(1, 0, 0, 2, 1, 2, 3, 5, 6),
             new BC7ModeInfo(1, 0, 0, 2, 0, 2, 2, 7, 8),
             new BC7ModeInfo(1, 0, 2, 0, 0, 4, 0, 7, 7),
-            new BC7ModeInfo(2, 6, 4, 0, 0, 2, 0, 5, 5)
+            new BC7ModeInfo(2, 6, 4, 0, 0, 2, 0, 5, 5),
         };
 
         public static readonly byte[][] Weights =
         {
             new byte[] { 0, 21, 43, 64 },
             new byte[] { 0, 9, 18, 27, 37, 46, 55, 64 },
-            new byte[] { 0, 4, 9, 13, 17, 21, 26, 30, 34, 38, 43, 47, 51, 55, 60, 64 }
+            new byte[] { 0, 4, 9, 13, 17, 21, 26, 30, 34, 38, 43, 47, 51, 55, 60, 64 },
         };
 
         public static readonly byte[][] InverseWeights =
         {
             new byte[] { 64, 43, 21, 0 },
             new byte[] { 64, 55, 46, 37, 27, 18, 9, 0 },
-            new byte[] { 64, 60, 55, 51, 47, 43, 38, 34, 30, 26, 21, 17, 13, 9, 4, 0 }
+            new byte[] { 64, 60, 55, 51, 47, 43, 38, 34, 30, 26, 21, 17, 13, 9, 4, 0 },
         };
 
         public static readonly byte[][][] FixUpIndices = new byte[3][][]
@@ -47,7 +47,7 @@
                 new byte[] {  0,  0,  0 }, new byte[] {  0,  0,  0 }, new byte[] {  0,  0,  0 }, new byte[] {  0,  0,  0 },
                 new byte[] {  0,  0,  0 }, new byte[] {  0,  0,  0 }, new byte[] {  0,  0,  0 }, new byte[] {  0,  0,  0 },
                 new byte[] {  0,  0,  0 }, new byte[] {  0,  0,  0 }, new byte[] {  0,  0,  0 }, new byte[] {  0,  0,  0 },
-                new byte[] {  0,  0,  0 }, new byte[] {  0,  0,  0 }, new byte[] {  0,  0,  0 }, new byte[] {  0,  0,  0 }
+                new byte[] {  0,  0,  0 }, new byte[] {  0,  0,  0 }, new byte[] {  0,  0,  0 }, new byte[] {  0,  0,  0 },
             },
             new byte[64][]
             {
@@ -66,7 +66,7 @@
                 new byte[] {  0,  6,  0 }, new byte[] {  0,  2,  0 }, new byte[] {  0,  6,  0 }, new byte[] {  0,  8,  0 },
                 new byte[] {  0, 15,  0 }, new byte[] {  0, 15,  0 }, new byte[] {  0,  2,  0 }, new byte[] {  0,  2,  0 },
                 new byte[] {  0, 15,  0 }, new byte[] {  0, 15,  0 }, new byte[] {  0, 15,  0 }, new byte[] {  0, 15,  0 },
-                new byte[] {  0, 15,  0 }, new byte[] {  0,  2,  0 }, new byte[] {  0,  2,  0 }, new byte[] {  0, 15,  0 }
+                new byte[] {  0, 15,  0 }, new byte[] {  0,  2,  0 }, new byte[] {  0,  2,  0 }, new byte[] {  0, 15,  0 },
             },
             new byte[64][]
             {
@@ -85,8 +85,8 @@
                 new byte[] {  0,  3, 15 }, new byte[] {  0, 15,  3 }, new byte[] {  0,  5, 15 }, new byte[] {  0,  5, 15 },
                 new byte[] {  0,  5, 15 }, new byte[] {  0,  8, 15 }, new byte[] {  0,  5, 15 }, new byte[] {  0, 10, 15 },
                 new byte[] {  0,  5, 15 }, new byte[] {  0, 10, 15 }, new byte[] {  0,  8, 15 }, new byte[] {  0, 13, 15 },
-                new byte[] {  0, 15,  3 }, new byte[] {  0, 12, 15 }, new byte[] {  0,  3, 15 }, new byte[] {  0,  3,  8 }
-            }
+                new byte[] {  0, 15,  3 }, new byte[] {  0, 12, 15 }, new byte[] {  0,  3, 15 }, new byte[] {  0,  3,  8 },
+            },
         };
 
         public static readonly byte[][][] PartitionTable = new byte[3][][]
@@ -156,7 +156,7 @@
                 new byte[16] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, // 60
                 new byte[16] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, // 61
                 new byte[16] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, // 62
-                new byte[16] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }  // 63
+                new byte[16] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, // 63
             },
             new byte[64][]
             {
@@ -223,7 +223,7 @@
                 new byte[16] { 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1 }, // 60
                 new byte[16] { 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0 }, // 61
                 new byte[16] { 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0 }, // 62
-                new byte[16] { 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1 }  // 63
+                new byte[16] { 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1 }, // 63
             },
             new byte[64][]
             {
@@ -290,8 +290,8 @@
                 new byte[16] { 0, 0, 0, 2, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 1 }, // 60
                 new byte[16] { 0, 2, 2, 2, 1, 2, 2, 2, 0, 2, 2, 2, 1, 2, 2, 2 }, // 61
                 new byte[16] { 0, 1, 0, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2 }, // 62
-                new byte[16] { 0, 1, 1, 1, 2, 0, 1, 1, 2, 2, 0, 1, 2, 2, 2, 0 }  // 63
-            }
+                new byte[16] { 0, 1, 1, 1, 2, 0, 1, 1, 2, 2, 0, 1, 2, 2, 2, 0 }, // 63
+            },
         };
     }
 }

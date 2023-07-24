@@ -173,7 +173,7 @@ void main()
                 4 => SizedInternalFormat.R32ui,
                 8 => SizedInternalFormat.Rg32ui,
                 16 => SizedInternalFormat.Rgba32ui,
-                _ => throw new ArgumentException($"Invalid bytes per pixel {bytesPerPixel}.")
+                _ => throw new ArgumentException($"Invalid bytes per pixel {bytesPerPixel}."),
             };
         }
 

@@ -4,6 +4,6 @@
     {
         List,
         Grid,
-        Chip
+        Chip,
     }
 }

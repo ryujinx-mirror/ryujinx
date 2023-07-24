@@ -36,7 +36,7 @@ namespace Ryujinx.Horizon.Generators.Hipc
             None,
             Ref,
             Out,
-            In
+            In,
         }
 
         private readonly struct OutParameter

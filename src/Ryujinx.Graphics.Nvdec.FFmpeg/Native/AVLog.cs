@@ -10,6 +10,6 @@
         Verbose = 40,
         Debug = 48,
         Trace = 56,
-        MaxOffset = 64
+        MaxOffset = 64,
     }
 }

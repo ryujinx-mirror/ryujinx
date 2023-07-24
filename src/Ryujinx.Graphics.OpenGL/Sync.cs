@@ -24,7 +24,7 @@ namespace Ryujinx.Graphics.OpenGL
             SyncHandle handle = new()
             {
                 ID = id,
-                Handle = GL.FenceSync(SyncCondition.SyncGpuCommandsComplete, WaitSyncFlags.None)
+                Handle = GL.FenceSync(SyncCondition.SyncGpuCommandsComplete, WaitSyncFlags.None),
             };
 
 

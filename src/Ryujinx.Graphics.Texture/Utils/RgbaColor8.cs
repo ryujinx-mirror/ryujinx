@@ -77,7 +77,7 @@ namespace Ryujinx.Graphics.Texture.Utils
                 1 => G,
                 2 => B,
                 3 => A,
-                _ => throw new ArgumentOutOfRangeException(nameof(index))
+                _ => throw new ArgumentOutOfRangeException(nameof(index)),
             };
         }
     }

@@ -5,6 +5,6 @@
         Fast,
         Exhaustive,
         ModeMask = 0xff,
-        Multithreaded = 1 << 8
+        Multithreaded = 1 << 8,
     }
 }

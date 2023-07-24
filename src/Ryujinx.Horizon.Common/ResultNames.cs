@@ -1690,7 +1690,7 @@ namespace Ryujinx.Horizon.Common
             { 0x821AC, "InvalidPackage1" },
             { 0x823AC, "InvalidPackage1SectionSize" },
             { 0x825AC, "InvalidPackage1MarikoBodySize" },
-            { 0x827AC, "InvalidPackage1Pk11Size" }
+            { 0x827AC, "InvalidPackage1Pk11Size" },
         };
 
         public static bool TryGet(int errorCode, out string name)

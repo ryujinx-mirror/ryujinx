@@ -72,7 +72,7 @@ namespace Ryujinx.Graphics.OpenGL.Image
                 (int)Info.SwizzleR.Convert(),
                 (int)Info.SwizzleG.Convert(),
                 (int)Info.SwizzleB.Convert(),
-                (int)Info.SwizzleA.Convert()
+                (int)Info.SwizzleA.Convert(),
             };
 
             if (Info.Format == Format.A1B5G5R5Unorm)
@@ -210,7 +210,7 @@ namespace Ryujinx.Graphics.OpenGL.Image
                 {
                     Target.Texture2DMultisample => Target.Texture2D,
                     Target.Texture2DMultisampleArray => Target.Texture2DArray,
-                    _ => Target
+                    _ => Target,
                 };
 
                 TextureView intermmediate = _renderer.TextureCopy.IntermediatePool.GetOrCreateWithAtLeast(
@@ -354,7 +354,7 @@ namespace Ryujinx.Graphics.OpenGL.Image
                     TextureTarget.TextureCubeMapArray => (layer / 6) * mipSize,
                     TextureTarget.Texture1DArray => layer * mipSize,
                     TextureTarget.Texture2DArray => layer * mipSize,
-                    _ => 0
+                    _ => 0,
                 };
             }
 

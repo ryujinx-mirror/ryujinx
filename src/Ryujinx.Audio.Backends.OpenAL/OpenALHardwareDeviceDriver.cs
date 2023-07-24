@@ -31,7 +31,7 @@ namespace Ryujinx.Audio.Backends.OpenAL
             _stillRunning = true;
             _updaterThread = new Thread(Update)
             {
-                Name = "HardwareDeviceDriver.OpenAL"
+                Name = "HardwareDeviceDriver.OpenAL",
             };
 
             _updaterThread.Start();

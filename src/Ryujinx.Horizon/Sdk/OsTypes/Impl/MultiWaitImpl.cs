@@ -168,7 +168,7 @@ namespace Ryujinx.Horizon.Sdk.OsTypes.Impl
 
             long minTime = endTime;
 
-            foreach (MultiWaitHolder holder in _multiWaits)
+            foreach (MultiWaitHolderBase holder in _multiWaits)
             {
                 long currentTime = holder.GetAbsoluteTimeToWakeup();
 

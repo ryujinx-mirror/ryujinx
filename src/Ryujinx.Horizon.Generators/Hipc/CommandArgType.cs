@@ -13,6 +13,6 @@
         OutCopyHandle,
         OutMoveHandle,
         OutObject,
-        ProcessId
+        ProcessId,
     }
 }

@@ -417,7 +417,7 @@ namespace Ryujinx.Graphics.Vic.Image
                 0 => offsets.LumaOffset,
                 1 => offsets.ChromaUOffset,
                 2 => offsets.ChromaVOffset,
-                _ => throw new ArgumentOutOfRangeException(nameof(plane))
+                _ => throw new ArgumentOutOfRangeException(nameof(plane)),
             };
         }
 

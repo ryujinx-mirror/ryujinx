@@ -89,7 +89,7 @@ namespace Ryujinx.Graphics.Texture
                 8 => Convert<ulong>(dst, data),
                 12 => Convert<Bpp12Pixel>(dst, data),
                 16 => Convert<Vector128<byte>>(dst, data),
-                _ => throw new NotSupportedException($"Unable to convert ${bytesPerPixel} bpp pixel format.")
+                _ => throw new NotSupportedException($"Unable to convert ${bytesPerPixel} bpp pixel format."),
             };
         }
 
@@ -240,7 +240,7 @@ namespace Ryujinx.Graphics.Texture
                     8 => Convert<ulong>(output, data),
                     12 => Convert<Bpp12Pixel>(output, data),
                     16 => Convert<Vector128<byte>>(output, data),
-                    _ => throw new NotSupportedException($"Unable to convert ${bytesPerPixel} bpp pixel format.")
+                    _ => throw new NotSupportedException($"Unable to convert ${bytesPerPixel} bpp pixel format."),
                 };
             }
             return output;
@@ -359,7 +359,7 @@ namespace Ryujinx.Graphics.Texture
                 8 => Convert<ulong>(dst, data),
                 12 => Convert<Bpp12Pixel>(dst, data),
                 16 => Convert<Vector128<byte>>(dst, data),
-                _ => throw new NotSupportedException($"Unable to convert ${bytesPerPixel} bpp pixel format.")
+                _ => throw new NotSupportedException($"Unable to convert ${bytesPerPixel} bpp pixel format."),
             };
         }
 
@@ -504,7 +504,7 @@ namespace Ryujinx.Graphics.Texture
                     8 => Convert<ulong>(output, data),
                     12 => Convert<Bpp12Pixel>(output, data),
                     16 => Convert<Vector128<byte>>(output, data),
-                    _ => throw new NotSupportedException($"Unable to convert ${bytesPerPixel} bpp pixel format.")
+                    _ => throw new NotSupportedException($"Unable to convert ${bytesPerPixel} bpp pixel format."),
                 };
             }
 

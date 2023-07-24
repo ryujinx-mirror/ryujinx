@@ -412,7 +412,7 @@ namespace Ryujinx.Graphics.GAL.Multithreading
 
         public ICounterEvent ReportCounter(CounterType type, EventHandler<ulong> resultHandler, float divisor, bool hostReserved)
         {
-            ThreadedCounterEvent evt = new ThreadedCounterEvent(this, type, _lastSampleCounterClear);
+            ThreadedCounterEvent evt = new(this, type, _lastSampleCounterClear);
             New<ReportCounterCommand>().Set(Ref(evt), type, Ref(resultHandler), divisor, hostReserved);
             QueueCommand();
 

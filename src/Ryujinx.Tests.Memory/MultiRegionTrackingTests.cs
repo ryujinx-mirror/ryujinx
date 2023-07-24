@@ -337,7 +337,7 @@ namespace Ryujinx.Tests.Memory
             {
                 granular.GetHandles(),
                 singlePages,
-                doublePages
+                doublePages,
             };
 
             MultiRegionHandle combined = _tracking.BeginGranularTracking(0, PageSize * 18, handleGroups.SelectMany((handles) => handles), PageSize, 0);
@@ -349,7 +349,7 @@ namespace Ryujinx.Tests.Memory
                 true, true, // Gap.
                 false, true, false, // Individual handles.
                 false, false, true, true, false, false, // Double size handles.
-                true // Gap.
+                true, // Gap.
             };
 
             for (int i = 0; i < 18; i++)

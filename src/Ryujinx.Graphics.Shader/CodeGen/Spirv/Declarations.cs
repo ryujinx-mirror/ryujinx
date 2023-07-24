@@ -13,8 +13,6 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
 {
     static class Declarations
     {
-        private static readonly string[] _stagePrefixes = { "cp", "vp", "tcp", "tep", "gp", "fp" };
-
         public static void DeclareParameters(CodeGenContext context, StructuredFunction function)
         {
             DeclareParameters(context, function.InArguments, 0);
@@ -192,7 +190,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                     SamplerType.Texture3D => Dim.Dim3D,
                     SamplerType.TextureCube => Dim.Cube,
                     SamplerType.TextureBuffer => Dim.Buffer,
-                    _ => throw new InvalidOperationException($"Invalid sampler type \"{sampler.Type & SamplerType.Mask}\".")
+                    _ => throw new InvalidOperationException($"Invalid sampler type \"{sampler.Type & SamplerType.Mask}\"."),
                 };
 
                 var imageType = context.TypeImage(
@@ -518,11 +516,6 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                 ? (isOutput ? context.OutputsPerPatch : context.InputsPerPatch)
                 : (isOutput ? context.Outputs : context.Inputs);
             dict.Add(ioDefinition, spvVar);
-        }
-
-        private static string GetStagePrefix(ShaderStage stage)
-        {
-            return _stagePrefixes[(int)stage];
         }
     }
 }

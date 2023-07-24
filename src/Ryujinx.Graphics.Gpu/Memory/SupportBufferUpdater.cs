@@ -187,7 +187,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
                     X = scale * 2f / viewportWidth,
                     Y = scale * 2f / viewportHeight,
                     Z = 1,
-                    W = disableTransformF
+                    W = disableTransformF,
                 });
             }
         }
@@ -210,7 +210,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
                 ReadOnlySpan<byte> data = MemoryMarshal.Cast<SupportBuffer, byte>(MemoryMarshal.CreateSpan(ref _data, 1));
 
-                _renderer.SetBufferData(_handle, _startOffset, data.Slice(_startOffset, _endOffset - _startOffset));
+                _renderer.SetBufferData(_handle, _startOffset, data[_startOffset.._endOffset]);
 
                 _startOffset = -1;
                 _endOffset = -1;

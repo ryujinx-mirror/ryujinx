@@ -1,19 +1,10 @@
 name: Build job
 
 on:
-  workflow_dispatch:
-    inputs: {}
-  pull_request:
-    branches: [ master ]
-    paths-ignore:
-      - '.github/**'
-      - '*.yml'
-      - '*.json'
-      - '*.config'
-      - 'README.md'
+  workflow_call:
 
 concurrency:
-  group: pr-checks-${{ github.event.number }}
+  group: pr-builds-${{ github.event.number }}
   cancel-in-progress: true
 
 env:

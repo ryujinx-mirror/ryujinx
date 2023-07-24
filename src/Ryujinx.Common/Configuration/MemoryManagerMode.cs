@@ -8,6 +8,6 @@ namespace Ryujinx.Common.Configuration
     {
         SoftwarePageTable,
         HostMapped,
-        HostMappedUnsafe
+        HostMappedUnsafe,
     }
 }

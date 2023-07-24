@@ -1,0 +1,71 @@
+name: Perform checks
+
+on:
+  pull_request:
+    branches: [ master ]
+    paths:
+      - '**'
+      - '!.github/**'
+      - '!*.yml'
+      - '!*.config'
+      - '!README.md'
+      - '.github/workflows/*.yml'
+
+permissions:
+  pull-requests: write
+  checks: write
+
+concurrency:
+  group: pr-checks-${{ github.event.number }}
+  cancel-in-progress: true
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-dotnet@v3
+        with:
+          global-json-file: global.json
+
+      - run: dotnet restore
+
+      - name: Print dotnet format version
+        run: dotnet format --version
+
+      - name: Run dotnet format whitespace
+        run: |
+          dotnet format whitespace --verify-no-changes --report ./whitespace-report.json -v d
+
+      - name: Run dotnet format style
+        run: |
+          dotnet format style --severity info --verify-no-changes --report ./style-report.json -v d
+
+      # For some reason this step sometimes fails with exit code 139 (segfault?),
+      # so should that be the case we'll try again (3 tries max).
+      - name: Run dotnet format analyzers
+        run: |
+          attempt=0
+          exit_code=139
+          until [ $attempt -ge 3 ] || [ $exit_code -ne 139 ]; do
+            ((attempt+=1))
+            exit_code=0
+            echo "Attempt: ${attempt}/3"
+            dotnet format analyzers --severity info --verify-no-changes --report ./analyzers-report.json -v d || exit_code=$?
+          done
+          exit $exit_code
+
+      - name: Upload report
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: dotnet-format
+          path: ./*-report.json
+
+  pr_build:
+    uses: ./.github/workflows/build.yml
+    needs: format
+    secrets: inherit

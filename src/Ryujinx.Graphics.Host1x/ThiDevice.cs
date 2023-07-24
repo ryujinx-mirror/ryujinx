@@ -57,7 +57,7 @@ namespace Ryujinx.Graphics.Host1x
             _state = new DeviceState<ThiRegisters>(new Dictionary<string, RwCallback>
             {
                 { nameof(ThiRegisters.IncrSyncpt), new RwCallback(IncrSyncpt, null) },
-                { nameof(ThiRegisters.Method1), new RwCallback(Method1, null) }
+                { nameof(ThiRegisters.Method1), new RwCallback(Method1, null) },
             });
 
             _previousContextId = -1;

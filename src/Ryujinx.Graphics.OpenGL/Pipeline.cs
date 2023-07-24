@@ -5,7 +5,6 @@ using Ryujinx.Graphics.OpenGL.Image;
 using Ryujinx.Graphics.OpenGL.Queries;
 using Ryujinx.Graphics.Shader;
 using System;
-using System.Runtime.CompilerServices;
 
 namespace Ryujinx.Graphics.OpenGL
 {
@@ -44,7 +43,7 @@ namespace Ryujinx.Graphics.OpenGL
 
         private CounterQueueEvent _activeConditionalRender;
 
-        private Vector4<int>[] _fpIsBgra = new Vector4<int>[SupportBuffer.FragmentIsBgraCount];
+        private readonly Vector4<int>[] _fpIsBgra = new Vector4<int>[SupportBuffer.FragmentIsBgraCount];
 
         private readonly (TextureBase, Format)[] _images;
         private TextureBase _unit0Texture;

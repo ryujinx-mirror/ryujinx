@@ -68,7 +68,7 @@ namespace Ryujinx.Graphics.Nvdec.Types.Vp8
                 FirstPartSize = FirstPartSize,
                 Version = Version,
                 FrameWidth = FrameWidth,
-                FrameHeight = FrameHeight
+                FrameHeight = FrameHeight,
             };
         }
     }

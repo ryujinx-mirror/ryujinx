@@ -15,6 +15,6 @@
         Tsec = 0xe0,
         Tsecb = 0xe1,
         Nvjpg = 0xc0,
-        Nvdec = 0xf0
+        Nvdec = 0xf0,
     }
 }

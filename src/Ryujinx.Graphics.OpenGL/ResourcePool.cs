@@ -41,7 +41,7 @@ namespace Ryujinx.Graphics.OpenGL
                 {
                     Info = view.Info,
                     View = view,
-                    RemainingFrames = DisposedLiveFrames
+                    RemainingFrames = DisposedLiveFrames,
                 });
             }
         }

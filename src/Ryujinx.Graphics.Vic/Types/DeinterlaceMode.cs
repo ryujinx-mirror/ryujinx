@@ -7,6 +7,6 @@ namespace Ryujinx.Graphics.Vic.Types
         Bob,
         NewBob,
         Disi1,
-        WeaveLumaBobFieldChroma
+        WeaveLumaBobFieldChroma,
     }
 }

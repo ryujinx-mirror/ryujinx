@@ -80,7 +80,7 @@ namespace Ryujinx.Graphics.Nvdec.Types.Vp9
                 SegmentFeatureData = Seg.FeatureData,
                 ModeRefDeltaEnabled = Lf.ModeRefDeltaEnabled != 0,
                 RefDeltas = Lf.RefDeltas,
-                ModeDeltas = Lf.ModeDeltas
+                ModeDeltas = Lf.ModeDeltas,
             };
         }
     }

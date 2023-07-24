@@ -266,7 +266,7 @@ namespace Ryujinx.Graphics.Shader.Translation
                 {
                     AccurateType = accurateType,
                     Type = type,
-                    UsageFlags = usageFlags
+                    UsageFlags = usageFlags,
                 };
 
                 int binding;

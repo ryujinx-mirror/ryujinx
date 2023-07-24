@@ -16,6 +16,6 @@
         NonIncrW,
         GatherW,
         RestartW,
-        Extend
+        Extend,
     }
 }

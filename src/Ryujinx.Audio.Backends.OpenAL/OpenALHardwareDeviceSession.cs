@@ -67,7 +67,7 @@ namespace Ryujinx.Audio.Backends.OpenAL
                 {
                     DriverIdentifier = buffer.DataPointer,
                     BufferId = AL.GenBuffer(),
-                    SampleCount = GetSampleCount(buffer)
+                    SampleCount = GetSampleCount(buffer),
                 };
 
                 AL.BufferData(driverBuffer.BufferId, _targetFormat, buffer.Data, (int)RequestedSampleRate);

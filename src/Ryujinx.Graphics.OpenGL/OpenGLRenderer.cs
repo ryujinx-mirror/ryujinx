@@ -210,7 +210,7 @@ namespace Ryujinx.Graphics.OpenGL
                 GL.Arb.MaxShaderCompilerThreads(Math.Min(Environment.ProcessorCount, 8));
             }
 
-            _counters.Initialize(_pipeline);
+            _counters.Initialize();
 
             // This is required to disable [0, 1] clamping for SNorm outputs on compatibility profiles.
             // This call is expected to fail if we're running with a core profile,

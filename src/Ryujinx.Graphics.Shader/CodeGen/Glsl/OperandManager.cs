@@ -11,7 +11,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 {
     class OperandManager
     {
-        private Dictionary<AstOperand, string> _locals;
+        private readonly Dictionary<AstOperand, string> _locals;
 
         public OperandManager()
         {

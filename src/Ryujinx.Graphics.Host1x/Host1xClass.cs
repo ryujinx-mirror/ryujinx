@@ -15,7 +15,7 @@ namespace Ryujinx.Graphics.Host1x
             _syncMgr = syncMgr;
             _state = new DeviceState<Host1xClassRegisters>(new Dictionary<string, RwCallback>
             {
-                { nameof(Host1xClassRegisters.WaitSyncpt32), new RwCallback(WaitSyncpt32, null) }
+                { nameof(Host1xClassRegisters.WaitSyncpt32), new RwCallback(WaitSyncpt32, null) },
             });
         }
 

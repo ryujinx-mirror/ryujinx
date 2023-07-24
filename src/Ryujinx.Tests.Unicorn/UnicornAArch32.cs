@@ -159,7 +159,7 @@ namespace Ryujinx.Tests.Unicorn
             Arm.UC_ARM_REG_Q12,
             Arm.UC_ARM_REG_Q13,
             Arm.UC_ARM_REG_Q14,
-            Arm.UC_ARM_REG_Q15
+            Arm.UC_ARM_REG_Q15,
         };
 #pragma warning restore IDE0051, IDE0052
 

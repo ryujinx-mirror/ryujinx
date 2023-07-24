@@ -1,8 +1,10 @@
 name: Comment PR artifacts links
+
 on:
   workflow_run:
-    workflows: ['Build job']
+    workflows: ['Perform checks']
     types: [completed]
+
 jobs:
   pr_comment:
     if: github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion == 'success'

@@ -8,8 +8,6 @@ using System.Threading;
 
 namespace Ryujinx.Graphics.Gpu
 {
-    using Texture = Image.Texture;
-
     /// <summary>
     /// GPU image presentation window.
     /// </summary>
@@ -202,13 +200,13 @@ namespace Ryujinx.Graphics.Gpu
             {
                 pt.AcquireCallback(_context, pt.UserObj);
 
-                Texture texture = pt.Cache.FindOrCreateTexture(null, TextureSearchFlags.WithUpscale, pt.Info, 0, pt.Range);
+                Image.Texture texture = pt.Cache.FindOrCreateTexture(null, TextureSearchFlags.WithUpscale, pt.Info, 0, pt.Range);
 
                 pt.Cache.Tick();
 
                 texture.SynchronizeMemory();
 
-                ImageCrop crop = new ImageCrop(
+                ImageCrop crop = new(
                     (int)(pt.Crop.Left * texture.ScaleFactor),
                     (int)MathF.Ceiling(pt.Crop.Right * texture.ScaleFactor),
                     (int)(pt.Crop.Top * texture.ScaleFactor),

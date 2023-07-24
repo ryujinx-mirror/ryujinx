@@ -6,6 +6,6 @@
 
         OglThreadControlDefault = 0,
         OglThreadControlEnable = 1,
-        OglThreadControlDisable = 2
+        OglThreadControlDisable = 2,
     }
 }

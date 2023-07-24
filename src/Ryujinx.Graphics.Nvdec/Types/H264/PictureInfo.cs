@@ -116,7 +116,7 @@ namespace Ryujinx.Graphics.Nvdec.Types.H264
                 FrameType = 0,
                 PicWidthInMbsMinus1 = PicWidthInMbs - 1,
                 PicHeightInMapUnitsMinus1 = (PicHeightInMbs >> (FrameMbsOnlyFlag != 0 ? 0 : 1)) - 1,
-                QpprimeYZeroTransformBypassFlag = QpprimeYZeroTransformBypassFlag
+                QpprimeYZeroTransformBypassFlag = QpprimeYZeroTransformBypassFlag,
             };
         }
     }

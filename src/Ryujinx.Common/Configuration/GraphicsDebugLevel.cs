@@ -9,6 +9,6 @@ namespace Ryujinx.Common.Configuration
         None,
         Error,
         Slowdowns,
-        All
+        All,
     }
 }
