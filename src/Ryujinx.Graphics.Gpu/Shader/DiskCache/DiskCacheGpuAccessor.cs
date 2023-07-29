@@ -248,6 +248,12 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
         }
 
         /// <inheritdoc/>
+        public bool QueryYNegateEnabled()
+        {
+            return _oldSpecState.GraphicsState.YNegateEnabled;
+        }
+
+        /// <inheritdoc/>
         public void RegisterTexture(int handle, int cbufSlot)
         {
             if (!_oldSpecState.TextureRegistered(_stageIndex, handle, cbufSlot))

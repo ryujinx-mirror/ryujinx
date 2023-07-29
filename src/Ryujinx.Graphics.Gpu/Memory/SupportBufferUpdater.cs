@@ -113,6 +113,17 @@ namespace Ryujinx.Graphics.Gpu.Memory
         }
 
         /// <summary>
+        /// Updates the viewport size vector.
+        /// </summary>
+        /// <param name="data">Viewport size vector</param>
+        private void UpdateViewportSize(Vector4<float> data)
+        {
+            _data.ViewportSize = data;
+
+            MarkDirty(SupportBuffer.ViewportSizeOffset, SupportBuffer.FieldSize);
+        }
+
+        /// <summary>
         /// Sets the scale of all output render targets (they should all have the same scale).
         /// </summary>
         /// <param name="scale">Scale value</param>
@@ -188,6 +199,25 @@ namespace Ryujinx.Graphics.Gpu.Memory
                     Y = scale * 2f / viewportHeight,
                     Z = 1,
                     W = disableTransformF,
+                });
+            }
+        }
+
+        /// <summary>
+        /// Sets the viewport size, used to invert the fragment coordinates Y value.
+        /// </summary>
+        /// <param name="viewportWidth">Value used as viewport width</param>
+        /// <param name="viewportHeight">Value used as viewport height</param>
+        public void SetViewportSize(float viewportWidth, float viewportHeight)
+        {
+            if (_data.ViewportSize.X != viewportWidth || _data.ViewportSize.Y != viewportHeight)
+            {
+                UpdateViewportSize(new Vector4<float>
+                {
+                    X = viewportWidth,
+                    Y = viewportHeight,
+                    Z = 1,
+                    W = 0
                 });
             }
         }

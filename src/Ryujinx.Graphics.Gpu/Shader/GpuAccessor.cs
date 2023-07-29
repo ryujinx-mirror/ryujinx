@@ -114,6 +114,13 @@ namespace Ryujinx.Graphics.Gpu.Shader
         }
 
         /// <inheritdoc/>
+        public bool QueryEarlyZForce()
+        {
+            _state.SpecializationState?.RecordEarlyZForce();
+            return _state.GraphicsState.EarlyZForce;
+        }
+
+        /// <inheritdoc/>
         public AttributeType QueryFragmentOutputType(int location)
         {
             return _state.GraphicsState.FragmentOutputTypes[location];
@@ -276,16 +283,15 @@ namespace Ryujinx.Graphics.Gpu.Shader
         }
 
         /// <inheritdoc/>
-        public bool QueryEarlyZForce()
-        {
-            _state.SpecializationState?.RecordEarlyZForce();
-            return _state.GraphicsState.EarlyZForce;
-        }
-
-        /// <inheritdoc/>
         public bool QueryViewportTransformDisable()
         {
             return _state.GraphicsState.ViewportTransformDisable;
+        }
+
+        /// <inheritdoc/>
+        public bool QueryYNegateEnabled()
+        {
+            return _state.GraphicsState.YNegateEnabled;
         }
 
         /// <inheritdoc/>

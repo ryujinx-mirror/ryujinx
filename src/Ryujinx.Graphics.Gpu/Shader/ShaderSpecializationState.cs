@@ -540,6 +540,11 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 return false;
             }
 
+            if (graphicsState.YNegateEnabled != GraphicsState.YNegateEnabled)
+            {
+                return false;
+            }
+
             return Matches(channel, ref poolState, checkTextures, isCompute: false);
         }
 

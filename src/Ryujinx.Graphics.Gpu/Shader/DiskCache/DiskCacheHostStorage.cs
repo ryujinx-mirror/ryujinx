@@ -22,7 +22,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
         private const ushort FileFormatVersionMajor = 1;
         private const ushort FileFormatVersionMinor = 2;
         private const uint FileFormatVersionPacked = ((uint)FileFormatVersionMajor << 16) | FileFormatVersionMinor;
-        private const uint CodeGenVersion = 5266;
+        private const uint CodeGenVersion = 4675;
 
         private const string SharedTocFileName = "shared.toc";
         private const string SharedDataFileName = "shared.data";
@@ -139,6 +139,11 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
             /// Shader stage.
             /// </summary>
             public ShaderStage Stage;
+
+            /// <summary>
+            /// Indicates if the fragment shader accesses the fragment coordinate built-in variable.
+            /// </summary>
+            public bool UsesFragCoord;
 
             /// <summary>
             /// Indicates if the shader accesses the Instance ID built-in variable.
@@ -781,6 +786,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
                 ShaderIdentification.None,
                 0,
                 dataInfo.Stage,
+                dataInfo.UsesFragCoord,
                 dataInfo.UsesInstanceId,
                 dataInfo.UsesDrawParameters,
                 dataInfo.UsesRtLayer,
@@ -807,6 +813,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
                 TexturesCount = (ushort)info.Textures.Count,
                 ImagesCount = (ushort)info.Images.Count,
                 Stage = info.Stage,
+                UsesFragCoord = info.UsesFragCoord,
                 UsesInstanceId = info.UsesInstanceId,
                 UsesDrawParameters = info.UsesDrawParameters,
                 UsesRtLayer = info.UsesRtLayer,

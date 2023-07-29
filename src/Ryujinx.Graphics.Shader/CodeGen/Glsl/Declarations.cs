@@ -188,10 +188,19 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                 context.AppendLine();
             }
 
-            if (context.Config.Stage == ShaderStage.Fragment && context.Config.GpuAccessor.QueryEarlyZForce())
+            if (context.Config.Stage == ShaderStage.Fragment)
             {
-                context.AppendLine("layout(early_fragment_tests) in;");
-                context.AppendLine();
+                if (context.Config.GpuAccessor.QueryEarlyZForce())
+                {
+                    context.AppendLine("layout (early_fragment_tests) in;");
+                    context.AppendLine();
+                }
+
+                if (context.Config.Properties.OriginUpperLeft)
+                {
+                    context.AppendLine("layout (origin_upper_left) in vec4 gl_FragCoord;");
+                    context.AppendLine();
+                }
             }
 
             if ((info.HelperFunctionsMask & HelperFunctionsMask.MultiplyHighS32) != 0)

@@ -19,6 +19,7 @@ namespace Ryujinx.Graphics.Shader
         FragmentAlphaTest,
         FragmentIsBgra,
         ViewportInverse,
+        ViewportSize,
         FragmentRenderScaleCount,
         RenderScale,
     }
@@ -33,6 +34,7 @@ namespace Ryujinx.Graphics.Shader
         public static readonly int FragmentAlphaTestOffset;
         public static readonly int FragmentIsBgraOffset;
         public static readonly int ViewportInverseOffset;
+        public static readonly int ViewportSizeOffset;
         public static readonly int FragmentRenderScaleCountOffset;
         public static readonly int GraphicsRenderScaleOffset;
         public static readonly int ComputeRenderScaleOffset;
@@ -56,6 +58,7 @@ namespace Ryujinx.Graphics.Shader
             FragmentAlphaTestOffset = OffsetOf(ref instance, ref instance.FragmentAlphaTest);
             FragmentIsBgraOffset = OffsetOf(ref instance, ref instance.FragmentIsBgra);
             ViewportInverseOffset = OffsetOf(ref instance, ref instance.ViewportInverse);
+            ViewportSizeOffset = OffsetOf(ref instance, ref instance.ViewportSize);
             FragmentRenderScaleCountOffset = OffsetOf(ref instance, ref instance.FragmentRenderScaleCount);
             GraphicsRenderScaleOffset = OffsetOf(ref instance, ref instance.RenderScale);
             ComputeRenderScaleOffset = GraphicsRenderScaleOffset + FieldSize;
@@ -68,6 +71,7 @@ namespace Ryujinx.Graphics.Shader
                 new StructureField(AggregateType.U32, "s_alpha_test"),
                 new StructureField(AggregateType.Array | AggregateType.U32, "s_is_bgra", FragmentIsBgraCount),
                 new StructureField(AggregateType.Vector4 | AggregateType.FP32, "s_viewport_inverse"),
+                new StructureField(AggregateType.Vector4 | AggregateType.FP32, "s_viewport_size"),
                 new StructureField(AggregateType.S32, "s_frag_scale_count"),
                 new StructureField(AggregateType.Array | AggregateType.FP32, "s_render_scale", RenderScaleMaxCount),
             });
@@ -76,6 +80,7 @@ namespace Ryujinx.Graphics.Shader
         public Vector4<int> FragmentAlphaTest;
         public Array8<Vector4<int>> FragmentIsBgra;
         public Vector4<float> ViewportInverse;
+        public Vector4<float> ViewportSize;
         public Vector4<int> FragmentRenderScaleCount;
 
         // Render scale max count: 1 + 64 + 8. First scale is fragment output scale, others are textures/image inputs.

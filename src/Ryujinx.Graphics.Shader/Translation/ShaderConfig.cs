@@ -123,7 +123,20 @@ namespace Ryujinx.Graphics.Shader.Translation
             UsedInputAttributesPerPatch = new HashSet<int>();
             UsedOutputAttributesPerPatch = new HashSet<int>();
 
-            ResourceManager = new ResourceManager(stage, gpuAccessor, new ShaderProperties());
+            ShaderProperties properties;
+
+            switch (stage)
+            {
+                case ShaderStage.Fragment:
+                    bool originUpperLeft = options.TargetApi == TargetApi.Vulkan || gpuAccessor.QueryYNegateEnabled();
+                    properties = new ShaderProperties(originUpperLeft);
+                    break;
+                default:
+                    properties = new ShaderProperties();
+                    break;
+            }
+
+            ResourceManager = new ResourceManager(stage, gpuAccessor, properties);
 
             if (!gpuAccessor.QueryHostSupportsTransformFeedback() && gpuAccessor.QueryTransformFeedbackEnabled())
             {
@@ -135,7 +148,7 @@ namespace Ryujinx.Graphics.Shader.Translation
 
                 BufferDefinition tfeInfoBuffer = new(BufferLayout.Std430, 1, Constants.TfeInfoBinding, "tfe_info", tfeInfoStruct);
 
-                Properties.AddOrUpdateStorageBuffer(Constants.TfeInfoBinding, tfeInfoBuffer);
+                properties.AddOrUpdateStorageBuffer(Constants.TfeInfoBinding, tfeInfoBuffer);
 
                 StructureType tfeDataStruct = new(new StructureField[]
                 {
@@ -146,7 +159,7 @@ namespace Ryujinx.Graphics.Shader.Translation
                 {
                     int binding = Constants.TfeBufferBaseBinding + i;
                     BufferDefinition tfeDataBuffer = new(BufferLayout.Std430, 1, binding, $"tfe_data{i}", tfeDataStruct);
-                    Properties.AddOrUpdateStorageBuffer(binding, tfeDataBuffer);
+                    properties.AddOrUpdateStorageBuffer(binding, tfeDataBuffer);
                 }
             }
         }
@@ -615,6 +628,7 @@ namespace Ryujinx.Graphics.Shader.Translation
                 identification,
                 GpLayerInputAttribute,
                 Stage,
+                UsedFeatures.HasFlag(FeatureFlags.FragCoordXY),
                 UsedFeatures.HasFlag(FeatureFlags.InstanceId),
                 UsedFeatures.HasFlag(FeatureFlags.DrawParameters),
                 UsedFeatures.HasFlag(FeatureFlags.RtLayer),

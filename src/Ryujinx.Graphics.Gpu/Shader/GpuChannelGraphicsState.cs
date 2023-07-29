@@ -98,6 +98,11 @@ namespace Ryujinx.Graphics.Gpu.Shader
         public bool DualSourceBlendEnable;
 
         /// <summary>
+        /// Indicates whether Y negate of the fragment coordinates is enabled.
+        /// </summary>
+        public bool YNegateEnabled;
+
+        /// <summary>
         /// Creates a new GPU graphics state.
         /// </summary>
         /// <param name="earlyZForce">Early Z force enable</param>
@@ -116,7 +121,8 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// <param name="hasConstantBufferDrawParameters">Indicates that the draw is writing the base vertex, base instance and draw index to Constant Buffer 0</param>
         /// <param name="hasUnalignedStorageBuffer">Indicates that any storage buffer use is unaligned</param>
         /// <param name="fragmentOutputTypes">Type of the fragment shader outputs</param>
-        /// <param name="dualSourceBlendEnable">Type of the vertex attributes consumed by the shader</param>
+        /// <param name="dualSourceBlendEnable">Indicates whether dual source blend is enabled</param>
+        /// <param name="yNegateEnabled">Indicates whether Y negate of the fragment coordinates is enabled</param>
         public GpuChannelGraphicsState(
             bool earlyZForce,
             PrimitiveTopology topology,
@@ -134,7 +140,8 @@ namespace Ryujinx.Graphics.Gpu.Shader
             bool hasConstantBufferDrawParameters,
             bool hasUnalignedStorageBuffer,
             ref Array8<AttributeType> fragmentOutputTypes,
-            bool dualSourceBlendEnable)
+            bool dualSourceBlendEnable,
+            bool yNegateEnabled)
         {
             EarlyZForce = earlyZForce;
             Topology = topology;
@@ -153,6 +160,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
             HasUnalignedStorageBuffer = hasUnalignedStorageBuffer;
             FragmentOutputTypes = fragmentOutputTypes;
             DualSourceBlendEnable = dualSourceBlendEnable;
+            YNegateEnabled = yNegateEnabled;
         }
     }
 }

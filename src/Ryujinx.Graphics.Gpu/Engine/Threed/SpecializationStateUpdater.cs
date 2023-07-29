@@ -342,5 +342,19 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                 Signal();
             }
         }
+
+        /// <summary>
+        /// Sets the Y negate enabled state.
+        /// </summary>
+        /// <param name="enabled">True if Y negate of the fragment coordinates is enabled</param>
+        public void SetYNegateEnabled(bool enabled)
+        {
+            if (enabled != _graphics.YNegateEnabled)
+            {
+                _graphics.YNegateEnabled = enabled;
+
+                Signal();
+            }
+        }
     }
 }

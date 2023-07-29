@@ -179,6 +179,15 @@ namespace Ryujinx.Graphics.Shader
         }
 
         /// <summary>
+        /// Queries if host state forces early depth testing.
+        /// </summary>
+        /// <returns>True if early depth testing is forced</returns>
+        bool QueryEarlyZForce()
+        {
+            return false;
+        }
+
+        /// <summary>
         /// Queries whenever the current draw has written the base vertex and base instance into Constant Buffer 0.
         /// </summary>
         /// <returns>True if the shader translator can assume that the constant buffer contains the base IDs, false otherwise</returns>
@@ -534,19 +543,19 @@ namespace Ryujinx.Graphics.Shader
         }
 
         /// <summary>
-        /// Queries if host state forces early depth testing.
+        /// Queries if host state disables the viewport transform.
         /// </summary>
-        /// <returns>True if early depth testing is forced</returns>
-        bool QueryEarlyZForce()
+        /// <returns>True if the viewport transform is disabled</returns>
+        bool QueryViewportTransformDisable()
         {
             return false;
         }
 
         /// <summary>
-        /// Queries if host state disables the viewport transform.
+        /// Queries Y negate enable state.
         /// </summary>
-        /// <returns>True if the viewport transform is disabled</returns>
-        bool QueryViewportTransformDisable()
+        /// <returns>True if Y negate of the fragment coordinates is enabled, false otherwise</returns>
+        bool QueryYNegateEnabled()
         {
             return false;
         }

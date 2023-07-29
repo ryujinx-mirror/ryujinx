@@ -429,6 +429,11 @@ namespace Ryujinx.Graphics.Shader.Translation
             return context.Add(Instruction.FP32 | Instruction.SquareRoot, Local(), a);
         }
 
+        public static Operand FPSubtract(this EmitterContext context, Operand a, Operand b, Instruction fpType = Instruction.FP32)
+        {
+            return context.Add(fpType | Instruction.Subtract, Local(), a, b);
+        }
+
         public static Operand FPTruncate(this EmitterContext context, Operand a, Instruction fpType = Instruction.FP32)
         {
             return context.Add(fpType | Instruction.Truncate, Local(), a);
