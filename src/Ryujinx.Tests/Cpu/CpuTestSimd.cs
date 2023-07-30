@@ -764,7 +764,9 @@ namespace Ryujinx.Tests.Cpu
             {
                 0x7E30D820u, // FADDP   S0, V1.2S
                 0x7E30C820u, // FMAXNMP S0, V1.2S
+                0x7E30F820u, // FMAXP   S0, V1.2S
                 0x7EB0C820u, // FMINNMP S0, V1.2S
+                0x7EB0F820u, // FMINP   S0, V1.2S
             };
         }
 
@@ -774,7 +776,9 @@ namespace Ryujinx.Tests.Cpu
             {
                 0x7E70D820u, // FADDP   D0, V1.2D
                 0x7E70C820u, // FMAXNMP D0, V1.2D
+                0x7E70F820u, // FMAXP   D0, V1.2D
                 0x7EF0C820u, // FMINNMP D0, V1.2D
+                0x7EF0F820u, // FMINP   D0, V1.2D
             };
         }
 

@@ -330,6 +330,7 @@ namespace ARMeilleure.Decoders
             SetA64("011111100x110000110010xxxxxxxxxx", InstName.Fmaxnmp_S,       InstEmit.Fmaxnmp_S,       OpCodeSimd.Create);
             SetA64("0>1011100<1xxxxx110001xxxxxxxxxx", InstName.Fmaxnmp_V,       InstEmit.Fmaxnmp_V,       OpCodeSimdReg.Create);
             SetA64("0110111000110000110010xxxxxxxxxx", InstName.Fmaxnmv_V,       InstEmit.Fmaxnmv_V,       OpCodeSimd.Create);
+            SetA64("011111100x110000111110xxxxxxxxxx", InstName.Fmaxp_S,         InstEmit.Fmaxp_S,         OpCodeSimd.Create);
             SetA64("0>1011100<1xxxxx111101xxxxxxxxxx", InstName.Fmaxp_V,         InstEmit.Fmaxp_V,         OpCodeSimdReg.Create);
             SetA64("0110111000110000111110xxxxxxxxxx", InstName.Fmaxv_V,         InstEmit.Fmaxv_V,         OpCodeSimd.Create);
             SetA64("000111100x1xxxxx010110xxxxxxxxxx", InstName.Fmin_S,          InstEmit.Fmin_S,          OpCodeSimdReg.Create);
@@ -339,6 +340,7 @@ namespace ARMeilleure.Decoders
             SetA64("011111101x110000110010xxxxxxxxxx", InstName.Fminnmp_S,       InstEmit.Fminnmp_S,       OpCodeSimd.Create);
             SetA64("0>1011101<1xxxxx110001xxxxxxxxxx", InstName.Fminnmp_V,       InstEmit.Fminnmp_V,       OpCodeSimdReg.Create);
             SetA64("0110111010110000110010xxxxxxxxxx", InstName.Fminnmv_V,       InstEmit.Fminnmv_V,       OpCodeSimd.Create);
+            SetA64("011111101x110000111110xxxxxxxxxx", InstName.Fminp_S,         InstEmit.Fminp_S,         OpCodeSimd.Create);
             SetA64("0>1011101<1xxxxx111101xxxxxxxxxx", InstName.Fminp_V,         InstEmit.Fminp_V,         OpCodeSimdReg.Create);
             SetA64("0110111010110000111110xxxxxxxxxx", InstName.Fminv_V,         InstEmit.Fminv_V,         OpCodeSimd.Create);
             SetA64("010111111xxxxxxx0001x0xxxxxxxxxx", InstName.Fmla_Se,         InstEmit.Fmla_Se,         OpCodeSimdRegElemF.Create);

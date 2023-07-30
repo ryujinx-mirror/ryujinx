@@ -883,6 +883,31 @@ namespace ARMeilleure.Instructions
             }
         }
 
+        public static void Fmaxp_S(ArmEmitterContext context)
+        {
+            if (Optimizations.UseAdvSimd)
+            {
+                InstEmitSimdHelperArm64.EmitScalarUnaryOpF(context, Intrinsic.Arm64FmaxpS);
+            }
+            else if (Optimizations.FastFP && Optimizations.UseSse41)
+            {
+                EmitSse2ScalarPairwiseOpF(context, (op1, op2) =>
+                {
+                    return EmitSse41ProcessNaNsOpF(context, (op1, op2) =>
+                    {
+                        return EmitSse2VectorMaxMinOpF(context, op1, op2, isMax: true);
+                    }, scalar: true, op1, op2);
+                });
+            }
+            else
+            {
+                EmitScalarPairwiseOpF(context, (op1, op2) =>
+                {
+                    return EmitSoftFloatCall(context, nameof(SoftFloat32.FPMax), op1, op2);
+                });
+            }
+        }
+
         public static void Fmaxp_V(ArmEmitterContext context)
         {
             if (Optimizations.UseAdvSimd)
@@ -1077,6 +1102,31 @@ namespace ARMeilleure.Instructions
                 EmitVectorAcrossVectorOpF(context, (op1, op2) =>
                 {
                     return EmitSoftFloatCall(context, nameof(SoftFloat32.FPMinNum), op1, op2);
+                });
+            }
+        }
+
+        public static void Fminp_S(ArmEmitterContext context)
+        {
+            if (Optimizations.UseAdvSimd)
+            {
+                InstEmitSimdHelperArm64.EmitScalarUnaryOpF(context, Intrinsic.Arm64FminpS);
+            }
+            else if (Optimizations.FastFP && Optimizations.UseSse41)
+            {
+                EmitSse2ScalarPairwiseOpF(context, (op1, op2) =>
+                {
+                    return EmitSse41ProcessNaNsOpF(context, (op1, op2) =>
+                    {
+                        return EmitSse2VectorMaxMinOpF(context, op1, op2, isMax: false);
+                    }, scalar: true, op1, op2);
+                });
+            }
+            else
+            {
+                EmitScalarPairwiseOpF(context, (op1, op2) =>
+                {
+                    return EmitSoftFloatCall(context, nameof(SoftFloat32.FPMin), op1, op2);
                 });
             }
         }
