@@ -218,7 +218,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 return context.Copy(Register(srcB++, RegisterType.Gpr));
             }
 
-            Operand d = dest != RegisterConsts.RegisterZeroIndex ? Register(dest, RegisterType.Gpr) : null;
+            Operand d = Register(dest, RegisterType.Gpr);
 
             List<Operand> sourcesList = new();
 
@@ -304,6 +304,11 @@ namespace Ryujinx.Graphics.Shader.Instructions
             bool byteAddress,
             bool isBindless)
         {
+            if (srcB == RegisterConsts.RegisterZeroIndex)
+            {
+                return;
+            }
+
             context.Config.SetUsedFeature(FeatureFlags.IntegerSampling);
 
             SamplerType type = ConvertSamplerType(dimensions);
