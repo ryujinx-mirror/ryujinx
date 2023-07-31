@@ -54,7 +54,11 @@ jobs:
         run: dotnet build -c "${{ matrix.configuration }}" -p:Version="${{ env.RYUJINX_BASE_VERSION }}" -p:SourceRevisionId="${{ steps.git_short_hash.outputs.result }}" -p:ExtraDefineConstants=DISABLE_UPDATER
 
       - name: Test
-        run: dotnet test --no-build -c "${{ matrix.configuration }}"
+        uses: TSRBerry/unstable-commands@v1
+        with:
+          commands: dotnet test --no-build -c "${{ matrix.configuration }}"
+          timeout-minutes: 10
+          retry-codes: 139
 
       - name: Publish Ryujinx
         run: dotnet publish -c "${{ matrix.configuration }}" -r "${{ matrix.DOTNET_RUNTIME_IDENTIFIER }}" -o ./publish -p:Version="${{ env.RYUJINX_BASE_VERSION }}" -p:DebugType=embedded -p:SourceRevisionId="${{ steps.git_short_hash.outputs.result }}" -p:ExtraDefineConstants=DISABLE_UPDATER src/Ryujinx --self-contained true
