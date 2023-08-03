@@ -42,6 +42,7 @@ namespace Ryujinx.Graphics.Vulkan
             "VK_NV_viewport_array2",
             "VK_EXT_depth_clip_control",
             "VK_KHR_portability_subset", // As per spec, we should enable this if present.
+            "VK_EXT_4444_formats",
         };
 
         private static readonly string[] _requiredExtensions = {
