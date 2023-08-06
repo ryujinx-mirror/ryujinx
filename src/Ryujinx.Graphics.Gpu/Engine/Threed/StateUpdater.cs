@@ -331,7 +331,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                 UpdateShaderState();
             }
 
-            _channel.BufferManager.CommitGraphicsBindings();
+            _channel.BufferManager.CommitGraphicsBindings(_drawState.DrawIndexed);
         }
 
         /// <summary>
