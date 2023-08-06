@@ -28,6 +28,7 @@ jobs:
           dot: true
 
       - name: Assign reviewers
+        if: ! github.event.pull_request.draft
         run: |
           pip3 install PyGithub
           python3 .github/update_reviewers.py ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} ${{ github.event.pull_request.number }} .github/reviewers.yml
