@@ -304,11 +304,11 @@ namespace Ryujinx.Graphics.Shader.Translation
             PrepareForVertexReturn();
         }
 
-        public void PrepareForReturn()
+        public bool PrepareForReturn()
         {
             if (IsNonMain)
             {
-                return;
+                return true;
             }
 
             if (Config.LastInVertexPipeline &&
@@ -383,13 +383,13 @@ namespace Ryujinx.Graphics.Shader.Translation
 
                 AlphaTestOp alphaTestOp = Config.GpuAccessor.QueryAlphaTestCompare();
 
-                if (alphaTestOp != AlphaTestOp.Always && (Config.OmapTargets & 8) != 0)
+                if (alphaTestOp != AlphaTestOp.Always)
                 {
                     if (alphaTestOp == AlphaTestOp.Never)
                     {
                         this.Discard();
                     }
-                    else
+                    else if ((Config.OmapTargets & 8) != 0)
                     {
                         Instruction comparator = alphaTestOp switch
                         {
@@ -413,6 +413,12 @@ namespace Ryujinx.Graphics.Shader.Translation
                         this.Discard();
                         this.MarkLabel(alphaPassLabel);
                     }
+                }
+
+                // We don't need to output anything if alpha test always fails.
+                if (alphaTestOp == AlphaTestOp.Never)
+                {
+                    return false;
                 }
 
                 int regIndexBase = 0;
@@ -462,6 +468,8 @@ namespace Ryujinx.Graphics.Shader.Translation
                     }
                 }
             }
+
+            return true;
         }
 
         private void GenerateAlphaToCoverageDitherDiscard()
