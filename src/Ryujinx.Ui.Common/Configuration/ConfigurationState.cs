@@ -486,6 +486,11 @@ namespace Ryujinx.Ui.Common.Configuration
             public ReactiveObject<bool> EnableMacroHLE { get; private set; }
 
             /// <summary>
+            /// Enables or disables color space passthrough, if available.
+            /// </summary>
+            public ReactiveObject<bool> EnableColorSpacePassthrough { get; private set; }
+
+            /// <summary>
             /// Graphics backend
             /// </summary>
             public ReactiveObject<GraphicsBackend> GraphicsBackend { get; private set; }
@@ -535,6 +540,8 @@ namespace Ryujinx.Ui.Common.Configuration
                 PreferredGpu.Event += static (sender, e) => LogValueChange(e, nameof(PreferredGpu));
                 EnableMacroHLE = new ReactiveObject<bool>();
                 EnableMacroHLE.Event += static (sender, e) => LogValueChange(e, nameof(EnableMacroHLE));
+                EnableColorSpacePassthrough = new ReactiveObject<bool>();
+                EnableColorSpacePassthrough.Event += static (sender, e) => LogValueChange(e, nameof(EnableColorSpacePassthrough));
                 AntiAliasing = new ReactiveObject<AntiAliasing>();
                 AntiAliasing.Event += static (sender, e) => LogValueChange(e, nameof(AntiAliasing));
                 ScalingFilter = new ReactiveObject<ScalingFilter>();
@@ -667,6 +674,7 @@ namespace Ryujinx.Ui.Common.Configuration
                 EnableShaderCache = Graphics.EnableShaderCache,
                 EnableTextureRecompression = Graphics.EnableTextureRecompression,
                 EnableMacroHLE = Graphics.EnableMacroHLE,
+                EnableColorSpacePassthrough = Graphics.EnableColorSpacePassthrough,
                 EnablePtc = System.EnablePtc,
                 EnableInternetAccess = System.EnableInternetAccess,
                 EnableFsIntegrityChecks = System.EnableFsIntegrityChecks,
@@ -772,6 +780,7 @@ namespace Ryujinx.Ui.Common.Configuration
             Graphics.EnableShaderCache.Value = true;
             Graphics.EnableTextureRecompression.Value = false;
             Graphics.EnableMacroHLE.Value = true;
+            Graphics.EnableColorSpacePassthrough.Value = false;
             Graphics.AntiAliasing.Value = AntiAliasing.None;
             Graphics.ScalingFilter.Value = ScalingFilter.Bilinear;
             Graphics.ScalingFilterLevel.Value = 80;
@@ -1391,6 +1400,15 @@ namespace Ryujinx.Ui.Common.Configuration
                 configurationFileUpdated = true;
             }
 
+            if (configurationFileFormat.Version < 48)
+            {
+                Ryujinx.Common.Logging.Logger.Warning?.Print(LogClass.Application, $"Outdated configuration version {configurationFileFormat.Version}, migrating to version 48.");
+
+                configurationFileFormat.EnableColorSpacePassthrough = false;
+
+                configurationFileUpdated = true;
+            }
+
             Logger.EnableFileLog.Value = configurationFileFormat.EnableFileLog;
             Graphics.ResScale.Value = configurationFileFormat.ResScale;
             Graphics.ResScaleCustom.Value = configurationFileFormat.ResScaleCustom;
@@ -1426,6 +1444,7 @@ namespace Ryujinx.Ui.Common.Configuration
             Graphics.EnableShaderCache.Value = configurationFileFormat.EnableShaderCache;
             Graphics.EnableTextureRecompression.Value = configurationFileFormat.EnableTextureRecompression;
             Graphics.EnableMacroHLE.Value = configurationFileFormat.EnableMacroHLE;
+            Graphics.EnableColorSpacePassthrough.Value = configurationFileFormat.EnableColorSpacePassthrough;
             System.EnablePtc.Value = configurationFileFormat.EnablePtc;
             System.EnableInternetAccess.Value = configurationFileFormat.EnableInternetAccess;
             System.EnableFsIntegrityChecks.Value = configurationFileFormat.EnableFsIntegrityChecks;

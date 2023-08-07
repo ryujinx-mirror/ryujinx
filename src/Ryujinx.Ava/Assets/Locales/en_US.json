@@ -620,6 +620,8 @@
   "SettingsTabHotkeysVolumeDownHotkey": "Decrease Volume:",
   "SettingsEnableMacroHLE": "Enable Macro HLE",
   "SettingsEnableMacroHLETooltip": "High-level emulation of GPU Macro code.\n\nImproves performance, but may cause graphical glitches in some games.\n\nLeave ON if unsure.",
+  "SettingsEnableColorSpacePassthrough": "Color Space Passthrough",
+  "SettingsEnableColorSpacePassthroughTooltip": "Directs the Vulkan backend to pass through color information without specifying a color space. For users with wide gamut displays, this may result in more vibrant colors, at the cost of color correctness.",
   "VolumeShort": "Vol",
   "UserProfilesManageSaves": "Manage Saves",
   "DeleteUserSave": "Do you want to delete user save for this game?",

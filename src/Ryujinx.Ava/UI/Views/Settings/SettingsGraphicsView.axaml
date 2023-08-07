@@ -73,6 +73,10 @@
                             ToolTip.Tip="{locale:Locale SettingsEnableMacroHLETooltip}">
                             <TextBlock Text="{locale:Locale SettingsEnableMacroHLE}" />
                         </CheckBox>
+                        <CheckBox IsChecked="{Binding EnableColorSpacePassthrough}"
+                            ToolTip.Tip="{locale:Locale SettingsEnableColorSpacePassthroughTooltip}">
+                            <TextBlock Text="{locale:Locale SettingsEnableColorSpacePassthrough}" />
+                        </CheckBox>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal">
                         <TextBlock VerticalAlignment="Center"

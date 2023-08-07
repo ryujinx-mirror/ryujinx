@@ -14,7 +14,7 @@ namespace Ryujinx.Ui.Common.Configuration
         /// <summary>
         /// The current version of the file format
         /// </summary>
-        public const int CurrentVersion = 47;
+        public const int CurrentVersion = 48;
 
         /// <summary>
         /// Version of the configuration file format
@@ -185,6 +185,11 @@ namespace Ryujinx.Ui.Common.Configuration
         /// Enables or disables Macro high-level emulation
         /// </summary>
         public bool EnableMacroHLE { get; set; }
+
+        /// <summary>
+        /// Enables or disables color space passthrough, if available.
+        /// </summary>
+        public bool EnableColorSpacePassthrough { get; set; }
 
         /// <summary>
         /// Enables or disables profiled translation cache persistency

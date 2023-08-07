@@ -38,5 +38,7 @@ namespace Ryujinx.Graphics.GAL.Multithreading
         public void SetScalingFilter(ScalingFilter type) { }
 
         public void SetScalingFilterLevel(float level) { }
+
+        public void SetColorSpacePassthrough(bool colorSpacePassthroughEnabled) { }
     }
 }

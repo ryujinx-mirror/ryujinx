@@ -28,7 +28,7 @@ namespace Ryujinx.Graphics.Vulkan
         private int _width;
         private int _height;
         private bool _vsyncEnabled;
-        private bool _vsyncModeChanged;
+        private bool _swapchainIsDirty;
         private VkFormat _format;
         private AntiAliasing _currentAntiAliasing;
         private bool _updateEffect;
@@ -38,6 +38,7 @@ namespace Ryujinx.Graphics.Vulkan
         private float _scalingFilterLevel;
         private bool _updateScalingFilter;
         private ScalingFilter _currentScalingFilter;
+        private bool _colorSpacePassthroughEnabled;
 
         public unsafe Window(VulkanRenderer gd, SurfaceKHR surface, PhysicalDevice physicalDevice, Device device)
         {
@@ -60,7 +61,7 @@ namespace Ryujinx.Graphics.Vulkan
         private void RecreateSwapchain()
         {
             var oldSwapchain = _swapchain;
-            _vsyncModeChanged = false;
+            _swapchainIsDirty = false;
 
             for (int i = 0; i < _swapchainImageViews.Length; i++)
             {
@@ -106,7 +107,7 @@ namespace Ryujinx.Graphics.Vulkan
                 imageCount = capabilities.MaxImageCount;
             }
 
-            var surfaceFormat = ChooseSwapSurfaceFormat(surfaceFormats);
+            var surfaceFormat = ChooseSwapSurfaceFormat(surfaceFormats, _colorSpacePassthroughEnabled);
 
             var extent = ChooseSwapExtent(capabilities);
 
@@ -178,22 +179,40 @@ namespace Ryujinx.Graphics.Vulkan
             return new Auto<DisposableImageView>(new DisposableImageView(_gd.Api, _device, imageView));
         }
 
-        private static SurfaceFormatKHR ChooseSwapSurfaceFormat(SurfaceFormatKHR[] availableFormats)
+        private static SurfaceFormatKHR ChooseSwapSurfaceFormat(SurfaceFormatKHR[] availableFormats, bool colorSpacePassthroughEnabled)
         {
             if (availableFormats.Length == 1 && availableFormats[0].Format == VkFormat.Undefined)
             {
                 return new SurfaceFormatKHR(VkFormat.B8G8R8A8Unorm, ColorSpaceKHR.PaceSrgbNonlinearKhr);
             }
-
-            foreach (var format in availableFormats)
+            var formatToReturn = availableFormats[0];
+            if (colorSpacePassthroughEnabled)
             {
-                if (format.Format == VkFormat.B8G8R8A8Unorm && format.ColorSpace == ColorSpaceKHR.PaceSrgbNonlinearKhr)
+                foreach (var format in availableFormats)
                 {
-                    return format;
+                    if (format.Format == VkFormat.B8G8R8A8Unorm && format.ColorSpace == ColorSpaceKHR.SpacePassThroughExt)
+                    {
+                        formatToReturn = format;
+                        break;
+                    }
+                    else if (format.Format == VkFormat.B8G8R8A8Unorm && format.ColorSpace == ColorSpaceKHR.PaceSrgbNonlinearKhr)
+                    {
+                        formatToReturn = format;
+                    }
                 }
             }
-
-            return availableFormats[0];
+            else
+            {
+                foreach (var format in availableFormats)
+                {
+                    if (format.Format == VkFormat.B8G8R8A8Unorm && format.ColorSpace == ColorSpaceKHR.PaceSrgbNonlinearKhr)
+                    {
+                        formatToReturn = format;
+                        break;
+                    }
+                }
+            }
+            return formatToReturn;
         }
 
         private static CompositeAlphaFlagsKHR ChooseCompositeAlpha(CompositeAlphaFlagsKHR supportedFlags)
@@ -259,7 +278,7 @@ namespace Ryujinx.Graphics.Vulkan
 
                 if (acquireResult == Result.ErrorOutOfDateKhr ||
                     acquireResult == Result.SuboptimalKhr ||
-                    _vsyncModeChanged)
+                    _swapchainIsDirty)
                 {
                     RecreateSwapchain();
                 }
@@ -443,6 +462,12 @@ namespace Ryujinx.Graphics.Vulkan
             _updateScalingFilter = true;
         }
 
+        public override void SetColorSpacePassthrough(bool colorSpacePassthroughEnabled)
+        {
+            _colorSpacePassthroughEnabled = colorSpacePassthroughEnabled;
+            _swapchainIsDirty = true;
+        }
+
         private void UpdateEffect()
         {
             if (_updateEffect)
@@ -559,7 +584,7 @@ namespace Ryujinx.Graphics.Vulkan
         public override void ChangeVSyncMode(bool vsyncEnabled)
         {
             _vsyncEnabled = vsyncEnabled;
-            _vsyncModeChanged = true;
+            _swapchainIsDirty = true;
         }
 
         protected virtual void Dispose(bool disposing)

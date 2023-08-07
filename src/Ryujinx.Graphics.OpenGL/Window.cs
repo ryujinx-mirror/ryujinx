@@ -307,6 +307,8 @@ namespace Ryujinx.Graphics.OpenGL
             _updateScalingFilter = true;
         }
 
+        public void SetColorSpacePassthrough(bool colorSpacePassthroughEnabled) { }
+
         private void UpdateEffect()
         {
             if (_updateEffect)
