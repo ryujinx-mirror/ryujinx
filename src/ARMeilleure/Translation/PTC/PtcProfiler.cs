@@ -9,10 +9,13 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
+using System.Timers;
 using static ARMeilleure.Translation.PTC.PtcFormatter;
+using Timer = System.Timers.Timer;
 
 namespace ARMeilleure.Translation.PTC
 {
@@ -20,7 +23,11 @@ namespace ARMeilleure.Translation.PTC
     {
         private const string OuterHeaderMagicString = "Pohd\0\0\0\0";
 
-        private const uint InternalVersion = 1866; //! Not to be incremented manually for each change to the ARMeilleure project.
+        private const uint InternalVersion = 5518; //! Not to be incremented manually for each change to the ARMeilleure project.
+
+        private static readonly uint[] _migrateInternalVersions = {
+            1866,
+        };
 
         private const int SaveInterval = 30; // Seconds.
 
@@ -28,7 +35,7 @@ namespace ARMeilleure.Translation.PTC
 
         private readonly Ptc _ptc;
 
-        private readonly System.Timers.Timer _timer;
+        private readonly Timer _timer;
 
         private readonly ulong _outerHeaderMagic;
 
@@ -51,7 +58,7 @@ namespace ARMeilleure.Translation.PTC
         {
             _ptc = ptc;
 
-            _timer = new System.Timers.Timer((double)SaveInterval * 1000d);
+            _timer = new Timer(SaveInterval * 1000d);
             _timer.Elapsed += PreSave;
 
             _outerHeaderMagic = BinaryPrimitives.ReadUInt64LittleEndian(EncodingCache.UTF8NoBOM.GetBytes(OuterHeaderMagicString).AsSpan());
@@ -168,7 +175,7 @@ namespace ARMeilleure.Translation.PTC
                     return false;
                 }
 
-                if (outerHeader.InfoFileVersion != InternalVersion)
+                if (outerHeader.InfoFileVersion != InternalVersion && !_migrateInternalVersions.Contains(outerHeader.InfoFileVersion))
                 {
                     InvalidateCompressedStream(compressedStream);
 
@@ -211,7 +218,19 @@ namespace ARMeilleure.Translation.PTC
                     return false;
                 }
 
-                ProfiledFuncs = Deserialize(stream);
+                switch (outerHeader.InfoFileVersion)
+                {
+                    case InternalVersion:
+                        ProfiledFuncs = Deserialize(stream);
+                        break;
+                    case 1866:
+                        ProfiledFuncs = Deserialize(stream, (address, profile) => (address + 0x500000UL, profile));
+                        break;
+                    default:
+                        Logger.Error?.Print(LogClass.Ptc, $"No migration path for {nameof(outerHeader.InfoFileVersion)} '{outerHeader.InfoFileVersion}'. Discarding cache.");
+                        InvalidateCompressedStream(compressedStream);
+                        return false;
+                }
 
                 Debug.Assert(stream.Position == stream.Length);
 
@@ -225,9 +244,14 @@ namespace ARMeilleure.Translation.PTC
             return true;
         }
 
-        private static Dictionary<ulong, FuncProfile> Deserialize(Stream stream)
+        private static Dictionary<ulong, FuncProfile> Deserialize(Stream stream, Func<ulong, FuncProfile, (ulong, FuncProfile)> migrateEntryFunc = null)
         {
-            return DeserializeDictionary<ulong, FuncProfile>(stream, (stream) => DeserializeStructure<FuncProfile>(stream));
+            if (migrateEntryFunc != null)
+            {
+                return DeserializeAndUpdateDictionary(stream, DeserializeStructure<FuncProfile>, migrateEntryFunc);
+            }
+
+            return DeserializeDictionary<ulong, FuncProfile>(stream, DeserializeStructure<FuncProfile>);
         }
 
         private static ReadOnlySpan<byte> GetReadOnlySpan(MemoryStream memoryStream)
@@ -240,7 +264,7 @@ namespace ARMeilleure.Translation.PTC
             compressedStream.SetLength(0L);
         }
 
-        private void PreSave(object source, System.Timers.ElapsedEventArgs e)
+        private void PreSave(object source, ElapsedEventArgs e)
         {
             _waitEvent.Reset();
 
@@ -277,7 +301,7 @@ namespace ARMeilleure.Translation.PTC
             {
                 Debug.Assert(stream.Seek(0L, SeekOrigin.Begin) == 0L && stream.Length == 0L);
 
-                stream.Seek((long)Unsafe.SizeOf<Hash128>(), SeekOrigin.Begin);
+                stream.Seek(Unsafe.SizeOf<Hash128>(), SeekOrigin.Begin);
 
                 lock (_lock)
                 {
@@ -288,7 +312,7 @@ namespace ARMeilleure.Translation.PTC
 
                 Debug.Assert(stream.Position == stream.Length);
 
-                stream.Seek((long)Unsafe.SizeOf<Hash128>(), SeekOrigin.Begin);
+                stream.Seek(Unsafe.SizeOf<Hash128>(), SeekOrigin.Begin);
                 Hash128 hash = XXHash128.ComputeHash(GetReadOnlySpan(stream));
 
                 stream.Seek(0L, SeekOrigin.Begin);
@@ -332,7 +356,7 @@ namespace ARMeilleure.Translation.PTC
 
         private static void Serialize(Stream stream, Dictionary<ulong, FuncProfile> profiledFuncs)
         {
-            SerializeDictionary(stream, profiledFuncs, (stream, structure) => SerializeStructure(stream, structure));
+            SerializeDictionary(stream, profiledFuncs, SerializeStructure);
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1/*, Size = 29*/)]

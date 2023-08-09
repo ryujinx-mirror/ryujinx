@@ -89,9 +89,6 @@ namespace Ryujinx.HLE.Loaders.Processes.Extensions
                 Logger.Warning?.Print(LogClass.Ptc, "Detected unsupported ExeFs modifications. PTC disabled.");
             }
 
-            // We allow it for nx-hbloader because it can be used to launch homebrew.
-            bool allowCodeMemoryForJit = programId == 0x010000000000100DUL || isHomebrew;
-
             string programName = "";
 
             if (!isHomebrew && programId > 0x010000000000FFFF)
@@ -119,7 +116,7 @@ namespace Ryujinx.HLE.Loaders.Processes.Extensions
                 metaLoader,
                 nacpData,
                 enablePtc,
-                allowCodeMemoryForJit,
+                true,
                 programName,
                 metaLoader.GetProgramId(),
                 null,

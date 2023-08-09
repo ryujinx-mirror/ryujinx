@@ -28,6 +28,11 @@ namespace Ryujinx.HLE.Loaders.Processes
 {
     static class ProcessLoaderHelper
     {
+        // NOTE: If you want to change this value make sure to increment the InternalVersion of Ptc and PtcProfiler.
+        //       You also need to add a new migration path and adjust the existing ones.
+        // TODO: Remove this workaround when ASLR is implemented.
+        private const ulong CodeStartOffset = 0x500000UL;
+
         public static LibHac.Result RegisterProgramMapInfo(Switch device, PartitionFileSystem partitionFileSystem)
         {
             ulong applicationId = 0;
@@ -242,7 +247,7 @@ namespace Ryujinx.HLE.Loaders.Processes
 
             ulong argsStart = 0;
             uint argsSize = 0;
-            ulong codeStart = (meta.Flags & 1) != 0 ? 0x8000000UL : 0x200000UL;
+            ulong codeStart = ((meta.Flags & 1) != 0 ? 0x8000000UL : 0x200000UL) + CodeStartOffset;
             uint codeSize = 0;
 
             var buildIds = executables.Select(e => (e switch
