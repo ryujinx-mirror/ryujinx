@@ -70,6 +70,11 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
         internal void SetSupportedPlayer(PlayerIndex player, bool supported = true)
         {
+            if ((uint)player >= _supportedPlayers.Length)
+            {
+                return;
+            }
+
             _supportedPlayers[(int)player] = supported;
         }
 

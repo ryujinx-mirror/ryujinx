@@ -48,7 +48,22 @@ namespace Ryujinx.Tests.Cpu
             bool methodCalled = false;
             bool isFz = false;
 
-            var managedMethod = () =>
+            var method = TranslatorTestMethods.GenerateFpFlagsPInvokeTest();
+
+            // This method sets flush-to-zero and then calls the managed method.
+            // Before and after setting the flags, it ensures subnormal addition works as expected.
+            // It returns a positive result if any tests fail, and 0 on success (or if the platform cannot change FP flags)
+            int result = method(Marshal.GetFunctionPointerForDelegate(ManagedMethod));
+
+            // Subnormal results are not flushed to zero by default, which we should have returned to exiting the method.
+            Assert.AreNotEqual(GetDenormal() + GetZero(), 0f);
+
+            Assert.True(result == 0);
+            Assert.True(methodCalled);
+            Assert.True(isFz);
+            return;
+
+            void ManagedMethod()
             {
                 // Floating point math should not modify fp flags.
                 float test = 2f * 3.5f;
@@ -73,21 +88,7 @@ namespace Ryujinx.Tests.Cpu
 
                     methodCalled = true;
                 }
-            };
-
-            var method = TranslatorTestMethods.GenerateFpFlagsPInvokeTest();
-
-            // This method sets flush-to-zero and then calls the managed method.
-            // Before and after setting the flags, it ensures subnormal addition works as expected.
-            // It returns a positive result if any tests fail, and 0 on success (or if the platform cannot change FP flags)
-            int result = method(Marshal.GetFunctionPointerForDelegate(managedMethod));
-
-            // Subnormal results are not flushed to zero by default, which we should have returned to exiting the method.
-            Assert.AreNotEqual(GetDenormal() + GetZero(), 0f);
-
-            Assert.True(result == 0);
-            Assert.True(methodCalled);
-            Assert.True(isFz);
+            }
         }
     }
 }
