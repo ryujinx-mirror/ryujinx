@@ -1,7 +1,7 @@
-﻿using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Interactivity;
+using Avalonia.Platform.Storage;
+using Avalonia.VisualTree;
 using Ryujinx.Ava.Common.Locale;
 using Ryujinx.Ava.UI.ViewModels;
 using System.Collections.Generic;
@@ -30,13 +30,16 @@ namespace Ryujinx.Ava.UI.Views.Settings
             }
             else
             {
-                if (Application.Current.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+                if (this.GetVisualRoot() is Window window)
                 {
-                    path = await new OpenFolderDialog().ShowAsync(desktop.MainWindow);
-
-                    if (!string.IsNullOrWhiteSpace(path))
+                    var result = await window.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
                     {
-                        ViewModel.GameDirectories.Add(path);
+                        AllowMultiple = false
+                    });
+
+                    if (result.Count > 0)
+                    {
+                        ViewModel.GameDirectories.Add(result[0].Path.LocalPath);
                         ViewModel.DirectoryChanged = true;
                     }
                 }
@@ -61,22 +64,25 @@ namespace Ryujinx.Ava.UI.Views.Settings
 
         public async void BrowseTheme(object sender, RoutedEventArgs e)
         {
-            var dialog = new OpenFileDialog
+            var window = this.GetVisualRoot() as Window;
+            var result = await window.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
             {
                 Title = LocaleManager.Instance[LocaleKeys.SettingsSelectThemeFileDialogTitle],
                 AllowMultiple = false,
-            };
-
-            dialog.Filters.Add(new FileDialogFilter { Extensions = { "xaml" }, Name = LocaleManager.Instance[LocaleKeys.SettingsXamlThemeFile] });
-
-            if (Application.Current.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
-            {
-                var file = await dialog.ShowAsync(desktop.MainWindow);
-
-                if (file != null && file.Length > 0)
+                FileTypeFilter = new List<FilePickerFileType>
                 {
-                    ViewModel.CustomThemePath = file[0];
+                    new("xml")
+                    {
+                        Patterns = new[] { "*.xaml" },
+                        AppleUniformTypeIdentifiers = new[] { "com.ryujinx.xaml" },
+                        MimeTypes = new[] { "application/xaml+xml" }
+                    }
                 }
+            });
+
+            if (result.Count > 0)
+            {
+                ViewModel.CustomThemePath = result[0].Path.LocalPath;
             }
         }
     }

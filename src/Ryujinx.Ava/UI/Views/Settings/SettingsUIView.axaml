@@ -7,7 +7,6 @@
     xmlns:locale="clr-namespace:Ryujinx.Ava.Common.Locale"
     xmlns:viewModels="clr-namespace:Ryujinx.Ava.UI.ViewModels"
     mc:Ignorable="d"
-    x:CompileBindings="True"
     x:DataType="viewModels:SettingsViewModel">
     <Design.DataContext>
         <viewModels:SettingsViewModel />
@@ -66,7 +65,7 @@
                     <ListBox
                         Name="GameList"
                         MinHeight="230"
-                        Items="{Binding GameDirectories}">
+                        ItemsSource="{Binding GameDirectories}">
                         <ListBox.Styles>
                             <Style Selector="ListBoxItem">
                                 <Setter Property="Padding" Value="10" />

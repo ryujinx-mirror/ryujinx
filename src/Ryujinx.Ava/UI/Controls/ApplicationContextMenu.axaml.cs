@@ -299,7 +299,11 @@ namespace Ryujinx.Ava.UI.Controls
 
             if (viewModel?.SelectedApplication != null)
             {
-                await ApplicationHelper.ExtractSection(NcaSectionType.Code, viewModel.SelectedApplication.Path, viewModel.SelectedApplication.TitleName);
+                await ApplicationHelper.ExtractSection(
+                    viewModel.StorageProvider,
+                    NcaSectionType.Code,
+                    viewModel.SelectedApplication.Path,
+                    viewModel.SelectedApplication.TitleName);
             }
         }
 
@@ -309,7 +313,11 @@ namespace Ryujinx.Ava.UI.Controls
 
             if (viewModel?.SelectedApplication != null)
             {
-                await ApplicationHelper.ExtractSection(NcaSectionType.Data, viewModel.SelectedApplication.Path, viewModel.SelectedApplication.TitleName);
+                await ApplicationHelper.ExtractSection(
+                    viewModel.StorageProvider,
+                    NcaSectionType.Data,
+                    viewModel.SelectedApplication.Path,
+                    viewModel.SelectedApplication.TitleName);
             }
         }
 
@@ -319,7 +327,11 @@ namespace Ryujinx.Ava.UI.Controls
 
             if (viewModel?.SelectedApplication != null)
             {
-                await ApplicationHelper.ExtractSection(NcaSectionType.Logo, viewModel.SelectedApplication.Path, viewModel.SelectedApplication.TitleName);
+                await ApplicationHelper.ExtractSection(
+                    viewModel.StorageProvider,
+                    NcaSectionType.Logo,
+                    viewModel.SelectedApplication.Path,
+                    viewModel.SelectedApplication.TitleName);
             }
         }
 

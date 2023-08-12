@@ -34,13 +34,13 @@
             Grid.Row="1"
             Grid.Column="1"
             Margin="5"
-            Text="{Binding MainText}"
+            Text="{ReflectionBinding MainText}"
             TextWrapping="Wrap" />
         <TextBlock
             Grid.Row="2"
             Grid.Column="1"
             Margin="5"
-            Text="{Binding SecondaryText}"
+            Text="{ReflectionBinding SecondaryText}"
             TextWrapping="Wrap" />
         <TextBox
             Name="Input"
@@ -50,7 +50,7 @@
             VerticalAlignment="Center"
             Focusable="True"
             KeyUp="Message_KeyUp"
-            Text="{Binding Message}"
+            Text="{ReflectionBinding Message}"
             TextInput="Message_TextInput"
             TextWrapping="Wrap"
             UseFloatingWatermark="True" />

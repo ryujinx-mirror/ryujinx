@@ -1,9 +1,5 @@
 ﻿using Avalonia.Controls;
-using Avalonia.Data;
-using Avalonia.Data.Converters;
 using Ryujinx.Ava.UI.ViewModels;
-using System;
-using System.Linq;
 using TimeZone = Ryujinx.Ava.UI.Models.TimeZone;
 
 namespace Ryujinx.Ava.UI.Views.Settings
@@ -15,15 +11,6 @@ namespace Ryujinx.Ava.UI.Views.Settings
         public SettingsSystemView()
         {
             InitializeComponent();
-
-            FuncMultiValueConverter<string, string> converter = new(parts => string.Format("{0}  {1}   {2}", parts.ToArray()).Trim());
-            MultiBinding tzMultiBinding = new() { Converter = converter };
-
-            tzMultiBinding.Bindings.Add(new Binding("UtcDifference"));
-            tzMultiBinding.Bindings.Add(new Binding("Location"));
-            tzMultiBinding.Bindings.Add(new Binding("Abbreviation"));
-
-            TimeZoneBox.ValueMemberBinding = tzMultiBinding;
         }
 
         private void TimeZoneBox_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -39,13 +26,11 @@ namespace Ryujinx.Ava.UI.Views.Settings
             }
         }
 
-        private void TimeZoneBox_OnTextChanged(object sender, EventArgs e)
+        private void TimeZoneBox_OnTextChanged(object sender, TextChangedEventArgs e)
         {
             if (sender is AutoCompleteBox box && box.SelectedItem is TimeZone timeZone)
             {
-                {
-                    ViewModel.ValidateAndSetTimeZone(timeZone.Location);
-                }
+                ViewModel.ValidateAndSetTimeZone(timeZone.Location);
             }
         }
     }

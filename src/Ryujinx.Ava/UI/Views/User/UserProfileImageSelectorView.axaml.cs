@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Avalonia.Platform.Storage;
 using Avalonia.VisualTree;
 using FluentAvalonia.UI.Controls;
 using FluentAvalonia.UI.Navigation;
@@ -10,6 +11,7 @@ using Ryujinx.Ava.UI.ViewModels;
 using Ryujinx.HLE.FileSystem;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Processing;
+using System.Collections.Generic;
 using System.IO;
 using Image = SixLabors.ImageSharp.Image;
 
@@ -63,33 +65,25 @@ namespace Ryujinx.Ava.UI.Views.User
 
         private async void Import_OnClick(object sender, RoutedEventArgs e)
         {
-            OpenFileDialog dialog = new();
-            dialog.Filters.Add(new FileDialogFilter
+            var window = this.GetVisualRoot() as Window;
+            var result = await window.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
             {
-                Name = LocaleManager.Instance[LocaleKeys.AllSupportedFormats],
-                Extensions = { "jpg", "jpeg", "png", "bmp" },
-            });
-            dialog.Filters.Add(new FileDialogFilter { Name = "JPEG", Extensions = { "jpg", "jpeg" } });
-            dialog.Filters.Add(new FileDialogFilter { Name = "PNG", Extensions = { "png" } });
-            dialog.Filters.Add(new FileDialogFilter { Name = "BMP", Extensions = { "bmp" } });
-
-            dialog.AllowMultiple = false;
-
-            string[] image = await dialog.ShowAsync(((TopLevel)_parent.GetVisualRoot()) as Window);
-
-            if (image != null)
-            {
-                if (image.Length > 0)
+                AllowMultiple = false,
+                FileTypeFilter = new List<FilePickerFileType>
                 {
-                    string imageFile = image[0];
-
-                    _profile.Image = ProcessProfileImage(File.ReadAllBytes(imageFile));
-
-                    if (_profile.Image != null)
+                    new(LocaleManager.Instance[LocaleKeys.AllSupportedFormats])
                     {
-                        _parent.GoBack();
+                        Patterns = new[] { "*.jpg", "*.jpeg", "*.png", "*.bmp" },
+                        AppleUniformTypeIdentifiers = new[] { "public.jpeg", "public.png", "com.microsoft.bmp" },
+                        MimeTypes = new[] { "image/jpeg", "image/png", "image/bmp" }
                     }
                 }
+            });
+
+            if (result.Count > 0)
+            {
+                _profile.Image = ProcessProfileImage(File.ReadAllBytes(result[0].Path.LocalPath));
+                _parent.GoBack();
             }
         }
 

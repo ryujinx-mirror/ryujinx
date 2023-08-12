@@ -1,6 +1,7 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using Ryujinx.Ava.UI.Windows;
 using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Logging;
@@ -47,6 +48,11 @@ namespace Ryujinx.Ava.UI.Views.Main
             AspectRatio aspectRatio = ConfigurationState.Instance.Graphics.AspectRatio.Value;
 
             ConfigurationState.Instance.Graphics.AspectRatio.Value = (int)aspectRatio + 1 > Enum.GetNames(typeof(AspectRatio)).Length - 1 ? AspectRatio.Fixed4x3 : aspectRatio + 1;
+        }
+
+        private void Refresh_OnClick(object sender, RoutedEventArgs e)
+        {
+            Window.LoadApplications();
         }
     }
 }

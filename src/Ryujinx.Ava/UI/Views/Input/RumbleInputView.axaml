@@ -8,7 +8,6 @@
     mc:Ignorable="d"
     x:Class="Ryujinx.Ava.UI.Views.Input.RumbleInputView"
     x:DataType="viewModels:RumbleInputViewModel"
-    x:CompileBindings="True"
     Focusable="True">
     <Grid Margin="10">
         <Grid.RowDefinitions>

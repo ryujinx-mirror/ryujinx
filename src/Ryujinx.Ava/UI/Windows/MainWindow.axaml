@@ -18,9 +18,9 @@
     MinHeight="672"
     d:DesignHeight="720"
     d:DesignWidth="1280"
-    x:CompileBindings="True"
     x:DataType="viewModels:MainWindowViewModel"
     mc:Ignorable="d"
+    WindowStartupLocation="Manual"
     Focusable="True">
     <Window.Styles>
         <Style Selector="TitleBar:fullscreen">
@@ -33,19 +33,19 @@
     <Window.Resources>
         <helpers:BitmapArrayValueConverter x:Key="ByteImage" />
     </Window.Resources>
+    <Window.KeyBindings>
+        <KeyBinding Gesture="Alt+Return" Command="{Binding ToggleFullscreen}" />
+        <KeyBinding Gesture="F11" Command="{Binding ToggleFullscreen}" />
+        <KeyBinding Gesture="Ctrl+Cmd+F" Command="{Binding ToggleFullscreen}" />
+        <KeyBinding Gesture="F9" Command="{Binding ToggleDockMode}" />
+        <KeyBinding Gesture="Escape" Command="{Binding ExitCurrentState}" />
+    </Window.KeyBindings>
     <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <helpers:OffscreenTextBox Name="HiddenTextBox" Grid.Row="0" />
-        <StackPanel Grid.Row="0" IsVisible="False">
-            <helpers:HotKeyControl Name="FullscreenHotKey" Command="{ReflectionBinding ToggleFullscreen}" />
-            <helpers:HotKeyControl Name="FullscreenHotKey2" Command="{ReflectionBinding ToggleFullscreen}" />
-            <helpers:HotKeyControl Name="FullscreenHotKeyMacOS" Command="{ReflectionBinding ToggleFullscreen}" />
-            <helpers:HotKeyControl Name="DockToggleHotKey" Command="{ReflectionBinding ToggleDockMode}" />
-            <helpers:HotKeyControl Name="ExitHotKey" Command="{ReflectionBinding ExitCurrentState}" />
-        </StackPanel>
         <Grid
             Grid.Row="1"
             HorizontalAlignment="Stretch"
@@ -67,7 +67,7 @@
                 VerticalAlignment="Stretch"
                 IsVisible="{Binding ShowMenuAndStatusBar}"
                 Orientation="Vertical">
-                <main:MainMenuBarView 
+                <main:MainMenuBarView
                     Name="MenuBarView" />
             </StackPanel>
             <ContentControl
@@ -197,7 +197,7 @@
                     </Grid>
                 </Grid>
             </Grid>
-            <main:MainStatusBarView 
+            <main:MainStatusBarView
                 Name="StatusBarView"
                 Grid.Row="2" />
         </Grid>

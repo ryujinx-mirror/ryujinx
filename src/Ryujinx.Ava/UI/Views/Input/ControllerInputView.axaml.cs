@@ -31,8 +31,7 @@ namespace Ryujinx.Ava.UI.Views.Input
             {
                 if (visual is ToggleButton button && visual is not CheckBox)
                 {
-                    button.Checked += Button_Checked;
-                    button.Unchecked += Button_Unchecked;
+                    button.IsCheckedChanged += Button_IsCheckedChanged;
                 }
             }
         }
@@ -47,48 +46,56 @@ namespace Ryujinx.Ava.UI.Views.Input
             }
         }
 
-        private void Button_Checked(object sender, RoutedEventArgs e)
+        private void Button_IsCheckedChanged(object sender, RoutedEventArgs e)
         {
             if (sender is ToggleButton button)
             {
-                if (_currentAssigner != null && button == _currentAssigner.ToggledButton)
+                if ((bool)button.IsChecked)
                 {
-                    return;
-                }
-
-                bool isStick = button.Tag != null && button.Tag.ToString() == "stick";
-
-                if (_currentAssigner == null && (bool)button.IsChecked)
-                {
-                    _currentAssigner = new ButtonKeyAssigner(button);
-
-                    FocusManager.Instance.Focus(this, NavigationMethod.Pointer);
-
-                    PointerPressed += MouseClick;
-
-                    IKeyboard keyboard = (IKeyboard)ViewModel.AvaloniaKeyboardDriver.GetGamepad("0"); // Open Avalonia keyboard for cancel operations.
-                    IButtonAssigner assigner = CreateButtonAssigner(isStick);
-
-                    _currentAssigner.ButtonAssigned += (sender, e) =>
+                    if (_currentAssigner != null && button == _currentAssigner.ToggledButton)
                     {
-                        if (e.IsAssigned)
-                        {
-                            ViewModel.IsModified = true;
-                        }
-                    };
+                        return;
+                    }
 
-                    _currentAssigner.GetInputAndAssign(assigner, keyboard);
+                    bool isStick = button.Tag != null && button.Tag.ToString() == "stick";
+
+                    if (_currentAssigner == null)
+                    {
+                        _currentAssigner = new ButtonKeyAssigner(button);
+
+                        this.Focus(NavigationMethod.Pointer);
+
+                        PointerPressed += MouseClick;
+
+                        IKeyboard keyboard = (IKeyboard)ViewModel.AvaloniaKeyboardDriver.GetGamepad("0"); // Open Avalonia keyboard for cancel operations.
+                        IButtonAssigner assigner = CreateButtonAssigner(isStick);
+
+                        _currentAssigner.ButtonAssigned += (sender, e) =>
+                        {
+                            if (e.IsAssigned)
+                            {
+                                ViewModel.IsModified = true;
+                            }
+                        };
+
+                        _currentAssigner.GetInputAndAssign(assigner, keyboard);
+                    }
+                    else
+                    {
+                        if (_currentAssigner != null)
+                        {
+                            ToggleButton oldButton = _currentAssigner.ToggledButton;
+
+                            _currentAssigner.Cancel();
+                            _currentAssigner = null;
+                            button.IsChecked = false;
+                        }
+                    }
                 }
                 else
                 {
-                    if (_currentAssigner != null)
-                    {
-                        ToggleButton oldButton = _currentAssigner.ToggledButton;
-
-                        _currentAssigner.Cancel();
-                        _currentAssigner = null;
-                        button.IsChecked = false;
-                    }
+                    _currentAssigner?.Cancel();
+                    _currentAssigner = null;
                 }
             }
         }
@@ -118,12 +125,6 @@ namespace Ryujinx.Ava.UI.Views.Input
             }
 
             return assigner;
-        }
-
-        private void Button_Unchecked(object sender, RoutedEventArgs e)
-        {
-            _currentAssigner?.Cancel();
-            _currentAssigner = null;
         }
 
         private void MouseClick(object sender, PointerPressedEventArgs e)

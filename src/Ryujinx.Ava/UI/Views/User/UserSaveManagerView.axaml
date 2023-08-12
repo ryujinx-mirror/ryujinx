@@ -14,7 +14,6 @@
     Height="450"
     Width="550"
     x:Class="Ryujinx.Ava.UI.Views.User.UserSaveManagerView"
-    x:CompileBindings="True"
     x:DataType="viewModels:UserSaveManagerViewModel"
     Focusable="True">
     <Design.DataContext>
@@ -107,8 +106,7 @@
             VerticalAlignment="Stretch">
             <ListBox
                 Name="SaveList"
-                VirtualizationMode="None"
-                Items="{Binding Views}"
+                ItemsSource="{Binding Views}"
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Stretch">
                 <ListBox.Styles>
@@ -117,7 +115,7 @@
                         <Setter Property="Margin" Value="5" />
                         <Setter Property="CornerRadius" Value="4" />
                     </Style>
-                    <Style Selector="ListBoxItem:selected /template/ Border#SelectionIndicator">
+                    <Style Selector="ListBoxItem:selected /template/ Rectangle#SelectionIndicator">
                         <Setter Property="IsVisible" Value="False" />
                     </Style>
                 </ListBox.Styles>

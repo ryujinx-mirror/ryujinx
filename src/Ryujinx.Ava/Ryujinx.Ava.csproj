@@ -10,6 +10,8 @@
     <RootNamespace>Ryujinx.Ava</RootNamespace>
     <ApplicationIcon>Ryujinx.ico</ApplicationIcon>
     <TieredPGO>true</TieredPGO>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="$([MSBuild]::IsOSPlatform('OSX'))">
@@ -26,7 +28,7 @@
   <ItemGroup>
     <PackageReference Include="Avalonia" />
     <PackageReference Include="Avalonia.Desktop" />
-    <PackageReference Include="Avalonia.Diagnostics" />
+    <PackageReference Include="Avalonia.Diagnostics" Condition="'$(Configuration)'=='Debug'" />
     <PackageReference Include="Avalonia.Controls.DataGrid" />
     <PackageReference Include="Avalonia.Markup.Xaml.Loader" />
     <PackageReference Include="Avalonia.Svg" />
@@ -34,7 +36,6 @@
     <PackageReference Include="jp2masa.Avalonia.Flexbox" />
     <PackageReference Include="DynamicData" />
     <PackageReference Include="FluentAvaloniaUI" />
-    <PackageReference Include="XamlNameReferenceGenerator" />
 
     <PackageReference Include="OpenTK.Core" />
     <PackageReference Include="Ryujinx.Audio.OpenAL.Dependencies" Condition="'$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64' AND '$(RuntimeIdentifier)' != 'osx-arm64'" />
@@ -97,10 +98,7 @@
       <SubType>Designer</SubType>
     </AvaloniaResource>
     <AvaloniaResource Include="Assets\Fonts\SegoeFluentIcons.ttf" />
-    <AvaloniaResource Include="Assets\Styles\BaseLight.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </AvaloniaResource>
-    <AvaloniaResource Include="Assets\Styles\BaseDark.xaml">
+    <AvaloniaResource Include="Assets\Styles\Themes.xaml">
       <Generator>MSBuild:Compile</Generator>
     </AvaloniaResource>
     <AvaloniaResource Include="Assets\Styles\Styles.xaml" />
@@ -123,8 +121,7 @@
     <None Remove="Assets\Locales\zh_CN.json" />
     <None Remove="Assets\Locales\zh_TW.json" />
     <None Remove="Assets\Styles\Styles.xaml" />
-    <None Remove="Assets\Styles\BaseDark.xaml" />
-    <None Remove="Assets\Styles\BaseLight.xaml" />
+    <None Remove="Assets\Styles\Themes.xaml" />
   </ItemGroup>
 
   <ItemGroup>

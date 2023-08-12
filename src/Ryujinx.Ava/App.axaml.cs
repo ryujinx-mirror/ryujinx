@@ -3,7 +3,6 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Styling;
 using Avalonia.Threading;
-using FluentAvalonia.Styling;
 using Ryujinx.Ava.Common.Locale;
 using Ryujinx.Ava.UI.Helpers;
 using Ryujinx.Ava.UI.Windows;
@@ -24,6 +23,11 @@ namespace Ryujinx.Ava
             Name = $"Ryujinx {Program.Version}";
 
             AvaloniaXamlLoader.Load(this);
+
+            if (OperatingSystem.IsMacOS())
+            {
+                Process.Start("/usr/bin/defaults", "write org.ryujinx.Ryujinx ApplePressAndHoldEnabled -bool false");
+            }
         }
 
         public override void OnFrameworkInitializationCompleted()
@@ -89,8 +93,6 @@ namespace Ryujinx.Ava
                 string themePath = ConfigurationState.Instance.Ui.CustomThemePath;
                 bool enableCustomTheme = ConfigurationState.Instance.Ui.EnableCustomTheme;
 
-                const string BaseStyleUrl = "avares://Ryujinx.Ava/Assets/Styles/Base{0}.xaml";
-
                 if (string.IsNullOrWhiteSpace(baseStyle))
                 {
                     ConfigurationState.Instance.Ui.BaseStyle.Value = "Dark";
@@ -98,31 +100,12 @@ namespace Ryujinx.Ava
                     baseStyle = ConfigurationState.Instance.Ui.BaseStyle;
                 }
 
-                var theme = AvaloniaLocator.Current.GetService<FluentAvaloniaTheme>();
-
-                theme.RequestedTheme = baseStyle;
-
-                var currentStyles = this.Styles;
-
-                // Remove all styles except the base style.
-                if (currentStyles.Count > 1)
+                RequestedThemeVariant = baseStyle switch
                 {
-                    currentStyles.RemoveRange(1, currentStyles.Count - 1);
-                }
-
-                IStyle newStyles = null;
-
-                // Load requested style, and fallback to Dark theme if loading failed.
-                try
-                {
-                    newStyles = (Styles)AvaloniaXamlLoader.Load(new Uri(string.Format(BaseStyleUrl, baseStyle), UriKind.Absolute));
-                }
-                catch (XamlLoadException)
-                {
-                    newStyles = (Styles)AvaloniaXamlLoader.Load(new Uri(string.Format(BaseStyleUrl, "Dark"), UriKind.Absolute));
-                }
-
-                currentStyles.Add(newStyles);
+                    "Light" => ThemeVariant.Light,
+                    "Dark" => ThemeVariant.Dark,
+                    _ => ThemeVariant.Default
+                };
 
                 if (enableCustomTheme)
                 {
@@ -133,7 +116,7 @@ namespace Ryujinx.Ava
                             var themeContent = File.ReadAllText(themePath);
                             var customStyle = AvaloniaRuntimeXamlLoader.Parse<IStyle>(themeContent);
 
-                            currentStyles.Add(customStyle);
+                            Styles.Add(customStyle);
                         }
                         catch (Exception ex)
                         {

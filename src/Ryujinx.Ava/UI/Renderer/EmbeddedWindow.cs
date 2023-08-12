@@ -34,7 +34,7 @@ namespace Ryujinx.Ava.UI.Renderer
         private UpdateBoundsCallbackDelegate _updateBoundsCallback;
 
         public event EventHandler<IntPtr> WindowCreated;
-        public event EventHandler<Size> SizeChanged;
+        public event EventHandler<Size> BoundsChanged;
 
         public EmbeddedWindow()
         {
@@ -67,7 +67,7 @@ namespace Ryujinx.Ava.UI.Renderer
 
         private void StateChanged(Rect rect)
         {
-            SizeChanged?.Invoke(this, rect.Size);
+            BoundsChanged?.Invoke(this, rect.Size);
             _updateBoundsCallback?.Invoke(rect);
         }
 
@@ -149,9 +149,10 @@ namespace Ryujinx.Ava.UI.Renderer
                         msg == WindowsMessages.Rbuttonup ||
                         msg == WindowsMessages.Mousemove)
                     {
-                        Point rootVisualPosition = this.TranslatePoint(new Point((long)lParam & 0xFFFF, (long)lParam >> 16 & 0xFFFF), VisualRoot).Value;
+                        Point rootVisualPosition = this.TranslatePoint(new Point((long)lParam & 0xFFFF, (long)lParam >> 16 & 0xFFFF), this).Value;
                         Pointer pointer = new(0, PointerType.Mouse, true);
 
+#pragma warning disable CS0618 // Type or member is obsolete (As of Avalonia 11, the constructors for PointerPressedEventArgs & PointerEventArgs are marked as obsolete)
                         switch (msg)
                         {
                             case WindowsMessages.Lbuttondown:
@@ -164,7 +165,7 @@ namespace Ryujinx.Ava.UI.Renderer
                                     var evnt = new PointerPressedEventArgs(
                                         this,
                                         pointer,
-                                        VisualRoot,
+                                        this,
                                         rootVisualPosition,
                                         (ulong)Environment.TickCount64,
                                         properties,
@@ -184,7 +185,7 @@ namespace Ryujinx.Ava.UI.Renderer
                                     var evnt = new PointerReleasedEventArgs(
                                         this,
                                         pointer,
-                                        VisualRoot,
+                                        this,
                                         rootVisualPosition,
                                         (ulong)Environment.TickCount64,
                                         properties,
@@ -201,7 +202,7 @@ namespace Ryujinx.Ava.UI.Renderer
                                         PointerMovedEvent,
                                         this,
                                         pointer,
-                                        VisualRoot,
+                                        this,
                                         rootVisualPosition,
                                         (ulong)Environment.TickCount64,
                                         new PointerPointProperties(RawInputModifiers.None, PointerUpdateKind.Other),
@@ -212,6 +213,7 @@ namespace Ryujinx.Ava.UI.Renderer
                                     break;
                                 }
                         }
+#pragma warning restore CS0618
                     }
                 }
 

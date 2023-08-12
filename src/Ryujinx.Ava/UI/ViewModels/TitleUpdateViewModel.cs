@@ -1,7 +1,7 @@
 using Avalonia;
 using Avalonia.Collections;
-using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using LibHac.Common;
 using LibHac.Fs;
@@ -70,11 +70,18 @@ namespace Ryujinx.Ava.UI.ViewModels
             }
         }
 
+        public IStorageProvider StorageProvider;
+
         public TitleUpdateViewModel(VirtualFileSystem virtualFileSystem, ulong titleId)
         {
             VirtualFileSystem = virtualFileSystem;
 
             TitleId = titleId;
+
+            if (Application.Current.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            {
+                StorageProvider = desktop.MainWindow.StorageProvider;
+            }
 
             TitleUpdateJsonPath = Path.Combine(AppDataManager.GamesDirPath, titleId.ToString("x16"), "updates.json");
 
@@ -202,29 +209,23 @@ namespace Ryujinx.Ava.UI.ViewModels
 
         public async void Add()
         {
-            OpenFileDialog dialog = new()
+            var result = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
             {
-                Title = LocaleManager.Instance[LocaleKeys.SelectUpdateDialogTitle],
                 AllowMultiple = true,
-            };
-
-            dialog.Filters.Add(new FileDialogFilter
-            {
-                Name = "NSP",
-                Extensions = { "nsp" },
-            });
-
-            if (Application.Current.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
-            {
-                string[] files = await dialog.ShowAsync(desktop.MainWindow);
-
-                if (files != null)
+                FileTypeFilter = new List<FilePickerFileType>
                 {
-                    foreach (string file in files)
+                    new(LocaleManager.Instance[LocaleKeys.AllSupportedFormats])
                     {
-                        AddUpdate(file);
+                        Patterns = new[] { "*.nsp" },
+                        AppleUniformTypeIdentifiers = new[] { "com.ryujinx.nsp" },
+                        MimeTypes = new[] { "application/x-nx-nsp" }
                     }
                 }
+            });
+
+            foreach (var file in result)
+            {
+                AddUpdate(file.Path.LocalPath);
             }
 
             SortUpdates();

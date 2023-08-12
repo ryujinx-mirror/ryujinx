@@ -1,4 +1,4 @@
-<window:StyleableWindow 
+<window:StyleableWindow
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -6,14 +6,15 @@
     xmlns:window="clr-namespace:Ryujinx.Ava.UI.Windows"
     xmlns:viewModels="clr-namespace:Ryujinx.Ava.UI.ViewModels"
     xmlns:locale="clr-namespace:Ryujinx.Ava.Common.Locale"
-    mc:Ignorable="d" 
-    d:DesignWidth="400" 
+    mc:Ignorable="d"
+    d:DesignWidth="400"
     d:DesignHeight="350"
     x:Class="Ryujinx.Ava.UI.Windows.AmiiboWindow"
+    x:DataType="viewModels:AmiiboWindowViewModel"
     CanResize="False"
     WindowStartupLocation="CenterOwner"
-    Width="800" 
-    MinHeight="650" 
+    Width="800"
+    MinHeight="650"
     Height="650"
     SizeToContent="Manual"
     MinWidth="600"
@@ -35,11 +36,11 @@
             </Grid.ColumnDefinitions>
             <StackPanel Spacing="10" Orientation="Horizontal" HorizontalAlignment="Left">
                 <TextBlock VerticalAlignment="Center" Text="{locale:Locale AmiiboSeriesLabel}" />
-                <ComboBox SelectedIndex="{Binding SeriesSelectedIndex}" Items="{Binding AmiiboSeries}" MinWidth="100" />
+                <ComboBox SelectedIndex="{Binding SeriesSelectedIndex}" ItemsSource="{Binding AmiiboSeries}" MinWidth="100" />
             </StackPanel>
             <StackPanel Spacing="10" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
                 <TextBlock VerticalAlignment="Center" Text="{locale:Locale AmiiboCharacterLabel}" />
-                <ComboBox SelectedIndex="{Binding AmiiboSelectedIndex}" MinWidth="100" Items="{Binding AmiiboList}" />
+                <ComboBox SelectedIndex="{Binding AmiiboSelectedIndex}" MinWidth="100" ItemsSource="{Binding AmiiboList}" />
             </StackPanel>
         </Grid>
         <StackPanel Margin="20" Grid.Row="2">

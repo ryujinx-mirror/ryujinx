@@ -9,7 +9,6 @@
     xmlns:viewModels="clr-namespace:Ryujinx.Ava.UI.ViewModels"
     mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
     x:Class="Ryujinx.Ava.UI.Views.Main.MainViewControls"
-    x:CompileBindings="True"
     x:DataType="viewModels:MainWindowViewModel">
     <Design.DataContext>
         <viewModels:MainWindowViewModel />
@@ -23,7 +22,7 @@
             MinWidth="40"
             Margin="5,2,0,2"
             VerticalAlignment="Stretch"
-            Command="{ReflectionBinding SetListMode}"
+            Command="{Binding SetListMode}"
             IsEnabled="{Binding IsGrid}">
             <ui:FontIcon
                 Margin="0"
@@ -37,7 +36,7 @@
             MinWidth="40"
             Margin="5,2,5,2"
             VerticalAlignment="Stretch"
-            Command="{ReflectionBinding SetGridMode}"
+            Command="{Binding SetGridMode}"
             IsEnabled="{Binding IsList}">
             <ui:FontIcon
                 Margin="0"
@@ -79,13 +78,13 @@
             KeyUp="SearchBox_OnKeyUp"
             Text="{Binding SearchText}"
             Watermark="{locale:Locale MenuSearch}" />
-        <ui:DropDownButton
+        <DropDownButton
             Width="150"
             HorizontalAlignment="Right"
             VerticalAlignment="Center"
             Content="{Binding SortName}"
             DockPanel.Dock="Right">
-            <ui:DropDownButton.Flyout>
+            <DropDownButton.Flyout>
                 <Flyout Placement="Bottom">
                     <StackPanel
                         Margin="0"
@@ -164,8 +163,8 @@
                             Tag="Descending" />
                     </StackPanel>
                 </Flyout>
-            </ui:DropDownButton.Flyout>
-        </ui:DropDownButton>
+            </DropDownButton.Flyout>
+        </DropDownButton>
         <TextBlock
             Margin="10,0"
             HorizontalAlignment="Right"

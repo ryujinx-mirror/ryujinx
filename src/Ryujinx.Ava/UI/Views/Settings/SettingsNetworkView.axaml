@@ -7,7 +7,6 @@
     xmlns:locale="clr-namespace:Ryujinx.Ava.Common.Locale"
     xmlns:viewModels="clr-namespace:Ryujinx.Ava.UI.ViewModels"
     mc:Ignorable="d"
-    x:CompileBindings="True"
     x:DataType="viewModels:SettingsViewModel">
     <Design.DataContext>
         <viewModels:SettingsViewModel />
@@ -37,7 +36,7 @@
                     <ComboBox SelectedIndex="{Binding NetworkInterfaceIndex}"
                               ToolTip.Tip="{locale:Locale NetworkInterfaceTooltip}"
                               HorizontalContentAlignment="Left"
-                              Items="{Binding NetworkInterfaceList}"
+                              ItemsSource="{Binding NetworkInterfaceList}"
                               Width="250" />
                 </StackPanel>
             </StackPanel>

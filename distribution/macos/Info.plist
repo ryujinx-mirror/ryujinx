@@ -44,9 +44,114 @@
     <string>public.app-category.games</string>
     <key>LSMinimumSystemVersion</key>
     <string>11.0</string>
+    <key>UTExportedTypeDeclarations</key>
+    <array>
+      <dict>
+        <key>UTTypeDescription</key>
+        <string>Extensible Application Markup Language</string>
+        <key>UTTypeConformsTo</key>
+        <array>
+          <string>public.xml</string>
+        </array>
+        <key>UTTypeIdentifier</key>
+        <string>com.ryujinx.xaml</string>
+        <key>UTTypeTagSpecification</key>
+        <dict>
+          <key>public.filename-extension</key>
+          <array>
+            <string>xaml</string>
+          </array>
+        </dict>
+      </dict>
+      <dict>
+        <key>UTTypeDescription</key>
+        <string>Nintendo Submission Package</string>
+        <key>UTTypeConformsTo</key>
+        <array>
+          <string>public.data</string>
+        </array>
+        <key>UTTypeIdentifier</key>
+        <string>com.ryujinx.nsp</string>
+        <key>UTTypeTagSpecification</key>
+        <dict>
+          <key>public.filename-extension</key>
+          <array>
+            <string>nsp</string>
+          </array>
+        </dict>
+      </dict>
+      <dict>
+        <key>UTTypeDescription</key>
+        <string>Nintendo Switch Cartridge</string>
+        <key>UTTypeConformsTo</key>
+        <array>
+          <string>public.data</string>
+        </array>
+        <key>UTTypeIdentifier</key>
+        <string>com.ryujinx.xci</string>
+        <key>UTTypeTagSpecification</key>
+        <dict>
+          <key>public.filename-extension</key>
+          <array>
+            <string>xci</string>
+          </array>
+        </dict>
+      </dict>
+      <dict>
+        <key>UTTypeDescription</key>
+        <string>Nintendo Content Archive</string>
+        <key>UTTypeConformsTo</key>
+        <array>
+          <string>public.data</string>
+        </array>
+        <key>UTTypeIdentifier</key>
+        <string>com.ryujinx.nca</string>
+        <key>UTTypeTagSpecification</key>
+        <dict>
+          <key>public.filename-extension</key>
+          <array>
+            <string>nca</string>
+          </array>
+        </dict>
+      </dict>
+      <dict>
+        <key>UTTypeDescription</key>
+        <string>Nintendo Relocatable Object</string>
+        <key>UTTypeConformsTo</key>
+        <array>
+          <string>public.data</string>
+        </array>
+        <key>UTTypeIdentifier</key>
+        <string>com.ryujinx.nro</string>
+        <key>UTTypeTagSpecification</key>
+        <dict>
+          <key>public.filename-extension</key>
+          <array>
+            <string>nro</string>
+          </array>
+        </dict>
+      </dict>
+      <dict>
+        <key>UTTypeDescription</key>
+        <string>Nintendo Shared Object</string>
+        <key>UTTypeConformsTo</key>
+        <array>
+          <string>public.data</string>
+        </array>
+        <key>UTTypeIdentifier</key>
+        <string>com.ryujinx.nso</string>
+        <key>UTTypeTagSpecification</key>
+        <dict>
+          <key>public.filename-extension</key>
+          <array>
+            <string>nso</string>
+          </array>
+        </dict>
+      </dict>
+    </array>
     <key>LSEnvironment</key>
     <dict>
-        <key>COMPlus_DefaultStackSize</key>
+        <key>DOTNET_DefaultStackSize</key>
         <string>200000</string>
     </dict>
 </dict>

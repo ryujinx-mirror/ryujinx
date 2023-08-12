@@ -1,4 +1,3 @@
-using Avalonia;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Avalonia.Threading;
@@ -88,21 +87,19 @@ namespace Ryujinx.Ava.UI.ViewModels
         {
             Version = Program.Version;
 
-            var assets = AvaloniaLocator.Current.GetService<IAssetLoader>();
-
             if (ConfigurationState.Instance.Ui.BaseStyle.Value == "Light")
             {
-                GithubLogo = new Bitmap(assets.Open(new Uri("resm:Ryujinx.Ui.Common.Resources.Logo_GitHub_Light.png?assembly=Ryujinx.Ui.Common")));
-                DiscordLogo = new Bitmap(assets.Open(new Uri("resm:Ryujinx.Ui.Common.Resources.Logo_Discord_Light.png?assembly=Ryujinx.Ui.Common")));
-                PatreonLogo = new Bitmap(assets.Open(new Uri("resm:Ryujinx.Ui.Common.Resources.Logo_Patreon_Light.png?assembly=Ryujinx.Ui.Common")));
-                TwitterLogo = new Bitmap(assets.Open(new Uri("resm:Ryujinx.Ui.Common.Resources.Logo_Twitter_Light.png?assembly=Ryujinx.Ui.Common")));
+                GithubLogo = new Bitmap(AssetLoader.Open(new Uri("resm:Ryujinx.Ui.Common.Resources.Logo_GitHub_Light.png?assembly=Ryujinx.Ui.Common")));
+                DiscordLogo = new Bitmap(AssetLoader.Open(new Uri("resm:Ryujinx.Ui.Common.Resources.Logo_Discord_Light.png?assembly=Ryujinx.Ui.Common")));
+                PatreonLogo = new Bitmap(AssetLoader.Open(new Uri("resm:Ryujinx.Ui.Common.Resources.Logo_Patreon_Light.png?assembly=Ryujinx.Ui.Common")));
+                TwitterLogo = new Bitmap(AssetLoader.Open(new Uri("resm:Ryujinx.Ui.Common.Resources.Logo_Twitter_Light.png?assembly=Ryujinx.Ui.Common")));
             }
             else
             {
-                GithubLogo = new Bitmap(assets.Open(new Uri("resm:Ryujinx.Ui.Common.Resources.Logo_GitHub_Dark.png?assembly=Ryujinx.Ui.Common")));
-                DiscordLogo = new Bitmap(assets.Open(new Uri("resm:Ryujinx.Ui.Common.Resources.Logo_Discord_Dark.png?assembly=Ryujinx.Ui.Common")));
-                PatreonLogo = new Bitmap(assets.Open(new Uri("resm:Ryujinx.Ui.Common.Resources.Logo_Patreon_Dark.png?assembly=Ryujinx.Ui.Common")));
-                TwitterLogo = new Bitmap(assets.Open(new Uri("resm:Ryujinx.Ui.Common.Resources.Logo_Twitter_Dark.png?assembly=Ryujinx.Ui.Common")));
+                GithubLogo = new Bitmap(AssetLoader.Open(new Uri("resm:Ryujinx.Ui.Common.Resources.Logo_GitHub_Dark.png?assembly=Ryujinx.Ui.Common")));
+                DiscordLogo = new Bitmap(AssetLoader.Open(new Uri("resm:Ryujinx.Ui.Common.Resources.Logo_Discord_Dark.png?assembly=Ryujinx.Ui.Common")));
+                PatreonLogo = new Bitmap(AssetLoader.Open(new Uri("resm:Ryujinx.Ui.Common.Resources.Logo_Patreon_Dark.png?assembly=Ryujinx.Ui.Common")));
+                TwitterLogo = new Bitmap(AssetLoader.Open(new Uri("resm:Ryujinx.Ui.Common.Resources.Logo_Twitter_Dark.png?assembly=Ryujinx.Ui.Common")));
             }
 
             Dispatcher.UIThread.InvokeAsync(DownloadPatronsJson);

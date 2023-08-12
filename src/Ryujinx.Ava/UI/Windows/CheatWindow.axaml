@@ -40,7 +40,7 @@
             HorizontalAlignment="Center"
             VerticalAlignment="Center"
             LineHeight="18"
-            Text="{Binding Heading}"
+            Text="{ReflectionBinding Heading}"
             TextAlignment="Center"
             TextWrapping="Wrap" />
         <TextBlock
@@ -61,7 +61,7 @@
             MinWidth="160"
             HorizontalAlignment="Center"
             VerticalAlignment="Center"
-            Text="{Binding BuildId}"
+            Text="{ReflectionBinding BuildId}"
             IsReadOnly="True" />
         <Border
             Grid.Row="3"
@@ -77,7 +77,7 @@
                 MinHeight="300"
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Stretch"
-                Items="{Binding LoadedCheats}">
+                ItemsSource="{ReflectionBinding LoadedCheats}">
                 <TreeView.Styles>
                     <Styles>
                         <Style Selector="TreeViewItem:empty /template/ ItemsPresenter">
@@ -120,15 +120,15 @@
                     Name="SaveButton"
                     MinWidth="90"
                     Margin="5"
-                    Command="{Binding Save}"
-                    IsVisible="{Binding !NoCheatsFound}">
+                    Command="{ReflectionBinding Save}"
+                    IsVisible="{ReflectionBinding !NoCheatsFound}">
                     <TextBlock Text="{locale:Locale SettingsButtonSave}" />
                 </Button>
                 <Button
                     Name="CancelButton"
                     MinWidth="90"
                     Margin="5"
-                    Command="{Binding Close}">
+                    Command="{ReflectionBinding Close}">
                     <TextBlock Text="{locale:Locale InputDialogCancel}" />
                 </Button>
             </DockPanel>

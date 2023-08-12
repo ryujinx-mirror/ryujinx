@@ -14,7 +14,6 @@
     d:DesignWidth="800"
     x:Class="Ryujinx.Ava.UI.Views.Input.ControllerInputView"
     x:DataType="viewModels:ControllerInputViewModel"
-    x:CompileBindings="True"
     mc:Ignorable="d"
     Focusable="True">
     <Design.DataContext>
@@ -66,7 +65,7 @@
                         HorizontalAlignment="Stretch"
                         VerticalAlignment="Center"
                         SelectionChanged="PlayerIndexBox_OnSelectionChanged"
-                        Items="{Binding PlayerIndexes}"
+                        ItemsSource="{Binding PlayerIndexes}"
                         SelectedIndex="{Binding PlayerId}">
                         <ComboBox.ItemTemplate>
                             <DataTemplate>
@@ -94,15 +93,15 @@
                         HorizontalAlignment="Left"
                         VerticalAlignment="Center"
                         Text="{locale:Locale ControllerSettingsProfile}" />
-                    <ui:ComboBox
+                    <ui:FAComboBox
                         Grid.Column="1"
                         IsEditable="True"
                         Name="ProfileBox"
                         HorizontalAlignment="Stretch"
                         VerticalAlignment="Center"
                         SelectedIndex="0"
-                        Items="{Binding ProfilesList}"
-                        Text="{Binding ProfileName}" />
+                        ItemsSource="{Binding ProfilesList}" 
+                        Text="{Binding ProfileName, Mode=TwoWay}" />
                     <Button
                         Grid.Column="2"
                         MinWidth="0"
@@ -170,7 +169,7 @@
                         Name="DeviceBox"
                         HorizontalAlignment="Stretch"
                         VerticalAlignment="Center"
-                        Items="{Binding DeviceList}"
+                        ItemsSource="{Binding DeviceList}"
                         SelectedIndex="{Binding Device}" />
                     <Button
                         Grid.Column="2"
@@ -203,8 +202,8 @@
                     <ComboBox
                         Grid.Column="1"
                         HorizontalAlignment="Stretch"
-                        Items="{ReflectionBinding Controllers}"
-                        SelectedIndex="{ReflectionBinding Controller}">
+                        ItemsSource="{Binding Controllers}"
+                        SelectedIndex="{Binding Controller}">
                         <ComboBox.ItemTemplate>
                             <DataTemplate DataType="models:ControllerModel">
                                 <TextBlock Text="{Binding Name}" />
@@ -723,7 +722,7 @@
                             <Button
                                 Margin="10"
                                 Grid.Column="1"
-                                Command="{ReflectionBinding ShowMotionConfig}">
+                                Command="{Binding ShowMotionConfig}">
                                 <TextBlock Text="{locale:Locale ControllerSettingsConfigureGeneral}" />
                             </Button>
                         </Grid>
@@ -750,7 +749,7 @@
                             <Button
                                 Margin="10"
                                 Grid.Column="1"
-                                Command="{ReflectionBinding ShowRumbleConfig}">
+                                Command="{Binding ShowRumbleConfig}">
                                 <TextBlock Text="{locale:Locale ControllerSettingsConfigureGeneral}" />
                             </Button>
                         </Grid>

@@ -8,7 +8,6 @@
     xmlns:viewModels="clr-namespace:Ryujinx.Ava.UI.ViewModels"
     mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
     x:Class="Ryujinx.Ava.UI.Views.Main.MainStatusBarView"
-    x:CompileBindings="True"
     x:DataType="viewModels:MainWindowViewModel">
     <Design.DataContext>
         <viewModels:MainWindowViewModel />
@@ -46,7 +45,7 @@
                     Margin="0,0,5,0"
                     VerticalAlignment="Center"
                     Background="Transparent"
-                    Command="{ReflectionBinding LoadApplications}">
+                    Click="Refresh_OnClick">
                     <ui:SymbolIcon
                         Width="50"
                         Height="100"
@@ -64,7 +63,7 @@
                     Grid.Column="2"
                     Height="6"
                     VerticalAlignment="Center"
-                    Foreground="{DynamicResource HighlightColor}"
+                    Foreground="{DynamicResource SystemAccentColorLight2}"
                     IsVisible="{Binding StatusBarVisible}"
                     Maximum="{Binding StatusBarProgressMaximum}"
                     Value="{Binding StatusBarProgressValue}" />
@@ -93,6 +92,7 @@
                 Height="12"
                 Margin="0"
                 BorderBrush="Gray"
+                Background="Gray"
                 BorderThickness="1"
                 IsVisible="{Binding !ShowLoadProgress}" />
             <TextBlock
@@ -109,6 +109,7 @@
                 Height="12"
                 Margin="0"
                 BorderBrush="Gray"
+                Background="Gray"
                 BorderThickness="1"
                 IsVisible="{Binding !ShowLoadProgress}" />
             <TextBlock
@@ -125,20 +126,32 @@
                 Height="12"
                 Margin="0"
                 BorderBrush="Gray"
+                Background="Gray"
                 BorderThickness="1"
                 IsVisible="{Binding !ShowLoadProgress}" />
-            <ui:ToggleSplitButton
+            <ToggleSplitButton
                 Name="VolumeStatus"
                 Padding="5,0,5,0"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Center"
                 VerticalContentAlignment="Center"
-                Background="{DynamicResource ThemeContentBackgroundColor}"
-                BorderThickness="0"
                 Content="{Binding VolumeStatusText}"
                 IsChecked="{Binding VolumeMuted}"
-                IsVisible="{Binding !ShowLoadProgress}">
-                <ui:ToggleSplitButton.Flyout>
+                IsVisible="{Binding !ShowLoadProgress}"
+                Background="Transparent"
+                BorderThickness="0"
+                CornerRadius="0">
+                <ToggleSplitButton.Styles>
+                    <Style Selector=":checked">
+                        <Style Selector="^:checked ContentPresenter">
+                            <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundColor}" />
+                        </Style>
+                    </Style>
+                    <Style Selector="Border#SeparatorBorder">
+                        <Setter Property="Opacity" Value="0" />
+                    </Style>
+                </ToggleSplitButton.Styles>
+                <ToggleSplitButton.Flyout>
                     <Flyout Placement="Bottom" ShowMode="TransientWithDismissOnPointerMoveAway">
                         <Grid Margin="0">
                             <Slider
@@ -156,13 +169,14 @@
                                 Value="{Binding Volume}" />
                         </Grid>
                     </Flyout>
-                </ui:ToggleSplitButton.Flyout>
-            </ui:ToggleSplitButton>
+                </ToggleSplitButton.Flyout>
+            </ToggleSplitButton>
             <Border
                 Width="2"
                 Height="12"
                 Margin="0"
                 BorderBrush="Gray"
+                Background="Gray"
                 BorderThickness="1"
                 IsVisible="{Binding !ShowLoadProgress}" />
             <TextBlock
@@ -177,6 +191,7 @@
                 Height="12"
                 Margin="0"
                 BorderBrush="Gray"
+                Background="Gray"
                 BorderThickness="1"
                 IsVisible="{Binding !ShowLoadProgress}" />
             <TextBlock
@@ -191,6 +206,7 @@
                 Height="12"
                 Margin="0"
                 BorderBrush="Gray"
+                Background="Gray"
                 BorderThickness="1"
                 IsVisible="{Binding !ShowLoadProgress}" />
             <TextBlock
@@ -205,6 +221,7 @@
                 Height="12"
                 Margin="0"
                 BorderBrush="Gray"
+                Background="Gray"
                 BorderThickness="1"
                 IsVisible="{Binding !ShowLoadProgress}" />
             <TextBlock

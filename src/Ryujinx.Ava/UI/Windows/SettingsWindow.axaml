@@ -15,7 +15,6 @@
     MinWidth="800"
     MinHeight="480"
     WindowStartupLocation="CenterOwner"
-    x:CompileBindings="True"
     x:DataType="viewModels:SettingsViewModel"
     mc:Ignorable="d"
     Focusable="True">
@@ -59,44 +58,44 @@
                     IsSelected="True"
                     Content="{locale:Locale SettingsTabGeneral}"
                     Tag="UiPage"
-                    Icon="New" />
+                    IconSource="New" />
                 <ui:NavigationViewItem
                     Content="{locale:Locale SettingsTabInput}"
                     Tag="InputPage"
-                    Icon="Games" />
+                    IconSource="Games" />
                 <ui:NavigationViewItem
                     Content="{locale:Locale SettingsTabHotkeys}"
                     Tag="HotkeysPage"
-                    Icon="Keyboard" />
+                    IconSource="Keyboard" />
                 <ui:NavigationViewItem
                     Content="{locale:Locale SettingsTabSystem}"
                     Tag="SystemPage"
-                    Icon="Settings" />
+                    IconSource="Settings" />
                 <ui:NavigationViewItem
                     Content="{locale:Locale SettingsTabCpu}"
                     Tag="CpuPage">
-                    <ui:NavigationViewItem.Icon>
-                        <ui:FontIcon
+                    <ui:NavigationViewItem.IconSource>
+                        <ui:FontIconSource
                             FontFamily="avares://Ryujinx.Ava/Assets/Fonts#Segoe Fluent Icons"
                             Glyph="{helpers:GlyphValueConverter Chip}" />
-                    </ui:NavigationViewItem.Icon>
+                    </ui:NavigationViewItem.IconSource>
                 </ui:NavigationViewItem>
                 <ui:NavigationViewItem
                     Content="{locale:Locale SettingsTabGraphics}"
                     Tag="GraphicsPage"
-                    Icon="Image" />
+                    IconSource="Image" />
                 <ui:NavigationViewItem
                     Content="{locale:Locale SettingsTabAudio}"
-                    Icon="Audio"
+                    IconSource="Audio"
                     Tag="AudioPage" />
                 <ui:NavigationViewItem
                     Content="{locale:Locale SettingsTabNetwork}"
                     Tag="NetworkPage"
-                    Icon="Globe" />
+                    IconSource="Globe" />
                 <ui:NavigationViewItem
                     Content="{locale:Locale SettingsTabLogging}"
                     Tag="LoggingPage"
-                    Icon="Document" />
+                    IconSource="Document" />
             </ui:NavigationView.MenuItems>
             <ui:NavigationView.Styles>
                 <Style Selector="Grid#PlaceholderGrid">
@@ -115,14 +114,14 @@
                 HotKey="Enter"
                 Classes="accent"
                 Content="{locale:Locale SettingsButtonOk}"
-                Command="{ReflectionBinding OkButton}" />
+                Command="{Binding OkButton}" />
             <Button
                 HotKey="Escape"
                 Content="{locale:Locale SettingsButtonCancel}"
-                Command="{ReflectionBinding CancelButton}" />
+                Command="{Binding CancelButton}" />
             <Button
                 Content="{locale:Locale SettingsButtonApply}"
-                Command="{ReflectionBinding ApplyButton}" />
+                Command="{Binding ApplyButton}" />
         </ReversibleStackPanel>
     </Grid>
 </window:StyleableWindow>

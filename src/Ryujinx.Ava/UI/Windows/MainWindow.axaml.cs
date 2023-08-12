@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Input;
+using Avalonia.Controls.Primitives;
+using Avalonia.Interactivity;
 using Avalonia.Threading;
 using FluentAvalonia.UI.Controls;
 using Ryujinx.Ava.Common;
@@ -21,7 +22,6 @@ using Ryujinx.Ui.Common;
 using Ryujinx.Ui.Common.Configuration;
 using Ryujinx.Ui.Common.Helper;
 using System;
-using System.ComponentModel;
 using System.IO;
 using System.Runtime.Versioning;
 using System.Threading.Tasks;
@@ -85,6 +85,7 @@ namespace Ryujinx.Ava.UI.Windows
 
                 ViewModel.Initialize(
                     ContentManager,
+                    StorageProvider,
                     ApplicationLibrary,
                     VirtualFileSystem,
                     AccountManager,
@@ -102,11 +103,16 @@ namespace Ryujinx.Ava.UI.Windows
                 LoadGameList();
 
                 this.GetObservable(IsActiveProperty).Subscribe(IsActiveChanged);
+                this.ScalingChanged += OnScalingChanged;
             }
 
             ApplicationLibrary.ApplicationCountUpdated += ApplicationLibrary_ApplicationCountUpdated;
             ApplicationLibrary.ApplicationAdded += ApplicationLibrary_ApplicationAdded;
-            ViewModel.ReloadGameList += ReloadGameList;
+        }
+
+        protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
+        {
+            base.OnApplyTemplate(e);
 
             NotificationHelper.SetNotificationManager(this);
         }
@@ -130,10 +136,9 @@ namespace Ryujinx.Ava.UI.Windows
             _isLoading = false;
         }
 
-        protected override void HandleScalingChanged(double scale)
+        private void OnScalingChanged(object sender, EventArgs e)
         {
-            Program.DesktopScaleFactor = scale;
-            base.HandleScalingChanged(scale);
+            Program.DesktopScaleFactor = this.RenderScaling;
         }
 
         public void AddApplication(ApplicationData applicationData)
@@ -219,16 +224,6 @@ namespace Ryujinx.Ava.UI.Windows
                     ViewModel.ToggleFullscreen();
                 }
             });
-        }
-
-        protected override void HandleWindowStateChanged(WindowState state)
-        {
-            ViewModel.WindowState = state;
-
-            if (state != WindowState.Minimized)
-            {
-                Renderer.Start();
-            }
         }
 
         private void Initialize()
@@ -367,14 +362,12 @@ namespace Ryujinx.Ava.UI.Windows
             ApplicationList.ApplicationOpened += Application_Opened;
 
             ApplicationList.DataContext = ViewModel;
-
-            LoadHotKeys();
         }
 
         private void SetWindowSizePosition()
         {
             PixelPoint savedPoint = new(ConfigurationState.Instance.Ui.WindowStartup.WindowPositionX,
-                                                   ConfigurationState.Instance.Ui.WindowStartup.WindowPositionY);
+                                        ConfigurationState.Instance.Ui.WindowStartup.WindowPositionY);
 
             ViewModel.WindowHeight = ConfigurationState.Instance.Ui.WindowStartup.WindowSizeHeight * Program.WindowScaleFactor;
             ViewModel.WindowWidth = ConfigurationState.Instance.Ui.WindowStartup.WindowSizeWidth * Program.WindowScaleFactor;
@@ -447,18 +440,7 @@ namespace Ryujinx.Ava.UI.Windows
 #pragma warning restore IDE0055
         }
 
-        public void LoadHotKeys()
-        {
-#pragma warning disable IDE0055 // Disable formatting
-            HotKeyManager.SetHotKey(FullscreenHotKey,      new KeyGesture(Key.Enter, KeyModifiers.Alt));
-            HotKeyManager.SetHotKey(FullscreenHotKey2,     new KeyGesture(Key.F11));
-            HotKeyManager.SetHotKey(FullscreenHotKeyMacOS, new KeyGesture(Key.F, KeyModifiers.Control | KeyModifiers.Meta));
-            HotKeyManager.SetHotKey(DockToggleHotKey,      new KeyGesture(Key.F9));
-            HotKeyManager.SetHotKey(ExitHotKey,            new KeyGesture(Key.Escape));
-#pragma warning restore IDE0055
-        }
-
-        private void VolumeStatus_CheckedChanged(object sender, SplitButtonClickEventArgs e)
+        private void VolumeStatus_CheckedChanged(object sender, RoutedEventArgs e)
         {
             var volumeSplitButton = sender as ToggleSplitButton;
             if (ViewModel.IsGameRunning)
@@ -476,7 +458,7 @@ namespace Ryujinx.Ava.UI.Windows
             }
         }
 
-        protected override void OnClosing(CancelEventArgs e)
+        protected override void OnClosing(WindowClosingEventArgs e)
         {
             if (!ViewModel.IsClosing && ViewModel.AppHost != null && ConfigurationState.Instance.ShowConfirmExit)
             {
@@ -546,6 +528,25 @@ namespace Ryujinx.Ava.UI.Windows
             });
 
             ReloadGameList();
+        }
+
+        public void ToggleFileType(string fileType)
+        {
+            _ = fileType switch
+            {
+#pragma warning disable IDE0055 // Disable formatting
+                "NSP"  => ConfigurationState.Instance.Ui.ShownFileTypes.NSP.Value  = !ConfigurationState.Instance.Ui.ShownFileTypes.NSP,
+                "PFS0" => ConfigurationState.Instance.Ui.ShownFileTypes.PFS0.Value = !ConfigurationState.Instance.Ui.ShownFileTypes.PFS0,
+                "XCI"  => ConfigurationState.Instance.Ui.ShownFileTypes.XCI.Value  = !ConfigurationState.Instance.Ui.ShownFileTypes.XCI,
+                "NCA"  => ConfigurationState.Instance.Ui.ShownFileTypes.NCA.Value  = !ConfigurationState.Instance.Ui.ShownFileTypes.NCA,
+                "NRO"  => ConfigurationState.Instance.Ui.ShownFileTypes.NRO.Value  = !ConfigurationState.Instance.Ui.ShownFileTypes.NRO,
+                "NSO"  => ConfigurationState.Instance.Ui.ShownFileTypes.NSO.Value  = !ConfigurationState.Instance.Ui.ShownFileTypes.NSO,
+                _  => throw new ArgumentOutOfRangeException(fileType),
+#pragma warning restore IDE0055
+            };
+
+            ConfigurationState.Instance.ToFileFormat().SaveConfig(Program.ConfigurationPath);
+            LoadApplications();
         }
 
         private void ReloadGameList()

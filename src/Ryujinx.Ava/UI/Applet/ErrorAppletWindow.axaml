@@ -38,7 +38,7 @@
             Grid.Column="1"
             Margin="10"
             VerticalAlignment="Stretch"
-            Text="{Binding Message}"
+            Text="{ReflectionBinding Message}"
             TextWrapping="Wrap" />
         <StackPanel
             Name="ButtonStack"

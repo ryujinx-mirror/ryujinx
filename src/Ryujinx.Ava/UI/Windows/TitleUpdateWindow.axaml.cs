@@ -61,7 +61,7 @@ namespace Ryujinx.Ava.UI.Windows
 
             if (VisualRoot is MainWindow window)
             {
-                window.ViewModel.LoadApplications();
+                window.LoadApplications();
             }
 
             ((ContentDialog)Parent).Hide();

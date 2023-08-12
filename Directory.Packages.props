@@ -3,21 +3,21 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="Avalonia" Version="0.10.21" />
-    <PackageVersion Include="Avalonia.Controls.DataGrid" Version="0.10.21" />
-    <PackageVersion Include="Avalonia.Desktop" Version="0.10.21" />
-    <PackageVersion Include="Avalonia.Diagnostics" Version="0.10.21" />
-    <PackageVersion Include="Avalonia.Markup.Xaml.Loader" Version="0.10.21" />
-    <PackageVersion Include="Avalonia.Svg" Version="0.10.18" />
-    <PackageVersion Include="Avalonia.Svg.Skia" Version="0.10.18" />
+    <PackageVersion Include="Avalonia" Version="11.0.3" />
+    <PackageVersion Include="Avalonia.Controls.DataGrid" Version="11.0.3" />
+    <PackageVersion Include="Avalonia.Desktop" Version="11.0.3" />
+    <PackageVersion Include="Avalonia.Diagnostics" Version="11.0.3" />
+    <PackageVersion Include="Avalonia.Markup.Xaml.Loader" Version="11.0.3" />
+    <PackageVersion Include="Avalonia.Svg" Version="11.0.0" />
+    <PackageVersion Include="Avalonia.Svg.Skia" Version="11.0.0" />
     <PackageVersion Include="CommandLineParser" Version="2.9.1" />
     <PackageVersion Include="Concentus" Version="1.1.7" />
     <PackageVersion Include="DiscordRichPresence" Version="1.2.1.24" />
     <PackageVersion Include="DynamicData" Version="7.14.2" />
-    <PackageVersion Include="FluentAvaloniaUI" Version="1.4.5" />
+    <PackageVersion Include="FluentAvaloniaUI" Version="2.0.1" />
     <PackageVersion Include="GtkSharp.Dependencies" Version="1.1.1" />
     <PackageVersion Include="GtkSharp.Dependencies.osx" Version="0.0.5" />
-    <PackageVersion Include="jp2masa.Avalonia.Flexbox" Version="0.2.0" />
+    <PackageVersion Include="jp2masa.Avalonia.Flexbox" Version="0.3.0-beta.4" />
     <PackageVersion Include="LibHac" Version="0.18.0" />
     <PackageVersion Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4" />
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="4.6.0" />
@@ -48,6 +48,5 @@
     <PackageVersion Include="System.IO.Hashing" Version="7.0.0" />
     <PackageVersion Include="System.Management" Version="7.0.2" />
     <PackageVersion Include="UnicornEngine.Unicorn" Version="2.0.2-rc1-fb78016" />
-    <PackageVersion Include="XamlNameReferenceGenerator" Version="1.6.1" />
   </ItemGroup>
 </Project>

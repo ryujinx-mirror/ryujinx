@@ -8,7 +8,6 @@
     xmlns:viewModels="clr-namespace:Ryujinx.Ava.UI.ViewModels"
     mc:Ignorable="d"
     x:Class="Ryujinx.Ava.UI.Views.Input.MotionInputView"
-    x:CompileBindings="True"
     x:DataType="viewModels:MotionInputViewModel"
     Focusable="True">
     <Grid Margin="10">

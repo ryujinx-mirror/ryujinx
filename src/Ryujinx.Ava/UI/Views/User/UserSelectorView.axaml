@@ -15,7 +15,6 @@
     d:DesignWidth="800"
     mc:Ignorable="d"
     Focusable="True"
-    x:CompileBindings="True"
     x:DataType="viewModels:UserProfileViewModel">
     <UserControl.Resources>
         <helpers:BitmapArrayValueConverter x:Key="ByteImage" />
@@ -38,7 +37,7 @@
                 VerticalAlignment="Center"
                 SelectionChanged="ProfilesList_SelectionChanged"
                 Background="Transparent"
-                Items="{Binding Profiles}">
+                ItemsSource="{Binding Profiles}">
                 <ListBox.ItemsPanel>
                     <ItemsPanelTemplate>
                         <flex:FlexPanel
@@ -53,7 +52,7 @@
                         <Setter Property="Margin" Value="5 5 0 5" />
                         <Setter Property="CornerRadius" Value="5" />
                     </Style>
-                    <Style Selector="Border#SelectionIndicator">
+                    <Style Selector="Rectangle#SelectionIndicator">
                         <Setter Property="Opacity" Value="0" />
                     </Style>
                 </ListBox.Styles>
@@ -61,8 +60,8 @@
                     <DataTemplate
                         DataType="models:UserProfile">
                         <Grid
-                            PointerEnter="Grid_PointerEntered"
-                            PointerLeave="Grid_OnPointerExited">
+                            PointerEntered="Grid_PointerEntered"
+                            PointerExited="Grid_OnPointerExited">
                             <Border
                                 HorizontalAlignment="Stretch"
                                 VerticalAlignment="Stretch"

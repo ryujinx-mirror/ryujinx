@@ -11,7 +11,6 @@
     Width="500"
     Height="380"
     mc:Ignorable="d"
-    x:CompileBindings="True"
     x:DataType="viewModels:DownloadableContentManagerViewModel"
     Focusable="True">
     <Grid>
@@ -53,8 +52,8 @@
                 </StackPanel>
                 <TextBox
                     Grid.Column="2"
-                    MinHeight="27"
-                    MaxHeight="27"
+                    MinHeight="29"
+                    MaxHeight="29"
                     HorizontalAlignment="Stretch"
                     Watermark="{locale:Locale Search}"
                     Text="{Binding Search}" />
@@ -71,12 +70,11 @@
             Padding="2.5">
             <ListBox
                 AutoScrollToSelectedItem="False"
-                VirtualizationMode="None"
                 SelectionMode="Multiple, Toggle"
                 Background="Transparent"
                 SelectionChanged="OnSelectionChanged"
                 SelectedItems="{Binding SelectedDownloadableContents, Mode=TwoWay}"
-                Items="{Binding Views}">
+                ItemsSource="{Binding Views}">
                 <ListBox.DataTemplates>
                     <DataTemplate
                         DataType="models:DownloadableContentModel">

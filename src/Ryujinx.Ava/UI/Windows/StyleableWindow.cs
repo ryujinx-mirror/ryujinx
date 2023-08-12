@@ -11,12 +11,12 @@ namespace Ryujinx.Ava.UI.Windows
 {
     public class StyleableWindow : Window
     {
-        public IBitmap IconImage { get; set; }
+        public Bitmap IconImage { get; set; }
 
         public StyleableWindow()
         {
             WindowStartupLocation = WindowStartupLocation.CenterOwner;
-            TransparencyLevelHint = WindowTransparencyLevel.None;
+            TransparencyLevelHint = new[] { WindowTransparencyLevel.None };
 
             using Stream stream = Assembly.GetAssembly(typeof(ConfigurationState)).GetManifestResourceStream("Ryujinx.Ui.Common.Resources.Logo_Ryujinx.png");
 

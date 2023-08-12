@@ -1,7 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
-using Avalonia.Markup.Xaml;
 using Ryujinx.Ava.UI.Helpers;
 using Ryujinx.Ava.UI.ViewModels;
 using Ryujinx.Ui.App.Common;
@@ -25,12 +24,7 @@ namespace Ryujinx.Ava.UI.Controls
             InitializeComponent();
         }
 
-        private void InitializeComponent()
-        {
-            AvaloniaXamlLoader.Load(this);
-        }
-
-        public void GameList_DoubleTapped(object sender, RoutedEventArgs args)
+        public void GameList_DoubleTapped(object sender, TappedEventArgs args)
         {
             if (sender is ListBox listBox)
             {

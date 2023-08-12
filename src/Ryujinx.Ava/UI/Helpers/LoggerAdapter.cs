@@ -42,21 +42,6 @@ namespace Ryujinx.Ava.UI.Helpers
             GetLog(level)?.PrintMsg(RyuLogClass.Ui, Format(level, area, messageTemplate, source, null));
         }
 
-        public void Log<T0>(AvaLogLevel level, string area, object source, string messageTemplate, T0 propertyValue0)
-        {
-            GetLog(level)?.PrintMsg(RyuLogClass.Ui, Format(level, area, messageTemplate, source, new object[] { propertyValue0 }));
-        }
-
-        public void Log<T0, T1>(AvaLogLevel level, string area, object source, string messageTemplate, T0 propertyValue0, T1 propertyValue1)
-        {
-            GetLog(level)?.PrintMsg(RyuLogClass.Ui, Format(level, area, messageTemplate, source, new object[] { propertyValue0, propertyValue1 }));
-        }
-
-        public void Log<T0, T1, T2>(AvaLogLevel level, string area, object source, string messageTemplate, T0 propertyValue0, T1 propertyValue1, T2 propertyValue2)
-        {
-            GetLog(level)?.PrintMsg(RyuLogClass.Ui, Format(level, area, messageTemplate, source, new object[] { propertyValue0, propertyValue1, propertyValue2 }));
-        }
-
         public void Log(AvaLogLevel level, string area, object source, string messageTemplate, params object[] propertyValues)
         {
             GetLog(level)?.PrintMsg(RyuLogClass.Ui, Format(level, area, messageTemplate, source, propertyValues));

@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input;
 using Avalonia.Media;
+using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using DynamicData;
 using DynamicData.Binding;
@@ -105,8 +106,6 @@ namespace Ryujinx.Ava.UI.ViewModels
         public ApplicationData ListSelectedApplication;
         public ApplicationData GridSelectedApplication;
 
-        public event Action ReloadGameList;
-
         private string TitleName { get; set; }
         internal AppHost AppHost { get; set; }
 
@@ -131,6 +130,7 @@ namespace Ryujinx.Ava.UI.ViewModels
 
         public void Initialize(
             ContentManager contentManager,
+            IStorageProvider storageProvider,
             ApplicationLibrary applicationLibrary,
             VirtualFileSystem virtualFileSystem,
             AccountManager accountManager,
@@ -144,6 +144,7 @@ namespace Ryujinx.Ava.UI.ViewModels
             TopLevel topLevel)
         {
             ContentManager = contentManager;
+            StorageProvider = storageProvider;
             ApplicationLibrary = applicationLibrary;
             VirtualFileSystem = virtualFileSystem;
             AccountManager = accountManager;
@@ -891,6 +892,7 @@ namespace Ryujinx.Ava.UI.ViewModels
         }
 
         public ContentManager ContentManager { get; private set; }
+        public IStorageProvider StorageProvider { get; private set; }
         public ApplicationLibrary ApplicationLibrary { get; private set; }
         public VirtualFileSystem VirtualFileSystem { get; private set; }
         public AccountManager AccountManager { get; private set; }
@@ -1188,7 +1190,9 @@ namespace Ryujinx.Ava.UI.ViewModels
                 {
                     Application.Current.Styles.TryGetResource(args.VSyncEnabled
                         ? "VsyncEnabled"
-                        : "VsyncDisabled", out object color);
+                        : "VsyncDisabled",
+                        Avalonia.Application.Current.ActualThemeVariant,
+                        out object color);
 
                     if (color is not null)
                     {
@@ -1259,6 +1263,16 @@ namespace Ryujinx.Ava.UI.ViewModels
             ShowMenuAndStatusBar = false;
         }
 
+        public void ToggleStartGamesInFullscreen()
+        {
+            StartGamesInFullscreen = !StartGamesInFullscreen;
+        }
+
+        public void ToggleShowConsole()
+        {
+            ShowConsole = !ShowConsole;
+        }
+
         public void SetListMode()
         {
             Glyph = Glyph.List;
@@ -1271,43 +1285,57 @@ namespace Ryujinx.Ava.UI.ViewModels
 
         public async void InstallFirmwareFromFile()
         {
-            if (Application.Current.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            var result = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
             {
-                OpenFileDialog dialog = new() { AllowMultiple = false };
-                dialog.Filters.Add(new FileDialogFilter { Name = LocaleManager.Instance[LocaleKeys.FileDialogAllTypes], Extensions = { "xci", "zip" } });
-                dialog.Filters.Add(new FileDialogFilter { Name = "XCI", Extensions = { "xci" } });
-                dialog.Filters.Add(new FileDialogFilter { Name = "ZIP", Extensions = { "zip" } });
-
-                string[] file = await dialog.ShowAsync(desktop.MainWindow);
-
-                if (file != null && file.Length > 0)
+                AllowMultiple = false,
+                FileTypeFilter = new List<FilePickerFileType>
                 {
-                    await HandleFirmwareInstallation(file[0]);
+                    new(LocaleManager.Instance[LocaleKeys.FileDialogAllTypes])
+                    {
+                        Patterns = new[] { "*.xci", "*.zip" },
+                        AppleUniformTypeIdentifiers = new[] { "com.ryujinx.xci", "public.zip-archive" },
+                        MimeTypes = new[] { "application/x-nx-xci", "application/zip" }
+                    },
+                    new("XCI")
+                    {
+                        Patterns = new[] { "*.xci" },
+                        AppleUniformTypeIdentifiers = new[] { "com.ryujinx.xci" },
+                        MimeTypes = new[] { "application/x-nx-xci" }
+                    },
+                    new("ZIP")
+                    {
+                        Patterns = new[] { "*.zip" },
+                        AppleUniformTypeIdentifiers = new[] { "public.zip-archive" },
+                        MimeTypes = new[] { "application/zip" }
+                    },
                 }
+            });
+
+            if (result.Count > 0)
+            {
+                await HandleFirmwareInstallation(result[0].Path.LocalPath);
             }
         }
 
         public async void InstallFirmwareFromFolder()
         {
-            if (Application.Current.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            var result = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
             {
-                OpenFolderDialog dialog = new();
+                AllowMultiple = false
+            });
 
-                string folder = await dialog.ShowAsync(desktop.MainWindow);
-
-                if (!string.IsNullOrEmpty(folder))
-                {
-                    await HandleFirmwareInstallation(folder);
-                }
+            if (result.Count > 0)
+            {
+                await HandleFirmwareInstallation(result[0].Path.LocalPath);
             }
         }
 
-        public static void OpenRyujinxFolder()
+        public void OpenRyujinxFolder()
         {
             OpenHelper.OpenFolder(AppDataManager.BaseDirPath);
         }
 
-        public static void OpenLogsFolder()
+        public void OpenLogsFolder()
         {
             string logPath = Path.Combine(ReleaseInformation.GetBaseApplicationDirectory(), "Logs");
 
@@ -1349,25 +1377,6 @@ namespace Ryujinx.Ava.UI.ViewModels
             }
         }
 
-        public void ToggleFileType(string fileType)
-        {
-            _ = fileType switch
-            {
-#pragma warning disable IDE0055 // Disable formatting
-                "NSP"  => ConfigurationState.Instance.Ui.ShownFileTypes.NSP.Value  = !ConfigurationState.Instance.Ui.ShownFileTypes.NSP,
-                "PFS0" => ConfigurationState.Instance.Ui.ShownFileTypes.PFS0.Value = !ConfigurationState.Instance.Ui.ShownFileTypes.PFS0,
-                "XCI"  => ConfigurationState.Instance.Ui.ShownFileTypes.XCI.Value  = !ConfigurationState.Instance.Ui.ShownFileTypes.XCI,
-                "NCA"  => ConfigurationState.Instance.Ui.ShownFileTypes.NCA.Value  = !ConfigurationState.Instance.Ui.ShownFileTypes.NCA,
-                "NRO"  => ConfigurationState.Instance.Ui.ShownFileTypes.NRO.Value  = !ConfigurationState.Instance.Ui.ShownFileTypes.NRO,
-                "NSO"  => ConfigurationState.Instance.Ui.ShownFileTypes.NSO.Value  = !ConfigurationState.Instance.Ui.ShownFileTypes.NSO,
-                    _  => throw new ArgumentOutOfRangeException(fileType),
-#pragma warning restore IDE0055
-            };
-
-            ConfigurationState.Instance.ToFileFormat().SaveConfig(Program.ConfigurationPath);
-            LoadApplications();
-        }
-
         public async void ManageProfiles()
         {
             await NavigationDialogHost.Show(AccountManager, ContentManager, VirtualFileSystem, LibHacHorizonManager.RyujinxClient);
@@ -1378,78 +1387,84 @@ namespace Ryujinx.Ava.UI.ViewModels
             AppHost.Device.System.SimulateWakeUpMessage();
         }
 
-        public async void LoadApplications()
-        {
-            await Dispatcher.UIThread.InvokeAsync(() =>
-            {
-                Applications.Clear();
-
-                StatusBarVisible = true;
-                StatusBarProgressMaximum = 0;
-                StatusBarProgressValue = 0;
-
-                LocaleManager.Instance.UpdateAndGetDynamicValue(LocaleKeys.StatusBarGamesLoaded, 0, 0);
-            });
-
-            ReloadGameList?.Invoke();
-        }
-
         public async void OpenFile()
         {
-            if (Application.Current.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            var result = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
             {
-                OpenFileDialog dialog = new()
+                Title = LocaleManager.Instance[LocaleKeys.OpenFileDialogTitle],
+                AllowMultiple = false,
+                FileTypeFilter = new List<FilePickerFileType>
                 {
-                    Title = LocaleManager.Instance[LocaleKeys.OpenFileDialogTitle],
-                };
-
-                dialog.Filters.Add(new FileDialogFilter
-                {
-                    Name = LocaleManager.Instance[LocaleKeys.AllSupportedFormats],
-                    Extensions =
+                    new(LocaleManager.Instance[LocaleKeys.AllSupportedFormats])
                     {
-                        "nsp",
-                        "pfs0",
-                        "xci",
-                        "nca",
-                        "nro",
-                        "nso",
+                        Patterns = new[] { "*.nsp", "*.xci", "*.nca", "*.nro", "*.nso" },
+                        AppleUniformTypeIdentifiers = new[]
+                        {
+                            "com.ryujinx.nsp",
+                            "com.ryujinx.xci",
+                            "com.ryujinx.nca",
+                            "com.ryujinx.nro",
+                            "com.ryujinx.nso"
+                        },
+                        MimeTypes = new[]
+                        {
+                            "application/x-nx-nsp",
+                            "application/x-nx-xci",
+                            "application/x-nx-nca",
+                            "application/x-nx-nro",
+                            "application/x-nx-nso"
+                        }
                     },
-                });
-
-#pragma warning disable IDE0055 // Disable formatting
-                dialog.Filters.Add(new FileDialogFilter { Name = "NSP",  Extensions = { "nsp" } });
-                dialog.Filters.Add(new FileDialogFilter { Name = "PFS0", Extensions = { "pfs0" } });
-                dialog.Filters.Add(new FileDialogFilter { Name = "XCI",  Extensions = { "xci" } });
-                dialog.Filters.Add(new FileDialogFilter { Name = "NCA",  Extensions = { "nca" } });
-                dialog.Filters.Add(new FileDialogFilter { Name = "NRO",  Extensions = { "nro" } });
-                dialog.Filters.Add(new FileDialogFilter { Name = "NSO",  Extensions = { "nso" } });
-#pragma warning restore IDE0055
-
-                string[] files = await dialog.ShowAsync(desktop.MainWindow);
-
-                if (files != null && files.Length > 0)
-                {
-                    LoadApplication(files[0]);
+                    new("NSP")
+                    {
+                        Patterns = new[] { "*.nsp" },
+                        AppleUniformTypeIdentifiers = new[] { "com.ryujinx.nsp" },
+                        MimeTypes = new[] { "application/x-nx-nsp" }
+                    },
+                    new("XCI")
+                    {
+                        Patterns = new[] { "*.xci" },
+                        AppleUniformTypeIdentifiers = new[] { "com.ryujinx.xci" },
+                        MimeTypes = new[] { "application/x-nx-xci" }
+                    },
+                    new("NCA")
+                    {
+                        Patterns = new[] { "*.nca" },
+                        AppleUniformTypeIdentifiers = new[] { "com.ryujinx.nca" },
+                        MimeTypes = new[] { "application/x-nx-nca" }
+                    },
+                    new("NRO")
+                    {
+                        Patterns = new[] { "*.nro" },
+                        AppleUniformTypeIdentifiers = new[] { "com.ryujinx.nro" },
+                        MimeTypes = new[] { "application/x-nx-nro" }
+                    },
+                    new("NSO")
+                    {
+                        Patterns = new[] { "*.nso" },
+                        AppleUniformTypeIdentifiers = new[] { "com.ryujinx.nso" },
+                        MimeTypes = new[] { "application/x-nx-nso" }
+                    },
                 }
+            });
+
+            if (result.Count > 0)
+            {
+                LoadApplication(result[0].Path.LocalPath);
             }
         }
 
         public async void OpenFolder()
         {
-            if (Application.Current.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            var result = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
             {
-                OpenFolderDialog dialog = new()
-                {
-                    Title = LocaleManager.Instance[LocaleKeys.OpenFolderDialogTitle],
-                };
+                Title = LocaleManager.Instance[LocaleKeys.OpenFolderDialogTitle],
+                AllowMultiple = false
+            });
 
-                string folder = await dialog.ShowAsync(desktop.MainWindow);
-
-                if (!string.IsNullOrWhiteSpace(folder) && Directory.Exists(folder))
-                {
-                    LoadApplication(folder);
-                }
+            if (result.Count > 0)
+            {
+                LoadApplication(result[0].Path.LocalPath);
             }
         }
 

@@ -1,4 +1,3 @@
-using Avalonia;
 using Avalonia.Media;
 using Ryujinx.Ava.UI.Controls;
 using Ryujinx.Ava.UI.ViewModels;
@@ -88,7 +87,8 @@ namespace Ryujinx.Ava.UI.Models
 
         private void UpdateBackground()
         {
-            Application.Current.Styles.TryGetResource("ControlFillColorSecondary", out object color);
+            var currentApplication = Avalonia.Application.Current;
+            currentApplication.Styles.TryGetResource("ControlFillColorSecondary", currentApplication.ActualThemeVariant, out object color);
 
             if (color is not null)
             {

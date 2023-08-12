@@ -4,9 +4,6 @@ using Avalonia.Threading;
 using Ryujinx.Ava.Common.Locale;
 using Ryujinx.Ava.UI.Windows;
 using System.Threading.Tasks;
-#if DEBUG
-using Avalonia;
-#endif
 
 namespace Ryujinx.Ava.UI.Applet
 {
@@ -21,9 +18,7 @@ namespace Ryujinx.Ava.UI.Applet
             Message = message;
             DataContext = this;
             InitializeComponent();
-#if DEBUG
-            this.AttachDevTools();
-#endif
+
             int responseId = 0;
 
             if (buttons != null)
@@ -44,9 +39,6 @@ namespace Ryujinx.Ava.UI.Applet
         {
             DataContext = this;
             InitializeComponent();
-#if DEBUG
-            this.AttachDevTools();
-#endif
         }
 
         public string Message { get; set; }
