@@ -100,8 +100,6 @@ namespace Ryujinx.Ava
 
             ReloadConfig();
 
-            ForceDpiAware.Windows();
-
             WindowScaleFactor = ForceDpiAware.GetWindowScaleFactor();
 
             // Logging system information.
