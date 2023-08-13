@@ -8,7 +8,7 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
 {
     class Demangler
     {
-        private static readonly string _base36 = "0123456789abcdefghijklmnopqrstuvwxyz";
+        private const string Base36 = "0123456789abcdefghijklmnopqrstuvwxyz";
         private readonly List<BaseNode> _substitutionList = new();
         private List<BaseNode> _templateParamList = new();
 
@@ -87,7 +87,7 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
 
             for (int i = 0; i < reversedEncoded.Length; i++)
             {
-                int value = _base36.IndexOf(reversedEncoded[i]);
+                int value = Base36.IndexOf(reversedEncoded[i]);
                 if (value == -1)
                 {
                     return -1;

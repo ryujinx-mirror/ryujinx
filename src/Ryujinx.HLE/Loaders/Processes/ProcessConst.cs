@@ -20,7 +20,7 @@
             "sdk",
         };
 
-        public static readonly string MainNpdmPath = "/main.npdm";
+        public const string MainNpdmPath = "/main.npdm";
 
         public const int NroAsetMagic = ('A' << 0) | ('S' << 8) | ('E' << 16) | ('T' << 24);
 

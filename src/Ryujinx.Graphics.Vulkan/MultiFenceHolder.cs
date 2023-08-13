@@ -8,7 +8,7 @@ namespace Ryujinx.Graphics.Vulkan
     /// </summary>
     class MultiFenceHolder
     {
-        private static readonly int _bufferUsageTrackingGranularity = 4096;
+        private const int BufferUsageTrackingGranularity = 4096;
 
         private readonly FenceHolder[] _fences;
         private readonly BufferUsageBitmap _bufferUsageBitmap;
@@ -28,7 +28,7 @@ namespace Ryujinx.Graphics.Vulkan
         public MultiFenceHolder(int size)
         {
             _fences = new FenceHolder[CommandBufferPool.MaxCommandBuffers];
-            _bufferUsageBitmap = new BufferUsageBitmap(size, _bufferUsageTrackingGranularity);
+            _bufferUsageBitmap = new BufferUsageBitmap(size, BufferUsageTrackingGranularity);
         }
 
         /// <summary>

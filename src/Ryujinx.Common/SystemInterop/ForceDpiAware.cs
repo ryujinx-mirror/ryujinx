@@ -28,8 +28,8 @@ namespace Ryujinx.Common.SystemInterop
         [LibraryImport(X11LibraryName)]
         private static partial int XCloseDisplay(IntPtr display);
 
-        private static readonly double _standardDpiScale = 96.0;
-        private static readonly double _maxScaleFactor = 1.25;
+        private const double StandardDpiScale = 96.0;
+        private const double MaxScaleFactor = 1.25;
 
         /// <summary>
         /// Marks the application as DPI-Aware when running on the Windows operating system.
@@ -90,7 +90,7 @@ namespace Ryujinx.Common.SystemInterop
         {
             double userDpiScale = GetActualScaleFactor();
 
-            return Math.Min(userDpiScale / _standardDpiScale, _maxScaleFactor);
+            return Math.Min(userDpiScale / StandardDpiScale, MaxScaleFactor);
         }
     }
 }

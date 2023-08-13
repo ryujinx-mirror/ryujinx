@@ -37,7 +37,7 @@ namespace Ryujinx.Modules
         private static readonly string _homeDir = AppDomain.CurrentDomain.BaseDirectory;
         private static readonly string _updateDir = Path.Combine(Path.GetTempPath(), "Ryujinx", "update");
         private static readonly string _updatePublishDir = Path.Combine(_updateDir, "publish");
-        private static readonly int _connectionCount = 4;
+        private const int ConnectionCount = 4;
 
         private static string _buildVer;
         private static string _platformExt;
@@ -344,22 +344,22 @@ namespace Ryujinx.Modules
         private static void DoUpdateWithMultipleThreads(TaskDialog taskDialog, string downloadUrl, string updateFile)
         {
             // Multi-Threaded Updater
-            long chunkSize = _buildSize / _connectionCount;
-            long remainderChunk = _buildSize % _connectionCount;
+            long chunkSize = _buildSize / ConnectionCount;
+            long remainderChunk = _buildSize % ConnectionCount;
 
             int completedRequests = 0;
             int totalProgressPercentage = 0;
-            int[] progressPercentage = new int[_connectionCount];
+            int[] progressPercentage = new int[ConnectionCount];
 
-            List<byte[]> list = new(_connectionCount);
-            List<WebClient> webClients = new(_connectionCount);
+            List<byte[]> list = new(ConnectionCount);
+            List<WebClient> webClients = new(ConnectionCount);
 
-            for (int i = 0; i < _connectionCount; i++)
+            for (int i = 0; i < ConnectionCount; i++)
             {
                 list.Add(Array.Empty<byte>());
             }
 
-            for (int i = 0; i < _connectionCount; i++)
+            for (int i = 0; i < ConnectionCount; i++)
             {
 #pragma warning disable SYSLIB0014
                 // TODO: WebClient is obsolete and need to be replaced with a more complex logic using HttpClient.
@@ -368,7 +368,7 @@ namespace Ryujinx.Modules
 
                 webClients.Add(client);
 
-                if (i == _connectionCount - 1)
+                if (i == ConnectionCount - 1)
                 {
                     client.Headers.Add("Range", $"bytes={chunkSize * i}-{(chunkSize * (i + 1) - 1) + remainderChunk}");
                 }
@@ -385,7 +385,7 @@ namespace Ryujinx.Modules
                     Interlocked.Exchange(ref progressPercentage[index], args.ProgressPercentage);
                     Interlocked.Add(ref totalProgressPercentage, args.ProgressPercentage);
 
-                    taskDialog.SetProgressBarState(totalProgressPercentage / _connectionCount, TaskDialogProgressState.Normal);
+                    taskDialog.SetProgressBarState(totalProgressPercentage / ConnectionCount, TaskDialogProgressState.Normal);
                 };
 
                 client.DownloadDataCompleted += (_, args) =>
@@ -404,10 +404,10 @@ namespace Ryujinx.Modules
                     list[index] = args.Result;
                     Interlocked.Increment(ref completedRequests);
 
-                    if (Equals(completedRequests, _connectionCount))
+                    if (Equals(completedRequests, ConnectionCount))
                     {
                         byte[] mergedFileBytes = new byte[_buildSize];
-                        for (int connectionIndex = 0, destinationOffset = 0; connectionIndex < _connectionCount; connectionIndex++)
+                        for (int connectionIndex = 0, destinationOffset = 0; connectionIndex < ConnectionCount; connectionIndex++)
                         {
                             Array.Copy(list[connectionIndex], 0, mergedFileBytes, destinationOffset, list[connectionIndex].Length);
                             destinationOffset += list[connectionIndex].Length;
