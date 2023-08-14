@@ -71,7 +71,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
             }
             else
             {
-                context.Config.GpuAccessor.Log($"Invalid vote operation: {op.VoteMode}.");
+                context.TranslatorContext.GpuAccessor.Log($"Invalid vote operation: {op.VoteMode}.");
             }
 
             if (op.Dest != RegisterConsts.RegisterZeroIndex)

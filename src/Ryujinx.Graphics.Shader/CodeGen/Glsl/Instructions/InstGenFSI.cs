@@ -4,11 +4,11 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
     {
         public static string FSIBegin(CodeGenContext context)
         {
-            if (context.Config.GpuAccessor.QueryHostSupportsFragmentShaderInterlock())
+            if (context.HostCapabilities.SupportsFragmentShaderInterlock)
             {
                 return "beginInvocationInterlockARB()";
             }
-            else if (context.Config.GpuAccessor.QueryHostSupportsFragmentShaderOrderingIntel())
+            else if (context.HostCapabilities.SupportsFragmentShaderOrderingIntel)
             {
                 return "beginFragmentShaderOrderingINTEL()";
             }
@@ -18,7 +18,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 
         public static string FSIEnd(CodeGenContext context)
         {
-            if (context.Config.GpuAccessor.QueryHostSupportsFragmentShaderInterlock())
+            if (context.HostCapabilities.SupportsFragmentShaderInterlock)
             {
                 return "endInvocationInterlockARB()";
             }

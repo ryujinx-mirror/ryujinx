@@ -174,7 +174,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
         {
             if (dstType == IDstFmt.U64)
             {
-                context.Config.GpuAccessor.Log("Unimplemented 64-bits F2I.");
+                context.TranslatorContext.GpuAccessor.Log("Unimplemented 64-bits F2I.");
             }
 
             Instruction fpType = srcType.ToInstFPType();
@@ -297,7 +297,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
         {
             if ((srcType & ~ISrcDstFmt.S8) > ISrcDstFmt.U32 || (dstType & ~ISrcDstFmt.S8) > ISrcDstFmt.U32)
             {
-                context.Config.GpuAccessor.Log("Invalid I2I encoding.");
+                context.TranslatorContext.GpuAccessor.Log("Invalid I2I encoding.");
                 return;
             }
 

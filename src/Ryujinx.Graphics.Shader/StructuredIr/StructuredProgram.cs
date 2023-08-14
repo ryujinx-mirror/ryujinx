@@ -8,9 +8,14 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
 {
     static class StructuredProgram
     {
-        public static StructuredProgramInfo MakeStructuredProgram(IReadOnlyList<Function> functions, ShaderConfig config)
+        public static StructuredProgramInfo MakeStructuredProgram(
+            IReadOnlyList<Function> functions,
+            AttributeUsage attributeUsage,
+            ShaderDefinitions definitions,
+            ResourceManager resourceManager,
+            bool debugMode)
         {
-            StructuredProgramContext context = new(config);
+            StructuredProgramContext context = new(attributeUsage, definitions, resourceManager, debugMode);
 
             for (int funcIndex = 0; funcIndex < functions.Count; funcIndex++)
             {
@@ -82,13 +87,13 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
                     int location = 0;
                     int component = 0;
 
-                    if (context.Config.HasPerLocationInputOrOutput(ioVariable, isOutput))
+                    if (context.Definitions.HasPerLocationInputOrOutput(ioVariable, isOutput))
                     {
                         location = operation.GetSource(1).Value;
 
                         if (operation.SourcesCount > 2 &&
                             operation.GetSource(2).Type == OperandType.Constant &&
-                            context.Config.HasPerLocationInputOrOutputComponent(ioVariable, location, operation.GetSource(2).Value, isOutput))
+                            context.Definitions.HasPerLocationInputOrOutputComponent(ioVariable, location, operation.GetSource(2).Value, isOutput))
                         {
                             component = operation.GetSource(2).Value;
                         }
@@ -98,7 +103,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
                 }
                 else if (storageKind == StorageKind.ConstantBuffer && operation.GetSource(0).Type == OperandType.Constant)
                 {
-                    context.Config.ResourceManager.SetUsedConstantBufferBinding(operation.GetSource(0).Value);
+                    context.ResourceManager.SetUsedConstantBufferBinding(operation.GetSource(0).Value);
                 }
             }
 

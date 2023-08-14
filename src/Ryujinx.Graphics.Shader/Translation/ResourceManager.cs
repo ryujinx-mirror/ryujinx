@@ -50,10 +50,10 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         public ShaderProperties Properties { get; }
 
-        public ResourceManager(ShaderStage stage, IGpuAccessor gpuAccessor, ShaderProperties properties)
+        public ResourceManager(ShaderStage stage, IGpuAccessor gpuAccessor)
         {
             _gpuAccessor = gpuAccessor;
-            Properties = properties;
+            Properties = new();
             _stage = stage;
             _stagePrefix = GetShaderStagePrefix(stage);
 
@@ -62,15 +62,15 @@ namespace Ryujinx.Graphics.Shader.Translation
             _cbSlotToBindingMap.AsSpan().Fill(-1);
             _sbSlotToBindingMap.AsSpan().Fill(-1);
 
-            _sbSlots = new Dictionary<int, int>();
-            _sbSlotsReverse = new Dictionary<int, int>();
+            _sbSlots = new();
+            _sbSlotsReverse = new();
 
-            _usedConstantBufferBindings = new HashSet<int>();
+            _usedConstantBufferBindings = new();
 
-            _usedTextures = new Dictionary<TextureInfo, TextureMeta>();
-            _usedImages = new Dictionary<TextureInfo, TextureMeta>();
+            _usedTextures = new();
+            _usedImages = new();
 
-            properties.AddOrUpdateConstantBuffer(0, new BufferDefinition(BufferLayout.Std140, 0, 0, "support_buffer", SupportBuffer.GetStructureType()));
+            Properties.AddOrUpdateConstantBuffer(new(BufferLayout.Std140, 0, SupportBuffer.Binding, "support_buffer", SupportBuffer.GetStructureType()));
 
             LocalMemoryId = -1;
             SharedMemoryId = -1;
@@ -312,11 +312,11 @@ namespace Ryujinx.Graphics.Shader.Translation
 
                 if (isImage)
                 {
-                    Properties.AddOrUpdateImage(binding, definition);
+                    Properties.AddOrUpdateImage(definition);
                 }
                 else
                 {
-                    Properties.AddOrUpdateTexture(binding, definition);
+                    Properties.AddOrUpdateTexture(definition);
                 }
 
                 if (layer == 0)
@@ -500,7 +500,7 @@ namespace Ryujinx.Graphics.Shader.Translation
                 new StructureField(AggregateType.Array | AggregateType.Vector4 | AggregateType.FP32, "data", Constants.ConstantBufferSize / 16),
             });
 
-            Properties.AddOrUpdateConstantBuffer(binding, new BufferDefinition(BufferLayout.Std140, 0, binding, name, type));
+            Properties.AddOrUpdateConstantBuffer(new(BufferLayout.Std140, 0, binding, name, type));
         }
 
         private void AddNewStorageBuffer(int binding, string name)
@@ -510,7 +510,7 @@ namespace Ryujinx.Graphics.Shader.Translation
                 new StructureField(AggregateType.Array | AggregateType.U32, "data", 0),
             });
 
-            Properties.AddOrUpdateStorageBuffer(binding, new BufferDefinition(BufferLayout.Std430, 1, binding, name, type));
+            Properties.AddOrUpdateStorageBuffer(new(BufferLayout.Std430, 1, binding, name, type));
         }
 
         public static string GetShaderStagePrefix(ShaderStage stage)

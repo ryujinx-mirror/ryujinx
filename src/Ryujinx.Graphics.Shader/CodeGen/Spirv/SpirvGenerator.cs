@@ -35,7 +35,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             HelperFunctionsMask.ShuffleXor |
             HelperFunctionsMask.SwizzleAdd;
 
-        public static byte[] Generate(StructuredProgramInfo info, ShaderConfig config)
+        public static byte[] Generate(StructuredProgramInfo info, CodeGenParameters parameters)
         {
             SpvInstructionPool instPool;
             SpvLiteralIntegerPool integerPool;
@@ -46,7 +46,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                 integerPool = _integerPool.Allocate();
             }
 
-            CodeGenContext context = new(info, config, instPool, integerPool);
+            CodeGenContext context = new(info, parameters, instPool, integerPool);
 
             context.AddCapability(Capability.GroupNonUniformBallot);
             context.AddCapability(Capability.GroupNonUniformShuffle);
@@ -56,39 +56,40 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             context.AddCapability(Capability.ImageQuery);
             context.AddCapability(Capability.SampledBuffer);
 
-            if (config.TransformFeedbackEnabled && config.LastInVertexPipeline)
+            if (parameters.Definitions.TransformFeedbackEnabled && parameters.Definitions.LastInVertexPipeline)
             {
                 context.AddCapability(Capability.TransformFeedback);
             }
 
-            if (config.Stage == ShaderStage.Fragment)
+            if (parameters.Definitions.Stage == ShaderStage.Fragment)
             {
                 if (context.Info.IoDefinitions.Contains(new IoDefinition(StorageKind.Input, IoVariable.Layer)))
                 {
                     context.AddCapability(Capability.Geometry);
                 }
 
-                if (context.Config.GpuAccessor.QueryHostSupportsFragmentShaderInterlock())
+                if (context.HostCapabilities.SupportsFragmentShaderInterlock)
                 {
                     context.AddCapability(Capability.FragmentShaderPixelInterlockEXT);
                     context.AddExtension("SPV_EXT_fragment_shader_interlock");
                 }
             }
-            else if (config.Stage == ShaderStage.Geometry)
+            else if (parameters.Definitions.Stage == ShaderStage.Geometry)
             {
                 context.AddCapability(Capability.Geometry);
 
-                if (config.GpPassthrough && context.Config.GpuAccessor.QueryHostSupportsGeometryShaderPassthrough())
+                if (parameters.Definitions.GpPassthrough && context.HostCapabilities.SupportsGeometryShaderPassthrough)
                 {
                     context.AddExtension("SPV_NV_geometry_shader_passthrough");
                     context.AddCapability(Capability.GeometryShaderPassthroughNV);
                 }
             }
-            else if (config.Stage == ShaderStage.TessellationControl || config.Stage == ShaderStage.TessellationEvaluation)
+            else if (parameters.Definitions.Stage == ShaderStage.TessellationControl ||
+                     parameters.Definitions.Stage == ShaderStage.TessellationEvaluation)
             {
                 context.AddCapability(Capability.Tessellation);
             }
-            else if (config.Stage == ShaderStage.Vertex)
+            else if (parameters.Definitions.Stage == ShaderStage.Vertex)
             {
                 context.AddCapability(Capability.DrawParameters);
             }
@@ -170,15 +171,15 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
 
             if (funcIndex == 0)
             {
-                context.AddEntryPoint(context.Config.Stage.Convert(), spvFunc, "main", context.GetMainInterface());
+                context.AddEntryPoint(context.Definitions.Stage.Convert(), spvFunc, "main", context.GetMainInterface());
 
-                if (context.Config.Stage == ShaderStage.TessellationControl)
+                if (context.Definitions.Stage == ShaderStage.TessellationControl)
                 {
-                    context.AddExecutionMode(spvFunc, ExecutionMode.OutputVertices, (SpvLiteralInteger)context.Config.ThreadsPerInputPrimitive);
+                    context.AddExecutionMode(spvFunc, ExecutionMode.OutputVertices, (SpvLiteralInteger)context.Definitions.ThreadsPerInputPrimitive);
                 }
-                else if (context.Config.Stage == ShaderStage.TessellationEvaluation)
+                else if (context.Definitions.Stage == ShaderStage.TessellationEvaluation)
                 {
-                    switch (context.Config.GpuAccessor.QueryTessPatchType())
+                    switch (context.Definitions.TessPatchType)
                     {
                         case TessPatchType.Isolines:
                             context.AddExecutionMode(spvFunc, ExecutionMode.Isolines);
@@ -191,7 +192,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                             break;
                     }
 
-                    switch (context.Config.GpuAccessor.QueryTessSpacing())
+                    switch (context.Definitions.TessSpacing)
                     {
                         case TessSpacing.EqualSpacing:
                             context.AddExecutionMode(spvFunc, ExecutionMode.SpacingEqual);
@@ -204,9 +205,9 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                             break;
                     }
 
-                    bool tessCw = context.Config.GpuAccessor.QueryTessCw();
+                    bool tessCw = context.Definitions.TessCw;
 
-                    if (context.Config.Options.TargetApi == TargetApi.Vulkan)
+                    if (context.TargetApi == TargetApi.Vulkan)
                     {
                         // We invert the front face on Vulkan backend, so we need to do that here as well.
                         tessCw = !tessCw;
@@ -221,37 +222,35 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                         context.AddExecutionMode(spvFunc, ExecutionMode.VertexOrderCcw);
                     }
                 }
-                else if (context.Config.Stage == ShaderStage.Geometry)
+                else if (context.Definitions.Stage == ShaderStage.Geometry)
                 {
-                    InputTopology inputTopology = context.Config.GpuAccessor.QueryPrimitiveTopology();
-
-                    context.AddExecutionMode(spvFunc, inputTopology switch
+                    context.AddExecutionMode(spvFunc, context.Definitions.InputTopology switch
                     {
                         InputTopology.Points => ExecutionMode.InputPoints,
                         InputTopology.Lines => ExecutionMode.InputLines,
                         InputTopology.LinesAdjacency => ExecutionMode.InputLinesAdjacency,
                         InputTopology.Triangles => ExecutionMode.Triangles,
                         InputTopology.TrianglesAdjacency => ExecutionMode.InputTrianglesAdjacency,
-                        _ => throw new InvalidOperationException($"Invalid input topology \"{inputTopology}\"."),
+                        _ => throw new InvalidOperationException($"Invalid input topology \"{context.Definitions.InputTopology}\"."),
                     });
 
-                    context.AddExecutionMode(spvFunc, ExecutionMode.Invocations, (SpvLiteralInteger)context.Config.ThreadsPerInputPrimitive);
+                    context.AddExecutionMode(spvFunc, ExecutionMode.Invocations, (SpvLiteralInteger)context.Definitions.ThreadsPerInputPrimitive);
 
-                    context.AddExecutionMode(spvFunc, context.Config.OutputTopology switch
+                    context.AddExecutionMode(spvFunc, context.Definitions.OutputTopology switch
                     {
                         OutputTopology.PointList => ExecutionMode.OutputPoints,
                         OutputTopology.LineStrip => ExecutionMode.OutputLineStrip,
                         OutputTopology.TriangleStrip => ExecutionMode.OutputTriangleStrip,
-                        _ => throw new InvalidOperationException($"Invalid output topology \"{context.Config.OutputTopology}\"."),
+                        _ => throw new InvalidOperationException($"Invalid output topology \"{context.Definitions.OutputTopology}\"."),
                     });
 
-                    int maxOutputVertices = context.Config.GpPassthrough ? context.InputVertices : context.Config.MaxOutputVertices;
+                    int maxOutputVertices = context.Definitions.GpPassthrough ? context.InputVertices : context.Definitions.MaxOutputVertices;
 
                     context.AddExecutionMode(spvFunc, ExecutionMode.OutputVertices, (SpvLiteralInteger)maxOutputVertices);
                 }
-                else if (context.Config.Stage == ShaderStage.Fragment)
+                else if (context.Definitions.Stage == ShaderStage.Fragment)
                 {
-                    context.AddExecutionMode(spvFunc, context.Config.Properties.OriginUpperLeft
+                    context.AddExecutionMode(spvFunc, context.Definitions.OriginUpperLeft
                         ? ExecutionMode.OriginUpperLeft
                         : ExecutionMode.OriginLowerLeft);
 
@@ -260,22 +259,22 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                         context.AddExecutionMode(spvFunc, ExecutionMode.DepthReplacing);
                     }
 
-                    if (context.Config.GpuAccessor.QueryEarlyZForce())
+                    if (context.Definitions.EarlyZForce)
                     {
                         context.AddExecutionMode(spvFunc, ExecutionMode.EarlyFragmentTests);
                     }
 
                     if ((info.HelperFunctionsMask & HelperFunctionsMask.FSI) != 0 &&
-                        context.Config.GpuAccessor.QueryHostSupportsFragmentShaderInterlock())
+                        context.HostCapabilities.SupportsFragmentShaderInterlock)
                     {
                         context.AddExecutionMode(spvFunc, ExecutionMode.PixelInterlockOrderedEXT);
                     }
                 }
-                else if (context.Config.Stage == ShaderStage.Compute)
+                else if (context.Definitions.Stage == ShaderStage.Compute)
                 {
-                    var localSizeX = (SpvLiteralInteger)context.Config.GpuAccessor.QueryComputeLocalSizeX();
-                    var localSizeY = (SpvLiteralInteger)context.Config.GpuAccessor.QueryComputeLocalSizeY();
-                    var localSizeZ = (SpvLiteralInteger)context.Config.GpuAccessor.QueryComputeLocalSizeZ();
+                    var localSizeX = (SpvLiteralInteger)context.Definitions.ComputeLocalSizeX;
+                    var localSizeY = (SpvLiteralInteger)context.Definitions.ComputeLocalSizeY;
+                    var localSizeZ = (SpvLiteralInteger)context.Definitions.ComputeLocalSizeZ;
 
                     context.AddExecutionMode(
                         spvFunc,
@@ -285,7 +284,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                         localSizeZ);
                 }
 
-                if (context.Config.TransformFeedbackEnabled && context.Config.LastInVertexPipeline)
+                if (context.Definitions.TransformFeedbackEnabled && context.Definitions.LastInVertexPipeline)
                 {
                     context.AddExecutionMode(spvFunc, ExecutionMode.Xfb);
                 }

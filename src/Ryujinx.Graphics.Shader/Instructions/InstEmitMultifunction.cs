@@ -76,7 +76,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                     break;
 
                 default:
-                    context.Config.GpuAccessor.Log($"Invalid MUFU operation \"{op.MufuOp}\".");
+                    context.TranslatorContext.GpuAccessor.Log($"Invalid MUFU operation \"{op.MufuOp}\".");
                     break;
             }
 

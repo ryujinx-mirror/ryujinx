@@ -103,64 +103,81 @@ namespace Ryujinx.Graphics.Gpu.Shader
         public bool YNegateEnabled;
 
         /// <summary>
-        /// Creates a new GPU graphics state.
+        /// Creates a new graphics state from this state that can be used for shader generation.
         /// </summary>
-        /// <param name="earlyZForce">Early Z force enable</param>
-        /// <param name="topology">Primitive topology</param>
-        /// <param name="tessellationMode">Tessellation mode</param>
-        /// <param name="alphaToCoverageEnable">Indicates whether alpha-to-coverage is enabled</param>
-        /// <param name="alphaToCoverageDitherEnable">Indicates whether alpha-to-coverage dithering is enabled</param>
-        /// <param name="viewportTransformDisable">Indicates whether the viewport transform is disabled</param>
-        /// <param name="depthMode">Depth mode zero to one or minus one to one</param>
-        /// <param name="programPointSizeEnable">Indicates if the point size is set on the shader or is fixed</param>
-        /// <param name="pointSize">Point size if not set from shader</param>
-        /// <param name="alphaTestEnable">Indicates whether alpha test is enabled</param>
-        /// <param name="alphaTestCompare">When alpha test is enabled, indicates the comparison that decides if the fragment should be discarded</param>
-        /// <param name="alphaTestReference">When alpha test is enabled, indicates the value to compare with the fragment output alpha</param>
-        /// <param name="attributeTypes">Type of the vertex attributes consumed by the shader</param>
-        /// <param name="hasConstantBufferDrawParameters">Indicates that the draw is writing the base vertex, base instance and draw index to Constant Buffer 0</param>
-        /// <param name="hasUnalignedStorageBuffer">Indicates that any storage buffer use is unaligned</param>
-        /// <param name="fragmentOutputTypes">Type of the fragment shader outputs</param>
-        /// <param name="dualSourceBlendEnable">Indicates whether dual source blend is enabled</param>
-        /// <param name="yNegateEnabled">Indicates whether Y negate of the fragment coordinates is enabled</param>
-        public GpuChannelGraphicsState(
-            bool earlyZForce,
-            PrimitiveTopology topology,
-            TessMode tessellationMode,
-            bool alphaToCoverageEnable,
-            bool alphaToCoverageDitherEnable,
-            bool viewportTransformDisable,
-            bool depthMode,
-            bool programPointSizeEnable,
-            float pointSize,
-            bool alphaTestEnable,
-            CompareOp alphaTestCompare,
-            float alphaTestReference,
-            ref Array32<AttributeType> attributeTypes,
-            bool hasConstantBufferDrawParameters,
-            bool hasUnalignedStorageBuffer,
-            ref Array8<AttributeType> fragmentOutputTypes,
-            bool dualSourceBlendEnable,
-            bool yNegateEnabled)
+        /// <param name="hostSupportsAlphaTest">Indicates if the host API supports alpha test operations</param>
+        /// <returns>GPU graphics state that can be used for shader translation</returns>
+        public readonly GpuGraphicsState CreateShaderGraphicsState(bool hostSupportsAlphaTest, bool originUpperLeft)
         {
-            EarlyZForce = earlyZForce;
-            Topology = topology;
-            TessellationMode = tessellationMode;
-            AlphaToCoverageEnable = alphaToCoverageEnable;
-            AlphaToCoverageDitherEnable = alphaToCoverageDitherEnable;
-            ViewportTransformDisable = viewportTransformDisable;
-            DepthMode = depthMode;
-            ProgramPointSizeEnable = programPointSizeEnable;
-            PointSize = pointSize;
-            AlphaTestEnable = alphaTestEnable;
-            AlphaTestCompare = alphaTestCompare;
-            AlphaTestReference = alphaTestReference;
-            AttributeTypes = attributeTypes;
-            HasConstantBufferDrawParameters = hasConstantBufferDrawParameters;
-            HasUnalignedStorageBuffer = hasUnalignedStorageBuffer;
-            FragmentOutputTypes = fragmentOutputTypes;
-            DualSourceBlendEnable = dualSourceBlendEnable;
-            YNegateEnabled = yNegateEnabled;
+            AlphaTestOp alphaTestOp;
+
+            if (hostSupportsAlphaTest || !AlphaTestEnable)
+            {
+                alphaTestOp = AlphaTestOp.Always;
+            }
+            else
+            {
+                alphaTestOp = AlphaTestCompare switch
+                {
+                    CompareOp.Never or CompareOp.NeverGl => AlphaTestOp.Never,
+                    CompareOp.Less or CompareOp.LessGl => AlphaTestOp.Less,
+                    CompareOp.Equal or CompareOp.EqualGl => AlphaTestOp.Equal,
+                    CompareOp.LessOrEqual or CompareOp.LessOrEqualGl => AlphaTestOp.LessOrEqual,
+                    CompareOp.Greater or CompareOp.GreaterGl => AlphaTestOp.Greater,
+                    CompareOp.NotEqual or CompareOp.NotEqualGl => AlphaTestOp.NotEqual,
+                    CompareOp.GreaterOrEqual or CompareOp.GreaterOrEqualGl => AlphaTestOp.GreaterOrEqual,
+                    _ => AlphaTestOp.Always,
+                };
+            }
+
+            return new GpuGraphicsState(
+                EarlyZForce,
+                ConvertToInputTopology(Topology, TessellationMode),
+                TessellationMode.UnpackCw(),
+                TessellationMode.UnpackPatchType(),
+                TessellationMode.UnpackSpacing(),
+                AlphaToCoverageEnable,
+                AlphaToCoverageDitherEnable,
+                ViewportTransformDisable,
+                DepthMode,
+                ProgramPointSizeEnable,
+                PointSize,
+                alphaTestOp,
+                AlphaTestReference,
+                in AttributeTypes,
+                HasConstantBufferDrawParameters,
+                in FragmentOutputTypes,
+                DualSourceBlendEnable,
+                YNegateEnabled,
+                originUpperLeft);
+        }
+
+        /// <summary>
+        /// Converts the Maxwell primitive topology to the shader translator topology.
+        /// </summary>
+        /// <param name="topology">Maxwell primitive topology</param>
+        /// <param name="tessellationMode">Maxwell tessellation mode</param>
+        /// <returns>Shader translator topology</returns>
+        private static InputTopology ConvertToInputTopology(PrimitiveTopology topology, TessMode tessellationMode)
+        {
+            return topology switch
+            {
+                PrimitiveTopology.Points => InputTopology.Points,
+                PrimitiveTopology.Lines or
+                PrimitiveTopology.LineLoop or
+                PrimitiveTopology.LineStrip => InputTopology.Lines,
+                PrimitiveTopology.LinesAdjacency or
+                PrimitiveTopology.LineStripAdjacency => InputTopology.LinesAdjacency,
+                PrimitiveTopology.Triangles or
+                PrimitiveTopology.TriangleStrip or
+                PrimitiveTopology.TriangleFan => InputTopology.Triangles,
+                PrimitiveTopology.TrianglesAdjacency or
+                PrimitiveTopology.TriangleStripAdjacency => InputTopology.TrianglesAdjacency,
+                PrimitiveTopology.Patches => tessellationMode.UnpackPatchType() == TessPatchType.Isolines
+                    ? InputTopology.Lines
+                    : InputTopology.Triangles,
+                _ => InputTopology.Points,
+            };
         }
     }
 }

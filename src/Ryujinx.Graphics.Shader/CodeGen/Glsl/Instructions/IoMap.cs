@@ -7,7 +7,8 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
     static class IoMap
     {
         public static (string, AggregateType) GetGlslVariable(
-            ShaderConfig config,
+            ShaderDefinitions definitions,
+            HostCapabilities hostCapabilities,
             IoVariable ioVariable,
             int location,
             int component,
@@ -25,7 +26,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
                 IoVariable.DrawIndex => ("gl_DrawIDARB", AggregateType.S32),
                 IoVariable.FogCoord => ("gl_FogFragCoord", AggregateType.FP32), // Deprecated.
                 IoVariable.FragmentCoord => ("gl_FragCoord", AggregateType.Vector4 | AggregateType.FP32),
-                IoVariable.FragmentOutputColor => GetFragmentOutputColorVariableName(config, location),
+                IoVariable.FragmentOutputColor => GetFragmentOutputColorVariableName(definitions, location),
                 IoVariable.FragmentOutputDepth => ("gl_FragDepth", AggregateType.FP32),
                 IoVariable.FrontColorDiffuse => ("gl_FrontColor", AggregateType.Vector4 | AggregateType.FP32), // Deprecated.
                 IoVariable.FrontColorSpecular => ("gl_FrontSecondaryColor", AggregateType.Vector4 | AggregateType.FP32), // Deprecated.
@@ -38,20 +39,20 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
                 IoVariable.PointCoord => ("gl_PointCoord", AggregateType.Vector2 | AggregateType.FP32),
                 IoVariable.PointSize => ("gl_PointSize", AggregateType.FP32),
                 IoVariable.Position => ("gl_Position", AggregateType.Vector4 | AggregateType.FP32),
-                IoVariable.PrimitiveId => GetPrimitiveIdVariableName(config.Stage, isOutput),
-                IoVariable.SubgroupEqMask => GetSubgroupMaskVariableName(config, "Eq"),
-                IoVariable.SubgroupGeMask => GetSubgroupMaskVariableName(config, "Ge"),
-                IoVariable.SubgroupGtMask => GetSubgroupMaskVariableName(config, "Gt"),
-                IoVariable.SubgroupLaneId => GetSubgroupInvocationIdVariableName(config),
-                IoVariable.SubgroupLeMask => GetSubgroupMaskVariableName(config, "Le"),
-                IoVariable.SubgroupLtMask => GetSubgroupMaskVariableName(config, "Lt"),
+                IoVariable.PrimitiveId => GetPrimitiveIdVariableName(definitions.Stage, isOutput),
+                IoVariable.SubgroupEqMask => GetSubgroupMaskVariableName(hostCapabilities.SupportsShaderBallot, "Eq"),
+                IoVariable.SubgroupGeMask => GetSubgroupMaskVariableName(hostCapabilities.SupportsShaderBallot, "Ge"),
+                IoVariable.SubgroupGtMask => GetSubgroupMaskVariableName(hostCapabilities.SupportsShaderBallot, "Gt"),
+                IoVariable.SubgroupLaneId => GetSubgroupInvocationIdVariableName(hostCapabilities.SupportsShaderBallot),
+                IoVariable.SubgroupLeMask => GetSubgroupMaskVariableName(hostCapabilities.SupportsShaderBallot, "Le"),
+                IoVariable.SubgroupLtMask => GetSubgroupMaskVariableName(hostCapabilities.SupportsShaderBallot, "Lt"),
                 IoVariable.TessellationCoord => ("gl_TessCoord", AggregateType.Vector3 | AggregateType.FP32),
                 IoVariable.TessellationLevelInner => ("gl_TessLevelInner", AggregateType.Array | AggregateType.FP32),
                 IoVariable.TessellationLevelOuter => ("gl_TessLevelOuter", AggregateType.Array | AggregateType.FP32),
                 IoVariable.TextureCoord => ("gl_TexCoord", AggregateType.Array | AggregateType.Vector4 | AggregateType.FP32), // Deprecated.
                 IoVariable.ThreadId => ("gl_LocalInvocationID", AggregateType.Vector3 | AggregateType.U32),
                 IoVariable.ThreadKill => ("gl_HelperInvocation", AggregateType.Bool),
-                IoVariable.UserDefined => GetUserDefinedVariableName(config, location, component, isOutput, isPerPatch),
+                IoVariable.UserDefined => GetUserDefinedVariableName(definitions, location, component, isOutput, isPerPatch),
                 IoVariable.VertexId => ("gl_VertexID", AggregateType.S32),
                 IoVariable.VertexIndex => ("gl_VertexIndex", AggregateType.S32),
                 IoVariable.ViewportIndex => ("gl_ViewportIndex", AggregateType.S32),
@@ -86,16 +87,16 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             return false;
         }
 
-        private static (string, AggregateType) GetFragmentOutputColorVariableName(ShaderConfig config, int location)
+        private static (string, AggregateType) GetFragmentOutputColorVariableName(ShaderDefinitions definitions, int location)
         {
             if (location < 0)
             {
-                return (DefaultNames.OAttributePrefix, config.GetFragmentOutputColorType(0));
+                return (DefaultNames.OAttributePrefix, definitions.GetFragmentOutputColorType(0));
             }
 
             string name = DefaultNames.OAttributePrefix + location.ToString(CultureInfo.InvariantCulture);
 
-            return (name, config.GetFragmentOutputColorType(location));
+            return (name, definitions.GetFragmentOutputColorType(location));
         }
 
         private static (string, AggregateType) GetPrimitiveIdVariableName(ShaderStage stage, bool isOutput)
@@ -104,21 +105,21 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             return (isOutput || stage != ShaderStage.Geometry ? "gl_PrimitiveID" : "gl_PrimitiveIDIn", AggregateType.S32);
         }
 
-        private static (string, AggregateType) GetSubgroupMaskVariableName(ShaderConfig config, string cc)
+        private static (string, AggregateType) GetSubgroupMaskVariableName(bool supportsShaderBallot, string cc)
         {
-            return config.GpuAccessor.QueryHostSupportsShaderBallot()
+            return supportsShaderBallot
                 ? ($"unpackUint2x32(gl_SubGroup{cc}MaskARB)", AggregateType.Vector2 | AggregateType.U32)
                 : ($"gl_Subgroup{cc}Mask", AggregateType.Vector4 | AggregateType.U32);
         }
 
-        private static (string, AggregateType) GetSubgroupInvocationIdVariableName(ShaderConfig config)
+        private static (string, AggregateType) GetSubgroupInvocationIdVariableName(bool supportsShaderBallot)
         {
-            return config.GpuAccessor.QueryHostSupportsShaderBallot()
+            return supportsShaderBallot
                 ? ("gl_SubGroupInvocationARB", AggregateType.U32)
                 : ("gl_SubgroupInvocationID", AggregateType.U32);
         }
 
-        private static (string, AggregateType) GetUserDefinedVariableName(ShaderConfig config, int location, int component, bool isOutput, bool isPerPatch)
+        private static (string, AggregateType) GetUserDefinedVariableName(ShaderDefinitions definitions, int location, int component, bool isOutput, bool isPerPatch)
         {
             string name = isPerPatch
                 ? DefaultNames.PerPatchAttributePrefix
@@ -126,17 +127,17 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 
             if (location < 0)
             {
-                return (name, config.GetUserDefinedType(0, isOutput));
+                return (name, definitions.GetUserDefinedType(0, isOutput));
             }
 
             name += location.ToString(CultureInfo.InvariantCulture);
 
-            if (config.HasPerLocationInputOrOutputComponent(IoVariable.UserDefined, location, component, isOutput))
+            if (definitions.HasPerLocationInputOrOutputComponent(IoVariable.UserDefined, location, component, isOutput))
             {
                 name += "_" + "xyzw"[component & 3];
             }
 
-            return (name, config.GetUserDefinedType(location, isOutput));
+            return (name, definitions.GetUserDefinedType(location, isOutput));
         }
     }
 }

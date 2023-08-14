@@ -26,9 +26,9 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
         public static void Atoms(EmitterContext context)
         {
-            if (context.Config.Stage != ShaderStage.Compute)
+            if (context.TranslatorContext.Definitions.Stage != ShaderStage.Compute)
             {
-                context.Config.GpuAccessor.Log($"Atoms instruction is not valid on \"{context.Config.Stage}\" stage.");
+                context.TranslatorContext.GpuAccessor.Log($"Atoms instruction is not valid on \"{context.TranslatorContext.Definitions.Stage}\" stage.");
                 return;
             }
 
@@ -50,7 +50,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 _ => AtomSize.U32,
             };
 
-            Operand id = Const(context.Config.ResourceManager.SharedMemoryId);
+            Operand id = Const(context.ResourceManager.SharedMemoryId);
             Operand res = EmitAtomicOp(context, StorageKind.SharedMemory, op.AtomOp, size, id, offset, value);
 
             context.Copy(GetDest(op.Dest), res);
@@ -62,7 +62,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             if (op.LsSize > LsSize2.B64)
             {
-                context.Config.GpuAccessor.Log($"Invalid LDC size: {op.LsSize}.");
+                context.TranslatorContext.GpuAccessor.Log($"Invalid LDC size: {op.LsSize}.");
                 return;
             }
 
@@ -119,9 +119,9 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
         public static void Lds(EmitterContext context)
         {
-            if (context.Config.Stage != ShaderStage.Compute)
+            if (context.TranslatorContext.Definitions.Stage != ShaderStage.Compute)
             {
-                context.Config.GpuAccessor.Log($"Lds instruction is not valid on \"{context.Config.Stage}\" stage.");
+                context.TranslatorContext.GpuAccessor.Log($"Lds instruction is not valid on \"{context.TranslatorContext.Definitions.Stage}\" stage.");
                 return;
             }
 
@@ -155,9 +155,9 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
         public static void Sts(EmitterContext context)
         {
-            if (context.Config.Stage != ShaderStage.Compute)
+            if (context.TranslatorContext.Definitions.Stage != ShaderStage.Compute)
             {
-                context.Config.GpuAccessor.Log($"Sts instruction is not valid on \"{context.Config.Stage}\" stage.");
+                context.TranslatorContext.GpuAccessor.Log($"Sts instruction is not valid on \"{context.TranslatorContext.Definitions.Stage}\" stage.");
                 return;
             }
 
@@ -173,19 +173,19 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             if (slot.Type == OperandType.Constant)
             {
-                int binding = context.Config.ResourceManager.GetConstantBufferBinding(slot.Value);
+                int binding = context.ResourceManager.GetConstantBufferBinding(slot.Value);
                 return context.Load(StorageKind.ConstantBuffer, binding, Const(0), vecIndex, elemIndex);
             }
             else
             {
                 Operand value = Const(0);
 
-                uint cbUseMask = context.Config.GpuAccessor.QueryConstantBufferUse();
+                uint cbUseMask = context.TranslatorContext.GpuAccessor.QueryConstantBufferUse();
 
                 while (cbUseMask != 0)
                 {
                     int cbIndex = BitOperations.TrailingZeroCount(cbUseMask);
-                    int binding = context.Config.ResourceManager.GetConstantBufferBinding(cbIndex);
+                    int binding = context.ResourceManager.GetConstantBufferBinding(cbIndex);
 
                     Operand isCurrent = context.ICompareEqual(slot, Const(cbIndex));
                     Operand currentValue = context.Load(StorageKind.ConstantBuffer, binding, Const(0), vecIndex, elemIndex);
@@ -219,7 +219,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                     }
                     else
                     {
-                        context.Config.GpuAccessor.Log($"Invalid reduction type: {type}.");
+                        context.TranslatorContext.GpuAccessor.Log($"Invalid reduction type: {type}.");
                     }
                     break;
                 case AtomOp.And:
@@ -229,7 +229,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                     }
                     else
                     {
-                        context.Config.GpuAccessor.Log($"Invalid reduction type: {type}.");
+                        context.TranslatorContext.GpuAccessor.Log($"Invalid reduction type: {type}.");
                     }
                     break;
                 case AtomOp.Xor:
@@ -239,7 +239,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                     }
                     else
                     {
-                        context.Config.GpuAccessor.Log($"Invalid reduction type: {type}.");
+                        context.TranslatorContext.GpuAccessor.Log($"Invalid reduction type: {type}.");
                     }
                     break;
                 case AtomOp.Or:
@@ -249,7 +249,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                     }
                     else
                     {
-                        context.Config.GpuAccessor.Log($"Invalid reduction type: {type}.");
+                        context.TranslatorContext.GpuAccessor.Log($"Invalid reduction type: {type}.");
                     }
                     break;
                 case AtomOp.Max:
@@ -263,7 +263,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                     }
                     else
                     {
-                        context.Config.GpuAccessor.Log($"Invalid reduction type: {type}.");
+                        context.TranslatorContext.GpuAccessor.Log($"Invalid reduction type: {type}.");
                     }
                     break;
                 case AtomOp.Min:
@@ -277,7 +277,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                     }
                     else
                     {
-                        context.Config.GpuAccessor.Log($"Invalid reduction type: {type}.");
+                        context.TranslatorContext.GpuAccessor.Log($"Invalid reduction type: {type}.");
                     }
                     break;
             }
@@ -295,13 +295,13 @@ namespace Ryujinx.Graphics.Shader.Instructions
         {
             if (size > LsSize2.B128)
             {
-                context.Config.GpuAccessor.Log($"Invalid load size: {size}.");
+                context.TranslatorContext.GpuAccessor.Log($"Invalid load size: {size}.");
                 return;
             }
 
             int id = storageKind == StorageKind.LocalMemory
-                ? context.Config.ResourceManager.LocalMemoryId
-                : context.Config.ResourceManager.SharedMemoryId;
+                ? context.ResourceManager.LocalMemoryId
+                : context.ResourceManager.SharedMemoryId;
             bool isSmallInt = size < LsSize2.B32;
 
             int count = size switch
@@ -376,13 +376,13 @@ namespace Ryujinx.Graphics.Shader.Instructions
         {
             if (size > LsSize2.B128)
             {
-                context.Config.GpuAccessor.Log($"Invalid store size: {size}.");
+                context.TranslatorContext.GpuAccessor.Log($"Invalid store size: {size}.");
                 return;
             }
 
             int id = storageKind == StorageKind.LocalMemory
-                ? context.Config.ResourceManager.LocalMemoryId
-                : context.Config.ResourceManager.SharedMemoryId;
+                ? context.ResourceManager.LocalMemoryId
+                : context.ResourceManager.SharedMemoryId;
             bool isSmallInt = size < LsSize2.B32;
 
             int count = size switch
@@ -444,7 +444,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
         {
             if (size > LsSize2.B128)
             {
-                context.Config.GpuAccessor.Log($"Invalid store size: {size}.");
+                context.TranslatorContext.GpuAccessor.Log($"Invalid store size: {size}.");
                 return;
             }
 

@@ -31,7 +31,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             if (context.CurrBlock.Successors.Count <= startIndex)
             {
-                context.Config.GpuAccessor.Log($"Failed to find targets for BRX instruction at 0x{currOp.Address:X}.");
+                context.TranslatorContext.GpuAccessor.Log($"Failed to find targets for BRX instruction at 0x{currOp.Address:X}.");
                 return;
             }
 
@@ -156,7 +156,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             if (context.IsNonMain)
             {
-                context.Config.GpuAccessor.Log("Invalid exit on non-main function.");
+                context.TranslatorContext.GpuAccessor.Log("Invalid exit on non-main function.");
                 return;
             }
 
@@ -218,7 +218,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
             }
             else
             {
-                context.Config.GpuAccessor.Log("Invalid return on main function.");
+                context.TranslatorContext.GpuAccessor.Log("Invalid return on main function.");
             }
         }
 

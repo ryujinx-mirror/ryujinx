@@ -28,9 +28,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
         [Flags]
         private enum QueriedStateFlags
         {
-            EarlyZForce = 1 << 0,
             PrimitiveTopology = 1 << 1,
-            TessellationMode = 1 << 2,
             TransformFeedback = 1 << 3,
         }
 
@@ -265,27 +263,11 @@ namespace Ryujinx.Graphics.Gpu.Shader
         }
 
         /// <summary>
-        /// Indicates that the shader accesses the early Z force state.
-        /// </summary>
-        public void RecordEarlyZForce()
-        {
-            _queriedState |= QueriedStateFlags.EarlyZForce;
-        }
-
-        /// <summary>
         /// Indicates that the shader accesses the primitive topology state.
         /// </summary>
         public void RecordPrimitiveTopology()
         {
             _queriedState |= QueriedStateFlags.PrimitiveTopology;
-        }
-
-        /// <summary>
-        /// Indicates that the shader accesses the tessellation mode state.
-        /// </summary>
-        public void RecordTessellationMode()
-        {
-            _queriedState |= QueriedStateFlags.TessellationMode;
         }
 
         /// <summary>

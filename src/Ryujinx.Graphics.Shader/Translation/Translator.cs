@@ -1,11 +1,6 @@
-using Ryujinx.Graphics.Shader.CodeGen.Glsl;
-using Ryujinx.Graphics.Shader.CodeGen.Spirv;
 using Ryujinx.Graphics.Shader.Decoders;
 using Ryujinx.Graphics.Shader.IntermediateRepresentation;
-using Ryujinx.Graphics.Shader.StructuredIr;
-using Ryujinx.Graphics.Shader.Translation.Optimizations;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using static Ryujinx.Graphics.Shader.IntermediateRepresentation.OperandHelper;
 
@@ -13,6 +8,7 @@ namespace Ryujinx.Graphics.Shader.Translation
 {
     public static class Translator
     {
+        private const int ThreadsPerWarp = 32;
         private const int HeaderSize = 0x50;
 
         internal readonly struct FunctionCode
@@ -30,93 +26,30 @@ namespace Ryujinx.Graphics.Shader.Translation
             return DecodeShader(address, gpuAccessor, options);
         }
 
-        internal static ShaderProgram Translate(FunctionCode[] functions, ShaderConfig config)
-        {
-            var cfgs = new ControlFlowGraph[functions.Length];
-            var frus = new RegisterUsage.FunctionRegisterUsage[functions.Length];
-
-            for (int i = 0; i < functions.Length; i++)
-            {
-                cfgs[i] = ControlFlowGraph.Create(functions[i].Code);
-
-                if (i != 0)
-                {
-                    frus[i] = RegisterUsage.RunPass(cfgs[i]);
-                }
-            }
-
-            List<Function> funcs = new(functions.Length);
-
-            for (int i = 0; i < functions.Length; i++)
-            {
-                funcs.Add(null);
-            }
-
-            HelperFunctionManager hfm = new(funcs, config.Stage);
-
-            for (int i = 0; i < functions.Length; i++)
-            {
-                var cfg = cfgs[i];
-
-                int inArgumentsCount = 0;
-                int outArgumentsCount = 0;
-
-                if (i != 0)
-                {
-                    var fru = frus[i];
-
-                    inArgumentsCount = fru.InArguments.Length;
-                    outArgumentsCount = fru.OutArguments.Length;
-                }
-
-                if (cfg.Blocks.Length != 0)
-                {
-                    RegisterUsage.FixupCalls(cfg.Blocks, frus);
-
-                    Dominance.FindDominators(cfg);
-                    Dominance.FindDominanceFrontiers(cfg.Blocks);
-
-                    Ssa.Rename(cfg.Blocks);
-
-                    Optimizer.RunPass(hfm, cfg.Blocks, config);
-                    Rewriter.RunPass(hfm, cfg.Blocks, config);
-                }
-
-                funcs[i] = new Function(cfg.Blocks, $"fun{i}", false, inArgumentsCount, outArgumentsCount);
-            }
-
-            var identification = ShaderIdentifier.Identify(funcs, config);
-
-            var sInfo = StructuredProgram.MakeStructuredProgram(funcs, config);
-
-            var info = config.CreateProgramInfo(identification);
-
-            return config.Options.TargetLanguage switch
-            {
-                TargetLanguage.Glsl => new ShaderProgram(info, TargetLanguage.Glsl, GlslGenerator.Generate(sInfo, config)),
-                TargetLanguage.Spirv => new ShaderProgram(info, TargetLanguage.Spirv, SpirvGenerator.Generate(sInfo, config)),
-                _ => throw new NotImplementedException(config.Options.TargetLanguage.ToString()),
-            };
-        }
-
         private static TranslatorContext DecodeShader(ulong address, IGpuAccessor gpuAccessor, TranslationOptions options)
         {
-            ShaderConfig config;
+            int localMemorySize;
+            ShaderDefinitions definitions;
             DecodedProgram program;
-            ulong maxEndAddress = 0;
 
             if (options.Flags.HasFlag(TranslationFlags.Compute))
             {
-                config = new ShaderConfig(ShaderStage.Compute, gpuAccessor, options, gpuAccessor.QueryComputeLocalMemorySize());
+                definitions = CreateComputeDefinitions(gpuAccessor);
+                localMemorySize = gpuAccessor.QueryComputeLocalMemorySize();
 
-                program = Decoder.Decode(config, address);
+                program = Decoder.Decode(definitions, gpuAccessor, address);
             }
             else
             {
-                config = new ShaderConfig(new ShaderHeader(gpuAccessor, address), gpuAccessor, options);
+                ShaderHeader header = new(gpuAccessor, address);
 
-                program = Decoder.Decode(config, address + HeaderSize);
+                definitions = CreateGraphicsDefinitions(gpuAccessor, header);
+                localMemorySize = GetLocalMemorySize(header);
+
+                program = Decoder.Decode(definitions, gpuAccessor, address + HeaderSize);
             }
+
+            ulong maxEndAddress = 0;
 
             foreach (DecodedFunction function in program)
             {
@@ -129,12 +62,76 @@ namespace Ryujinx.Graphics.Shader.Translation
                 }
             }
 
-            config.SizeAdd((int)maxEndAddress + (options.Flags.HasFlag(TranslationFlags.Compute) ? 0 : HeaderSize));
+            int size = (int)maxEndAddress + (options.Flags.HasFlag(TranslationFlags.Compute) ? 0 : HeaderSize);
 
-            return new TranslatorContext(address, program, config);
+            return new TranslatorContext(address, size, localMemorySize, definitions, gpuAccessor, options, program);
         }
 
-        internal static FunctionCode[] EmitShader(DecodedProgram program, ShaderConfig config, bool initializeOutputs, out int initializationOperations)
+        private static ShaderDefinitions CreateComputeDefinitions(IGpuAccessor gpuAccessor)
+        {
+            return new ShaderDefinitions(
+                ShaderStage.Compute,
+                gpuAccessor.QueryComputeLocalSizeX(),
+                gpuAccessor.QueryComputeLocalSizeY(),
+                gpuAccessor.QueryComputeLocalSizeZ());
+        }
+
+        private static ShaderDefinitions CreateGraphicsDefinitions(IGpuAccessor gpuAccessor, ShaderHeader header)
+        {
+            bool transformFeedbackEnabled =
+                gpuAccessor.QueryTransformFeedbackEnabled() &&
+                gpuAccessor.QueryHostSupportsTransformFeedback();
+            TransformFeedbackOutput[] transformFeedbackOutputs = null;
+            ulong transformFeedbackVecMap = 0UL;
+
+            if (transformFeedbackEnabled)
+            {
+                transformFeedbackOutputs = new TransformFeedbackOutput[0xc0];
+
+                for (int tfbIndex = 0; tfbIndex < 4; tfbIndex++)
+                {
+                    var locations = gpuAccessor.QueryTransformFeedbackVaryingLocations(tfbIndex);
+                    var stride = gpuAccessor.QueryTransformFeedbackStride(tfbIndex);
+
+                    for (int i = 0; i < locations.Length; i++)
+                    {
+                        byte wordOffset = locations[i];
+                        if (wordOffset < 0xc0)
+                        {
+                            transformFeedbackOutputs[wordOffset] = new TransformFeedbackOutput(tfbIndex, i * 4, stride);
+                            transformFeedbackVecMap |= 1UL << (wordOffset / 4);
+                        }
+                    }
+                }
+            }
+
+            return new ShaderDefinitions(
+                header.Stage,
+                gpuAccessor.QueryGraphicsState(),
+                header.Stage == ShaderStage.Geometry && header.GpPassthrough,
+                header.ThreadsPerInputPrimitive,
+                header.OutputTopology,
+                header.MaxOutputVertexCount,
+                header.ImapTypes,
+                header.OmapTargets,
+                header.OmapSampleMask,
+                header.OmapDepth,
+                transformFeedbackEnabled,
+                transformFeedbackVecMap,
+                transformFeedbackOutputs);
+        }
+
+        private static int GetLocalMemorySize(ShaderHeader header)
+        {
+            return header.ShaderLocalMemoryLowSize + header.ShaderLocalMemoryHighSize + (header.ShaderLocalMemoryCrsSize / ThreadsPerWarp);
+        }
+
+        internal static FunctionCode[] EmitShader(
+            TranslatorContext translatorContext,
+            ResourceManager resourceManager,
+            DecodedProgram program,
+            bool initializeOutputs,
+            out int initializationOperations)
         {
             initializationOperations = 0;
 
@@ -149,11 +146,11 @@ namespace Ryujinx.Graphics.Shader.Translation
 
             for (int index = 0; index < functions.Length; index++)
             {
-                EmitterContext context = new(program, config, index != 0);
+                EmitterContext context = new(translatorContext, resourceManager, program, index != 0);
 
                 if (initializeOutputs && index == 0)
                 {
-                    EmitOutputsInitialization(context, config);
+                    EmitOutputsInitialization(context, translatorContext.AttributeUsage, translatorContext.GpuAccessor, translatorContext.Stage);
                     initializationOperations = context.OperationsCount;
                 }
 
@@ -168,27 +165,27 @@ namespace Ryujinx.Graphics.Shader.Translation
                     EmitOps(context, block);
                 }
 
-                functions[index] = new FunctionCode(context.GetOperations());
+                functions[index] = new(context.GetOperations());
             }
 
             return functions;
         }
 
-        private static void EmitOutputsInitialization(EmitterContext context, ShaderConfig config)
+        private static void EmitOutputsInitialization(EmitterContext context, AttributeUsage attributeUsage, IGpuAccessor gpuAccessor, ShaderStage stage)
         {
             // Compute has no output attributes, and fragment is the last stage, so we
             // don't need to initialize outputs on those stages.
-            if (config.Stage == ShaderStage.Compute || config.Stage == ShaderStage.Fragment)
+            if (stage == ShaderStage.Compute || stage == ShaderStage.Fragment)
             {
                 return;
             }
 
-            if (config.Stage == ShaderStage.Vertex)
+            if (stage == ShaderStage.Vertex)
             {
                 InitializePositionOutput(context);
             }
 
-            UInt128 usedAttributes = context.Config.NextInputAttributesComponents;
+            UInt128 usedAttributes = context.TranslatorContext.AttributeUsage.NextInputAttributesComponents;
             while (usedAttributes != UInt128.Zero)
             {
                 int index = (int)UInt128.TrailingZeroCount(usedAttributes);
@@ -197,7 +194,7 @@ namespace Ryujinx.Graphics.Shader.Translation
                 usedAttributes &= ~(UInt128.One << index);
 
                 // We don't need to initialize passthrough attributes.
-                if ((context.Config.PassthroughAttributes & (1 << vecIndex)) != 0)
+                if ((context.TranslatorContext.AttributeUsage.PassthroughAttributes & (1 << vecIndex)) != 0)
                 {
                     continue;
                 }
@@ -205,30 +202,28 @@ namespace Ryujinx.Graphics.Shader.Translation
                 InitializeOutputComponent(context, vecIndex, index & 3, perPatch: false);
             }
 
-            if (context.Config.NextUsedInputAttributesPerPatch != null)
+            if (context.TranslatorContext.AttributeUsage.NextUsedInputAttributesPerPatch != null)
             {
-                foreach (int vecIndex in context.Config.NextUsedInputAttributesPerPatch.Order())
+                foreach (int vecIndex in context.TranslatorContext.AttributeUsage.NextUsedInputAttributesPerPatch.Order())
                 {
                     InitializeOutput(context, vecIndex, perPatch: true);
                 }
             }
 
-            if (config.NextUsesFixedFuncAttributes)
+            if (attributeUsage.NextUsesFixedFuncAttributes)
             {
-                bool supportsLayerFromVertexOrTess = config.GpuAccessor.QueryHostSupportsLayerVertexTessellation();
+                bool supportsLayerFromVertexOrTess = gpuAccessor.QueryHostSupportsLayerVertexTessellation();
                 int fixedStartAttr = supportsLayerFromVertexOrTess ? 0 : 1;
 
                 for (int i = fixedStartAttr; i < fixedStartAttr + 5 + AttributeConsts.TexCoordCount; i++)
                 {
-                    int index = config.GetFreeUserAttribute(isOutput: true, i);
+                    int index = attributeUsage.GetFreeUserAttribute(isOutput: true, i);
                     if (index < 0)
                     {
                         break;
                     }
 
                     InitializeOutput(context, index, perPatch: false);
-
-                    config.SetOutputUserAttributeFixedFunc(index);
                 }
             }
         }
@@ -253,11 +248,11 @@ namespace Ryujinx.Graphics.Shader.Translation
         {
             StorageKind storageKind = perPatch ? StorageKind.OutputPerPatch : StorageKind.Output;
 
-            if (context.Config.UsedFeatures.HasFlag(FeatureFlags.OaIndexing))
+            if (context.TranslatorContext.Definitions.OaIndexing)
             {
                 Operand invocationId = null;
 
-                if (context.Config.Stage == ShaderStage.TessellationControl && !perPatch)
+                if (context.TranslatorContext.Definitions.Stage == ShaderStage.TessellationControl && !perPatch)
                 {
                     invocationId = context.Load(StorageKind.Input, IoVariable.InvocationId);
                 }
@@ -268,7 +263,7 @@ namespace Ryujinx.Graphics.Shader.Translation
             }
             else
             {
-                if (context.Config.Stage == ShaderStage.TessellationControl && !perPatch)
+                if (context.TranslatorContext.Definitions.Stage == ShaderStage.TessellationControl && !perPatch)
                 {
                     Operand invocationId = context.Load(StorageKind.Input, IoVariable.InvocationId);
                     context.Store(storageKind, IoVariable.UserDefined, Const(location), invocationId, Const(c), ConstF(c == 3 ? 1f : 0f));
@@ -286,7 +281,7 @@ namespace Ryujinx.Graphics.Shader.Translation
             {
                 InstOp op = block.OpCodes[opIndex];
 
-                if (context.Config.Options.Flags.HasFlag(TranslationFlags.DebugMode))
+                if (context.TranslatorContext.Options.Flags.HasFlag(TranslationFlags.DebugMode))
                 {
                     string instName;
 
@@ -298,7 +293,7 @@ namespace Ryujinx.Graphics.Shader.Translation
                     {
                         instName = "???";
 
-                        context.Config.GpuAccessor.Log($"Invalid instruction at 0x{op.Address:X6} (0x{op.RawOpCode:X16}).");
+                        context.TranslatorContext.GpuAccessor.Log($"Invalid instruction at 0x{op.Address:X6} (0x{op.RawOpCode:X16}).");
                     }
 
                     string dbgComment = $"0x{op.Address:X6}: 0x{op.RawOpCode:X16} {instName}";

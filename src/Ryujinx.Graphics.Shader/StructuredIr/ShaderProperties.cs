@@ -18,8 +18,6 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
         public IReadOnlyDictionary<int, MemoryDefinition> LocalMemories => _localMemories;
         public IReadOnlyDictionary<int, MemoryDefinition> SharedMemories => _sharedMemories;
 
-        public readonly bool OriginUpperLeft;
-
         public ShaderProperties()
         {
             _constantBuffers = new Dictionary<int, BufferDefinition>();
@@ -30,29 +28,24 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             _sharedMemories = new Dictionary<int, MemoryDefinition>();
         }
 
-        public ShaderProperties(bool originUpperLeft) : this()
+        public void AddOrUpdateConstantBuffer(BufferDefinition definition)
         {
-            OriginUpperLeft = originUpperLeft;
+            _constantBuffers[definition.Binding] = definition;
         }
 
-        public void AddOrUpdateConstantBuffer(int binding, BufferDefinition definition)
+        public void AddOrUpdateStorageBuffer(BufferDefinition definition)
         {
-            _constantBuffers[binding] = definition;
+            _storageBuffers[definition.Binding] = definition;
         }
 
-        public void AddOrUpdateStorageBuffer(int binding, BufferDefinition definition)
+        public void AddOrUpdateTexture(TextureDefinition definition)
         {
-            _storageBuffers[binding] = definition;
+            _textures[definition.Binding] = definition;
         }
 
-        public void AddOrUpdateTexture(int binding, TextureDefinition descriptor)
+        public void AddOrUpdateImage(TextureDefinition definition)
         {
-            _textures[binding] = descriptor;
-        }
-
-        public void AddOrUpdateImage(int binding, TextureDefinition descriptor)
-        {
-            _images[binding] = descriptor;
+            _images[definition.Binding] = definition;
         }
 
         public int AddLocalMemory(MemoryDefinition definition)
@@ -69,6 +62,49 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             _sharedMemories.Add(id, definition);
 
             return id;
+        }
+
+        public static TextureFormat GetTextureFormat(IGpuAccessor gpuAccessor, int handle, int cbufSlot = -1)
+        {
+            // When the formatted load extension is supported, we don't need to
+            // specify a format, we can just declare it without a format and the GPU will handle it.
+            if (gpuAccessor.QueryHostSupportsImageLoadFormatted())
+            {
+                return TextureFormat.Unknown;
+            }
+
+            var format = gpuAccessor.QueryTextureFormat(handle, cbufSlot);
+
+            if (format == TextureFormat.Unknown)
+            {
+                gpuAccessor.Log($"Unknown format for texture {handle}.");
+
+                format = TextureFormat.R8G8B8A8Unorm;
+            }
+
+            return format;
+        }
+
+        private static bool FormatSupportsAtomic(TextureFormat format)
+        {
+            return format == TextureFormat.R32Sint || format == TextureFormat.R32Uint;
+        }
+
+        public static TextureFormat GetTextureFormatAtomic(IGpuAccessor gpuAccessor, int handle, int cbufSlot = -1)
+        {
+            // Atomic image instructions do not support GL_EXT_shader_image_load_formatted,
+            // and must have a type specified. Default to R32Sint if not available.
+
+            var format = gpuAccessor.QueryTextureFormat(handle, cbufSlot);
+
+            if (!FormatSupportsAtomic(format))
+            {
+                gpuAccessor.Log($"Unsupported format for texture {handle}: {format}.");
+
+                format = TextureFormat.R32Sint;
+            }
+
+            return format;
         }
     }
 }

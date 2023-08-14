@@ -11,9 +11,9 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
     {
         private const string MainFunctionName = "main";
 
-        public static string Generate(StructuredProgramInfo info, ShaderConfig config)
+        public static string Generate(StructuredProgramInfo info, CodeGenParameters parameters)
         {
-            CodeGenContext context = new(info, config);
+            CodeGenContext context = new(info, parameters);
 
             Declarations.Declare(context, info);
 
@@ -113,7 +113,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                 }
             };
 
-            bool supportsBarrierDivergence = context.Config.GpuAccessor.QueryHostSupportsShaderBarrierDivergence();
+            bool supportsBarrierDivergence = context.HostCapabilities.SupportsShaderBarrierDivergence;
             bool mayHaveReturned = false;
 
             foreach (IAstNode node in visitor.Visit())
@@ -128,7 +128,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                             // so skip emitting the barrier for those cases.
                             if (visitor.Block.Type != AstBlockType.Main || mayHaveReturned || !isMainFunction)
                             {
-                                context.Config.GpuAccessor.Log($"Shader has barrier on potentially divergent block, the barrier will be removed.");
+                                context.Logger.Log("Shader has barrier on potentially divergent block, the barrier will be removed.");
 
                                 continue;
                             }

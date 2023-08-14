@@ -14,7 +14,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 
             string arg = GetSoureExpr(context, operation.GetSource(0), dstType);
 
-            if (context.Config.GpuAccessor.QueryHostSupportsShaderBallot())
+            if (context.HostCapabilities.SupportsShaderBallot)
             {
                 return $"unpackUint2x32(ballotARB({arg})).x";
             }

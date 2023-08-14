@@ -1,268 +1,45 @@
 using Ryujinx.Graphics.Shader.IntermediateRepresentation;
-using Ryujinx.Graphics.Shader.StructuredIr;
-using Ryujinx.Graphics.Shader.Translation.Optimizations;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using static Ryujinx.Graphics.Shader.IntermediateRepresentation.OperandHelper;
 
-namespace Ryujinx.Graphics.Shader.Translation
+namespace Ryujinx.Graphics.Shader.Translation.Transforms
 {
-    static class Rewriter
+    class TexturePass : ITransformPass
     {
-        public static void RunPass(HelperFunctionManager hfm, BasicBlock[] blocks, ShaderConfig config)
+        public static bool IsEnabled(IGpuAccessor gpuAccessor, ShaderStage stage, TargetLanguage targetLanguage, FeatureFlags usedFeatures)
         {
-            bool isVertexShader = config.Stage == ShaderStage.Vertex;
-            bool isImpreciseFragmentShader = config.Stage == ShaderStage.Fragment && config.GpuAccessor.QueryHostReducedPrecision();
-            bool hasConstantBufferDrawParameters = config.GpuAccessor.QueryHasConstantBufferDrawParameters();
-            bool hasVectorIndexingBug = config.GpuAccessor.QueryHostHasVectorIndexingBug();
-            bool supportsSnormBufferTextureFormat = config.GpuAccessor.QueryHostSupportsSnormBufferTextureFormat();
+            return true;
+        }
 
-            for (int blkIndex = 0; blkIndex < blocks.Length; blkIndex++)
+        public static LinkedListNode<INode> RunPass(TransformContext context, LinkedListNode<INode> node)
+        {
+            if (node.Value is TextureOperation texOp)
             {
-                BasicBlock block = blocks[blkIndex];
+                node = InsertTexelFetchScale(context.Hfm, node, context.ResourceManager, context.Stage);
+                node = InsertTextureSizeUnscale(context.Hfm, node, context.ResourceManager, context.Stage);
 
-                for (LinkedListNode<INode> node = block.Operations.First; node != null; node = node.Next)
+                if (texOp.Inst == Instruction.TextureSample)
                 {
-                    if (node.Value is not Operation operation)
+                    node = InsertCoordNormalization(context.Hfm, node, context.ResourceManager, context.GpuAccessor, context.Stage);
+                    node = InsertCoordGatherBias(node, context.ResourceManager, context.GpuAccessor);
+                    node = InsertConstOffsets(node, context.ResourceManager, context.GpuAccessor);
+
+                    if (texOp.Type == SamplerType.TextureBuffer && !context.GpuAccessor.QueryHostSupportsSnormBufferTextureFormat())
                     {
-                        continue;
-                    }
-
-                    if (isVertexShader)
-                    {
-                        if (hasConstantBufferDrawParameters)
-                        {
-                            if (ReplaceConstantBufferWithDrawParameters(node, operation))
-                            {
-                                config.SetUsedFeature(FeatureFlags.DrawParameters);
-                            }
-                        }
-                        else if (HasConstantBufferDrawParameters(operation))
-                        {
-                            config.SetUsedFeature(FeatureFlags.DrawParameters);
-                        }
-                    }
-
-                    if (isImpreciseFragmentShader)
-                    {
-                        EnableForcePreciseIfNeeded(operation);
-                    }
-
-                    if (hasVectorIndexingBug)
-                    {
-                        InsertVectorComponentSelect(node, config);
-                    }
-
-                    if (operation is TextureOperation texOp)
-                    {
-                        node = InsertTexelFetchScale(hfm, node, config);
-                        node = InsertTextureSizeUnscale(hfm, node, config);
-
-                        if (texOp.Inst == Instruction.TextureSample)
-                        {
-                            node = InsertCoordNormalization(hfm, node, config);
-                            node = InsertCoordGatherBias(node, config);
-                            node = InsertConstOffsets(node, config);
-
-                            if (texOp.Type == SamplerType.TextureBuffer && !supportsSnormBufferTextureFormat)
-                            {
-                                node = InsertSnormNormalization(node, config);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        node = InsertSharedStoreSmallInt(hfm, node);
-
-                        if (config.Options.TargetLanguage != TargetLanguage.Spirv)
-                        {
-                            node = InsertSharedAtomicSigned(hfm, node);
-                        }
+                        node = InsertSnormNormalization(node, context.ResourceManager, context.GpuAccessor);
                     }
                 }
             }
+
+            return node;
         }
 
-        private static void EnableForcePreciseIfNeeded(Operation operation)
-        {
-            // There are some cases where a small bias is added to values to prevent division by zero.
-            // When operating with reduced precision, it is possible for this bias to get rounded to 0
-            // and cause a division by zero.
-            // To prevent that, we force those operations to be precise even if the host wants
-            // imprecise operations for performance.
-
-            if (operation.Inst == (Instruction.FP32 | Instruction.Divide) &&
-                operation.GetSource(0).Type == OperandType.Constant &&
-                operation.GetSource(0).AsFloat() == 1f &&
-                operation.GetSource(1).AsgOp is Operation addOp &&
-                addOp.Inst == (Instruction.FP32 | Instruction.Add) &&
-                addOp.GetSource(1).Type == OperandType.Constant)
-            {
-                addOp.ForcePrecise = true;
-            }
-        }
-
-        private static void InsertVectorComponentSelect(LinkedListNode<INode> node, ShaderConfig config)
-        {
-            Operation operation = (Operation)node.Value;
-
-            if (operation.Inst != Instruction.Load ||
-                operation.StorageKind != StorageKind.ConstantBuffer ||
-                operation.SourcesCount < 3)
-            {
-                return;
-            }
-
-            Operand bindingIndex = operation.GetSource(0);
-            Operand fieldIndex = operation.GetSource(1);
-            Operand elemIndex = operation.GetSource(operation.SourcesCount - 1);
-
-            if (bindingIndex.Type != OperandType.Constant ||
-                fieldIndex.Type != OperandType.Constant ||
-                elemIndex.Type == OperandType.Constant)
-            {
-                return;
-            }
-
-            BufferDefinition buffer = config.Properties.ConstantBuffers[bindingIndex.Value];
-            StructureField field = buffer.Type.Fields[fieldIndex.Value];
-
-            int elemCount = (field.Type & AggregateType.ElementCountMask) switch
-            {
-                AggregateType.Vector2 => 2,
-                AggregateType.Vector3 => 3,
-                AggregateType.Vector4 => 4,
-                _ => 1,
-            };
-
-            if (elemCount == 1)
-            {
-                return;
-            }
-
-            Operand result = null;
-
-            for (int i = 0; i < elemCount; i++)
-            {
-                Operand value = Local();
-                Operand[] inputs = new Operand[operation.SourcesCount];
-
-                for (int srcIndex = 0; srcIndex < inputs.Length - 1; srcIndex++)
-                {
-                    inputs[srcIndex] = operation.GetSource(srcIndex);
-                }
-
-                inputs[^1] = Const(i);
-
-                Operation loadOp = new(Instruction.Load, StorageKind.ConstantBuffer, value, inputs);
-
-                node.List.AddBefore(node, loadOp);
-
-                if (i == 0)
-                {
-                    result = value;
-                }
-                else
-                {
-                    Operand isCurrentIndex = Local();
-                    Operand selection = Local();
-
-                    Operation compareOp = new(Instruction.CompareEqual, isCurrentIndex, new Operand[] { elemIndex, Const(i) });
-                    Operation selectOp = new(Instruction.ConditionalSelect, selection, new Operand[] { isCurrentIndex, value, result });
-
-                    node.List.AddBefore(node, compareOp);
-                    node.List.AddBefore(node, selectOp);
-
-                    result = selection;
-                }
-            }
-
-            operation.TurnIntoCopy(result);
-        }
-
-        private static LinkedListNode<INode> InsertSharedStoreSmallInt(HelperFunctionManager hfm, LinkedListNode<INode> node)
-        {
-            Operation operation = (Operation)node.Value;
-            HelperFunctionName name;
-
-            if (operation.StorageKind == StorageKind.SharedMemory8)
-            {
-                name = HelperFunctionName.SharedStore8;
-            }
-            else if (operation.StorageKind == StorageKind.SharedMemory16)
-            {
-                name = HelperFunctionName.SharedStore16;
-            }
-            else
-            {
-                return node;
-            }
-
-            if (operation.Inst != Instruction.Store)
-            {
-                return node;
-            }
-
-            Operand memoryId = operation.GetSource(0);
-            Operand byteOffset = operation.GetSource(1);
-            Operand value = operation.GetSource(2);
-
-            Debug.Assert(memoryId.Type == OperandType.Constant);
-
-            int functionId = hfm.GetOrCreateFunctionId(name, memoryId.Value);
-
-            Operand[] callArgs = new Operand[] { Const(functionId), byteOffset, value };
-
-            LinkedListNode<INode> newNode = node.List.AddBefore(node, new Operation(Instruction.Call, 0, (Operand)null, callArgs));
-
-            Utils.DeleteNode(node, operation);
-
-            return newNode;
-        }
-
-        private static LinkedListNode<INode> InsertSharedAtomicSigned(HelperFunctionManager hfm, LinkedListNode<INode> node)
-        {
-            Operation operation = (Operation)node.Value;
-            HelperFunctionName name;
-
-            if (operation.Inst == Instruction.AtomicMaxS32)
-            {
-                name = HelperFunctionName.SharedAtomicMaxS32;
-            }
-            else if (operation.Inst == Instruction.AtomicMinS32)
-            {
-                name = HelperFunctionName.SharedAtomicMinS32;
-            }
-            else
-            {
-                return node;
-            }
-
-            if (operation.StorageKind != StorageKind.SharedMemory)
-            {
-                return node;
-            }
-
-            Operand result = operation.Dest;
-            Operand memoryId = operation.GetSource(0);
-            Operand byteOffset = operation.GetSource(1);
-            Operand value = operation.GetSource(2);
-
-            Debug.Assert(memoryId.Type == OperandType.Constant);
-
-            int functionId = hfm.GetOrCreateFunctionId(name, memoryId.Value);
-
-            Operand[] callArgs = new Operand[] { Const(functionId), byteOffset, value };
-
-            LinkedListNode<INode> newNode = node.List.AddBefore(node, new Operation(Instruction.Call, 0, result, callArgs));
-
-            Utils.DeleteNode(node, operation);
-
-            return newNode;
-        }
-
-        private static LinkedListNode<INode> InsertTexelFetchScale(HelperFunctionManager hfm, LinkedListNode<INode> node, ShaderConfig config)
+        private static LinkedListNode<INode> InsertTexelFetchScale(
+            HelperFunctionManager hfm,
+            LinkedListNode<INode> node,
+            ResourceManager resourceManager,
+            ShaderStage stage)
         {
             TextureOperation texOp = (TextureOperation)node.Value;
 
@@ -280,20 +57,20 @@ namespace Ryujinx.Graphics.Shader.Translation
                 (intCoords || isImage) &&
                 !isBindless &&
                 !isIndexed &&
-                config.Stage.SupportsRenderScale() &&
+                stage.SupportsRenderScale() &&
                 TypeSupportsScale(texOp.Type))
             {
                 int functionId = hfm.GetOrCreateFunctionId(HelperFunctionName.TexelFetchScale);
                 int samplerIndex = isImage
-                    ? config.ResourceManager.GetTextureDescriptors().Length + config.ResourceManager.FindImageDescriptorIndex(texOp.Binding)
-                    : config.ResourceManager.FindTextureDescriptorIndex(texOp.Binding);
+                    ? resourceManager.GetTextureDescriptors().Length + resourceManager.FindImageDescriptorIndex(texOp.Binding)
+                    : resourceManager.FindTextureDescriptorIndex(texOp.Binding);
 
                 for (int index = 0; index < coordsCount; index++)
                 {
                     Operand scaledCoord = Local();
                     Operand[] callArgs;
 
-                    if (config.Stage == ShaderStage.Fragment)
+                    if (stage == ShaderStage.Fragment)
                     {
                         callArgs = new Operand[] { Const(functionId), texOp.GetSource(coordsIndex + index), Const(samplerIndex), Const(index) };
                     }
@@ -311,7 +88,11 @@ namespace Ryujinx.Graphics.Shader.Translation
             return node;
         }
 
-        private static LinkedListNode<INode> InsertTextureSizeUnscale(HelperFunctionManager hfm, LinkedListNode<INode> node, ShaderConfig config)
+        private static LinkedListNode<INode> InsertTextureSizeUnscale(
+            HelperFunctionManager hfm,
+            LinkedListNode<INode> node,
+            ResourceManager resourceManager,
+            ShaderStage stage)
         {
             TextureOperation texOp = (TextureOperation)node.Value;
 
@@ -322,11 +103,11 @@ namespace Ryujinx.Graphics.Shader.Translation
                 texOp.Index < 2 &&
                 !isBindless &&
                 !isIndexed &&
-                config.Stage.SupportsRenderScale() &&
+                stage.SupportsRenderScale() &&
                 TypeSupportsScale(texOp.Type))
             {
                 int functionId = hfm.GetOrCreateFunctionId(HelperFunctionName.TextureSizeUnscale);
-                int samplerIndex = config.ResourceManager.FindTextureDescriptorIndex(texOp.Binding);
+                int samplerIndex = resourceManager.FindTextureDescriptorIndex(texOp.Binding);
 
                 for (int index = texOp.DestsCount - 1; index >= 0; index--)
                 {
@@ -356,19 +137,12 @@ namespace Ryujinx.Graphics.Shader.Translation
             return node;
         }
 
-        private static bool IsImageInstructionWithScale(Instruction inst)
-        {
-            // Currently, we don't support scaling images that are modified,
-            // so we only need to care about the load instruction.
-            return inst == Instruction.ImageLoad;
-        }
-
-        private static bool TypeSupportsScale(SamplerType type)
-        {
-            return (type & SamplerType.Mask) == SamplerType.Texture2D;
-        }
-
-        private static LinkedListNode<INode> InsertCoordNormalization(HelperFunctionManager hfm, LinkedListNode<INode> node, ShaderConfig config)
+        private static LinkedListNode<INode> InsertCoordNormalization(
+            HelperFunctionManager hfm,
+            LinkedListNode<INode> node,
+            ResourceManager resourceManager,
+            IGpuAccessor gpuAccessor,
+            ShaderStage stage)
         {
             // Emulate non-normalized coordinates by normalizing the coordinates on the shader.
             // Without normalization, the coordinates are expected to the in the [0, W or H] range,
@@ -386,9 +160,9 @@ namespace Ryujinx.Graphics.Shader.Translation
 
             bool intCoords = (texOp.Flags & TextureFlags.IntCoords) != 0;
 
-            (int cbufSlot, int handle) = config.ResourceManager.GetCbufSlotAndHandleForTexture(texOp.Binding);
+            (int cbufSlot, int handle) = resourceManager.GetCbufSlotAndHandleForTexture(texOp.Binding);
 
-            bool isCoordNormalized = config.GpuAccessor.QueryTextureCoordNormalized(handle, cbufSlot);
+            bool isCoordNormalized = gpuAccessor.QueryTextureCoordNormalized(handle, cbufSlot);
 
             if (isCoordNormalized || intCoords)
             {
@@ -399,8 +173,6 @@ namespace Ryujinx.Graphics.Shader.Translation
 
             int coordsCount = texOp.Type.GetDimensions();
             int coordsIndex = isBindless || isIndexed ? 1 : 0;
-
-            config.SetUsedFeature(FeatureFlags.IntegerSampling);
 
             int normCoordsCount = (texOp.Type & SamplerType.Mask) == SamplerType.TextureCube ? 2 : coordsCount;
 
@@ -429,7 +201,7 @@ namespace Ryujinx.Graphics.Shader.Translation
                     new[] { coordSize },
                     texSizeSources));
 
-                config.ResourceManager.SetUsageFlagsForTextureQuery(texOp.Binding, texOp.Type);
+                resourceManager.SetUsageFlagsForTextureQuery(texOp.Binding, texOp.Type);
 
                 Operand source = texOp.GetSource(coordsIndex + index);
 
@@ -439,13 +211,13 @@ namespace Ryujinx.Graphics.Shader.Translation
 
                 texOp.SetSource(coordsIndex + index, coordNormalized);
 
-                InsertTextureSizeUnscale(hfm, textureSizeNode, config);
+                InsertTextureSizeUnscale(hfm, textureSizeNode, resourceManager, stage);
             }
 
             return node;
         }
 
-        private static LinkedListNode<INode> InsertCoordGatherBias(LinkedListNode<INode> node, ShaderConfig config)
+        private static LinkedListNode<INode> InsertCoordGatherBias(LinkedListNode<INode> node, ResourceManager resourceManager, IGpuAccessor gpuAccessor)
         {
             // The gather behavior when the coordinate sits right in the middle of two texels is not well defined.
             // To ensure the correct texel is sampled, we add a small bias value to the coordinate.
@@ -457,24 +229,17 @@ namespace Ryujinx.Graphics.Shader.Translation
             bool isBindless = (texOp.Flags & TextureFlags.Bindless) != 0;
             bool isGather = (texOp.Flags & TextureFlags.Gather) != 0;
 
-            int gatherBiasPrecision = config.GpuAccessor.QueryHostGatherBiasPrecision();
+            int gatherBiasPrecision = gpuAccessor.QueryHostGatherBiasPrecision();
 
             if (!isGather || gatherBiasPrecision == 0)
             {
                 return node;
             }
 
-#pragma warning disable IDE0059 // Remove unnecessary value assignment
-            bool intCoords = (texOp.Flags & TextureFlags.IntCoords) != 0;
-
-            bool isArray = (texOp.Type & SamplerType.Array) != 0;
             bool isIndexed = (texOp.Type & SamplerType.Indexed) != 0;
-#pragma warning restore IDE0059
 
             int coordsCount = texOp.Type.GetDimensions();
             int coordsIndex = isBindless || isIndexed ? 1 : 0;
-
-            config.SetUsedFeature(FeatureFlags.IntegerSampling);
 
             int normCoordsCount = (texOp.Type & SamplerType.Mask) == SamplerType.TextureCube ? 2 : coordsCount;
 
@@ -524,7 +289,7 @@ namespace Ryujinx.Graphics.Shader.Translation
             return node;
         }
 
-        private static LinkedListNode<INode> InsertConstOffsets(LinkedListNode<INode> node, ShaderConfig config)
+        private static LinkedListNode<INode> InsertConstOffsets(LinkedListNode<INode> node, ResourceManager resourceManager, IGpuAccessor gpuAccessor)
         {
             // Non-constant texture offsets are not allowed (according to the spec),
             // however some GPUs does support that.
@@ -540,7 +305,7 @@ namespace Ryujinx.Graphics.Shader.Translation
             bool hasOffset = (texOp.Flags & TextureFlags.Offset) != 0;
             bool hasOffsets = (texOp.Flags & TextureFlags.Offsets) != 0;
 
-            bool hasInvalidOffset = (hasOffset || hasOffsets) && !config.GpuAccessor.QueryHostSupportsNonConstantTextureOffset();
+            bool hasInvalidOffset = (hasOffset || hasOffsets) && !gpuAccessor.QueryHostSupportsNonConstantTextureOffset();
 
             bool isBindless = (texOp.Flags & TextureFlags.Bindless) != 0;
 
@@ -673,8 +438,6 @@ namespace Ryujinx.Graphics.Shader.Translation
 
             if (isGather && !isShadow)
             {
-                config.SetUsedFeature(FeatureFlags.IntegerSampling);
-
                 Operand[] newSources = new Operand[sources.Length];
 
                 sources.CopyTo(newSources, 0);
@@ -741,8 +504,6 @@ namespace Ryujinx.Graphics.Shader.Translation
                 }
                 else
                 {
-                    config.SetUsedFeature(FeatureFlags.IntegerSampling);
-
                     Operand[] texSizes = InsertTextureLod(node, texOp, lodSources, bindlessHandle, coordsCount);
 
                     for (int index = 0; index < coordsCount; index++)
@@ -840,7 +601,7 @@ namespace Ryujinx.Graphics.Shader.Translation
             return texSizes;
         }
 
-        private static LinkedListNode<INode> InsertSnormNormalization(LinkedListNode<INode> node, ShaderConfig config)
+        private static LinkedListNode<INode> InsertSnormNormalization(LinkedListNode<INode> node, ResourceManager resourceManager, IGpuAccessor gpuAccessor)
         {
             TextureOperation texOp = (TextureOperation)node.Value;
 
@@ -851,9 +612,9 @@ namespace Ryujinx.Graphics.Shader.Translation
                 return node;
             }
 
-            (int cbufSlot, int handle) = config.ResourceManager.GetCbufSlotAndHandleForTexture(texOp.Binding);
+            (int cbufSlot, int handle) = resourceManager.GetCbufSlotAndHandleForTexture(texOp.Binding);
 
-            TextureFormat format = config.GpuAccessor.QueryTextureFormat(handle, cbufSlot);
+            TextureFormat format = gpuAccessor.QueryTextureFormat(handle, cbufSlot);
 
             int maxPositive = format switch
             {
@@ -926,63 +687,16 @@ namespace Ryujinx.Graphics.Shader.Translation
             return res;
         }
 
-        private static bool ReplaceConstantBufferWithDrawParameters(LinkedListNode<INode> node, Operation operation)
+        private static bool IsImageInstructionWithScale(Instruction inst)
         {
-            Operand GenerateLoad(IoVariable ioVariable)
-            {
-                Operand value = Local();
-                node.List.AddBefore(node, new Operation(Instruction.Load, StorageKind.Input, value, Const((int)ioVariable)));
-                return value;
-            }
-
-            bool modified = false;
-
-            for (int srcIndex = 0; srcIndex < operation.SourcesCount; srcIndex++)
-            {
-                Operand src = operation.GetSource(srcIndex);
-
-                if (src.Type == OperandType.ConstantBuffer && src.GetCbufSlot() == 0)
-                {
-                    switch (src.GetCbufOffset())
-                    {
-                        case Constants.NvnBaseVertexByteOffset / 4:
-                            operation.SetSource(srcIndex, GenerateLoad(IoVariable.BaseVertex));
-                            modified = true;
-                            break;
-                        case Constants.NvnBaseInstanceByteOffset / 4:
-                            operation.SetSource(srcIndex, GenerateLoad(IoVariable.BaseInstance));
-                            modified = true;
-                            break;
-                        case Constants.NvnDrawIndexByteOffset / 4:
-                            operation.SetSource(srcIndex, GenerateLoad(IoVariable.DrawIndex));
-                            modified = true;
-                            break;
-                    }
-                }
-            }
-
-            return modified;
+            // Currently, we don't support scaling images that are modified,
+            // so we only need to care about the load instruction.
+            return inst == Instruction.ImageLoad;
         }
 
-        private static bool HasConstantBufferDrawParameters(Operation operation)
+        private static bool TypeSupportsScale(SamplerType type)
         {
-            for (int srcIndex = 0; srcIndex < operation.SourcesCount; srcIndex++)
-            {
-                Operand src = operation.GetSource(srcIndex);
-
-                if (src.Type == OperandType.ConstantBuffer && src.GetCbufSlot() == 0)
-                {
-                    switch (src.GetCbufOffset())
-                    {
-                        case Constants.NvnBaseVertexByteOffset / 4:
-                        case Constants.NvnBaseInstanceByteOffset / 4:
-                        case Constants.NvnDrawIndexByteOffset / 4:
-                            return true;
-                    }
-                }
-            }
-
-            return false;
+            return (type & SamplerType.Mask) == SamplerType.Texture2D;
         }
     }
 }

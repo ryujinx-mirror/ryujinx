@@ -28,17 +28,25 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
 
         public StructuredProgramInfo Info { get; }
 
-        public ShaderConfig Config { get; }
+        public ShaderDefinitions Definitions { get; }
+        public ResourceManager ResourceManager { get; }
+        public bool DebugMode { get; }
 
-        public StructuredProgramContext(ShaderConfig config)
+        public StructuredProgramContext(
+            AttributeUsage attributeUsage,
+            ShaderDefinitions definitions,
+            ResourceManager resourceManager,
+            bool debugMode)
         {
             Info = new StructuredProgramInfo();
 
-            Config = config;
+            Definitions = definitions;
+            ResourceManager = resourceManager;
+            DebugMode = debugMode;
 
-            if (config.GpPassthrough)
+            if (definitions.GpPassthrough)
             {
-                int passthroughAttributes = config.PassthroughAttributes;
+                int passthroughAttributes = attributeUsage.PassthroughAttributes;
                 while (passthroughAttributes != 0)
                 {
                     int index = BitOperations.TrailingZeroCount(passthroughAttributes);
@@ -51,11 +59,6 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
                 Info.IoDefinitions.Add(new IoDefinition(StorageKind.Input, IoVariable.Position));
                 Info.IoDefinitions.Add(new IoDefinition(StorageKind.Input, IoVariable.PointSize));
                 Info.IoDefinitions.Add(new IoDefinition(StorageKind.Input, IoVariable.ClipDistance));
-            }
-            else if (config.Stage == ShaderStage.Fragment)
-            {
-                // Potentially used for texture coordinate scaling.
-                Info.IoDefinitions.Add(new IoDefinition(StorageKind.Input, IoVariable.FragmentCoord));
             }
         }
 
@@ -304,11 +307,11 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
                 int cbufSlot = operand.GetCbufSlot();
                 int cbufOffset = operand.GetCbufOffset();
 
-                int binding = Config.ResourceManager.GetConstantBufferBinding(cbufSlot);
+                int binding = ResourceManager.GetConstantBufferBinding(cbufSlot);
                 int vecIndex = cbufOffset >> 2;
                 int elemIndex = cbufOffset & 3;
 
-                Config.ResourceManager.SetUsedConstantBufferBinding(binding);
+                ResourceManager.SetUsedConstantBufferBinding(binding);
 
                 IAstNode[] sources = new IAstNode[]
                 {

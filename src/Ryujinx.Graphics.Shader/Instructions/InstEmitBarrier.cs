@@ -16,7 +16,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
             }
             else
             {
-                context.Config.GpuAccessor.Log($"Invalid barrier mode: {op.BarOp}.");
+                context.TranslatorContext.GpuAccessor.Log($"Invalid barrier mode: {op.BarOp}.");
             }
         }
 

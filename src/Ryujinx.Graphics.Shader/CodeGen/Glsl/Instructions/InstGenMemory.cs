@@ -84,7 +84,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
                 indexExpr = Src(AggregateType.S32);
             }
 
-            string imageName = GetImageName(context.Config, texOp, indexExpr);
+            string imageName = GetImageName(context.Properties, texOp, indexExpr);
 
             texCallBuilder.Append('(');
             texCallBuilder.Append(imageName);
@@ -216,7 +216,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
                 indexExpr = GetSoureExpr(context, texOp.GetSource(0), AggregateType.S32);
             }
 
-            string samplerName = GetSamplerName(context.Config, texOp, indexExpr);
+            string samplerName = GetSamplerName(context.Properties, texOp, indexExpr);
 
             int coordsIndex = isBindless || isIndexed ? 1 : 0;
 
@@ -273,7 +273,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 
             // 2D Array and Cube shadow samplers with LOD level or bias requires an extension.
             // If the extension is not supported, just remove the LOD parameter.
-            if (isArray && isShadow && (is2D || isCube) && !context.Config.GpuAccessor.QueryHostSupportsTextureShadowLod())
+            if (isArray && isShadow && (is2D || isCube) && !context.HostCapabilities.SupportsTextureShadowLod)
             {
                 hasLodBias = false;
                 hasLodLevel = false;
@@ -281,7 +281,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 
             // Cube shadow samplers with LOD level requires an extension.
             // If the extension is not supported, just remove the LOD level parameter.
-            if (isShadow && isCube && !context.Config.GpuAccessor.QueryHostSupportsTextureShadowLod())
+            if (isShadow && isCube && !context.HostCapabilities.SupportsTextureShadowLod)
             {
                 hasLodLevel = false;
             }
@@ -342,7 +342,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
                 indexExpr = Src(AggregateType.S32);
             }
 
-            string samplerName = GetSamplerName(context.Config, texOp, indexExpr);
+            string samplerName = GetSamplerName(context.Properties, texOp, indexExpr);
 
             texCall += "(" + samplerName;
 
@@ -538,7 +538,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
                 indexExpr = GetSoureExpr(context, texOp.GetSource(0), AggregateType.S32);
             }
 
-            string samplerName = GetSamplerName(context.Config, texOp, indexExpr);
+            string samplerName = GetSamplerName(context.Properties, texOp, indexExpr);
 
             if (texOp.Index == 3)
             {
@@ -546,7 +546,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             }
             else
             {
-                context.Config.Properties.Textures.TryGetValue(texOp.Binding, out TextureDefinition definition);
+                context.Properties.Textures.TryGetValue(texOp.Binding, out TextureDefinition definition);
                 bool hasLod = !definition.Type.HasFlag(SamplerType.Multisample) && (definition.Type & SamplerType.Mask) != SamplerType.TextureBuffer;
                 string texCall;
 
@@ -593,8 +593,8 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 
                     int binding = bindingIndex.Value;
                     BufferDefinition buffer = storageKind == StorageKind.ConstantBuffer
-                        ? context.Config.Properties.ConstantBuffers[binding]
-                        : context.Config.Properties.StorageBuffers[binding];
+                        ? context.Properties.ConstantBuffers[binding]
+                        : context.Properties.StorageBuffers[binding];
 
                     if (operation.GetSource(srcIndex++) is not AstOperand fieldIndex || fieldIndex.Type != OperandType.Constant)
                     {
@@ -614,8 +614,8 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
                     }
 
                     MemoryDefinition memory = storageKind == StorageKind.LocalMemory
-                        ? context.Config.Properties.LocalMemories[bindingId.Value]
-                        : context.Config.Properties.SharedMemories[bindingId.Value];
+                        ? context.Properties.LocalMemories[bindingId.Value]
+                        : context.Properties.SharedMemories[bindingId.Value];
 
                     varName = memory.Name;
                     varType = memory.Type;
@@ -636,7 +636,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
                     int location = -1;
                     int component = 0;
 
-                    if (context.Config.HasPerLocationInputOrOutput(ioVariable, isOutput))
+                    if (context.Definitions.HasPerLocationInputOrOutput(ioVariable, isOutput))
                     {
                         if (operation.GetSource(srcIndex++) is not AstOperand vecIndex || vecIndex.Type != OperandType.Constant)
                         {
@@ -648,16 +648,23 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
                         if (operation.SourcesCount > srcIndex &&
                             operation.GetSource(srcIndex) is AstOperand elemIndex &&
                             elemIndex.Type == OperandType.Constant &&
-                            context.Config.HasPerLocationInputOrOutputComponent(ioVariable, location, elemIndex.Value, isOutput))
+                            context.Definitions.HasPerLocationInputOrOutputComponent(ioVariable, location, elemIndex.Value, isOutput))
                         {
                             component = elemIndex.Value;
                             srcIndex++;
                         }
                     }
 
-                    (varName, varType) = IoMap.GetGlslVariable(context.Config, ioVariable, location, component, isOutput, isPerPatch);
+                    (varName, varType) = IoMap.GetGlslVariable(
+                        context.Definitions,
+                        context.HostCapabilities,
+                        ioVariable,
+                        location,
+                        component,
+                        isOutput,
+                        isPerPatch);
 
-                    if (IoMap.IsPerVertexBuiltIn(context.Config.Stage, ioVariable, isOutput))
+                    if (IoMap.IsPerVertexBuiltIn(context.Definitions.Stage, ioVariable, isOutput))
                     {
                         // Since those exist both as input and output on geometry and tessellation shaders,
                         // we need the gl_in and gl_out prefixes to disambiguate.
@@ -692,7 +699,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
                 {
                     varName += "." + "xyzw"[elementIndex.Value & 3];
                 }
-                else if (srcIndex == firstSrcIndex && context.Config.Stage == ShaderStage.TessellationControl && storageKind == StorageKind.Output)
+                else if (srcIndex == firstSrcIndex && context.Definitions.Stage == ShaderStage.TessellationControl && storageKind == StorageKind.Output)
                 {
                     // GLSL requires that for tessellation control shader outputs,
                     // that the index expression must be *exactly* "gl_InvocationID",
@@ -715,9 +722,9 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             return varName;
         }
 
-        private static string GetSamplerName(ShaderConfig config, AstTextureOperation texOp, string indexExpr)
+        private static string GetSamplerName(ShaderProperties resourceDefinitions, AstTextureOperation texOp, string indexExpr)
         {
-            string name = config.Properties.Textures[texOp.Binding].Name;
+            string name = resourceDefinitions.Textures[texOp.Binding].Name;
 
             if (texOp.Type.HasFlag(SamplerType.Indexed))
             {
@@ -727,9 +734,9 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             return name;
         }
 
-        private static string GetImageName(ShaderConfig config, AstTextureOperation texOp, string indexExpr)
+        private static string GetImageName(ShaderProperties resourceDefinitions, AstTextureOperation texOp, string indexExpr)
         {
-            string name = config.Properties.Images[texOp.Binding].Name;
+            string name = resourceDefinitions.Images[texOp.Binding].Name;
 
             if (texOp.Type.HasFlag(SamplerType.Indexed))
             {

@@ -20,21 +20,29 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
 
         public StructuredProgramInfo Info { get; }
 
-        public ShaderConfig Config { get; }
+        public AttributeUsage AttributeUsage { get; }
+        public ShaderDefinitions Definitions { get; }
+        public ShaderProperties Properties { get; }
+        public HostCapabilities HostCapabilities { get; }
+        public ILogger Logger { get; }
+        public TargetApi TargetApi { get; }
 
         public int InputVertices { get; }
 
-        public Dictionary<int, Instruction> ConstantBuffers { get; } = new Dictionary<int, Instruction>();
-        public Dictionary<int, Instruction> StorageBuffers { get; } = new Dictionary<int, Instruction>();
-        public Dictionary<int, Instruction> LocalMemories { get; } = new Dictionary<int, Instruction>();
-        public Dictionary<int, Instruction> SharedMemories { get; } = new Dictionary<int, Instruction>();
-        public Dictionary<int, SamplerType> SamplersTypes { get; } = new Dictionary<int, SamplerType>();
-        public Dictionary<int, (Instruction, Instruction, Instruction)> Samplers { get; } = new Dictionary<int, (Instruction, Instruction, Instruction)>();
-        public Dictionary<int, (Instruction, Instruction)> Images { get; } = new Dictionary<int, (Instruction, Instruction)>();
-        public Dictionary<IoDefinition, Instruction> Inputs { get; } = new Dictionary<IoDefinition, Instruction>();
-        public Dictionary<IoDefinition, Instruction> Outputs { get; } = new Dictionary<IoDefinition, Instruction>();
-        public Dictionary<IoDefinition, Instruction> InputsPerPatch { get; } = new Dictionary<IoDefinition, Instruction>();
-        public Dictionary<IoDefinition, Instruction> OutputsPerPatch { get; } = new Dictionary<IoDefinition, Instruction>();
+        public Dictionary<int, Instruction> ConstantBuffers { get; } = new();
+        public Dictionary<int, Instruction> StorageBuffers { get; } = new();
+
+        public Dictionary<int, Instruction> LocalMemories { get; } = new();
+        public Dictionary<int, Instruction> SharedMemories { get; } = new();
+
+        public Dictionary<int, SamplerType> SamplersTypes { get; } = new();
+        public Dictionary<int, (Instruction, Instruction, Instruction)> Samplers { get; } = new();
+        public Dictionary<int, (Instruction, Instruction)> Images { get; } = new();
+
+        public Dictionary<IoDefinition, Instruction> Inputs { get; } = new();
+        public Dictionary<IoDefinition, Instruction> Outputs { get; } = new();
+        public Dictionary<IoDefinition, Instruction> InputsPerPatch { get; } = new();
+        public Dictionary<IoDefinition, Instruction> OutputsPerPatch { get; } = new();
 
         public StructuredFunction CurrentFunction { get; set; }
         private readonly Dictionary<AstOperand, Instruction> _locals = new();
@@ -81,25 +89,28 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
 
         public CodeGenContext(
             StructuredProgramInfo info,
-            ShaderConfig config,
+            CodeGenParameters parameters,
             GeneratorPool<Instruction> instPool,
             GeneratorPool<LiteralInteger> integerPool) : base(SpirvVersionPacked, instPool, integerPool)
         {
             Info = info;
-            Config = config;
+            AttributeUsage = parameters.AttributeUsage;
+            Definitions = parameters.Definitions;
+            Properties = parameters.Properties;
+            HostCapabilities = parameters.HostCapabilities;
+            Logger = parameters.Logger;
+            TargetApi = parameters.TargetApi;
 
-            if (config.Stage == ShaderStage.Geometry)
+            if (parameters.Definitions.Stage == ShaderStage.Geometry)
             {
-                InputTopology inPrimitive = config.GpuAccessor.QueryPrimitiveTopology();
-
-                InputVertices = inPrimitive switch
+                InputVertices = parameters.Definitions.InputTopology switch
                 {
                     InputTopology.Points => 1,
                     InputTopology.Lines => 2,
                     InputTopology.LinesAdjacency => 2,
                     InputTopology.Triangles => 3,
                     InputTopology.TrianglesAdjacency => 3,
-                    _ => throw new InvalidOperationException($"Invalid input topology \"{inPrimitive}\"."),
+                    _ => throw new InvalidOperationException($"Invalid input topology \"{parameters.Definitions.InputTopology}\"."),
                 };
             }
 

@@ -1,6 +1,5 @@
 using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.GAL;
-using Ryujinx.Graphics.Gpu.Engine.Threed;
 using Ryujinx.Graphics.Gpu.Image;
 using Ryujinx.Graphics.Shader;
 using Ryujinx.Graphics.Shader.Translation;
@@ -230,34 +229,6 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 Format.R11G11B10Float    => TextureFormat.R11G11B10Float,
                 _                        => TextureFormat.Unknown,
 #pragma warning restore IDE0055
-            };
-        }
-
-        /// <summary>
-        /// Converts the Maxwell primitive topology to the shader translator topology.
-        /// </summary>
-        /// <param name="topology">Maxwell primitive topology</param>
-        /// <param name="tessellationMode">Maxwell tessellation mode</param>
-        /// <returns>Shader translator topology</returns>
-        protected static InputTopology ConvertToInputTopology(PrimitiveTopology topology, TessMode tessellationMode)
-        {
-            return topology switch
-            {
-                PrimitiveTopology.Points => InputTopology.Points,
-                PrimitiveTopology.Lines or
-                PrimitiveTopology.LineLoop or
-                PrimitiveTopology.LineStrip => InputTopology.Lines,
-                PrimitiveTopology.LinesAdjacency or
-                PrimitiveTopology.LineStripAdjacency => InputTopology.LinesAdjacency,
-                PrimitiveTopology.Triangles or
-                PrimitiveTopology.TriangleStrip or
-                PrimitiveTopology.TriangleFan => InputTopology.Triangles,
-                PrimitiveTopology.TrianglesAdjacency or
-                PrimitiveTopology.TriangleStripAdjacency => InputTopology.TrianglesAdjacency,
-                PrimitiveTopology.Patches => tessellationMode.UnpackPatchType() == TessPatchType.Isolines
-                    ? InputTopology.Lines
-                    : InputTopology.Triangles,
-                _ => InputTopology.Points,
             };
         }
     }

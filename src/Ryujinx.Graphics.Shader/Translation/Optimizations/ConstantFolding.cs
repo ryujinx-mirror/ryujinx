@@ -7,7 +7,7 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
 {
     static class ConstantFolding
     {
-        public static void RunPass(ShaderConfig config, Operation operation)
+        public static void RunPass(ResourceManager resourceManager, Operation operation)
         {
             if (!AreAllSourcesConstant(operation))
             {
@@ -158,7 +158,7 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
                         int binding = operation.GetSource(0).Value;
                         int fieldIndex = operation.GetSource(1).Value;
 
-                        if (config.ResourceManager.TryGetConstantBufferSlot(binding, out int cbufSlot) && fieldIndex == 0)
+                        if (resourceManager.TryGetConstantBufferSlot(binding, out int cbufSlot) && fieldIndex == 0)
                         {
                             int vecIndex = operation.GetSource(2).Value;
                             int elemIndex = operation.GetSource(3).Value;

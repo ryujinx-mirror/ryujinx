@@ -88,24 +88,24 @@ namespace Ryujinx.Graphics.Shader.Instructions
                     break;
 
                 case SReg.ThreadKill:
-                    src = context.Config.Stage == ShaderStage.Fragment ? context.Load(StorageKind.Input, IoVariable.ThreadKill) : Const(0);
+                    src = context.TranslatorContext.Definitions.Stage == ShaderStage.Fragment ? context.Load(StorageKind.Input, IoVariable.ThreadKill) : Const(0);
                     break;
 
                 case SReg.InvocationInfo:
-                    if (context.Config.Stage != ShaderStage.Compute && context.Config.Stage != ShaderStage.Fragment)
+                    if (context.TranslatorContext.Definitions.Stage != ShaderStage.Compute && context.TranslatorContext.Definitions.Stage != ShaderStage.Fragment)
                     {
                         // Note: Lowest 8-bits seems to contain some primitive index,
                         // but it seems to be NVIDIA implementation specific as it's only used
                         // to calculate ISBE offsets, so we can just keep it as zero.
 
-                        if (context.Config.Stage == ShaderStage.TessellationControl ||
-                            context.Config.Stage == ShaderStage.TessellationEvaluation)
+                        if (context.TranslatorContext.Definitions.Stage == ShaderStage.TessellationControl ||
+                            context.TranslatorContext.Definitions.Stage == ShaderStage.TessellationEvaluation)
                         {
                             src = context.ShiftLeft(context.Load(StorageKind.Input, IoVariable.PatchVertices), Const(16));
                         }
                         else
                         {
-                            src = Const(context.Config.GpuAccessor.QueryPrimitiveTopology().ToInputVertices() << 16);
+                            src = Const(context.TranslatorContext.Definitions.InputTopology.ToInputVertices() << 16);
                         }
                     }
                     else
