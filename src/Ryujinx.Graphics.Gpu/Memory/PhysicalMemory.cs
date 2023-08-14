@@ -237,6 +237,18 @@ namespace Ryujinx.Graphics.Gpu.Memory
         }
 
         /// <summary>
+        /// Writes data to the application process, triggering a precise memory tracking event.
+        /// </summary>
+        /// <param name="address">Address to write into</param>
+        /// <param name="data">Data to be written</param>
+        /// <param name="kind">Kind of the resource being written, which will not be signalled as CPU modified</param>
+        public void WriteTrackedResource(ulong address, ReadOnlySpan<byte> data, ResourceKind kind)
+        {
+            _cpuMemory.SignalMemoryTracking(address, (ulong)data.Length, true, precise: true, exemptId: (int)kind);
+            _cpuMemory.WriteUntracked(address, data);
+        }
+
+        /// <summary>
         /// Writes data to the application process.
         /// </summary>
         /// <param name="address">Address to write into</param>
