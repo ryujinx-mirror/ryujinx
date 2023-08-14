@@ -61,8 +61,6 @@ namespace Ryujinx.Graphics.Gpu.Image
 
         private int _textureBufferIndex;
 
-        private readonly float[] _scales;
-        private bool _scaleChanged;
         private int _lastFragmentTotal;
 
         /// <summary>
@@ -72,14 +70,12 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <param name="channel">The GPU channel that the texture bindings manager belongs to</param>
         /// <param name="texturePoolCache">Texture pools cache used to get texture pools from</param>
         /// <param name="samplerPoolCache">Sampler pools cache used to get sampler pools from</param>
-        /// <param name="scales">Array where the scales for the currently bound textures are stored</param>
         /// <param name="isCompute">True if the bindings manager is used for the compute engine</param>
         public TextureBindingsManager(
             GpuContext context,
             GpuChannel channel,
             TexturePoolCache texturePoolCache,
             SamplerPoolCache samplerPoolCache,
-            float[] scales,
             bool isCompute)
         {
             _context = context;
@@ -87,7 +83,6 @@ namespace Ryujinx.Graphics.Gpu.Image
             _texturePoolCache = texturePoolCache;
             _samplerPoolCache = samplerPoolCache;
 
-            _scales = scales;
             _isCompute = isCompute;
 
             int stages = isCompute ? 1 : Constants.ShaderStages;
@@ -239,12 +234,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                 }
             }
 
-            if (result != _scales[index])
-            {
-                _scaleChanged = true;
-
-                _scales[index] = result;
-            }
+            _context.SupportBufferUpdater.UpdateRenderScale(index, result);
 
             return changed;
         }
@@ -290,11 +280,6 @@ namespace Ryujinx.Graphics.Gpu.Image
                 // - Vertex stage has bindings that require scale.
                 // - Fragment stage binding count has been updated since last render scale update.
 
-                _scaleChanged = true;
-            }
-
-            if (_scaleChanged)
-            {
                 if (!_isCompute)
                 {
                     total += fragmentTotal; // Add the fragment bindings to the total.
@@ -302,9 +287,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                 _lastFragmentTotal = fragmentTotal;
 
-                _context.SupportBufferUpdater.UpdateRenderScale(_scales, total, fragmentTotal);
-
-                _scaleChanged = false;
+                _context.SupportBufferUpdater.UpdateRenderScaleFragmentCount(total, fragmentTotal);
             }
         }
 

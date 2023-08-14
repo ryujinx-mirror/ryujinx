@@ -376,7 +376,7 @@ namespace Ryujinx.Graphics.Vulkan
             var program = _program;
             var bindingSegments = program.BindingSegments[setIndex];
 
-            if (bindingSegments.Length == 0 && setIndex != PipelineBase.UniformSetIndex)
+            if (bindingSegments.Length == 0)
             {
                 return;
             }

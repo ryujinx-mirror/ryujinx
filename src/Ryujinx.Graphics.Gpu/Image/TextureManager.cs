@@ -44,11 +44,8 @@ namespace Ryujinx.Graphics.Gpu.Image
             TexturePoolCache texturePoolCache = new(context);
             SamplerPoolCache samplerPoolCache = new(context);
 
-            float[] scales = new float[64];
-            new Span<float>(scales).Fill(1f);
-
-            _cpBindingsManager = new TextureBindingsManager(context, channel, texturePoolCache, samplerPoolCache, scales, isCompute: true);
-            _gpBindingsManager = new TextureBindingsManager(context, channel, texturePoolCache, samplerPoolCache, scales, isCompute: false);
+            _cpBindingsManager = new TextureBindingsManager(context, channel, texturePoolCache, samplerPoolCache, isCompute: true);
+            _gpBindingsManager = new TextureBindingsManager(context, channel, texturePoolCache, samplerPoolCache, isCompute: false);
             _texturePoolCache = texturePoolCache;
             _samplerPoolCache = samplerPoolCache;
 

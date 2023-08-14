@@ -136,32 +136,29 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// <summary>
         /// Updates the render scales for shader input textures or images.
         /// </summary>
-        /// <param name="scales">Scale values</param>
+        /// <param name="index">Index of the scale</param>
+        /// <param name="scale">Scale value</param>
+        public void UpdateRenderScale(int index, float scale)
+        {
+            if (_data.RenderScale[1 + index].X != scale)
+            {
+                _data.RenderScale[1 + index].X = scale;
+                DirtyRenderScale(1 + index, 1);
+            }
+        }
+
+        /// <summary>
+        /// Updates the render scales for shader input textures or images.
+        /// </summary>
         /// <param name="totalCount">Total number of scales across all stages</param>
         /// <param name="fragmentCount">Total number of scales on the fragment shader stage</param>
-        public void UpdateRenderScale(ReadOnlySpan<float> scales, int totalCount, int fragmentCount)
+        public void UpdateRenderScaleFragmentCount(int totalCount, int fragmentCount)
         {
-            bool changed = false;
-
-            for (int index = 0; index < totalCount; index++)
-            {
-                if (_data.RenderScale[1 + index].X != scales[index])
-                {
-                    _data.RenderScale[1 + index].X = scales[index];
-                    changed = true;
-                }
-            }
-
             // Only update fragment count if there are scales after it for the vertex stage.
             if (fragmentCount != totalCount && fragmentCount != _data.FragmentRenderScaleCount.X)
             {
                 _data.FragmentRenderScaleCount.X = fragmentCount;
                 DirtyFragmentRenderScaleCount();
-            }
-
-            if (changed)
-            {
-                DirtyRenderScale(0, 1 + totalCount);
             }
         }
 
@@ -172,7 +169,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// <param name="isBgra">True if the format is BGRA< false otherwise</param>
         public void SetRenderTargetIsBgra(int index, bool isBgra)
         {
-            bool isBgraChanged = (_data.FragmentIsBgra[index].X != 0) != isBgra;
+            bool isBgraChanged = _data.FragmentIsBgra[index].X != 0 != isBgra;
 
             if (isBgraChanged)
             {
