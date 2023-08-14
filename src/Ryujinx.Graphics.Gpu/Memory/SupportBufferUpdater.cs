@@ -228,7 +228,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
             {
                 if (_handle == BufferHandle.Null)
                 {
-                    _handle = _renderer.CreateBuffer(SupportBuffer.RequiredSize);
+                    _handle = _renderer.CreateBuffer(SupportBuffer.RequiredSize, BufferAccess.Stream);
                     _renderer.Pipeline.ClearBuffer(_handle, 0, SupportBuffer.RequiredSize, 0);
 
                     var range = new BufferRange(_handle, 0, SupportBuffer.RequiredSize);

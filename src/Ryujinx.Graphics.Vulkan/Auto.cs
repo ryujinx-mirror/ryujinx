@@ -18,6 +18,12 @@ namespace Ryujinx.Graphics.Vulkan
         void AddCommandBufferDependencies(CommandBufferScoped cbs);
     }
 
+    interface IMirrorable<T> where T : IDisposable
+    {
+        Auto<T> GetMirrorable(CommandBufferScoped cbs, ref int offset, int size, out bool mirrored);
+        void ClearMirrors(CommandBufferScoped cbs, int offset, int size);
+    }
+
     class Auto<T> : IAutoPrivate, IDisposable where T : IDisposable
     {
         private int _referenceCount;
@@ -26,6 +32,7 @@ namespace Ryujinx.Graphics.Vulkan
         private readonly BitMap _cbOwnership;
         private readonly MultiFenceHolder _waitable;
         private readonly IAutoPrivate[] _referencedObjs;
+        private readonly IMirrorable<T> _mirrorable;
 
         private bool _disposed;
         private bool _destroyed;
@@ -35,6 +42,11 @@ namespace Ryujinx.Graphics.Vulkan
             _referenceCount = 1;
             _value = value;
             _cbOwnership = new BitMap(CommandBufferPool.MaxCommandBuffers);
+        }
+
+        public Auto(T value, IMirrorable<T> mirrorable, MultiFenceHolder waitable, params IAutoPrivate[] referencedObjs) : this(value, waitable, referencedObjs)
+        {
+            _mirrorable = mirrorable;
         }
 
         public Auto(T value, MultiFenceHolder waitable, params IAutoPrivate[] referencedObjs) : this(value)
@@ -48,9 +60,17 @@ namespace Ryujinx.Graphics.Vulkan
             }
         }
 
-        public T Get(CommandBufferScoped cbs, int offset, int size)
+        public T GetMirrorable(CommandBufferScoped cbs, ref int offset, int size, out bool mirrored)
         {
-            _waitable?.AddBufferUse(cbs.CommandBufferIndex, offset, size);
+            var mirror = _mirrorable.GetMirrorable(cbs, ref offset, size, out mirrored);
+            mirror._waitable?.AddBufferUse(cbs.CommandBufferIndex, offset, size, false);
+            return mirror.Get(cbs);
+        }
+
+        public T Get(CommandBufferScoped cbs, int offset, int size, bool write = false)
+        {
+            _mirrorable?.ClearMirrors(cbs, offset, size);
+            _waitable?.AddBufferUse(cbs.CommandBufferIndex, offset, size, write);
             return Get(cbs);
         }
 

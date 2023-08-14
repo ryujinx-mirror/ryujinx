@@ -14,6 +14,7 @@ namespace Ryujinx.Graphics.Vulkan
         private CounterQueueEvent _activeConditionalRender;
 
         private readonly List<BufferedQuery> _pendingQueryCopies;
+        private readonly List<BufferHolder> _activeBufferMirrors;
 
         private ulong _byteWeight;
 
@@ -24,6 +25,7 @@ namespace Ryujinx.Graphics.Vulkan
             _activeQueries = new List<(QueryPool, bool)>();
             _pendingQueryCopies = new();
             _backingSwaps = new();
+            _activeBufferMirrors = new();
 
             CommandBuffer = (Cbs = gd.CommandBufferPool.Rent()).CommandBuffer;
         }
@@ -233,6 +235,12 @@ namespace Ryujinx.Graphics.Vulkan
             Gd.RegisterFlush();
 
             // Restore per-command buffer state.
+            foreach (BufferHolder buffer in _activeBufferMirrors)
+            {
+                buffer.ClearMirrors();
+            }
+
+            _activeBufferMirrors.Clear();
 
             foreach ((var queryPool, var isOcclusion) in _activeQueries)
             {
@@ -247,6 +255,11 @@ namespace Ryujinx.Graphics.Vulkan
             TryBackingSwaps();
 
             Restore();
+        }
+
+        public void RegisterActiveMirror(BufferHolder buffer)
+        {
+            _activeBufferMirrors.Add(buffer);
         }
 
         public void BeginQuery(BufferedQuery query, QueryPool pool, bool needsReset, bool isOcclusion, bool fromSamplePool)

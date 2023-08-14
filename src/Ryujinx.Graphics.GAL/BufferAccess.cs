@@ -4,5 +4,6 @@ namespace Ryujinx.Graphics.GAL
     {
         Default,
         FlushPersistent,
+        Stream
     }
 }

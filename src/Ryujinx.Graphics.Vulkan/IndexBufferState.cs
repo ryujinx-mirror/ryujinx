@@ -5,6 +5,8 @@ namespace Ryujinx.Graphics.Vulkan
 {
     internal struct IndexBufferState
     {
+        private const int IndexBufferMaxMirrorable = 0x20000;
+
         public static IndexBufferState Null => new(BufferHandle.Null, 0, 0);
 
         private readonly int _offset;
@@ -37,6 +39,7 @@ namespace Ryujinx.Graphics.Vulkan
             Auto<DisposableBuffer> autoBuffer;
             int offset, size;
             IndexType type = _type;
+            bool mirrorable = false;
 
             if (_type == IndexType.Uint8Ext && !gd.Capabilities.SupportsIndexTypeUint8)
             {
@@ -56,6 +59,8 @@ namespace Ryujinx.Graphics.Vulkan
                     autoBuffer = null;
                 }
 
+                mirrorable = _size < IndexBufferMaxMirrorable;
+
                 offset = _offset;
                 size = _size;
             }
@@ -64,7 +69,9 @@ namespace Ryujinx.Graphics.Vulkan
 
             if (autoBuffer != null)
             {
-                gd.Api.CmdBindIndexBuffer(cbs.CommandBuffer, autoBuffer.Get(cbs, offset, size).Value, (ulong)offset, type);
+                DisposableBuffer buffer = mirrorable ? autoBuffer.GetMirrorable(cbs, ref offset, size, out _) : autoBuffer.Get(cbs, offset, size);
+
+                gd.Api.CmdBindIndexBuffer(cbs.CommandBuffer, buffer.Value, (ulong)offset, type);
             }
         }
 
@@ -154,6 +161,11 @@ namespace Ryujinx.Graphics.Vulkan
             {
                 _buffer = to;
             }
+        }
+
+        public readonly bool Overlaps(Auto<DisposableBuffer> buffer, int offset, int size)
+        {
+            return buffer == _buffer && offset < _offset + _size && offset + size > _offset;
         }
     }
 }

@@ -32,14 +32,20 @@ namespace Ryujinx.Graphics.Vulkan
         }
 
         /// <summary>
-        /// Adds buffer usage information to the uses list.
+        /// Adds read/write buffer usage information to the uses list.
         /// </summary>
         /// <param name="cbIndex">Index of the command buffer where the buffer is used</param>
         /// <param name="offset">Offset of the buffer being used</param>
         /// <param name="size">Size of the buffer region being used, in bytes</param>
-        public void AddBufferUse(int cbIndex, int offset, int size)
+        /// <param name="write">Whether the access is a write or not</param>
+        public void AddBufferUse(int cbIndex, int offset, int size, bool write)
         {
-            _bufferUsageBitmap.Add(cbIndex, offset, size);
+            _bufferUsageBitmap.Add(cbIndex, offset, size, false);
+
+            if (write)
+            {
+                _bufferUsageBitmap.Add(cbIndex, offset, size, true);
+            }
         }
 
         /// <summary>
@@ -68,10 +74,11 @@ namespace Ryujinx.Graphics.Vulkan
         /// </summary>
         /// <param name="offset">Offset of the buffer being used</param>
         /// <param name="size">Size of the buffer region being used, in bytes</param>
+        /// <param name="write">True if only write usages should count</param>
         /// <returns>True if in use, false otherwise</returns>
-        public bool IsBufferRangeInUse(int offset, int size)
+        public bool IsBufferRangeInUse(int offset, int size, bool write)
         {
-            return _bufferUsageBitmap.OverlapsWith(offset, size);
+            return _bufferUsageBitmap.OverlapsWith(offset, size, write);
         }
 
         /// <summary>

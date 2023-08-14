@@ -171,7 +171,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
 
             if (_inlineIndexBuffer == BufferHandle.Null)
             {
-                _inlineIndexBuffer = renderer.CreateBuffer(size);
+                _inlineIndexBuffer = renderer.CreateBuffer(size, BufferAccess.Stream);
                 _inlineIndexBufferSize = size;
             }
             else if (_inlineIndexBufferSize < size)
@@ -179,7 +179,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                 BufferHandle oldBuffer = _inlineIndexBuffer;
                 int oldSize = _inlineIndexBufferSize;
 
-                _inlineIndexBuffer = renderer.CreateBuffer(size);
+                _inlineIndexBuffer = renderer.CreateBuffer(size, BufferAccess.Stream);
                 _inlineIndexBufferSize = size;
 
                 renderer.Pipeline.CopyBuffer(oldBuffer, _inlineIndexBuffer, 0, 0, oldSize);

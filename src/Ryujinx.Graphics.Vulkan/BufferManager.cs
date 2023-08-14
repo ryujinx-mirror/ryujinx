@@ -100,9 +100,10 @@ namespace Ryujinx.Graphics.Vulkan
             VulkanRenderer gd,
             int size,
             BufferAllocationType baseType = BufferAllocationType.HostMapped,
-            BufferHandle storageHint = default)
+            BufferHandle storageHint = default,
+            bool forceMirrors = false)
         {
-            return CreateWithHandle(gd, size, out _, baseType, storageHint);
+            return CreateWithHandle(gd, size, out _, baseType, storageHint, forceMirrors);
         }
 
         public BufferHandle CreateWithHandle(
@@ -110,12 +111,18 @@ namespace Ryujinx.Graphics.Vulkan
             int size,
             out BufferHolder holder,
             BufferAllocationType baseType = BufferAllocationType.HostMapped,
-            BufferHandle storageHint = default)
+            BufferHandle storageHint = default,
+            bool forceMirrors = false)
         {
             holder = Create(gd, size, baseType: baseType, storageHint: storageHint);
             if (holder == null)
             {
                 return BufferHandle.Null;
+            }
+
+            if (forceMirrors)
+            {
+                holder.UseMirrors();
             }
 
             BufferCount++;

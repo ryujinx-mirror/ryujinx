@@ -23,7 +23,7 @@ namespace Ryujinx.Graphics.Vulkan
         {
             if (_buffer != null)
             {
-                var buffer = _buffer.Get(cbs, _offset, _size).Value;
+                var buffer = _buffer.Get(cbs, _offset, _size, true).Value;
 
                 gd.TransformFeedbackApi.CmdBindTransformFeedbackBuffers(cbs.CommandBuffer, binding, 1, buffer, (ulong)_offset, (ulong)_size);
             }
@@ -38,6 +38,11 @@ namespace Ryujinx.Graphics.Vulkan
 
                 _buffer = to;
             }
+        }
+
+        public readonly bool Overlaps(Auto<DisposableBuffer> buffer, int offset, int size)
+        {
+            return buffer == _buffer && offset < _offset + _size && offset + size > _offset;
         }
 
         public readonly void Dispose()

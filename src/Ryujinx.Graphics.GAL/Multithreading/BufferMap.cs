@@ -113,7 +113,7 @@ namespace Ryujinx.Graphics.GAL.Multithreading
 
         internal BufferRange MapBufferRange(BufferRange range)
         {
-            return new BufferRange(MapBuffer(range.Handle), range.Offset, range.Size);
+            return new BufferRange(MapBuffer(range.Handle), range.Offset, range.Size, range.Write);
         }
 
         internal Span<BufferRange> MapBufferRanges(Span<BufferRange> ranges)
@@ -131,7 +131,7 @@ namespace Ryujinx.Graphics.GAL.Multithreading
                         result = BufferHandle.Null;
                     }
 
-                    range = new BufferRange(result, range.Offset, range.Size);
+                    range = new BufferRange(result, range.Offset, range.Size, range.Write);
                 }
             }
 
@@ -154,7 +154,7 @@ namespace Ryujinx.Graphics.GAL.Multithreading
                         result = BufferHandle.Null;
                     }
 
-                    assignment = new BufferAssignment(ranges[i].Binding, new BufferRange(result, range.Offset, range.Size));
+                    assignment = new BufferAssignment(ranges[i].Binding, new BufferRange(result, range.Offset, range.Size, range.Write));
                 }
             }
 
@@ -176,7 +176,7 @@ namespace Ryujinx.Graphics.GAL.Multithreading
                         result = BufferHandle.Null;
                     }
 
-                    range = new BufferRange(result, range.Offset, range.Size);
+                    range = new BufferRange(result, range.Offset, range.Size, range.Write);
 
                     ranges[i] = new VertexBufferDescriptor(range, ranges[i].Stride, ranges[i].Divisor);
                 }

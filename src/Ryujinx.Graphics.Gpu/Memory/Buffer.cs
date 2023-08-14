@@ -140,18 +140,21 @@ namespace Ryujinx.Graphics.Gpu.Memory
         }
 
         /// <summary>
-        /// Gets a sub-range from the buffer, from a start address till the end of the buffer.
+        /// Gets a sub-range from the buffer, from a start address til a page boundary after the given size.
         /// </summary>
         /// <remarks>
         /// This can be used to bind and use sub-ranges of the buffer on the host API.
         /// </remarks>
         /// <param name="address">Start address of the sub-range, must be greater than or equal to the buffer address</param>
+        /// <param name="size">Size in bytes of the sub-range, must be less than or equal to the buffer size</param>
+        /// <param name="write">Whether the buffer will be written to by this use</param>
         /// <returns>The buffer sub-range</returns>
-        public BufferRange GetRange(ulong address)
+        public BufferRange GetRangeAligned(ulong address, ulong size, bool write)
         {
+            ulong end = ((address + size + MemoryManager.PageMask) & ~MemoryManager.PageMask) - Address;
             ulong offset = address - Address;
 
-            return new BufferRange(Handle, (int)offset, (int)(Size - offset));
+            return new BufferRange(Handle, (int)offset, (int)(end - offset), write);
         }
 
         /// <summary>
@@ -162,12 +165,13 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// </remarks>
         /// <param name="address">Start address of the sub-range, must be greater than or equal to the buffer address</param>
         /// <param name="size">Size in bytes of the sub-range, must be less than or equal to the buffer size</param>
+        /// <param name="write">Whether the buffer will be written to by this use</param>
         /// <returns>The buffer sub-range</returns>
-        public BufferRange GetRange(ulong address, ulong size)
+        public BufferRange GetRange(ulong address, ulong size, bool write)
         {
             int offset = (int)(address - Address);
 
-            return new BufferRange(Handle, offset, (int)size);
+            return new BufferRange(Handle, offset, (int)size, write);
         }
 
         /// <summary>

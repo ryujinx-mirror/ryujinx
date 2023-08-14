@@ -427,6 +427,7 @@ namespace Ryujinx.Graphics.Vulkan
             return access switch
             {
                 BufferAccess.FlushPersistent => BufferAllocationType.HostMapped,
+                BufferAccess.Stream => BufferAllocationType.HostMapped,
                 _ => BufferAllocationType.Auto,
             };
         }
