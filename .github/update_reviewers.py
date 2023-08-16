@@ -1,9 +1,10 @@
 from pathlib import Path
 from typing import List, Set
-from github import Github
+from github import Auth, Github
 from github.Repository import Repository
 from github.GithubException import GithubException
 
+import os
 import sys
 import yaml
 
@@ -24,6 +25,10 @@ def update_reviewers(config, repo: Repository, pr_id: int) -> int:
     if not pull_request:
         sys.stderr.writable(f"Unknown PR #{pr_id}\n")
         return 1
+
+    if pull_request.draft:
+        print("Not assigning reviewers for draft PRs")
+        return 0
 
     pull_request_author = pull_request.user.login
     reviewers = set()
@@ -53,16 +58,19 @@ def update_reviewers(config, repo: Repository, pr_id: int) -> int:
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 5:
-        sys.stderr.write("usage: <token> <repo_path> <pr_id> <config_path>\n")
+    if len(sys.argv) != 7:
+        sys.stderr.write("usage: <app_id> <private_key_env_name> <installation_id> <repo_path> <pr_id> <config_path>\n")
         sys.exit(1)
 
-    token = sys.argv[1]
-    repo_path = sys.argv[2]
-    pr_id = int(sys.argv[3])
-    config_path = Path(sys.argv[4])
+    app_id = sys.argv[1]
+    private_key = os.environ[sys.argv[2]]
+    installation_id = sys.argv[3]
+    repo_path = sys.argv[4]
+    pr_id = int(sys.argv[5])
+    config_path = Path(sys.argv[6])
 
-    g = Github(token)
+    auth = Auth.AppAuth(app_id, private_key).get_installation_auth(installation_id)
+    g = Github(auth=auth)
     repo = g.get_repo(repo_path)
 
     if not repo:

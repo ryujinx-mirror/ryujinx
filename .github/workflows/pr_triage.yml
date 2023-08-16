@@ -27,9 +27,11 @@ jobs:
           sync-labels: true
           dot: true
 
+      - run: pip3 install PyGithub
+
       - name: Assign reviewers
-        if: ! github.event.pull_request.draft
         run: |
-          pip3 install PyGithub
-          python3 .github/update_reviewers.py ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} ${{ github.event.pull_request.number }} .github/reviewers.yml
+          python3 .github/update_reviewers.py ${{ secrets.MAKO_APP_ID }} "MAKO_PRIVATE_KEY" ${{ secrets.MAKO_INSTALLATION_ID }} ${{ github.repository }} ${{ github.event.pull_request.number }} .github/reviewers.yml
         shell: bash
+        env:
+            MAKO_PRIVATE_KEY: ${{ secrets.MAKO_PRIVATE_KEY }}
