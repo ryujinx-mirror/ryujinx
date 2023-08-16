@@ -21,6 +21,7 @@ namespace Ryujinx.Graphics.GAL
         public readonly bool SupportsBgraFormat;
         public readonly bool SupportsR4G4Format;
         public readonly bool SupportsR4G4B4A4Format;
+        public readonly bool SupportsScaledVertexFormats;
         public readonly bool SupportsSnormBufferTextureFormat;
         public readonly bool Supports5BitComponentFormat;
         public readonly bool SupportsBlendEquationAdvanced;
@@ -71,6 +72,7 @@ namespace Ryujinx.Graphics.GAL
             bool supportsBgraFormat,
             bool supportsR4G4Format,
             bool supportsR4G4B4A4Format,
+            bool supportsScaledVertexFormats,
             bool supportsSnormBufferTextureFormat,
             bool supports5BitComponentFormat,
             bool supportsBlendEquationAdvanced,
@@ -117,6 +119,7 @@ namespace Ryujinx.Graphics.GAL
             SupportsBgraFormat = supportsBgraFormat;
             SupportsR4G4Format = supportsR4G4Format;
             SupportsR4G4B4A4Format = supportsR4G4B4A4Format;
+            SupportsScaledVertexFormats = supportsScaledVertexFormats;
             SupportsSnormBufferTextureFormat = supportsSnormBufferTextureFormat;
             Supports5BitComponentFormat = supports5BitComponentFormat;
             SupportsBlendEquationAdvanced = supportsBlendEquationAdvanced;

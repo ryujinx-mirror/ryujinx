@@ -267,6 +267,15 @@ namespace Ryujinx.Graphics.Shader
         }
 
         /// <summary>
+        /// Queries host support scaled vertex formats, where a integer value is converted to floating-point.
+        /// </summary>
+        /// <returns>True if the host support scaled vertex formats, false otherwise</returns>
+        bool QueryHostSupportsScaledVertexFormats()
+        {
+            return true;
+        }
+
+        /// <summary>
         /// Queries host GPU shader ballot support.
         /// </summary>
         /// <returns>True if the GPU and driver supports shader ballot, false otherwise</returns>

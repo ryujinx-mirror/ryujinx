@@ -116,6 +116,7 @@ namespace Ryujinx.Graphics.Shader.Translation
                 header.OmapTargets,
                 header.OmapSampleMask,
                 header.OmapDepth,
+                gpuAccessor.QueryHostSupportsScaledVertexFormats(),
                 transformFeedbackEnabled,
                 transformFeedbackVecMap,
                 transformFeedbackOutputs);

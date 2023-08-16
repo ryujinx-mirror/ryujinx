@@ -53,6 +53,8 @@ namespace Ryujinx.Graphics.Shader.Translation
         public bool OmapSampleMask { get; }
         public bool OmapDepth { get; }
 
+        public bool SupportsScaledVertexFormats { get; }
+
         public bool TransformFeedbackEnabled { get; }
 
         private readonly TransformFeedbackOutput[] _transformFeedbackOutputs;
@@ -139,6 +141,7 @@ namespace Ryujinx.Graphics.Shader.Translation
             int omapTargets,
             bool omapSampleMask,
             bool omapDepth,
+            bool supportsScaledVertexFormats,
             bool transformFeedbackEnabled,
             ulong transformFeedbackVecMap,
             TransformFeedbackOutput[] transformFeedbackOutputs)
@@ -154,6 +157,7 @@ namespace Ryujinx.Graphics.Shader.Translation
             OmapSampleMask = omapSampleMask;
             OmapDepth = omapDepth;
             LastInVertexPipeline = stage < ShaderStage.Fragment;
+            SupportsScaledVertexFormats = supportsScaledVertexFormats;
             TransformFeedbackEnabled = transformFeedbackEnabled;
             _transformFeedbackOutputs = transformFeedbackOutputs;
             _transformFeedbackDefinitions = new();
@@ -302,7 +306,7 @@ namespace Ryujinx.Graphics.Shader.Translation
 
             if (Stage == ShaderStage.Vertex && !isOutput)
             {
-                type |= _graphicsState.AttributeTypes[location].ToAggregateType();
+                type |= _graphicsState.AttributeTypes[location].ToAggregateType(SupportsScaledVertexFormats);
             }
             else
             {
@@ -310,6 +314,11 @@ namespace Ryujinx.Graphics.Shader.Translation
             }
 
             return type;
+        }
+
+        public AttributeType GetAttributeType(int location)
+        {
+            return _graphicsState.AttributeTypes[location];
         }
     }
 }

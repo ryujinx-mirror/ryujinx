@@ -218,17 +218,34 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         {
             bool changed = false;
             ref Array32<AttributeType> attributeTypes = ref _graphics.AttributeTypes;
+            bool supportsScaledFormats = _context.Capabilities.SupportsScaledVertexFormats;
 
             for (int location = 0; location < state.Length; location++)
             {
                 VertexAttribType type = state[location].UnpackType();
 
-                AttributeType value = type switch
+                AttributeType value;
+
+                if (supportsScaledFormats)
                 {
-                    VertexAttribType.Sint => AttributeType.Sint,
-                    VertexAttribType.Uint => AttributeType.Uint,
-                    _ => AttributeType.Float,
-                };
+                    value = type switch
+                    {
+                        VertexAttribType.Sint => AttributeType.Sint,
+                        VertexAttribType.Uint => AttributeType.Uint,
+                        _ => AttributeType.Float,
+                    };
+                }
+                else
+                {
+                    value = type switch
+                    {
+                        VertexAttribType.Sint => AttributeType.Sint,
+                        VertexAttribType.Uint => AttributeType.Uint,
+                        VertexAttribType.Uscaled => AttributeType.Uscaled,
+                        VertexAttribType.Sscaled => AttributeType.Sscaled,
+                        _ => AttributeType.Float,
+                    };
+                }
 
                 if (attributeTypes[location] != value)
                 {
