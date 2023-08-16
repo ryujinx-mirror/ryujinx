@@ -10,10 +10,10 @@ namespace Ryujinx.Graphics.Shader.Instructions
 {
     static partial class InstEmit
     {
-        private static readonly int[,] _maskLut = new int[,]
+        private static readonly int[][] _maskLut = new int[][]
         {
-            { 0b0001, 0b0010, 0b0100, 0b1000, 0b0011, 0b1001, 0b1010, 0b1100 },
-            { 0b0111, 0b1011, 0b1101, 0b1110, 0b1111, 0b0000, 0b0000, 0b0000 },
+            new int[] { 0b0001, 0b0010, 0b0100, 0b1000, 0b0011, 0b1001, 0b1010, 0b1100 },
+            new int[] { 0b0111, 0b1011, 0b1101, 0b1110, 0b1111, 0b0000, 0b0000, 0b0000 },
         };
 
         public const bool Sample1DAs2D = true;
@@ -605,7 +605,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
             Operand[] rd1 = new Operand[2] { ConstF(0), ConstF(0) };
 
             int handle = imm;
-            int componentMask = _maskLut[dest2 == RegisterConsts.RegisterZeroIndex ? 0 : 1, writeMask];
+            int componentMask = _maskLut[dest2 == RegisterConsts.RegisterZeroIndex ? 0 : 1][writeMask];
 
             int componentsCount = BitOperations.PopCount((uint)componentMask);
 
