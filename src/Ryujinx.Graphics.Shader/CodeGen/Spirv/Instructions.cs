@@ -1788,6 +1788,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             StorageClass storageClass;
             SpvInstruction baseObj;
             int srcIndex = 0;
+            IoVariable? perVertexBuiltIn = null;
 
             switch (storageKind)
             {
@@ -1881,6 +1882,12 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                     else
                     {
                         (_, varType) = IoMap.GetSpirvBuiltIn(ioVariable);
+
+                        if (IoMap.IsPerVertexBuiltIn(ioVariable))
+                        {
+                            perVertexBuiltIn = ioVariable;
+                            ioVariable = IoVariable.Position;
+                        }
                     }
 
                     varType &= AggregateType.ElementTypeMask;
@@ -1901,6 +1908,31 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
 
             bool isStoreOrAtomic = operation.Inst == Instruction.Store || operation.Inst.IsAtomic();
             int inputsCount = (isStoreOrAtomic ? operation.SourcesCount - 1 : operation.SourcesCount) - srcIndex;
+
+            if (perVertexBuiltIn.HasValue)
+            {
+                int fieldIndex = IoMap.GetPerVertexStructFieldIndex(perVertexBuiltIn.Value);
+
+                var indexes = new SpvInstruction[inputsCount + 1];
+                int index = 0;
+
+                if (IoMap.IsPerVertexArrayBuiltIn(storageKind, context.Definitions.Stage))
+                {
+                    indexes[index++] = context.Get(AggregateType.S32, operation.GetSource(srcIndex++));
+                    indexes[index++] = context.Constant(context.TypeS32(), fieldIndex);
+                }
+                else
+                {
+                    indexes[index++] = context.Constant(context.TypeS32(), fieldIndex);
+                }
+
+                for (; index < inputsCount + 1; srcIndex++, index++)
+                {
+                    indexes[index] = context.Get(AggregateType.S32, operation.GetSource(srcIndex));
+                }
+
+                return context.AccessChain(context.TypePointer(storageClass, context.GetType(varType)), baseObj, indexes);
+            }
 
             if (operation.Inst == Instruction.AtomicCompareAndSwap)
             {

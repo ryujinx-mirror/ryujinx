@@ -28,6 +28,7 @@ namespace Spv.Generator
 
         // In the declaration block.
         private readonly Dictionary<TypeDeclarationKey, Instruction> _typeDeclarations;
+        private readonly List<Instruction> _typeDeclarationsList;
         // In the declaration block.
         private readonly List<Instruction> _globals;
         // In the declaration block.
@@ -54,6 +55,7 @@ namespace Spv.Generator
             _debug = new List<Instruction>();
             _annotations = new List<Instruction>();
             _typeDeclarations = new Dictionary<TypeDeclarationKey, Instruction>();
+            _typeDeclarationsList = new List<Instruction>();
             _constants = new Dictionary<ConstantKey, Instruction>();
             _globals = new List<Instruction>();
             _functionsDeclarations = new List<Instruction>();
@@ -126,7 +128,8 @@ namespace Spv.Generator
 
             instruction.SetId(GetNewId());
 
-            _typeDeclarations.Add(key, instruction);
+            _typeDeclarations[key] = instruction;
+            _typeDeclarationsList.Add(instruction);
         }
 
         public void AddEntryPoint(ExecutionModel executionModel, Instruction function, string name, params Instruction[] interfaces)
@@ -330,7 +333,7 @@ namespace Spv.Generator
 
             // Ensure that everything is in the right order in the declarations section.
             List<Instruction> declarations = new();
-            declarations.AddRange(_typeDeclarations.Values);
+            declarations.AddRange(_typeDeclarationsList);
             declarations.AddRange(_globals);
             declarations.AddRange(_constants.Values);
             declarations.Sort((Instruction x, Instruction y) => x.Id.CompareTo(y.Id));

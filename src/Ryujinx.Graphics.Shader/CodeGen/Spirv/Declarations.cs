@@ -348,12 +348,98 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                         }
                     }
                 }
+                else if (IoMap.IsPerVertexBuiltIn(ioDefinition.IoVariable))
+                {
+                    continue;
+                }
 
                 bool isOutput = ioDefinition.StorageKind.IsOutput();
                 bool isPerPatch = ioDefinition.StorageKind.IsPerPatch();
 
                 DeclareInputOrOutput(context, ioDefinition, isOutput, isPerPatch, iq, firstLocation);
             }
+
+            DeclarePerVertexBlock(context);
+        }
+
+        private static void DeclarePerVertexBlock(CodeGenContext context)
+        {
+            if (context.Definitions.Stage.IsVtg())
+            {
+                if (context.Definitions.Stage != ShaderStage.Vertex)
+                {
+                    var perVertexInputStructType = CreatePerVertexStructType(context);
+                    int arraySize = context.Definitions.Stage == ShaderStage.Geometry ? context.InputVertices : 32;
+                    var perVertexInputArrayType = context.TypeArray(perVertexInputStructType, context.Constant(context.TypeU32(), arraySize));
+                    var perVertexInputPointerType = context.TypePointer(StorageClass.Input, perVertexInputArrayType);
+                    var perVertexInputVariable = context.Variable(perVertexInputPointerType, StorageClass.Input);
+
+                    context.Name(perVertexInputVariable, "gl_in");
+
+                    context.AddGlobalVariable(perVertexInputVariable);
+                    context.Inputs.Add(new IoDefinition(StorageKind.Input, IoVariable.Position), perVertexInputVariable);
+                }
+
+                var perVertexOutputStructType = CreatePerVertexStructType(context);
+
+                void DecorateTfo(IoVariable ioVariable, int fieldIndex)
+                {
+                    if (context.Definitions.TryGetTransformFeedbackOutput(ioVariable, 0, 0, out var transformFeedbackOutput))
+                    {
+                        context.MemberDecorate(perVertexOutputStructType, fieldIndex, Decoration.XfbBuffer, (LiteralInteger)transformFeedbackOutput.Buffer);
+                        context.MemberDecorate(perVertexOutputStructType, fieldIndex, Decoration.XfbStride, (LiteralInteger)transformFeedbackOutput.Stride);
+                        context.MemberDecorate(perVertexOutputStructType, fieldIndex, Decoration.Offset, (LiteralInteger)transformFeedbackOutput.Offset);
+                    }
+                }
+
+                DecorateTfo(IoVariable.Position, 0);
+                DecorateTfo(IoVariable.PointSize, 1);
+                DecorateTfo(IoVariable.ClipDistance, 2);
+
+                SpvInstruction perVertexOutputArrayType;
+
+                if (context.Definitions.Stage == ShaderStage.TessellationControl)
+                {
+                    int arraySize = context.Definitions.ThreadsPerInputPrimitive;
+                    perVertexOutputArrayType = context.TypeArray(perVertexOutputStructType, context.Constant(context.TypeU32(), arraySize));
+                }
+                else
+                {
+                    perVertexOutputArrayType = perVertexOutputStructType;
+                }
+
+                var perVertexOutputPointerType = context.TypePointer(StorageClass.Output, perVertexOutputArrayType);
+                var perVertexOutputVariable = context.Variable(perVertexOutputPointerType, StorageClass.Output);
+
+                context.AddGlobalVariable(perVertexOutputVariable);
+                context.Outputs.Add(new IoDefinition(StorageKind.Output, IoVariable.Position), perVertexOutputVariable);
+            }
+        }
+
+        private static SpvInstruction CreatePerVertexStructType(CodeGenContext context)
+        {
+            var vec4FloatType = context.TypeVector(context.TypeFP32(), 4);
+            var floatType = context.TypeFP32();
+            var array8FloatType = context.TypeArray(context.TypeFP32(), context.Constant(context.TypeU32(), 8));
+            var array1FloatType = context.TypeArray(context.TypeFP32(), context.Constant(context.TypeU32(), 1));
+
+            var perVertexStructType = context.TypeStruct(true, vec4FloatType, floatType, array8FloatType, array1FloatType);
+
+            context.Name(perVertexStructType, "gl_PerVertex");
+
+            context.MemberName(perVertexStructType, 0, "gl_Position");
+            context.MemberName(perVertexStructType, 1, "gl_PointSize");
+            context.MemberName(perVertexStructType, 2, "gl_ClipDistance");
+            context.MemberName(perVertexStructType, 3, "gl_CullDistance");
+
+            context.Decorate(perVertexStructType, Decoration.Block);
+
+            context.MemberDecorate(perVertexStructType, 0, Decoration.BuiltIn, (LiteralInteger)BuiltIn.Position);
+            context.MemberDecorate(perVertexStructType, 1, Decoration.BuiltIn, (LiteralInteger)BuiltIn.PointSize);
+            context.MemberDecorate(perVertexStructType, 2, Decoration.BuiltIn, (LiteralInteger)BuiltIn.ClipDistance);
+            context.MemberDecorate(perVertexStructType, 3, Decoration.BuiltIn, (LiteralInteger)BuiltIn.CullDistance);
+
+            return perVertexStructType;
         }
 
         private static void DeclareInputOrOutput(
