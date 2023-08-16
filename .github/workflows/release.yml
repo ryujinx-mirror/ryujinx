@@ -67,6 +67,9 @@ jobs:
       - uses: actions/setup-dotnet@v3
         with:
           global-json-file: global.json
+          
+      - name: Overwrite csc problem matcher
+        run: echo "::add-matcher::.github/csc.json"
 
       - name: Get version info
         id: version_info

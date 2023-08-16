@@ -31,6 +31,9 @@ jobs:
         with:
           global-json-file: global.json
 
+      - name: Overwrite csc problem matcher
+        run: echo "::add-matcher::.github/csc.json"
+
       - run: dotnet restore
 
       - name: Print dotnet format version
