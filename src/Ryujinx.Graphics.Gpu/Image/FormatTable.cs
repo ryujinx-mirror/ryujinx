@@ -179,6 +179,7 @@ namespace Ryujinx.Graphics.Gpu.Image
             R32G32B32A32Uint                 = R32G32B32A32      | RUint  | GUint  | BUint  | AUint,         // 0x49201
             R32G32B32A32Sint                 = R32G32B32A32      | RSint  | GSint  | BSint  | ASint,         // 0x36d81
             Z16Unorm                         = Z16               | RUnorm | GUnorm | BUnorm | AUnorm,        // 0x2493a
+            Z16RUnormGUintBUintAUint         = Z16               | RUnorm | GUint  | BUint  | AUint,         // 0x4913a
             Zf32RFloatGUintBUintAUint        = Zf32              | RFloat | GUint  | BUint  | AUint,         // 0x493af
             Zf32Float                        = Zf32              | RFloat | GFloat | BFloat | AFloat,        // 0x7ffaf
             G24R8RUintGUnormBUnormAUnorm     = G24R8             | RUint  | GUnorm | BUnorm | AUnorm,        // 0x24a0e
@@ -403,6 +404,7 @@ namespace Ryujinx.Graphics.Gpu.Image
             { TextureFormat.R32G32B32A32Uint,                 new FormatInfo(Format.R32G32B32A32Uint,  1,  1,  16, 4) },
             { TextureFormat.R32G32B32A32Sint,                 new FormatInfo(Format.R32G32B32A32Sint,  1,  1,  16, 4) },
             { TextureFormat.Z16Unorm,                         new FormatInfo(Format.D16Unorm,          1,  1,  2,  1) },
+            { TextureFormat.Z16RUnormGUintBUintAUint,         new FormatInfo(Format.D16Unorm,          1,  1,  2,  1) },
             { TextureFormat.Zf32RFloatGUintBUintAUint,        new FormatInfo(Format.D32Float,          1,  1,  4,  1) },
             { TextureFormat.Zf32Float,                        new FormatInfo(Format.D32Float,          1,  1,  4,  1) },
             { TextureFormat.G24R8RUintGUnormBUnormAUnorm,     new FormatInfo(Format.D24UnormS8Uint,    1,  1,  4,  2) },
