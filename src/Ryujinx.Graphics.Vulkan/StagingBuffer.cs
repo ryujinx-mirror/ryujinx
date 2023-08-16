@@ -246,7 +246,7 @@ namespace Ryujinx.Graphics.Vulkan
             return true;
         }
 
-        private void FreeCompleted()
+        public void FreeCompleted()
         {
             FenceHolder signalledFence = null;
             while (_pendingCopies.TryPeek(out var pc) && (pc.Fence == signalledFence || pc.Fence.IsSignaled()))

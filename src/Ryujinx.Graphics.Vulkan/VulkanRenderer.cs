@@ -475,6 +475,9 @@ namespace Ryujinx.Graphics.Vulkan
         internal void RegisterFlush()
         {
             SyncManager.RegisterFlush();
+
+            // Periodically free unused regions of the staging buffer to avoid doing it all at once.
+            BufferManager.StagingBuffer.FreeCompleted();
         }
 
         public PinnedSpan<byte> GetBufferData(BufferHandle buffer, int offset, int size)
