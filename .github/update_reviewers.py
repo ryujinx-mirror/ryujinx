@@ -62,9 +62,9 @@ if __name__ == "__main__":
         sys.stderr.write("usage: <app_id> <private_key_env_name> <installation_id> <repo_path> <pr_id> <config_path>\n")
         sys.exit(1)
 
-    app_id = sys.argv[1]
+    app_id = int(sys.argv[1])
     private_key = os.environ[sys.argv[2]]
-    installation_id = sys.argv[3]
+    installation_id = int(sys.argv[3])
     repo_path = sys.argv[4]
     pr_id = int(sys.argv[5])
     config_path = Path(sys.argv[6])
