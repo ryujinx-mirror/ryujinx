@@ -108,10 +108,10 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             Add(Instruction.ShiftLeft,                InstType.OpBinary,       "<<",              3);
             Add(Instruction.ShiftRightS32,            InstType.OpBinary,       ">>",              3);
             Add(Instruction.ShiftRightU32,            InstType.OpBinary,       ">>",              3);
-            Add(Instruction.Shuffle,                  InstType.CallQuaternary, HelperFunctionNames.Shuffle);
-            Add(Instruction.ShuffleDown,              InstType.CallQuaternary, HelperFunctionNames.ShuffleDown);
-            Add(Instruction.ShuffleUp,                InstType.CallQuaternary, HelperFunctionNames.ShuffleUp);
-            Add(Instruction.ShuffleXor,               InstType.CallQuaternary, HelperFunctionNames.ShuffleXor);
+            Add(Instruction.Shuffle,                  InstType.Special);
+            Add(Instruction.ShuffleDown,              InstType.CallBinary,     "subgroupShuffleDown");
+            Add(Instruction.ShuffleUp,                InstType.CallBinary,     "subgroupShuffleUp");
+            Add(Instruction.ShuffleXor,               InstType.CallBinary,     "subgroupShuffleXor");
             Add(Instruction.Sine,                     InstType.CallUnary,      "sin");
             Add(Instruction.SquareRoot,               InstType.CallUnary,      "sqrt");
             Add(Instruction.Store,                    InstType.Special);

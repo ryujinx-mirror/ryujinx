@@ -18,6 +18,7 @@ namespace Ryujinx.Graphics.Shader.Translation
         InstanceId = 1 << 3,
         DrawParameters = 1 << 4,
         RtLayer = 1 << 5,
+        Shuffle = 1 << 6,
         FixedFuncAttr = 1 << 9,
         LocalMemory = 1 << 10,
         SharedMemory = 1 << 11,

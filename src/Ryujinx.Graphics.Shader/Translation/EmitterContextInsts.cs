@@ -112,9 +112,13 @@ namespace Ryujinx.Graphics.Shader.Translation
             return context.Add(Instruction.AtomicXor, storageKind, Local(), Const(binding), e0, e1, value);
         }
 
-        public static Operand Ballot(this EmitterContext context, Operand a)
+        public static Operand Ballot(this EmitterContext context, Operand a, int index)
         {
-            return context.Add(Instruction.Ballot, Local(), a);
+            Operand dest = Local();
+
+            context.Add(new Operation(Instruction.Ballot, index, dest, a));
+
+            return dest;
         }
 
         public static Operand Barrier(this EmitterContext context)
@@ -782,9 +786,19 @@ namespace Ryujinx.Graphics.Shader.Translation
             return context.Add(Instruction.ShiftRightU32, Local(), a, b);
         }
 
+        public static Operand Shuffle(this EmitterContext context, Operand a, Operand b)
+        {
+            return context.Add(Instruction.Shuffle, Local(), a, b);
+        }
+
         public static (Operand, Operand) Shuffle(this EmitterContext context, Operand a, Operand b, Operand c)
         {
             return context.Add(Instruction.Shuffle, (Local(), Local()), a, b, c);
+        }
+
+        public static Operand ShuffleDown(this EmitterContext context, Operand a, Operand b)
+        {
+            return context.Add(Instruction.ShuffleDown, Local(), a, b);
         }
 
         public static (Operand, Operand) ShuffleDown(this EmitterContext context, Operand a, Operand b, Operand c)
@@ -792,9 +806,19 @@ namespace Ryujinx.Graphics.Shader.Translation
             return context.Add(Instruction.ShuffleDown, (Local(), Local()), a, b, c);
         }
 
+        public static Operand ShuffleUp(this EmitterContext context, Operand a, Operand b)
+        {
+            return context.Add(Instruction.ShuffleUp, Local(), a, b);
+        }
+
         public static (Operand, Operand) ShuffleUp(this EmitterContext context, Operand a, Operand b, Operand c)
         {
             return context.Add(Instruction.ShuffleUp, (Local(), Local()), a, b, c);
+        }
+
+        public static Operand ShuffleXor(this EmitterContext context, Operand a, Operand b)
+        {
+            return context.Add(Instruction.ShuffleXor, Local(), a, b);
         }
 
         public static (Operand, Operand) ShuffleXor(this EmitterContext context, Operand a, Operand b, Operand c)

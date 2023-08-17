@@ -282,18 +282,6 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
                 case Instruction.MultiplyHighU32:
                     context.Info.HelperFunctionsMask |= HelperFunctionsMask.MultiplyHighU32;
                     break;
-                case Instruction.Shuffle:
-                    context.Info.HelperFunctionsMask |= HelperFunctionsMask.Shuffle;
-                    break;
-                case Instruction.ShuffleDown:
-                    context.Info.HelperFunctionsMask |= HelperFunctionsMask.ShuffleDown;
-                    break;
-                case Instruction.ShuffleUp:
-                    context.Info.HelperFunctionsMask |= HelperFunctionsMask.ShuffleUp;
-                    break;
-                case Instruction.ShuffleXor:
-                    context.Info.HelperFunctionsMask |= HelperFunctionsMask.ShuffleXor;
-                    break;
                 case Instruction.SwizzleAdd:
                     context.Info.HelperFunctionsMask |= HelperFunctionsMask.SwizzleAdd;
                     break;

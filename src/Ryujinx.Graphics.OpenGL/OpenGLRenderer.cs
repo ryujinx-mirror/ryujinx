@@ -175,6 +175,7 @@ namespace Ryujinx.Graphics.OpenGL
                 maximumImagesPerStage: 8,
                 maximumComputeSharedMemorySize: HwCapabilities.MaximumComputeSharedMemorySize,
                 maximumSupportedAnisotropy: HwCapabilities.MaximumSupportedAnisotropy,
+                shaderSubgroupSize: Constants.MaxSubgroupSize,
                 storageBufferOffsetAlignment: HwCapabilities.StorageBufferOffsetAlignment,
                 gatherBiasPrecision: intelWindows || amdWindows ? 8 : 0); // Precision is 8 for these vendors on Vulkan.
         }

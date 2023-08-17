@@ -25,6 +25,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             {
                 context.AppendLine("#extension GL_KHR_shader_subgroup_basic : enable");
                 context.AppendLine("#extension GL_KHR_shader_subgroup_ballot : enable");
+                context.AppendLine("#extension GL_KHR_shader_subgroup_shuffle : enable");
             }
 
             context.AppendLine("#extension GL_ARB_shader_group_vote : enable");
@@ -199,26 +200,6 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             if ((info.HelperFunctionsMask & HelperFunctionsMask.MultiplyHighU32) != 0)
             {
                 AppendHelperFunction(context, "Ryujinx.Graphics.Shader/CodeGen/Glsl/HelperFunctions/MultiplyHighU32.glsl");
-            }
-
-            if ((info.HelperFunctionsMask & HelperFunctionsMask.Shuffle) != 0)
-            {
-                AppendHelperFunction(context, "Ryujinx.Graphics.Shader/CodeGen/Glsl/HelperFunctions/Shuffle.glsl");
-            }
-
-            if ((info.HelperFunctionsMask & HelperFunctionsMask.ShuffleDown) != 0)
-            {
-                AppendHelperFunction(context, "Ryujinx.Graphics.Shader/CodeGen/Glsl/HelperFunctions/ShuffleDown.glsl");
-            }
-
-            if ((info.HelperFunctionsMask & HelperFunctionsMask.ShuffleUp) != 0)
-            {
-                AppendHelperFunction(context, "Ryujinx.Graphics.Shader/CodeGen/Glsl/HelperFunctions/ShuffleUp.glsl");
-            }
-
-            if ((info.HelperFunctionsMask & HelperFunctionsMask.ShuffleXor) != 0)
-            {
-                AppendHelperFunction(context, "Ryujinx.Graphics.Shader/CodeGen/Glsl/HelperFunctions/ShuffleXor.glsl");
             }
 
             if ((info.HelperFunctionsMask & HelperFunctionsMask.SwizzleAdd) != 0)

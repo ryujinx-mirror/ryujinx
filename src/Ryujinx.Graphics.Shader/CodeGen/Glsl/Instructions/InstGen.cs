@@ -9,6 +9,7 @@ using static Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions.InstGenFSI;
 using static Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions.InstGenHelper;
 using static Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions.InstGenMemory;
 using static Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions.InstGenPacking;
+using static Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions.InstGenShuffle;
 using static Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions.InstGenVector;
 using static Ryujinx.Graphics.Shader.StructuredIr.InstructionInfo;
 
@@ -173,6 +174,9 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 
                     case Instruction.PackHalf2x16:
                         return PackHalf2x16(context, operation);
+
+                    case Instruction.Shuffle:
+                        return Shuffle(context, operation);
 
                     case Instruction.Store:
                         return Store(context, operation);

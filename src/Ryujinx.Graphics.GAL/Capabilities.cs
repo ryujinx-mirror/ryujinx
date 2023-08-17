@@ -52,6 +52,7 @@ namespace Ryujinx.Graphics.GAL
 
         public readonly int MaximumComputeSharedMemorySize;
         public readonly float MaximumSupportedAnisotropy;
+        public readonly int ShaderSubgroupSize;
         public readonly int StorageBufferOffsetAlignment;
 
         public readonly int GatherBiasPrecision;
@@ -101,6 +102,7 @@ namespace Ryujinx.Graphics.GAL
             uint maximumImagesPerStage,
             int maximumComputeSharedMemorySize,
             float maximumSupportedAnisotropy,
+            int shaderSubgroupSize,
             int storageBufferOffsetAlignment,
             int gatherBiasPrecision)
         {
@@ -148,6 +150,7 @@ namespace Ryujinx.Graphics.GAL
             MaximumImagesPerStage = maximumImagesPerStage;
             MaximumComputeSharedMemorySize = maximumComputeSharedMemorySize;
             MaximumSupportedAnisotropy = maximumSupportedAnisotropy;
+            ShaderSubgroupSize = shaderSubgroupSize;
             StorageBufferOffsetAlignment = storageBufferOffsetAlignment;
             GatherBiasPrecision = gatherBiasPrecision;
         }

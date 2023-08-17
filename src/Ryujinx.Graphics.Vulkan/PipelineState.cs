@@ -352,11 +352,6 @@ namespace Ryujinx.Graphics.Vulkan
                 return pipeline;
             }
 
-            if (gd.Capabilities.SupportsSubgroupSizeControl)
-            {
-                UpdateStageRequiredSubgroupSizes(gd, 1);
-            }
-
             var pipelineCreateInfo = new ComputePipelineCreateInfo
             {
                 SType = StructureType.ComputePipelineCreateInfo,
@@ -616,11 +611,6 @@ namespace Ryujinx.Graphics.Vulkan
                     PDynamicStates = dynamicStates,
                 };
 
-                if (gd.Capabilities.SupportsSubgroupSizeControl)
-                {
-                    UpdateStageRequiredSubgroupSizes(gd, (int)StagesCount);
-                }
-
                 var pipelineCreateInfo = new GraphicsPipelineCreateInfo
                 {
                     SType = StructureType.GraphicsPipelineCreateInfo,
@@ -657,19 +647,6 @@ namespace Ryujinx.Graphics.Vulkan
             program.AddGraphicsPipeline(ref Internal, pipeline);
 
             return pipeline;
-        }
-
-        private readonly unsafe void UpdateStageRequiredSubgroupSizes(VulkanRenderer gd, int count)
-        {
-            for (int index = 0; index < count; index++)
-            {
-                bool canUseExplicitSubgroupSize =
-                    (gd.Capabilities.RequiredSubgroupSizeStages & Stages[index].Stage) != 0 &&
-                    gd.Capabilities.MinSubgroupSize <= RequiredSubgroupSize &&
-                    gd.Capabilities.MaxSubgroupSize >= RequiredSubgroupSize;
-
-                Stages[index].PNext = canUseExplicitSubgroupSize ? StageRequiredSubgroupSizes.Pointer + index : null;
-            }
         }
 
         private void UpdateVertexAttributeDescriptions(VulkanRenderer gd)

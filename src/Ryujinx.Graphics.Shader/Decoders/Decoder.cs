@@ -307,6 +307,9 @@ namespace Ryujinx.Graphics.Shader.Decoders
                     case InstName.Sts:
                         context.SetUsedFeature(FeatureFlags.SharedMemory);
                         break;
+                    case InstName.Shfl:
+                        context.SetUsedFeature(FeatureFlags.Shuffle);
+                        break;
                 }
 
                 block.OpCodes.Add(op);

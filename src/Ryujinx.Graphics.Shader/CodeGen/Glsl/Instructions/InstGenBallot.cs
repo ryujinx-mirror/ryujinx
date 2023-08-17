@@ -13,14 +13,15 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             AggregateType dstType = GetSrcVarType(operation.Inst, 0);
 
             string arg = GetSoureExpr(context, operation.GetSource(0), dstType);
+            char component = "xyzw"[operation.Index];
 
             if (context.HostCapabilities.SupportsShaderBallot)
             {
-                return $"unpackUint2x32(ballotARB({arg})).x";
+                return $"unpackUint2x32(ballotARB({arg})).{component}";
             }
             else
             {
-                return $"subgroupBallot({arg}).x";
+                return $"subgroupBallot({arg}).{component}";
             }
         }
     }

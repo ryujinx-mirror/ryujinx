@@ -195,6 +195,15 @@ namespace Ryujinx.Graphics.Shader
         }
 
         /// <summary>
+        /// Queries host shader subgroup size.
+        /// </summary>
+        /// <returns>Host shader subgroup size in invocations</returns>
+        int QueryHostSubgroupSize()
+        {
+            return 32;
+        }
+
+        /// <summary>
         /// Queries host support for texture formats with BGRA component order (such as BGRA8).
         /// </summary>
         /// <returns>True if BGRA formats are supported, false otherwise</returns>

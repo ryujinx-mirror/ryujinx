@@ -76,7 +76,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
             switch (op.SReg)
             {
                 case SReg.LaneId:
-                    src = context.Load(StorageKind.Input, IoVariable.SubgroupLaneId);
+                    src = EmitLoadSubgroupLaneId(context);
                     break;
 
                 case SReg.InvocationId:
@@ -146,19 +146,19 @@ namespace Ryujinx.Graphics.Shader.Instructions
                     break;
 
                 case SReg.EqMask:
-                    src = context.Load(StorageKind.Input, IoVariable.SubgroupEqMask, null, Const(0));
+                    src = EmitLoadSubgroupMask(context, IoVariable.SubgroupEqMask);
                     break;
                 case SReg.LtMask:
-                    src = context.Load(StorageKind.Input, IoVariable.SubgroupLtMask, null, Const(0));
+                    src = EmitLoadSubgroupMask(context, IoVariable.SubgroupLtMask);
                     break;
                 case SReg.LeMask:
-                    src = context.Load(StorageKind.Input, IoVariable.SubgroupLeMask, null, Const(0));
+                    src = EmitLoadSubgroupMask(context, IoVariable.SubgroupLeMask);
                     break;
                 case SReg.GtMask:
-                    src = context.Load(StorageKind.Input, IoVariable.SubgroupGtMask, null, Const(0));
+                    src = EmitLoadSubgroupMask(context, IoVariable.SubgroupGtMask);
                     break;
                 case SReg.GeMask:
-                    src = context.Load(StorageKind.Input, IoVariable.SubgroupGeMask, null, Const(0));
+                    src = EmitLoadSubgroupMask(context, IoVariable.SubgroupGeMask);
                     break;
 
                 default:
@@ -167,6 +167,52 @@ namespace Ryujinx.Graphics.Shader.Instructions
             }
 
             context.Copy(GetDest(op.Dest), src);
+        }
+
+        private static Operand EmitLoadSubgroupLaneId(EmitterContext context)
+        {
+            if (context.TranslatorContext.GpuAccessor.QueryHostSubgroupSize() <= 32)
+            {
+                return context.Load(StorageKind.Input, IoVariable.SubgroupLaneId);
+            }
+
+            return context.BitwiseAnd(context.Load(StorageKind.Input, IoVariable.SubgroupLaneId), Const(0x1f));
+        }
+
+        private static Operand EmitLoadSubgroupMask(EmitterContext context, IoVariable ioVariable)
+        {
+            int subgroupSize = context.TranslatorContext.GpuAccessor.QueryHostSubgroupSize();
+
+            if (subgroupSize <= 32)
+            {
+                return context.Load(StorageKind.Input, ioVariable, null, Const(0));
+            }
+            else if (subgroupSize == 64)
+            {
+                Operand laneId = context.Load(StorageKind.Input, IoVariable.SubgroupLaneId);
+                Operand low = context.Load(StorageKind.Input, ioVariable, null, Const(0));
+                Operand high = context.Load(StorageKind.Input, ioVariable, null, Const(1));
+
+                return context.ConditionalSelect(context.BitwiseAnd(laneId, Const(32)), high, low);
+            }
+            else
+            {
+                Operand laneId = context.Load(StorageKind.Input, IoVariable.SubgroupLaneId);
+                Operand element = context.ShiftRightU32(laneId, Const(5));
+
+                Operand res = context.Load(StorageKind.Input, ioVariable, null, Const(0));
+                res = context.ConditionalSelect(
+                    context.ICompareEqual(element, Const(1)),
+                    context.Load(StorageKind.Input, ioVariable, null, Const(1)), res);
+                res = context.ConditionalSelect(
+                    context.ICompareEqual(element, Const(2)),
+                    context.Load(StorageKind.Input, ioVariable, null, Const(2)), res);
+                res = context.ConditionalSelect(
+                    context.ICompareEqual(element, Const(3)),
+                    context.Load(StorageKind.Input, ioVariable, null, Const(3)), res);
+
+                return res;
+            }
         }
 
         public static void SelR(EmitterContext context)

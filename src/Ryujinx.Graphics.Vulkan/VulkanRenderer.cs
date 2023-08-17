@@ -151,6 +151,14 @@ namespace Ryujinx.Graphics.Vulkan
                 SType = StructureType.PhysicalDeviceProperties2,
             };
 
+            PhysicalDeviceSubgroupProperties propertiesSubgroup = new()
+            {
+                SType = StructureType.PhysicalDeviceSubgroupProperties,
+                PNext = properties2.PNext,
+            };
+
+            properties2.PNext = &propertiesSubgroup;
+
             PhysicalDeviceBlendOperationAdvancedPropertiesEXT propertiesBlendOperationAdvanced = new()
             {
                 SType = StructureType.PhysicalDeviceBlendOperationAdvancedPropertiesExt,
@@ -162,18 +170,6 @@ namespace Ryujinx.Graphics.Vulkan
             {
                 propertiesBlendOperationAdvanced.PNext = properties2.PNext;
                 properties2.PNext = &propertiesBlendOperationAdvanced;
-            }
-
-            PhysicalDeviceSubgroupSizeControlPropertiesEXT propertiesSubgroupSizeControl = new()
-            {
-                SType = StructureType.PhysicalDeviceSubgroupSizeControlPropertiesExt,
-            };
-
-            bool supportsSubgroupSizeControl = _physicalDevice.IsDeviceExtensionPresent("VK_EXT_subgroup_size_control");
-
-            if (supportsSubgroupSizeControl)
-            {
-                properties2.PNext = &propertiesSubgroupSizeControl;
             }
 
             bool supportsTransformFeedback = _physicalDevice.IsDeviceExtensionPresent(ExtTransformFeedback.ExtensionName);
@@ -315,7 +311,6 @@ namespace Ryujinx.Graphics.Vulkan
                 _physicalDevice.IsDeviceExtensionPresent(KhrDrawIndirectCount.ExtensionName),
                 _physicalDevice.IsDeviceExtensionPresent("VK_EXT_fragment_shader_interlock"),
                 _physicalDevice.IsDeviceExtensionPresent("VK_NV_geometry_shader_passthrough"),
-                supportsSubgroupSizeControl,
                 features2.Features.ShaderFloat64,
                 featuresShaderInt8.ShaderInt8,
                 _physicalDevice.IsDeviceExtensionPresent("VK_EXT_shader_stencil_export"),
@@ -335,9 +330,7 @@ namespace Ryujinx.Graphics.Vulkan
                 _physicalDevice.IsDeviceExtensionPresent("VK_NV_viewport_array2"),
                 _physicalDevice.IsDeviceExtensionPresent(ExtExternalMemoryHost.ExtensionName),
                 supportsDepthClipControl && featuresDepthClipControl.DepthClipControl,
-                propertiesSubgroupSizeControl.MinSubgroupSize,
-                propertiesSubgroupSizeControl.MaxSubgroupSize,
-                propertiesSubgroupSizeControl.RequiredSubgroupSizeStages,
+                propertiesSubgroup.SubgroupSize,
                 supportedSampleCounts,
                 portabilityFlags,
                 vertexBufferAlignment,
@@ -623,6 +616,7 @@ namespace Ryujinx.Graphics.Vulkan
                 maximumImagesPerStage: Constants.MaxImagesPerStage,
                 maximumComputeSharedMemorySize: (int)limits.MaxComputeSharedMemorySize,
                 maximumSupportedAnisotropy: (int)limits.MaxSamplerAnisotropy,
+                shaderSubgroupSize: (int)Capabilities.SubgroupSize,
                 storageBufferOffsetAlignment: (int)limits.MinStorageBufferOffsetAlignment,
                 gatherBiasPrecision: IsIntelWindows || IsAmdWindows ? (int)Capabilities.SubTexelPrecisionBits : 0);
         }

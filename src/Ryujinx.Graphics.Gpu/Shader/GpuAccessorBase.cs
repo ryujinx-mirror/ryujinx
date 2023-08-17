@@ -137,6 +137,8 @@ namespace Ryujinx.Graphics.Gpu.Shader
 
         public int QueryHostStorageBufferOffsetAlignment() => _context.Capabilities.StorageBufferOffsetAlignment;
 
+        public int QueryHostSubgroupSize() => _context.Capabilities.ShaderSubgroupSize;
+
         public bool QueryHostSupportsBgraFormat() => _context.Capabilities.SupportsBgraFormat;
 
         public bool QueryHostSupportsFragmentShaderInterlock() => _context.Capabilities.SupportsFragmentShaderInterlock;

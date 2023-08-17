@@ -28,12 +28,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             _poolLock = new object();
         }
 
-        private const HelperFunctionsMask NeedsInvocationIdMask =
-            HelperFunctionsMask.Shuffle |
-            HelperFunctionsMask.ShuffleDown |
-            HelperFunctionsMask.ShuffleUp |
-            HelperFunctionsMask.ShuffleXor |
-            HelperFunctionsMask.SwizzleAdd;
+        private const HelperFunctionsMask NeedsInvocationIdMask = HelperFunctionsMask.SwizzleAdd;
 
         public static byte[] Generate(StructuredProgramInfo info, CodeGenParameters parameters)
         {

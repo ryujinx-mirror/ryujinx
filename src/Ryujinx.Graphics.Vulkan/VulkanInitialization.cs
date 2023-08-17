@@ -37,7 +37,6 @@ namespace Ryujinx.Graphics.Vulkan
             "VK_EXT_shader_stencil_export",
             "VK_KHR_shader_float16_int8",
             "VK_EXT_shader_subgroup_ballot",
-            "VK_EXT_subgroup_size_control",
             "VK_NV_geometry_shader_passthrough",
             "VK_NV_viewport_array2",
             "VK_EXT_depth_clip_control",
