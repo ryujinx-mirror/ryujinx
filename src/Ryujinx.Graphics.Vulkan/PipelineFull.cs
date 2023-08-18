@@ -81,6 +81,42 @@ namespace Ryujinx.Graphics.Vulkan
             }
         }
 
+        public void ClearRenderTargetDepthStencil(int layer, int layerCount, float depthValue, bool depthMask, int stencilValue, int stencilMask)
+        {
+            if (FramebufferParams == null)
+            {
+                return;
+            }
+
+            if (stencilMask != 0 && stencilMask != 0xff)
+            {
+                // We can't use CmdClearAttachments if not clearing all (mask is all ones, 0xFF) or none (mask is 0) of the stencil bits,
+                // because on Vulkan, the pipeline state does not affect clears.
+                var dstTexture = FramebufferParams.GetDepthStencilAttachment();
+                if (dstTexture == null)
+                {
+                    return;
+                }
+
+                // TODO: Clear only the specified layer.
+                Gd.HelperShader.Clear(
+                    Gd,
+                    dstTexture,
+                    depthValue,
+                    depthMask,
+                    stencilValue,
+                    stencilMask,
+                    (int)FramebufferParams.Width,
+                    (int)FramebufferParams.Height,
+                    FramebufferParams.AttachmentFormats[FramebufferParams.AttachmentsCount - 1],
+                    ClearScissor);
+            }
+            else
+            {
+                ClearRenderTargetDepthStencil(layer, layerCount, depthValue, depthMask, stencilValue, stencilMask != 0);
+            }
+        }
+
         public void EndHostConditionalRendering()
         {
             if (Gd.Capabilities.SupportsConditionalRendering)

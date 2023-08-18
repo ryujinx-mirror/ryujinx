@@ -38,6 +38,7 @@ namespace Ryujinx.Graphics.Vulkan
         private readonly IProgram _programColorClearF;
         private readonly IProgram _programColorClearSI;
         private readonly IProgram _programColorClearUI;
+        private readonly IProgram _programDepthStencilClear;
         private readonly IProgram _programStrideChange;
         private readonly IProgram _programConvertD32S8ToD24S8;
         private readonly IProgram _programConvertIndexBuffer;
@@ -103,6 +104,12 @@ namespace Ryujinx.Graphics.Vulkan
             {
                 new ShaderSource(ReadSpirv("ColorClearVertex.spv"), ShaderStage.Vertex, TargetLanguage.Spirv),
                 new ShaderSource(ReadSpirv("ColorClearUIFragment.spv"), ShaderStage.Fragment, TargetLanguage.Spirv),
+            }, colorClearResourceLayout);
+
+            _programDepthStencilClear = gd.CreateProgramWithMinimalLayout(new[]
+            {
+                new ShaderSource(ReadSpirv("ColorClearVertex.spv"), ShaderStage.Vertex, TargetLanguage.Spirv),
+                new ShaderSource(ReadSpirv("DepthStencilClearFragment.spv"), ShaderStage.Fragment, TargetLanguage.Spirv),
             }, colorClearResourceLayout);
 
             var strideChangeResourceLayout = new ResourceLayoutBuilder()
@@ -446,10 +453,6 @@ namespace Ryujinx.Graphics.Vulkan
                 0f,
                 1f);
 
-            Span<Rectangle<int>> scissors = stackalloc Rectangle<int>[1];
-
-            scissors[0] = new Rectangle<int>(0, 0, dstWidth, dstHeight);
-
             if (dstIsDepthOrStencil)
             {
                 _pipeline.SetProgram(src.Info.Target.IsMultisample() ? _programDepthBlitMs : _programDepthBlit);
@@ -470,7 +473,7 @@ namespace Ryujinx.Graphics.Vulkan
 
             _pipeline.SetRenderTarget(dst, (uint)dstWidth, (uint)dstHeight, (uint)dstSamples, dstIsDepthOrStencil, dstFormat);
             _pipeline.SetRenderTargetColorMasks(new uint[] { 0xf });
-            _pipeline.SetScissors(scissors);
+            _pipeline.SetScissors(stackalloc Rectangle<int>[] { new Rectangle<int>(0, 0, dstWidth, dstHeight) });
 
             if (clearAlpha)
             {
@@ -547,12 +550,8 @@ namespace Ryujinx.Graphics.Vulkan
                 0f,
                 1f);
 
-            Span<Rectangle<int>> scissors = stackalloc Rectangle<int>[1];
-
-            scissors[0] = new Rectangle<int>(0, 0, dstWidth, dstHeight);
-
             _pipeline.SetRenderTarget(dst, (uint)dstWidth, (uint)dstHeight, (uint)dstSamples, true, dstFormat);
-            _pipeline.SetScissors(scissors);
+            _pipeline.SetScissors(stackalloc Rectangle<int>[] { new Rectangle<int>(0, 0, dstWidth, dstHeight) });
             _pipeline.SetViewports(viewports);
             _pipeline.SetPrimitiveTopology(PrimitiveTopology.TriangleStrip);
 
@@ -639,7 +638,11 @@ namespace Ryujinx.Graphics.Vulkan
             }
         }
 
-        private static StencilTestDescriptor CreateStencilTestDescriptor(bool enabled)
+        private static StencilTestDescriptor CreateStencilTestDescriptor(
+            bool enabled,
+            int refValue = 0,
+            int compareMask = 0xff,
+            int writeMask = 0xff)
         {
             return new StencilTestDescriptor(
                 enabled,
@@ -647,16 +650,16 @@ namespace Ryujinx.Graphics.Vulkan
                 StencilOp.Replace,
                 StencilOp.Replace,
                 StencilOp.Replace,
-                0,
-                0xff,
-                0xff,
+                refValue,
+                compareMask,
+                writeMask,
                 CompareOp.Always,
                 StencilOp.Replace,
                 StencilOp.Replace,
                 StencilOp.Replace,
-                0,
-                0xff,
-                0xff);
+                refValue,
+                compareMask,
+                writeMask);
         }
 
         public void Clear(
@@ -695,10 +698,6 @@ namespace Ryujinx.Graphics.Vulkan
                 0f,
                 1f);
 
-            Span<Rectangle<int>> scissors = stackalloc Rectangle<int>[1];
-
-            scissors[0] = scissor;
-
             IProgram program;
 
             if (type == ComponentType.SignedInteger)
@@ -718,8 +717,58 @@ namespace Ryujinx.Graphics.Vulkan
             _pipeline.SetRenderTarget(dst, (uint)dstWidth, (uint)dstHeight, false, dstFormat);
             _pipeline.SetRenderTargetColorMasks(new[] { componentMask });
             _pipeline.SetViewports(viewports);
-            _pipeline.SetScissors(scissors);
+            _pipeline.SetScissors(stackalloc Rectangle<int>[] { scissor });
             _pipeline.SetPrimitiveTopology(PrimitiveTopology.TriangleStrip);
+            _pipeline.Draw(4, 1, 0, 0);
+            _pipeline.Finish();
+
+            gd.BufferManager.Delete(bufferHandle);
+        }
+
+        public void Clear(
+            VulkanRenderer gd,
+            Auto<DisposableImageView> dst,
+            float depthValue,
+            bool depthMask,
+            int stencilValue,
+            int stencilMask,
+            int dstWidth,
+            int dstHeight,
+            VkFormat dstFormat,
+            Rectangle<int> scissor)
+        {
+            const int ClearColorBufferSize = 16;
+
+            gd.FlushAllCommands();
+
+            using var cbs = gd.CommandBufferPool.Rent();
+
+            _pipeline.SetCommandBuffer(cbs);
+
+            var bufferHandle = gd.BufferManager.CreateWithHandle(gd, ClearColorBufferSize);
+
+            gd.BufferManager.SetData<float>(bufferHandle, 0, stackalloc float[] { depthValue });
+
+            _pipeline.SetUniformBuffers(stackalloc[] { new BufferAssignment(1, new BufferRange(bufferHandle, 0, ClearColorBufferSize)) });
+
+            Span<Viewport> viewports = stackalloc Viewport[1];
+
+            viewports[0] = new Viewport(
+                new Rectangle<float>(0, 0, dstWidth, dstHeight),
+                ViewportSwizzle.PositiveX,
+                ViewportSwizzle.PositiveY,
+                ViewportSwizzle.PositiveZ,
+                ViewportSwizzle.PositiveW,
+                0f,
+                1f);
+
+            _pipeline.SetProgram(_programDepthStencilClear);
+            _pipeline.SetRenderTarget(dst, (uint)dstWidth, (uint)dstHeight, true, dstFormat);
+            _pipeline.SetViewports(viewports);
+            _pipeline.SetScissors(stackalloc Rectangle<int>[] { scissor });
+            _pipeline.SetPrimitiveTopology(PrimitiveTopology.TriangleStrip);
+            _pipeline.SetDepthTest(new DepthTestDescriptor(true, depthMask, CompareOp.Always));
+            _pipeline.SetStencilTest(CreateStencilTestDescriptor(stencilMask != 0, stencilValue, 0xff, stencilMask));
             _pipeline.Draw(4, 1, 0, 0);
             _pipeline.Finish();
 
@@ -777,8 +826,6 @@ namespace Ryujinx.Graphics.Vulkan
                 ViewportSwizzle.PositiveW,
                 0f,
                 1f);
-
-            Span<Rectangle<int>> scissors = stackalloc Rectangle<int>[1];
 
             pipeline.SetProgram(_programColorBlit);
             pipeline.SetViewports(viewports);
@@ -1119,11 +1166,7 @@ namespace Ryujinx.Graphics.Vulkan
                     0f,
                     1f);
 
-                Span<Rectangle<int>> scissors = stackalloc Rectangle<int>[1];
-
-                scissors[0] = new Rectangle<int>(0, 0, dst.Width, dst.Height);
-
-                _pipeline.SetScissors(scissors);
+                _pipeline.SetScissors(stackalloc Rectangle<int>[] { new Rectangle<int>(0, 0, dst.Width, dst.Height) });
                 _pipeline.SetViewports(viewports);
                 _pipeline.SetPrimitiveTopology(PrimitiveTopology.TriangleStrip);
 
@@ -1251,12 +1294,8 @@ namespace Ryujinx.Graphics.Vulkan
                 0f,
                 1f);
 
-            Span<Rectangle<int>> scissors = stackalloc Rectangle<int>[1];
-
-            scissors[0] = new Rectangle<int>(0, 0, dst.Width, dst.Height);
-
             _pipeline.SetRenderTargetColorMasks(new uint[] { 0xf });
-            _pipeline.SetScissors(scissors);
+            _pipeline.SetScissors(stackalloc Rectangle<int>[] { new Rectangle<int>(0, 0, dst.Width, dst.Height) });
             _pipeline.SetViewports(viewports);
             _pipeline.SetPrimitiveTopology(PrimitiveTopology.TriangleStrip);
 
@@ -1731,6 +1770,7 @@ namespace Ryujinx.Graphics.Vulkan
                 _programColorClearF.Dispose();
                 _programColorClearSI.Dispose();
                 _programColorClearUI.Dispose();
+                _programDepthStencilClear.Dispose();
                 _programStrideChange.Dispose();
                 _programConvertIndexBuffer.Dispose();
                 _programConvertIndirectData.Dispose();

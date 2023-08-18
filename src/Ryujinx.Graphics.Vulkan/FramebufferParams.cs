@@ -148,6 +148,16 @@ namespace Ryujinx.Graphics.Vulkan
             return _attachments[index];
         }
 
+        public Auto<DisposableImageView> GetDepthStencilAttachment()
+        {
+            if (!HasDepthStencil)
+            {
+                return null;
+            }
+
+            return _attachments[AttachmentsCount - 1];
+        }
+
         public ComponentType GetAttachmentComponentType(int index)
         {
             if (_colors != null && (uint)index < _colors.Length)
