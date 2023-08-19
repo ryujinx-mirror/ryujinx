@@ -31,7 +31,10 @@ namespace Ryujinx.Horizon.Sdk.Sf.Hipc
 
             if (allocator != null)
             {
-                _pointerBuffersBaseAddress = allocator.Allocate((ulong)maxSessions * (ulong)options.PointerBufferSize);
+                if (options.PointerBufferSize != 0)
+                {
+                    _pointerBuffersBaseAddress = allocator.Allocate((ulong)maxSessions * (ulong)options.PointerBufferSize);
+                }
 
                 if (options.CanDeferInvokeRequest)
                 {
