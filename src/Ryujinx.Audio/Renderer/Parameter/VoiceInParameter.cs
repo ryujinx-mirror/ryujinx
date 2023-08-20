@@ -264,8 +264,8 @@ namespace Ryujinx.Audio.Renderer.Parameter
             {
                 uint dataTypeSize = (uint)Unsafe.SizeOf<T>();
 
-                return StartSampleOffset * dataTypeSize <= Size &&
-                       EndSampleOffset * dataTypeSize <= Size;
+                return (ulong)StartSampleOffset * dataTypeSize <= Size &&
+                       (ulong)EndSampleOffset * dataTypeSize <= Size;
             }
 
             /// <summary>
