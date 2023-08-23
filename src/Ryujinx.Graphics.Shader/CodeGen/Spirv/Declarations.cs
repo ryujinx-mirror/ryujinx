@@ -434,6 +434,11 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
 
             context.Decorate(perVertexStructType, Decoration.Block);
 
+            if (context.HostCapabilities.ReducedPrecision)
+            {
+                context.MemberDecorate(perVertexStructType, 0, Decoration.Invariant);
+            }
+
             context.MemberDecorate(perVertexStructType, 0, Decoration.BuiltIn, (LiteralInteger)BuiltIn.Position);
             context.MemberDecorate(perVertexStructType, 1, Decoration.BuiltIn, (LiteralInteger)BuiltIn.PointSize);
             context.MemberDecorate(perVertexStructType, 2, Decoration.BuiltIn, (LiteralInteger)BuiltIn.ClipDistance);
