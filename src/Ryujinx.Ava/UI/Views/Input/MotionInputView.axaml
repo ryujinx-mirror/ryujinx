@@ -29,6 +29,7 @@
                     MaxWidth="150"
                     TickFrequency="0.01"
                     IsSnapToTickEnabled="True"
+                    SmallChange="0.01"
                     Maximum="100"
                     Minimum="0"
                     Value="{Binding Sensitivity, Mode=TwoWay}" />
@@ -50,6 +51,7 @@
                     MaxWidth="150"
                     TickFrequency="0.01"
                     IsSnapToTickEnabled="True"
+                    SmallChange="0.01"
                     Maximum="100"
                     Minimum="0"
                     Value="{Binding GyroDeadzone, Mode=TwoWay}" />

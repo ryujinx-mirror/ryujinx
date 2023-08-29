@@ -56,6 +56,7 @@
             Margin="5,-10,5,0"
             VerticalAlignment="Center"
             IsSnapToTickEnabled="True"
+            SmallChange="1"
             Maximum="4"
             Minimum="1"
             TickFrequency="1"

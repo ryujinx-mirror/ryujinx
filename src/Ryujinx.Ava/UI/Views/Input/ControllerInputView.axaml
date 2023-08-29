@@ -465,6 +465,7 @@
                                         Maximum="1"
                                         TickFrequency="0.01"
                                         IsSnapToTickEnabled="True"
+                                        SmallChange="0.01"
                                         Minimum="0"
                                         Value="{ReflectionBinding Configuration.DeadzoneLeft, Mode=TwoWay}" />
                                     <TextBlock
@@ -484,6 +485,7 @@
                                         Maximum="2"
                                         TickFrequency="0.01"
                                         IsSnapToTickEnabled="True"
+                                        SmallChange="0.01"
                                         Minimum="0"
                                         Value="{ReflectionBinding Configuration.RangeLeft, Mode=TwoWay}" />
                                     <TextBlock
@@ -607,6 +609,7 @@
                                 Maximum="1"
                                 TickFrequency="0.01"
                                 IsSnapToTickEnabled="True"
+                                SmallChange="0.01"
                                 Minimum="0"
                                 Value="{ReflectionBinding Configuration.TriggerThreshold, Mode=TwoWay}" />
                             <TextBlock
@@ -1085,6 +1088,7 @@
                                         Maximum="1"
                                         TickFrequency="0.01"
                                         IsSnapToTickEnabled="True"
+                                        SmallChange="0.01"
                                         Padding="0"
                                         VerticalAlignment="Center"
                                         Minimum="0"
@@ -1106,6 +1110,7 @@
                                         Maximum="2"
                                         TickFrequency="0.01"
                                         IsSnapToTickEnabled="True"
+                                        SmallChange="0.01"
                                         Minimum="0"
                                         Value="{ReflectionBinding Configuration.RangeRight, Mode=TwoWay}" />
                                     <TextBlock

@@ -26,6 +26,7 @@
                     Width="200"
                     TickFrequency="0.01"
                     IsSnapToTickEnabled="True"
+                    SmallChange="0.01"
                     Maximum="10"
                     Minimum="0"
                     Value="{Binding StrongRumble, Mode=TwoWay}" />
@@ -47,6 +48,7 @@
                     Maximum="10"
                     TickFrequency="0.01"
                     IsSnapToTickEnabled="True"
+                    SmallChange="0.01"
                     Minimum="0"
                     Value="{Binding WeakRumble, Mode=TwoWay}" />
                 <TextBlock
