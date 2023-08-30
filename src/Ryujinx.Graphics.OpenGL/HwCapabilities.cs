@@ -29,6 +29,7 @@ namespace Ryujinx.Graphics.OpenGL
 
         private static readonly Lazy<int> _maximumComputeSharedMemorySize = new(() => GetLimit(All.MaxComputeSharedMemorySize));
         private static readonly Lazy<int> _storageBufferOffsetAlignment = new(() => GetLimit(All.ShaderStorageBufferOffsetAlignment));
+        private static readonly Lazy<int> _textureBufferOffsetAlignment = new(() => GetLimit(All.TextureBufferOffsetAlignment));
 
         public enum GpuVendor
         {
@@ -78,6 +79,7 @@ namespace Ryujinx.Graphics.OpenGL
 
         public static int MaximumComputeSharedMemorySize => _maximumComputeSharedMemorySize.Value;
         public static int StorageBufferOffsetAlignment => _storageBufferOffsetAlignment.Value;
+        public static int TextureBufferOffsetAlignment => _textureBufferOffsetAlignment.Value;
 
         public static float MaximumSupportedAnisotropy => _maxSupportedAnisotropy.Value;
 

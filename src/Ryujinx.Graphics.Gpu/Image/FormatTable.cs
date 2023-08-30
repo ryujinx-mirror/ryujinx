@@ -557,6 +557,91 @@ namespace Ryujinx.Graphics.Gpu.Image
         };
 #pragma warning restore IDE0055
 
+        // Note: Some of those formats have been changed and requires conversion on the shader,
+        // as GPUs don't support them when used as buffer texture format.
+        private static readonly Dictionary<VertexAttributeFormat, (Format, int)> _singleComponentAttribFormats = new()
+        {
+            { VertexAttributeFormat.R8Unorm,             (Format.R8Unorm, 1)          },
+            { VertexAttributeFormat.R8Snorm,             (Format.R8Snorm, 1)          },
+            { VertexAttributeFormat.R8Uint,              (Format.R8Uint, 1)           },
+            { VertexAttributeFormat.R8Sint,              (Format.R8Sint, 1)           },
+            { VertexAttributeFormat.R16Float,            (Format.R16Float, 1)         },
+            { VertexAttributeFormat.R16Unorm,            (Format.R16Unorm, 1)         },
+            { VertexAttributeFormat.R16Snorm,            (Format.R16Snorm, 1)         },
+            { VertexAttributeFormat.R16Uint,             (Format.R16Uint, 1)          },
+            { VertexAttributeFormat.R16Sint,             (Format.R16Sint, 1)          },
+            { VertexAttributeFormat.R32Float,            (Format.R32Float, 1)         },
+            { VertexAttributeFormat.R32Uint,             (Format.R32Uint, 1)          },
+            { VertexAttributeFormat.R32Sint,             (Format.R32Sint, 1)          },
+            { VertexAttributeFormat.R8G8Unorm,           (Format.R8Unorm, 2)          },
+            { VertexAttributeFormat.R8G8Snorm,           (Format.R8Snorm, 2)          },
+            { VertexAttributeFormat.R8G8Uint,            (Format.R8Uint, 2)           },
+            { VertexAttributeFormat.R8G8Sint,            (Format.R8Sint, 2)           },
+            { VertexAttributeFormat.R16G16Float,         (Format.R16Float, 2)         },
+            { VertexAttributeFormat.R16G16Unorm,         (Format.R16Unorm, 2)         },
+            { VertexAttributeFormat.R16G16Snorm,         (Format.R16Snorm, 2)         },
+            { VertexAttributeFormat.R16G16Uint,          (Format.R16Uint, 2)          },
+            { VertexAttributeFormat.R16G16Sint,          (Format.R16Sint, 2)          },
+            { VertexAttributeFormat.R32G32Float,         (Format.R32Float, 2)         },
+            { VertexAttributeFormat.R32G32Uint,          (Format.R32Uint, 2)          },
+            { VertexAttributeFormat.R32G32Sint,          (Format.R32Sint, 2)          },
+            { VertexAttributeFormat.R8G8B8Unorm,         (Format.R8Unorm, 3)          },
+            { VertexAttributeFormat.R8G8B8Snorm,         (Format.R8Snorm, 3)          },
+            { VertexAttributeFormat.R8G8B8Uint,          (Format.R8Uint, 3)           },
+            { VertexAttributeFormat.R8G8B8Sint,          (Format.R8Sint, 3)           },
+            { VertexAttributeFormat.R16G16B16Float,      (Format.R16Float, 3)         },
+            { VertexAttributeFormat.R16G16B16Unorm,      (Format.R16Unorm, 3)         },
+            { VertexAttributeFormat.R16G16B16Snorm,      (Format.R16Snorm, 3)         },
+            { VertexAttributeFormat.R16G16B16Uint,       (Format.R16Uint, 3)          },
+            { VertexAttributeFormat.R16G16B16Sint,       (Format.R16Sint, 3)          },
+            { VertexAttributeFormat.R32G32B32Float,      (Format.R32Float, 3)         },
+            { VertexAttributeFormat.R32G32B32Uint,       (Format.R32Uint, 3)          },
+            { VertexAttributeFormat.R32G32B32Sint,       (Format.R32Sint, 3)          },
+            { VertexAttributeFormat.R8G8B8A8Unorm,       (Format.R8Unorm, 4)          },
+            { VertexAttributeFormat.R8G8B8A8Snorm,       (Format.R8Snorm, 4)          },
+            { VertexAttributeFormat.R8G8B8A8Uint,        (Format.R8Uint, 4)           },
+            { VertexAttributeFormat.R8G8B8A8Sint,        (Format.R8Sint, 4)           },
+            { VertexAttributeFormat.R16G16B16A16Float,   (Format.R16Float, 4)         },
+            { VertexAttributeFormat.R16G16B16A16Unorm,   (Format.R16Unorm, 4)         },
+            { VertexAttributeFormat.R16G16B16A16Snorm,   (Format.R16Snorm, 4)         },
+            { VertexAttributeFormat.R16G16B16A16Uint,    (Format.R16Uint, 4)          },
+            { VertexAttributeFormat.R16G16B16A16Sint,    (Format.R16Sint, 4)          },
+            { VertexAttributeFormat.R32G32B32A32Float,   (Format.R32Float, 4)         },
+            { VertexAttributeFormat.R32G32B32A32Uint,    (Format.R32Uint, 4)          },
+            { VertexAttributeFormat.R32G32B32A32Sint,    (Format.R32Sint, 4)          },
+            { VertexAttributeFormat.A2B10G10R10Unorm,    (Format.R10G10B10A2Unorm, 4) },
+            { VertexAttributeFormat.A2B10G10R10Uint,     (Format.R10G10B10A2Uint, 4)  },
+            { VertexAttributeFormat.B10G11R11Float,      (Format.R11G11B10Float, 3)   },
+            { VertexAttributeFormat.R8Uscaled,           (Format.R8Uint, 1)           }, // Uscaled -> Uint
+            { VertexAttributeFormat.R8Sscaled,           (Format.R8Sint, 1)           }, // Sscaled -> Sint
+            { VertexAttributeFormat.R16Uscaled,          (Format.R16Uint, 1)          }, // Uscaled -> Uint
+            { VertexAttributeFormat.R16Sscaled,          (Format.R16Sint, 1)          }, // Sscaled -> Sint
+            { VertexAttributeFormat.R32Uscaled,          (Format.R32Uint, 1)          }, // Uscaled -> Uint
+            { VertexAttributeFormat.R32Sscaled,          (Format.R32Sint, 1)          }, // Sscaled -> Sint
+            { VertexAttributeFormat.R8G8Uscaled,         (Format.R8Uint, 2)           }, // Uscaled -> Uint
+            { VertexAttributeFormat.R8G8Sscaled,         (Format.R8Sint, 2)           }, // Sscaled -> Sint
+            { VertexAttributeFormat.R16G16Uscaled,       (Format.R16Uint, 2)          }, // Uscaled -> Uint
+            { VertexAttributeFormat.R16G16Sscaled,       (Format.R16Sint, 2)          }, // Sscaled -> Sint
+            { VertexAttributeFormat.R32G32Uscaled,       (Format.R32Uint, 2)          }, // Uscaled -> Uint
+            { VertexAttributeFormat.R32G32Sscaled,       (Format.R32Sint, 2)          }, // Sscaled -> Sint
+            { VertexAttributeFormat.R8G8B8Uscaled,       (Format.R8Uint, 3)           }, // Uscaled -> Uint
+            { VertexAttributeFormat.R8G8B8Sscaled,       (Format.R8Sint, 3)           }, // Sscaled -> Sint
+            { VertexAttributeFormat.R16G16B16Uscaled,    (Format.R16Uint, 3)          }, // Uscaled -> Uint
+            { VertexAttributeFormat.R16G16B16Sscaled,    (Format.R16Sint, 3)          }, // Sscaled -> Sint
+            { VertexAttributeFormat.R32G32B32Uscaled,    (Format.R32Uint, 3)          }, // Uscaled -> Uint
+            { VertexAttributeFormat.R32G32B32Sscaled,    (Format.R32Sint , 3)         }, // Sscaled -> Sint
+            { VertexAttributeFormat.R8G8B8A8Uscaled,     (Format.R8Uint, 4)           }, // Uscaled -> Uint
+            { VertexAttributeFormat.R8G8B8A8Sscaled,     (Format.R8Sint, 4)           }, // Sscaled -> Sint
+            { VertexAttributeFormat.R16G16B16A16Uscaled, (Format.R16Uint, 4)          }, // Uscaled -> Uint
+            { VertexAttributeFormat.R16G16B16A16Sscaled, (Format.R16Sint, 4)          }, // Sscaled -> Sint
+            { VertexAttributeFormat.R32G32B32A32Uscaled, (Format.R32Uint, 4)          }, // Uscaled -> Uint
+            { VertexAttributeFormat.R32G32B32A32Sscaled, (Format.R32Sint, 4)          }, // Sscaled -> Sint
+            { VertexAttributeFormat.A2B10G10R10Snorm,    (Format.R10G10B10A2Uint, 4)  }, // Snorm -> Uint
+            { VertexAttributeFormat.A2B10G10R10Sint,     (Format.R10G10B10A2Uint, 4)  }, // Sint -> Uint
+            { VertexAttributeFormat.A2B10G10R10Uscaled,  (Format.R10G10B10A2Uint, 4)  }, // Uscaled -> Uint
+            { VertexAttributeFormat.A2B10G10R10Sscaled,  (Format.R10G10B10A2Sint, 4)  }  // Sscaled -> Sint
+        };
+
         /// <summary>
         /// Try getting the texture format from an encoded format integer from the Maxwell texture descriptor.
         /// </summary>
@@ -580,6 +665,23 @@ namespace Ryujinx.Graphics.Gpu.Image
         public static bool TryGetAttribFormat(uint encoded, out Format format)
         {
             return _attribFormats.TryGetValue((VertexAttributeFormat)encoded, out format);
+        }
+
+        /// <summary>
+        /// Try getting a single component vertex attribute format from an encoded format integer from Maxwell attribute registers.
+        /// </summary>
+        /// <param name="encoded">The encoded format integer from the attribute registers</param>
+        /// <param name="format">The output single component vertex attribute format</param>
+        /// <param name="componentsCount">Number of components that the format has</param>
+        /// <returns>True if the format is valid, false otherwise</returns>
+        public static bool TryGetSingleComponentAttribFormat(uint encoded, out Format format, out int componentsCount)
+        {
+            bool result = _singleComponentAttribFormats.TryGetValue((VertexAttributeFormat)encoded, out var tuple);
+
+            format = tuple.Item1;
+            componentsCount = tuple.Item2;
+
+            return result;
         }
     }
 }

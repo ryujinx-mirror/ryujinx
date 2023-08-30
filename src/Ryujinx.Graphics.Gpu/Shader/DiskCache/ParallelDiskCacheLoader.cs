@@ -595,6 +595,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
 
             ResourceCounts counts = new();
 
+            DiskCacheGpuAccessor[] gpuAccessors = new DiskCacheGpuAccessor[Constants.ShaderStages];
             TranslatorContext[] translatorContexts = new TranslatorContext[Constants.ShaderStages + 1];
             TranslatorContext nextStage = null;
 
@@ -626,14 +627,22 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
                         translatorContexts[0] = DecodeGraphicsShader(gpuAccessorA, api, DefaultFlags | TranslationFlags.VertexA, 0);
                     }
 
+                    gpuAccessors[stageIndex] = gpuAccessor;
                     translatorContexts[stageIndex + 1] = currentStage;
                     nextStage = currentStage;
                 }
             }
 
-            if (!_context.Capabilities.SupportsGeometryShader)
+            bool hasGeometryShader = translatorContexts[4] != null;
+            bool vertexHasStore = translatorContexts[1] != null && translatorContexts[1].HasStore;
+            bool geometryHasStore = hasGeometryShader && translatorContexts[4].HasStore;
+            bool vertexToCompute = ShouldConvertVertexToCompute(_context, vertexHasStore, geometryHasStore, hasGeometryShader);
+
+            // We don't support caching shader stages that have been converted to compute currently,
+            // so just eliminate them if they exist in the cache.
+            if (vertexToCompute)
             {
-                ShaderCache.TryRemoveGeometryStage(translatorContexts);
+                return;
             }
 
             CachedShaderStage[] shaders = new CachedShaderStage[guestShaders.Length];
@@ -647,6 +656,8 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
 
                 if (currentStage != null)
                 {
+                    gpuAccessors[stageIndex].InitializeReservedCounts(specState.TransformFeedbackDescriptors != null, vertexToCompute);
+
                     ShaderProgram program;
 
                     byte[] guestCode = guestShaders[stageIndex + 1].Value.Code;
@@ -701,6 +712,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
             ResourceCounts counts = new();
             ShaderSpecializationState newSpecState = new(ref specState.ComputeState);
             DiskCacheGpuAccessor gpuAccessor = new(_context, shader.Code, shader.Cb1Data, specState, newSpecState, counts, 0);
+            gpuAccessor.InitializeReservedCounts(tfEnabled: false, vertexAsCompute: false);
 
             TranslatorContext translatorContext = DecodeComputeShader(gpuAccessor, _context.Capabilities.Api, 0);
 

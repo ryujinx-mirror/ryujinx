@@ -32,7 +32,7 @@ namespace Ryujinx.Graphics.Shader.Translation
         public bool GpPassthrough { get; }
         public bool LastInVertexPipeline { get; set; }
 
-        public int ThreadsPerInputPrimitive { get; }
+        public int ThreadsPerInputPrimitive { get; private set; }
 
         public InputTopology InputTopology => _graphicsState.Topology;
         public OutputTopology OutputTopology { get; }
@@ -97,9 +97,14 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         private readonly Dictionary<TransformFeedbackVariable, TransformFeedbackOutput> _transformFeedbackDefinitions;
 
-        public ShaderDefinitions(ShaderStage stage)
+        public ShaderDefinitions(ShaderStage stage, ulong transformFeedbackVecMap, TransformFeedbackOutput[] transformFeedbackOutputs)
         {
             Stage = stage;
+            TransformFeedbackEnabled = transformFeedbackOutputs != null;
+            _transformFeedbackOutputs = transformFeedbackOutputs;
+            _transformFeedbackDefinitions = new();
+
+            PopulateTransformFeedbackDefinitions(transformFeedbackVecMap, transformFeedbackOutputs);
         }
 
         public ShaderDefinitions(
@@ -142,7 +147,6 @@ namespace Ryujinx.Graphics.Shader.Translation
             bool omapSampleMask,
             bool omapDepth,
             bool supportsScaledVertexFormats,
-            bool transformFeedbackEnabled,
             ulong transformFeedbackVecMap,
             TransformFeedbackOutput[] transformFeedbackOutputs)
         {
@@ -151,17 +155,22 @@ namespace Ryujinx.Graphics.Shader.Translation
             GpPassthrough = gpPassthrough;
             ThreadsPerInputPrimitive = threadsPerInputPrimitive;
             OutputTopology = outputTopology;
-            MaxOutputVertices = maxOutputVertices;
+            MaxOutputVertices = gpPassthrough ? graphicsState.Topology.ToInputVerticesNoAdjacency() : maxOutputVertices;
             ImapTypes = imapTypes;
             OmapTargets = omapTargets;
             OmapSampleMask = omapSampleMask;
             OmapDepth = omapDepth;
             LastInVertexPipeline = stage < ShaderStage.Fragment;
             SupportsScaledVertexFormats = supportsScaledVertexFormats;
-            TransformFeedbackEnabled = transformFeedbackEnabled;
+            TransformFeedbackEnabled = transformFeedbackOutputs != null;
             _transformFeedbackOutputs = transformFeedbackOutputs;
             _transformFeedbackDefinitions = new();
 
+            PopulateTransformFeedbackDefinitions(transformFeedbackVecMap, transformFeedbackOutputs);
+        }
+
+        private void PopulateTransformFeedbackDefinitions(ulong transformFeedbackVecMap, TransformFeedbackOutput[] transformFeedbackOutputs)
+        {
             while (transformFeedbackVecMap != 0)
             {
                 int vecIndex = BitOperations.TrailingZeroCount(transformFeedbackVecMap);
@@ -198,16 +207,6 @@ namespace Ryujinx.Graphics.Shader.Translation
         public void EnableOutputIndexing()
         {
             OaIndexing = true;
-        }
-
-        public TransformFeedbackOutput[] GetTransformFeedbackOutputs()
-        {
-            if (!HasTransformFeedbackOutputs())
-            {
-                return null;
-            }
-
-            return _transformFeedbackOutputs;
         }
 
         public bool TryGetTransformFeedbackOutput(IoVariable ioVariable, int location, int component, out TransformFeedbackOutput transformFeedbackOutput)
@@ -319,6 +318,36 @@ namespace Ryujinx.Graphics.Shader.Translation
         public AttributeType GetAttributeType(int location)
         {
             return _graphicsState.AttributeTypes[location];
+        }
+
+        public bool IsAttributeSint(int location)
+        {
+            return (_graphicsState.AttributeTypes[location] & ~AttributeType.AnyPacked) == AttributeType.Sint;
+        }
+
+        public bool IsAttributePacked(int location)
+        {
+            return _graphicsState.AttributeTypes[location].HasFlag(AttributeType.Packed);
+        }
+
+        public bool IsAttributePackedRgb10A2Signed(int location)
+        {
+            return _graphicsState.AttributeTypes[location].HasFlag(AttributeType.PackedRgb10A2Signed);
+        }
+
+        public int GetGeometryOutputIndexBufferStridePerInstance()
+        {
+            return MaxOutputVertices + OutputTopology switch
+            {
+                OutputTopology.LineStrip => MaxOutputVertices / 2,
+                OutputTopology.TriangleStrip => MaxOutputVertices / 3,
+                _ => MaxOutputVertices,
+            };
+        }
+
+        public int GetGeometryOutputIndexBufferStride()
+        {
+            return GetGeometryOutputIndexBufferStridePerInstance() * ThreadsPerInputPrimitive;
         }
     }
 }

@@ -14,6 +14,8 @@ namespace Ryujinx.Graphics.Shader.Translation
         public TranslatorContext TranslatorContext { get; }
         public ResourceManager ResourceManager { get; }
 
+        public bool VertexAsCompute { get; }
+
         public bool IsNonMain { get; }
 
         public Block CurrBlock { get; set; }
@@ -59,11 +61,13 @@ namespace Ryujinx.Graphics.Shader.Translation
             TranslatorContext translatorContext,
             ResourceManager resourceManager,
             DecodedProgram program,
+            bool vertexAsCompute,
             bool isNonMain) : this()
         {
             TranslatorContext = translatorContext;
             ResourceManager = resourceManager;
             Program = program;
+            VertexAsCompute = vertexAsCompute;
             IsNonMain = isNonMain;
 
             EmitStart();
@@ -71,12 +75,86 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         private void EmitStart()
         {
-            if (TranslatorContext.Definitions.Stage == ShaderStage.Vertex &&
-                TranslatorContext.Options.TargetApi == TargetApi.Vulkan &&
-                (TranslatorContext.Options.Flags & TranslationFlags.VertexA) == 0)
+            if (TranslatorContext.Options.Flags.HasFlag(TranslationFlags.VertexA))
+            {
+                return;
+            }
+
+            if (TranslatorContext.Definitions.Stage == ShaderStage.Vertex && TranslatorContext.Options.TargetApi == TargetApi.Vulkan)
             {
                 // Vulkan requires the point size to be always written on the shader if the primitive topology is points.
                 this.Store(StorageKind.Output, IoVariable.PointSize, null, ConstF(TranslatorContext.Definitions.PointSize));
+            }
+
+            if (VertexAsCompute)
+            {
+                int vertexInfoCbBinding = ResourceManager.Reservations.VertexInfoConstantBufferBinding;
+                int countFieldIndex = TranslatorContext.Stage == ShaderStage.Vertex
+                    ? (int)VertexInfoBufferField.VertexCounts
+                    : (int)VertexInfoBufferField.GeometryCounts;
+
+                Operand outputVertexOffset = this.Load(StorageKind.Input, IoVariable.GlobalId, Const(0));
+                Operand vertexCount = this.Load(StorageKind.ConstantBuffer, vertexInfoCbBinding, Const(countFieldIndex), Const(0));
+                Operand isVertexOob = this.ICompareGreaterOrEqualUnsigned(outputVertexOffset, vertexCount);
+
+                Operand lblVertexInBounds = Label();
+
+                this.BranchIfFalse(lblVertexInBounds, isVertexOob);
+                this.Return();
+                this.MarkLabel(lblVertexInBounds);
+
+                Operand outputInstanceOffset = this.Load(StorageKind.Input, IoVariable.GlobalId, Const(1));
+                Operand instanceCount = this.Load(StorageKind.ConstantBuffer, vertexInfoCbBinding, Const((int)VertexInfoBufferField.VertexCounts), Const(1));
+                Operand firstVertex = this.Load(StorageKind.ConstantBuffer, vertexInfoCbBinding, Const((int)VertexInfoBufferField.VertexCounts), Const(2));
+                Operand firstInstance = this.Load(StorageKind.ConstantBuffer, vertexInfoCbBinding, Const((int)VertexInfoBufferField.VertexCounts), Const(3));
+                Operand ibBaseOffset = this.Load(StorageKind.ConstantBuffer, vertexInfoCbBinding, Const((int)VertexInfoBufferField.GeometryCounts), Const(3));
+                Operand isInstanceOob = this.ICompareGreaterOrEqualUnsigned(outputInstanceOffset, instanceCount);
+
+                Operand lblInstanceInBounds = Label();
+
+                this.BranchIfFalse(lblInstanceInBounds, isInstanceOob);
+                this.Return();
+                this.MarkLabel(lblInstanceInBounds);
+
+                if (TranslatorContext.Stage == ShaderStage.Vertex)
+                {
+                    Operand vertexIndexVr = Local();
+
+                    this.TextureSample(
+                        SamplerType.TextureBuffer,
+                        TextureFlags.IntCoords,
+                        ResourceManager.Reservations.IndexBufferTextureBinding,
+                        1,
+                        new[] { vertexIndexVr },
+                        new[] { this.IAdd(ibBaseOffset, outputVertexOffset) });
+
+                    this.Store(StorageKind.LocalMemory, ResourceManager.LocalVertexIndexVertexRateMemoryId, this.IAdd(firstVertex, vertexIndexVr));
+                    this.Store(StorageKind.LocalMemory, ResourceManager.LocalVertexIndexInstanceRateMemoryId, this.IAdd(firstInstance, outputInstanceOffset));
+                }
+                else if (TranslatorContext.Stage == ShaderStage.Geometry)
+                {
+                    int inputVertices = TranslatorContext.Definitions.InputTopology.ToInputVertices();
+
+                    Operand baseVertex = this.IMultiply(outputVertexOffset, Const(inputVertices));
+
+                    for (int index = 0; index < inputVertices; index++)
+                    {
+                        Operand vertexIndex = Local();
+
+                        this.TextureSample(
+                            SamplerType.TextureBuffer,
+                            TextureFlags.IntCoords,
+                            ResourceManager.Reservations.TopologyRemapBufferTextureBinding,
+                            1,
+                            new[] { vertexIndex },
+                            new[] { this.IAdd(baseVertex, Const(index)) });
+
+                        this.Store(StorageKind.LocalMemory, ResourceManager.LocalTopologyRemapMemoryId, Const(index), vertexIndex);
+                    }
+
+                    this.Store(StorageKind.LocalMemory, ResourceManager.LocalGeometryOutputVertexCountMemoryId, Const(0));
+                    this.Store(StorageKind.LocalMemory, ResourceManager.LocalGeometryOutputIndexCountMemoryId, Const(0));
+                }
             }
         }
 
@@ -166,16 +244,21 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         public void PrepareForVertexReturn()
         {
-            if (!TranslatorContext.GpuAccessor.QueryHostSupportsTransformFeedback() && TranslatorContext.GpuAccessor.QueryTransformFeedbackEnabled())
-            {
-                Operand vertexCount = this.Load(StorageKind.StorageBuffer, Constants.TfeInfoBinding, Const(1));
+            // TODO: Support transform feedback emulation on stages other than vertex.
+            // Those stages might produce more primitives, so it needs a way to "compact" the output after it is written.
 
-                for (int tfbIndex = 0; tfbIndex < Constants.TfeBuffersCount; tfbIndex++)
+            if (!TranslatorContext.GpuAccessor.QueryHostSupportsTransformFeedback() &&
+                TranslatorContext.GpuAccessor.QueryTransformFeedbackEnabled() &&
+                TranslatorContext.Stage == ShaderStage.Vertex)
+            {
+                Operand vertexCount = this.Load(StorageKind.ConstantBuffer, SupportBuffer.Binding, Const((int)SupportBufferField.TfeVertexCount));
+
+                for (int tfbIndex = 0; tfbIndex < ResourceReservations.TfeBuffersCount; tfbIndex++)
                 {
                     var locations = TranslatorContext.GpuAccessor.QueryTransformFeedbackVaryingLocations(tfbIndex);
                     var stride = TranslatorContext.GpuAccessor.QueryTransformFeedbackStride(tfbIndex);
 
-                    Operand baseOffset = this.Load(StorageKind.StorageBuffer, Constants.TfeInfoBinding, Const(0), Const(tfbIndex));
+                    Operand baseOffset = this.Load(StorageKind.ConstantBuffer, SupportBuffer.Binding, Const((int)SupportBufferField.TfeOffset), Const(tfbIndex));
                     Operand baseVertex = this.Load(StorageKind.Input, IoVariable.BaseVertex);
                     Operand baseInstance = this.Load(StorageKind.Input, IoVariable.BaseInstance);
                     Operand vertexIndex = this.Load(StorageKind.Input, IoVariable.VertexIndex);
@@ -200,7 +283,9 @@ namespace Ryujinx.Graphics.Shader.Translation
                         Operand offset = this.IAdd(baseOffset, Const(j));
                         Operand value = Instructions.AttributeMap.GenerateAttributeLoad(this, null, location * 4, isOutput: true, isPerPatch: false);
 
-                        this.Store(StorageKind.StorageBuffer, Constants.TfeBufferBaseBinding + tfbIndex, Const(0), offset, value);
+                        int binding = ResourceManager.Reservations.GetTfeBufferStorageBufferBinding(tfbIndex);
+
+                        this.Store(StorageKind.StorageBuffer, binding, Const(0), offset, value);
                     }
                 }
             }
@@ -224,16 +309,6 @@ namespace Ryujinx.Graphics.Shader.Translation
                 Operand halfW = this.FPMultiply(w, ConstF(0.5f));
 
                 this.Store(StorageKind.Output, IoVariable.Position, null, Const(2), this.FPFusedMultiplyAdd(z, ConstF(0.5f), halfW));
-            }
-
-            if (TranslatorContext.Definitions.Stage != ShaderStage.Geometry && TranslatorContext.HasLayerInputAttribute)
-            {
-                int attrVecIndex = TranslatorContext.GpLayerInputAttribute >> 2;
-                int attrComponentIndex = TranslatorContext.GpLayerInputAttribute & 3;
-
-                Operand layer = this.Load(StorageKind.Output, IoVariable.UserDefined, null, Const(attrVecIndex), Const(attrComponentIndex));
-
-                this.Store(StorageKind.Output, IoVariable.Layer, null, layer);
             }
         }
 
@@ -308,9 +383,30 @@ namespace Ryujinx.Graphics.Shader.Translation
 
                 if (TranslatorContext.Definitions.GpPassthrough && !TranslatorContext.GpuAccessor.QueryHostSupportsGeometryShaderPassthrough())
                 {
-                    int inputVertices = TranslatorContext.Definitions.InputTopology.ToInputVertices();
+                    int inputStart, inputEnd, inputStep;
 
-                    for (int primIndex = 0; primIndex < inputVertices; primIndex++)
+                    InputTopology topology = TranslatorContext.Definitions.InputTopology;
+
+                    if (topology == InputTopology.LinesAdjacency)
+                    {
+                        inputStart = 1;
+                        inputEnd = 3;
+                        inputStep = 1;
+                    }
+                    else if (topology == InputTopology.TrianglesAdjacency)
+                    {
+                        inputStart = 0;
+                        inputEnd = 6;
+                        inputStep = 2;
+                    }
+                    else
+                    {
+                        inputStart = 0;
+                        inputEnd = topology.ToInputVerticesNoAdjacency();
+                        inputStep = 1;
+                    }
+
+                    for (int primIndex = inputStart; primIndex < inputEnd; primIndex += inputStep)
                     {
                         WritePositionOutput(primIndex);
 
@@ -425,6 +521,65 @@ namespace Ryujinx.Graphics.Shader.Translation
                     {
                         regIndexBase += 4;
                     }
+                }
+            }
+
+            if (VertexAsCompute)
+            {
+                if (TranslatorContext.Stage == ShaderStage.Vertex)
+                {
+                    int vertexInfoCbBinding = ResourceManager.Reservations.VertexInfoConstantBufferBinding;
+                    int vertexOutputSbBinding = ResourceManager.Reservations.VertexOutputStorageBufferBinding;
+                    int stride = ResourceManager.Reservations.OutputSizePerInvocation;
+
+                    Operand vertexCount = this.Load(StorageKind.ConstantBuffer, vertexInfoCbBinding, Const((int)VertexInfoBufferField.VertexCounts), Const(0));
+
+                    Operand outputVertexOffset = this.Load(StorageKind.Input, IoVariable.GlobalId, Const(0));
+                    Operand outputInstanceOffset = this.Load(StorageKind.Input, IoVariable.GlobalId, Const(1));
+
+                    Operand outputBaseVertex = this.IMultiply(outputInstanceOffset, vertexCount);
+
+                    Operand baseOffset = this.IMultiply(this.IAdd(outputBaseVertex, outputVertexOffset), Const(stride));
+
+                    for (int offset = 0; offset < stride; offset++)
+                    {
+                        Operand vertexOffset = this.IAdd(baseOffset, Const(offset));
+                        Operand value = this.Load(StorageKind.LocalMemory, ResourceManager.LocalVertexDataMemoryId, Const(offset));
+
+                        this.Store(StorageKind.StorageBuffer, vertexOutputSbBinding, Const(0), vertexOffset, value);
+                    }
+                }
+                else if (TranslatorContext.Stage == ShaderStage.Geometry)
+                {
+                    Operand lblLoopHead = Label();
+                    Operand lblExit = Label();
+
+                    this.MarkLabel(lblLoopHead);
+
+                    Operand writtenIndices = this.Load(StorageKind.LocalMemory, ResourceManager.LocalGeometryOutputIndexCountMemoryId);
+
+                    int maxIndicesPerPrimitiveInvocation = TranslatorContext.Definitions.GetGeometryOutputIndexBufferStridePerInstance();
+                    int maxIndicesPerPrimitive = maxIndicesPerPrimitiveInvocation * TranslatorContext.Definitions.ThreadsPerInputPrimitive;
+
+                    this.BranchIfTrue(lblExit, this.ICompareGreaterOrEqualUnsigned(writtenIndices, Const(maxIndicesPerPrimitiveInvocation)));
+
+                    int vertexInfoCbBinding = ResourceManager.Reservations.VertexInfoConstantBufferBinding;
+
+                    Operand primitiveIndex = this.Load(StorageKind.Input, IoVariable.GlobalId, Const(0));
+                    Operand instanceIndex = this.Load(StorageKind.Input, IoVariable.GlobalId, Const(1));
+                    Operand invocationId = this.Load(StorageKind.Input, IoVariable.GlobalId, Const(2));
+                    Operand vertexCount = this.Load(StorageKind.ConstantBuffer, vertexInfoCbBinding, Const((int)VertexInfoBufferField.VertexCounts), Const(0));
+                    Operand primitiveId = this.IAdd(this.IMultiply(instanceIndex, vertexCount), primitiveIndex);
+                    Operand ibOffset = this.IMultiply(primitiveId, Const(maxIndicesPerPrimitive));
+                    ibOffset = this.IAdd(ibOffset, this.IMultiply(invocationId, Const(maxIndicesPerPrimitiveInvocation)));
+                    ibOffset = this.IAdd(ibOffset, writtenIndices);
+
+                    this.Store(StorageKind.StorageBuffer, ResourceManager.Reservations.GeometryIndexOutputStorageBufferBinding, Const(0), ibOffset, Const(-1));
+                    this.Store(StorageKind.LocalMemory, ResourceManager.LocalGeometryOutputIndexCountMemoryId, this.IAdd(writtenIndices, Const(1)));
+
+                    this.Branch(lblLoopHead);
+
+                    this.MarkLabel(lblExit);
                 }
             }
 

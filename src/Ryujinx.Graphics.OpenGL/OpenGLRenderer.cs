@@ -164,6 +164,7 @@ namespace Ryujinx.Graphics.OpenGL
                 supportsShaderBarrierDivergence: !(intelWindows || intelUnix),
                 supportsShaderFloat64: true,
                 supportsTextureShadowLod: HwCapabilities.SupportsTextureShadowLod,
+                supportsVertexStoreAndAtomics: true,
                 supportsViewportIndexVertexTessellation: HwCapabilities.SupportsShaderViewportLayerArray,
                 supportsViewportMask: HwCapabilities.SupportsViewportArray2,
                 supportsViewportSwizzle: HwCapabilities.SupportsViewportSwizzle,
@@ -177,6 +178,7 @@ namespace Ryujinx.Graphics.OpenGL
                 maximumSupportedAnisotropy: HwCapabilities.MaximumSupportedAnisotropy,
                 shaderSubgroupSize: Constants.MaxSubgroupSize,
                 storageBufferOffsetAlignment: HwCapabilities.StorageBufferOffsetAlignment,
+                textureBufferOffsetAlignment: HwCapabilities.TextureBufferOffsetAlignment,
                 gatherBiasPrecision: intelWindows || amdWindows ? 8 : 0); // Precision is 8 for these vendors on Vulkan.
         }
 

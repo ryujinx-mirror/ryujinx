@@ -18,6 +18,7 @@ namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
         FrontColorDiffuse,
         FrontColorSpecular,
         FrontFacing,
+        GlobalId,
         InstanceId,
         InstanceIndex,
         InvocationId,

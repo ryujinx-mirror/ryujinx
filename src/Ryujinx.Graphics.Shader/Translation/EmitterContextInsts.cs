@@ -831,6 +831,11 @@ namespace Ryujinx.Graphics.Shader.Translation
             return context.Add(Instruction.Store, storageKind, null, e0, e1, value);
         }
 
+        public static Operand Store(this EmitterContext context, StorageKind storageKind, int binding, Operand value)
+        {
+            return context.Add(Instruction.Store, storageKind, null, Const(binding), value);
+        }
+
         public static Operand Store(this EmitterContext context, StorageKind storageKind, int binding, Operand e0, Operand value)
         {
             return context.Add(Instruction.Store, storageKind, null, Const(binding), e0, value);

@@ -218,11 +218,13 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         {
             bool changed = false;
             ref Array32<AttributeType> attributeTypes = ref _graphics.AttributeTypes;
-            bool supportsScaledFormats = _context.Capabilities.SupportsScaledVertexFormats;
+            bool mayConvertVtgToCompute = ShaderCache.MayConvertVtgToCompute(ref _context.Capabilities);
+            bool supportsScaledFormats = _context.Capabilities.SupportsScaledVertexFormats && !mayConvertVtgToCompute;
 
             for (int location = 0; location < state.Length; location++)
             {
                 VertexAttribType type = state[location].UnpackType();
+                VertexAttribSize size = state[location].UnpackSize();
 
                 AttributeType value;
 
@@ -245,6 +247,18 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                         VertexAttribType.Sscaled => AttributeType.Sscaled,
                         _ => AttributeType.Float,
                     };
+                }
+
+                if (mayConvertVtgToCompute && (size == VertexAttribSize.Rgb10A2 || size == VertexAttribSize.Rg11B10))
+                {
+                    value |= AttributeType.Packed;
+
+                    if (type == VertexAttribType.Snorm ||
+                        type == VertexAttribType.Sint ||
+                        type == VertexAttribType.Sscaled)
+                    {
+                        value |= AttributeType.PackedRgb10A2Signed;
+                    }
                 }
 
                 if (attributeTypes[location] != value)

@@ -78,11 +78,31 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         private static ShaderDefinitions CreateGraphicsDefinitions(IGpuAccessor gpuAccessor, ShaderHeader header)
         {
+            TransformFeedbackOutput[] transformFeedbackOutputs = GetTransformFeedbackOutputs(gpuAccessor, out ulong transformFeedbackVecMap);
+
+            return new ShaderDefinitions(
+                header.Stage,
+                gpuAccessor.QueryGraphicsState(),
+                header.Stage == ShaderStage.Geometry && header.GpPassthrough,
+                header.ThreadsPerInputPrimitive,
+                header.OutputTopology,
+                header.MaxOutputVertexCount,
+                header.ImapTypes,
+                header.OmapTargets,
+                header.OmapSampleMask,
+                header.OmapDepth,
+                gpuAccessor.QueryHostSupportsScaledVertexFormats(),
+                transformFeedbackVecMap,
+                transformFeedbackOutputs);
+        }
+
+        internal static TransformFeedbackOutput[] GetTransformFeedbackOutputs(IGpuAccessor gpuAccessor, out ulong transformFeedbackVecMap)
+        {
             bool transformFeedbackEnabled =
                 gpuAccessor.QueryTransformFeedbackEnabled() &&
                 gpuAccessor.QueryHostSupportsTransformFeedback();
             TransformFeedbackOutput[] transformFeedbackOutputs = null;
-            ulong transformFeedbackVecMap = 0UL;
+            transformFeedbackVecMap = 0UL;
 
             if (transformFeedbackEnabled)
             {
@@ -105,21 +125,7 @@ namespace Ryujinx.Graphics.Shader.Translation
                 }
             }
 
-            return new ShaderDefinitions(
-                header.Stage,
-                gpuAccessor.QueryGraphicsState(),
-                header.Stage == ShaderStage.Geometry && header.GpPassthrough,
-                header.ThreadsPerInputPrimitive,
-                header.OutputTopology,
-                header.MaxOutputVertexCount,
-                header.ImapTypes,
-                header.OmapTargets,
-                header.OmapSampleMask,
-                header.OmapDepth,
-                gpuAccessor.QueryHostSupportsScaledVertexFormats(),
-                transformFeedbackEnabled,
-                transformFeedbackVecMap,
-                transformFeedbackOutputs);
+            return transformFeedbackOutputs;
         }
 
         private static int GetLocalMemorySize(ShaderHeader header)
@@ -131,6 +137,7 @@ namespace Ryujinx.Graphics.Shader.Translation
             TranslatorContext translatorContext,
             ResourceManager resourceManager,
             DecodedProgram program,
+            bool vertexAsCompute,
             bool initializeOutputs,
             out int initializationOperations)
         {
@@ -147,7 +154,7 @@ namespace Ryujinx.Graphics.Shader.Translation
 
             for (int index = 0; index < functions.Length; index++)
             {
-                EmitterContext context = new(translatorContext, resourceManager, program, index != 0);
+                EmitterContext context = new(translatorContext, resourceManager, program, vertexAsCompute, index != 0);
 
                 if (initializeOutputs && index == 0)
                 {

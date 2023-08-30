@@ -63,7 +63,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                     {
                         value = AttributeMap.GenerateAttributeLoad(context, primVertex, offset, isOutput, op.P);
 
-                        if (!context.TranslatorContext.Definitions.SupportsScaledVertexFormats &&
+                        if ((!context.TranslatorContext.Definitions.SupportsScaledVertexFormats || context.VertexAsCompute) &&
                             context.TranslatorContext.Stage == ShaderStage.Vertex &&
                             !op.O &&
                             offset >= 0x80 &&

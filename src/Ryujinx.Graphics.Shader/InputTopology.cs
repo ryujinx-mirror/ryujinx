@@ -29,6 +29,19 @@ namespace Ryujinx.Graphics.Shader
             return topology switch
             {
                 InputTopology.Points => 1,
+                InputTopology.Lines => 2,
+                InputTopology.LinesAdjacency => 4,
+                InputTopology.Triangles => 3,
+                InputTopology.TrianglesAdjacency => 6,
+                _ => 1,
+            };
+        }
+
+        public static int ToInputVerticesNoAdjacency(this InputTopology topology)
+        {
+            return topology switch
+            {
+                InputTopology.Points => 1,
                 InputTopology.Lines or
                 InputTopology.LinesAdjacency => 2,
                 InputTopology.Triangles or

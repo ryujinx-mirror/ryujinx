@@ -239,9 +239,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                         _ => throw new InvalidOperationException($"Invalid output topology \"{context.Definitions.OutputTopology}\"."),
                     });
 
-                    int maxOutputVertices = context.Definitions.GpPassthrough ? context.InputVertices : context.Definitions.MaxOutputVertices;
-
-                    context.AddExecutionMode(spvFunc, ExecutionMode.OutputVertices, (SpvLiteralInteger)maxOutputVertices);
+                    context.AddExecutionMode(spvFunc, ExecutionMode.OutputVertices, (SpvLiteralInteger)context.Definitions.MaxOutputVertices);
                 }
                 else if (context.Definitions.Stage == ShaderStage.Fragment)
                 {
@@ -277,6 +275,14 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                         localSizeX,
                         localSizeY,
                         localSizeZ);
+                }
+
+                if (context.Definitions.Stage != ShaderStage.Fragment &&
+                    context.Definitions.Stage != ShaderStage.Geometry &&
+                    context.Definitions.Stage != ShaderStage.Compute &&
+                    context.Info.IoDefinitions.Contains(new IoDefinition(StorageKind.Output, IoVariable.Layer)))
+                {
+                    context.AddCapability(Capability.ShaderLayer);
                 }
 
                 if (context.Definitions.TransformFeedbackEnabled && context.Definitions.LastInVertexPipeline)

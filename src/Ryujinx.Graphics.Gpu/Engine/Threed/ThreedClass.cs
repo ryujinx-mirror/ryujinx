@@ -13,7 +13,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
     /// <summary>
     /// Represents a 3D engine class.
     /// </summary>
-    class ThreedClass : IDeviceState
+    class ThreedClass : IDeviceState, IDisposable
     {
         private readonly GpuContext _context;
         private readonly GPFifoClass _fifoClass;
@@ -179,6 +179,15 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         }
 
         /// <summary>
+        /// Marks the specified register range for a group index as dirty, forcing the associated state to update on the next draw.
+        /// </summary>
+        /// <param name="groupIndex">Index of the group to dirty</param>
+        public void ForceStateDirtyByIndex(int groupIndex)
+        {
+            _stateUpdater.ForceDirty(groupIndex);
+        }
+
+        /// <summary>
         /// Forces the shaders to be rebound on the next draw.
         /// </summary>
         public void ForceShaderUpdate()
@@ -207,7 +216,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         /// </summary>
         public void PerformDeferredDraws()
         {
-            _drawManager.PerformDeferredDraws();
+            _drawManager.PerformDeferredDraws(this);
         }
 
         /// <summary>
@@ -402,7 +411,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         /// <param name="argument">Method call argument</param>
         private void DrawBegin(int argument)
         {
-            _drawManager.DrawBegin(argument);
+            _drawManager.DrawBegin(this, argument);
         }
 
         /// <summary>
@@ -616,6 +625,20 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         public void Clear(int argument, int layerCount)
         {
             _drawManager.Clear(this, argument, layerCount);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _drawManager.Dispose();
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
     }
 }

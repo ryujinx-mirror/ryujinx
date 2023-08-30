@@ -60,6 +60,11 @@ namespace Ryujinx.Graphics.Shader.Decoders
             _functionsWithId.Add(function);
         }
 
+        public IoUsage GetIoUsage()
+        {
+            return new IoUsage(UsedFeatures, ClipDistancesWritten, AttributeUsage.UsedOutputAttributes);
+        }
+
         public IEnumerator<DecodedFunction> GetEnumerator()
         {
             return _functions.Values.GetEnumerator();

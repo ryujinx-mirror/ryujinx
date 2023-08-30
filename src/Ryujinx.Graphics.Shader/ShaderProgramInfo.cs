@@ -10,9 +10,10 @@ namespace Ryujinx.Graphics.Shader
         public ReadOnlyCollection<TextureDescriptor> Textures { get; }
         public ReadOnlyCollection<TextureDescriptor> Images { get; }
 
-        public ShaderIdentification Identification { get; }
-        public int GpLayerInputAttribute { get; }
         public ShaderStage Stage { get; }
+        public int GeometryVerticesPerPrimitive { get; }
+        public int GeometryMaxOutputVertices { get; }
+        public int ThreadsPerInputPrimitive { get; }
         public bool UsesFragCoord { get; }
         public bool UsesInstanceId { get; }
         public bool UsesDrawParameters { get; }
@@ -25,9 +26,10 @@ namespace Ryujinx.Graphics.Shader
             BufferDescriptor[] sBuffers,
             TextureDescriptor[] textures,
             TextureDescriptor[] images,
-            ShaderIdentification identification,
-            int gpLayerInputAttribute,
             ShaderStage stage,
+            int geometryVerticesPerPrimitive,
+            int geometryMaxOutputVertices,
+            int threadsPerInputPrimitive,
             bool usesFragCoord,
             bool usesInstanceId,
             bool usesDrawParameters,
@@ -40,9 +42,10 @@ namespace Ryujinx.Graphics.Shader
             Textures = Array.AsReadOnly(textures);
             Images = Array.AsReadOnly(images);
 
-            Identification = identification;
-            GpLayerInputAttribute = gpLayerInputAttribute;
             Stage = stage;
+            GeometryVerticesPerPrimitive = geometryVerticesPerPrimitive;
+            GeometryMaxOutputVertices = geometryMaxOutputVertices;
+            ThreadsPerInputPrimitive = threadsPerInputPrimitive;
             UsesFragCoord = usesFragCoord;
             UsesInstanceId = usesInstanceId;
             UsesDrawParameters = usesDrawParameters;

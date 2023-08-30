@@ -22,7 +22,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
         private const ushort FileFormatVersionMajor = 1;
         private const ushort FileFormatVersionMinor = 2;
         private const uint FileFormatVersionPacked = ((uint)FileFormatVersionMajor << 16) | FileFormatVersionMinor;
-        private const uint CodeGenVersion = 5609;
+        private const uint CodeGenVersion = 5551;
 
         private const string SharedTocFileName = "shared.toc";
         private const string SharedDataFileName = "shared.data";
@@ -139,6 +139,21 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
             /// Shader stage.
             /// </summary>
             public ShaderStage Stage;
+
+            /// <summary>
+            /// Number of vertices that each output primitive has on a geometry shader.
+            /// </summary>
+            public byte GeometryVerticesPerPrimitive;
+
+            /// <summary>
+            /// Maximum number of vertices that a geometry shader may generate.
+            /// </summary>
+            public ushort GeometryMaxOutputVertices;
+
+            /// <summary>
+            /// Number of invocations per primitive on tessellation or geometry shaders.
+            /// </summary>
+            public ushort ThreadsPerInputPrimitive;
 
             /// <summary>
             /// Indicates if the fragment shader accesses the fragment coordinate built-in variable.
@@ -783,9 +798,10 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
                 sBuffers,
                 textures,
                 images,
-                ShaderIdentification.None,
-                0,
                 dataInfo.Stage,
+                dataInfo.GeometryVerticesPerPrimitive,
+                dataInfo.GeometryMaxOutputVertices,
+                dataInfo.ThreadsPerInputPrimitive,
                 dataInfo.UsesFragCoord,
                 dataInfo.UsesInstanceId,
                 dataInfo.UsesDrawParameters,
@@ -813,6 +829,9 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
                 TexturesCount = (ushort)info.Textures.Count,
                 ImagesCount = (ushort)info.Images.Count,
                 Stage = info.Stage,
+                GeometryVerticesPerPrimitive = (byte)info.GeometryVerticesPerPrimitive,
+                GeometryMaxOutputVertices = (ushort)info.GeometryMaxOutputVertices,
+                ThreadsPerInputPrimitive = (ushort)info.ThreadsPerInputPrimitive,
                 UsesFragCoord = info.UsesFragCoord,
                 UsesInstanceId = info.UsesInstanceId,
                 UsesDrawParameters = info.UsesDrawParameters,

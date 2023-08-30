@@ -29,6 +29,12 @@ namespace Ryujinx.ShaderTools
             [Option("compute", Required = false, Default = false, HelpText = "Indicate that the shader is a compute shader.")]
             public bool Compute { get; set; }
 
+            [Option("vertex-as-compute", Required = false, Default = false, HelpText = "Indicate that the shader is a vertex shader and should be converted to compute.")]
+            public bool VertexAsCompute { get; set; }
+
+            [Option("vertex-passthrough", Required = false, Default = false, HelpText = "Indicate that the shader is a vertex passthrough shader for compute output.")]
+            public bool VertexPassthrough { get; set; }
+
             [Option("target-language", Required = false, Default = TargetLanguage.Glsl, HelpText = "Indicate the target shader language to use.")]
             public TargetLanguage TargetLanguage { get; set; }
 
@@ -54,8 +60,18 @@ namespace Ryujinx.ShaderTools
             byte[] data = File.ReadAllBytes(options.InputPath);
 
             TranslationOptions translationOptions = new(options.TargetLanguage, options.TargetApi, flags);
+            TranslatorContext translatorContext = Translator.CreateContext(0, new GpuAccessor(data), translationOptions);
 
-            ShaderProgram program = Translator.CreateContext(0, new GpuAccessor(data), translationOptions).Translate();
+            ShaderProgram program;
+
+            if (options.VertexPassthrough)
+            {
+                program = translatorContext.GenerateVertexPassthroughForCompute();
+            }
+            else
+            {
+                program = translatorContext.Translate(options.VertexAsCompute);
+            }
 
             if (options.OutputPath == null)
             {

@@ -19,8 +19,12 @@ namespace Ryujinx.Graphics.Shader.Translation
         DrawParameters = 1 << 4,
         RtLayer = 1 << 5,
         Shuffle = 1 << 6,
+        ViewportIndex = 1 << 7,
+        ViewportMask = 1 << 8,
         FixedFuncAttr = 1 << 9,
         LocalMemory = 1 << 10,
         SharedMemory = 1 << 11,
+        Store = 1 << 12,
+        VtgAsCompute = 1 << 13,
     }
 }

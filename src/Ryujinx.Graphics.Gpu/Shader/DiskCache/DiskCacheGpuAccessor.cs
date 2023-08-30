@@ -35,7 +35,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
             ShaderSpecializationState oldSpecState,
             ShaderSpecializationState newSpecState,
             ResourceCounts counts,
-            int stageIndex) : base(context, counts, stageIndex, oldSpecState.TransformFeedbackDescriptors != null)
+            int stageIndex) : base(context, counts, stageIndex)
         {
             _data = data;
             _cb1Data = cb1Data;

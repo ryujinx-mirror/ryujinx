@@ -48,12 +48,22 @@ namespace Ryujinx.Graphics.Shader.Translation
         public int LocalMemoryId { get; private set; }
         public int SharedMemoryId { get; private set; }
 
+        public int LocalVertexDataMemoryId { get; private set; }
+        public int LocalTopologyRemapMemoryId { get; private set; }
+        public int LocalVertexIndexVertexRateMemoryId { get; private set; }
+        public int LocalVertexIndexInstanceRateMemoryId { get; private set; }
+        public int LocalGeometryOutputVertexCountMemoryId { get; private set; }
+        public int LocalGeometryOutputIndexCountMemoryId { get; private set; }
+
         public ShaderProperties Properties { get; }
 
-        public ResourceManager(ShaderStage stage, IGpuAccessor gpuAccessor)
+        public ResourceReservations Reservations { get; }
+
+        public ResourceManager(ShaderStage stage, IGpuAccessor gpuAccessor, ResourceReservations reservations = null)
         {
             _gpuAccessor = gpuAccessor;
             Properties = new();
+            Reservations = reservations;
             _stage = stage;
             _stagePrefix = GetShaderStagePrefix(stage);
 
@@ -112,6 +122,29 @@ namespace Ryujinx.Graphics.Shader.Translation
             {
                 SharedMemoryId = -1;
             }
+        }
+
+        public void SetVertexAsComputeLocalMemories(ShaderStage stage, InputTopology inputTopology)
+        {
+            LocalVertexDataMemoryId = AddMemoryDefinition("local_vertex_data", AggregateType.Array | AggregateType.FP32, Reservations.OutputSizePerInvocation);
+
+            if (stage == ShaderStage.Vertex)
+            {
+                LocalVertexIndexVertexRateMemoryId = AddMemoryDefinition("local_vertex_index_vr", AggregateType.U32);
+                LocalVertexIndexInstanceRateMemoryId = AddMemoryDefinition("local_vertex_index_ir", AggregateType.U32);
+            }
+            else if (stage == ShaderStage.Geometry)
+            {
+                LocalTopologyRemapMemoryId = AddMemoryDefinition("local_topology_remap", AggregateType.Array | AggregateType.U32, inputTopology.ToInputVertices());
+
+                LocalGeometryOutputVertexCountMemoryId = AddMemoryDefinition("local_geometry_output_vertex", AggregateType.U32);
+                LocalGeometryOutputIndexCountMemoryId = AddMemoryDefinition("local_geometry_output_index", AggregateType.U32);
+            }
+        }
+
+        private int AddMemoryDefinition(string name, AggregateType type, int arrayLength = 1)
+        {
+            return Properties.AddLocalMemory(new MemoryDefinition(name, type, arrayLength));
         }
 
         public int GetConstantBufferBinding(int slot)
@@ -465,17 +498,22 @@ namespace Ryujinx.Graphics.Shader.Translation
             return descriptors;
         }
 
-        public (int, int) GetCbufSlotAndHandleForTexture(int binding)
+        public bool TryGetCbufSlotAndHandleForTexture(int binding, out int cbufSlot, out int handle)
         {
             foreach ((TextureInfo info, TextureMeta meta) in _usedTextures)
             {
                 if (meta.Binding == binding)
                 {
-                    return (info.CbufSlot, info.Handle);
+                    cbufSlot = info.CbufSlot;
+                    handle = info.Handle;
+
+                    return true;
                 }
             }
 
-            throw new ArgumentException($"Binding {binding} is invalid.");
+            cbufSlot = 0;
+            handle = 0;
+            return false;
         }
 
         private static int FindDescriptorIndex(TextureDescriptor[] array, int binding)
