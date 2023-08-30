@@ -154,6 +154,28 @@ namespace Ryujinx.HLE.HOS.Services.Audio
             return ResultCode.Success;
         }
 
+        [CommandCmif(8)] // 16.0.0+
+        // GetWorkBufferSizeExEx(OpusParametersEx) -> u32
+        public ResultCode GetWorkBufferSizeExEx(ServiceCtx context)
+        {
+            // NOTE: GetWorkBufferSizeEx use hardcoded values to compute the returned size.
+            //       GetWorkBufferSizeExEx fixes that by using dynamic values.
+            //       Since we're already doing that, it's fine to call it directly.
+
+            return GetWorkBufferSizeEx(context);
+        }
+
+        [CommandCmif(9)] // 16.0.0+
+        // GetWorkBufferSizeForMultiStreamExEx(buffer<unknown<0x118>, 0x19>) -> u32
+        public ResultCode GetWorkBufferSizeForMultiStreamExEx(ServiceCtx context)
+        {
+            // NOTE: GetWorkBufferSizeForMultiStreamEx use hardcoded values to compute the returned size.
+            //       GetWorkBufferSizeForMultiStreamExEx fixes that by using dynamic values.
+            //       Since we're already doing that, it's fine to call it directly.
+
+            return GetWorkBufferSizeForMultiStreamEx(context);
+        }
+
         private static int GetOpusMultistreamDecoderSize(int streams, int coupledStreams)
         {
             if (streams < 1 || coupledStreams > streams || coupledStreams < 0)
