@@ -136,10 +136,10 @@ namespace Ryujinx.Ava.UI.Controls
             string localeText;
             switch (mode)
             {
-                case KeyboardMode.NumbersOnly:
-                    localeText = LocaleManager.Instance.UpdateAndGetDynamicValue(LocaleKeys.SoftwareKeyboardModeNumbersOnly);
+                case KeyboardMode.Numeric:
+                    localeText = LocaleManager.Instance.UpdateAndGetDynamicValue(LocaleKeys.SoftwareKeyboardModeNumeric);
                     validationInfoText = string.IsNullOrEmpty(validationInfoText) ? localeText : string.Join("\n", validationInfoText, localeText);
-                    _checkInput = text => text.All(char.IsDigit);
+                    _checkInput = text => text.All(NumericCharacterValidation.IsNumeric);
                     break;
                 case KeyboardMode.Alphabet:
                     localeText = LocaleManager.Instance.UpdateAndGetDynamicValue(LocaleKeys.SoftwareKeyboardModeAlphabet);

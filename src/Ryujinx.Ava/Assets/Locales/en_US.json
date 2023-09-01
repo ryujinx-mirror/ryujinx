@@ -544,7 +544,7 @@
   "SwkbdMinCharacters": "Must be at least {0} characters long",
   "SwkbdMinRangeCharacters": "Must be {0}-{1} characters long",
   "SoftwareKeyboard": "Software Keyboard",
-  "SoftwareKeyboardModeNumbersOnly": "Must be numbers only",
+  "SoftwareKeyboardModeNumeric": "Must be 0-9 or '.' only",
   "SoftwareKeyboardModeAlphabet": "Must be non CJK-characters only",
   "SoftwareKeyboardModeASCII": "Must be ASCII text only",
   "DialogControllerAppletMessagePlayerRange": "Application requests {0} player(s) with:\n\nTYPES: {1}\n\nPLAYERS: {2}\n\n{3}Please open Settings and reconfigure Input now or press Close.",
