@@ -967,7 +967,7 @@ namespace Ryujinx.Graphics.Vulkan
 
             if (!_cachedConvertedBuffers.TryGetValue(offset, size, key, out var holder))
             {
-                holder = _gd.BufferManager.Create(_gd, (size * 2 + 3) & ~3);
+                holder = _gd.BufferManager.Create(_gd, (size * 2 + 3) & ~3, baseType: BufferAllocationType.DeviceLocal);
 
                 _gd.PipelineInternal.EndRenderPass();
                 _gd.HelperShader.ConvertI8ToI16(_gd, cbs, this, holder, offset, size);
@@ -993,7 +993,7 @@ namespace Ryujinx.Graphics.Vulkan
             {
                 int alignedStride = (stride + (alignment - 1)) & -alignment;
 
-                holder = _gd.BufferManager.Create(_gd, (size / stride) * alignedStride);
+                holder = _gd.BufferManager.Create(_gd, (size / stride) * alignedStride, baseType: BufferAllocationType.DeviceLocal);
 
                 _gd.PipelineInternal.EndRenderPass();
                 _gd.HelperShader.ChangeStride(_gd, cbs, this, holder, offset, size, stride, alignedStride);
@@ -1023,7 +1023,7 @@ namespace Ryujinx.Graphics.Vulkan
 
                 int convertedCount = pattern.GetConvertedCount(indexCount);
 
-                holder = _gd.BufferManager.Create(_gd, convertedCount * 4);
+                holder = _gd.BufferManager.Create(_gd, convertedCount * 4, baseType: BufferAllocationType.DeviceLocal);
 
                 _gd.PipelineInternal.EndRenderPass();
                 _gd.HelperShader.ConvertIndexBuffer(_gd, cbs, this, holder, pattern, indexSize, offset, indexCount);

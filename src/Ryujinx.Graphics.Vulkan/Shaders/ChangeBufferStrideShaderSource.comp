@@ -29,7 +29,7 @@ void main()
     int sourceOffset = stride_arguments_data.w;
 
     int strideRemainder = targetStride - sourceStride;
-    int invocations = int(gl_WorkGroupSize.x);
+    int invocations = int(gl_WorkGroupSize.x * gl_NumWorkGroups.x);
 
     int copiesRequired = bufferSize / sourceStride;
 
@@ -39,7 +39,7 @@ void main()
     int allInvocationCopies = copiesRequired / invocations;
 
     // - Extra remainder copy that this invocation performs.
-    int index = int(gl_LocalInvocationID.x);
+    int index = int(gl_GlobalInvocationID.x);
     int extra = (index < (copiesRequired % invocations)) ? 1 : 0;
 
     int copyCount = allInvocationCopies + extra;

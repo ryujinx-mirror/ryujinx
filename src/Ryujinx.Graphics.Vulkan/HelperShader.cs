@@ -5,7 +5,6 @@ using Ryujinx.Graphics.Shader.Translation;
 using Silk.NET.Vulkan;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Numerics;
 using CompareOp = Ryujinx.Graphics.GAL.CompareOp;
 using Format = Ryujinx.Graphics.GAL.Format;
@@ -27,6 +26,7 @@ namespace Ryujinx.Graphics.Vulkan
     class HelperShader : IDisposable
     {
         private const int UniformBufferAlignment = 256;
+        private const int ConvertElementsPerWorkgroup = 32 * 100; // Work group size of 32 times 100 elements.
         private const string ShaderBinariesPath = "Ryujinx.Graphics.Vulkan/Shaders/SpirvBinaries";
 
         private readonly PipelineHelperShader _pipeline;
@@ -894,7 +894,7 @@ namespace Ryujinx.Graphics.Vulkan
                 _pipeline.SetStorageBuffers(1, sbRanges);
 
                 _pipeline.SetProgram(_programStrideChange);
-                _pipeline.DispatchCompute(1, 1, 1);
+                _pipeline.DispatchCompute(1 + elems / ConvertElementsPerWorkgroup, 1, 1);
 
                 gd.BufferManager.Delete(bufferHandle);
 
@@ -1742,7 +1742,7 @@ namespace Ryujinx.Graphics.Vulkan
             _pipeline.SetStorageBuffers(1, sbRanges);
 
             _pipeline.SetProgram(_programConvertD32S8ToD24S8);
-            _pipeline.DispatchCompute(1, 1, 1);
+            _pipeline.DispatchCompute(1 + inSize / ConvertElementsPerWorkgroup, 1, 1);
 
             gd.BufferManager.Delete(bufferHandle);
 
