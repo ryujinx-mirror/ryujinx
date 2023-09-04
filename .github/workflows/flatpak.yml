@@ -24,7 +24,7 @@ jobs:
       RYUJINX_VERSION: "${{ inputs.ryujinx_version }}"
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           path: Ryujinx
 
@@ -38,7 +38,7 @@ jobs:
         run: |
           echo "git_hash=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           repository: flathub/org.ryujinx.Ryujinx
           token: ${{ secrets.RYUJINX_BOT_PAT }}

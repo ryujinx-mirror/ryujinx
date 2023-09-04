@@ -14,7 +14,7 @@ jobs:
     steps:
       # Grab sources to get latest labeler.yml
       - name: Fetch sources
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
            # Ensure we pin the source origin as pull_request_target run under forks.
            fetch-depth: 0
@@ -22,7 +22,7 @@ jobs:
            ref: master
 
       - name: Checkout Ryujinx-Mako
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
             repository: Ryujinx/Ryujinx-Mako
             ref: master

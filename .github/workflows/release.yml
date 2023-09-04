@@ -62,7 +62,7 @@ jobs:
             DOTNET_RUNTIME_IDENTIFIER: win10-x64
             RELEASE_ZIP_OS_NAME: win_x64
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: actions/setup-dotnet@v3
         with:
@@ -150,7 +150,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: ${{ fromJSON(vars.JOB_TIMEOUT) }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: actions/setup-dotnet@v3
         with:
