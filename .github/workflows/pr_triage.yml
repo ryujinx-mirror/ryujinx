@@ -12,6 +12,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Grab sources to get latest labeler.yml
+      - name: Fetch sources
+        uses: actions/checkout@v3
+        with:
+           # Ensure we pin the source origin as pull_request_target run under forks.
+           fetch-depth: 0
+           repository: Ryujinx/Ryujinx
+           ref: master
+
       - name: Checkout Ryujinx-Mako
         uses: actions/checkout@v3
         with:
@@ -21,15 +30,6 @@ jobs:
 
       - name: Setup Ryujinx-Mako
         uses: ./.ryujinx-mako/.github/actions/setup-mako
-
-      # Grab sources to get latest labeler.yml
-      - name: Fetch sources
-        uses: actions/checkout@v3
-        with:
-          # Ensure we pin the source origin as pull_request_target run under forks.
-          fetch-depth: 0
-          repository: Ryujinx/Ryujinx
-          ref: master
 
       - name: Update labels based on changes
         uses: actions/labeler@v4
