@@ -12,7 +12,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Grab sources to get update_reviewers.py and reviewers.yml
+      - name: Checkout Ryujinx-Mako
+        uses: actions/checkout@v3
+        with:
+            repository: Ryujinx/Ryujinx-Mako
+            ref: master
+            path: '.ryujinx-mako'
+
+      - name: Setup Ryujinx-Mako
+        uses: ./.ryujinx-mako/.github/actions/setup-mako
+
+      # Grab sources to get latest labeler.yml
       - name: Fetch sources
         uses: actions/checkout@v3
         with:
@@ -27,11 +37,12 @@ jobs:
           sync-labels: true
           dot: true
 
-      - run: pip3 install PyGithub
-
       - name: Assign reviewers
         run: |
-          python3 .github/update_reviewers.py ${{ secrets.MAKO_APP_ID }} "MAKO_PRIVATE_KEY" ${{ secrets.MAKO_INSTALLATION_ID }} ${{ github.repository }} ${{ github.event.pull_request.number }} .github/reviewers.yml
+            poetry -C .ryujinx-mako shell
+            ryujinx-mako update-reviewers ${{ github.repository }} ${{ github.event.pull_request.number }} .github/reviewers.yml
         shell: bash
         env:
+            MAKO_APP_ID: ${{ secrets.MAKO_APP_ID }}
             MAKO_PRIVATE_KEY: ${{ secrets.MAKO_PRIVATE_KEY }}
+            MAKO_INSTALLATION_ID: ${{ secrets.MAKO_INSTALLATION_ID }}
