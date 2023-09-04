@@ -128,7 +128,26 @@ namespace Ryujinx.Graphics.Shader
         /// <returns>GPU graphics state</returns>
         GpuGraphicsState QueryGraphicsState()
         {
-            return default;
+            return new GpuGraphicsState(
+                false,
+                InputTopology.Points,
+                false,
+                TessPatchType.Triangles,
+                TessSpacing.EqualSpacing,
+                false,
+                false,
+                false,
+                false,
+                false,
+                1f,
+                AlphaTestOp.Always,
+                0f,
+                default,
+                true,
+                default,
+                false,
+                false,
+                false);
         }
 
         /// <summary>
