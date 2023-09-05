@@ -490,10 +490,11 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed.ComputeDraw
         /// </summary>
         /// <param name="offset">Offset of the range</param>
         /// <param name="size">Size of the range in bytes</param>
+        /// <param name="write">Indicates if the buffer contents will be modified</param>
         /// <returns>Range</returns>
-        public BufferRange GetVertexDataBufferRange(int offset, int size)
+        public BufferRange GetVertexDataBufferRange(int offset, int size, bool write)
         {
-            return new BufferRange(_vertexDataBuffer.Handle, offset, size);
+            return new BufferRange(_vertexDataBuffer.Handle, offset, size, write);
         }
 
         /// <summary>
@@ -501,10 +502,11 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed.ComputeDraw
         /// </summary>
         /// <param name="offset">Offset of the range</param>
         /// <param name="size">Size of the range in bytes</param>
+        /// <param name="write">Indicates if the buffer contents will be modified</param>
         /// <returns>Range</returns>
-        public BufferRange GetGeometryVertexDataBufferRange(int offset, int size)
+        public BufferRange GetGeometryVertexDataBufferRange(int offset, int size, bool write)
         {
-            return new BufferRange(_geometryVertexDataBuffer.Handle, offset, size);
+            return new BufferRange(_geometryVertexDataBuffer.Handle, offset, size, write);
         }
 
         /// <summary>
@@ -512,10 +514,11 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed.ComputeDraw
         /// </summary>
         /// <param name="offset">Offset of the range</param>
         /// <param name="size">Size of the range in bytes</param>
+        /// <param name="write">Indicates if the buffer contents will be modified</param>
         /// <returns>Range</returns>
-        public BufferRange GetGeometryIndexDataBufferRange(int offset, int size)
+        public BufferRange GetGeometryIndexDataBufferRange(int offset, int size, bool write)
         {
-            return new BufferRange(_geometryIndexDataBuffer.Handle, offset, size);
+            return new BufferRange(_geometryIndexDataBuffer.Handle, offset, size, write);
         }
 
         /// <summary>

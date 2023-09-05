@@ -61,7 +61,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
             }
 
             AddDescriptor(SupportBufferStages, ResourceType.UniformBuffer, UniformSetIndex, 0, 1);
-            AddUsage(SupportBufferStages, ResourceType.UniformBuffer, ResourceAccess.Read, UniformSetIndex, 0, 1);
+            AddUsage(SupportBufferStages, ResourceType.UniformBuffer, UniformSetIndex, 0, 1);
 
             ResourceReservationCounts rrc = new(!context.Capabilities.SupportsTransformFeedback && tfEnabled, vertexAsCompute);
 
@@ -73,16 +73,16 @@ namespace Ryujinx.Graphics.Gpu.Shader
             // TODO: Handle that better? Maybe we should only set the binding that are really needed on each shader.
             ResourceStages stages = vertexAsCompute ? ResourceStages.Compute | ResourceStages.Vertex : VtgStages;
 
-            PopulateDescriptorAndUsages(stages, ResourceType.UniformBuffer, ResourceAccess.Read, UniformSetIndex, 1, rrc.ReservedConstantBuffers - 1);
-            PopulateDescriptorAndUsages(stages, ResourceType.StorageBuffer, ResourceAccess.ReadWrite, StorageSetIndex, 0, rrc.ReservedStorageBuffers);
-            PopulateDescriptorAndUsages(stages, ResourceType.BufferTexture, ResourceAccess.Read, TextureSetIndex, 0, rrc.ReservedTextures);
-            PopulateDescriptorAndUsages(stages, ResourceType.BufferImage, ResourceAccess.ReadWrite, ImageSetIndex, 0, rrc.ReservedImages);
+            PopulateDescriptorAndUsages(stages, ResourceType.UniformBuffer, UniformSetIndex, 1, rrc.ReservedConstantBuffers - 1);
+            PopulateDescriptorAndUsages(stages, ResourceType.StorageBuffer, StorageSetIndex, 0, rrc.ReservedStorageBuffers);
+            PopulateDescriptorAndUsages(stages, ResourceType.BufferTexture, TextureSetIndex, 0, rrc.ReservedTextures);
+            PopulateDescriptorAndUsages(stages, ResourceType.BufferImage, ImageSetIndex, 0, rrc.ReservedImages);
         }
 
-        private void PopulateDescriptorAndUsages(ResourceStages stages, ResourceType type, ResourceAccess access, int setIndex, int start, int count)
+        private void PopulateDescriptorAndUsages(ResourceStages stages, ResourceType type, int setIndex, int start, int count)
         {
             AddDescriptor(stages, type, setIndex, start, count);
-            AddUsage(stages, type, access, setIndex, start, count);
+            AddUsage(stages, type, setIndex, start, count);
         }
 
         /// <summary>
@@ -174,15 +174,14 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// </summary>
         /// <param name="stages">Shader stages where the resource is used</param>
         /// <param name="type">Type of the resource</param>
-        /// <param name="access">How the resource is accessed by the shader stages where it is used</param>
         /// <param name="setIndex">Descriptor set number where the resource will be bound</param>
         /// <param name="binding">Binding number where the resource will be bound</param>
         /// <param name="count">Number of resources bound at the binding location</param>
-        private void AddUsage(ResourceStages stages, ResourceType type, ResourceAccess access, int setIndex, int binding, int count)
+        private void AddUsage(ResourceStages stages, ResourceType type, int setIndex, int binding, int count)
         {
             for (int index = 0; index < count; index++)
             {
-                _resourceUsages[setIndex].Add(new ResourceUsage(binding + index, type, stages, access));
+                _resourceUsages[setIndex].Add(new ResourceUsage(binding + index, type, stages));
             }
         }
 
@@ -200,8 +199,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 _resourceUsages[setIndex].Add(new ResourceUsage(
                     buffer.Binding,
                     isStorage ? ResourceType.StorageBuffer : ResourceType.UniformBuffer,
-                    stages,
-                    buffer.Flags.HasFlag(BufferUsageFlags.Write) ? ResourceAccess.ReadWrite : ResourceAccess.Read));
+                    stages));
             }
         }
 
@@ -225,8 +223,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 _resourceUsages[setIndex].Add(new ResourceUsage(
                     texture.Binding,
                     type,
-                    stages,
-                    texture.Flags.HasFlag(TextureUsageFlags.ImageStore) ? ResourceAccess.ReadWrite : ResourceAccess.Read));
+                    stages));
             }
         }
 

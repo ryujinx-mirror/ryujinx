@@ -162,8 +162,7 @@ namespace Ryujinx.Graphics.Vulkan
                                 currentDescriptor.Binding,
                                 currentCount,
                                 currentDescriptor.Type,
-                                currentDescriptor.Stages,
-                                ResourceAccess.ReadWrite));
+                                currentDescriptor.Stages));
                         }
 
                         currentDescriptor = descriptor;
@@ -181,8 +180,7 @@ namespace Ryujinx.Graphics.Vulkan
                         currentDescriptor.Binding,
                         currentCount,
                         currentDescriptor.Type,
-                        currentDescriptor.Stages,
-                        ResourceAccess.ReadWrite));
+                        currentDescriptor.Stages));
                 }
 
                 segments[setIndex] = currentSegments.ToArray();
@@ -206,16 +204,9 @@ namespace Ryujinx.Graphics.Vulkan
                 {
                     ResourceUsage usage = setUsages[setIndex].Usages[index];
 
-                    // If the resource is not accessed, we don't need to update it.
-                    if (usage.Access == ResourceAccess.None)
-                    {
-                        continue;
-                    }
-
                     if (currentUsage.Binding + currentCount != usage.Binding ||
                         currentUsage.Type != usage.Type ||
-                        currentUsage.Stages != usage.Stages ||
-                        currentUsage.Access != usage.Access)
+                        currentUsage.Stages != usage.Stages)
                     {
                         if (currentCount != 0)
                         {
@@ -223,8 +214,7 @@ namespace Ryujinx.Graphics.Vulkan
                                 currentUsage.Binding,
                                 currentCount,
                                 currentUsage.Type,
-                                currentUsage.Stages,
-                                currentUsage.Access));
+                                currentUsage.Stages));
                         }
 
                         currentUsage = usage;
@@ -242,8 +232,7 @@ namespace Ryujinx.Graphics.Vulkan
                         currentUsage.Binding,
                         currentCount,
                         currentUsage.Type,
-                        currentUsage.Stages,
-                        currentUsage.Access));
+                        currentUsage.Stages));
                 }
 
                 segments[setIndex] = currentSegments.ToArray();

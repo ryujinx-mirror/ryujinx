@@ -8,15 +8,13 @@ namespace Ryujinx.Graphics.Vulkan
         public readonly int Count;
         public readonly ResourceType Type;
         public readonly ResourceStages Stages;
-        public readonly ResourceAccess Access;
 
-        public ResourceBindingSegment(int binding, int count, ResourceType type, ResourceStages stages, ResourceAccess access)
+        public ResourceBindingSegment(int binding, int count, ResourceType type, ResourceStages stages)
         {
             Binding = binding;
             Count = count;
             Type = type;
             Stages = stages;
-            Access = access;
         }
     }
 }

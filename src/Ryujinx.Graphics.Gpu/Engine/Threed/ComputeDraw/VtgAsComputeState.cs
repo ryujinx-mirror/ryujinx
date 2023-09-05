@@ -202,7 +202,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed.ComputeDraw
             _context.Renderer.Pipeline.SetUniformBuffers(stackalloc[] { new BufferAssignment(vertexInfoBinding, vertexInfoRange) });
 
             int vertexDataBinding = _vertexAsCompute.Reservations.VertexOutputStorageBufferBinding;
-            BufferRange vertexDataRange = _vacContext.GetVertexDataBufferRange(_vertexDataOffset, _vertexDataSize);
+            BufferRange vertexDataRange = _vacContext.GetVertexDataBufferRange(_vertexDataOffset, _vertexDataSize, write: true);
             _context.Renderer.Pipeline.SetStorageBuffers(stackalloc[] { new BufferAssignment(vertexDataBinding, vertexDataRange) });
 
             _vacContext.VertexInfoBufferUpdater.Commit();
@@ -245,9 +245,9 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed.ComputeDraw
             int geometryVbBinding = _geometryAsCompute.Reservations.GeometryVertexOutputStorageBufferBinding;
             int geometryIbBinding = _geometryAsCompute.Reservations.GeometryIndexOutputStorageBufferBinding;
 
-            BufferRange vertexDataRange = _vacContext.GetVertexDataBufferRange(_vertexDataOffset, _vertexDataSize);
-            BufferRange vertexBuffer = _vacContext.GetGeometryVertexDataBufferRange(_geometryVertexDataOffset, _geometryVertexDataSize);
-            BufferRange indexBuffer = _vacContext.GetGeometryIndexDataBufferRange(_geometryIndexDataOffset, _geometryIndexDataSize);
+            BufferRange vertexDataRange = _vacContext.GetVertexDataBufferRange(_vertexDataOffset, _vertexDataSize, write: false);
+            BufferRange vertexBuffer = _vacContext.GetGeometryVertexDataBufferRange(_geometryVertexDataOffset, _geometryVertexDataSize, write: true);
+            BufferRange indexBuffer = _vacContext.GetGeometryIndexDataBufferRange(_geometryIndexDataOffset, _geometryIndexDataSize, write: true);
 
             _context.Renderer.Pipeline.SetStorageBuffers(stackalloc[]
             {
@@ -293,8 +293,8 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed.ComputeDraw
 
             if (_geometryAsCompute != null)
             {
-                BufferRange vertexBuffer = _vacContext.GetGeometryVertexDataBufferRange(_geometryVertexDataOffset, _geometryVertexDataSize);
-                BufferRange indexBuffer = _vacContext.GetGeometryIndexDataBufferRange(_geometryIndexDataOffset, _geometryIndexDataSize);
+                BufferRange vertexBuffer = _vacContext.GetGeometryVertexDataBufferRange(_geometryVertexDataOffset, _geometryVertexDataSize, write: false);
+                BufferRange indexBuffer = _vacContext.GetGeometryIndexDataBufferRange(_geometryIndexDataOffset, _geometryIndexDataSize, write: false);
 
                 _context.Renderer.Pipeline.SetProgram(_vertexPassthroughProgram);
                 _context.Renderer.Pipeline.SetIndexBuffer(indexBuffer, IndexType.UInt);
@@ -310,7 +310,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed.ComputeDraw
             }
             else
             {
-                BufferRange vertexDataRange = _vacContext.GetVertexDataBufferRange(_vertexDataOffset, _vertexDataSize);
+                BufferRange vertexDataRange = _vacContext.GetVertexDataBufferRange(_vertexDataOffset, _vertexDataSize, write: false);
 
                 _context.Renderer.Pipeline.SetProgram(_vertexPassthroughProgram);
                 _context.Renderer.Pipeline.SetStorageBuffers(stackalloc[] { new BufferAssignment(vertexDataBinding, vertexDataRange) });
