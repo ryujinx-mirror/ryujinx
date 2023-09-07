@@ -28,7 +28,7 @@ namespace Ryujinx.HLE.HOS.Services.Sm
 
         static IUserInterface()
         {
-            _services = Assembly.GetExecutingAssembly().GetTypes()
+            _services = typeof(IUserInterface).Assembly.GetTypes()
                 .SelectMany(type => type.GetCustomAttributes(typeof(ServiceAttribute), true)
                 .Select(service => (((ServiceAttribute)service).Name, type)))
                 .ToDictionary(service => service.Name, service => service.type);

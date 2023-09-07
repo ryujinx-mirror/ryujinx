@@ -68,15 +68,15 @@ namespace Ryujinx.HLE.HOS.Applets.SoftwareKeyboard
             int ryujinxLogoSize = 32;
 
             string ryujinxIconPath = "Ryujinx.HLE.HOS.Applets.SoftwareKeyboard.Resources.Logo_Ryujinx.png";
-            _ryujinxLogo = LoadResource(Assembly.GetExecutingAssembly(), ryujinxIconPath, ryujinxLogoSize, ryujinxLogoSize);
+            _ryujinxLogo = LoadResource(typeof(SoftwareKeyboardRendererBase).Assembly, ryujinxIconPath, ryujinxLogoSize, ryujinxLogoSize);
 
             string padAcceptIconPath = "Ryujinx.HLE.HOS.Applets.SoftwareKeyboard.Resources.Icon_BtnA.png";
             string padCancelIconPath = "Ryujinx.HLE.HOS.Applets.SoftwareKeyboard.Resources.Icon_BtnB.png";
             string keyModeIconPath = "Ryujinx.HLE.HOS.Applets.SoftwareKeyboard.Resources.Icon_KeyF6.png";
 
-            _padAcceptIcon = LoadResource(Assembly.GetExecutingAssembly(), padAcceptIconPath, 0, 0);
-            _padCancelIcon = LoadResource(Assembly.GetExecutingAssembly(), padCancelIconPath, 0, 0);
-            _keyModeIcon = LoadResource(Assembly.GetExecutingAssembly(), keyModeIconPath, 0, 0);
+            _padAcceptIcon = LoadResource(typeof(SoftwareKeyboardRendererBase).Assembly, padAcceptIconPath, 0, 0);
+            _padCancelIcon = LoadResource(typeof(SoftwareKeyboardRendererBase).Assembly, padCancelIconPath, 0, 0);
+            _keyModeIcon = LoadResource(typeof(SoftwareKeyboardRendererBase).Assembly, keyModeIconPath, 0, 0);
 
             Color panelColor = ToColor(uiTheme.DefaultBackgroundColor, 255);
             Color panelTransparentColor = ToColor(uiTheme.DefaultBackgroundColor, 150);
