@@ -1126,7 +1126,7 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
             // so we want to get the byte offset back, since each one of those word
             // offsets are a new "local variable" which will not match.
 
-            if (operation.GetSource(0).AsgOp is Operation shiftRightOp &&
+            if (operation.GetSource(1).AsgOp is Operation shiftRightOp &&
                 shiftRightOp.Inst == Instruction.ShiftRightU32 &&
                 shiftRightOp.GetSource(1).Type == OperandType.Constant &&
                 shiftRightOp.GetSource(1).Value == 2)
@@ -1158,9 +1158,11 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
 
         private static bool TryGetLocalMemoryOffset(Operation operation, out int constOffset)
         {
-            if (operation.GetSource(0).Type == OperandType.Constant)
+            Operand offset = operation.GetSource(1);
+
+            if (offset.Type == OperandType.Constant)
             {
-                constOffset = operation.GetSource(0).Value;
+                constOffset = offset.Value;
                 return true;
             }
 
