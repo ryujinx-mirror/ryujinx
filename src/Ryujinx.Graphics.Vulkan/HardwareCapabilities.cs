@@ -41,6 +41,7 @@ namespace Ryujinx.Graphics.Vulkan
         public readonly bool SupportsPreciseOcclusionQueries;
         public readonly bool SupportsPipelineStatisticsQuery;
         public readonly bool SupportsGeometryShader;
+        public readonly bool SupportsTessellationShader;
         public readonly bool SupportsViewportArray2;
         public readonly bool SupportsHostImportedMemory;
         public readonly bool SupportsDepthClipControl;
@@ -77,6 +78,7 @@ namespace Ryujinx.Graphics.Vulkan
             bool supportsPreciseOcclusionQueries,
             bool supportsPipelineStatisticsQuery,
             bool supportsGeometryShader,
+            bool supportsTessellationShader,
             bool supportsViewportArray2,
             bool supportsHostImportedMemory,
             bool supportsDepthClipControl,
@@ -112,6 +114,7 @@ namespace Ryujinx.Graphics.Vulkan
             SupportsPreciseOcclusionQueries = supportsPreciseOcclusionQueries;
             SupportsPipelineStatisticsQuery = supportsPipelineStatisticsQuery;
             SupportsGeometryShader = supportsGeometryShader;
+            SupportsTessellationShader = supportsTessellationShader;
             SupportsViewportArray2 = supportsViewportArray2;
             SupportsHostImportedMemory = supportsHostImportedMemory;
             SupportsDepthClipControl = supportsDepthClipControl;

@@ -149,10 +149,22 @@ namespace Ryujinx.Graphics.Vulkan
                 DstAccessMask = AccessFlags.MemoryReadBit | AccessFlags.MemoryWriteBit,
             };
 
+            PipelineStageFlags pipelineStageFlags = PipelineStageFlags.VertexShaderBit | PipelineStageFlags.FragmentShaderBit;
+
+            if (Gd.Capabilities.SupportsGeometryShader)
+            {
+                pipelineStageFlags |= PipelineStageFlags.GeometryShaderBit;
+            }
+
+            if (Gd.Capabilities.SupportsTessellationShader)
+            {
+                pipelineStageFlags |= PipelineStageFlags.TessellationControlShaderBit | PipelineStageFlags.TessellationEvaluationShaderBit;
+            }
+
             Gd.Api.CmdPipelineBarrier(
                 CommandBuffer,
-                PipelineStageFlags.FragmentShaderBit,
-                PipelineStageFlags.FragmentShaderBit,
+                pipelineStageFlags,
+                pipelineStageFlags,
                 0,
                 1,
                 memoryBarrier,

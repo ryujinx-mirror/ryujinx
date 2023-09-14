@@ -257,14 +257,22 @@ namespace Ryujinx.Graphics.Vulkan
 
                 if (realIndex != -1)
                 {
-                    _colors[realIndex].Storage?.InsertReadToWriteBarrier(cbs, AccessFlags.ColorAttachmentWriteBit, PipelineStageFlags.ColorAttachmentOutputBit);
+                    _colors[realIndex].Storage?.InsertReadToWriteBarrier(
+                        cbs,
+                        AccessFlags.ColorAttachmentWriteBit,
+                        PipelineStageFlags.ColorAttachmentOutputBit,
+                        insideRenderPass: true);
                 }
             }
         }
 
         public void InsertClearBarrierDS(CommandBufferScoped cbs)
         {
-            _depthStencil?.Storage?.InsertReadToWriteBarrier(cbs, AccessFlags.DepthStencilAttachmentWriteBit, PipelineStageFlags.LateFragmentTestsBit);
+            _depthStencil?.Storage?.InsertReadToWriteBarrier(
+                cbs,
+                AccessFlags.DepthStencilAttachmentWriteBit,
+                PipelineStageFlags.LateFragmentTestsBit,
+                insideRenderPass: true);
         }
     }
 }

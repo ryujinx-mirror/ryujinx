@@ -9,8 +9,12 @@ namespace Ryujinx.Graphics.Vulkan
 {
     static class PipelineConverter
     {
-        private const AccessFlags SubpassSrcAccessMask = AccessFlags.MemoryReadBit | AccessFlags.MemoryWriteBit | AccessFlags.ColorAttachmentWriteBit;
-        private const AccessFlags SubpassDstAccessMask = AccessFlags.MemoryReadBit | AccessFlags.MemoryWriteBit | AccessFlags.ShaderReadBit;
+        private const AccessFlags SubpassAccessMask =
+            AccessFlags.MemoryReadBit |
+            AccessFlags.MemoryWriteBit |
+            AccessFlags.ShaderReadBit |
+            AccessFlags.ColorAttachmentWriteBit |
+            AccessFlags.DepthStencilAttachmentWriteBit;
 
         public static unsafe DisposableRenderPass ToRenderPass(this ProgramPipelineState state, VulkanRenderer gd, Device device)
         {
@@ -132,8 +136,8 @@ namespace Ryujinx.Graphics.Vulkan
                 0,
                 PipelineStageFlags.AllGraphicsBit,
                 PipelineStageFlags.AllGraphicsBit,
-                SubpassSrcAccessMask,
-                SubpassDstAccessMask,
+                SubpassAccessMask,
+                SubpassAccessMask,
                 0);
         }
 
@@ -146,8 +150,8 @@ namespace Ryujinx.Graphics.Vulkan
                 0,
                 PipelineStageFlags.AllGraphicsBit,
                 PipelineStageFlags.AllGraphicsBit,
-                SubpassSrcAccessMask,
-                SubpassDstAccessMask,
+                SubpassAccessMask,
+                SubpassAccessMask,
                 0);
         }
 
