@@ -576,6 +576,11 @@ namespace Ryujinx.Graphics.Shader.Translation
             int outputAttributesMask = AttributeUsage.UsedOutputAttributes;
             int layerOutputAttr = LayerOutputAttribute;
 
+            if (LayerOutputWritten)
+            {
+                outputAttributesMask |= 1 << ((layerOutputAttr - AttributeConsts.UserAttributeBase) / 16);
+            }
+
             OutputTopology outputTopology;
             int maxOutputVertices;
 
