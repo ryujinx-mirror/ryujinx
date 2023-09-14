@@ -6,8 +6,8 @@ namespace Ryujinx.Horizon.Bcat
 {
     internal class BcatIpcServer
     {
-        private const int BcatMaxSessionsCount = 8;
-        private const int BcatTotalMaxSessionsCount = BcatMaxSessionsCount * 4;
+        private const int MaxSessionsCount = 8;
+        private const int TotalMaxSessionsCount = MaxSessionsCount * 4;
 
         private const int PointerBufferSize = 0x400;
         private const int MaxDomains = 64;
@@ -17,7 +17,7 @@ namespace Ryujinx.Horizon.Bcat
         private SmApi _sm;
         private BcatServerManager _serverManager;
 
-        private static readonly ManagerOptions _bcatManagerOptions = new(PointerBufferSize, MaxDomains, MaxDomainObjects, false);
+        private static readonly ManagerOptions _managerOptions = new(PointerBufferSize, MaxDomains, MaxDomainObjects, false);
 
         internal void Initialize()
         {
@@ -26,13 +26,13 @@ namespace Ryujinx.Horizon.Bcat
             _sm = new SmApi();
             _sm.Initialize().AbortOnFailure();
 
-            _serverManager = new BcatServerManager(allocator, _sm, MaxPortsCount, _bcatManagerOptions, BcatTotalMaxSessionsCount);
+            _serverManager = new BcatServerManager(allocator, _sm, MaxPortsCount, _managerOptions, TotalMaxSessionsCount);
 
 #pragma warning disable IDE0055 // Disable formatting
-            _serverManager.RegisterServer((int)BcatPortIndex.Admin,   ServiceName.Encode("bcat:a"), BcatMaxSessionsCount);
-            _serverManager.RegisterServer((int)BcatPortIndex.Manager, ServiceName.Encode("bcat:m"), BcatMaxSessionsCount);
-            _serverManager.RegisterServer((int)BcatPortIndex.User,    ServiceName.Encode("bcat:u"), BcatMaxSessionsCount);
-            _serverManager.RegisterServer((int)BcatPortIndex.System,  ServiceName.Encode("bcat:s"), BcatMaxSessionsCount);
+            _serverManager.RegisterServer((int)BcatPortIndex.Admin,   ServiceName.Encode("bcat:a"), MaxSessionsCount);
+            _serverManager.RegisterServer((int)BcatPortIndex.Manager, ServiceName.Encode("bcat:m"), MaxSessionsCount);
+            _serverManager.RegisterServer((int)BcatPortIndex.User,    ServiceName.Encode("bcat:u"), MaxSessionsCount);
+            _serverManager.RegisterServer((int)BcatPortIndex.System,  ServiceName.Encode("bcat:s"), MaxSessionsCount);
 #pragma warning restore IDE0055
         }
 

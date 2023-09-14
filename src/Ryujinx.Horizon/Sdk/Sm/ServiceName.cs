@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 namespace Ryujinx.Horizon.Sdk.Sm
 {
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    readonly struct ServiceName
+    public readonly struct ServiceName
     {
         public static ServiceName Invalid { get; } = new(0);
 

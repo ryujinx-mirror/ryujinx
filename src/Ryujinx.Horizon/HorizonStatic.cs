@@ -4,7 +4,7 @@ using System;
 
 namespace Ryujinx.Horizon
 {
-    static class HorizonStatic
+    public static class HorizonStatic
     {
         [ThreadStatic]
         private static HorizonOptions _options;

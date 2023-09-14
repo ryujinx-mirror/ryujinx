@@ -6,14 +6,14 @@ namespace Ryujinx.Horizon.MmNv
 {
     class MmNvIpcServer
     {
-        private const int MmNvMaxSessionsCount = 9;
+        private const int MaxSessionsCount = 40;
 
         private const int PointerBufferSize = 0;
         private const int MaxDomains = 0;
         private const int MaxDomainObjects = 0;
         private const int MaxPortsCount = 1;
 
-        private static readonly ManagerOptions _mmNvOptions = new(PointerBufferSize, MaxDomains, MaxDomainObjects, false);
+        private static readonly ManagerOptions _managerOptions = new(PointerBufferSize, MaxDomains, MaxDomainObjects, false);
 
         private SmApi _sm;
         private ServerManager _serverManager;
@@ -25,9 +25,9 @@ namespace Ryujinx.Horizon.MmNv
             _sm = new SmApi();
             _sm.Initialize().AbortOnFailure();
 
-            _serverManager = new ServerManager(allocator, _sm, MaxPortsCount, _mmNvOptions, MmNvMaxSessionsCount);
+            _serverManager = new ServerManager(allocator, _sm, MaxPortsCount, _managerOptions, MaxSessionsCount);
 
-            _serverManager.RegisterObjectForServer(new Request(), ServiceName.Encode("mm:u"), MmNvMaxSessionsCount);
+            _serverManager.RegisterObjectForServer(new Request(), ServiceName.Encode("mm:u"), MaxSessionsCount);
         }
 
         public void ServiceRequests()

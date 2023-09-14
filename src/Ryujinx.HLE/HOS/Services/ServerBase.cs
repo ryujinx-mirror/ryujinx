@@ -6,6 +6,7 @@ using Ryujinx.HLE.HOS.Kernel;
 using Ryujinx.HLE.HOS.Kernel.Ipc;
 using Ryujinx.HLE.HOS.Kernel.Process;
 using Ryujinx.HLE.HOS.Kernel.Threading;
+using Ryujinx.Horizon;
 using Ryujinx.Horizon.Common;
 using System;
 using System.Buffers;
@@ -171,6 +172,13 @@ namespace Ryujinx.HLE.HOS.Services
         {
             _selfProcess = KernelStatic.GetCurrentProcess();
             _selfThread = KernelStatic.GetCurrentThread();
+
+            HorizonStatic.Register(
+                default,
+                _context.Syscall,
+                _selfProcess.CpuMemory,
+                _selfThread.ThreadContext,
+                (int)_selfThread.ThreadContext.GetX(1));
 
             if (SmObjectFactory != null)
             {

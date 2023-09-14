@@ -5,6 +5,7 @@ using Ryujinx.HLE.HOS.Services.Settings.Types;
 using Ryujinx.HLE.HOS.Services.Vi.RootService.ApplicationDisplayService;
 using Ryujinx.HLE.HOS.SystemState;
 using Ryujinx.Horizon.Common;
+using Ryujinx.Horizon.Sdk.Lbl;
 using System;
 
 namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.SystemAppletProxy
@@ -15,7 +16,6 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
 
         private readonly Apm.ManagerServer _apmManagerServer;
         private readonly Apm.SystemManagerServer _apmSystemManagerServer;
-        private readonly Lbl.LblControllerServer _lblControllerServer;
 
         private bool _vrModeEnabled;
 #pragma warning disable CS0414, IDE0052 // Remove unread private member
@@ -34,7 +34,6 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
 
             _apmManagerServer = new Apm.ManagerServer(context);
             _apmSystemManagerServer = new Apm.SystemManagerServer(context);
-            _lblControllerServer = new Lbl.LblControllerServer(context);
 
             _acquiredSleepLockEvent = new KEvent(context.Device.System.KernelContext);
         }
@@ -215,13 +214,15 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
 
             _vrModeEnabled = vrModeEnabled;
 
+            using var lblApi = new LblApi();
+
             if (vrModeEnabled)
             {
-                _lblControllerServer.EnableVrMode();
+                lblApi.EnableVrMode().AbortOnFailure();
             }
             else
             {
-                _lblControllerServer.DisableVrMode();
+                lblApi.DisableVrMode().AbortOnFailure();
             }
 
             // TODO: It signals an internal event of ICommonStateGetter. We have to determine where this event is used.

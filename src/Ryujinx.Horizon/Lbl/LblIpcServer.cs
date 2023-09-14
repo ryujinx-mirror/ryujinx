@@ -1,16 +1,16 @@
-﻿using Ryujinx.Horizon.LogManager.Ipc;
+﻿using Ryujinx.Horizon.Lbl.Ipc;
 using Ryujinx.Horizon.Sdk.Sf.Hipc;
 using Ryujinx.Horizon.Sdk.Sm;
 
-namespace Ryujinx.Horizon.LogManager
+namespace Ryujinx.Horizon.Lbl
 {
-    class LmIpcServer
+    class LblIpcServer
     {
-        private const int MaxSessionsCount = 42;
+        private const int MaxSessionsCount = 5;
 
-        private const int PointerBufferSize = 0x400;
-        private const int MaxDomains = 31;
-        private const int MaxDomainObjects = 61;
+        private const int PointerBufferSize = 0;
+        private const int MaxDomains = 0;
+        private const int MaxDomainObjects = 0;
         private const int MaxPortsCount = 1;
 
         private static readonly ManagerOptions _managerOptions = new(PointerBufferSize, MaxDomains, MaxDomainObjects, false);
@@ -27,7 +27,7 @@ namespace Ryujinx.Horizon.LogManager
 
             _serverManager = new ServerManager(allocator, _sm, MaxPortsCount, _managerOptions, MaxSessionsCount);
 
-            _serverManager.RegisterObjectForServer(new LogService(), ServiceName.Encode("lm"), MaxSessionsCount);
+            _serverManager.RegisterObjectForServer(new LblController(), ServiceName.Encode("lbl"), MaxSessionsCount);
         }
 
         public void ServiceRequests()

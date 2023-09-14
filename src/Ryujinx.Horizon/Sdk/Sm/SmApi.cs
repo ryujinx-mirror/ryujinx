@@ -5,7 +5,7 @@ using System;
 
 namespace Ryujinx.Horizon.Sdk.Sm
 {
-    class SmApi
+    public class SmApi : IDisposable
     {
         private const string SmName = "sm:";
 
@@ -108,6 +108,18 @@ namespace Ryujinx.Horizon.Sdk.Sm
             writer.Write(0UL);
 
             return ServiceUtil.SendRequest(out _, _portHandle, 4, sendPid: true, data);
+        }
+
+        public void Dispose()
+        {
+            if (_portHandle != 0)
+            {
+                HorizonStatic.Syscall.CloseHandle(_portHandle);
+
+                _portHandle = 0;
+            }
+
+            GC.SuppressFinalize(this);
         }
     }
 }
