@@ -89,6 +89,16 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                 context.AddCapability(Capability.DrawParameters);
             }
 
+            if (context.Definitions.Stage != ShaderStage.Fragment &&
+                context.Definitions.Stage != ShaderStage.Geometry &&
+                context.Definitions.Stage != ShaderStage.Compute &&
+                (context.Info.IoDefinitions.Contains(new IoDefinition(StorageKind.Output, IoVariable.Layer)) ||
+                context.Info.IoDefinitions.Contains(new IoDefinition(StorageKind.Output, IoVariable.ViewportIndex))))
+            {
+                context.AddExtension("SPV_EXT_shader_viewport_index_layer");
+                context.AddCapability(Capability.ShaderViewportIndexLayerEXT);
+            }
+
             if (context.Info.IoDefinitions.Contains(new IoDefinition(StorageKind.Output, IoVariable.ViewportMask)))
             {
                 context.AddExtension("SPV_NV_viewport_array2");
@@ -275,14 +285,6 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                         localSizeX,
                         localSizeY,
                         localSizeZ);
-                }
-
-                if (context.Definitions.Stage != ShaderStage.Fragment &&
-                    context.Definitions.Stage != ShaderStage.Geometry &&
-                    context.Definitions.Stage != ShaderStage.Compute &&
-                    context.Info.IoDefinitions.Contains(new IoDefinition(StorageKind.Output, IoVariable.Layer)))
-                {
-                    context.AddCapability(Capability.ShaderLayer);
                 }
 
                 if (context.Definitions.TransformFeedbackEnabled && context.Definitions.LastInVertexPipeline)
