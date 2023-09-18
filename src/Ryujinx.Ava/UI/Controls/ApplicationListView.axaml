@@ -42,7 +42,7 @@
             </ListBox.ItemsPanel>
             <ListBox.Styles>
                 <Style Selector="ListBoxItem:selected /template/ Rectangle#SelectionIndicator">
-                    <Setter Property="MinHeight" Value="{ReflectionBinding $parent[UserControl].DataContext.ListItemSelectorSize}" />
+                    <Setter Property="MinHeight" Value="{Binding $parent[UserControl].((viewModels:MainWindowViewModel)DataContext).ListItemSelectorSize}" />
                 </Style>
             </ListBox.Styles>
             <ListBox.ItemTemplate>
@@ -67,10 +67,10 @@
                                     Grid.RowSpan="3"
                                     Grid.Column="0"
                                     Margin="0"
-                                    Classes.huge="{ReflectionBinding $parent[UserControl].DataContext.IsGridHuge}"
-                                    Classes.large="{ReflectionBinding $parent[UserControl].DataContext.IsGridLarge}"
-                                    Classes.normal="{ReflectionBinding $parent[UserControl].DataContext.IsGridMedium}"
-                                    Classes.small="{ReflectionBinding $parent[UserControl].DataContext.IsGridSmall}"
+                                    Classes.huge="{Binding $parent[UserControl].((viewModels:MainWindowViewModel)DataContext).IsGridHuge}"
+                                    Classes.large="{Binding $parent[UserControl].((viewModels:MainWindowViewModel)DataContext).IsGridLarge}"
+                                    Classes.normal="{Binding $parent[UserControl].((viewModels:MainWindowViewModel)DataContext).IsGridMedium}"
+                                    Classes.small="{Binding $parent[UserControl].((viewModels:MainWindowViewModel)DataContext).IsGridSmall}"
                                     Source="{Binding Icon, Converter={StaticResource ByteImage}}" />
                                 <Border
                                     Grid.Column="2"

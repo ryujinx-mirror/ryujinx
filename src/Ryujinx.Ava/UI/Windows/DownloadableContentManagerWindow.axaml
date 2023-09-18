@@ -39,14 +39,14 @@
                         Name="EnableAllButton"
                         MinWidth="90"
                         Margin="5"
-                        Command="{ReflectionBinding EnableAll}">
+                        Command="{Binding EnableAll}">
                         <TextBlock Text="{locale:Locale DlcManagerEnableAllButton}" />
                     </Button>
                     <Button
                         Name="DisableAllButton"
                         MinWidth="90"
                         Margin="5"
-                        Command="{ReflectionBinding DisableAll}">
+                        Command="{Binding DisableAll}">
                         <TextBlock Text="{locale:Locale DlcManagerDisableAllButton}" />
                     </Button>
                 </StackPanel>
@@ -157,14 +157,14 @@
                     Name="AddButton"
                     MinWidth="90"
                     Margin="5"
-                    Command="{ReflectionBinding Add}">
+                    Command="{Binding Add}">
                     <TextBlock Text="{locale:Locale SettingsTabGeneralAdd}" />
                 </Button>
                 <Button
                     Name="RemoveAllButton"
                     MinWidth="90"
                     Margin="5"
-                    Command="{ReflectionBinding RemoveAll}">
+                    Command="{Binding RemoveAll}">
                     <TextBlock Text="{locale:Locale DlcManagerRemoveAllButton}" />
                 </Button>
             </StackPanel>
