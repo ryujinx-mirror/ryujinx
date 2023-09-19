@@ -299,11 +299,21 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd.Impl
         {
             try
             {
+                LinuxError result = WinSockHelper.ValidateSocketOption(option, level, write: false);
+
+                if (result != LinuxError.SUCCESS)
+                {
+                    Logger.Warning?.Print(LogClass.ServiceBsd, $"Invalid GetSockOpt Option: {option} Level: {level}");
+
+                    return result;
+                }
+
                 if (!WinSockHelper.TryConvertSocketOption(option, level, out SocketOptionName optionName))
                 {
                     Logger.Warning?.Print(LogClass.ServiceBsd, $"Unsupported GetSockOpt Option: {option} Level: {level}");
+                    optionValue.Clear();
 
-                    return LinuxError.EOPNOTSUPP;
+                    return LinuxError.SUCCESS;
                 }
 
                 byte[] tempOptionValue = new byte[optionValue.Length];
@@ -324,11 +334,20 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd.Impl
         {
             try
             {
+                LinuxError result = WinSockHelper.ValidateSocketOption(option, level, write: true);
+
+                if (result != LinuxError.SUCCESS)
+                {
+                    Logger.Warning?.Print(LogClass.ServiceBsd, $"Invalid SetSockOpt Option: {option} Level: {level}");
+
+                    return result;
+                }
+
                 if (!WinSockHelper.TryConvertSocketOption(option, level, out SocketOptionName optionName))
                 {
                     Logger.Warning?.Print(LogClass.ServiceBsd, $"Unsupported SetSockOpt Option: {option} Level: {level}");
 
-                    return LinuxError.EOPNOTSUPP;
+                    return LinuxError.SUCCESS;
                 }
 
                 int value = optionValue.Length >= 4 ? MemoryMarshal.Read<int>(optionValue) : MemoryMarshal.Read<byte>(optionValue);
