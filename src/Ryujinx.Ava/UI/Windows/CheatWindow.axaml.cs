@@ -17,7 +17,7 @@ namespace Ryujinx.Ava.UI.Windows
         private readonly string _enabledCheatsPath;
         public bool NoCheatsFound { get; }
 
-        private AvaloniaList<CheatsList> LoadedCheats { get; }
+        public AvaloniaList<CheatsList> LoadedCheats { get; }
 
         public string Heading { get; }
         public string BuildId { get; }
