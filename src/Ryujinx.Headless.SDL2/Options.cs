@@ -14,8 +14,20 @@ namespace Ryujinx.Headless.SDL2
         [Option("profile", Required = false, HelpText = "Set the user profile to launch the game with.")]
         public string UserProfile { get; set; }
 
-        [Option("fullscreen", Required = false, HelpText = "Launch the game in fullscreen mode.")]
+        [Option("display-id", Required = false, Default = 0, HelpText = "Set the display to use - especially helpful for fullscreen mode. [0-n]")]
+        public int DisplayId { get; set; }
+
+        [Option("fullscreen", Required = false, Default = false, HelpText = "Launch the game in fullscreen mode.")]
         public bool IsFullscreen { get; set; }
+
+        [Option("exclusive-fullscreen", Required = false, Default = false, HelpText = "Launch the game in exclusive fullscreen mode.")]
+        public bool IsExclusiveFullscreen { get; set; }
+
+        [Option("exclusive-fullscreen-width", Required = false, Default = 1920, HelpText = "Set horizontal resolution for exclusive fullscreen mode.")]
+        public int ExclusiveFullscreenWidth { get; set; }
+
+        [Option("exclusive-fullscreen-height", Required = false, Default = 1080, HelpText = "Set vertical resolution for exclusive fullscreen mode.")]
+        public int ExclusiveFullscreenHeight { get; set; }
 
         // Input
 
@@ -195,6 +207,15 @@ namespace Ryujinx.Headless.SDL2
 
         [Option("preferred-gpu-vendor", Required = false, Default = "", HelpText = "When using the Vulkan backend, prefer using the GPU from the specified vendor.")]
         public string PreferredGPUVendor { get; set; }
+
+        [Option("anti-aliasing", Required = false, Default = AntiAliasing.None, HelpText = "Set the type of anti aliasing being used. [None|Fxaa|SmaaLow|SmaaMedium|SmaaHigh|SmaaUltra]")]
+        public AntiAliasing AntiAliasing { get; set; }
+
+        [Option("scaling-filter", Required = false, Default = ScalingFilter.Bilinear, HelpText = "Set the scaling filter. [Bilinear|Nearest|Fsr]")]
+        public ScalingFilter ScalingFilter { get; set; }
+
+        [Option("scaling-filter-level", Required = false, Default = 0, HelpText = "Set the scaling filter intensity (currently only applies to FSR). [0-100]")]
+        public int ScalingFilterLevel { get; set; }
 
         // Hacks
 
