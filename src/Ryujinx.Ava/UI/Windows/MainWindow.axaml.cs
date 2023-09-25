@@ -15,6 +15,7 @@ using Ryujinx.Graphics.Gpu;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.HOS;
 using Ryujinx.HLE.HOS.Services.Account.Acc;
+using Ryujinx.Input.HLE;
 using Ryujinx.Input.SDL2;
 using Ryujinx.Modules;
 using Ryujinx.Ui.App.Common;
@@ -25,7 +26,6 @@ using System;
 using System.IO;
 using System.Runtime.Versioning;
 using System.Threading.Tasks;
-using InputManager = Ryujinx.Input.HLE.InputManager;
 
 namespace Ryujinx.Ava.UI.Windows
 {
@@ -251,7 +251,7 @@ namespace Ryujinx.Ava.UI.Windows
 
             VirtualFileSystem.ReloadKeySet();
 
-            ApplicationHelper.Initialize(VirtualFileSystem, AccountManager, LibHacHorizonManager.RyujinxClient, this);
+            ApplicationHelper.Initialize(VirtualFileSystem, AccountManager, LibHacHorizonManager.RyujinxClient);
         }
 
         [SupportedOSPlatform("linux")]

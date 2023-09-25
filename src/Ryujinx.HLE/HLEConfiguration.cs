@@ -1,6 +1,7 @@
 ﻿using LibHac.Tools.FsSystem;
 using Ryujinx.Audio.Integration;
 using Ryujinx.Common.Configuration;
+using Ryujinx.Common.Configuration.Multiplayer;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.HOS;
@@ -159,6 +160,11 @@ namespace Ryujinx.HLE
         public string MultiplayerLanInterfaceId { internal get; set; }
 
         /// <summary>
+        /// Multiplayer Mode
+        /// </summary>
+        public MultiplayerMode MultiplayerMode { internal get; set; }
+
+        /// <summary>
         /// An action called when HLE force a refresh of output after docked mode changed.
         /// </summary>
         public Action RefreshInputConfig { internal get; set; }
@@ -187,7 +193,8 @@ namespace Ryujinx.HLE
                                 AspectRatio aspectRatio,
                                 float audioVolume,
                                 bool useHypervisor,
-                                string multiplayerLanInterfaceId)
+                                string multiplayerLanInterfaceId,
+                                MultiplayerMode multiplayerMode)
         {
             VirtualFileSystem = virtualFileSystem;
             LibHacHorizonManager = libHacHorizonManager;
@@ -214,6 +221,7 @@ namespace Ryujinx.HLE
             AudioVolume = audioVolume;
             UseHypervisor = useHypervisor;
             MultiplayerLanInterfaceId = multiplayerLanInterfaceId;
+            MultiplayerMode = multiplayerMode;
         }
     }
 }

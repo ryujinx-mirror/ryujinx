@@ -5,6 +5,7 @@ using Ryujinx.Audio.Backends.SDL2;
 using Ryujinx.Audio.Backends.SoundIo;
 using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Configuration.Hid;
+using Ryujinx.Common.Configuration.Multiplayer;
 using Ryujinx.Common.GraphicsDriver;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.HOS.Services.Time.TimeZone;
@@ -18,6 +19,7 @@ using System.Globalization;
 using System.IO;
 using System.Net.NetworkInformation;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using GUI = Gtk.Builder.ObjectAttribute;
 
@@ -87,6 +89,7 @@ namespace Ryujinx.Ui.Windows
         [GUI] Adjustment _systemTimeHourSpinAdjustment;
         [GUI] Adjustment _systemTimeMinuteSpinAdjustment;
         [GUI] ComboBoxText _multiLanSelect;
+        [GUI] ComboBoxText _multiModeSelect;
         [GUI] CheckButton _custThemeToggle;
         [GUI] Entry _custThemePath;
         [GUI] ToggleButton _browseThemePath;
@@ -361,6 +364,7 @@ namespace Ryujinx.Ui.Windows
             _graphicsBackend.Changed += (sender, e) => UpdatePreferredGpuComboBox();
             PopulateNetworkInterfaces();
             _multiLanSelect.SetActiveId(ConfigurationState.Instance.Multiplayer.LanInterfaceId.Value);
+            _multiModeSelect.SetActiveId(ConfigurationState.Instance.Multiplayer.Mode.Value.ToString());
 
             _custThemePath.Buffer.Text = ConfigurationState.Instance.Ui.CustomThemePath;
             _resScaleText.Buffer.Text = ConfigurationState.Instance.Graphics.ResScaleCustom.Value.ToString();
@@ -657,6 +661,9 @@ namespace Ryujinx.Ui.Windows
             ConfigurationState.Instance.Multiplayer.LanInterfaceId.Value = _multiLanSelect.ActiveId;
 
             _previousVolumeLevel = ConfigurationState.Instance.System.AudioVolume.Value;
+
+            ConfigurationState.Instance.Multiplayer.Mode.Value = Enum.Parse<MultiplayerMode>(_multiModeSelect.ActiveId);
+            ConfigurationState.Instance.Multiplayer.LanInterfaceId.Value = _multiLanSelect.ActiveId;
 
             if (_audioBackendSelect.GetActiveIter(out TreeIter activeIter))
             {

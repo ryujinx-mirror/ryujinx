@@ -1,4 +1,6 @@
-﻿using System.Net.NetworkInformation;
+﻿using System.Buffers.Binary;
+using System.Net;
+using System.Net.NetworkInformation;
 
 namespace Ryujinx.Common.Utilities
 {
@@ -61,6 +63,16 @@ namespace Ryujinx.Common.Utilities
             }
 
             return (targetProperties, targetAddressInfo);
+        }
+
+        public static uint ConvertIpv4Address(IPAddress ipAddress)
+        {
+            return BinaryPrimitives.ReadUInt32BigEndian(ipAddress.GetAddressBytes());
+        }
+
+        public static uint ConvertIpv4Address(string ipAddress)
+        {
+            return ConvertIpv4Address(IPAddress.Parse(ipAddress));
         }
     }
 }
