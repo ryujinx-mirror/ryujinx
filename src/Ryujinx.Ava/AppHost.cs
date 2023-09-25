@@ -3,7 +3,6 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input;
-using Avalonia.Rendering;
 using Avalonia.Threading;
 using LibHac.Tools.FsSystem;
 using Ryujinx.Audio.Backends.Dummy;

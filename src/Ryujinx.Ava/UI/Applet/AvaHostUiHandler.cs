@@ -106,7 +106,7 @@ namespace Ryujinx.Ava.UI.Applet
             bool error = false;
             string inputText = args.InitialText ?? "";
 
-            Dispatcher.UIThread.Post(async () =>
+            Dispatcher.UIThread.InvokeAsync(async () =>
             {
                 try
                 {
@@ -149,7 +149,7 @@ namespace Ryujinx.Ava.UI.Applet
 
             bool showDetails = false;
 
-            Dispatcher.UIThread.Post(async () =>
+            Dispatcher.UIThread.InvokeAsync(async () =>
             {
                 try
                 {

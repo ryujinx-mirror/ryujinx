@@ -34,7 +34,7 @@ namespace Ryujinx.Ava.UI.Views.Settings
                 {
                     var result = await window.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
                     {
-                        AllowMultiple = false
+                        AllowMultiple = false,
                     });
 
                     if (result.Count > 0)
@@ -75,9 +75,9 @@ namespace Ryujinx.Ava.UI.Views.Settings
                     {
                         Patterns = new[] { "*.xaml" },
                         AppleUniformTypeIdentifiers = new[] { "com.ryujinx.xaml" },
-                        MimeTypes = new[] { "application/xaml+xml" }
-                    }
-                }
+                        MimeTypes = new[] { "application/xaml+xml" },
+                    },
+                },
             });
 
             if (result.Count > 0)

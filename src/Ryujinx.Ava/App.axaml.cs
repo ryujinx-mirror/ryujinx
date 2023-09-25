@@ -104,7 +104,7 @@ namespace Ryujinx.Ava
                 {
                     "Light" => ThemeVariant.Light,
                     "Dark" => ThemeVariant.Dark,
-                    _ => ThemeVariant.Default
+                    _ => ThemeVariant.Default,
                 };
 
                 if (enableCustomTheme)

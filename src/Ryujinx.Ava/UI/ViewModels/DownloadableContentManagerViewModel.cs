@@ -212,9 +212,9 @@ namespace Ryujinx.Ava.UI.ViewModels
                     {
                         Patterns = new[] { "*.nsp" },
                         AppleUniformTypeIdentifiers = new[] { "com.ryujinx.nsp" },
-                        MimeTypes = new[] { "application/x-nx-nsp" }
-                    }
-                }
+                        MimeTypes = new[] { "application/x-nx-nsp" },
+                    },
+                },
             });
 
             foreach (var file in result)

@@ -26,6 +26,7 @@ using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.HOS;
 using Ryujinx.HLE.HOS.Services.Account.Acc;
 using Ryujinx.HLE.Ui;
+using Ryujinx.Input.HLE;
 using Ryujinx.Modules;
 using Ryujinx.Ui.App.Common;
 using Ryujinx.Ui.Common;
@@ -39,7 +40,6 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Image = SixLabors.ImageSharp.Image;
-using InputManager = Ryujinx.Input.HLE.InputManager;
 using Key = Ryujinx.Input.Key;
 using MissingKeyException = LibHac.Common.Keys.MissingKeyException;
 using ShaderCacheLoadingState = Ryujinx.Graphics.Gpu.Shader.ShaderCacheState;
@@ -1068,9 +1068,7 @@ namespace Ryujinx.Ava.UI.ViewModels
                 {
                     Logger.Error?.Print(LogClass.Application, ex.ToString());
 
-                    static async void Action() => await UserErrorDialog.ShowUserErrorDialog(UserError.NoKeys);
-
-                    Dispatcher.UIThread.Post(Action);
+                    await UserErrorDialog.ShowUserErrorDialog(UserError.NoKeys);
                 }
             }
             catch (Exception ex)
@@ -1163,16 +1161,13 @@ namespace Ryujinx.Ava.UI.ViewModels
             AppHost?.DisposeContext();
         }
 
-        private void HandleRelaunch()
+        private async Task HandleRelaunch()
         {
             if (UserChannelPersistence.PreviousIndex != -1 && UserChannelPersistence.ShouldRestart)
             {
                 UserChannelPersistence.ShouldRestart = false;
 
-                Dispatcher.UIThread.Post(() =>
-                {
-                    LoadApplication(_currentEmulatedGamePath);
-                });
+                await LoadApplication(_currentEmulatedGamePath);
             }
             else
             {
@@ -1191,7 +1186,7 @@ namespace Ryujinx.Ava.UI.ViewModels
                     Application.Current.Styles.TryGetResource(args.VSyncEnabled
                         ? "VsyncEnabled"
                         : "VsyncDisabled",
-                        Avalonia.Application.Current.ActualThemeVariant,
+                        Application.Current.ActualThemeVariant,
                         out object color);
 
                     if (color is not null)
@@ -1283,7 +1278,7 @@ namespace Ryujinx.Ava.UI.ViewModels
             Glyph = Glyph.Grid;
         }
 
-        public async void InstallFirmwareFromFile()
+        public async Task InstallFirmwareFromFile()
         {
             var result = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
             {
@@ -1294,21 +1289,21 @@ namespace Ryujinx.Ava.UI.ViewModels
                     {
                         Patterns = new[] { "*.xci", "*.zip" },
                         AppleUniformTypeIdentifiers = new[] { "com.ryujinx.xci", "public.zip-archive" },
-                        MimeTypes = new[] { "application/x-nx-xci", "application/zip" }
+                        MimeTypes = new[] { "application/x-nx-xci", "application/zip" },
                     },
                     new("XCI")
                     {
                         Patterns = new[] { "*.xci" },
                         AppleUniformTypeIdentifiers = new[] { "com.ryujinx.xci" },
-                        MimeTypes = new[] { "application/x-nx-xci" }
+                        MimeTypes = new[] { "application/x-nx-xci" },
                     },
                     new("ZIP")
                     {
                         Patterns = new[] { "*.zip" },
                         AppleUniformTypeIdentifiers = new[] { "public.zip-archive" },
-                        MimeTypes = new[] { "application/zip" }
+                        MimeTypes = new[] { "application/zip" },
                     },
-                }
+                },
             });
 
             if (result.Count > 0)
@@ -1317,11 +1312,11 @@ namespace Ryujinx.Ava.UI.ViewModels
             }
         }
 
-        public async void InstallFirmwareFromFolder()
+        public async Task InstallFirmwareFromFolder()
         {
             var result = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
             {
-                AllowMultiple = false
+                AllowMultiple = false,
             });
 
             if (result.Count > 0)
@@ -1352,7 +1347,7 @@ namespace Ryujinx.Ava.UI.ViewModels
             }
         }
 
-        public async void ExitCurrentState()
+        public async Task ExitCurrentState()
         {
             if (WindowState == WindowState.FullScreen)
             {
@@ -1377,7 +1372,7 @@ namespace Ryujinx.Ava.UI.ViewModels
             }
         }
 
-        public async void ManageProfiles()
+        public async Task ManageProfiles()
         {
             await NavigationDialogHost.Show(AccountManager, ContentManager, VirtualFileSystem, LibHacHorizonManager.RyujinxClient);
         }
@@ -1387,7 +1382,7 @@ namespace Ryujinx.Ava.UI.ViewModels
             AppHost.Device.System.SimulateWakeUpMessage();
         }
 
-        public async void OpenFile()
+        public async Task OpenFile()
         {
             var result = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
             {
@@ -1404,7 +1399,7 @@ namespace Ryujinx.Ava.UI.ViewModels
                             "com.ryujinx.xci",
                             "com.ryujinx.nca",
                             "com.ryujinx.nro",
-                            "com.ryujinx.nso"
+                            "com.ryujinx.nso",
                         },
                         MimeTypes = new[]
                         {
@@ -1412,63 +1407,63 @@ namespace Ryujinx.Ava.UI.ViewModels
                             "application/x-nx-xci",
                             "application/x-nx-nca",
                             "application/x-nx-nro",
-                            "application/x-nx-nso"
-                        }
+                            "application/x-nx-nso",
+                        },
                     },
                     new("NSP")
                     {
                         Patterns = new[] { "*.nsp" },
                         AppleUniformTypeIdentifiers = new[] { "com.ryujinx.nsp" },
-                        MimeTypes = new[] { "application/x-nx-nsp" }
+                        MimeTypes = new[] { "application/x-nx-nsp" },
                     },
                     new("XCI")
                     {
                         Patterns = new[] { "*.xci" },
                         AppleUniformTypeIdentifiers = new[] { "com.ryujinx.xci" },
-                        MimeTypes = new[] { "application/x-nx-xci" }
+                        MimeTypes = new[] { "application/x-nx-xci" },
                     },
                     new("NCA")
                     {
                         Patterns = new[] { "*.nca" },
                         AppleUniformTypeIdentifiers = new[] { "com.ryujinx.nca" },
-                        MimeTypes = new[] { "application/x-nx-nca" }
+                        MimeTypes = new[] { "application/x-nx-nca" },
                     },
                     new("NRO")
                     {
                         Patterns = new[] { "*.nro" },
                         AppleUniformTypeIdentifiers = new[] { "com.ryujinx.nro" },
-                        MimeTypes = new[] { "application/x-nx-nro" }
+                        MimeTypes = new[] { "application/x-nx-nro" },
                     },
                     new("NSO")
                     {
                         Patterns = new[] { "*.nso" },
                         AppleUniformTypeIdentifiers = new[] { "com.ryujinx.nso" },
-                        MimeTypes = new[] { "application/x-nx-nso" }
+                        MimeTypes = new[] { "application/x-nx-nso" },
                     },
-                }
+                },
             });
 
             if (result.Count > 0)
             {
-                LoadApplication(result[0].Path.LocalPath);
+                await LoadApplication(result[0].Path.LocalPath);
             }
         }
 
-        public async void OpenFolder()
+        public async Task OpenFolder()
         {
             var result = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
             {
                 Title = LocaleManager.Instance[LocaleKeys.OpenFolderDialogTitle],
-                AllowMultiple = false
+                AllowMultiple = false,
             });
 
             if (result.Count > 0)
             {
-                LoadApplication(result[0].Path.LocalPath);
+                await LoadApplication(result[0].Path.LocalPath);
             }
         }
 
-        public async void LoadApplication(string path, bool startFullscreen = false, string titleName = "")
+        public async Task LoadApplication(string path, bool startFullscreen = false, string titleName = "")
         {
             if (AppHost != null)
             {
@@ -1505,35 +1500,30 @@ namespace Ryujinx.Ava.UI.ViewModels
                 this,
                 TopLevel);
 
-            async void Action()
+            if (!await AppHost.LoadGuestApplication())
             {
-                if (!await AppHost.LoadGuestApplication())
-                {
-                    AppHost.DisposeContext();
-                    AppHost = null;
+                AppHost.DisposeContext();
+                AppHost = null;
 
-                    return;
-                }
-
-                CanUpdate = false;
-
-                LoadHeading = TitleName = titleName;
-
-                if (string.IsNullOrWhiteSpace(titleName))
-                {
-                    LoadHeading = LocaleManager.Instance.UpdateAndGetDynamicValue(LocaleKeys.LoadingHeading, AppHost.Device.Processes.ActiveApplication.Name);
-                    TitleName = AppHost.Device.Processes.ActiveApplication.Name;
-                }
-
-                SwitchToRenderer(startFullscreen);
-
-                _currentEmulatedGamePath = path;
-
-                Thread gameThread = new(InitializeGame) { Name = "GUI.WindowThread" };
-                gameThread.Start();
+                return;
             }
 
-            Dispatcher.UIThread.Post(Action);
+            CanUpdate = false;
+
+            LoadHeading = TitleName = titleName;
+
+            if (string.IsNullOrWhiteSpace(titleName))
+            {
+                LoadHeading = LocaleManager.Instance.UpdateAndGetDynamicValue(LocaleKeys.LoadingHeading, AppHost.Device.Processes.ActiveApplication.Name);
+                TitleName = AppHost.Device.Processes.ActiveApplication.Name;
+            }
+
+            SwitchToRenderer(startFullscreen);
+
+            _currentEmulatedGamePath = path;
+
+            Thread gameThread = new(InitializeGame) { Name = "GUI.WindowThread" };
+            gameThread.Start();
         }
 
         public void SwitchToRenderer(bool startFullscreen)
@@ -1596,7 +1586,7 @@ namespace Ryujinx.Ava.UI.ViewModels
 
             IsGameRunning = false;
 
-            Dispatcher.UIThread.InvokeAsync(() =>
+            Dispatcher.UIThread.InvokeAsync(async () =>
             {
                 ShowMenuAndStatusBar = true;
                 ShowContent = true;
@@ -1609,7 +1599,7 @@ namespace Ryujinx.Ava.UI.ViewModels
 
                 AppHost = null;
 
-                HandleRelaunch();
+                await HandleRelaunch();
             });
 
             RendererHostControl.WindowCreated -= RendererHost_Created;
