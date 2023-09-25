@@ -1,6 +1,7 @@
 ﻿using Silk.NET.Vulkan;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace Ryujinx.Graphics.Vulkan
 {
@@ -13,6 +14,7 @@ namespace Ryujinx.Graphics.Vulkan
         private readonly Device _device;
         private readonly List<MemoryAllocatorBlockList> _blockLists;
         private readonly int _blockAlignment;
+        private readonly ReaderWriterLockSlim _lock;
 
         public MemoryAllocator(Vk api, VulkanPhysicalDevice physicalDevice, Device device)
         {
@@ -21,6 +23,7 @@ namespace Ryujinx.Graphics.Vulkan
             _device = device;
             _blockLists = new List<MemoryAllocatorBlockList>();
             _blockAlignment = (int)Math.Min(int.MaxValue, MaxDeviceMemoryUsageEstimate / _physicalDevice.PhysicalDeviceProperties.Limits.MaxMemoryAllocationCount);
+            _lock = new(LockRecursionPolicy.NoRecursion);
         }
 
         public MemoryAllocation AllocateDeviceMemory(
@@ -40,21 +43,37 @@ namespace Ryujinx.Graphics.Vulkan
 
         private MemoryAllocation Allocate(int memoryTypeIndex, ulong size, ulong alignment, bool map, bool isBuffer)
         {
-            for (int i = 0; i < _blockLists.Count; i++)
+            _lock.EnterReadLock();
+
+            try
             {
-                var bl = _blockLists[i];
-                if (bl.MemoryTypeIndex == memoryTypeIndex && bl.ForBuffer == isBuffer)
+                for (int i = 0; i < _blockLists.Count; i++)
                 {
-                    lock (bl)
+                    var bl = _blockLists[i];
+                    if (bl.MemoryTypeIndex == memoryTypeIndex && bl.ForBuffer == isBuffer)
                     {
                         return bl.Allocate(size, alignment, map);
                     }
                 }
             }
+            finally
+            {
+                _lock.ExitReadLock();
+            }
 
-            var newBl = new MemoryAllocatorBlockList(_api, _device, memoryTypeIndex, _blockAlignment, isBuffer);
-            _blockLists.Add(newBl);
-            return newBl.Allocate(size, alignment, map);
+            _lock.EnterWriteLock();
+
+            try
+            {
+                var newBl = new MemoryAllocatorBlockList(_api, _device, memoryTypeIndex, _blockAlignment, isBuffer);
+                _blockLists.Add(newBl);
+
+                return newBl.Allocate(size, alignment, map);
+            }
+            finally
+            {
+                _lock.ExitWriteLock();
+            }
         }
 
         internal int FindSuitableMemoryTypeIndex(
