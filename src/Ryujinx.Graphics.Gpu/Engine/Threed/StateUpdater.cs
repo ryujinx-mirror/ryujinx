@@ -447,6 +447,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             bool useControl = updateFlags.HasFlag(RenderTargetUpdateFlags.UseControl);
             bool layered = updateFlags.HasFlag(RenderTargetUpdateFlags.Layered);
             bool singleColor = updateFlags.HasFlag(RenderTargetUpdateFlags.SingleColor);
+            bool discard = updateFlags.HasFlag(RenderTargetUpdateFlags.DiscardClip);
 
             int count = useControl ? rtControl.UnpackCount() : Constants.TotalRenderTargets;
 
@@ -486,6 +487,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                     memoryManager,
                     colorState,
                     _vtgWritesRtLayer || layered,
+                    discard,
                     samplesInX,
                     samplesInY,
                     sizeHint);
@@ -525,6 +527,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                     dsState,
                     dsSize,
                     _vtgWritesRtLayer || layered,
+                    discard,
                     samplesInX,
                     samplesInY,
                     sizeHint);

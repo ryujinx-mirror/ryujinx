@@ -34,6 +34,11 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         UpdateDepthStencil = 1 << 3,
 
         /// <summary>
+        /// Indicates that the data in the clip region can be discarded for the next use.
+        /// </summary>
+        DiscardClip = 1 << 4,
+
+        /// <summary>
         /// Default update flags for draw.
         /// </summary>
         UpdateAll = UseControl | UpdateDepthStencil,

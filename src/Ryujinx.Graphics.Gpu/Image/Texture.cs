@@ -571,6 +571,18 @@ namespace Ryujinx.Graphics.Gpu.Image
         }
 
         /// <summary>
+        /// Discards all data for this texture.
+        /// This clears all dirty flags, modified flags, and pending copies from other textures.
+        /// It should be used if the texture data will be fully overwritten by the next use.
+        /// </summary>
+        public void DiscardData()
+        {
+            Group.DiscardData(this);
+
+            _dirty = false;
+        }
+
+        /// <summary>
         /// Synchronizes guest and host memory.
         /// This will overwrite the texture data with the texture data on the guest memory, if a CPU
         /// modification is detected.

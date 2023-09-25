@@ -2,7 +2,6 @@
 using Ryujinx.Memory.Tracking;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 
 namespace Ryujinx.Graphics.Gpu.Image
@@ -152,6 +151,24 @@ namespace Ryujinx.Graphics.Gpu.Image
             {
                 // Linear textures are presumed to be used for readback initially.
                 _flushBalance = FlushBalanceThreshold + FlushBalanceIncrement;
+            }
+        }
+
+        /// <summary>
+        /// Discards all data for this handle.
+        /// This clears all dirty flags, modified flags, and pending copies from other handles.
+        /// </summary>
+        public void DiscardData()
+        {
+            Modified = false;
+            DeferredCopy = null;
+
+            foreach (RegionHandle handle in Handles)
+            {
+                if (handle.Dirty)
+                {
+                    handle.Reprotect();
+                }
             }
         }
 

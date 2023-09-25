@@ -279,6 +279,24 @@ namespace Ryujinx.Graphics.Gpu.Image
         }
 
         /// <summary>
+        /// Discards all data for a given texture.
+        /// This clears all dirty flags, modified flags, and pending copies from other textures.
+        /// </summary>
+        /// <param name="texture">The texture being discarded</param>
+        public void DiscardData(Texture texture)
+        {
+            EvaluateRelevantHandles(texture, (baseHandle, regionCount, split) =>
+            {
+                for (int i = 0; i < regionCount; i++)
+                {
+                    TextureGroupHandle group = _handles[baseHandle + i];
+
+                    group.DiscardData();
+                }
+            });
+        }
+
+        /// <summary>
         /// Synchronize memory for a given texture.
         /// If overlapping tracking handles are dirty, fully or partially synchronize the texture data.
         /// </summary>

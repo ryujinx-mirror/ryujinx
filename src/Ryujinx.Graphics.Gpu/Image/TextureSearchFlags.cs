@@ -14,5 +14,6 @@ namespace Ryujinx.Graphics.Gpu.Image
         DepthAlias = 1 << 3,
         WithUpscale = 1 << 4,
         NoCreate = 1 << 5,
+        DiscardData = 1 << 6,
     }
 }
