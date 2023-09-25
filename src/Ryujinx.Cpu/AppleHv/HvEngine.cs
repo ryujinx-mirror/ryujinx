@@ -1,7 +1,9 @@
 using ARMeilleure.Memory;
+using System.Runtime.Versioning;
 
 namespace Ryujinx.Cpu.AppleHv
 {
+    [SupportedOSPlatform("macos")]
     public class HvEngine : ICpuEngine
     {
         private readonly ITickSource _tickSource;

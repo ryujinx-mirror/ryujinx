@@ -2,10 +2,12 @@ using Ryujinx.Cpu.AppleHv.Arm;
 using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using System.Threading;
 
 namespace Ryujinx.Cpu.AppleHv
 {
+    [SupportedOSPlatform("macos")]
     class HvAddressSpaceRange : IDisposable
     {
         private const ulong AllocationGranule = 1UL << 14;

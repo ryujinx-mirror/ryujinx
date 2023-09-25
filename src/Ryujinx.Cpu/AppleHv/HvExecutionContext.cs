@@ -2,9 +2,12 @@ using ARMeilleure.State;
 using Ryujinx.Cpu.AppleHv.Arm;
 using Ryujinx.Memory.Tracking;
 using System;
+using System.Runtime.Versioning;
+using System.Threading;
 
 namespace Ryujinx.Cpu.AppleHv
 {
+    [SupportedOSPlatform("macos")]
     class HvExecutionContext : IExecutionContext
     {
         /// <inheritdoc/>
@@ -67,6 +70,8 @@ namespace Ryujinx.Cpu.AppleHv
 
         private readonly ExceptionCallbacks _exceptionCallbacks;
 
+        private int _interruptRequested;
+
         public HvExecutionContext(ICounter counter, ExceptionCallbacks exceptionCallbacks)
         {
             _counter = counter;
@@ -111,7 +116,15 @@ namespace Ryujinx.Cpu.AppleHv
         /// <inheritdoc/>
         public void RequestInterrupt()
         {
-            _impl.RequestInterrupt();
+            if (Interlocked.Exchange(ref _interruptRequested, 1) == 0 && _impl is HvExecutionContextVcpu impl)
+            {
+                impl.RequestInterrupt();
+            }
+        }
+
+        private bool GetAndClearInterruptRequested()
+        {
+            return Interlocked.Exchange(ref _interruptRequested, 0) != 0;
         }
 
         /// <inheritdoc/>
@@ -131,9 +144,9 @@ namespace Ryujinx.Cpu.AppleHv
             {
                 HvApi.hv_vcpu_run(vcpu.Handle).ThrowOnError();
 
-                uint reason = vcpu.ExitInfo->Reason;
+                HvExitReason reason = vcpu.ExitInfo->Reason;
 
-                if (reason == 1)
+                if (reason == HvExitReason.Exception)
                 {
                     uint hvEsr = (uint)vcpu.ExitInfo->Exception.Syndrome;
                     ExceptionClass hvEc = (ExceptionClass)(hvEsr >> 26);
@@ -146,13 +159,21 @@ namespace Ryujinx.Cpu.AppleHv
                     address = SynchronousException(memoryManager, ref vcpu);
                     HvApi.hv_vcpu_set_reg(vcpu.Handle, HvReg.PC, address).ThrowOnError();
                 }
-                else if (reason == 0)
+                else if (reason == HvExitReason.Canceled || reason == HvExitReason.VTimerActivated)
                 {
-                    if (_impl.GetAndClearInterruptRequested())
+                    if (GetAndClearInterruptRequested())
                     {
                         ReturnToPool(vcpu);
                         InterruptHandler();
                         vcpu = RentFromPool(memoryManager.AddressSpace, vcpu);
+                    }
+
+                    if (reason == HvExitReason.VTimerActivated)
+                    {
+                        vcpu.EnableAndUpdateVTimer();
+
+                        // Unmask VTimer interrupts.
+                        HvApi.hv_vcpu_set_vtimer_mask(vcpu.Handle, false).ThrowOnError();
                     }
                 }
                 else

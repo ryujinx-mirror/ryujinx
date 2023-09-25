@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using System.Threading;
 
 namespace Ryujinx.Cpu.AppleHv
@@ -14,6 +15,7 @@ namespace Ryujinx.Cpu.AppleHv
     /// <summary>
     /// Represents a CPU memory manager which maps guest virtual memory directly onto the Hypervisor page table.
     /// </summary>
+    [SupportedOSPlatform("macos")]
     public class HvMemoryManager : MemoryManagerBase, IMemoryManager, IVirtualMemoryManagerTracked, IWritableBlock
     {
         public const int PageBits = 12;

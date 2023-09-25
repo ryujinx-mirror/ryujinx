@@ -1,7 +1,9 @@
 using Ryujinx.Memory;
+using System.Runtime.Versioning;
 
 namespace Ryujinx.Cpu.AppleHv
 {
+    [SupportedOSPlatform("macos")]
     class HvMemoryBlockAllocator : PrivateMemoryAllocatorImpl<HvMemoryBlockAllocator.Block>
     {
         public class Block : PrivateMemoryAllocator.Block

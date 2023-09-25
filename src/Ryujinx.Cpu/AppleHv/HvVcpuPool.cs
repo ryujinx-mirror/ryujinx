@@ -1,8 +1,10 @@
 using System;
+using System.Runtime.Versioning;
 using System.Threading;
 
 namespace Ryujinx.Cpu.AppleHv
 {
+    [SupportedOSPlatform("macos")]
     class HvVcpuPool
     {
         // Since there's a limit on the number of VCPUs we can create,
@@ -80,6 +82,8 @@ namespace Ryujinx.Cpu.AppleHv
             HvExecutionContextVcpu nativeContext = new(vcpuHandle);
 
             HvVcpu vcpu = new(vcpuHandle, exitInfo, shadowContext, nativeContext, isEphemeral);
+
+            vcpu.EnableAndUpdateVTimer();
 
             return vcpu;
         }

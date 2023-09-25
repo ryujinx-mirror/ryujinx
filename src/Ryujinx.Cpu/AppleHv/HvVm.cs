@@ -1,8 +1,10 @@
 using Ryujinx.Memory;
 using System;
+using System.Runtime.Versioning;
 
 namespace Ryujinx.Cpu.AppleHv
 {
+    [SupportedOSPlatform("macos")]
     static class HvVm
     {
         // This alignment allows us to use larger blocks on the page table.
