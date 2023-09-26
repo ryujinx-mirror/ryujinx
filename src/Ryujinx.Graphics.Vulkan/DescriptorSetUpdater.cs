@@ -59,6 +59,8 @@ namespace Ryujinx.Graphics.Vulkan
         private BitMapStruct<Array2<long>> _uniformMirrored;
         private BitMapStruct<Array2<long>> _storageMirrored;
 
+        private bool _updateDescriptorCacheCbIndex;
+
         [Flags]
         private enum DirtyFlags
         {
@@ -218,6 +220,7 @@ namespace Ryujinx.Graphics.Vulkan
         public void SetProgram(ShaderCollection program)
         {
             _program = program;
+            _updateDescriptorCacheCbIndex = true;
             _dirty = DirtyFlags.All;
         }
 
@@ -490,7 +493,13 @@ namespace Ryujinx.Graphics.Vulkan
 
             var dummyBuffer = _dummyBuffer?.GetBuffer();
 
-            var dsc = program.GetNewDescriptorSetCollection(_gd, cbs.CommandBufferIndex, setIndex, out var isNew).Get(cbs);
+            if (_updateDescriptorCacheCbIndex)
+            {
+                _updateDescriptorCacheCbIndex = false;
+                program.UpdateDescriptorCacheCommandBufferIndex(cbs.CommandBufferIndex);
+            }
+
+            var dsc = program.GetNewDescriptorSetCollection(setIndex, out var isNew).Get(cbs);
 
             if (!program.HasMinimalLayout)
             {
@@ -697,6 +706,7 @@ namespace Ryujinx.Graphics.Vulkan
 
         public void SignalCommandBufferChange()
         {
+            _updateDescriptorCacheCbIndex = true;
             _dirty = DirtyFlags.All;
 
             _uniformSet.Clear();

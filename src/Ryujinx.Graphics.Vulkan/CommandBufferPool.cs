@@ -27,6 +27,7 @@ namespace Ryujinx.Graphics.Vulkan
         {
             public bool InUse;
             public bool InConsumption;
+            public int SubmissionCount;
             public CommandBuffer CommandBuffer;
             public FenceHolder Fence;
             public SemaphoreHolder Semaphore;
@@ -193,6 +194,11 @@ namespace Ryujinx.Graphics.Vulkan
             return _commandBuffers[cbIndex].Fence;
         }
 
+        public int GetSubmissionCount(int cbIndex)
+        {
+            return _commandBuffers[cbIndex].SubmissionCount;
+        }
+
         private int FreeConsumed(bool wait)
         {
             int freeEntry = 0;
@@ -282,6 +288,7 @@ namespace Ryujinx.Graphics.Vulkan
                 Debug.Assert(entry.CommandBuffer.Handle == cbs.CommandBuffer.Handle);
                 entry.InUse = false;
                 entry.InConsumption = true;
+                entry.SubmissionCount++;
                 _inUseCount--;
 
                 var commandBuffer = entry.CommandBuffer;

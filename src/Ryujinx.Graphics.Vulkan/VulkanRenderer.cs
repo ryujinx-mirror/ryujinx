@@ -347,7 +347,7 @@ namespace Ryujinx.Graphics.Vulkan
 
             CommandBufferPool = new CommandBufferPool(Api, _device, Queue, QueueLock, queueFamilyIndex);
 
-            DescriptorSetManager = new DescriptorSetManager(_device);
+            DescriptorSetManager = new DescriptorSetManager(_device, PipelineBase.DescriptorSetLayouts);
 
             PipelineLayoutCache = new PipelineLayoutCache();
 
