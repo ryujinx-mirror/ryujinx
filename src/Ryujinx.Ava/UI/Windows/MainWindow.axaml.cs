@@ -265,32 +265,46 @@ namespace Ryujinx.Ava.UI.Windows
 
         private void CheckLaunchState()
         {
-            if (ShowKeyErrorOnLoad)
-            {
-                ShowKeyErrorOnLoad = false;
-
-                UserErrorDialog.ShowUserErrorDialog(UserError.NoKeys).Wait();
-            }
-
             if (OperatingSystem.IsLinux() && LinuxHelper.VmMaxMapCount < LinuxHelper.RecommendedVmMaxMapCount)
             {
                 Logger.Warning?.Print(LogClass.Application, $"The value of vm.max_map_count is lower than {LinuxHelper.RecommendedVmMaxMapCount}. ({LinuxHelper.VmMaxMapCount})");
 
                 if (LinuxHelper.PkExecPath is not null)
                 {
-                    ShowVmMaxMapCountDialog().Wait();
+                    Dispatcher.UIThread.Post(async () =>
+                    {
+                        if (OperatingSystem.IsLinux())
+                        {
+                            await ShowVmMaxMapCountDialog();
+                        }
+                    });
                 }
                 else
                 {
-                    ShowVmMaxMapCountWarning().Wait();
+                    Dispatcher.UIThread.Post(async () =>
+                    {
+                        if (OperatingSystem.IsLinux())
+                        {
+                            await ShowVmMaxMapCountWarning();
+                        }
+                    });
                 }
             }
 
-            if (_deferLoad)
+            if (!ShowKeyErrorOnLoad)
             {
-                _deferLoad = false;
+                if (_deferLoad)
+                {
+                    _deferLoad = false;
 
-                ViewModel.LoadApplication(_launchPath, _startFullscreen).Wait();
+                    ViewModel.LoadApplication(_launchPath, _startFullscreen).Wait();
+                }
+            }
+            else
+            {
+                ShowKeyErrorOnLoad = false;
+
+                Dispatcher.UIThread.Post(async () => await UserErrorDialog.ShowUserErrorDialog(UserError.NoKeys));
             }
 
             if (ConfigurationState.Instance.CheckUpdatesOnStart.Value && Updater.CanUpdate(false))
