@@ -696,11 +696,14 @@ namespace Ryujinx.Graphics.Gpu.Image
             }
 
             // Find view compatible matches.
-            int overlapsCount;
+            int overlapsCount = 0;
 
-            lock (_textures)
+            if (info.Target != Target.TextureBuffer)
             {
-                overlapsCount = _textures.FindOverlaps(range.Value, ref _textureOverlaps);
+                lock (_textures)
+                {
+                    overlapsCount = _textures.FindOverlaps(range.Value, ref _textureOverlaps);
+                }
             }
 
             if (_overlapInfo.Length != _textureOverlaps.Length)

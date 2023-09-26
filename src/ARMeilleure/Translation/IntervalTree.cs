@@ -189,7 +189,7 @@ namespace ARMeilleure.Translation
             {
                 if (start.CompareTo(node.End) < 0)
                 {
-                    if (overlaps.Length >= overlapCount)
+                    if (overlaps.Length <= overlapCount)
                     {
                         Array.Resize(ref overlaps, overlapCount + ArrayGrowthSize);
                     }
