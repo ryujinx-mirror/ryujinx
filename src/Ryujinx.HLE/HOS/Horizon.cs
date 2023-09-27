@@ -327,8 +327,10 @@ namespace Ryujinx.HLE.HOS
 
         private void StartNewServices()
         {
+            HorizonFsClient fsClient = new(this);
+
             ServiceTable = new ServiceTable();
-            var services = ServiceTable.GetServices(new HorizonOptions(Device.Configuration.IgnoreMissingServices, LibHacHorizonManager.BcatClient));
+            var services = ServiceTable.GetServices(new HorizonOptions(Device.Configuration.IgnoreMissingServices, LibHacHorizonManager.BcatClient, fsClient));
 
             foreach (var service in services)
             {

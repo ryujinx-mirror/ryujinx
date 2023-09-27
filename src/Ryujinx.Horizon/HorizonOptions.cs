@@ -1,4 +1,5 @@
 using LibHac;
+using Ryujinx.Horizon.Sdk.Fs;
 
 namespace Ryujinx.Horizon
 {
@@ -8,12 +9,14 @@ namespace Ryujinx.Horizon
         public bool ThrowOnInvalidCommandIds { get; }
 
         public HorizonClient BcatClient { get; }
+        public IFsClient FsClient { get; }
 
-        public HorizonOptions(bool ignoreMissingServices, HorizonClient bcatClient)
+        public HorizonOptions(bool ignoreMissingServices, HorizonClient bcatClient, IFsClient fsClient)
         {
             IgnoreMissingServices = ignoreMissingServices;
             ThrowOnInvalidCommandIds = true;
             BcatClient = bcatClient;
+            FsClient = fsClient;
         }
     }
 }

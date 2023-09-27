@@ -2,7 +2,7 @@
 
 namespace Ryujinx.Horizon
 {
-    internal static class LibHacResultExtensions
+    public static class LibHacResultExtensions
     {
         public static Result ToHorizonResult(this LibHac.Result result)
         {
