@@ -36,6 +36,8 @@ namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator
                 throw new InvalidOperationException("Out of handles!");
             }
 
+            _completionEvent.WritableEvent.Signal();
+
             context.Response.HandleDesc = IpcHandleDesc.MakeCopy(completionEventHandle);
 
             return ResultCode.Success;
@@ -183,6 +185,20 @@ namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator
             context.ResponseData.Write(0);
 
             Logger.Stub?.PrintStub(LogClass.ServiceFriend, new { offset, UserId = userId.ToString() });
+
+            return ResultCode.Success;
+        }
+
+        [CommandCmif(10420)]
+        // nn::friends::CheckBlockedUserListAvailability(nn::account::Uid userId) -> bool
+        public ResultCode CheckBlockedUserListAvailability(ServiceCtx context)
+        {
+            UserId userId = context.RequestData.ReadStruct<UserId>();
+
+            // Yes, it is available.
+            context.ResponseData.Write(true);
+
+            Logger.Stub?.PrintStub(LogClass.ServiceFriend, new { UserId = userId.ToString() });
 
             return ResultCode.Success;
         }
