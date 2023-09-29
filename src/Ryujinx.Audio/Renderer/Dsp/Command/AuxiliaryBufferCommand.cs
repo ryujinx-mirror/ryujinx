@@ -31,9 +31,18 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
 
         public bool IsEffectEnabled { get; }
 
-        public AuxiliaryBufferCommand(uint bufferOffset, byte inputBufferOffset, byte outputBufferOffset,
-                          ref AuxiliaryBufferAddresses sendBufferInfo, bool isEnabled, uint countMax,
-                          CpuAddress outputBuffer, CpuAddress inputBuffer, uint updateCount, uint writeOffset, int nodeId)
+        public AuxiliaryBufferCommand(
+            uint bufferOffset,
+            byte inputBufferOffset,
+            byte outputBufferOffset,
+            ref AuxiliaryBufferAddresses sendBufferInfo,
+            bool isEnabled,
+            uint countMax,
+            CpuAddress outputBuffer,
+            CpuAddress inputBuffer,
+            uint updateCount,
+            uint writeOffset,
+            int nodeId)
         {
             Enabled = true;
             NodeId = nodeId;

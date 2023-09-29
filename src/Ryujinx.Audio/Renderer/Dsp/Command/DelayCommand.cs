@@ -88,7 +88,7 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
             float outGain = FixedPointHelper.ToFloat(Parameter.OutGain, FixedPointPrecision);
 
             Matrix2x2 delayFeedback = new(delayFeedbackBaseGain, delayFeedbackCrossGain,
-                                                    delayFeedbackCrossGain, delayFeedbackBaseGain);
+                                          delayFeedbackCrossGain, delayFeedbackBaseGain);
 
             for (int i = 0; i < sampleCount; i++)
             {
@@ -125,9 +125,9 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
             float outGain = FixedPointHelper.ToFloat(Parameter.OutGain, FixedPointPrecision);
 
             Matrix4x4 delayFeedback = new(delayFeedbackBaseGain, delayFeedbackCrossGain, delayFeedbackCrossGain, 0.0f,
-                                                    delayFeedbackCrossGain, delayFeedbackBaseGain, 0.0f, delayFeedbackCrossGain,
-                                                    delayFeedbackCrossGain, 0.0f, delayFeedbackBaseGain, delayFeedbackCrossGain,
-                                                    0.0f, delayFeedbackCrossGain, delayFeedbackCrossGain, delayFeedbackBaseGain);
+                                          delayFeedbackCrossGain, delayFeedbackBaseGain, 0.0f, delayFeedbackCrossGain,
+                                          delayFeedbackCrossGain, 0.0f, delayFeedbackBaseGain, delayFeedbackCrossGain,
+                                          0.0f, delayFeedbackCrossGain, delayFeedbackCrossGain, delayFeedbackBaseGain);
 
 
             for (int i = 0; i < sampleCount; i++)
@@ -172,11 +172,11 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
             float outGain = FixedPointHelper.ToFloat(Parameter.OutGain, FixedPointPrecision);
 
             Matrix6x6 delayFeedback = new(delayFeedbackBaseGain, 0.0f, delayFeedbackCrossGain, 0.0f, delayFeedbackCrossGain, 0.0f,
-                                                    0.0f, delayFeedbackBaseGain, delayFeedbackCrossGain, 0.0f, 0.0f, delayFeedbackCrossGain,
-                                                    delayFeedbackCrossGain, delayFeedbackCrossGain, delayFeedbackBaseGain, 0.0f, 0.0f, 0.0f,
-                                                    0.0f, 0.0f, 0.0f, feedbackGain, 0.0f, 0.0f,
-                                                    delayFeedbackCrossGain, 0.0f, 0.0f, 0.0f, delayFeedbackBaseGain, delayFeedbackCrossGain,
-                                                    0.0f, delayFeedbackCrossGain, 0.0f, 0.0f, delayFeedbackCrossGain, delayFeedbackBaseGain);
+                                          0.0f, delayFeedbackBaseGain, delayFeedbackCrossGain, 0.0f, 0.0f, delayFeedbackCrossGain,
+                                          delayFeedbackCrossGain, delayFeedbackCrossGain, delayFeedbackBaseGain, 0.0f, 0.0f, 0.0f,
+                                          0.0f, 0.0f, 0.0f, feedbackGain, 0.0f, 0.0f,
+                                          delayFeedbackCrossGain, 0.0f, 0.0f, 0.0f, delayFeedbackBaseGain, delayFeedbackCrossGain,
+                                          0.0f, delayFeedbackCrossGain, 0.0f, 0.0f, delayFeedbackCrossGain, delayFeedbackBaseGain);
 
             for (int i = 0; i < sampleCount; i++)
             {

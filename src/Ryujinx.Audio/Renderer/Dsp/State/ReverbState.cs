@@ -5,7 +5,7 @@ using System;
 
 namespace Ryujinx.Audio.Renderer.Dsp.State
 {
-    public class ReverbState
+    public struct ReverbState
     {
         private static readonly float[] _fdnDelayTimes = new float[20]
         {
@@ -54,7 +54,7 @@ namespace Ryujinx.Audio.Renderer.Dsp.State
             // Room
             0.70f, 0.68f, 0.70f, 0.68f, 0.70f, 0.68f, 0.70f, 0.68f, 0.68f, 0.68f,
             // Chamber
-            0.70f, 0.68f, 0.70f, 0.68f, 0.70f, 0.68f, 0.68f, 0.68f, 0.68f, 0.68f, 
+            0.70f, 0.68f, 0.70f, 0.68f, 0.70f, 0.68f, 0.68f, 0.68f, 0.68f, 0.68f,
             // Hall
             0.50f, 0.70f, 0.70f, 0.68f, 0.50f, 0.68f, 0.68f, 0.70f, 0.68f, 0.00f,
             // Cathedral

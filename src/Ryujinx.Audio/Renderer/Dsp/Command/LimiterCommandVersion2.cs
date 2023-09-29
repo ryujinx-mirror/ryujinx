@@ -28,7 +28,14 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
 
         private LimiterParameter _parameter;
 
-        public LimiterCommandVersion2(uint bufferOffset, LimiterParameter parameter, Memory<LimiterState> state, Memory<EffectResultState> resultState, bool isEnabled, ulong workBuffer, int nodeId)
+        public LimiterCommandVersion2(
+            uint bufferOffset,
+            LimiterParameter parameter,
+            Memory<LimiterState> state,
+            Memory<EffectResultState> resultState,
+            bool isEnabled,
+            ulong workBuffer,
+            int nodeId)
         {
             Enabled = true;
             NodeId = nodeId;

@@ -79,53 +79,57 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ProcessReverbMono(ref ReverbState state, ReadOnlySpan<IntPtr> outputBuffers, ReadOnlySpan<IntPtr> inputBuffers, uint sampleCount)
         {
-            ProcessReverbGeneric(ref state,
-                     outputBuffers,
-                     inputBuffers,
-                     sampleCount,
-                     _outputEarlyIndicesTableMono,
-                     _targetEarlyDelayLineIndicesTableMono,
-                     _targetOutputFeedbackIndicesTableMono,
-                     _outputIndicesTableMono);
+            ProcessReverbGeneric(
+                ref state,
+                outputBuffers,
+                inputBuffers,
+                sampleCount,
+                _outputEarlyIndicesTableMono,
+                _targetEarlyDelayLineIndicesTableMono,
+                _targetOutputFeedbackIndicesTableMono,
+                _outputIndicesTableMono);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ProcessReverbStereo(ref ReverbState state, ReadOnlySpan<IntPtr> outputBuffers, ReadOnlySpan<IntPtr> inputBuffers, uint sampleCount)
         {
-            ProcessReverbGeneric(ref state,
-                     outputBuffers,
-                     inputBuffers,
-                     sampleCount,
-                     _outputEarlyIndicesTableStereo,
-                     _targetEarlyDelayLineIndicesTableStereo,
-                     _targetOutputFeedbackIndicesTableStereo,
-                     _outputIndicesTableStereo);
+            ProcessReverbGeneric(
+                ref state,
+                outputBuffers,
+                inputBuffers,
+                sampleCount,
+                _outputEarlyIndicesTableStereo,
+                _targetEarlyDelayLineIndicesTableStereo,
+                _targetOutputFeedbackIndicesTableStereo,
+                _outputIndicesTableStereo);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ProcessReverbQuadraphonic(ref ReverbState state, ReadOnlySpan<IntPtr> outputBuffers, ReadOnlySpan<IntPtr> inputBuffers, uint sampleCount)
         {
-            ProcessReverbGeneric(ref state,
-                     outputBuffers,
-                     inputBuffers,
-                     sampleCount,
-                     _outputEarlyIndicesTableQuadraphonic,
-                     _targetEarlyDelayLineIndicesTableQuadraphonic,
-                     _targetOutputFeedbackIndicesTableQuadraphonic,
-                     _outputIndicesTableQuadraphonic);
+            ProcessReverbGeneric(
+                ref state,
+                outputBuffers,
+                inputBuffers,
+                sampleCount,
+                _outputEarlyIndicesTableQuadraphonic,
+                _targetEarlyDelayLineIndicesTableQuadraphonic,
+                _targetOutputFeedbackIndicesTableQuadraphonic,
+                _outputIndicesTableQuadraphonic);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ProcessReverbSurround(ref ReverbState state, ReadOnlySpan<IntPtr> outputBuffers, ReadOnlySpan<IntPtr> inputBuffers, uint sampleCount)
         {
-            ProcessReverbGeneric(ref state,
-                     outputBuffers,
-                     inputBuffers,
-                     sampleCount,
-                     _outputEarlyIndicesTableSurround,
-                     _targetEarlyDelayLineIndicesTableSurround,
-                     _targetOutputFeedbackIndicesTableSurround,
-                     _outputIndicesTableSurround);
+            ProcessReverbGeneric(
+                ref state,
+                outputBuffers,
+                inputBuffers,
+                sampleCount,
+                _outputEarlyIndicesTableSurround,
+                _targetEarlyDelayLineIndicesTableSurround,
+                _targetOutputFeedbackIndicesTableSurround,
+                _outputIndicesTableSurround);
         }
 
         private unsafe void ProcessReverbGeneric(ref ReverbState state, ReadOnlySpan<IntPtr> outputBuffers, ReadOnlySpan<IntPtr> inputBuffers, uint sampleCount, ReadOnlySpan<int> outputEarlyIndicesTable, ReadOnlySpan<int> targetEarlyDelayLineIndicesTable, ReadOnlySpan<int> targetOutputFeedbackIndicesTable, ReadOnlySpan<int> outputIndicesTable)

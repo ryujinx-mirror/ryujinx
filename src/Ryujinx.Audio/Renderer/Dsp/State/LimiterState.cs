@@ -4,7 +4,7 @@ using System;
 
 namespace Ryujinx.Audio.Renderer.Dsp.State
 {
-    public class LimiterState
+    public struct LimiterState
     {
         public ExponentialMovingAverage[] DetectorAverage;
         public ExponentialMovingAverage[] CompressionGainAverage;

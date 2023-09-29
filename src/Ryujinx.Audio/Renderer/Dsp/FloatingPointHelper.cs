@@ -52,7 +52,7 @@ namespace Ryujinx.Audio.Renderer.Dsp
         {
             // NOTE: Nintendo uses an approximation of log10, we don't.
             // As such, we support the same ranges as Nintendo to avoid unexpected behaviours.
-            return MathF.Pow(10, MathF.Max(x, 1.0e-10f));
+            return MathF.Log10(MathF.Max(x, 1.0e-10f));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -62,7 +62,8 @@ namespace Ryujinx.Audio.Renderer.Dsp
 
             foreach (float input in inputs)
             {
-                res += (input * input);
+                float normInput = input * (1f / 32768f);
+                res += normInput * normInput;
             }
 
             res /= inputs.Length;
@@ -79,19 +80,6 @@ namespace Ryujinx.Audio.Renderer.Dsp
         public static float DecibelToLinear(float db)
         {
             return MathF.Pow(10.0f, db / 20.0f);
-        }
-
-        /// <summary>
-        /// Map decibel to linear in [0, 2] range.
-        /// </summary>
-        /// <param name="db">The decibel value to convert</param>
-        /// <returns>Converted linear value in [0, 2] range</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static float DecibelToLinearExtended(float db)
-        {
-            float tmp = MathF.Log2(DecibelToLinear(db));
-
-            return MathF.Truncate(tmp) + MathF.Pow(2.0f, tmp - MathF.Truncate(tmp));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -4,7 +4,7 @@ using System;
 
 namespace Ryujinx.Audio.Renderer.Dsp.State
 {
-    public class Reverb3dState
+    public struct Reverb3dState
     {
         private readonly float[] _fdnDelayMinTimes = new float[4] { 5.0f, 6.0f, 13.0f, 14.0f };
         private readonly float[] _fdnDelayMaxTimes = new float[4] { 45.704f, 82.782f, 149.94f, 271.58f };

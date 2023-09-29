@@ -94,18 +94,18 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
 
                     float newMean = inputMovingAverage.Update(FloatingPointHelper.MeanSquare(channelInput), _parameter.InputGain);
                     float y = FloatingPointHelper.Log10(newMean) * 10.0f;
-                    float z = 0.0f;
+                    float z = 1.0f;
 
-                    bool unknown10OutOfRange = false;
+                    bool unknown10OutOfRange = y >= state.Unknown10;
 
                     if (newMean < 1.0e-10f)
                     {
-                        z = 1.0f;
+                        y = -100.0f;
 
-                        unknown10OutOfRange = state.Unknown10 < -100.0f;
+                        unknown10OutOfRange = state.Unknown10 <= -100.0f;
                     }
 
-                    if (y >= state.Unknown10 || unknown10OutOfRange)
+                    if (unknown10OutOfRange)
                     {
                         float tmpGain;
 
@@ -118,7 +118,7 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
                             tmpGain = (y - state.Unknown10) * ((y - state.Unknown10) * -state.CompressorGainReduction);
                         }
 
-                        z = FloatingPointHelper.DecibelToLinearExtended(tmpGain);
+                        z = FloatingPointHelper.DecibelToLinear(tmpGain);
                     }
 
                     float unknown4New = z;
