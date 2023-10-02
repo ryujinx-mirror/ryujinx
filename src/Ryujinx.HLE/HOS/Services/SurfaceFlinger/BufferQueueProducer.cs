@@ -669,6 +669,12 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 
             lock (Core.Lock)
             {
+                // If we are replacing a buffer that has already been queued, make sure we release the references.
+                if (Core.Slots[slot].BufferState == BufferState.Queued)
+                {
+                    Core.Slots[slot].GraphicBuffer.Object.DecrementNvMapHandleRefCount(Core.Owner);
+                }
+
                 Core.Slots[slot].BufferState = BufferState.Free;
                 Core.Slots[slot].Fence = AndroidFence.NoFence;
                 Core.Slots[slot].RequestBufferCalled = false;
