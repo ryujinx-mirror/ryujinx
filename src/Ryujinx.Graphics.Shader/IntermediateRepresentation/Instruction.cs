@@ -1,10 +1,8 @@
 using System;
-using System.Diagnostics.CodeAnalysis;
 
 namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
 {
     [Flags]
-    [SuppressMessage("Design", "CA1069: Enums values should not be duplicated")]
     enum Instruction
     {
         Absolute = 1,
@@ -118,7 +116,8 @@ namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
         Subtract,
         SwizzleAdd,
         TextureSample,
-        TextureSize,
+        TextureQuerySamples,
+        TextureQuerySize,
         Truncate,
         UnpackDouble2x32,
         UnpackHalf2x16,
@@ -160,7 +159,7 @@ namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
         public static bool IsTextureQuery(this Instruction inst)
         {
             inst &= Instruction.Mask;
-            return inst == Instruction.Lod || inst == Instruction.TextureSize;
+            return inst == Instruction.Lod || inst == Instruction.TextureQuerySamples || inst == Instruction.TextureQuerySize;
         }
     }
 }

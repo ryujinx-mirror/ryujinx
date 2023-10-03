@@ -134,7 +134,8 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             Add(Instruction.Subtract,                 GenerateSubtract);
             Add(Instruction.SwizzleAdd,               GenerateSwizzleAdd);
             Add(Instruction.TextureSample,            GenerateTextureSample);
-            Add(Instruction.TextureSize,              GenerateTextureSize);
+            Add(Instruction.TextureQuerySamples,      GenerateTextureQuerySamples);
+            Add(Instruction.TextureQuerySize,         GenerateTextureQuerySize);
             Add(Instruction.Truncate,                 GenerateTruncate);
             Add(Instruction.UnpackDouble2x32,         GenerateUnpackDouble2x32);
             Add(Instruction.UnpackHalf2x16,           GenerateUnpackHalf2x16);
@@ -1492,7 +1493,36 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             return new OperationResult(swizzledResultType, result);
         }
 
-        private static OperationResult GenerateTextureSize(CodeGenContext context, AstOperation operation)
+        private static OperationResult GenerateTextureQuerySamples(CodeGenContext context, AstOperation operation)
+        {
+            AstTextureOperation texOp = (AstTextureOperation)operation;
+
+            bool isBindless = (texOp.Flags & TextureFlags.Bindless) != 0;
+
+            // TODO: Bindless texture support. For now we just return 0.
+            if (isBindless)
+            {
+                return new OperationResult(AggregateType.S32, context.Constant(context.TypeS32(), 0));
+            }
+
+            bool isIndexed = (texOp.Type & SamplerType.Indexed) != 0;
+
+            if (isIndexed)
+            {
+                context.GetS32(texOp.GetSource(0));
+            }
+
+            (var imageType, var sampledImageType, var sampledImageVariable) = context.Samplers[texOp.Binding];
+
+            var image = context.Load(sampledImageType, sampledImageVariable);
+            image = context.Image(imageType, image);
+
+            SpvInstruction result = context.ImageQuerySamples(context.TypeS32(), image);
+
+            return new OperationResult(AggregateType.S32, result);
+        }
+
+        private static OperationResult GenerateTextureQuerySize(CodeGenContext context, AstOperation operation)
         {
             AstTextureOperation texOp = (AstTextureOperation)operation;
 

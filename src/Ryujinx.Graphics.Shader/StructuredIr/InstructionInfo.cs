@@ -124,7 +124,8 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             Add(Instruction.Subtract,                 AggregateType.Scalar, AggregateType.Scalar,  AggregateType.Scalar);
             Add(Instruction.SwizzleAdd,               AggregateType.FP32,   AggregateType.FP32,    AggregateType.FP32,    AggregateType.S32);
             Add(Instruction.TextureSample,            AggregateType.FP32);
-            Add(Instruction.TextureSize,              AggregateType.S32,    AggregateType.S32,     AggregateType.S32);
+            Add(Instruction.TextureQuerySamples,      AggregateType.S32,    AggregateType.S32);
+            Add(Instruction.TextureQuerySize,         AggregateType.S32,    AggregateType.S32,     AggregateType.S32);
             Add(Instruction.Truncate,                 AggregateType.Scalar, AggregateType.Scalar);
             Add(Instruction.UnpackDouble2x32,         AggregateType.U32,    AggregateType.FP64);
             Add(Instruction.UnpackHalf2x16,           AggregateType.FP32,   AggregateType.U32);

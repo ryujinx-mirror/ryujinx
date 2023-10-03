@@ -27,9 +27,7 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
                     continue;
                 }
 
-                if (texOp.Inst == Instruction.Lod ||
-                    texOp.Inst == Instruction.TextureSample ||
-                    texOp.Inst == Instruction.TextureSize)
+                if (texOp.Inst == Instruction.TextureSample || texOp.Inst.IsTextureQuery())
                 {
                     Operand bindlessHandle = Utils.FindLastOperation(texOp.GetSource(0), block);
 
@@ -40,7 +38,8 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
                     // as long bindless elimination is successful and we know where the texture descriptor is located.
                     bool rewriteSamplerType =
                         texOp.Type == SamplerType.TextureBuffer ||
-                        texOp.Inst == Instruction.TextureSize;
+                        texOp.Inst == Instruction.TextureQuerySamples ||
+                        texOp.Inst == Instruction.TextureQuerySize;
 
                     if (bindlessHandle.Type == OperandType.ConstantBuffer)
                     {

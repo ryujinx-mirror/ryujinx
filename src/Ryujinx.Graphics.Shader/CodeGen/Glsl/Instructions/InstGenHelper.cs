@@ -118,7 +118,8 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             Add(Instruction.Subtract,                 InstType.OpBinary,       "-",               2);
             Add(Instruction.SwizzleAdd,               InstType.CallTernary,    HelperFunctionNames.SwizzleAdd);
             Add(Instruction.TextureSample,            InstType.Special);
-            Add(Instruction.TextureSize,              InstType.Special);
+            Add(Instruction.TextureQuerySamples,      InstType.Special);
+            Add(Instruction.TextureQuerySize,         InstType.Special);
             Add(Instruction.Truncate,                 InstType.CallUnary,      "trunc");
             Add(Instruction.UnpackDouble2x32,         InstType.Special);
             Add(Instruction.UnpackHalf2x16,           InstType.Special);

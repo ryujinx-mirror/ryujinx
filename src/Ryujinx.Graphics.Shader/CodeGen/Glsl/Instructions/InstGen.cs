@@ -184,8 +184,11 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
                     case Instruction.TextureSample:
                         return TextureSample(context, operation);
 
-                    case Instruction.TextureSize:
-                        return TextureSize(context, operation);
+                    case Instruction.TextureQuerySamples:
+                        return TextureQuerySamples(context, operation);
+
+                    case Instruction.TextureQuerySize:
+                        return TextureQuerySize(context, operation);
 
                     case Instruction.UnpackDouble2x32:
                         return UnpackDouble2x32(context, operation);
