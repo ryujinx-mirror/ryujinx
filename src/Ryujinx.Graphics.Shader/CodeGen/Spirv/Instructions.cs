@@ -311,7 +311,6 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             var (function, spvFunc) = context.GetFunction(funcId.Value);
 
             var args = new SpvInstruction[operation.SourcesCount - 1];
-            var spvLocals = context.GetLocalForArgsPointers(funcId.Value);
 
             for (int i = 0; i < args.Length; i++)
             {
@@ -324,12 +323,8 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                 else
                 {
                     var type = function.GetArgumentType(i);
-                    var value = context.Get(type, operand);
-                    var spvLocal = spvLocals[i];
 
-                    context.Store(spvLocal, value);
-
-                    args[i] = spvLocal;
+                    args[i] = context.Get(type, operand);
                 }
             }
 

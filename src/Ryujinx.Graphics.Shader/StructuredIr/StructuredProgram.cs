@@ -8,11 +8,15 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
 {
     static class StructuredProgram
     {
+        // TODO: Eventually it should be possible to specify the parameter types for the function instead of using S32 for everything.
+        private const AggregateType FuncParameterType = AggregateType.S32;
+
         public static StructuredProgramInfo MakeStructuredProgram(
             IReadOnlyList<Function> functions,
             AttributeUsage attributeUsage,
             ShaderDefinitions definitions,
             ResourceManager resourceManager,
+            TargetLanguage targetLanguage,
             bool debugMode)
         {
             StructuredProgramContext context = new(attributeUsage, definitions, resourceManager, debugMode);
@@ -23,19 +27,19 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
 
                 BasicBlock[] blocks = function.Blocks;
 
-                AggregateType returnType = function.ReturnsValue ? AggregateType.S32 : AggregateType.Void;
+                AggregateType returnType = function.ReturnsValue ? FuncParameterType : AggregateType.Void;
 
                 AggregateType[] inArguments = new AggregateType[function.InArgumentsCount];
                 AggregateType[] outArguments = new AggregateType[function.OutArgumentsCount];
 
                 for (int i = 0; i < inArguments.Length; i++)
                 {
-                    inArguments[i] = AggregateType.S32;
+                    inArguments[i] = FuncParameterType;
                 }
 
                 for (int i = 0; i < outArguments.Length; i++)
                 {
-                    outArguments[i] = AggregateType.S32;
+                    outArguments[i] = FuncParameterType;
                 }
 
                 context.EnterFunction(blocks.Length, function.Name, returnType, inArguments, outArguments);
@@ -58,7 +62,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
                         }
                         else
                         {
-                            AddOperation(context, operation);
+                            AddOperation(context, operation, targetLanguage);
                         }
                     }
                 }
@@ -73,7 +77,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             return context.Info;
         }
 
-        private static void AddOperation(StructuredProgramContext context, Operation operation)
+        private static void AddOperation(StructuredProgramContext context, Operation operation, TargetLanguage targetLanguage)
         {
             Instruction inst = operation.Inst;
             StorageKind storageKind = operation.StorageKind;
@@ -114,9 +118,28 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
 
             IAstNode[] sources = new IAstNode[sourcesCount + outDestsCount];
 
-            for (int index = 0; index < operation.SourcesCount; index++)
+            if (inst == Instruction.Call && targetLanguage == TargetLanguage.Spirv)
             {
-                sources[index] = context.GetOperandOrCbLoad(operation.GetSource(index));
+                // SPIR-V requires that all function parameters are copied to a local variable before the call
+                // (or at least that's what the Khronos compiler does).
+
+                // First one is the function index.
+                sources[0] = context.GetOperandOrCbLoad(operation.GetSource(0));
+
+                // Remaining ones are parameters, copy them to a temp local variable.
+                for (int index = 1; index < operation.SourcesCount; index++)
+                {
+                    AstOperand argTemp = context.NewTemp(FuncParameterType);
+                    context.AddNode(new AstAssignment(argTemp, context.GetOperandOrCbLoad(operation.GetSource(index))));
+                    sources[index] = argTemp;
+                }
+            }
+            else
+            {
+                for (int index = 0; index < operation.SourcesCount; index++)
+                {
+                    sources[index] = context.GetOperandOrCbLoad(operation.GetSource(index));
+                }
             }
 
             for (int index = 0; index < outDestsCount; index++)
