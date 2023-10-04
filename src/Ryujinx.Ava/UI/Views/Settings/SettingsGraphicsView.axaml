@@ -73,6 +73,7 @@
                             <TextBlock Text="{locale:Locale SettingsEnableMacroHLE}" />
                         </CheckBox>
                         <CheckBox IsChecked="{Binding EnableColorSpacePassthrough}"
+                                  IsVisible="{Binding ColorSpacePassthroughAvailable}"
                             ToolTip.Tip="{locale:Locale SettingsEnableColorSpacePassthroughTooltip}">
                             <TextBlock Text="{locale:Locale SettingsEnableColorSpacePassthrough}" />
                         </CheckBox>
