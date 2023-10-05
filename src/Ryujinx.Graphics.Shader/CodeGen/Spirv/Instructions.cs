@@ -316,16 +316,9 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             {
                 var operand = operation.GetSource(i + 1);
 
-                if (i >= function.InArguments.Length)
-                {
-                    args[i] = context.GetLocalPointer((AstOperand)operand);
-                }
-                else
-                {
-                    var type = function.GetArgumentType(i);
-
-                    args[i] = context.Get(type, operand);
-                }
+                AstOperand local = (AstOperand)operand;
+                Debug.Assert(local.Type == OperandType.LocalVariable);
+                args[i] = context.GetLocalPointer(local);
             }
 
             var retType = function.ReturnType;
