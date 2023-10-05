@@ -142,7 +142,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
         // OpenDisplay(nn::vi::DisplayName) -> u64 display_id
         public ResultCode OpenDisplay(ServiceCtx context)
         {
-            string name = "";
+            StringBuilder nameBuilder = new();
 
             for (int index = 0; index < 8 && context.RequestData.BaseStream.Position < context.RequestData.BaseStream.Length; index++)
             {
@@ -150,11 +150,11 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
 
                 if (chr >= 0x20 && chr < 0x7f)
                 {
-                    name += (char)chr;
+                    nameBuilder.Append((char)chr);
                 }
             }
 
-            return OpenDisplayImpl(context, name);
+            return OpenDisplayImpl(context, nameBuilder.ToString());
         }
 
         [CommandCmif(1011)]

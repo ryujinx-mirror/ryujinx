@@ -779,17 +779,18 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 
         private static string GetMaskMultiDest(int mask)
         {
-            string swizzle = ".";
+            StringBuilder swizzleBuilder = new();
+            swizzleBuilder.Append('.');
 
             for (int i = 0; i < 4; i++)
             {
                 if ((mask & (1 << i)) != 0)
                 {
-                    swizzle += "xyzw"[i];
+                    swizzleBuilder.Append("xyzw"[i]);
                 }
             }
 
-            return swizzle;
+            return swizzleBuilder.ToString();
         }
     }
 }

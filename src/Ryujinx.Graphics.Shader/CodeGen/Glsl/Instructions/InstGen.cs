@@ -2,6 +2,7 @@ using Ryujinx.Graphics.Shader.IntermediateRepresentation;
 using Ryujinx.Graphics.Shader.StructuredIr;
 using Ryujinx.Graphics.Shader.Translation;
 using System;
+using System.Text;
 
 using static Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions.InstGenBallot;
 using static Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions.InstGenCall;
@@ -67,11 +68,11 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 
                 int arity = (int)(info.Type & InstType.ArityMask);
 
-                string args = string.Empty;
+                StringBuilder builder = new();
 
                 if (atomic && (operation.StorageKind == StorageKind.StorageBuffer || operation.StorageKind == StorageKind.SharedMemory))
                 {
-                    args = GenerateLoadOrStore(context, operation, isStore: false);
+                    builder.Append(GenerateLoadOrStore(context, operation, isStore: false));
 
                     AggregateType dstType = operation.Inst == Instruction.AtomicMaxS32 || operation.Inst == Instruction.AtomicMinS32
                         ? AggregateType.S32
@@ -79,7 +80,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 
                     for (int argIndex = operation.SourcesCount - arity + 2; argIndex < operation.SourcesCount; argIndex++)
                     {
-                        args += ", " + GetSoureExpr(context, operation.GetSource(argIndex), dstType);
+                        builder.Append($", {GetSoureExpr(context, operation.GetSource(argIndex), dstType)}");
                     }
                 }
                 else
@@ -88,16 +89,16 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
                     {
                         if (argIndex != 0)
                         {
-                            args += ", ";
+                            builder.Append(", ");
                         }
 
                         AggregateType dstType = GetSrcVarType(inst, argIndex);
 
-                        args += GetSoureExpr(context, operation.GetSource(argIndex), dstType);
+                        builder.Append(GetSoureExpr(context, operation.GetSource(argIndex), dstType));
                     }
                 }
 
-                return info.OpName + '(' + args + ')';
+                return $"{info.OpName}({builder})";
             }
             else if ((info.Type & InstType.Op) != 0)
             {

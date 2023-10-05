@@ -92,14 +92,14 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
         private static string GetIndentation(int level)
         {
-            string indentation = string.Empty;
+            StringBuilder indentationBuilder = new();
 
             for (int index = 0; index < level; index++)
             {
-                indentation += Tab;
+                indentationBuilder.Append(Tab);
             }
 
-            return indentation;
+            return indentationBuilder.ToString();
         }
     }
 }

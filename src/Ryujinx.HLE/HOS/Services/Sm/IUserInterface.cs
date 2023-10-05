@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 
 namespace Ryujinx.HLE.HOS.Services.Sm
 {
@@ -235,7 +236,7 @@ namespace Ryujinx.HLE.HOS.Services.Sm
 
         private static string ReadName(ServiceCtx context)
         {
-            string name = string.Empty;
+            StringBuilder nameBuilder = new();
 
             for (int index = 0; index < 8 &&
                 context.RequestData.BaseStream.Position <
@@ -245,11 +246,11 @@ namespace Ryujinx.HLE.HOS.Services.Sm
 
                 if (chr >= 0x20 && chr < 0x7f)
                 {
-                    name += (char)chr;
+                    nameBuilder.Append((char)chr);
                 }
             }
 
-            return name;
+            return nameBuilder.ToString();
         }
 
         public override void DestroyAtExit()

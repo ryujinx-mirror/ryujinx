@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Text;
 using Path = System.IO.Path;
 
 namespace Ryujinx.HLE.FileSystem
@@ -817,13 +818,13 @@ namespace Ryujinx.HLE.FileSystem
 
                     if (updateNcas.Count > 0)
                     {
-                        string extraNcas = string.Empty;
+                        StringBuilder extraNcas = new();
 
                         foreach (var entry in updateNcas)
                         {
                             foreach (var (type, path) in entry.Value)
                             {
-                                extraNcas += path + Environment.NewLine;
+                                extraNcas.AppendLine(path);
                             }
                         }
 
@@ -954,13 +955,13 @@ namespace Ryujinx.HLE.FileSystem
 
                 if (updateNcas.Count > 0)
                 {
-                    string extraNcas = string.Empty;
+                    StringBuilder extraNcas = new();
 
                     foreach (var entry in updateNcas)
                     {
                         foreach (var (type, path) in entry.Value)
                         {
-                            extraNcas += path + Environment.NewLine;
+                            extraNcas.AppendLine(path);
                         }
                     }
 

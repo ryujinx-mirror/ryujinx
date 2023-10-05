@@ -436,14 +436,14 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
             uint nameIndex = sym.NameOffset;
 
-            string name = string.Empty;
+            StringBuilder nameBuilder = new();
 
             for (int chr; (chr = memory.Read<byte>(strTblAddr + nameIndex++)) != 0;)
             {
-                name += (char)chr;
+                nameBuilder.Append((char)chr);
             }
 
-            return new ElfSymbol(name, sym.Info, sym.Other, sym.SectionIndex, sym.ValueAddress, sym.Size);
+            return new ElfSymbol(nameBuilder.ToString(), sym.Info, sym.Other, sym.SectionIndex, sym.ValueAddress, sym.Size);
         }
 
         private static ElfSymbol GetSymbol32(IVirtualMemoryManager memory, ulong address, ulong strTblAddr)
@@ -452,14 +452,14 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
             uint nameIndex = sym.NameOffset;
 
-            string name = string.Empty;
+            StringBuilder nameBuilder = new();
 
             for (int chr; (chr = memory.Read<byte>(strTblAddr + nameIndex++)) != 0;)
             {
-                name += (char)chr;
+                nameBuilder.Append((char)chr);
             }
 
-            return new ElfSymbol(name, sym.Info, sym.Other, sym.SectionIndex, sym.ValueAddress, sym.Size);
+            return new ElfSymbol(nameBuilder.ToString(), sym.Info, sym.Other, sym.SectionIndex, sym.ValueAddress, sym.Size);
         }
     }
 }

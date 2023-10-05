@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Text;
 
 namespace ARMeilleure.Diagnostics
 {
@@ -48,14 +49,15 @@ namespace ARMeilleure.Diagnostics
                         ulong diff = address - symbol.Start;
                         ulong rem = diff % symbol.ElementSize;
 
-                        result = symbol.Name + "_" + diff / symbol.ElementSize;
+                        StringBuilder resultBuilder = new();
+                        resultBuilder.Append($"{symbol.Name}_{diff / symbol.ElementSize}");
 
                         if (rem != 0)
                         {
-                            result += "+" + rem;
+                            resultBuilder.Append($"+{rem}");
                         }
 
-                        _symbols.TryAdd(address, result);
+                        _symbols.TryAdd(address, resultBuilder.ToString());
 
                         return result;
                     }
