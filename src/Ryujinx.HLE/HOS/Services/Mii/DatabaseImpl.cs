@@ -290,7 +290,7 @@ namespace Ryujinx.HLE.HOS.Services.Mii
         {
             coreData = new CoreData();
 
-            if (charInfo.IsValid())
+            if (!charInfo.IsValid())
             {
                 return ResultCode.InvalidCharInfo;
             }

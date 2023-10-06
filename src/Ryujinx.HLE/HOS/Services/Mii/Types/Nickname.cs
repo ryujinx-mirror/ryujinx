@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Ryujinx.Common.Memory;
+using System;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -10,12 +11,12 @@ namespace Ryujinx.HLE.HOS.Services.Mii.Types
         public const int CharCount = 10;
         private const int SizeConst = (CharCount + 1) * 2;
 
-        private byte _storage;
+        private Array22<byte> _storage;
 
         public static Nickname Default => FromString("no name");
         public static Nickname Question => FromString("???");
 
-        public Span<byte> Raw => MemoryMarshal.CreateSpan(ref _storage, SizeConst);
+        public Span<byte> Raw => _storage.AsSpan();
 
         private ReadOnlySpan<ushort> Characters => MemoryMarshal.Cast<byte, ushort>(Raw);
 

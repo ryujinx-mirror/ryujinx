@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Ryujinx.Common.Memory;
+using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using static Ryujinx.HLE.HOS.Services.Mii.Types.RandomMiiConstants;
@@ -10,9 +11,9 @@ namespace Ryujinx.HLE.HOS.Services.Mii.Types
     {
         public const int Size = 0x30;
 
-        private byte _storage;
+        private Array48<byte> _storage;
 
-        public Span<byte> Storage => MemoryMarshal.CreateSpan(ref _storage, Size);
+        public Span<byte> Storage => _storage.AsSpan();
 
         [StructLayout(LayoutKind.Sequential, Pack = 4, Size = 0x18)]
         public struct ElementInfo

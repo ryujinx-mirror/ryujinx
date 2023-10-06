@@ -62,7 +62,7 @@ namespace Ryujinx.HLE.HOS.Services.Mii.Types
 
         private ushort CalculateDataCrc()
         {
-            return Helper.CalculateCrc16(AsSpanWithoutDeviceCrc(), 0, true);
+            return Helper.CalculateCrc16(AsSpanWithoutCrcs(), 0, true);
         }
 
         private ushort CalculateDeviceCrc()
@@ -71,7 +71,7 @@ namespace Ryujinx.HLE.HOS.Services.Mii.Types
 
             ushort deviceIdCrc16 = Helper.CalculateCrc16(SpanHelpers.AsByteSpan(ref deviceId), 0, false);
 
-            return Helper.CalculateCrc16(AsSpan(), deviceIdCrc16, true);
+            return Helper.CalculateCrc16(AsSpanWithoutDeviceCrc(), deviceIdCrc16, true);
         }
 
         private ReadOnlySpan<byte> AsSpan()
@@ -82,6 +82,11 @@ namespace Ryujinx.HLE.HOS.Services.Mii.Types
         private ReadOnlySpan<byte> AsSpanWithoutDeviceCrc()
         {
             return AsSpan()[..(Size - 2)];
+        }
+
+        private ReadOnlySpan<byte> AsSpanWithoutCrcs()
+        {
+            return AsSpan()[..(Size - 4)];
         }
 
         public static StoreData BuildDefault(UtilityImpl utilImpl, uint index)
