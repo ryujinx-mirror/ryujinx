@@ -1,12 +1,15 @@
-﻿using Ryujinx.Graphics.Device;
+﻿using Ryujinx.Common.Memory;
+using Ryujinx.Graphics.Device;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.Gpu.Engine.GPFifo;
 using Ryujinx.Graphics.Gpu.Engine.InlineToMemory;
 using Ryujinx.Graphics.Gpu.Engine.Threed.Blender;
+using Ryujinx.Graphics.Gpu.Engine.Types;
 using Ryujinx.Graphics.Gpu.Synchronization;
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Runtime.Intrinsics;
 
 namespace Ryujinx.Graphics.Gpu.Engine.Threed
 {
@@ -25,6 +28,8 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         private readonly SemaphoreUpdater _semaphoreUpdater;
         private readonly ConstantBufferUpdater _cbUpdater;
         private readonly StateUpdater _stateUpdater;
+
+        private SetMmeShadowRamControlMode ShadowMode => _state.State.SetMmeShadowRamControlMode;
 
         /// <summary>
         /// Creates a new instance of the 3D engine class.
@@ -226,6 +231,206 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         public void ConstantBufferUpdate(ReadOnlySpan<int> data)
         {
             _cbUpdater.Update(data);
+        }
+
+        /// <summary>
+        /// Test if two 32 byte structs are equal. 
+        /// </summary>
+        /// <typeparam name="T">Type of the 32-byte struct</typeparam>
+        /// <param name="lhs">First struct</param>
+        /// <param name="rhs">Second struct</param>
+        /// <returns>True if equal, false otherwise</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static bool UnsafeEquals32Byte<T>(ref T lhs, ref T rhs) where T : unmanaged
+        {
+            if (Vector256.IsHardwareAccelerated)
+            {
+                return Vector256.EqualsAll(
+                    Unsafe.As<T, Vector256<uint>>(ref lhs),
+                    Unsafe.As<T, Vector256<uint>>(ref rhs)
+                );
+            }
+            else
+            {
+                ref var lhsVec = ref Unsafe.As<T, Vector128<uint>>(ref lhs);
+                ref var rhsVec = ref Unsafe.As<T, Vector128<uint>>(ref rhs);
+
+                return Vector128.EqualsAll(lhsVec, rhsVec) &&
+                    Vector128.EqualsAll(Unsafe.Add(ref lhsVec, 1), Unsafe.Add(ref rhsVec, 1));
+            }
+        }
+
+        /// <summary>
+        /// Updates blend enable. Respects current shadow mode.
+        /// </summary>
+        /// <param name="masks">Blend enable</param>
+        public void UpdateBlendEnable(ref Array8<Boolean32> enable)
+        {
+            var shadow = ShadowMode;
+            ref var state = ref _state.State.BlendEnable;
+
+            if (shadow.IsReplay())
+            {
+                enable = _state.ShadowState.BlendEnable;
+            }
+
+            if (!UnsafeEquals32Byte(ref enable, ref state))
+            {
+                state = enable;
+
+                _stateUpdater.ForceDirty(StateUpdater.BlendStateIndex);
+            }
+
+            if (shadow.IsTrack())
+            {
+                _state.ShadowState.BlendEnable = enable;
+            }
+        }
+
+        /// <summary>
+        /// Updates color masks. Respects current shadow mode.
+        /// </summary>
+        /// <param name="masks">Color masks</param>
+        public void UpdateColorMasks(ref Array8<RtColorMask> masks)
+        {
+            var shadow = ShadowMode;
+            ref var state = ref _state.State.RtColorMask;
+
+            if (shadow.IsReplay())
+            {
+                masks = _state.ShadowState.RtColorMask;
+            }
+
+            if (!UnsafeEquals32Byte(ref masks, ref state))
+            {
+                state = masks;
+
+                _stateUpdater.ForceDirty(StateUpdater.RtColorMaskIndex);
+            }
+
+            if (shadow.IsTrack())
+            {
+                _state.ShadowState.RtColorMask = masks;
+            }
+        }
+
+        /// <summary>
+        /// Updates index buffer state for an indexed draw. Respects current shadow mode.
+        /// </summary>
+        /// <param name="addrHigh">High part of the address</param>
+        /// <param name="addrLow">Low part of the address</param>
+        /// <param name="type">Type of the binding</param>
+        public void UpdateIndexBuffer(uint addrHigh, uint addrLow, IndexType type)
+        {
+            var shadow = ShadowMode;
+            ref var state = ref _state.State.IndexBufferState;
+
+            if (shadow.IsReplay())
+            {
+                ref var shadowState = ref _state.ShadowState.IndexBufferState;
+                addrHigh = shadowState.Address.High;
+                addrLow = shadowState.Address.Low;
+                type = shadowState.Type;
+            }
+
+            if (state.Address.High != addrHigh || state.Address.Low != addrLow || state.Type != type)
+            {
+                state.Address.High = addrHigh;
+                state.Address.Low = addrLow;
+                state.Type = type;
+
+                _stateUpdater.ForceDirty(StateUpdater.IndexBufferStateIndex);
+            }
+
+            if (shadow.IsTrack())
+            {
+                ref var shadowState = ref _state.ShadowState.IndexBufferState;
+                shadowState.Address.High = addrHigh;
+                shadowState.Address.Low = addrLow;
+                shadowState.Type = type;
+            }
+        }
+
+        /// <summary>
+        /// Updates uniform buffer state for update or bind. Respects current shadow mode.
+        /// </summary>
+        /// <param name="size">Size of the binding</param>
+        /// <param name="addrHigh">High part of the addrsss</param>
+        /// <param name="addrLow">Low part of the address</param>
+        public void UpdateUniformBufferState(int size, uint addrHigh, uint addrLow)
+        {
+            var shadow = ShadowMode;
+            ref var state = ref _state.State.UniformBufferState;
+
+            if (shadow.IsReplay())
+            {
+                ref var shadowState = ref _state.ShadowState.UniformBufferState;
+                size = shadowState.Size;
+                addrHigh = shadowState.Address.High;
+                addrLow = shadowState.Address.Low;
+            }
+
+            state.Size = size;
+            state.Address.High = addrHigh;
+            state.Address.Low = addrLow;
+
+            if (shadow.IsTrack())
+            {
+                ref var shadowState = ref _state.ShadowState.UniformBufferState;
+                shadowState.Size = size;
+                shadowState.Address.High = addrHigh;
+                shadowState.Address.Low = addrLow;
+            }
+        }
+
+        /// <summary>
+        /// Updates a shader offset. Respects current shadow mode.
+        /// </summary>
+        /// <param name="index">Index of the shader to update</param>
+        /// <param name="offset">Offset to update with</param>
+        public void SetShaderOffset(int index, uint offset)
+        {
+            var shadow = ShadowMode;
+            ref var shaderState = ref _state.State.ShaderState[index];
+
+            if (shadow.IsReplay())
+            {
+                offset = _state.ShadowState.ShaderState[index].Offset;
+            }
+
+            if (shaderState.Offset != offset)
+            {
+                shaderState.Offset = offset;
+
+                _stateUpdater.ForceDirty(StateUpdater.ShaderStateIndex);
+            }
+
+            if (shadow.IsTrack())
+            {
+                _state.ShadowState.ShaderState[index].Offset = offset;
+            }
+        }
+
+        /// <summary>
+        /// Updates uniform buffer state for update. Respects current shadow mode.
+        /// </summary>
+        /// <param name="ubState">Uniform buffer state</param>
+        public void UpdateUniformBufferState(UniformBufferState ubState)
+        {
+            var shadow = ShadowMode;
+            ref var state = ref _state.State.UniformBufferState;
+
+            if (shadow.IsReplay())
+            {
+                ubState = _state.ShadowState.UniformBufferState;
+            }
+
+            state = ubState;
+
+            if (shadow.IsTrack())
+            {
+                _state.ShadowState.UniformBufferState = ubState;
+            }
         }
 
         /// <summary>

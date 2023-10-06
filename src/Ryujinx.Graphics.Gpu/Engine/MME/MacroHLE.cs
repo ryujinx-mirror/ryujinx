@@ -1,7 +1,10 @@
 using Ryujinx.Common.Logging;
+using Ryujinx.Common.Memory;
 using Ryujinx.Graphics.Device;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.Gpu.Engine.GPFifo;
+using Ryujinx.Graphics.Gpu.Engine.Threed;
+using Ryujinx.Graphics.Gpu.Engine.Types;
 using System;
 using System.Collections.Generic;
 
@@ -15,8 +18,17 @@ namespace Ryujinx.Graphics.Gpu.Engine.MME
         private const int ColorLayerCountOffset = 0x818;
         private const int ColorStructSize = 0x40;
         private const int ZetaLayerCountOffset = 0x1230;
+        private const int UniformBufferBindVertexOffset = 0x2410;
+        private const int FirstVertexOffset = 0x1434;
 
         private const int IndirectIndexedDataEntrySize = 0x14;
+
+        private const int LogicOpOffset = 0x19c4;
+        private const int ShaderIdScratchOffset = 0x3470;
+        private const int ShaderAddressScratchOffset = 0x3488;
+        private const int UpdateConstantBufferAddressesBase = 0x34a8;
+        private const int UpdateConstantBufferSizesBase = 0x34bc;
+        private const int UpdateConstantBufferAddressCbu = 0x3460;
 
         private readonly GPFifoProcessor _processor;
         private readonly MacroHLEFunctionName _functionName;
@@ -49,6 +61,9 @@ namespace Ryujinx.Graphics.Gpu.Engine.MME
         {
             switch (_functionName)
             {
+                case MacroHLEFunctionName.BindShaderProgram:
+                    BindShaderProgram(state, arg0);
+                    break;
                 case MacroHLEFunctionName.ClearColor:
                     ClearColor(state, arg0);
                     break;
@@ -57,6 +72,9 @@ namespace Ryujinx.Graphics.Gpu.Engine.MME
                     break;
                 case MacroHLEFunctionName.DrawArraysInstanced:
                     DrawArraysInstanced(state, arg0);
+                    break;
+                case MacroHLEFunctionName.DrawElements:
+                    DrawElements(state, arg0);
                     break;
                 case MacroHLEFunctionName.DrawElementsInstanced:
                     DrawElementsInstanced(state, arg0);
@@ -67,12 +85,170 @@ namespace Ryujinx.Graphics.Gpu.Engine.MME
                 case MacroHLEFunctionName.MultiDrawElementsIndirectCount:
                     MultiDrawElementsIndirectCount(state, arg0);
                     break;
+                case MacroHLEFunctionName.UpdateBlendState:
+                    UpdateBlendState(state, arg0);
+                    break;
+                case MacroHLEFunctionName.UpdateColorMasks:
+                    UpdateColorMasks(state, arg0);
+                    break;
+                case MacroHLEFunctionName.UpdateUniformBufferState:
+                    UpdateUniformBufferState(state, arg0);
+                    break;
+                case MacroHLEFunctionName.UpdateUniformBufferStateCbu:
+                    UpdateUniformBufferStateCbu(state, arg0);
+                    break;
+                case MacroHLEFunctionName.UpdateUniformBufferStateCbuV2:
+                    UpdateUniformBufferStateCbuV2(state, arg0);
+                    break;
                 default:
                     throw new NotImplementedException(_functionName.ToString());
             }
 
             // It should be empty at this point, but clear it just to be safe.
             Fifo.Clear();
+        }
+
+        /// <summary>
+        /// Binds a shader program with the index in arg0.
+        /// </summary>
+        /// <param name="state">GPU state at the time of the call</param>
+        /// <param name="arg0">First argument of the call</param>
+        private void BindShaderProgram(IDeviceState state, int arg0)
+        {
+            int scratchOffset = ShaderIdScratchOffset + arg0 * 4;
+
+            int lastId = state.Read(scratchOffset);
+            int id = FetchParam().Word;
+            int offset = FetchParam().Word;
+
+            if (lastId == id)
+            {
+                FetchParam();
+                FetchParam();
+
+                return;
+            }
+
+            _processor.ThreedClass.SetShaderOffset(arg0, (uint)offset);
+
+            // Removes overflow on the method address into the increment portion.
+            // Present in the original macro.
+            int addrMask = unchecked((int)0xfffc0fff) << 2;
+
+            state.Write(scratchOffset & addrMask, id);
+            state.Write((ShaderAddressScratchOffset + arg0 * 4) & addrMask, offset);
+
+            int stage = FetchParam().Word;
+            uint cbAddress = (uint)FetchParam().Word;
+
+            _processor.ThreedClass.UpdateUniformBufferState(65536, cbAddress >> 24, cbAddress << 8);
+
+            int stageOffset = (stage & 0x7f) << 3;
+
+            state.Write((UniformBufferBindVertexOffset + stageOffset * 4) & addrMask, 17);
+        }
+
+        /// <summary>
+        /// Updates uniform buffer state for update or bind.
+        /// </summary>
+        /// <param name="state">GPU state at the time of the call</param>
+        /// <param name="arg0">First argument of the call</param>
+        private void UpdateUniformBufferState(IDeviceState state, int arg0)
+        {
+            uint address = (uint)state.Read(UpdateConstantBufferAddressesBase + arg0 * 4);
+            int size = state.Read(UpdateConstantBufferSizesBase + arg0 * 4);
+
+            _processor.ThreedClass.UpdateUniformBufferState(size, address >> 24, address << 8);
+        }
+
+        /// <summary>
+        /// Updates uniform buffer state for update.
+        /// </summary>
+        /// <param name="state">GPU state at the time of the call</param>
+        /// <param name="arg0">First argument of the call</param>
+        private void UpdateUniformBufferStateCbu(IDeviceState state, int arg0)
+        {
+            uint address = (uint)state.Read(UpdateConstantBufferAddressCbu);
+
+            UniformBufferState ubState = new()
+            {
+                Address = new()
+                {
+                    High = address >> 24,
+                    Low = address << 8
+                },
+                Size = 24320,
+                Offset = arg0 << 2
+            };
+
+            _processor.ThreedClass.UpdateUniformBufferState(ubState);
+        }
+
+        /// <summary>
+        /// Updates uniform buffer state for update.
+        /// </summary>
+        /// <param name="state">GPU state at the time of the call</param>
+        /// <param name="arg0">First argument of the call</param>
+        private void UpdateUniformBufferStateCbuV2(IDeviceState state, int arg0)
+        {
+            uint address = (uint)state.Read(UpdateConstantBufferAddressCbu);
+
+            UniformBufferState ubState = new()
+            {
+                Address = new()
+                {
+                    High = address >> 24,
+                    Low = address << 8
+                },
+                Size = 28672,
+                Offset = arg0 << 2
+            };
+
+            _processor.ThreedClass.UpdateUniformBufferState(ubState);
+        }
+
+        /// <summary>
+        /// Updates blend enable using the given argument.
+        /// </summary>
+        /// <param name="state">GPU state at the time of the call</param>
+        /// <param name="arg0">First argument of the call</param>
+        private void UpdateBlendState(IDeviceState state, int arg0)
+        {
+            state.Write(LogicOpOffset, 0);
+
+            Array8<Boolean32> enable = new();
+
+            for (int i = 0; i < 8; i++)
+            {
+                enable[i] = new Boolean32((uint)(arg0 >> (i + 8)) & 1);
+            }
+
+            _processor.ThreedClass.UpdateBlendEnable(ref enable);
+        }
+
+        /// <summary>
+        /// Updates color masks using the given argument and three pushed arguments.
+        /// </summary>
+        /// <param name="state">GPU state at the time of the call</param>
+        /// <param name="arg0">First argument of the call</param>
+        private void UpdateColorMasks(IDeviceState state, int arg0)
+        {
+            Array8<RtColorMask> masks = new();
+
+            int index = 0;
+
+            for (int i = 0; i < 4; i++)
+            {
+                masks[index++] = new RtColorMask((uint)arg0 & 0x1fff);
+                masks[index++] = new RtColorMask(((uint)arg0 >> 16) & 0x1fff);
+
+                if (i != 3)
+                {
+                    arg0 = FetchParam().Word;
+                }
+            }
+
+            _processor.ThreedClass.UpdateColorMasks(ref masks);
         }
 
         /// <summary>
@@ -127,6 +303,36 @@ namespace Ryujinx.Graphics.Gpu.Engine.MME
                 firstVertex.Word,
                 firstInstance.Word,
                 indexed: false);
+        }
+
+        /// <summary>
+        /// Performs a indexed draw.
+        /// </summary>
+        /// <param name="state">GPU state at the time of the call</param>
+        /// <param name="arg0">First argument of the call</param>
+        private void DrawElements(IDeviceState state, int arg0)
+        {
+            var topology = (PrimitiveTopology)arg0;
+
+            var indexAddressHigh = FetchParam();
+            var indexAddressLow = FetchParam();
+            var indexType = FetchParam();
+            var firstIndex = 0;
+            var indexCount = FetchParam();
+
+            _processor.ThreedClass.UpdateIndexBuffer(
+                (uint)indexAddressHigh.Word,
+                (uint)indexAddressLow.Word,
+                (IndexType)indexType.Word);
+
+            _processor.ThreedClass.Draw(
+                topology,
+                indexCount.Word,
+                1,
+                firstIndex,
+                state.Read(FirstVertexOffset),
+                0,
+                indexed: true);
         }
 
         /// <summary>

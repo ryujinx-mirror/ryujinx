@@ -17,9 +17,11 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
     class StateUpdater
     {
         public const int ShaderStateIndex = 26;
+        public const int RtColorMaskIndex = 14;
         public const int RasterizerStateIndex = 15;
         public const int ScissorStateIndex = 16;
         public const int VertexBufferStateIndex = 0;
+        public const int BlendStateIndex = 2;
         public const int IndexBufferStateIndex = 23;
         public const int PrimitiveRestartStateIndex = 12;
         public const int RenderTargetStateIndex = 27;

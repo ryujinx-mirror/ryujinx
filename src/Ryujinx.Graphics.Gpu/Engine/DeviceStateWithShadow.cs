@@ -33,6 +33,11 @@ namespace Ryujinx.Graphics.Gpu.Engine
         public ref TState State => ref _state.State;
 
         /// <summary>
+        /// Current shadow state.
+        /// </summary>
+        public ref TState ShadowState => ref _shadowState.State;
+
+        /// <summary>
         /// Creates a new instance of the device state, with shadow state.
         /// </summary>
         /// <param name="callbacks">Optional that will be called if a register specified by name is read or written</param>
