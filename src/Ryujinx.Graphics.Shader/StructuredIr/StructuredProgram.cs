@@ -2,6 +2,7 @@ using Ryujinx.Graphics.Shader.IntermediateRepresentation;
 using Ryujinx.Graphics.Shader.Translation;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Numerics;
 
 namespace Ryujinx.Graphics.Shader.StructuredIr
@@ -62,7 +63,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
                         }
                         else
                         {
-                            AddOperation(context, operation, targetLanguage);
+                            AddOperation(context, operation, targetLanguage, functions);
                         }
                     }
                 }
@@ -77,7 +78,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             return context.Info;
         }
 
-        private static void AddOperation(StructuredProgramContext context, Operation operation, TargetLanguage targetLanguage)
+        private static void AddOperation(StructuredProgramContext context, Operation operation, TargetLanguage targetLanguage, IReadOnlyList<Function> functions)
         {
             Instruction inst = operation.Inst;
             StorageKind storageKind = operation.StorageKind;
@@ -124,14 +125,29 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
                 // (or at least that's what the Khronos compiler does).
 
                 // First one is the function index.
-                sources[0] = context.GetOperandOrCbLoad(operation.GetSource(0));
+                Operand funcIndexOperand = operation.GetSource(0);
+                Debug.Assert(funcIndexOperand.Type == OperandType.Constant);
+                int funcIndex = funcIndexOperand.Value;
+
+                sources[0] = new AstOperand(OperandType.Constant, funcIndex);
+
+                int inArgsCount = functions[funcIndex].InArgumentsCount;
 
                 // Remaining ones are parameters, copy them to a temp local variable.
                 for (int index = 1; index < operation.SourcesCount; index++)
                 {
-                    AstOperand argTemp = context.NewTemp(FuncParameterType);
-                    context.AddNode(new AstAssignment(argTemp, context.GetOperandOrCbLoad(operation.GetSource(index))));
-                    sources[index] = argTemp;
+                    IAstNode source = context.GetOperandOrCbLoad(operation.GetSource(index));
+
+                    if (index - 1 < inArgsCount)
+                    {
+                        AstOperand argTemp = context.NewTemp(FuncParameterType);
+                        context.AddNode(new AstAssignment(argTemp, source));
+                        sources[index] = argTemp;
+                    }
+                    else
+                    {
+                        sources[index] = source;
+                    }
                 }
             }
             else
