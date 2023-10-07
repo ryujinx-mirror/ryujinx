@@ -34,7 +34,6 @@ namespace ARMeilleure.Diagnostics
 
         public static string Get(ulong address)
         {
-
             if (_symbols.TryGetValue(address, out string result))
             {
                 return result;
@@ -57,7 +56,8 @@ namespace ARMeilleure.Diagnostics
                             resultBuilder.Append($"+{rem}");
                         }
 
-                        _symbols.TryAdd(address, resultBuilder.ToString());
+                        result = resultBuilder.ToString();
+                        _symbols.TryAdd(address, result);
 
                         return result;
                     }
