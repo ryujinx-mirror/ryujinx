@@ -1278,6 +1278,11 @@ namespace Ryujinx.Ava.UI.ViewModels
             Glyph = Glyph.Grid;
         }
 
+        public void SetAspectRatio(AspectRatio aspectRatio)
+        {
+            ConfigurationState.Instance.Graphics.AspectRatio.Value = aspectRatio;
+        }
+
         public async Task InstallFirmwareFromFile()
         {
             var result = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
