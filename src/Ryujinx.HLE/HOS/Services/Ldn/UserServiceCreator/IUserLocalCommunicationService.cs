@@ -29,6 +29,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator
         private const bool IsDevelopment = false;
 
         private readonly KEvent _stateChangeEvent;
+        private int _stateChangeEventHandle;
 
         private NetworkState _state;
         private DisconnectReason _disconnectReason;
@@ -277,12 +278,12 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator
         // AttachStateChangeEvent() -> handle<copy>
         public ResultCode AttachStateChangeEvent(ServiceCtx context)
         {
-            if (context.Process.HandleTable.GenerateHandle(_stateChangeEvent.ReadableEvent, out int stateChangeEventHandle) != Result.Success)
+            if (_stateChangeEventHandle == 0 && context.Process.HandleTable.GenerateHandle(_stateChangeEvent.ReadableEvent, out _stateChangeEventHandle) != Result.Success)
             {
                 throw new InvalidOperationException("Out of handles!");
             }
 
-            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(stateChangeEventHandle);
+            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(_stateChangeEventHandle);
 
             // Returns ResultCode.InvalidArgument if handle is null, doesn't occur in our case since we already throw an Exception.
 
@@ -964,6 +965,12 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator
                 SetDisconnectReason(DisconnectReason.None);
             }
 
+            if (_stateChangeEventHandle != 0)
+            {
+                context.Process.HandleTable.CloseHandle(_stateChangeEventHandle);
+                _stateChangeEventHandle = 0;
+            }
+
             return resultCode;
         }
 
@@ -1021,7 +1028,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator
 
             SetState(NetworkState.None);
 
-            NetworkClient?.DisconnectAndStop();
+            NetworkClient?.Dispose();
             NetworkClient = null;
 
             return ResultCode.Success;
@@ -1072,7 +1079,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator
                     }
                     else
                     {
-                        // NOTE: Service returns differents ResultCode here related to the nifm ResultCode.
+                        // NOTE: Service returns different ResultCode here related to the nifm ResultCode.
                         resultCode = ResultCode.DeviceDisabled;
                         _nifmResultCode = resultCode;
                     }
@@ -1084,14 +1091,13 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator
 
         public void Dispose()
         {
-            if (NetworkClient != null)
-            {
-                _station?.Dispose();
-                _accessPoint?.Dispose();
+            _station?.Dispose();
+            _station = null;
 
-                NetworkClient.DisconnectAndStop();
-            }
+            _accessPoint?.Dispose();
+            _accessPoint = null;
 
+            NetworkClient?.Dispose();
             NetworkClient = null;
         }
     }
