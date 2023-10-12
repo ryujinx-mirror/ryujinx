@@ -5,7 +5,7 @@ namespace Ryujinx.Common
 {
     public class ReactiveObject<T>
     {
-        private readonly ReaderWriterLock _readerWriterLock = new();
+        private readonly ReaderWriterLockSlim _readerWriterLock = new();
         private bool _isInitialized;
         private T _value;
 
@@ -15,15 +15,15 @@ namespace Ryujinx.Common
         {
             get
             {
-                _readerWriterLock.AcquireReaderLock(Timeout.Infinite);
+                _readerWriterLock.EnterReadLock();
                 T value = _value;
-                _readerWriterLock.ReleaseReaderLock();
+                _readerWriterLock.ExitReadLock();
 
                 return value;
             }
             set
             {
-                _readerWriterLock.AcquireWriterLock(Timeout.Infinite);
+                _readerWriterLock.EnterWriteLock();
 
                 T oldValue = _value;
 
@@ -32,7 +32,7 @@ namespace Ryujinx.Common
                 _isInitialized = true;
                 _value = value;
 
-                _readerWriterLock.ReleaseWriterLock();
+                _readerWriterLock.ExitWriteLock();
 
                 if (!oldIsInitialized || oldValue == null || !oldValue.Equals(_value))
                 {

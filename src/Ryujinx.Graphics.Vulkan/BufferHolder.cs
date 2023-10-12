@@ -58,7 +58,7 @@ namespace Ryujinx.Graphics.Vulkan
         private int _flushTemp;
         private int _lastFlushWrite = -1;
 
-        private readonly ReaderWriterLock _flushLock;
+        private readonly ReaderWriterLockSlim _flushLock;
         private FenceHolder _flushFence;
         private int _flushWaiting;
 
@@ -85,7 +85,7 @@ namespace Ryujinx.Graphics.Vulkan
             _currentType = currentType;
             DesiredType = currentType;
 
-            _flushLock = new ReaderWriterLock();
+            _flushLock = new ReaderWriterLockSlim();
             _useMirrors = gd.IsTBDR;
         }
 
@@ -106,7 +106,7 @@ namespace Ryujinx.Graphics.Vulkan
             _currentType = currentType;
             DesiredType = currentType;
 
-            _flushLock = new ReaderWriterLock();
+            _flushLock = new ReaderWriterLockSlim();
         }
 
         public bool TryBackingSwap(ref CommandBufferScoped? cbs)
@@ -116,7 +116,7 @@ namespace Ryujinx.Graphics.Vulkan
                 // Only swap if the buffer is not used in any queued command buffer.
                 bool isRented = _buffer.HasRentedCommandBufferDependency(_gd.CommandBufferPool);
 
-                if (!isRented && _gd.CommandBufferPool.OwnedByCurrentThread && !_flushLock.IsReaderLockHeld && (_pendingData == null || cbs != null))
+                if (!isRented && _gd.CommandBufferPool.OwnedByCurrentThread && !_flushLock.IsReadLockHeld && (_pendingData == null || cbs != null))
                 {
                     var currentAllocation = _allocationAuto;
                     var currentBuffer = _buffer;
@@ -131,7 +131,7 @@ namespace Ryujinx.Graphics.Vulkan
                             ClearMirrors(cbs.Value, 0, Size);
                         }
 
-                        _flushLock.AcquireWriterLock(Timeout.Infinite);
+                        _flushLock.EnterWriteLock();
 
                         ClearFlushFence();
 
@@ -185,7 +185,7 @@ namespace Ryujinx.Graphics.Vulkan
 
                         _gd.PipelineInternal.SwapBuffer(currentBuffer, _buffer);
 
-                        _flushLock.ReleaseWriterLock();
+                        _flushLock.ExitWriteLock();
                     }
 
                     _swapQueued = false;
@@ -548,42 +548,44 @@ namespace Ryujinx.Graphics.Vulkan
 
         private void WaitForFlushFence()
         {
-            // Assumes the _flushLock is held as reader, returns in same state.
+            if (_flushFence == null)
+            {
+                return;
+            }
+
+            // If storage has changed, make sure the fence has been reached so that the data is in place.
+            _flushLock.ExitReadLock();
+            _flushLock.EnterWriteLock();
 
             if (_flushFence != null)
             {
-                // If storage has changed, make sure the fence has been reached so that the data is in place.
+                var fence = _flushFence;
+                Interlocked.Increment(ref _flushWaiting);
 
-                var cookie = _flushLock.UpgradeToWriterLock(Timeout.Infinite);
+                // Don't wait in the lock.
 
-                if (_flushFence != null)
+                _flushLock.ExitWriteLock();
+
+                fence.Wait();
+
+                _flushLock.EnterWriteLock();
+
+                if (Interlocked.Decrement(ref _flushWaiting) == 0)
                 {
-                    var fence = _flushFence;
-                    Interlocked.Increment(ref _flushWaiting);
-
-                    // Don't wait in the lock.
-
-                    var restoreCookie = _flushLock.ReleaseLock();
-
-                    fence.Wait();
-
-                    _flushLock.RestoreLock(ref restoreCookie);
-
-                    if (Interlocked.Decrement(ref _flushWaiting) == 0)
-                    {
-                        fence.Put();
-                    }
-
-                    _flushFence = null;
+                    fence.Put();
                 }
 
-                _flushLock.DowngradeFromWriterLock(ref cookie);
+                _flushFence = null;
             }
+
+            // Assumes the _flushLock is held as reader, returns in same state.
+            _flushLock.ExitWriteLock();
+            _flushLock.EnterReadLock();
         }
 
         public PinnedSpan<byte> GetData(int offset, int size)
         {
-            _flushLock.AcquireReaderLock(Timeout.Infinite);
+            _flushLock.EnterReadLock();
 
             WaitForFlushFence();
 
@@ -603,7 +605,7 @@ namespace Ryujinx.Graphics.Vulkan
                 // Need to be careful here, the buffer can't be unmapped while the data is being used.
                 _buffer.IncrementReferenceCount();
 
-                _flushLock.ReleaseReaderLock();
+                _flushLock.ExitReadLock();
 
                 return PinnedSpan<byte>.UnsafeFromSpan(result, _buffer.DecrementReferenceCount);
             }
@@ -621,7 +623,7 @@ namespace Ryujinx.Graphics.Vulkan
                 result = resource.GetFlushBuffer().GetBufferData(resource.GetPool(), this, offset, size);
             }
 
-            _flushLock.ReleaseReaderLock();
+            _flushLock.ExitReadLock();
 
             // Flush buffer is pinned until the next GetBufferData on the thread, which is fine for current uses.
             return PinnedSpan<byte>.UnsafeFromSpan(result);
@@ -1073,11 +1075,11 @@ namespace Ryujinx.Graphics.Vulkan
                 _allocationAuto.Dispose();
             }
 
-            _flushLock.AcquireWriterLock(Timeout.Infinite);
+            _flushLock.EnterWriteLock();
 
             ClearFlushFence();
 
-            _flushLock.ReleaseWriterLock();
+            _flushLock.ExitWriteLock();
         }
     }
 }
