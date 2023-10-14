@@ -93,7 +93,7 @@ namespace Ryujinx.Horizon.Generators.Hipc
                 generator.LeaveScope();
                 generator.LeaveScope();
 
-                context.AddSource($"{className}.g.cs", generator.ToString());
+                context.AddSource($"{GetNamespaceName(commandInterface.ClassDeclarationSyntax)}.{className}.g.cs", generator.ToString());
             }
         }
 
