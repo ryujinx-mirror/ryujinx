@@ -374,6 +374,13 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                 return stride == rhs.Stride ? TextureViewCompatibility.CopyOnly : TextureViewCompatibility.LayoutIncompatible;
             }
+            else if (lhs.Target.IsMultisample() != rhs.Target.IsMultisample() && alignedWidthMatches && lhsAlignedSize.Height == rhsAlignedSize.Height)
+            {
+                // Copy between multisample and non-multisample textures with mismatching size is allowed,
+                // as long aligned size matches.
+
+                return TextureViewCompatibility.CopyOnly;
+            }
             else
             {
                 return TextureViewCompatibility.LayoutIncompatible;
