@@ -163,6 +163,7 @@ namespace Ryujinx.Graphics.OpenGL
                 supportsShaderBallot: HwCapabilities.SupportsShaderBallot,
                 supportsShaderBarrierDivergence: !(intelWindows || intelUnix),
                 supportsShaderFloat64: true,
+                supportsTextureGatherOffsets: true,
                 supportsTextureShadowLod: HwCapabilities.SupportsTextureShadowLod,
                 supportsVertexStoreAndAtomics: true,
                 supportsViewportIndexVertexTessellation: HwCapabilities.SupportsShaderViewportLayerArray,

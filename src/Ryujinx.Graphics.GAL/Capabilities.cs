@@ -38,6 +38,7 @@ namespace Ryujinx.Graphics.GAL
         public readonly bool SupportsShaderBallot;
         public readonly bool SupportsShaderBarrierDivergence;
         public readonly bool SupportsShaderFloat64;
+        public readonly bool SupportsTextureGatherOffsets;
         public readonly bool SupportsTextureShadowLod;
         public readonly bool SupportsVertexStoreAndAtomics;
         public readonly bool SupportsViewportIndexVertexTessellation;
@@ -92,6 +93,7 @@ namespace Ryujinx.Graphics.GAL
             bool supportsShaderBallot,
             bool supportsShaderBarrierDivergence,
             bool supportsShaderFloat64,
+            bool supportsTextureGatherOffsets,
             bool supportsTextureShadowLod,
             bool supportsVertexStoreAndAtomics,
             bool supportsViewportIndexVertexTessellation,
@@ -142,6 +144,7 @@ namespace Ryujinx.Graphics.GAL
             SupportsShaderBallot = supportsShaderBallot;
             SupportsShaderBarrierDivergence = supportsShaderBarrierDivergence;
             SupportsShaderFloat64 = supportsShaderFloat64;
+            SupportsTextureGatherOffsets = supportsTextureGatherOffsets;
             SupportsTextureShadowLod = supportsTextureShadowLod;
             SupportsVertexStoreAndAtomics = supportsVertexStoreAndAtomics;
             SupportsViewportIndexVertexTessellation = supportsViewportIndexVertexTessellation;

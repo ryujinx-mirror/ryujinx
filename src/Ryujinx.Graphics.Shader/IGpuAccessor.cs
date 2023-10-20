@@ -340,6 +340,15 @@ namespace Ryujinx.Graphics.Shader
         }
 
         /// <summary>
+        /// Queries host GPU texture gather with multiple offsets support.
+        /// </summary>
+        /// <returns>True if the GPU and driver supports texture gather offsets, false otherwise</returns>
+        bool QueryHostSupportsTextureGatherOffsets()
+        {
+            return true;
+        }
+
+        /// <summary>
         /// Queries host GPU texture shadow LOD support.
         /// </summary>
         /// <returns>True if the GPU and driver supports texture shadow LOD, false otherwise</returns>

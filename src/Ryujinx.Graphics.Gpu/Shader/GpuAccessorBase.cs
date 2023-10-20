@@ -186,6 +186,8 @@ namespace Ryujinx.Graphics.Gpu.Shader
 
         public bool QueryHostSupportsSnormBufferTextureFormat() => _context.Capabilities.SupportsSnormBufferTextureFormat;
 
+        public bool QueryHostSupportsTextureGatherOffsets() => _context.Capabilities.SupportsTextureGatherOffsets;
+
         public bool QueryHostSupportsTextureShadowLod() => _context.Capabilities.SupportsTextureShadowLod;
 
         public bool QueryHostSupportsTransformFeedback() => _context.Capabilities.SupportsTransformFeedback;
