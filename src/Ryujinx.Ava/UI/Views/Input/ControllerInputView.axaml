@@ -5,6 +5,7 @@
     xmlns:locale="clr-namespace:Ryujinx.Ava.Common.Locale"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controls="clr-namespace:Ryujinx.Ava.UI.Controls"
     xmlns:models="clr-namespace:Ryujinx.Ava.UI.Models"
     xmlns:viewModels="clr-namespace:Ryujinx.Ava.UI.ViewModels"
     xmlns:helpers="clr-namespace:Ryujinx.Ava.UI.Helpers"
@@ -460,7 +461,7 @@
                                     HorizontalAlignment="Center"
                                     VerticalAlignment="Center"
                                     Orientation="Horizontal">
-                                    <Slider
+                                    <controls:SliderScroll
                                         Width="130"
                                         Maximum="1"
                                         TickFrequency="0.01"
@@ -480,7 +481,7 @@
                                     HorizontalAlignment="Center"
                                     VerticalAlignment="Center"
                                     Orientation="Horizontal">
-                                    <Slider
+                                    <controls:SliderScroll
                                         Width="130"
                                         Maximum="2"
                                         TickFrequency="0.01"
@@ -604,7 +605,7 @@
                         <StackPanel
                             HorizontalAlignment="Center"
                             Orientation="Horizontal">
-                            <Slider
+                            <controls:SliderScroll
                                 Width="130"
                                 Maximum="1"
                                 TickFrequency="0.01"
@@ -1083,7 +1084,7 @@
                                     HorizontalAlignment="Center"
                                     VerticalAlignment="Center"
                                     Orientation="Horizontal">
-                                    <Slider
+                                    <controls:SliderScroll
                                         Width="130"
                                         Maximum="1"
                                         TickFrequency="0.01"
@@ -1105,7 +1106,7 @@
                                     HorizontalAlignment="Center"
                                     VerticalAlignment="Center"
                                     Orientation="Horizontal">
-                                    <Slider
+                                    <controls:SliderScroll
                                         Width="130"
                                         Maximum="2"
                                         TickFrequency="0.01"

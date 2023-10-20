@@ -4,6 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controls="clr-namespace:Ryujinx.Ava.UI.Controls"
     xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
     xmlns:locale="clr-namespace:Ryujinx.Ava.Common.Locale"
     xmlns:viewModels="clr-namespace:Ryujinx.Ava.UI.ViewModels"
@@ -173,7 +174,7 @@
                                     <TextBlock Text="FSR" />
                                 </ComboBoxItem>
                             </ComboBox>
-                            <Slider Value="{Binding ScalingFilterLevel}"
+                            <controls:SliderScroll Value="{Binding ScalingFilterLevel}"
                                     ToolTip.Tip="{locale:Locale GraphicsScalingFilterLevelTooltip}"
                                     MinWidth="150"
                                     Margin="10,-3,0,0"

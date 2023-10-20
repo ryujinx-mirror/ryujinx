@@ -53,5 +53,20 @@ namespace Ryujinx.Ava.UI.Views.Main
         {
             Window.LoadApplications();
         }
+
+        private void VolumeStatus_OnPointerWheelChanged(object sender, PointerWheelEventArgs e)
+        {
+            // Change the volume by 5% at a time
+            float newValue = Window.ViewModel.Volume + (float)e.Delta.Y * 0.05f;
+
+            Window.ViewModel.Volume = newValue switch
+            {
+                < 0 => 0,
+                > 1 => 1,
+                _ => newValue,
+            };
+
+            e.Handled = true;
+        }
     }
 }

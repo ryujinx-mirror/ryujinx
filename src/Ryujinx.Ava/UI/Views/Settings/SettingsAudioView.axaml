@@ -4,6 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controls="clr-namespace:Ryujinx.Ava.UI.Controls"
     xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
     xmlns:locale="clr-namespace:Ryujinx.Ava.Common.Locale"
     xmlns:viewModels="clr-namespace:Ryujinx.Ava.UI.ViewModels"
@@ -63,13 +64,13 @@
                             Maximum="100" />
                 </StackPanel>
                 <StackPanel Margin="10,0,0,0" Orientation="Horizontal">
-                    <Slider Value="{Binding Volume}"
+                    <controls:SliderScroll Value="{Binding Volume}"
                             Margin="250,0,0,0"
                             ToolTip.Tip="{locale:Locale AudioVolumeTooltip}"
                             Minimum="0"
                             Maximum="100"
-                            SmallChange="5"
-                            TickFrequency="5"
+                            SmallChange="1"
+                            TickFrequency="1"
                             IsSnapToTickEnabled="True"
                             LargeChange="10"
                             Width="350" />
