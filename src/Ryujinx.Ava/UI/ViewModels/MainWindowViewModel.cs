@@ -356,6 +356,8 @@ namespace Ryujinx.Ava.UI.ViewModels
 
         public bool OpenBcatSaveDirectoryEnabled => !SelectedApplication.ControlHolder.ByteSpan.IsZeros() && SelectedApplication.ControlHolder.Value.BcatDeliveryCacheStorageSize > 0;
 
+        public bool CreateShortcutEnabled => !ReleaseInformation.IsFlatHubBuild();
+
         public string LoadHeading
         {
             get => _loadHeading;
@@ -1488,7 +1490,7 @@ namespace Ryujinx.Ava.UI.ViewModels
 
             Logger.RestartTime();
 
-            SelectedIcon ??= ApplicationLibrary.GetApplicationIcon(path);
+            SelectedIcon ??= ApplicationLibrary.GetApplicationIcon(path, ConfigurationState.Instance.System.Language);
 
             PrepareLoadScreen();
 
@@ -1696,7 +1698,6 @@ namespace Ryujinx.Ava.UI.ViewModels
                 }
             }
         }
-
         #endregion
     }
 }

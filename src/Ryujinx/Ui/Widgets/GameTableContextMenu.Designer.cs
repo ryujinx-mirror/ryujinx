@@ -23,6 +23,7 @@ namespace Ryujinx.Ui.Widgets
         private MenuItem _purgeShaderCacheMenuItem;
         private MenuItem _openPtcDirMenuItem;
         private MenuItem _openShaderCacheDirMenuItem;
+        private MenuItem _createShortcutMenuItem;
 
         private void InitializeComponent()
         {
@@ -187,6 +188,15 @@ namespace Ryujinx.Ui.Widgets
             };
             _openShaderCacheDirMenuItem.Activated += OpenShaderCacheDir_Clicked;
 
+            //
+            // _createShortcutMenuItem
+            //
+            _createShortcutMenuItem = new MenuItem("Create Application Shortcut")
+            {
+                TooltipText = "Create a Desktop Shortcut that launches the selected Application."
+            };
+            _createShortcutMenuItem.Activated += CreateShortcut_Clicked;
+
             ShowComponent();
         }
 
@@ -213,6 +223,7 @@ namespace Ryujinx.Ui.Widgets
             Add(new SeparatorMenuItem());
             Add(_manageCacheMenuItem);
             Add(_extractMenuItem);
+            Add(_createShortcutMenuItem);
 
             ShowAll();
         }

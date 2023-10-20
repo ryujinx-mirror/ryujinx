@@ -45,8 +45,18 @@
     <EmbeddedResource Include="Resources\Logo_Twitter_Light.png" />
   </ItemGroup>
 
+  <ItemGroup Condition="'$(RuntimeIdentifier)' == 'linux-x64' OR '$(RuntimeIdentifier)' == ''">
+    <EmbeddedResource Include="..\..\distribution\linux\shortcut-template.desktop" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(RuntimeIdentifier)' == 'osx-x64' OR '$(RuntimeIdentifier)' == 'osx-arm64' OR '$(RuntimeIdentifier)' == ''">
+    <EmbeddedResource Include="..\..\distribution\macos\shortcut-template.plist" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="DiscordRichPresence" />
+    <PackageReference Include="securifybv.ShellLink" />
+    <PackageReference Include="System.Drawing.Common" />
   </ItemGroup>
 
   <ItemGroup>

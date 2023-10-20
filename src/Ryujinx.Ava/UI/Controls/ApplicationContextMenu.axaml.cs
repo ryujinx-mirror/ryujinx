@@ -337,6 +337,17 @@ namespace Ryujinx.Ava.UI.Controls
             }
         }
 
+        public void CreateApplicationShortcut_Click(object sender, RoutedEventArgs args)
+        {
+            var viewModel = (sender as MenuItem)?.DataContext as MainWindowViewModel;
+
+            if (viewModel?.SelectedApplication != null)
+            {
+                ApplicationData selectedApplication = viewModel.SelectedApplication;
+                ShortcutHelper.CreateAppShortcut(selectedApplication.Path, selectedApplication.TitleName, selectedApplication.TitleId, selectedApplication.Icon);
+            }
+        }
+
         public async void RunApplication_Click(object sender, RoutedEventArgs args)
         {
             var viewModel = (sender as MenuItem)?.DataContext as MainWindowViewModel;

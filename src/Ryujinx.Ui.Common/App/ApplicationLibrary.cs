@@ -546,7 +546,7 @@ namespace Ryujinx.Ui.App.Common
             return appMetadata;
         }
 
-        public byte[] GetApplicationIcon(string applicationPath)
+        public byte[] GetApplicationIcon(string applicationPath, Language desiredTitleLanguage)
         {
             byte[] applicationIcon = null;
 
@@ -600,7 +600,7 @@ namespace Ryujinx.Ui.App.Common
                                 {
                                     using var icon = new UniqueRef<IFile>();
 
-                                    controlFs.OpenFile(ref icon.Ref, $"/icon_{_desiredTitleLanguage}.dat".ToU8Span(), OpenMode.Read).ThrowIfFailure();
+                                    controlFs.OpenFile(ref icon.Ref, $"/icon_{desiredTitleLanguage}.dat".ToU8Span(), OpenMode.Read).ThrowIfFailure();
 
                                     using MemoryStream stream = new();
 
