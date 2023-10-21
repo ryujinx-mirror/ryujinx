@@ -1,8 +1,11 @@
+using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
+using Avalonia.LogicalTree;
 using Avalonia.Threading;
 using Ryujinx.Input;
 using Ryujinx.Input.Assigner;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Ryujinx.Ava.UI.Helpers
@@ -12,12 +15,12 @@ namespace Ryujinx.Ava.UI.Helpers
         internal class ButtonAssignedEventArgs : EventArgs
         {
             public ToggleButton Button { get; }
-            public ButtonValue? ButtonValue { get; }
+            public bool IsAssigned { get; }
 
-            public ButtonAssignedEventArgs(ToggleButton button, ButtonValue? buttonValue)
+            public ButtonAssignedEventArgs(ToggleButton button, bool isAssigned)
             {
                 Button = button;
-                ButtonValue = buttonValue;
+                IsAssigned = isAssigned;
             }
         }
 
@@ -75,11 +78,15 @@ namespace Ryujinx.Ava.UI.Helpers
 
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
-                ButtonValue? pressedButton = assigner.GetPressedButton();
+                string pressedButton = assigner.GetPressedButton();
 
                 if (_shouldUnbind)
                 {
-                    pressedButton = null;
+                    SetButtonText(ToggledButton, "Unbound");
+                }
+                else if (pressedButton != "")
+                {
+                    SetButtonText(ToggledButton, pressedButton);
                 }
 
                 _shouldUnbind = false;
@@ -87,8 +94,17 @@ namespace Ryujinx.Ava.UI.Helpers
 
                 ToggledButton.IsChecked = false;
 
-                ButtonAssigned?.Invoke(this, new ButtonAssignedEventArgs(ToggledButton, pressedButton));
+                ButtonAssigned?.Invoke(this, new ButtonAssignedEventArgs(ToggledButton, pressedButton != null));
 
+                static void SetButtonText(ToggleButton button, string text)
+                {
+                    ILogical textBlock = button.GetLogicalDescendants().First(x => x is TextBlock);
+
+                    if (textBlock != null && textBlock is TextBlock block)
+                    {
+                        block.Text = text;
+                    }
+                }
             });
         }
 

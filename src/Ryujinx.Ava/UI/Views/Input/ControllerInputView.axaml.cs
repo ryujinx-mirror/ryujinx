@@ -1,28 +1,35 @@
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
+using Ryujinx.Ava.Common.Locale;
 using Ryujinx.Ava.UI.Helpers;
-using Ryujinx.Ava.UI.ViewModels.Input;
+using Ryujinx.Ava.UI.Models;
+using Ryujinx.Ava.UI.ViewModels;
 using Ryujinx.Common.Configuration.Hid.Controller;
 using Ryujinx.Input;
 using Ryujinx.Input.Assigner;
+using System;
 
 namespace Ryujinx.Ava.UI.Views.Input
 {
     public partial class ControllerInputView : UserControl
     {
+        private bool _dialogOpen;
+
         private ButtonKeyAssigner _currentAssigner;
+        internal ControllerInputViewModel ViewModel { get; set; }
 
         public ControllerInputView()
         {
+            DataContext = ViewModel = new ControllerInputViewModel(this);
+
             InitializeComponent();
 
             foreach (ILogical visual in SettingButtons.GetLogicalDescendants())
             {
-                if (visual is ToggleButton button and not CheckBox)
+                if (visual is ToggleButton button && visual is not CheckBox)
                 {
                     button.IsCheckedChanged += Button_IsCheckedChanged;
                 }
@@ -52,7 +59,7 @@ namespace Ryujinx.Ava.UI.Views.Input
 
                     bool isStick = button.Tag != null && button.Tag.ToString() == "stick";
 
-                    if (_currentAssigner == null && (bool)button.IsChecked)
+                    if (_currentAssigner == null)
                     {
                         _currentAssigner = new ButtonKeyAssigner(button);
 
@@ -60,86 +67,14 @@ namespace Ryujinx.Ava.UI.Views.Input
 
                         PointerPressed += MouseClick;
 
-                        IKeyboard keyboard = (IKeyboard)(DataContext as ControllerInputViewModel).parentModel.AvaloniaKeyboardDriver.GetGamepad("0"); // Open Avalonia keyboard for cancel operations.
+                        IKeyboard keyboard = (IKeyboard)ViewModel.AvaloniaKeyboardDriver.GetGamepad("0"); // Open Avalonia keyboard for cancel operations.
                         IButtonAssigner assigner = CreateButtonAssigner(isStick);
 
                         _currentAssigner.ButtonAssigned += (sender, e) =>
                         {
-                            if (e.ButtonValue.HasValue)
+                            if (e.IsAssigned)
                             {
-                                var viewModel = (DataContext as ControllerInputViewModel);
-                                var buttonValue = e.ButtonValue.Value;
-                                viewModel.parentModel.IsModified = true;
-
-                                switch (button.Name)
-                                {
-                                    case "ButtonZl":
-                                        viewModel.Config.ButtonZl = buttonValue.AsGamepadButtonInputId();
-                                        break;
-                                    case "ButtonL":
-                                        viewModel.Config.ButtonL = buttonValue.AsGamepadButtonInputId();
-                                        break;
-                                    case "ButtonMinus":
-                                        viewModel.Config.ButtonMinus = buttonValue.AsGamepadButtonInputId();
-                                        break;
-                                    case "LeftStickButton":
-                                        viewModel.Config.LeftStickButton = buttonValue.AsGamepadButtonInputId();
-                                        break;
-                                    case "LeftJoystick":
-                                        viewModel.Config.LeftJoystick = buttonValue.AsGamepadStickId();
-                                        break;
-                                    case "DpadUp":
-                                        viewModel.Config.DpadUp = buttonValue.AsGamepadButtonInputId();
-                                        break;
-                                    case "DpadDown":
-                                        viewModel.Config.DpadDown = buttonValue.AsGamepadButtonInputId();
-                                        break;
-                                    case "DpadLeft":
-                                        viewModel.Config.DpadLeft = buttonValue.AsGamepadButtonInputId();
-                                        break;
-                                    case "DpadRight":
-                                        viewModel.Config.DpadRight = buttonValue.AsGamepadButtonInputId();
-                                        break;
-                                    case "LeftButtonSr":
-                                        viewModel.Config.LeftButtonSr = buttonValue.AsGamepadButtonInputId();
-                                        break;
-                                    case "LeftButtonSl":
-                                        viewModel.Config.LeftButtonSl = buttonValue.AsGamepadButtonInputId();
-                                        break;
-                                    case "RightButtonSr":
-                                        viewModel.Config.RightButtonSr = buttonValue.AsGamepadButtonInputId();
-                                        break;
-                                    case "RightButtonSl":
-                                        viewModel.Config.RightButtonSl = buttonValue.AsGamepadButtonInputId();
-                                        break;
-                                    case "ButtonZr":
-                                        viewModel.Config.ButtonZr = buttonValue.AsGamepadButtonInputId();
-                                        break;
-                                    case "ButtonR":
-                                        viewModel.Config.ButtonR = buttonValue.AsGamepadButtonInputId();
-                                        break;
-                                    case "ButtonPlus":
-                                        viewModel.Config.ButtonPlus = buttonValue.AsGamepadButtonInputId();
-                                        break;
-                                    case "ButtonA":
-                                        viewModel.Config.ButtonA = buttonValue.AsGamepadButtonInputId();
-                                        break;
-                                    case "ButtonB":
-                                        viewModel.Config.ButtonB = buttonValue.AsGamepadButtonInputId();
-                                        break;
-                                    case "ButtonX":
-                                        viewModel.Config.ButtonX = buttonValue.AsGamepadButtonInputId();
-                                        break;
-                                    case "ButtonY":
-                                        viewModel.Config.ButtonY = buttonValue.AsGamepadButtonInputId();
-                                        break;
-                                    case "RightStickButton":
-                                        viewModel.Config.RightStickButton = buttonValue.AsGamepadButtonInputId();
-                                        break;
-                                    case "RightJoystick":
-                                        viewModel.Config.RightJoystick = buttonValue.AsGamepadStickId();
-                                        break;
-                                }
+                                ViewModel.IsModified = true;
                             }
                         };
 
@@ -165,29 +100,82 @@ namespace Ryujinx.Ava.UI.Views.Input
             }
         }
 
-        private void MouseClick(object sender, PointerPressedEventArgs e)
+        public void SaveCurrentProfile()
         {
-            bool shouldUnbind = e.GetCurrentPoint(this).Properties.IsMiddleButtonPressed;
-
-            _currentAssigner?.Cancel(shouldUnbind);
-
-            PointerPressed -= MouseClick;
+            ViewModel.Save();
         }
 
         private IButtonAssigner CreateButtonAssigner(bool forStick)
         {
             IButtonAssigner assigner;
 
-            assigner = new GamepadButtonAssigner((DataContext as ControllerInputViewModel).parentModel.SelectedGamepad, ((DataContext as ControllerInputViewModel).parentModel.Config as StandardControllerInputConfig).TriggerThreshold, forStick);
+            var device = ViewModel.Devices[ViewModel.Device];
+
+            if (device.Type == DeviceType.Keyboard)
+            {
+                assigner = new KeyboardKeyAssigner((IKeyboard)ViewModel.SelectedGamepad);
+            }
+            else if (device.Type == DeviceType.Controller)
+            {
+                assigner = new GamepadButtonAssigner(ViewModel.SelectedGamepad, (ViewModel.Config as StandardControllerInputConfig).TriggerThreshold, forStick);
+            }
+            else
+            {
+                throw new Exception("Controller not supported");
+            }
 
             return assigner;
         }
 
-        protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
+        private void MouseClick(object sender, PointerPressedEventArgs e)
         {
-            base.OnDetachedFromVisualTree(e);
+            bool shouldUnbind = false;
+
+            if (e.GetCurrentPoint(this).Properties.IsMiddleButtonPressed)
+            {
+                shouldUnbind = true;
+            }
+
+            _currentAssigner?.Cancel(shouldUnbind);
+
+            PointerPressed -= MouseClick;
+        }
+
+        private async void PlayerIndexBox_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (ViewModel.IsModified && !_dialogOpen)
+            {
+                _dialogOpen = true;
+
+                var result = await ContentDialogHelper.CreateConfirmationDialog(
+                    LocaleManager.Instance[LocaleKeys.DialogControllerSettingsModifiedConfirmMessage],
+                    LocaleManager.Instance[LocaleKeys.DialogControllerSettingsModifiedConfirmSubMessage],
+                    LocaleManager.Instance[LocaleKeys.InputDialogYes],
+                    LocaleManager.Instance[LocaleKeys.InputDialogNo],
+                    LocaleManager.Instance[LocaleKeys.RyujinxConfirm]);
+
+                if (result == UserResult.Yes)
+                {
+                    ViewModel.Save();
+                }
+
+                _dialogOpen = false;
+
+                ViewModel.IsModified = false;
+
+                if (e.AddedItems.Count > 0)
+                {
+                    var player = (PlayerModel)e.AddedItems[0];
+                    ViewModel.PlayerId = player.Id;
+                }
+            }
+        }
+
+        public void Dispose()
+        {
             _currentAssigner?.Cancel();
             _currentAssigner = null;
+            ViewModel.Dispose();
         }
     }
 }

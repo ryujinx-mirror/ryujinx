@@ -37,7 +37,7 @@ namespace Ryujinx.Ava.UI.Windows
 
         public void SaveSettings()
         {
-            InputPage.InputView?.SaveCurrentProfile();
+            InputPage.ControllerSettings?.SaveCurrentProfile();
 
             if (Owner is MainWindow window && ViewModel.DirectoryChanged)
             {

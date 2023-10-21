@@ -8,7 +8,7 @@ using Ryujinx.Ava.Common.Locale;
 using Ryujinx.Ava.Input;
 using Ryujinx.Ava.UI.Helpers;
 using Ryujinx.Ava.UI.Models;
-using Ryujinx.Ava.UI.Models.Input;
+using Ryujinx.Ava.UI.Views.Input;
 using Ryujinx.Ava.UI.Windows;
 using Ryujinx.Common;
 using Ryujinx.Common.Configuration;
@@ -30,9 +30,9 @@ using ConfigGamepadInputId = Ryujinx.Common.Configuration.Hid.Controller.Gamepad
 using ConfigStickInputId = Ryujinx.Common.Configuration.Hid.Controller.StickInputId;
 using Key = Ryujinx.Common.Configuration.Hid.Key;
 
-namespace Ryujinx.Ava.UI.ViewModels.Input
+namespace Ryujinx.Ava.UI.ViewModels
 {
-    public class InputViewModel : BaseModel, IDisposable
+    public class ControllerInputViewModel : BaseModel, IDisposable
     {
         private const string Disabled = "disabled";
         private const string ProControllerResource = "Ryujinx.Ui.Common/Resources/Controller_ProCon.svg";
@@ -48,7 +48,7 @@ namespace Ryujinx.Ava.UI.ViewModels.Input
         private int _controllerNumber;
         private string _controllerImage;
         private int _device;
-        private object _configViewModel;
+        private object _configuration;
         private string _profileName;
         private bool _isLoaded;
 
@@ -71,14 +71,13 @@ namespace Ryujinx.Ava.UI.ViewModels.Input
         public bool IsLeft { get; set; }
 
         public bool IsModified { get; set; }
-        public event Action NotifyChangesEvent;
 
-        public object ConfigViewModel
+        public object Configuration
         {
-            get => _configViewModel;
+            get => _configuration;
             set
             {
-                _configViewModel = value;
+                _configuration = value;
 
                 OnPropertyChanged();
             }
@@ -233,7 +232,7 @@ namespace Ryujinx.Ava.UI.ViewModels.Input
 
         public InputConfig Config { get; set; }
 
-        public InputViewModel(UserControl owner) : this()
+        public ControllerInputViewModel(UserControl owner) : this()
         {
             if (Program.PreviewerDetached)
             {
@@ -245,6 +244,7 @@ namespace Ryujinx.Ava.UI.ViewModels.Input
 
                 _mainWindow.InputManager.GamepadDriver.OnGamepadConnected += HandleOnGamepadConnected;
                 _mainWindow.InputManager.GamepadDriver.OnGamepadDisconnected += HandleOnGamepadDisconnected;
+
                 _mainWindow.ViewModel.AppHost?.NpadManager.BlockInputUpdates();
 
                 _isLoaded = false;
@@ -255,7 +255,7 @@ namespace Ryujinx.Ava.UI.ViewModels.Input
             }
         }
 
-        public InputViewModel()
+        public ControllerInputViewModel()
         {
             PlayerIndexes = new ObservableCollection<PlayerModel>();
             Controllers = new ObservableCollection<ControllerModel>();
@@ -282,12 +282,12 @@ namespace Ryujinx.Ava.UI.ViewModels.Input
 
             if (Config is StandardKeyboardInputConfig keyboardInputConfig)
             {
-                ConfigViewModel = new KeyboardInputViewModel(this, new KeyboardInputConfig(keyboardInputConfig));
+                Configuration = new InputConfiguration<Key, ConfigStickInputId>(keyboardInputConfig);
             }
 
             if (Config is StandardControllerInputConfig controllerInputConfig)
             {
-                ConfigViewModel = new ControllerInputViewModel(this, new ControllerInputConfig(controllerInputConfig));
+                Configuration = new InputConfiguration<ConfigGamepadInputId, ConfigStickInputId>(controllerInputConfig);
             }
         }
 
@@ -321,6 +321,16 @@ namespace Ryujinx.Ava.UI.ViewModels.Input
                     Device = 0;
                 }
             }
+        }
+
+        public async void ShowMotionConfig()
+        {
+            await MotionInputView.Show(this);
+        }
+
+        public async void ShowRumbleConfig()
+        {
+            await RumbleInputView.Show(this);
         }
 
         private void LoadInputDriver()
@@ -730,7 +740,7 @@ namespace Ryujinx.Ava.UI.ViewModels.Input
                 return;
             }
 
-            if (ConfigViewModel == null)
+            if (Configuration == null)
             {
                 return;
             }
@@ -741,37 +751,35 @@ namespace Ryujinx.Ava.UI.ViewModels.Input
 
                 return;
             }
+
+            bool validFileName = ProfileName.IndexOfAny(Path.GetInvalidFileNameChars()) == -1;
+
+            if (validFileName)
+            {
+                string path = Path.Combine(GetProfileBasePath(), ProfileName + ".json");
+
+                InputConfig config = null;
+
+                if (IsKeyboard)
+                {
+                    config = (Configuration as InputConfiguration<Key, ConfigStickInputId>).GetConfig();
+                }
+                else if (IsController)
+                {
+                    config = (Configuration as InputConfiguration<GamepadInputId, ConfigStickInputId>).GetConfig();
+                }
+
+                config.ControllerType = Controllers[_controller].Type;
+
+                string jsonString = JsonHelper.Serialize(config, _serializerContext.InputConfig);
+
+                await File.WriteAllTextAsync(path, jsonString);
+
+                LoadProfiles();
+            }
             else
             {
-                bool validFileName = ProfileName.IndexOfAny(Path.GetInvalidFileNameChars()) == -1;
-
-                if (validFileName)
-                {
-                    string path = Path.Combine(GetProfileBasePath(), ProfileName + ".json");
-
-                    InputConfig config = null;
-
-                    if (IsKeyboard)
-                    {
-                        config = (ConfigViewModel as KeyboardInputViewModel).Config.GetConfig();
-                    }
-                    else if (IsController)
-                    {
-                        config = (ConfigViewModel as ControllerInputViewModel).Config.GetConfig();
-                    }
-
-                    config.ControllerType = Controllers[_controller].Type;
-
-                    string jsonString = JsonHelper.Serialize(config, _serializerContext.InputConfig);
-
-                    await File.WriteAllTextAsync(path, jsonString);
-
-                    LoadProfiles();
-                }
-                else
-                {
-                    await ContentDialogHelper.CreateErrorDialog(LocaleManager.Instance[LocaleKeys.DialogProfileInvalidProfileNameErrorMessage]);
-                }
+                await ContentDialogHelper.CreateErrorDialog(LocaleManager.Instance[LocaleKeys.DialogProfileInvalidProfileNameErrorMessage]);
             }
         }
 
@@ -822,18 +830,18 @@ namespace Ryujinx.Ava.UI.ViewModels.Input
 
                 if (device.Type == DeviceType.Keyboard)
                 {
-                    var inputConfig = (ConfigViewModel as KeyboardInputViewModel).Config;
+                    var inputConfig = Configuration as InputConfiguration<Key, ConfigStickInputId>;
                     inputConfig.Id = device.Id;
                 }
                 else
                 {
-                    var inputConfig = (ConfigViewModel as ControllerInputViewModel).Config;
+                    var inputConfig = Configuration as InputConfiguration<GamepadInputId, ConfigStickInputId>;
                     inputConfig.Id = device.Id.Split(" ")[0];
                 }
 
                 var config = !IsController
-                    ? (ConfigViewModel as KeyboardInputViewModel).Config.GetConfig()
-                    : (ConfigViewModel as ControllerInputViewModel).Config.GetConfig();
+                    ? (Configuration as InputConfiguration<Key, ConfigStickInputId>).GetConfig()
+                    : (Configuration as InputConfiguration<GamepadInputId, ConfigStickInputId>).GetConfig();
                 config.ControllerType = Controllers[_controller].Type;
                 config.PlayerIndex = _playerId;
 
@@ -864,13 +872,12 @@ namespace Ryujinx.Ava.UI.ViewModels.Input
 
         public void NotifyChanges()
         {
-            OnPropertyChanged(nameof(ConfigViewModel));
+            OnPropertyChanged(nameof(Configuration));
             OnPropertyChanged(nameof(IsController));
             OnPropertyChanged(nameof(ShowSettings));
             OnPropertyChanged(nameof(IsKeyboard));
             OnPropertyChanged(nameof(IsRight));
             OnPropertyChanged(nameof(IsLeft));
-            NotifyChangesEvent?.Invoke();
         }
 
         public void Dispose()

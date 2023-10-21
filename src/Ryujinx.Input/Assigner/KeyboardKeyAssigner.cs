@@ -23,7 +23,7 @@ namespace Ryujinx.Input.Assigner
 
         public bool HasAnyButtonPressed()
         {
-            return GetPressedButton() is not null;
+            return GetPressedButton().Length != 0;
         }
 
         public bool ShouldCancel()
@@ -31,20 +31,20 @@ namespace Ryujinx.Input.Assigner
             return _keyboardState.IsPressed(Key.Escape);
         }
 
-        public ButtonValue? GetPressedButton()
+        public string GetPressedButton()
         {
-            ButtonValue? keyPressed = null;
+            string keyPressed = "";
 
             for (Key key = Key.Unknown; key < Key.Count; key++)
             {
                 if (_keyboardState.IsPressed(key))
                 {
-                    keyPressed = new(key);
+                    keyPressed = key.ToString();
                     break;
                 }
             }
 
-            return !ShouldCancel() ? keyPressed : null;
+            return !ShouldCancel() ? keyPressed : "";
         }
     }
 }
