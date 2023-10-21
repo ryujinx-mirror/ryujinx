@@ -893,7 +893,7 @@ namespace Ryujinx.Ui.Windows
                     }
                 }
 
-                string pressedButton = assigner.GetPressedButton();
+                string pressedButton = assigner.GetPressedButton().ToString();
 
                 Application.Invoke(delegate
                 {
