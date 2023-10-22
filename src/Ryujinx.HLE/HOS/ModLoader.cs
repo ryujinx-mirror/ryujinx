@@ -533,7 +533,9 @@ namespace Ryujinx.HLE.HOS
 
             Logger.Info?.Print(LogClass.ModLoader, "Using replacement ExeFS partition");
 
-            exefs = new PartitionFileSystem(mods.ExefsContainers[0].Path.OpenRead().AsStorage());
+            var pfs = new PartitionFileSystem();
+            pfs.Initialize(mods.ExefsContainers[0].Path.OpenRead().AsStorage()).ThrowIfFailure();
+            exefs = pfs;
 
             return true;
         }

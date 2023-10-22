@@ -211,7 +211,7 @@ namespace Ryujinx.Ui.Widgets
                         (System.IO.Path.GetExtension(_titleFilePath).ToLower() == ".pfs0") ||
                         (System.IO.Path.GetExtension(_titleFilePath).ToLower() == ".xci"))
                     {
-                        PartitionFileSystem pfs;
+                        IFileSystem pfs;
 
                         if (System.IO.Path.GetExtension(_titleFilePath) == ".xci")
                         {
@@ -221,7 +221,9 @@ namespace Ryujinx.Ui.Widgets
                         }
                         else
                         {
-                            pfs = new PartitionFileSystem(file.AsStorage());
+                            var pfsTemp = new PartitionFileSystem();
+                            pfsTemp.Initialize(file.AsStorage()).ThrowIfFailure();
+                            pfs = pfsTemp;
                         }
 
                         foreach (DirectoryEntryEx fileEntry in pfs.EnumerateEntries("/", "*.nca"))

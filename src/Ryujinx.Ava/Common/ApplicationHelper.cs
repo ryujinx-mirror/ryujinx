@@ -173,7 +173,7 @@ namespace Ryujinx.Ava.Common
                 string extension = Path.GetExtension(titleFilePath).ToLower();
                 if (extension == ".nsp" || extension == ".pfs0" || extension == ".xci")
                 {
-                    PartitionFileSystem pfs;
+                    IFileSystem pfs;
 
                     if (extension == ".xci")
                     {
@@ -181,7 +181,9 @@ namespace Ryujinx.Ava.Common
                     }
                     else
                     {
-                        pfs = new PartitionFileSystem(file.AsStorage());
+                        var pfsTemp = new PartitionFileSystem();
+                        pfsTemp.Initialize(file.AsStorage()).ThrowIfFailure();
+                        pfs = pfsTemp;
                     }
 
                     foreach (DirectoryEntryEx fileEntry in pfs.EnumerateEntries("/", "*.nca"))

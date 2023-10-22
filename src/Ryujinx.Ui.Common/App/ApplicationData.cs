@@ -65,7 +65,7 @@ namespace Ryujinx.Ui.App.Common
 
             if (extension is ".nsp" or ".xci")
             {
-                PartitionFileSystem pfs;
+                IFileSystem pfs;
 
                 if (extension == ".xci")
                 {
@@ -75,7 +75,9 @@ namespace Ryujinx.Ui.App.Common
                 }
                 else
                 {
-                    pfs = new PartitionFileSystem(file.AsStorage());
+                    var pfsTemp = new PartitionFileSystem();
+                    pfsTemp.Initialize(file.AsStorage()).ThrowIfFailure();
+                    pfs = pfsTemp;
                 }
 
                 foreach (DirectoryEntryEx fileEntry in pfs.EnumerateEntries("/", "*.nca"))

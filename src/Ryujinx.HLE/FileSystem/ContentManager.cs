@@ -238,7 +238,8 @@ namespace Ryujinx.HLE.FileSystem
                 if (!mergedToContainer)
                 {
                     using FileStream fileStream = File.OpenRead(containerPath);
-                    using PartitionFileSystem partitionFileSystem = new(fileStream.AsStorage());
+                    using PartitionFileSystem partitionFileSystem = new();
+                    partitionFileSystem.Initialize(fileStream.AsStorage()).ThrowIfFailure();
 
                     _virtualFileSystem.ImportTickets(partitionFileSystem);
                 }
@@ -259,16 +260,16 @@ namespace Ryujinx.HLE.FileSystem
             {
                 var file = new FileStream(aoc.ContainerPath, FileMode.Open, FileAccess.Read);
                 using var ncaFile = new UniqueRef<IFile>();
-                PartitionFileSystem pfs;
 
                 switch (Path.GetExtension(aoc.ContainerPath))
                 {
                     case ".xci":
-                        pfs = new Xci(_virtualFileSystem.KeySet, file.AsStorage()).OpenPartition(XciPartitionType.Secure);
-                        pfs.OpenFile(ref ncaFile.Ref, aoc.NcaPath.ToU8Span(), OpenMode.Read);
+                        var xci = new Xci(_virtualFileSystem.KeySet, file.AsStorage()).OpenPartition(XciPartitionType.Secure);
+                        xci.OpenFile(ref ncaFile.Ref, aoc.NcaPath.ToU8Span(), OpenMode.Read);
                         break;
                     case ".nsp":
-                        pfs = new PartitionFileSystem(file.AsStorage());
+                        var pfs = new PartitionFileSystem();
+                        pfs.Initialize(file.AsStorage());
                         pfs.OpenFile(ref ncaFile.Ref, aoc.NcaPath.ToU8Span(), OpenMode.Read);
                         break;
                     default:

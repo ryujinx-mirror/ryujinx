@@ -7,6 +7,7 @@ using LibHac.Fs.Shim;
 using LibHac.FsSrv;
 using LibHac.FsSystem;
 using LibHac.Ncm;
+using LibHac.Sdmmc;
 using LibHac.Spl;
 using LibHac.Tools.Es;
 using LibHac.Tools.Fs;
@@ -32,7 +33,7 @@ namespace Ryujinx.HLE.FileSystem
 
         public KeySet KeySet { get; private set; }
         public EmulatedGameCard GameCard { get; private set; }
-        public EmulatedSdCard SdCard { get; private set; }
+        public SdmmcApi SdCard { get; private set; }
         public ModLoader ModLoader { get; private set; }
 
         private readonly ConcurrentDictionary<ulong, Stream> _romFsByPid;
@@ -198,15 +199,15 @@ namespace Ryujinx.HLE.FileSystem
             fsServerObjects.FsCreators.EncryptedFileSystemCreator = new EncryptedFileSystemCreator();
 
             GameCard = fsServerObjects.GameCard;
-            SdCard = fsServerObjects.SdCard;
+            SdCard = fsServerObjects.Sdmmc;
 
-            SdCard.SetSdCardInsertionStatus(true);
+            SdCard.SetSdCardInserted(true);
 
             var fsServerConfig = new FileSystemServerConfig
             {
-                DeviceOperator = fsServerObjects.DeviceOperator,
                 ExternalKeySet = KeySet.ExternalKeySet,
                 FsCreators = fsServerObjects.FsCreators,
+                StorageDeviceManagerFactory = fsServerObjects.StorageDeviceManagerFactory,
                 RandomGenerator = randomGenerator,
             };
 

@@ -88,7 +88,8 @@ namespace Ryujinx.Ui.Windows
 
                     using FileStream containerFile = File.OpenRead(dlcContainer.ContainerPath);
 
-                    PartitionFileSystem pfs = new(containerFile.AsStorage());
+                    PartitionFileSystem pfs = new();
+                    pfs.Initialize(containerFile.AsStorage()).ThrowIfFailure();
 
                     _virtualFileSystem.ImportTickets(pfs);
 
@@ -153,7 +154,8 @@ namespace Ryujinx.Ui.Windows
 
                     using FileStream containerFile = File.OpenRead(containerPath);
 
-                    PartitionFileSystem pfs = new(containerFile.AsStorage());
+                    PartitionFileSystem pfs = new();
+                    pfs.Initialize(containerFile.AsStorage()).ThrowIfFailure();
                     bool containsDlc = false;
 
                     _virtualFileSystem.ImportTickets(pfs);

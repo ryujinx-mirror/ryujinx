@@ -174,7 +174,7 @@ namespace Ryujinx.Ui.App.Common
                         {
                             try
                             {
-                                PartitionFileSystem pfs;
+                                IFileSystem pfs;
 
                                 bool isExeFs = false;
 
@@ -186,7 +186,9 @@ namespace Ryujinx.Ui.App.Common
                                 }
                                 else
                                 {
-                                    pfs = new PartitionFileSystem(file.AsStorage());
+                                    var pfsTemp = new PartitionFileSystem();
+                                    pfsTemp.Initialize(file.AsStorage()).ThrowIfFailure();
+                                    pfs = pfsTemp;
 
                                     // If the NSP doesn't have a main NCA, decrement the number of applications found and then continue to the next application.
                                     bool hasMainNca = false;
@@ -500,7 +502,7 @@ namespace Ryujinx.Ui.App.Common
             ApplicationCountUpdated?.Invoke(null, e);
         }
 
-        private void GetControlFsAndTitleId(PartitionFileSystem pfs, out IFileSystem controlFs, out string titleId)
+        private void GetControlFsAndTitleId(IFileSystem pfs, out IFileSystem controlFs, out string titleId)
         {
             (_, _, Nca controlNca) = GetGameData(_virtualFileSystem, pfs, 0);
 
@@ -563,7 +565,7 @@ namespace Ryujinx.Ui.App.Common
                     {
                         try
                         {
-                            PartitionFileSystem pfs;
+                            IFileSystem pfs;
 
                             bool isExeFs = false;
 
@@ -575,7 +577,9 @@ namespace Ryujinx.Ui.App.Common
                             }
                             else
                             {
-                                pfs = new PartitionFileSystem(file.AsStorage());
+                                var pfsTemp = new PartitionFileSystem();
+                                pfsTemp.Initialize(file.AsStorage()).ThrowIfFailure();
+                                pfs = pfsTemp;
 
                                 foreach (DirectoryEntryEx fileEntry in pfs.EnumerateEntries("/", "*"))
                                 {
@@ -827,7 +831,7 @@ namespace Ryujinx.Ui.App.Common
             return false;
         }
 
-        public static (Nca main, Nca patch, Nca control) GetGameData(VirtualFileSystem fileSystem, PartitionFileSystem pfs, int programIndex)
+        public static (Nca main, Nca patch, Nca control) GetGameData(VirtualFileSystem fileSystem, IFileSystem pfs, int programIndex)
         {
             Nca mainNca = null;
             Nca patchNca = null;
@@ -931,7 +935,8 @@ namespace Ryujinx.Ui.App.Common
                     if (File.Exists(updatePath))
                     {
                         FileStream file = new(updatePath, FileMode.Open, FileAccess.Read);
-                        PartitionFileSystem nsp = new(file.AsStorage());
+                        PartitionFileSystem nsp = new();
+                        nsp.Initialize(file.AsStorage()).ThrowIfFailure();
 
                         return GetGameUpdateDataFromPartition(fileSystem, nsp, titleIdBase.ToString("x16"), programIndex);
                     }

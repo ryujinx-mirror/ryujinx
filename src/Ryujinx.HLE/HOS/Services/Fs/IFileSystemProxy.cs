@@ -1380,7 +1380,10 @@ namespace Ryujinx.HLE.HOS.Services.Fs
         [CommandCmif(1016)]
         public ResultCode FlushAccessLogOnSdCard(ServiceCtx context)
         {
-            return (ResultCode)_baseFileSystemProxy.Get.FlushAccessLogOnSdCard().Value;
+            // Logging the access log to the SD card isn't implemented, meaning this function will be a no-op since
+            // there's nothing to flush. Return success until it's implemented.
+            // return (ResultCode)_baseFileSystemProxy.Get.FlushAccessLogOnSdCard().Value;
+            return ResultCode.Success;
         }
 
         [CommandCmif(1017)]

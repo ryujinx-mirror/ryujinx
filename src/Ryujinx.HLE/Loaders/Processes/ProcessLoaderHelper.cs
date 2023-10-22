@@ -1,8 +1,8 @@
 ﻿using LibHac.Account;
 using LibHac.Common;
 using LibHac.Fs;
+using LibHac.Fs.Fsa;
 using LibHac.Fs.Shim;
-using LibHac.FsSystem;
 using LibHac.Loader;
 using LibHac.Ncm;
 using LibHac.Ns;
@@ -33,7 +33,7 @@ namespace Ryujinx.HLE.Loaders.Processes
         // TODO: Remove this workaround when ASLR is implemented.
         private const ulong CodeStartOffset = 0x500000UL;
 
-        public static LibHac.Result RegisterProgramMapInfo(Switch device, PartitionFileSystem partitionFileSystem)
+        public static LibHac.Result RegisterProgramMapInfo(Switch device, IFileSystem partitionFileSystem)
         {
             ulong applicationId = 0;
             int programCount = 0;

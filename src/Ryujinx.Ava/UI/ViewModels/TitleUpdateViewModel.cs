@@ -170,7 +170,9 @@ namespace Ryujinx.Ava.UI.ViewModels
 
                 try
                 {
-                    (Nca patchNca, Nca controlNca) = ApplicationLibrary.GetGameUpdateDataFromPartition(VirtualFileSystem, new PartitionFileSystem(file.AsStorage()), TitleId.ToString("x16"), 0);
+                    var pfs = new PartitionFileSystem();
+                    pfs.Initialize(file.AsStorage()).ThrowIfFailure();
+                    (Nca patchNca, Nca controlNca) = ApplicationLibrary.GetGameUpdateDataFromPartition(VirtualFileSystem, pfs, TitleId.ToString("x16"), 0);
 
                     if (controlNca != null && patchNca != null)
                     {

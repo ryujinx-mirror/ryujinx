@@ -26,7 +26,9 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
             try
             {
                 LocalStorage storage = new(pfsPath, FileAccess.Read, FileMode.Open);
-                using SharedRef<LibHac.Fs.Fsa.IFileSystem> nsp = new(new PartitionFileSystem(storage));
+                var pfs = new PartitionFileSystem();
+                using SharedRef<LibHac.Fs.Fsa.IFileSystem> nsp = new(pfs);
+                pfs.Initialize(storage).ThrowIfFailure();
 
                 ImportTitleKeysFromNsp(nsp.Get, context.Device.System.KeySet);
 
@@ -90,7 +92,8 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
 
                 try
                 {
-                    PartitionFileSystem nsp = new(pfsFile.AsStorage());
+                    PartitionFileSystem nsp = new();
+                    nsp.Initialize(pfsFile.AsStorage()).ThrowIfFailure();
 
                     ImportTitleKeysFromNsp(nsp, context.Device.System.KeySet);
 

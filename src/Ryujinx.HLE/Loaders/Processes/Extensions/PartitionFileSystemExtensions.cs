@@ -20,7 +20,11 @@ namespace Ryujinx.HLE.Loaders.Processes.Extensions
         private static readonly DownloadableContentJsonSerializerContext _contentSerializerContext = new(JsonHelper.GetDefaultSerializerOptions());
         private static readonly TitleUpdateMetadataJsonSerializerContext _titleSerializerContext = new(JsonHelper.GetDefaultSerializerOptions());
 
-        internal static (bool, ProcessResult) TryLoad(this PartitionFileSystem partitionFileSystem, Switch device, string path, out string errorMessage)
+        internal static (bool, ProcessResult) TryLoad<TMetaData, TFormat, THeader, TEntry>(this PartitionFileSystemCore<TMetaData, TFormat, THeader, TEntry> partitionFileSystem, Switch device, string path, out string errorMessage)
+            where TMetaData : PartitionFileSystemMetaCore<TFormat, THeader, TEntry>, new()
+            where TFormat : IPartitionFileSystemFormat
+            where THeader : unmanaged, IPartitionFileSystemHeader
+            where TEntry : unmanaged, IPartitionFileSystemEntry
         {
             errorMessage = null;
 
@@ -91,7 +95,8 @@ namespace Ryujinx.HLE.Loaders.Processes.Extensions
                         string updatePath = JsonHelper.DeserializeFromFile(titleUpdateMetadataPath, _titleSerializerContext.TitleUpdateMetadata).Selected;
                         if (File.Exists(updatePath))
                         {
-                            PartitionFileSystem updatePartitionFileSystem = new(new FileStream(updatePath, FileMode.Open, FileAccess.Read).AsStorage());
+                            PartitionFileSystem updatePartitionFileSystem = new();
+                            updatePartitionFileSystem.Initialize(new FileStream(updatePath, FileMode.Open, FileAccess.Read).AsStorage()).ThrowIfFailure();
 
                             device.Configuration.VirtualFileSystem.ImportTickets(updatePartitionFileSystem);
 

@@ -126,7 +126,8 @@ namespace Ryujinx.Ava.UI.ViewModels
                 {
                     using FileStream containerFile = File.OpenRead(downloadableContentContainer.ContainerPath);
 
-                    PartitionFileSystem partitionFileSystem = new(containerFile.AsStorage());
+                    PartitionFileSystem partitionFileSystem = new();
+                    partitionFileSystem.Initialize(containerFile.AsStorage()).ThrowIfFailure();
 
                     _virtualFileSystem.ImportTickets(partitionFileSystem);
 
@@ -232,7 +233,8 @@ namespace Ryujinx.Ava.UI.ViewModels
 
             using FileStream containerFile = File.OpenRead(path);
 
-            PartitionFileSystem partitionFileSystem = new(containerFile.AsStorage());
+            PartitionFileSystem partitionFileSystem = new();
+            partitionFileSystem.Initialize(containerFile.AsStorage()).ThrowIfFailure();
             bool containsDownloadableContent = false;
 
             _virtualFileSystem.ImportTickets(partitionFileSystem);
