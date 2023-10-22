@@ -766,7 +766,10 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 flags |= offset == TexOffset.Ptp ? TextureFlags.Offsets : TextureFlags.Offset;
             }
 
-            sourcesList.Add(Const((int)component));
+            if (!hasDepthCompare)
+            {
+                sourcesList.Add(Const((int)component));
+            }
 
             Operand[] sources = sourcesList.ToArray();
             Operand[] dests = new Operand[BitOperations.PopCount((uint)componentMask)];
