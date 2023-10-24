@@ -264,7 +264,16 @@ namespace Ryujinx.HLE.FileSystem
 
                 if (result.IsSuccess())
                 {
-                    Ticket ticket = new(ticketFile.Get.AsStream());
+                    // When reading a file from a Sha256PartitionFileSystem, you can't start a read in the middle
+                    // of the hashed portion (usually the first 0x200 bytes) of the file and end the read after
+                    // the end of the hashed portion, so we read the ticket file using a single read.
+                    byte[] ticketData = new byte[0x2C0];
+                    result = ticketFile.Get.Read(out long bytesRead, 0, ticketData);
+
+                    if (result.IsFailure() || bytesRead != ticketData.Length)
+                        continue;
+
+                    Ticket ticket = new(new MemoryStream(ticketData));
                     var titleKey = ticket.GetTitleKey(KeySet);
 
                     if (titleKey != null)
