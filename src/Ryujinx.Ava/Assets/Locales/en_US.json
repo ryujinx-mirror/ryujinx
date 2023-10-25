@@ -650,7 +650,7 @@
   "UserEditorTitle": "Edit User",
   "UserEditorTitleCreate": "Create User",
   "SettingsTabNetworkInterface": "Network Interface:",
-  "NetworkInterfaceTooltip": "The network interface used for LAN features",
+  "NetworkInterfaceTooltip": "The network interface used for LAN/LDN features",
   "NetworkInterfaceDefault": "Default",
   "PackagingShaders": "Packaging Shaders",
   "AboutChangelogButton": "View Changelog on GitHub",

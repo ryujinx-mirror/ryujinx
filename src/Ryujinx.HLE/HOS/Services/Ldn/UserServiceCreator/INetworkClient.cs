@@ -1,12 +1,13 @@
 ﻿using Ryujinx.HLE.HOS.Services.Ldn.Types;
-using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.Network.Types;
-using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.RyuLdn.Types;
+using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.Types;
 using System;
 
-namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.RyuLdn
+namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator
 {
     interface INetworkClient : IDisposable
     {
+        bool NeedsRealId { get; }
+
         event EventHandler<NetworkChangeEventArgs> NetworkChange;
 
         void DisconnectNetwork();

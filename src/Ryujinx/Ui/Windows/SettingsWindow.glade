@@ -2993,6 +2993,7 @@
                                         <property name="active-id">Disabled</property>
                                         <items>
                                           <item id="Disabled" translatable="yes">Disabled</item>
+                                          <item id="LdnMitm" translatable="yes">ldn_mitm</item>
                                         </items>
                                       </object>
                                       <packing>
@@ -3064,7 +3065,7 @@
                                       <object class="GtkLabel">
                                         <property name="visible">True</property>
                                         <property name="can-focus">False</property>
-                                        <property name="tooltip-text" translatable="yes">The network interface used for LAN features</property>
+                                        <property name="tooltip-text" translatable="yes">The network interface used for LAN/LDN features</property>
                                         <property name="halign">end</property>
                                         <property name="label" translatable="yes">Network Interface:</property>
                                       </object>
@@ -3079,7 +3080,7 @@
                                       <object class="GtkComboBoxText" id="_multiLanSelect">
                                         <property name="visible">True</property>
                                         <property name="can-focus">False</property>
-                                        <property name="tooltip-text" translatable="yes">The network interface used for LAN features</property>
+                                        <property name="tooltip-text" translatable="yes">The network interface used for LAN/LDN features</property>
                                         <property name="active-id">0</property>
                                         <items>
                                           <item id="0" translatable="yes">Default</item>

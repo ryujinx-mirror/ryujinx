@@ -1,7 +1,7 @@
 ﻿using Ryujinx.HLE.HOS.Services.Ldn.Types;
 using System.Runtime.InteropServices;
 
-namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.RyuLdn.Types
+namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.Types
 {
     [StructLayout(LayoutKind.Sequential, Size = 0xBC)]
     struct ConnectPrivateRequest

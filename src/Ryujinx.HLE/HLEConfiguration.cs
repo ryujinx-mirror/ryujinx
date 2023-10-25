@@ -101,7 +101,7 @@ namespace Ryujinx.HLE
         /// <summary>
         /// Control if the guest application should be told that there is a Internet connection available.
         /// </summary>
-        internal readonly bool EnableInternetAccess;
+        public bool EnableInternetAccess { internal get; set; }
 
         /// <summary>
         /// Control LibHac's integrity check level.

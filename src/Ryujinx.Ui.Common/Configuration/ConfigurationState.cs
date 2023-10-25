@@ -571,6 +571,7 @@ namespace Ryujinx.Ui.Common.Configuration
             {
                 LanInterfaceId = new ReactiveObject<string>();
                 Mode = new ReactiveObject<MultiplayerMode>();
+                Mode.Event += static (_, e) => LogValueChange(e, nameof(MultiplayerMode));
             }
         }
 

@@ -1,4 +1,4 @@
-namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.RyuLdn.Types
+namespace Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator.Types
 {
     enum NetworkError : int
     {

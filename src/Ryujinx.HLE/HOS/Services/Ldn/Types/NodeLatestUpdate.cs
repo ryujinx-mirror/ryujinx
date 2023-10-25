@@ -1,4 +1,4 @@
-﻿using Ryujinx.Common.Memory;
+using Ryujinx.Common.Memory;
 using System.Runtime.InteropServices;
 
 namespace Ryujinx.HLE.HOS.Services.Ldn.Types
@@ -48,7 +48,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn.Types
                 {
                     result[i].Reserved = new Array7<byte>();
 
-                    if (i < 8)
+                    if (i < LdnConst.NodeCountMax)
                     {
                         result[i].State = array[i].State;
                         array[i].State = NodeLatestUpdateFlags.None;
