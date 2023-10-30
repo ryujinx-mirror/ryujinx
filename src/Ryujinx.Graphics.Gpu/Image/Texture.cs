@@ -102,6 +102,11 @@ namespace Ryujinx.Graphics.Gpu.Image
         public bool AlwaysFlushOnOverlap { get; private set; }
 
         /// <summary>
+        /// Indicates that the texture was fully unmapped since the modified flag was set, and flushes should be ignored until it is modified again.
+        /// </summary>
+        public bool FlushStale { get; private set; }
+
+        /// <summary>
         /// Increments when the host texture is swapped, or when the texture is removed from all pools.
         /// </summary>
         public int InvalidatedSequence { get; private set; }
@@ -149,6 +154,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// </summary>
         public bool HadPoolOwner { get; private set; }
 
+        /// <summary>
         /// Physical memory ranges where the texture data is located.
         /// </summary>
         public MultiRange Range { get; private set; }
@@ -1411,6 +1417,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// </summary>
         public void SignalModified()
         {
+            FlushStale = false;
             _scaledSetScore = Math.Max(0, _scaledSetScore - 1);
 
             if (_modifiedStale || Group.HasCopyDependencies)
@@ -1431,6 +1438,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         {
             if (bound)
             {
+                FlushStale = false;
                 _scaledSetScore = Math.Max(0, _scaledSetScore - 1);
             }
 
@@ -1695,12 +1703,17 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <param name="unmapRange">The range of memory being unmapped</param>
         public void Unmapped(MultiRange unmapRange)
         {
+            if (unmapRange.Contains(Range))
+            {
+                // If this is a full unmap, prevent flushes until the texture is mapped again.
+                FlushStale = true;
+            }
+
             ChangedMapping = true;
 
             if (Group.Storage == this)
             {
                 Group.Unmapped();
-
                 Group.ClearModified(unmapRange);
             }
         }

@@ -1659,6 +1659,14 @@ namespace Ryujinx.Graphics.Gpu.Image
                 return;
             }
 
+            // If size is zero, we have nothing to flush.
+            // If the flush is stale, we should ignore it because the texture was unmapped since the modified
+            // flag was set, and flushing it is not safe anymore as the GPU might no longer own the memory.
+            if (size == 0 || Storage.FlushStale)
+            {
+                return;
+            }
+
             // There is a small gap here where the action is removed but _actionRegistered is still 1.
             // In this case it will skip registering the action, but here we are already handling it,
             // so there shouldn't be any issue as it's the same handler for all actions.

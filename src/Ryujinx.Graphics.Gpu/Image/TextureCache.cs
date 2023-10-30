@@ -107,8 +107,6 @@ namespace Ryujinx.Graphics.Gpu.Image
                             // Any texture that has been unmapped at any point or is partially unmapped
                             // should update their pool references after the remap completes.
 
-                            MultiRange unmapped = ((MemoryManager)sender).GetPhysicalRegions(e.Address, e.Size);
-
                             foreach (var texture in _partiallyMappedTextures)
                             {
                                 texture.UpdatePoolMappings();
