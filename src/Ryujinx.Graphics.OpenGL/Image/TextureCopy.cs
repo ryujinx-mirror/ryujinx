@@ -367,7 +367,7 @@ namespace Ryujinx.Graphics.OpenGL.Image
             return to;
         }
 
-        private TextureView PboCopy(TextureView from, TextureView to, int srcLayer, int dstLayer, int srcLevel, int dstLevel, int width, int height)
+        public void PboCopy(TextureView from, TextureView to, int srcLayer, int dstLayer, int srcLevel, int dstLevel, int width, int height)
         {
             int dstWidth = width;
             int dstHeight = height;
@@ -445,8 +445,6 @@ namespace Ryujinx.Graphics.OpenGL.Image
             }
 
             GL.BindBuffer(BufferTarget.PixelUnpackBuffer, 0);
-
-            return to;
         }
 
         private void EnsurePbo(TextureView view)

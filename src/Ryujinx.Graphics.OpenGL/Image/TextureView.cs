@@ -140,6 +140,28 @@ namespace Ryujinx.Graphics.OpenGL.Image
                 int levels = Math.Min(Info.Levels, destinationView.Info.Levels - firstLevel);
                 _renderer.TextureCopyIncompatible.CopyIncompatibleFormats(this, destinationView, 0, firstLayer, 0, firstLevel, layers, levels);
             }
+            else if (destinationView.Format.IsDepthOrStencil() != Format.IsDepthOrStencil())
+            {
+                int layers = Math.Min(Info.GetLayers(), destinationView.Info.GetLayers() - firstLayer);
+                int levels = Math.Min(Info.Levels, destinationView.Info.Levels - firstLevel);
+
+                for (int level = 0; level < levels; level++)
+                {
+                    int srcWidth = Math.Max(1, Width >> level);
+                    int srcHeight = Math.Max(1, Height >> level);
+
+                    int dstWidth = Math.Max(1, destinationView.Width >> (firstLevel + level));
+                    int dstHeight = Math.Max(1, destinationView.Height >> (firstLevel + level));
+
+                    int minWidth = Math.Min(srcWidth, dstWidth);
+                    int minHeight = Math.Min(srcHeight, dstHeight);
+
+                    for (int layer = 0; layer < layers; layer++)
+                    {
+                        _renderer.TextureCopy.PboCopy(this, destinationView, 0, firstLayer + layer, 0, firstLevel + level, minWidth, minHeight);
+                    }
+                }
+            }
             else
             {
                 _renderer.TextureCopy.CopyUnscaled(this, destinationView, 0, firstLayer, 0, firstLevel);
@@ -168,6 +190,13 @@ namespace Ryujinx.Graphics.OpenGL.Image
             else if (destinationView.Info.BytesPerPixel != Info.BytesPerPixel)
             {
                 _renderer.TextureCopyIncompatible.CopyIncompatibleFormats(this, destinationView, srcLayer, dstLayer, srcLevel, dstLevel, 1, 1);
+            }
+            else if (destinationView.Format.IsDepthOrStencil() != Format.IsDepthOrStencil())
+            {
+                int minWidth = Math.Min(Width, destinationView.Width);
+                int minHeight = Math.Min(Height, destinationView.Height);
+
+                _renderer.TextureCopy.PboCopy(this, destinationView, srcLayer, dstLayer, srcLevel, dstLevel, minWidth, minHeight);
             }
             else
             {
