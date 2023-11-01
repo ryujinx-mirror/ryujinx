@@ -191,6 +191,9 @@ namespace Ryujinx.HLE.HOS.Services
                 AddPort(serverPortHandle, SmObjectFactory);
             }
 
+            _wakeEvent = new KEvent(_context);
+            Result result = _selfProcess.HandleTable.GenerateHandle(_wakeEvent.ReadableEvent, out _wakeHandle);
+
             InitDone.Set();
 
             ulong messagePtr = _selfThread.TlsAddress;
@@ -200,9 +203,6 @@ namespace Ryujinx.HLE.HOS.Services
             _selfProcess.CpuMemory.Write(messagePtr + 0x4, 2 << 10);
             _selfProcess.CpuMemory.Write(messagePtr + 0x8, heapAddr | ((ulong)PointerBufferSize << 48));
             int replyTargetHandle = 0;
-
-            _wakeEvent = new KEvent(_context);
-            Result result = _selfProcess.HandleTable.GenerateHandle(_wakeEvent.ReadableEvent, out _wakeHandle);
 
             while (true)
             {
