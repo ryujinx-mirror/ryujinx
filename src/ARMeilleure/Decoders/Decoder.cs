@@ -38,7 +38,9 @@ namespace ARMeilleure.Decoders
                 {
                     block = new Block(blkAddress);
 
-                    if ((dMode != DecoderMode.MultipleBlocks && visited.Count >= 1) || opsCount > instructionLimit || !memory.IsMapped(blkAddress))
+                    if ((dMode != DecoderMode.MultipleBlocks && visited.Count >= 1) ||
+                        opsCount > instructionLimit ||
+                        (visited.Count > 0 && !memory.IsMapped(blkAddress)))
                     {
                         block.Exit = true;
                         block.EndAddress = blkAddress;
