@@ -4,7 +4,7 @@ using System.Management;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 
-namespace Ryujinx.Common.SystemInfo
+namespace Ryujinx.Ui.Common.SystemInfo
 {
     [SupportedOSPlatform("windows")]
     partial class WindowsSystemInfo : SystemInfo

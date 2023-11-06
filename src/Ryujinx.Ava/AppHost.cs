@@ -716,7 +716,7 @@ namespace Ryujinx.Ava
 
             ApplicationLibrary.LoadAndSaveMetaData(Device.Processes.ActiveApplication.ProgramIdText, appMetadata =>
             {
-                appMetadata.LastPlayed = DateTime.UtcNow;
+                appMetadata.UpdatePreGame();
             });
 
             return true;

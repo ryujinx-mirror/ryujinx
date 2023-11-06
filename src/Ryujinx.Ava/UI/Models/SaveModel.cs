@@ -4,7 +4,7 @@ using Ryujinx.Ava.UI.ViewModels;
 using Ryujinx.Ava.UI.Windows;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.Ui.App.Common;
-using System;
+using Ryujinx.Ui.Common.Helper;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -38,26 +38,7 @@ namespace Ryujinx.Ava.UI.Models
 
         public bool SizeAvailable { get; set; }
 
-        public string SizeString => GetSizeString();
-
-        private string GetSizeString()
-        {
-            const int Scale = 1024;
-            string[] orders = { "GiB", "MiB", "KiB" };
-            long max = (long)Math.Pow(Scale, orders.Length);
-
-            foreach (string order in orders)
-            {
-                if (Size > max)
-                {
-                    return $"{decimal.Divide(Size, max):##.##} {order}";
-                }
-
-                max /= Scale;
-            }
-
-            return "0 KiB";
-        }
+        public string SizeString => ValueFormatUtils.FormatFileSize(Size);
 
         public SaveModel(SaveDataInfo info)
         {

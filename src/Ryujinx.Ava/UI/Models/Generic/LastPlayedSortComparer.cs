@@ -13,20 +13,19 @@ namespace Ryujinx.Ava.UI.Models.Generic
 
         public int Compare(ApplicationData x, ApplicationData y)
         {
-            var aValue = x.LastPlayed;
-            var bValue = y.LastPlayed;
+            DateTime aValue = DateTime.UnixEpoch, bValue = DateTime.UnixEpoch;
 
-            if (!aValue.HasValue)
+            if (x?.LastPlayed != null)
             {
-                aValue = DateTime.UnixEpoch;
+                aValue = x.LastPlayed.Value;
             }
 
-            if (!bValue.HasValue)
+            if (y?.LastPlayed != null)
             {
-                bValue = DateTime.UnixEpoch;
+                bValue = y.LastPlayed.Value;
             }
 
-            return (IsAscending ? 1 : -1) * DateTime.Compare(bValue.Value, aValue.Value);
+            return (IsAscending ? 1 : -1) * DateTime.Compare(aValue, bValue);
         }
     }
 }

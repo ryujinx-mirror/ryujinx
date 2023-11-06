@@ -930,21 +930,20 @@ namespace Ryujinx.Ava.UI.ViewModels
             return SortMode switch
             {
 #pragma warning disable IDE0055 // Disable formatting
+                ApplicationSort.Title           => IsAscending ? SortExpressionComparer<ApplicationData>.Ascending(app => app.TitleName)
+                                                               : SortExpressionComparer<ApplicationData>.Descending(app => app.TitleName),
+                ApplicationSort.Developer       => IsAscending ? SortExpressionComparer<ApplicationData>.Ascending(app => app.Developer)
+                                                               : SortExpressionComparer<ApplicationData>.Descending(app => app.Developer),
                 ApplicationSort.LastPlayed      => new LastPlayedSortComparer(IsAscending),
-                ApplicationSort.FileSize        => IsAscending  ? SortExpressionComparer<ApplicationData>.Ascending(app => app.FileSizeBytes)
-                                                                : SortExpressionComparer<ApplicationData>.Descending(app => app.FileSizeBytes),
-                ApplicationSort.TotalTimePlayed => IsAscending  ? SortExpressionComparer<ApplicationData>.Ascending(app => app.TimePlayedNum)
-                                                                : SortExpressionComparer<ApplicationData>.Descending(app => app.TimePlayedNum),
-                ApplicationSort.Title           => IsAscending  ? SortExpressionComparer<ApplicationData>.Ascending(app => app.TitleName)
-                                                                : SortExpressionComparer<ApplicationData>.Descending(app => app.TitleName),
+                ApplicationSort.TotalTimePlayed => new TimePlayedSortComparer(IsAscending),
+                ApplicationSort.FileType        => IsAscending ? SortExpressionComparer<ApplicationData>.Ascending(app => app.FileExtension)
+                                                               : SortExpressionComparer<ApplicationData>.Descending(app => app.FileExtension),
+                ApplicationSort.FileSize        => IsAscending ? SortExpressionComparer<ApplicationData>.Ascending(app => app.FileSize)
+                                                               : SortExpressionComparer<ApplicationData>.Descending(app => app.FileSize),
+                ApplicationSort.Path            => IsAscending ? SortExpressionComparer<ApplicationData>.Ascending(app => app.Path)
+                                                               : SortExpressionComparer<ApplicationData>.Descending(app => app.Path),
                 ApplicationSort.Favorite        => !IsAscending ? SortExpressionComparer<ApplicationData>.Ascending(app => app.Favorite)
                                                                 : SortExpressionComparer<ApplicationData>.Descending(app => app.Favorite),
-                ApplicationSort.Developer       => IsAscending  ? SortExpressionComparer<ApplicationData>.Ascending(app => app.Developer)
-                                                                : SortExpressionComparer<ApplicationData>.Descending(app => app.Developer),
-                ApplicationSort.FileType        => IsAscending  ? SortExpressionComparer<ApplicationData>.Ascending(app => app.FileExtension)
-                                                                : SortExpressionComparer<ApplicationData>.Descending(app => app.FileExtension),
-                ApplicationSort.Path            => IsAscending  ? SortExpressionComparer<ApplicationData>.Ascending(app => app.Path)
-                                                                : SortExpressionComparer<ApplicationData>.Descending(app => app.Path),
                 _ => null,
 #pragma warning restore IDE0055
             };
@@ -1549,13 +1548,7 @@ namespace Ryujinx.Ava.UI.ViewModels
         {
             ApplicationLibrary.LoadAndSaveMetaData(titleId, appMetadata =>
             {
-                if (appMetadata.LastPlayed.HasValue)
-                {
-                    double sessionTimePlayed = DateTime.UtcNow.Subtract(appMetadata.LastPlayed.Value).TotalSeconds;
-                    appMetadata.TimePlayed += Math.Round(sessionTimePlayed, MidpointRounding.AwayFromZero);
-                }
-
-                appMetadata.LastPlayed = DateTime.UtcNow;
+                appMetadata.UpdatePostGame();
             });
         }
 
