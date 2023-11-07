@@ -575,22 +575,15 @@ namespace Ryujinx.Cpu.Jit
             }
         }
 
-#pragma warning disable IDE0051 // Remove unused private member
-        private ulong GetPhysicalAddress(ulong va)
-        {
-            // We return -1L if the virtual address is invalid or unmapped.
-            if (!ValidateAddress(va) || !IsMapped(va))
-            {
-                return ulong.MaxValue;
-            }
-
-            return GetPhysicalAddressInternal(va);
-        }
-#pragma warning restore IDE0051
-
         private ulong GetPhysicalAddressInternal(ulong va)
         {
             return PteToPa(_pageTable.Read<ulong>((va / PageSize) * PteSize) & ~(0xffffUL << 48)) + (va & PageMask);
+        }
+
+        /// <inheritdoc/>
+        public void Reprotect(ulong va, ulong size, MemoryPermission protection)
+        {
+            // TODO
         }
 
         /// <inheritdoc/>
@@ -698,9 +691,5 @@ namespace Ryujinx.Cpu.Jit
         /// Disposes of resources used by the memory manager.
         /// </summary>
         protected override void Destroy() => _pageTable.Dispose();
-
-#pragma warning disable IDE0051 // Remove unused private member
-        private static void ThrowInvalidMemoryRegionException(string message) => throw new InvalidMemoryRegionException(message);
-#pragma warning restore IDE0051
     }
 }

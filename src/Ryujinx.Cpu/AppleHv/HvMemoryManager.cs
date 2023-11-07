@@ -128,21 +128,6 @@ namespace Ryujinx.Cpu.AppleHv
             }
         }
 
-#pragma warning disable IDE0051 // Remove unused private member
-        /// <summary>
-        /// Ensures the combination of virtual address and size is part of the addressable space and fully mapped.
-        /// </summary>
-        /// <param name="va">Virtual address of the range</param>
-        /// <param name="size">Size of the range in bytes</param>
-        private void AssertMapped(ulong va, ulong size)
-        {
-            if (!ValidateAddressAndSize(va, size) || !IsRangeMappedImpl(va, size))
-            {
-                throw new InvalidMemoryRegionException($"Not mapped: va=0x{va:X16}, size=0x{size:X16}");
-            }
-        }
-#pragma warning restore IDE0051
-
         /// <inheritdoc/>
         public void Map(ulong va, ulong pa, ulong size, MemoryMapFlags flags)
         {
@@ -734,6 +719,24 @@ namespace Ryujinx.Cpu.AppleHv
             ulong vaSpan = (va - startVa + size + PageMask) & ~(ulong)PageMask;
 
             return (int)(vaSpan / PageSize);
+        }
+
+        /// <inheritdoc/>
+        public void Reprotect(ulong va, ulong size, MemoryPermission protection)
+        {
+            if (protection.HasFlag(MemoryPermission.Execute))
+            {
+                // Some applications use unordered exclusive memory access instructions
+                // where it is not valid to do so, leading to memory re-ordering that
+                // makes the code behave incorrectly on some CPUs.
+                // To work around this, we force all such accesses to be ordered.
+
+                using WritableRegion writableRegion = GetWritableRegion(va, (int)size);
+
+                HvCodePatcher.RewriteUnorderedExclusiveInstructions(writableRegion.Memory.Span);
+            }
+
+            // TODO
         }
 
         /// <inheritdoc/>

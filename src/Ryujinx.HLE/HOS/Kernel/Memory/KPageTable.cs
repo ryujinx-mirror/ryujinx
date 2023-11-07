@@ -203,15 +203,17 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
         /// <inheritdoc/>
         protected override Result Reprotect(ulong address, ulong pagesCount, KMemoryPermission permission)
         {
-            // TODO.
+            _cpuMemory.Reprotect(address, pagesCount * PageSize, permission.Convert());
+
             return Result.Success;
         }
 
         /// <inheritdoc/>
-        protected override Result ReprotectWithAttributes(ulong address, ulong pagesCount, KMemoryPermission permission)
+        protected override Result ReprotectAndFlush(ulong address, ulong pagesCount, KMemoryPermission permission)
         {
-            // TODO.
-            return Result.Success;
+            // TODO: Flush JIT cache.
+
+            return Reprotect(address, pagesCount, permission);
         }
 
         /// <inheritdoc/>

@@ -616,6 +616,12 @@ namespace Ryujinx.Cpu.Jit
         }
 
         /// <inheritdoc/>
+        public void Reprotect(ulong va, ulong size, MemoryPermission protection)
+        {
+            // TODO
+        }
+
+        /// <inheritdoc/>
         public void TrackingReprotect(ulong va, ulong size, MemoryPermission protection)
         {
             // Protection is inverted on software pages, since the default value is 0.

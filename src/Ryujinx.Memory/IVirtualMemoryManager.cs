@@ -104,6 +104,12 @@ namespace Ryujinx.Memory
         /// <returns>True if the data was changed, false otherwise</returns>
         bool WriteWithRedundancyCheck(ulong va, ReadOnlySpan<byte> data);
 
+        /// <summary>
+        /// Fills the specified memory region with the value specified in <paramref name="value"/>.
+        /// </summary>
+        /// <param name="va">Virtual address to fill the value into</param>
+        /// <param name="size">Size of the memory region to fill</param>
+        /// <param name="value">Value to fill with</param>
         void Fill(ulong va, ulong size, byte value)
         {
             const int MaxChunkSize = 1 << 24;
@@ -193,6 +199,14 @@ namespace Ryujinx.Memory
         /// <param name="precise">True if the access is precise, false otherwise</param>
         /// <param name="exemptId">Optional ID of the handles that should not be signalled</param>
         void SignalMemoryTracking(ulong va, ulong size, bool write, bool precise = false, int? exemptId = null);
+
+        /// <summary>
+        /// Reprotect a region of virtual memory for guest access.
+        /// </summary>
+        /// <param name="va">Virtual address base</param>
+        /// <param name="size">Size of the region to protect</param>
+        /// <param name="protection">Memory protection to set</param>
+        void Reprotect(ulong va, ulong size, MemoryPermission protection);
 
         /// <summary>
         /// Reprotect a region of virtual memory for tracking.

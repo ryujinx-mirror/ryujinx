@@ -1255,7 +1255,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
                         if ((oldPermission & KMemoryPermission.Execute) != 0)
                         {
-                            result = ReprotectWithAttributes(address, pagesCount, permission);
+                            result = ReprotectAndFlush(address, pagesCount, permission);
                         }
                         else
                         {
@@ -3036,13 +3036,13 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
         protected abstract Result Reprotect(ulong address, ulong pagesCount, KMemoryPermission permission);
 
         /// <summary>
-        /// Changes the permissions of a given virtual memory region.
+        /// Changes the permissions of a given virtual memory region, while also flushing the cache.
         /// </summary>
         /// <param name="address">Virtual address of the region to have the permission changes</param>
         /// <param name="pagesCount">Number of pages to have their permissions changed</param>
         /// <param name="permission">New permission</param>
         /// <returns>Result of the permission change operation</returns>
-        protected abstract Result ReprotectWithAttributes(ulong address, ulong pagesCount, KMemoryPermission permission);
+        protected abstract Result ReprotectAndFlush(ulong address, ulong pagesCount, KMemoryPermission permission);
 
         /// <summary>
         /// Alerts the memory tracking that a given region has been read from or written to.

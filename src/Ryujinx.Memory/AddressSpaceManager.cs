@@ -456,6 +456,11 @@ namespace Ryujinx.Memory
         }
 
         /// <inheritdoc/>
+        public void Reprotect(ulong va, ulong size, MemoryPermission protection)
+        {
+        }
+
+        /// <inheritdoc/>
         public void TrackingReprotect(ulong va, ulong size, MemoryPermission protection)
         {
             throw new NotImplementedException();
