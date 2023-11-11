@@ -25,7 +25,7 @@ env:
 jobs:
   tag:
     name: Create tag
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - name: Get version info
         id: version_info
