@@ -12,6 +12,11 @@
         Click="ToggleFavorite_Click"
         Header="{locale:Locale GameListContextMenuToggleFavorite}"
         ToolTip.Tip="{locale:Locale GameListContextMenuToggleFavoriteToolTip}" />
+	<MenuItem
+		Click="CreateApplicationShortcut_Click"
+		Header="{locale:Locale GameListContextMenuCreateShortcut}"
+        IsEnabled="{Binding CreateShortcutEnabled}"
+		ToolTip.Tip="{locale:Locale GameListContextMenuCreateShortcutToolTip}" />
     <Separator />
     <MenuItem
         Click="OpenUserSaveDirectory_Click"
@@ -82,9 +87,4 @@
             Header="{locale:Locale GameListContextMenuExtractDataLogo}"
             ToolTip.Tip="{locale:Locale GameListContextMenuExtractDataLogoToolTip}" />
     </MenuItem>
-	<MenuItem
-		Click="CreateApplicationShortcut_Click"
-		Header="{locale:Locale GameListContextMenuCreateShortcut}"
-        IsEnabled="{Binding CreateShortcutEnabled}"
-		ToolTip.Tip="{locale:Locale GameListContextMenuCreateShortcutToolTip}" />
 </MenuFlyout>

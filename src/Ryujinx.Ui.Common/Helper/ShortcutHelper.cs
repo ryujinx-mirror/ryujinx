@@ -30,7 +30,7 @@ namespace Ryujinx.Ui.Common.Helper
             graphic.DrawImage(image, 0, 0, 128, 128);
             SaveBitmapAsIcon(bitmap, iconPath);
 
-            var shortcut = Shortcut.CreateShortcut(basePath, GetArgsString(basePath, applicationFilePath), iconPath, 0);
+            var shortcut = Shortcut.CreateShortcut(basePath, GetArgsString(applicationFilePath), iconPath, 0);
             shortcut.StringData.NameString = cleanedAppName;
             shortcut.WriteToFile(Path.Combine(desktopPath, cleanedAppName + ".lnk"));
         }
@@ -46,16 +46,16 @@ namespace Ryujinx.Ui.Common.Helper
             image.SaveAsPng(iconPath);
 
             using StreamWriter outputFile = new(Path.Combine(desktopPath, cleanedAppName + ".desktop"));
-            outputFile.Write(desktopFile, cleanedAppName, iconPath, GetArgsString(basePath, applicationFilePath));
+            outputFile.Write(desktopFile, cleanedAppName, iconPath, $"{basePath} {GetArgsString(applicationFilePath)}");
         }
 
         [SupportedOSPlatform("macos")]
         private static void CreateShortcutMacos(string appFilePath, byte[] iconData, string desktopPath, string cleanedAppName)
         {
-            string basePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, AppDomain.CurrentDomain.FriendlyName);
+            string basePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Ryujinx");
             var plistFile = EmbeddedResources.ReadAllText("Ryujinx.Ui.Common/shortcut-template.plist");
             // Macos .App folder
-            string contentFolderPath = Path.Combine(desktopPath, cleanedAppName + ".app", "Contents");
+            string contentFolderPath = Path.Combine("/Applications", cleanedAppName + ".app", "Contents");
             string scriptFolderPath = Path.Combine(contentFolderPath, "MacOS");
 
             if (!Directory.Exists(scriptFolderPath))
@@ -69,7 +69,7 @@ namespace Ryujinx.Ui.Common.Helper
             using StreamWriter scriptFile = new(scriptPath);
 
             scriptFile.WriteLine("#!/bin/sh");
-            scriptFile.WriteLine(GetArgsString(basePath, appFilePath));
+            scriptFile.WriteLine($"{basePath} {GetArgsString(appFilePath)}");
 
             // Set execute permission
             FileInfo fileInfo = new(scriptPath);
@@ -125,13 +125,10 @@ namespace Ryujinx.Ui.Common.Helper
             throw new NotImplementedException("Shortcut support has not been implemented yet for this OS.");
         }
 
-        private static string GetArgsString(string basePath, string appFilePath)
+        private static string GetArgsString(string appFilePath)
         {
             // args are first defined as a list, for easier adjustments in the future
-            var argsList = new List<string>
-            {
-                basePath,
-            };
+            var argsList = new List<string>();
 
             if (!string.IsNullOrEmpty(CommandLineState.BaseDirPathArg))
             {
@@ -140,7 +137,6 @@ namespace Ryujinx.Ui.Common.Helper
             }
 
             argsList.Add($"\"{appFilePath}\"");
-
 
             return String.Join(" ", argsList);
         }

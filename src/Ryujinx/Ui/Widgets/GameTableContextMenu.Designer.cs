@@ -211,6 +211,8 @@ namespace Ryujinx.Ui.Widgets
             _manageSubMenu.Append(_openPtcDirMenuItem);
             _manageSubMenu.Append(_openShaderCacheDirMenuItem);
 
+            Add(_createShortcutMenuItem);
+            Add(new SeparatorMenuItem());
             Add(_openSaveUserDirMenuItem);
             Add(_openSaveDeviceDirMenuItem);
             Add(_openSaveBcatDirMenuItem);
@@ -223,7 +225,6 @@ namespace Ryujinx.Ui.Widgets
             Add(new SeparatorMenuItem());
             Add(_manageCacheMenuItem);
             Add(_extractMenuItem);
-            Add(_createShortcutMenuItem);
 
             ShowAll();
         }
