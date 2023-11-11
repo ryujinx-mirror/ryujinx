@@ -7,15 +7,15 @@ using Ryujinx.Ava.UI.Helpers;
 using Ryujinx.Ava.UI.Models;
 using Ryujinx.Ava.UI.ViewModels;
 using Ryujinx.HLE.FileSystem;
+using Ryujinx.Ui.App.Common;
 using Ryujinx.Ui.Common.Helper;
 using System.Threading.Tasks;
-using Button = Avalonia.Controls.Button;
 
 namespace Ryujinx.Ava.UI.Windows
 {
     public partial class TitleUpdateWindow : UserControl
     {
-        public TitleUpdateViewModel ViewModel;
+        public readonly TitleUpdateViewModel ViewModel;
 
         public TitleUpdateWindow()
         {
@@ -24,22 +24,22 @@ namespace Ryujinx.Ava.UI.Windows
             InitializeComponent();
         }
 
-        public TitleUpdateWindow(VirtualFileSystem virtualFileSystem, ulong titleId)
+        public TitleUpdateWindow(VirtualFileSystem virtualFileSystem, ApplicationData applicationData)
         {
-            DataContext = ViewModel = new TitleUpdateViewModel(virtualFileSystem, titleId);
+            DataContext = ViewModel = new TitleUpdateViewModel(virtualFileSystem, applicationData);
 
             InitializeComponent();
         }
 
-        public static async Task Show(VirtualFileSystem virtualFileSystem, ulong titleId, string titleName)
+        public static async Task Show(VirtualFileSystem virtualFileSystem, ApplicationData applicationData)
         {
             ContentDialog contentDialog = new()
             {
                 PrimaryButtonText = "",
                 SecondaryButtonText = "",
                 CloseButtonText = "",
-                Content = new TitleUpdateWindow(virtualFileSystem, titleId),
-                Title = LocaleManager.Instance.UpdateAndGetDynamicValue(LocaleKeys.GameUpdateWindowHeading, titleName, titleId.ToString("X16")),
+                Content = new TitleUpdateWindow(virtualFileSystem, applicationData),
+                Title = LocaleManager.Instance.UpdateAndGetDynamicValue(LocaleKeys.GameUpdateWindowHeading, applicationData.Name, applicationData.IdString),
             };
 
             Style bottomBorder = new(x => x.OfType<Grid>().Name("DialogSpace").Child().OfType<Border>());

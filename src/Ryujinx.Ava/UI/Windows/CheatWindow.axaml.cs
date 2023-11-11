@@ -1,9 +1,11 @@
 ﻿using Avalonia.Collections;
+using LibHac.Tools.FsSystem;
 using Ryujinx.Ava.Common.Locale;
 using Ryujinx.Ava.UI.Models;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.HOS;
 using Ryujinx.Ui.App.Common;
+using Ryujinx.Ui.Common.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -34,9 +36,12 @@ namespace Ryujinx.Ava.UI.Windows
         public CheatWindow(VirtualFileSystem virtualFileSystem, string titleId, string titleName, string titlePath)
         {
             LoadedCheats = new AvaloniaList<CheatsList>();
+            IntegrityCheckLevel checkLevel = ConfigurationState.Instance.System.EnableFsIntegrityChecks
+                ? IntegrityCheckLevel.ErrorOnInvalid
+                : IntegrityCheckLevel.None;
 
             Heading = LocaleManager.Instance.UpdateAndGetDynamicValue(LocaleKeys.CheatWindowHeading, titleName, titleId.ToUpper());
-            BuildId = ApplicationData.GetApplicationBuildId(virtualFileSystem, titlePath);
+            BuildId = ApplicationData.GetBuildId(virtualFileSystem, checkLevel, titlePath);
 
             InitializeComponent();
 

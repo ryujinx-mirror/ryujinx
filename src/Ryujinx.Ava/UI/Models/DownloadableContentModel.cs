@@ -1,4 +1,5 @@
-﻿using Ryujinx.Ava.UI.ViewModels;
+﻿using Ryujinx.Ava.Common.Locale;
+using Ryujinx.Ava.UI.ViewModels;
 using System.IO;
 
 namespace Ryujinx.Ava.UI.Models
@@ -23,6 +24,9 @@ namespace Ryujinx.Ava.UI.Models
         public string FullPath { get; }
 
         public string FileName => Path.GetFileName(ContainerPath);
+
+        public string Label =>
+            Path.GetExtension(FileName)?.ToLower() == ".xci" ? $"{LocaleManager.Instance[LocaleKeys.TitleBundledDlcLabel]} {FileName}" : FileName;
 
         public DownloadableContentModel(string titleId, string containerPath, string fullPath, bool enabled)
         {
