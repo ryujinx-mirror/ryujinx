@@ -16,7 +16,6 @@ using Ryujinx.Common.Logging;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.HOS;
 using Ryujinx.HLE.HOS.Services.Account.Acc;
-using Ryujinx.HLE.Loaders.Processes.Extensions;
 using Ryujinx.Ui.App.Common;
 using Ryujinx.Ui.Common.Configuration;
 using Ryujinx.Ui.Common.Helper;
@@ -24,6 +23,7 @@ using Ryujinx.Ui.Windows;
 using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Reflection;
 using System.Threading;
@@ -36,13 +36,17 @@ namespace Ryujinx.Ui.Widgets
         private readonly VirtualFileSystem _virtualFileSystem;
         private readonly AccountManager _accountManager;
         private readonly HorizonClient _horizonClient;
+        private readonly BlitStruct<ApplicationControlProperty> _controlData;
 
-        private readonly ApplicationData _title;
+        private readonly string _titleFilePath;
+        private readonly string _titleName;
+        private readonly string _titleIdText;
+        private readonly ulong _titleId;
 
         private MessageDialog _dialog;
         private bool _cancel;
 
-        public GameTableContextMenu(MainWindow parent, VirtualFileSystem virtualFileSystem, AccountManager accountManager, HorizonClient horizonClient, ApplicationData applicationData)
+        public GameTableContextMenu(MainWindow parent, VirtualFileSystem virtualFileSystem, AccountManager accountManager, HorizonClient horizonClient, string titleFilePath, string titleName, string titleId, BlitStruct<ApplicationControlProperty> controlData)
         {
             _parent = parent;
 
@@ -51,13 +55,23 @@ namespace Ryujinx.Ui.Widgets
             _virtualFileSystem = virtualFileSystem;
             _accountManager = accountManager;
             _horizonClient = horizonClient;
-            _title = applicationData;
+            _titleFilePath = titleFilePath;
+            _titleName = titleName;
+            _titleIdText = titleId;
+            _controlData = controlData;
 
-            _openSaveUserDirMenuItem.Sensitive = !Utilities.IsZeros(_title.ControlHolder.ByteSpan) && _title.ControlHolder.Value.UserAccountSaveDataSize > 0;
-            _openSaveDeviceDirMenuItem.Sensitive = !Utilities.IsZeros(_title.ControlHolder.ByteSpan) && _title.ControlHolder.Value.DeviceSaveDataSize > 0;
-            _openSaveBcatDirMenuItem.Sensitive = !Utilities.IsZeros(_title.ControlHolder.ByteSpan) && _title.ControlHolder.Value.BcatDeliveryCacheStorageSize > 0;
+            if (!ulong.TryParse(_titleIdText, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out _titleId))
+            {
+                GtkDialog.CreateErrorDialog("The selected game did not have a valid Title Id");
 
-            string fileExt = System.IO.Path.GetExtension(_title.Path).ToLower();
+                return;
+            }
+
+            _openSaveUserDirMenuItem.Sensitive = !Utilities.IsZeros(controlData.ByteSpan) && controlData.Value.UserAccountSaveDataSize > 0;
+            _openSaveDeviceDirMenuItem.Sensitive = !Utilities.IsZeros(controlData.ByteSpan) && controlData.Value.DeviceSaveDataSize > 0;
+            _openSaveBcatDirMenuItem.Sensitive = !Utilities.IsZeros(controlData.ByteSpan) && controlData.Value.BcatDeliveryCacheStorageSize > 0;
+
+            string fileExt = System.IO.Path.GetExtension(_titleFilePath).ToLower();
             bool hasNca = fileExt == ".nca" || fileExt == ".nsp" || fileExt == ".pfs0" || fileExt == ".xci";
 
             _extractRomFsMenuItem.Sensitive = hasNca;
@@ -123,7 +137,7 @@ namespace Ryujinx.Ui.Widgets
 
         private void OpenSaveDir(in SaveDataFilter saveDataFilter)
         {
-            if (!TryFindSaveData(_title.Name, _title.Id, _title.ControlHolder, in saveDataFilter, out ulong saveDataId))
+            if (!TryFindSaveData(_titleName, _titleId, _controlData, in saveDataFilter, out ulong saveDataId))
             {
                 return;
             }
@@ -176,7 +190,7 @@ namespace Ryujinx.Ui.Widgets
                         {
                             Title = "Ryujinx - NCA Section Extractor",
                             Icon = new Gdk.Pixbuf(Assembly.GetAssembly(typeof(ConfigurationState)), "Ryujinx.Ui.Common.Resources.Logo_Ryujinx.png"),
-                            SecondaryText = $"Extracting {ncaSectionType} section from {System.IO.Path.GetFileName(_title.Path)}...",
+                            SecondaryText = $"Extracting {ncaSectionType} section from {System.IO.Path.GetFileName(_titleFilePath)}...",
                             WindowPosition = WindowPosition.Center,
                         };
 
@@ -188,18 +202,18 @@ namespace Ryujinx.Ui.Widgets
                         }
                     });
 
-                    using FileStream file = new(_title.Path, FileMode.Open, FileAccess.Read);
+                    using FileStream file = new(_titleFilePath, FileMode.Open, FileAccess.Read);
 
                     Nca mainNca = null;
                     Nca patchNca = null;
 
-                    if ((System.IO.Path.GetExtension(_title.Path).ToLower() == ".nsp") ||
-                        (System.IO.Path.GetExtension(_title.Path).ToLower() == ".pfs0") ||
-                        (System.IO.Path.GetExtension(_title.Path).ToLower() == ".xci"))
+                    if ((System.IO.Path.GetExtension(_titleFilePath).ToLower() == ".nsp") ||
+                        (System.IO.Path.GetExtension(_titleFilePath).ToLower() == ".pfs0") ||
+                        (System.IO.Path.GetExtension(_titleFilePath).ToLower() == ".xci"))
                     {
                         IFileSystem pfs;
 
-                        if (System.IO.Path.GetExtension(_title.Path).ToLower() == ".xci")
+                        if (System.IO.Path.GetExtension(_titleFilePath) == ".xci")
                         {
                             Xci xci = new(_virtualFileSystem.KeySet, file.AsStorage());
 
@@ -235,7 +249,7 @@ namespace Ryujinx.Ui.Widgets
                             }
                         }
                     }
-                    else if (System.IO.Path.GetExtension(_title.Path).ToLower() == ".nca")
+                    else if (System.IO.Path.GetExtension(_titleFilePath).ToLower() == ".nca")
                     {
                         mainNca = new Nca(_virtualFileSystem.KeySet, file.AsStorage());
                     }
@@ -252,11 +266,7 @@ namespace Ryujinx.Ui.Widgets
                         return;
                     }
 
-                    IntegrityCheckLevel checkLevel = ConfigurationState.Instance.System.EnableFsIntegrityChecks
-                        ? IntegrityCheckLevel.ErrorOnInvalid
-                        : IntegrityCheckLevel.None;
-
-                    (Nca updatePatchNca, _) = mainNca.GetUpdateData(_virtualFileSystem, checkLevel, programIndex, out _);
+                    (Nca updatePatchNca, _) = ApplicationLibrary.GetGameUpdateData(_virtualFileSystem, mainNca.Header.TitleId.ToString("x16"), programIndex, out _);
 
                     if (updatePatchNca != null)
                     {
@@ -450,44 +460,44 @@ namespace Ryujinx.Ui.Widgets
         private void OpenSaveUserDir_Clicked(object sender, EventArgs args)
         {
             var userId = new LibHac.Fs.UserId((ulong)_accountManager.LastOpenedUser.UserId.High, (ulong)_accountManager.LastOpenedUser.UserId.Low);
-            var saveDataFilter = SaveDataFilter.Make(_title.Id, saveType: default, userId, saveDataId: default, index: default);
+            var saveDataFilter = SaveDataFilter.Make(_titleId, saveType: default, userId, saveDataId: default, index: default);
 
             OpenSaveDir(in saveDataFilter);
         }
 
         private void OpenSaveDeviceDir_Clicked(object sender, EventArgs args)
         {
-            var saveDataFilter = SaveDataFilter.Make(_title.Id, SaveDataType.Device, userId: default, saveDataId: default, index: default);
+            var saveDataFilter = SaveDataFilter.Make(_titleId, SaveDataType.Device, userId: default, saveDataId: default, index: default);
 
             OpenSaveDir(in saveDataFilter);
         }
 
         private void OpenSaveBcatDir_Clicked(object sender, EventArgs args)
         {
-            var saveDataFilter = SaveDataFilter.Make(_title.Id, SaveDataType.Bcat, userId: default, saveDataId: default, index: default);
+            var saveDataFilter = SaveDataFilter.Make(_titleId, SaveDataType.Bcat, userId: default, saveDataId: default, index: default);
 
             OpenSaveDir(in saveDataFilter);
         }
 
         private void ManageTitleUpdates_Clicked(object sender, EventArgs args)
         {
-            new TitleUpdateWindow(_parent, _virtualFileSystem, _title).Show();
+            new TitleUpdateWindow(_parent, _virtualFileSystem, _titleIdText, _titleName).Show();
         }
 
         private void ManageDlc_Clicked(object sender, EventArgs args)
         {
-            new DlcWindow(_virtualFileSystem, _title.IdString, _title).Show();
+            new DlcWindow(_virtualFileSystem, _titleIdText, _titleName).Show();
         }
 
         private void ManageCheats_Clicked(object sender, EventArgs args)
         {
-            new CheatWindow(_virtualFileSystem, _title.Id, _title.Name, _title.Path).Show();
+            new CheatWindow(_virtualFileSystem, _titleId, _titleName, _titleFilePath).Show();
         }
 
         private void OpenTitleModDir_Clicked(object sender, EventArgs args)
         {
             string modsBasePath = ModLoader.GetModsBasePath();
-            string titleModsPath = ModLoader.GetTitleDir(modsBasePath, _title.IdString);
+            string titleModsPath = ModLoader.GetTitleDir(modsBasePath, _titleIdText);
 
             OpenHelper.OpenFolder(titleModsPath);
         }
@@ -495,7 +505,7 @@ namespace Ryujinx.Ui.Widgets
         private void OpenTitleSdModDir_Clicked(object sender, EventArgs args)
         {
             string sdModsBasePath = ModLoader.GetSdModsBasePath();
-            string titleModsPath = ModLoader.GetTitleDir(sdModsBasePath, _title.IdString);
+            string titleModsPath = ModLoader.GetTitleDir(sdModsBasePath, _titleIdText);
 
             OpenHelper.OpenFolder(titleModsPath);
         }
@@ -517,7 +527,7 @@ namespace Ryujinx.Ui.Widgets
 
         private void OpenPtcDir_Clicked(object sender, EventArgs args)
         {
-            string ptcDir = System.IO.Path.Combine(AppDataManager.GamesDirPath, _title.IdString, "cache", "cpu");
+            string ptcDir = System.IO.Path.Combine(AppDataManager.GamesDirPath, _titleIdText, "cache", "cpu");
 
             string mainPath = System.IO.Path.Combine(ptcDir, "0");
             string backupPath = System.IO.Path.Combine(ptcDir, "1");
@@ -534,7 +544,7 @@ namespace Ryujinx.Ui.Widgets
 
         private void OpenShaderCacheDir_Clicked(object sender, EventArgs args)
         {
-            string shaderCacheDir = System.IO.Path.Combine(AppDataManager.GamesDirPath, _title.IdString, "cache", "shader");
+            string shaderCacheDir = System.IO.Path.Combine(AppDataManager.GamesDirPath, _titleIdText, "cache", "shader");
 
             if (!Directory.Exists(shaderCacheDir))
             {
@@ -546,10 +556,10 @@ namespace Ryujinx.Ui.Widgets
 
         private void PurgePtcCache_Clicked(object sender, EventArgs args)
         {
-            DirectoryInfo mainDir = new(System.IO.Path.Combine(AppDataManager.GamesDirPath, _title.IdString, "cache", "cpu", "0"));
-            DirectoryInfo backupDir = new(System.IO.Path.Combine(AppDataManager.GamesDirPath, _title.IdString, "cache", "cpu", "1"));
+            DirectoryInfo mainDir = new(System.IO.Path.Combine(AppDataManager.GamesDirPath, _titleIdText, "cache", "cpu", "0"));
+            DirectoryInfo backupDir = new(System.IO.Path.Combine(AppDataManager.GamesDirPath, _titleIdText, "cache", "cpu", "1"));
 
-            MessageDialog warningDialog = GtkDialog.CreateConfirmationDialog("Warning", $"You are about to queue a PPTC rebuild on the next boot of:\n\n<b>{_title.Name}</b>\n\nAre you sure you want to proceed?");
+            MessageDialog warningDialog = GtkDialog.CreateConfirmationDialog("Warning", $"You are about to queue a PPTC rebuild on the next boot of:\n\n<b>{_titleName}</b>\n\nAre you sure you want to proceed?");
 
             List<FileInfo> cacheFiles = new();
 
@@ -583,9 +593,9 @@ namespace Ryujinx.Ui.Widgets
 
         private void PurgeShaderCache_Clicked(object sender, EventArgs args)
         {
-            DirectoryInfo shaderCacheDir = new(System.IO.Path.Combine(AppDataManager.GamesDirPath, _title.IdString, "cache", "shader"));
+            DirectoryInfo shaderCacheDir = new(System.IO.Path.Combine(AppDataManager.GamesDirPath, _titleIdText, "cache", "shader"));
 
-            using MessageDialog warningDialog = GtkDialog.CreateConfirmationDialog("Warning", $"You are about to delete the shader cache for :\n\n<b>{_title.Name}</b>\n\nAre you sure you want to proceed?");
+            using MessageDialog warningDialog = GtkDialog.CreateConfirmationDialog("Warning", $"You are about to delete the shader cache for :\n\n<b>{_titleName}</b>\n\nAre you sure you want to proceed?");
 
             List<DirectoryInfo> oldCacheDirectories = new();
             List<FileInfo> newCacheFiles = new();
@@ -627,11 +637,8 @@ namespace Ryujinx.Ui.Widgets
 
         private void CreateShortcut_Clicked(object sender, EventArgs args)
         {
-            IntegrityCheckLevel checkLevel = ConfigurationState.Instance.System.EnableFsIntegrityChecks
-                ? IntegrityCheckLevel.ErrorOnInvalid
-                : IntegrityCheckLevel.None;
-            byte[] appIcon = new ApplicationLibrary(_virtualFileSystem, checkLevel).GetApplicationIcon(_title.Path, ConfigurationState.Instance.System.Language, _title.Id);
-            ShortcutHelper.CreateAppShortcut(_title.Path, _title.Name, _title.IdString, appIcon);
+            byte[] appIcon = new ApplicationLibrary(_virtualFileSystem).GetApplicationIcon(_titleFilePath, ConfigurationState.Instance.System.Language);
+            ShortcutHelper.CreateAppShortcut(_titleFilePath, _titleName, _titleIdText, appIcon);
         }
     }
 }

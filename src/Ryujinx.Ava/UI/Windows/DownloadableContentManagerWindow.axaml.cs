@@ -7,9 +7,9 @@ using Ryujinx.Ava.UI.Helpers;
 using Ryujinx.Ava.UI.Models;
 using Ryujinx.Ava.UI.ViewModels;
 using Ryujinx.HLE.FileSystem;
-using Ryujinx.Ui.App.Common;
 using Ryujinx.Ui.Common.Helper;
 using System.Threading.Tasks;
+using Button = Avalonia.Controls.Button;
 
 namespace Ryujinx.Ava.UI.Windows
 {
@@ -24,22 +24,22 @@ namespace Ryujinx.Ava.UI.Windows
             InitializeComponent();
         }
 
-        public DownloadableContentManagerWindow(VirtualFileSystem virtualFileSystem, ApplicationData applicationData)
+        public DownloadableContentManagerWindow(VirtualFileSystem virtualFileSystem, ulong titleId)
         {
-            DataContext = ViewModel = new DownloadableContentManagerViewModel(virtualFileSystem, applicationData);
+            DataContext = ViewModel = new DownloadableContentManagerViewModel(virtualFileSystem, titleId);
 
             InitializeComponent();
         }
 
-        public static async Task Show(VirtualFileSystem virtualFileSystem, ApplicationData applicationData)
+        public static async Task Show(VirtualFileSystem virtualFileSystem, ulong titleId, string titleName)
         {
             ContentDialog contentDialog = new()
             {
                 PrimaryButtonText = "",
                 SecondaryButtonText = "",
                 CloseButtonText = "",
-                Content = new DownloadableContentManagerWindow(virtualFileSystem, applicationData),
-                Title = string.Format(LocaleManager.Instance[LocaleKeys.DlcWindowTitle], applicationData.Name, applicationData.IdString),
+                Content = new DownloadableContentManagerWindow(virtualFileSystem, titleId),
+                Title = string.Format(LocaleManager.Instance[LocaleKeys.DlcWindowTitle], titleName, titleId.ToString("X16")),
             };
 
             Style bottomBorder = new(x => x.OfType<Grid>().Name("DialogSpace").Child().OfType<Border>());

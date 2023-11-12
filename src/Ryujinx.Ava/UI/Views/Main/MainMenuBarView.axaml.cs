@@ -10,7 +10,6 @@ using Ryujinx.Ava.UI.Windows;
 using Ryujinx.Common;
 using Ryujinx.Common.Utilities;
 using Ryujinx.Modules;
-using Ryujinx.Ui.App.Common;
 using Ryujinx.Ui.Common;
 using Ryujinx.Ui.Common.Configuration;
 using Ryujinx.Ui.Common.Helper;
@@ -132,14 +131,7 @@ namespace Ryujinx.Ava.UI.Views.Main
 
             if (!string.IsNullOrEmpty(contentPath))
             {
-                ApplicationData applicationData = new()
-                {
-                    Name = "miiEdit",
-                    Id = 0x0100000000001009,
-                    Path = contentPath,
-                };
-
-                await ViewModel.LoadApplication(applicationData, ViewModel.IsFullScreen || ViewModel.StartGamesInFullscreen);
+                await ViewModel.LoadApplication(contentPath, false, "Mii Applet");
             }
         }
 

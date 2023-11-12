@@ -42,14 +42,15 @@ namespace Ryujinx.HLE.Loaders.Processes
 
             foreach (DirectoryEntryEx fileEntry in partitionFileSystem.EnumerateEntries("/", "*.nca"))
             {
-                Nca nca = partitionFileSystem.GetNca(device.FileSystem.KeySet, fileEntry.FullPath);
+                Nca nca = partitionFileSystem.GetNca(device, fileEntry.FullPath);
 
-                if (!nca.IsProgram())
+                if (!nca.IsProgram() && nca.IsPatch())
                 {
                     continue;
                 }
 
-                ulong currentMainProgramId = nca.GetProgramIdBase();
+                ulong currentProgramId = nca.Header.TitleId;
+                ulong currentMainProgramId = currentProgramId & ~0xFFFul;
 
                 if (applicationId == 0 && currentMainProgramId != 0)
                 {
@@ -66,7 +67,7 @@ namespace Ryujinx.HLE.Loaders.Processes
                     break;
                 }
 
-                hasIndex[nca.GetProgramIndex()] = true;
+                hasIndex[(int)(currentProgramId & 0xF)] = true;
             }
 
             if (programCount == 0)

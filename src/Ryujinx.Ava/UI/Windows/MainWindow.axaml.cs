@@ -4,7 +4,6 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 using FluentAvalonia.UI.Controls;
-using LibHac.Tools.FsSystem;
 using Ryujinx.Ava.Common;
 using Ryujinx.Ava.Common.Locale;
 using Ryujinx.Ava.Input;
@@ -24,6 +23,7 @@ using Ryujinx.Ui.Common;
 using Ryujinx.Ui.Common.Configuration;
 using Ryujinx.Ui.Common.Helper;
 using System;
+using System.IO;
 using System.Runtime.Versioning;
 using System.Threading;
 using System.Threading.Tasks;
@@ -139,7 +139,9 @@ namespace Ryujinx.Ava.UI.Windows
             {
                 ViewModel.SelectedIcon = args.Application.Icon;
 
-                ViewModel.LoadApplication(args.Application).Wait();
+                string path = new FileInfo(args.Application.Path).FullName;
+
+                ViewModel.LoadApplication(path).Wait();
             }
 
             args.Handled = true;
@@ -188,11 +190,7 @@ namespace Ryujinx.Ava.UI.Windows
             LibHacHorizonManager.InitializeBcatServer();
             LibHacHorizonManager.InitializeSystemClients();
 
-            IntegrityCheckLevel checkLevel = ConfigurationState.Instance.System.EnableFsIntegrityChecks
-                ? IntegrityCheckLevel.ErrorOnInvalid
-                : IntegrityCheckLevel.None;
-
-            ApplicationLibrary = new ApplicationLibrary(VirtualFileSystem, checkLevel);
+            ApplicationLibrary = new ApplicationLibrary(VirtualFileSystem);
 
             // Save data created before we supported extra data in directory save data will not work properly if
             // given empty extra data. Luckily some of that extra data can be created using the data from the
@@ -299,12 +297,7 @@ namespace Ryujinx.Ava.UI.Windows
                 {
                     _deferLoad = false;
 
-                    ApplicationData applicationData = new()
-                    {
-                        Path = _launchPath,
-                    };
-
-                    ViewModel.LoadApplication(applicationData, _startFullscreen).Wait();
+                    ViewModel.LoadApplication(_launchPath, _startFullscreen).Wait();
                 }
             }
             else

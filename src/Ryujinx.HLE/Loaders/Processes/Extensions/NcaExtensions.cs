@@ -2,31 +2,21 @@
 using LibHac.Common;
 using LibHac.Fs;
 using LibHac.Fs.Fsa;
-using LibHac.FsSystem;
 using LibHac.Loader;
 using LibHac.Ncm;
 using LibHac.Ns;
-using LibHac.Tools.Fs;
 using LibHac.Tools.FsSystem;
 using LibHac.Tools.FsSystem.NcaUtils;
-using LibHac.Tools.Ncm;
-using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Logging;
-using Ryujinx.Common.Utilities;
-using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.HOS;
 using System.IO;
 using System.Linq;
 using ApplicationId = LibHac.Ncm.ApplicationId;
-using ContentType = LibHac.Ncm.ContentType;
-using Path = System.IO.Path;
 
 namespace Ryujinx.HLE.Loaders.Processes.Extensions
 {
-    public static class NcaExtensions
+    static class NcaExtensions
     {
-        private static readonly TitleUpdateMetadataJsonSerializerContext _titleSerializerContext = new(JsonHelper.GetDefaultSerializerOptions());
-
         public static ProcessResult Load(this Nca nca, Switch device, Nca patchNca, Nca controlNca)
         {
             // Extract RomFs and ExeFs from NCA.
@@ -57,7 +47,7 @@ namespace Ryujinx.HLE.Loaders.Processes.Extensions
                 nacpData = controlNca.GetNacp(device);
             }
 
-            /* TODO: Rework this since it's wrong and doesn't work as it takes the DisplayVersion from a "potential" non-existent update.
+            /* TODO: Rework this since it's wrong and doesn't work as it takes the DisplayVersion from a "potential" inexistant update.
 
             // Load program 0 control NCA as we are going to need it for display version.
             (_, Nca updateProgram0ControlNca) = GetGameUpdateData(_device.Configuration.VirtualFileSystem, mainNca.Header.TitleId.ToString("x16"), 0, out _);
@@ -96,11 +86,6 @@ namespace Ryujinx.HLE.Loaders.Processes.Extensions
             return processResult;
         }
 
-        public static ulong GetProgramIdBase(this Nca nca)
-        {
-            return nca.Header.TitleId & ~0x1FFFUL;
-        }
-
         public static int GetProgramIndex(this Nca nca)
         {
             return (int)(nca.Header.TitleId & 0xF);
@@ -109,11 +94,6 @@ namespace Ryujinx.HLE.Loaders.Processes.Extensions
         public static bool IsProgram(this Nca nca)
         {
             return nca.Header.ContentType == NcaContentType.Program;
-        }
-
-        public static bool IsMain(this Nca nca)
-        {
-            return nca.IsProgram() && !nca.IsPatch();
         }
 
         public static bool IsPatch(this Nca nca)
@@ -126,56 +106,6 @@ namespace Ryujinx.HLE.Loaders.Processes.Extensions
         public static bool IsControl(this Nca nca)
         {
             return nca.Header.ContentType == NcaContentType.Control;
-        }
-
-        public static (Nca, Nca) GetUpdateData(this Nca mainNca, VirtualFileSystem fileSystem, IntegrityCheckLevel checkLevel, int programIndex, out string updatePath)
-        {
-            updatePath = "(unknown)";
-
-            // Load Update NCAs.
-            Nca updatePatchNca = null;
-            Nca updateControlNca = null;
-
-            // Clear the program index part.
-            ulong titleIdBase = mainNca.GetProgramIdBase();
-
-            // Load update information if exists.
-            string titleUpdateMetadataPath = Path.Combine(AppDataManager.GamesDirPath, mainNca.Header.TitleId.ToString("x16"), "updates.json");
-            if (File.Exists(titleUpdateMetadataPath))
-            {
-                updatePath = JsonHelper.DeserializeFromFile(titleUpdateMetadataPath, _titleSerializerContext.TitleUpdateMetadata).Selected;
-                if (File.Exists(updatePath))
-                {
-                    var updateFile = new FileStream(updatePath, FileMode.Open, FileAccess.Read);
-
-                    IFileSystem updatePartitionFileSystem;
-
-                    if (Path.GetExtension(updatePath).ToLower() == ".xci")
-                    {
-                        updatePartitionFileSystem = new Xci(fileSystem.KeySet, updateFile.AsStorage()).OpenPartition(XciPartitionType.Secure);
-                    }
-                    else
-                    {
-                        PartitionFileSystem pfsTemp = new();
-                        pfsTemp.Initialize(updateFile.AsStorage()).ThrowIfFailure();
-                        updatePartitionFileSystem = pfsTemp;
-                    }
-
-                    foreach ((ulong updateTitleId, ContentCollection content) in updatePartitionFileSystem.GetUpdateData(fileSystem, checkLevel))
-                    {
-                        if ((updateTitleId & ~0x1FFFUL) != titleIdBase)
-                        {
-                            continue;
-                        }
-
-                        updatePatchNca = content.GetNcaByType(fileSystem.KeySet, ContentType.Program, programIndex);
-                        updateControlNca = content.GetNcaByType(fileSystem.KeySet, ContentType.Control, programIndex);
-                        break;
-                    }
-                }
-            }
-
-            return (updatePatchNca, updateControlNca);
         }
 
         public static IFileSystem GetExeFs(this Nca nca, Switch device, Nca patchNca = null)
@@ -241,32 +171,6 @@ namespace Ryujinx.HLE.Loaders.Processes.Extensions
             }
 
             return nacpData;
-        }
-
-        public static Cnmt GetCnmt(this Nca cnmtNca, IntegrityCheckLevel checkLevel, ContentMetaType metaType)
-        {
-            string path = $"/{metaType}_{cnmtNca.Header.TitleId:x16}.cnmt";
-            using var cnmtFile = new UniqueRef<IFile>();
-
-            try
-            {
-                Result result = cnmtNca.OpenFileSystem(0, checkLevel)
-                                       .OpenFile(ref cnmtFile.Ref, path.ToU8Span(), OpenMode.Read);
-
-                if (result.IsSuccess())
-                {
-                    return new Cnmt(cnmtFile.Release().AsStream());
-                }
-            }
-            catch (HorizonResultException ex)
-            {
-                if (!ResultFs.PathNotFound.Includes(ex.ResultValue))
-                {
-                    Logger.Warning?.Print(LogClass.Application, $"Failed get cnmt for '{cnmtNca.Header.TitleId:x16}' from nca: {ex.Message}");
-                }
-            }
-
-            return null;
         }
     }
 }

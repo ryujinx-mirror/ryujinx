@@ -1,3 +1,4 @@
+using Avalonia;
 using Avalonia.Collections;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Platform.Storage;
@@ -7,7 +8,6 @@ using LibHac.Fs;
 using LibHac.Fs.Fsa;
 using LibHac.FsSystem;
 using LibHac.Ns;
-using LibHac.Tools.Fs;
 using LibHac.Tools.FsSystem;
 using LibHac.Tools.FsSystem.NcaUtils;
 using Ryujinx.Ava.Common.Locale;
@@ -17,16 +17,12 @@ using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Logging;
 using Ryujinx.Common.Utilities;
 using Ryujinx.HLE.FileSystem;
-using Ryujinx.HLE.Loaders.Processes.Extensions;
 using Ryujinx.Ui.App.Common;
-using Ryujinx.Ui.Common.Configuration;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Application = Avalonia.Application;
-using ContentType = LibHac.Ncm.ContentType;
 using Path = System.IO.Path;
 using SpanHelpers = LibHac.Common.SpanHelpers;
 
@@ -37,7 +33,7 @@ namespace Ryujinx.Ava.UI.ViewModels
         public TitleUpdateMetadata TitleUpdateWindowData;
         public readonly string TitleUpdateJsonPath;
         private VirtualFileSystem VirtualFileSystem { get; }
-        private ApplicationData ApplicationData { get; }
+        private ulong TitleId { get; }
 
         private AvaloniaList<TitleUpdateModel> _titleUpdates = new();
         private AvaloniaList<object> _views = new();
@@ -77,18 +73,18 @@ namespace Ryujinx.Ava.UI.ViewModels
 
         public IStorageProvider StorageProvider;
 
-        public TitleUpdateViewModel(VirtualFileSystem virtualFileSystem, ApplicationData applicationData)
+        public TitleUpdateViewModel(VirtualFileSystem virtualFileSystem, ulong titleId)
         {
             VirtualFileSystem = virtualFileSystem;
 
-            ApplicationData = applicationData;
+            TitleId = titleId;
 
             if (Application.Current.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
                 StorageProvider = desktop.MainWindow.StorageProvider;
             }
 
-            TitleUpdateJsonPath = Path.Combine(AppDataManager.GamesDirPath, ApplicationData.IdString, "updates.json");
+            TitleUpdateJsonPath = Path.Combine(AppDataManager.GamesDirPath, titleId.ToString("x16"), "updates.json");
 
             try
             {
@@ -96,7 +92,7 @@ namespace Ryujinx.Ava.UI.ViewModels
             }
             catch
             {
-                Logger.Warning?.Print(LogClass.Application, $"Failed to deserialize title update data for {ApplicationData.IdString} at {TitleUpdateJsonPath}");
+                Logger.Warning?.Print(LogClass.Application, $"Failed to deserialize title update data for {TitleId} at {TitleUpdateJsonPath}");
 
                 TitleUpdateWindowData = new TitleUpdateMetadata
                 {
@@ -112,9 +108,6 @@ namespace Ryujinx.Ava.UI.ViewModels
 
         private void LoadUpdates()
         {
-            // Try to load updates from PFS first
-            AddUpdate(ApplicationData.Path, true);
-
             foreach (string path in TitleUpdateWindowData.Paths)
             {
                 AddUpdate(path);
@@ -169,41 +162,17 @@ namespace Ryujinx.Ava.UI.ViewModels
             }
         }
 
-        private void AddUpdate(string path, bool ignoreNotFound = false)
+        private void AddUpdate(string path)
         {
             if (File.Exists(path) && TitleUpdates.All(x => x.Path != path))
             {
-                IntegrityCheckLevel checkLevel = ConfigurationState.Instance.System.EnableFsIntegrityChecks
-                    ? IntegrityCheckLevel.ErrorOnInvalid
-                    : IntegrityCheckLevel.None;
-
                 using FileStream file = new(path, FileMode.Open, FileAccess.Read);
-
-                IFileSystem pfs;
 
                 try
                 {
-                    if (Path.GetExtension(path).ToLower() == ".xci")
-                    {
-                        pfs = new Xci(VirtualFileSystem.KeySet, file.AsStorage()).OpenPartition(XciPartitionType.Secure);
-                    }
-                    else
-                    {
-                        var pfsTemp = new PartitionFileSystem();
-                        pfsTemp.Initialize(file.AsStorage()).ThrowIfFailure();
-                        pfs = pfsTemp;
-                    }
-
-                    Dictionary<ulong, ContentCollection> updates = pfs.GetUpdateData(VirtualFileSystem, checkLevel);
-
-                    Nca patchNca = null;
-                    Nca controlNca = null;
-
-                    if (updates.TryGetValue(ApplicationData.Id, out ContentCollection content))
-                    {
-                        patchNca = content.GetNcaByType(VirtualFileSystem.KeySet, ContentType.Program);
-                        controlNca = content.GetNcaByType(VirtualFileSystem.KeySet, ContentType.Control);
-                    }
+                    var pfs = new PartitionFileSystem();
+                    pfs.Initialize(file.AsStorage()).ThrowIfFailure();
+                    (Nca patchNca, Nca controlNca) = ApplicationLibrary.GetGameUpdateDataFromPartition(VirtualFileSystem, pfs, TitleId.ToString("x16"), 0);
 
                     if (controlNca != null && patchNca != null)
                     {
@@ -218,10 +187,7 @@ namespace Ryujinx.Ava.UI.ViewModels
                     }
                     else
                     {
-                        if (!ignoreNotFound)
-                        {
-                            Dispatcher.UIThread.InvokeAsync(() => ContentDialogHelper.CreateErrorDialog(LocaleManager.Instance[LocaleKeys.DialogUpdateAddUpdateErrorMessage]));
-                        }
+                        Dispatcher.UIThread.InvokeAsync(() => ContentDialogHelper.CreateErrorDialog(LocaleManager.Instance[LocaleKeys.DialogUpdateAddUpdateErrorMessage]));
                     }
                 }
                 catch (Exception ex)

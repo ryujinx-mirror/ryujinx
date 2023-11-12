@@ -9,11 +9,9 @@ using LibHac.Tools.FsSystem;
 using LibHac.Tools.FsSystem.NcaUtils;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.FileSystem;
-using Ryujinx.HLE.Loaders.Processes.Extensions;
 using Ryujinx.Ui.Common.Helper;
 using System;
 using System.IO;
-using System.Text.Json.Serialization;
 
 namespace Ryujinx.Ui.App.Common
 {
@@ -21,10 +19,10 @@ namespace Ryujinx.Ui.App.Common
     {
         public bool Favorite { get; set; }
         public byte[] Icon { get; set; }
-        public string Name { get; set; } = "Unknown";
-        public ulong Id { get; set; }
-        public string Developer { get; set; } = "Unknown";
-        public string Version { get; set; } = "0";
+        public string TitleName { get; set; }
+        public string TitleId { get; set; }
+        public string Developer { get; set; }
+        public string Version { get; set; }
         public TimeSpan TimePlayed { get; set; }
         public DateTime? LastPlayed { get; set; }
         public string FileExtension { get; set; }
@@ -38,11 +36,7 @@ namespace Ryujinx.Ui.App.Common
 
         public string FileSizeString => ValueFormatUtils.FormatFileSize(FileSize);
 
-        [JsonIgnore] public string IdString => Id.ToString("x16");
-
-        [JsonIgnore] public ulong IdBase => Id & ~0x1FFFUL;
-
-        public static string GetBuildId(VirtualFileSystem virtualFileSystem, IntegrityCheckLevel checkLevel, string titleFilePath)
+        public static string GetApplicationBuildId(VirtualFileSystem virtualFileSystem, string titleFilePath)
         {
             using FileStream file = new(titleFilePath, FileMode.Open, FileAccess.Read);
 
@@ -111,7 +105,7 @@ namespace Ryujinx.Ui.App.Common
                 return string.Empty;
             }
 
-            (Nca updatePatchNca, _) = mainNca.GetUpdateData(virtualFileSystem, checkLevel, 0, out string _);
+            (Nca updatePatchNca, _) = ApplicationLibrary.GetGameUpdateData(virtualFileSystem, mainNca.Header.TitleId.ToString("x16"), 0, out _);
 
             if (updatePatchNca != null)
             {
