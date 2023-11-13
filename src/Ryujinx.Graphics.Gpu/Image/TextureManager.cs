@@ -413,21 +413,35 @@ namespace Ryujinx.Graphics.Gpu.Image
         {
             bool anyChanged = false;
 
-            if (_rtHostDs != _rtDepthStencil?.HostTexture)
-            {
-                _rtHostDs = _rtDepthStencil?.HostTexture;
+            Texture dsTexture = _rtDepthStencil;
+            ITexture hostDsTexture = null;
 
+            if (dsTexture != null)
+            {
+                hostDsTexture = dsTexture.HostTexture;
+                dsTexture.ModifiedSinceLastFlush = true;
+            }
+
+            if (_rtHostDs != hostDsTexture)
+            {
+                _rtHostDs = hostDsTexture;
                 anyChanged = true;
             }
 
             for (int index = 0; index < _rtColors.Length; index++)
             {
-                ITexture hostTexture = _rtColors[index]?.HostTexture;
+                Texture texture = _rtColors[index];
+                ITexture hostTexture = null;
+
+                if (texture != null)
+                {
+                    hostTexture = texture.HostTexture;
+                    texture.ModifiedSinceLastFlush = true;
+                }
 
                 if (_rtHostColors[index] != hostTexture)
                 {
                     _rtHostColors[index] = hostTexture;
-
                     anyChanged = true;
                 }
             }
