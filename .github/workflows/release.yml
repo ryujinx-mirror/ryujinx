@@ -59,7 +59,7 @@ jobs:
 
           - os: windows-latest
             OS_NAME: Windows x64
-            DOTNET_RUNTIME_IDENTIFIER: win10-x64
+            DOTNET_RUNTIME_IDENTIFIER: win-x64
             RELEASE_ZIP_OS_NAME: win_x64
     steps:
       - uses: actions/checkout@v4

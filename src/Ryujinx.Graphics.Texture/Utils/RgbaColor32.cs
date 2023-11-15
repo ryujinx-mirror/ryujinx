@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
@@ -102,11 +103,11 @@ namespace Ryujinx.Graphics.Texture.Utils
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static RgbaColor32 operator <<(RgbaColor32 x, int shift)
+        public static RgbaColor32 operator <<(RgbaColor32 x, [ConstantExpected] byte shift)
         {
             if (Sse2.IsSupported)
             {
-                return new RgbaColor32(Sse2.ShiftLeftLogical(x._color, (byte)shift));
+                return new RgbaColor32(Sse2.ShiftLeftLogical(x._color, shift));
             }
             else
             {
@@ -115,11 +116,11 @@ namespace Ryujinx.Graphics.Texture.Utils
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static RgbaColor32 operator >>(RgbaColor32 x, int shift)
+        public static RgbaColor32 operator >>(RgbaColor32 x, [ConstantExpected] byte shift)
         {
             if (Sse2.IsSupported)
             {
-                return new RgbaColor32(Sse2.ShiftRightLogical(x._color, (byte)shift));
+                return new RgbaColor32(Sse2.ShiftRightLogical(x._color, shift));
             }
             else
             {

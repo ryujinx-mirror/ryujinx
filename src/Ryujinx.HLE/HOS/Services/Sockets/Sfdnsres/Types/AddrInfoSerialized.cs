@@ -94,7 +94,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres.Types
 
             Header.ToNetworkOrder();
 
-            MemoryMarshal.Write(buffer, ref Header);
+            MemoryMarshal.Write(buffer, in Header);
 
             buffer = buffer[Unsafe.SizeOf<AddrInfoSerializedHeader>()..];
 
@@ -103,7 +103,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres.Types
                 AddrInfo4 socketAddress = SocketAddress.Value;
                 socketAddress.ToNetworkOrder();
 
-                MemoryMarshal.Write(buffer, ref socketAddress);
+                MemoryMarshal.Write(buffer, in socketAddress);
 
                 buffer = buffer[Unsafe.SizeOf<AddrInfo4>()..];
             }
@@ -117,7 +117,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres.Types
                 Array4<byte> rawIPv4Address = RawIPv4Address.Value;
                 AddrInfo4.RawIpv4AddressNetworkEndianSwap(ref rawIPv4Address);
 
-                MemoryMarshal.Write(buffer, ref rawIPv4Address);
+                MemoryMarshal.Write(buffer, in rawIPv4Address);
 
                 buffer = buffer[Unsafe.SizeOf<Array4<byte>>()..];
             }

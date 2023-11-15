@@ -69,10 +69,7 @@ namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
 
         public Operand GetDest(int index)
         {
-            if (index != 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(index));
-            }
+            ArgumentOutOfRangeException.ThrowIfNotEqual(index, 0);
 
             return _dest;
         }

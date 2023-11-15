@@ -654,7 +654,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres
             }
 
             uint sentinel = 0;
-            MemoryMarshal.Write(data, ref sentinel);
+            MemoryMarshal.Write(data, in sentinel);
             data = data[sizeof(uint)..];
 
             return region.Memory.Span.Length - data.Length;

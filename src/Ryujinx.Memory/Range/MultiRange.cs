@@ -52,10 +52,7 @@ namespace Ryujinx.Memory.Range
         {
             if (HasSingleRange)
             {
-                if (_singleRange.Size - offset < size)
-                {
-                    throw new ArgumentOutOfRangeException(nameof(size));
-                }
+                ArgumentOutOfRangeException.ThrowIfGreaterThan(size, _singleRange.Size - offset);
 
                 return new MultiRange(_singleRange.Address + offset, size);
             }
@@ -108,10 +105,7 @@ namespace Ryujinx.Memory.Range
         {
             if (HasSingleRange)
             {
-                if (index != 0)
-                {
-                    throw new ArgumentOutOfRangeException(nameof(index));
-                }
+                ArgumentOutOfRangeException.ThrowIfNotEqual(index, 0);
 
                 return _singleRange;
             }

@@ -21,7 +21,7 @@
     <PackageVersion Include="LibHac" Version="0.19.0" />
     <PackageVersion Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4" />
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="4.7.0" />
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.7.2" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
     <PackageVersion Include="Microsoft.IO.RecyclableMemoryStream" Version="2.3.2" />
     <PackageVersion Include="MsgPack.Cli" Version="1.0.1" />
     <PackageVersion Include="NetCoreServer" Version="7.0.0" />
@@ -45,10 +45,10 @@
     <PackageVersion Include="SixLabors.ImageSharp" Version="1.0.4" />
     <PackageVersion Include="SixLabors.ImageSharp.Drawing" Version="1.0.0-beta11" />
     <PackageVersion Include="SPB" Version="0.0.4-build28" />
-    <PackageVersion Include="System.Drawing.Common" Version="7.0.0" />
-    <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="7.0.0" />
-    <PackageVersion Include="System.IO.Hashing" Version="7.0.0" />
-    <PackageVersion Include="System.Management" Version="7.0.2" />
+    <PackageVersion Include="System.Drawing.Common" Version="8.0.0" />
+    <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="7.0.3" />
+    <PackageVersion Include="System.IO.Hashing" Version="8.0.0" />
+    <PackageVersion Include="System.Management" Version="8.0.0" />
     <PackageVersion Include="UnicornEngine.Unicorn" Version="2.0.2-rc1-fb78016" />
   </ItemGroup>
 </Project>

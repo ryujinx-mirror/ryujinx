@@ -27,7 +27,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd.Types
             int controlLength = message.Control == null ? 0 : message.Control.Length;
             BsdSocketFlags flags = message.Flags;
 
-            if (!MemoryMarshal.TryWrite(rawData, ref msgNameLength))
+            if (!MemoryMarshal.TryWrite(rawData, in msgNameLength))
             {
                 return LinuxError.EFAULT;
             }
@@ -45,7 +45,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd.Types
                 rawData = rawData[msgNameLength..];
             }
 
-            if (!MemoryMarshal.TryWrite(rawData, ref iovCount))
+            if (!MemoryMarshal.TryWrite(rawData, in iovCount))
             {
                 return LinuxError.EFAULT;
             }
@@ -58,7 +58,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd.Types
                 {
                     ulong iovLength = (ulong)message.Iov[index].Length;
 
-                    if (!MemoryMarshal.TryWrite(rawData, ref iovLength))
+                    if (!MemoryMarshal.TryWrite(rawData, in iovLength))
                     {
                         return LinuxError.EFAULT;
                     }
@@ -78,7 +78,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd.Types
                 }
             }
 
-            if (!MemoryMarshal.TryWrite(rawData, ref controlLength))
+            if (!MemoryMarshal.TryWrite(rawData, in controlLength))
             {
                 return LinuxError.EFAULT;
             }
@@ -96,14 +96,14 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd.Types
                 rawData = rawData[controlLength..];
             }
 
-            if (!MemoryMarshal.TryWrite(rawData, ref flags))
+            if (!MemoryMarshal.TryWrite(rawData, in flags))
             {
                 return LinuxError.EFAULT;
             }
 
             rawData = rawData[sizeof(BsdSocketFlags)..];
 
-            if (!MemoryMarshal.TryWrite(rawData, ref message.Length))
+            if (!MemoryMarshal.TryWrite(rawData, in message.Length))
             {
                 return LinuxError.EFAULT;
             }

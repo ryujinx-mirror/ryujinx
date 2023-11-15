@@ -161,7 +161,7 @@ namespace Ryujinx.HLE.HOS.Services.Ssl.SslService
                 }
                 else
                 {
-                    throw exception;
+                    throw;
                 }
             }
             finally
@@ -206,7 +206,7 @@ namespace Ryujinx.HLE.HOS.Services.Ssl.SslService
                 }
                 else
                 {
-                    throw exception;
+                    throw;
                 }
             }
             finally

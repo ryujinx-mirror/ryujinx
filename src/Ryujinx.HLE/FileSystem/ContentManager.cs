@@ -420,10 +420,7 @@ namespace Ryujinx.HLE.FileSystem
 
             if (locationList != null)
             {
-                if (locationList.Contains(entry))
-                {
-                    locationList.Remove(entry);
-                }
+                locationList.Remove(entry);
 
                 locationList.AddLast(entry);
             }

@@ -86,7 +86,7 @@ namespace Ryujinx.Ava.UI.Helpers
         public static partial IntPtr SetCursor(IntPtr handle);
 
         [LibraryImport("user32.dll")]
-        public static partial IntPtr CreateCursor(IntPtr hInst, int xHotSpot, int yHotSpot, int nWidth, int nHeight, byte[] pvAndPlane, byte[] pvXorPlane);
+        public static partial IntPtr CreateCursor(IntPtr hInst, int xHotSpot, int yHotSpot, int nWidth, int nHeight, [In] byte[] pvAndPlane, [In] byte[] pvXorPlane);
 
         [LibraryImport("user32.dll", SetLastError = true, EntryPoint = "RegisterClassExW")]
         public static partial ushort RegisterClassEx(ref WndClassEx param);

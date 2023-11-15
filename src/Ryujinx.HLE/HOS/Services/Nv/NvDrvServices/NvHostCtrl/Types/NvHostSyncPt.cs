@@ -85,10 +85,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostCtrl
 
         public void SetSyncpointMinEqualSyncpointMax(uint id)
         {
-            if (id >= SynchronizationManager.MaxHardwareSyncpoints)
-            {
-                throw new ArgumentOutOfRangeException(nameof(id));
-            }
+            ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(id, (uint)SynchronizationManager.MaxHardwareSyncpoints);
 
             int value = (int)ReadSyncpointValue(id);
 

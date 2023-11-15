@@ -33,9 +33,5 @@ namespace Ryujinx.Graphics.Vulkan
         public VulkanException(string message, Exception innerException) : base(message, innerException)
         {
         }
-
-        protected VulkanException(SerializationInfo info, StreamingContext context) : base(info, context)
-        {
-        }
     }
 }
