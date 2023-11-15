@@ -709,7 +709,8 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// </summary>
         /// <param name="texture">The texture that has been modified</param>
         /// <param name="bound">True if this texture is being bound, false if unbound</param>
-        public void SignalModifying(Texture texture, bool bound)
+        /// <param name="setModified">Indicates if the modified flag should be set</param>
+        public void SignalModifying(Texture texture, bool bound, bool setModified)
         {
             ModifiedSequence = _context.GetModifiedSequence();
 
@@ -721,7 +722,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                 {
                     TextureGroupHandle group = _handles[baseHandle + i];
 
-                    group.SignalModifying(bound, _context);
+                    group.SignalModifying(bound, _context, setModified);
                 }
             });
         }

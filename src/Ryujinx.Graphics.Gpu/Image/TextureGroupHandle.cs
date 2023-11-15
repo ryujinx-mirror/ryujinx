@@ -304,9 +304,17 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// </summary>
         /// <param name="bound">True if this handle is being bound, false if unbound</param>
         /// <param name="context">The GPU context to register a sync action on</param>
-        public void SignalModifying(bool bound, GpuContext context)
+        /// <param name="setModified">Indicates if the modified flag should be set</param>
+        public void SignalModifying(bool bound, GpuContext context, bool setModified)
         {
-            SignalModified(context);
+            if (setModified)
+            {
+                SignalModified(context);
+            }
+            else
+            {
+                RegisterSync(context);
+            }
 
             if (!bound && _syncActionRegistered && NextSyncCopies())
             {

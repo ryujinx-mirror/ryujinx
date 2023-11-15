@@ -1443,11 +1443,7 @@ namespace Ryujinx.Graphics.Gpu.Image
             if (_modifiedStale || Group.HasCopyDependencies || Group.HasFlushBuffer)
             {
                 _modifiedStale = false;
-
-                if (bound || ModifiedSinceLastFlush || Group.HasCopyDependencies || Group.HasFlushBuffer)
-                {
-                    Group.SignalModifying(this, bound);
-                }
+                Group.SignalModifying(this, bound, bound || ModifiedSinceLastFlush || Group.HasCopyDependencies || Group.HasFlushBuffer);
             }
 
             _physicalMemory.TextureCache.Lift(this);
