@@ -27,10 +27,10 @@
     <PackageVersion Include="NetCoreServer" Version="7.0.0" />
     <PackageVersion Include="NUnit" Version="3.13.3" />
     <PackageVersion Include="NUnit3TestAdapter" Version="4.1.0" />
-    <PackageVersion Include="OpenTK.Core" Version="4.7.7" />
-    <PackageVersion Include="OpenTK.Graphics" Version="4.7.7" />
-    <PackageVersion Include="OpenTK.OpenAL" Version="4.7.7" />
-    <PackageVersion Include="OpenTK.Windowing.GraphicsLibraryFramework" Version="4.7.7" />
+    <PackageVersion Include="OpenTK.Core" Version="4.8.1" />
+    <PackageVersion Include="OpenTK.Graphics" Version="4.8.1" />
+    <PackageVersion Include="OpenTK.Audio.OpenAL" Version="4.8.1" />
+    <PackageVersion Include="OpenTK.Windowing.GraphicsLibraryFramework" Version="4.8.1" />
     <PackageVersion Include="Ryujinx.Audio.OpenAL.Dependencies" Version="1.21.0.1" />
     <PackageVersion Include="Ryujinx.Graphics.Nvdec.Dependencies" Version="5.0.1-build13" />
     <PackageVersion Include="Ryujinx.Graphics.Vulkan.Dependencies.MoltenVK" Version="1.2.0" />

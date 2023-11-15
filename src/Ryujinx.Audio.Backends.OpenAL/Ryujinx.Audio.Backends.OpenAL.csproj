@@ -5,7 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="OpenTK.OpenAL" />
+    <PackageReference Include="OpenTK.Audio.OpenAL" />
   </ItemGroup>
 
   <ItemGroup>
