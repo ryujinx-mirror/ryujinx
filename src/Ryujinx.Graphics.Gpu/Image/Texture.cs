@@ -102,11 +102,6 @@ namespace Ryujinx.Graphics.Gpu.Image
         public bool AlwaysFlushOnOverlap { get; private set; }
 
         /// <summary>
-        /// Indicates that the texture was modified since the last time it was flushed.
-        /// </summary>
-        public bool ModifiedSinceLastFlush { get; set; }
-
-        /// <summary>
         /// Increments when the host texture is swapped, or when the texture is removed from all pools.
         /// </summary>
         public int InvalidatedSequence { get; private set; }
@@ -1443,7 +1438,7 @@ namespace Ryujinx.Graphics.Gpu.Image
             if (_modifiedStale || Group.HasCopyDependencies || Group.HasFlushBuffer)
             {
                 _modifiedStale = false;
-                Group.SignalModifying(this, bound, bound || ModifiedSinceLastFlush || Group.HasCopyDependencies || Group.HasFlushBuffer);
+                Group.SignalModifying(this, bound);
             }
 
             _physicalMemory.TextureCache.Lift(this);

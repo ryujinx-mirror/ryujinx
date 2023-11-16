@@ -211,6 +211,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Dma
             int xCount = (int)_state.State.LineLengthIn;
             int yCount = (int)_state.State.LineCount;
 
+            _channel.TextureManager.RefreshModifiedTextures();
             _3dEngine.CreatePendingSyncs();
             _3dEngine.FlushUboDirty();
 

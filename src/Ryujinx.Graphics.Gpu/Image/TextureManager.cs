@@ -20,8 +20,10 @@ namespace Ryujinx.Graphics.Gpu.Image
 
         private readonly Texture[] _rtColors;
         private readonly ITexture[] _rtHostColors;
+        private readonly bool[] _rtColorsBound;
         private Texture _rtDepthStencil;
         private ITexture _rtHostDs;
+        private bool _rtDsBound;
 
         public int ClipRegionWidth { get; private set; }
         public int ClipRegionHeight { get; private set; }
@@ -51,6 +53,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             _rtColors = new Texture[Constants.TotalRenderTargets];
             _rtHostColors = new ITexture[Constants.TotalRenderTargets];
+            _rtColorsBound = new bool[Constants.TotalRenderTargets];
         }
 
         /// <summary>
@@ -154,7 +157,14 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             if (_rtColors[index] != color)
             {
-                _rtColors[index]?.SignalModifying(false);
+                if (_rtColorsBound[index])
+                {
+                    _rtColors[index]?.SignalModifying(false);
+                }
+                else
+                {
+                    _rtColorsBound[index] = true;
+                }
 
                 if (color != null)
                 {
@@ -180,7 +190,14 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             if (_rtDepthStencil != depthStencil)
             {
-                _rtDepthStencil?.SignalModifying(false);
+                if (_rtDsBound)
+                {
+                    _rtDepthStencil?.SignalModifying(false);
+                }
+                else
+                {
+                    _rtDsBound = true;
+                }
 
                 if (depthStencil != null)
                 {
@@ -419,7 +436,12 @@ namespace Ryujinx.Graphics.Gpu.Image
             if (dsTexture != null)
             {
                 hostDsTexture = dsTexture.HostTexture;
-                dsTexture.ModifiedSinceLastFlush = true;
+
+                if (!_rtDsBound)
+                {
+                    dsTexture.SignalModifying(true);
+                    _rtDsBound = true;
+                }
             }
 
             if (_rtHostDs != hostDsTexture)
@@ -436,7 +458,12 @@ namespace Ryujinx.Graphics.Gpu.Image
                 if (texture != null)
                 {
                     hostTexture = texture.HostTexture;
-                    texture.ModifiedSinceLastFlush = true;
+
+                    if (!_rtColorsBound[index])
+                    {
+                        texture.SignalModifying(true);
+                        _rtColorsBound[index] = true;
+                    }
                 }
 
                 if (_rtHostColors[index] != hostTexture)
@@ -464,6 +491,31 @@ namespace Ryujinx.Graphics.Gpu.Image
             _rtHostDs = _rtDepthStencil?.HostTexture;
 
             _context.Renderer.Pipeline.SetRenderTargets(_rtHostColors, _rtHostDs);
+        }
+
+        /// <summary>
+        /// Marks all currently bound render target textures as modified, and also makes them be set as modified again on next use.
+        /// </summary>
+        public void RefreshModifiedTextures()
+        {
+            Texture dsTexture = _rtDepthStencil;
+
+            if (dsTexture != null && _rtDsBound)
+            {
+                dsTexture.SignalModifying(false);
+                _rtDsBound = false;
+            }
+
+            for (int index = 0; index < _rtColors.Length; index++)
+            {
+                Texture texture = _rtColors[index];
+
+                if (texture != null && _rtColorsBound[index])
+                {
+                    texture.SignalModifying(false);
+                    _rtColorsBound[index] = false;
+                }
+            }
         }
 
         /// <summary>
@@ -502,11 +554,19 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             for (int i = 0; i < _rtColors.Length; i++)
             {
-                _rtColors[i]?.DecrementReferenceCount();
+                if (_rtColorsBound[i])
+                {
+                    _rtColors[i]?.DecrementReferenceCount();
+                }
+
                 _rtColors[i] = null;
             }
 
-            _rtDepthStencil?.DecrementReferenceCount();
+            if (_rtDsBound)
+            {
+                _rtDepthStencil?.DecrementReferenceCount();
+            }
+
             _rtDepthStencil = null;
         }
     }
