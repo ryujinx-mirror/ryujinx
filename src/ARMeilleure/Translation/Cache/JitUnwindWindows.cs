@@ -95,7 +95,7 @@ namespace ARMeilleure.Translation.Cache
         {
             int offset = (int)((long)controlPc - context.ToInt64());
 
-            if (!JitCache.TryFind(offset, out CacheEntry funcEntry))
+            if (!JitCache.TryFind(offset, out CacheEntry funcEntry, out _))
             {
                 return null; // Not found.
             }

@@ -117,12 +117,11 @@ namespace ARMeilleure.Translation.Cache
 
                 int funcOffset = (int)(pointer.ToInt64() - _jitRegion.Pointer.ToInt64());
 
-                bool result = TryFind(funcOffset, out CacheEntry entry);
-                Debug.Assert(result);
-
-                _cacheAllocator.Free(funcOffset, AlignCodeSize(entry.Size));
-
-                Remove(funcOffset);
+                if (TryFind(funcOffset, out CacheEntry entry, out int entryIndex) && entry.Offset == funcOffset)
+                {
+                    _cacheAllocator.Free(funcOffset, AlignCodeSize(entry.Size));
+                    _cacheEntries.RemoveAt(entryIndex);
+                }
             }
         }
 
@@ -181,22 +180,7 @@ namespace ARMeilleure.Translation.Cache
             _cacheEntries.Insert(index, entry);
         }
 
-        private static void Remove(int offset)
-        {
-            int index = _cacheEntries.BinarySearch(new CacheEntry(offset, 0, default));
-
-            if (index < 0)
-            {
-                index = ~index - 1;
-            }
-
-            if (index >= 0)
-            {
-                _cacheEntries.RemoveAt(index);
-            }
-        }
-
-        public static bool TryFind(int offset, out CacheEntry entry)
+        public static bool TryFind(int offset, out CacheEntry entry, out int entryIndex)
         {
             lock (_lock)
             {
@@ -210,11 +194,13 @@ namespace ARMeilleure.Translation.Cache
                 if (index >= 0)
                 {
                     entry = _cacheEntries[index];
+                    entryIndex = index;
                     return true;
                 }
             }
 
             entry = default;
+            entryIndex = 0;
             return false;
         }
     }
