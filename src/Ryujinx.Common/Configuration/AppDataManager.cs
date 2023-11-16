@@ -48,7 +48,7 @@ namespace Ryujinx.Common.Configuration
             string appDataPath;
             if (OperatingSystem.IsMacOS())
             {
-                appDataPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), "Library", "Application Support");
+                appDataPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Library", "Application Support");
             }
             else
             {
