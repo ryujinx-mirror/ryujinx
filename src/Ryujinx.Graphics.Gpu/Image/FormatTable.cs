@@ -651,9 +651,35 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <returns>True if the format is valid, false otherwise</returns>
         public static bool TryGetTextureFormat(uint encoded, bool isSrgb, out FormatInfo format)
         {
-            encoded |= (isSrgb ? 1u << 19 : 0u);
+            bool isPacked = (encoded & 0x80000000u) != 0;
+            if (isPacked)
+            {
+                encoded &= ~0x80000000u;
+            }
 
-            return _textureFormats.TryGetValue((TextureFormat)encoded, out format);
+            encoded |= isSrgb ? 1u << 19 : 0u;
+
+            bool found = _textureFormats.TryGetValue((TextureFormat)encoded, out format);
+
+            if (found && isPacked && !format.Format.IsDepthOrStencil())
+            {
+                // If the packed flag is set, then the components of the pixel are tightly packed into the
+                // GPU registers on the shader.
+                // We can get the same behaviour by aliasing the texture as a format with the same amount of
+                // bytes per pixel, but only a single or the lowest possible number of components.
+
+                format = format.BytesPerPixel switch
+                {
+                    1 => new FormatInfo(Format.R8Unorm, 1, 1, 1, 1),
+                    2 => new FormatInfo(Format.R16Unorm, 1, 1, 2, 1),
+                    4 => new FormatInfo(Format.R32Float, 1, 1, 4, 1),
+                    8 => new FormatInfo(Format.R32G32Float, 1, 1, 8, 2),
+                    16 => new FormatInfo(Format.R32G32B32A32Float, 1, 1, 16, 4),
+                    _ => format,
+                };
+            }
+
+            return found;
         }
 
         /// <summary>

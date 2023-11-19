@@ -2,6 +2,8 @@ using Ryujinx.Common;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.Texture;
 using System;
+using System.Diagnostics;
+using System.Numerics;
 
 namespace Ryujinx.Graphics.Gpu.Image
 {
@@ -339,7 +341,20 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             if (lhs.FormatInfo.BytesPerPixel != rhs.FormatInfo.BytesPerPixel && IsIncompatibleFormatAliasingAllowed(lhs.FormatInfo, rhs.FormatInfo))
             {
-                alignedWidthMatches = lhsSize.Width * lhs.FormatInfo.BytesPerPixel == rhsSize.Width * rhs.FormatInfo.BytesPerPixel;
+                // If the formats are incompatible, but the texture strides match,
+                // we might allow them to be copy compatible depending on the format.
+                // The strides are aligned because the format with higher bytes per pixel
+                // might need a bit of padding at the end due to one width not being a multiple of the other.
+
+                Debug.Assert((1 << BitOperations.Log2((uint)lhs.FormatInfo.BytesPerPixel)) == lhs.FormatInfo.BytesPerPixel);
+                Debug.Assert((1 << BitOperations.Log2((uint)rhs.FormatInfo.BytesPerPixel)) == rhs.FormatInfo.BytesPerPixel);
+
+                int alignment = Math.Max(lhs.FormatInfo.BytesPerPixel, rhs.FormatInfo.BytesPerPixel);
+
+                int lhsStride = BitUtils.AlignUp(lhsSize.Width * lhs.FormatInfo.BytesPerPixel, alignment);
+                int rhsStride = BitUtils.AlignUp(rhsSize.Width * rhs.FormatInfo.BytesPerPixel, alignment);
+
+                alignedWidthMatches = lhsStride == rhsStride;
             }
 
             TextureViewCompatibility result = TextureViewCompatibility.Full;
@@ -718,7 +733,8 @@ namespace Ryujinx.Graphics.Gpu.Image
                 (lhsFormat, rhsFormat) = (rhsFormat, lhsFormat);
             }
 
-            return lhsFormat.Format == Format.R8Unorm && rhsFormat.Format == Format.R8G8B8A8Unorm;
+            return (lhsFormat.Format == Format.R8G8B8A8Unorm && rhsFormat.Format == Format.R32G32B32A32Float) ||
+                   (lhsFormat.Format == Format.R8Unorm && rhsFormat.Format == Format.R8G8B8A8Unorm);
         }
 
         /// <summary>
