@@ -55,7 +55,7 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
                         continue;
                     }
 
-                    if (bindlessHandle.AsgOp is not Operation handleCombineOp)
+                    if (!TryGetOperation(bindlessHandle.AsgOp, out Operation handleCombineOp))
                     {
                         continue;
                     }
@@ -199,9 +199,64 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
             }
         }
 
+        private static bool TryGetOperation(INode asgOp, out Operation outOperation)
+        {
+            if (asgOp is PhiNode phi)
+            {
+                // If we have a phi, let's check if all inputs are effectively the same value.
+                // If so, we can "see through" the phi and pick any of the inputs (since they are all the same).
+
+                Operand firstSrc = phi.GetSource(0);
+
+                for (int index = 1; index < phi.SourcesCount; index++)
+                {
+                    if (!IsSameOperand(firstSrc, phi.GetSource(index)))
+                    {
+                        outOperation = null;
+
+                        return false;
+                    }
+                }
+
+                asgOp = firstSrc.AsgOp;
+            }
+
+            if (asgOp is Operation operation)
+            {
+                outOperation = operation;
+
+                return true;
+            }
+
+            outOperation = null;
+
+            return false;
+        }
+
+        private static bool IsSameOperand(Operand x, Operand y)
+        {
+            if (x.Type == y.Type && x.Type == OperandType.LocalVariable)
+            {
+                return x.AsgOp is Operation xOp &&
+                    y.AsgOp is Operation yOp &&
+                    xOp.Inst == Instruction.BitwiseOr &&
+                    yOp.Inst == Instruction.BitwiseOr &&
+                    AreBothEqualConstantBuffers(xOp.GetSource(0), yOp.GetSource(0)) &&
+                    AreBothEqualConstantBuffers(xOp.GetSource(1), yOp.GetSource(1));
+            }
+
+            return false;
+        }
+
+        private static bool AreBothEqualConstantBuffers(Operand x, Operand y)
+        {
+            return x.Type == y.Type && x.Value == y.Value && x.Type == OperandType.ConstantBuffer;
+        }
+
         private static Operand GetSourceForMaskedHandle(Operation asgOp, uint mask)
         {
             // Assume it was already checked that the operation is bitwise AND.
+
             Operand src0 = asgOp.GetSource(0);
             Operand src1 = asgOp.GetSource(1);
 
@@ -210,6 +265,7 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
                 // We can't check if the mask matches here as both operands are from a constant buffer.
                 // Be optimistic and assume it matches. Avoid constant buffer 1 as official drivers
                 // uses this one to store compiler constants.
+
                 return src0.GetCbufSlot() == 1 ? src1 : src0;
             }
             else if (src0.Type == OperandType.ConstantBuffer && src1.Type == OperandType.Constant)
