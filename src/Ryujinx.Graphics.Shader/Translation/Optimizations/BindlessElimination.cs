@@ -29,7 +29,16 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
 
                 if (texOp.Inst == Instruction.TextureSample || texOp.Inst.IsTextureQuery())
                 {
-                    Operand bindlessHandle = Utils.FindLastOperation(texOp.GetSource(0), block);
+                    Operand bindlessHandle = texOp.GetSource(0);
+
+                    // In some cases the compiler uses a shuffle operation to get the handle,
+                    // for some textureGrad implementations. In those cases, we can skip the shuffle.
+                    if (bindlessHandle.AsgOp is Operation shuffleOp && shuffleOp.Inst == Instruction.Shuffle)
+                    {
+                        bindlessHandle = shuffleOp.GetSource(0);
+                    }
+
+                    bindlessHandle = Utils.FindLastOperation(bindlessHandle, block);
 
                     // Some instructions do not encode an accurate sampler type:
                     // - Most instructions uses the same type for 1D and Buffer.
