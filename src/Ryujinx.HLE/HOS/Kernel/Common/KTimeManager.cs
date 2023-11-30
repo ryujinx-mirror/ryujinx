@@ -1,4 +1,5 @@
 using Ryujinx.Common;
+using Ryujinx.Common.PreciseSleep;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -23,7 +24,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
 
         private readonly KernelContext _context;
         private readonly List<WaitingObject> _waitingObjects;
-        private AutoResetEvent _waitEvent;
+        private IPreciseSleepEvent _waitEvent;
         private bool _keepRunning;
         private long _enforceWakeupFromSpinWait;
 
@@ -54,6 +55,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
                 timePoint = long.MaxValue;
             }
 
+            timePoint = _waitEvent.AdjustTimePoint(timePoint, timeout);
+
             lock (_context.CriticalSection.Lock)
             {
                 _waitingObjects.Add(new WaitingObject(schedulerObj, timePoint));
@@ -64,7 +67,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
                 }
             }
 
-            _waitEvent.Set();
+            _waitEvent.Signal();
         }
 
         public void UnscheduleFutureInvocation(IKFutureSchedulerObject schedulerObj)
@@ -83,10 +86,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
 
         private void WaitAndCheckScheduledObjects()
         {
-            SpinWait spinWait = new();
             WaitingObject next;
 
-            using (_waitEvent = new AutoResetEvent(false))
+            using (_waitEvent = PreciseSleepHelper.CreateEvent())
             {
                 while (_keepRunning)
                 {
@@ -103,30 +105,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
 
                         if (next.TimePoint > timePoint)
                         {
-                            long ms = Math.Min((next.TimePoint - timePoint) / PerformanceCounter.TicksPerMillisecond, int.MaxValue);
-
-                            if (ms > 0)
+                            if (!_waitEvent.SleepUntil(next.TimePoint))
                             {
-                                _waitEvent.WaitOne((int)ms);
-                            }
-                            else
-                            {
-                                while (Interlocked.Read(ref _enforceWakeupFromSpinWait) != 1 && PerformanceCounter.ElapsedTicks < next.TimePoint)
-                                {
-                                    // Our time is close - don't let SpinWait go off and potentially Thread.Sleep().
-                                    if (spinWait.NextSpinWillYield)
-                                    {
-                                        Thread.Yield();
-
-                                        spinWait.Reset();
-                                    }
-                                    else
-                                    {
-                                        spinWait.SpinOnce();
-                                    }
-                                }
-
-                                spinWait.Reset();
+                                PreciseSleepHelper.SpinWaitUntilTimePoint(next.TimePoint, ref _enforceWakeupFromSpinWait);
                             }
                         }
 
@@ -145,7 +126,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
                     }
                     else
                     {
-                        _waitEvent.WaitOne();
+                        _waitEvent.Sleep();
                     }
                 }
             }
@@ -212,7 +193,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
         public void Dispose()
         {
             _keepRunning = false;
-            _waitEvent?.Set();
+            _waitEvent?.Signal();
         }
     }
 }

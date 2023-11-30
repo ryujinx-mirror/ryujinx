@@ -1,5 +1,7 @@
-﻿using Ryujinx.Common.Configuration;
+﻿using Ryujinx.Common;
+using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Logging;
+using Ryujinx.Common.PreciseSleep;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.Gpu;
 using Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvMap;
@@ -23,9 +25,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 
         private readonly Thread _composerThread;
 
-        private readonly Stopwatch _chrono;
-
-        private readonly ManualResetEvent _event = new(false);
+        private readonly AutoResetEvent _event = new(false);
         private readonly AutoResetEvent _nextFrameEvent = new(true);
         private long _ticks;
         private long _ticksPerFrame;
@@ -64,10 +64,8 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
             _composerThread = new Thread(HandleComposition)
             {
                 Name = "SurfaceFlinger.Composer",
+                Priority = ThreadPriority.AboveNormal
             };
-
-            _chrono = new Stopwatch();
-            _chrono.Start();
 
             _ticks = 0;
             _spinTicks = Stopwatch.Frequency / 500;
@@ -299,11 +297,11 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
         {
             _isRunning = true;
 
-            long lastTicks = _chrono.ElapsedTicks;
+            long lastTicks = PerformanceCounter.ElapsedTicks;
 
             while (_isRunning)
             {
-                long ticks = _chrono.ElapsedTicks;
+                long ticks = PerformanceCounter.ElapsedTicks;
 
                 if (_swapInterval == 0)
                 {
@@ -336,21 +334,16 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
                     }
 
                     // Sleep if possible. If the time til the next frame is too low, spin wait instead.
-                    long diff = _ticksPerFrame - (_ticks + _chrono.ElapsedTicks - ticks);
+                    long diff = _ticksPerFrame - (_ticks + PerformanceCounter.ElapsedTicks - ticks);
                     if (diff > 0)
                     {
+                        PreciseSleepHelper.SleepUntilTimePoint(_event, PerformanceCounter.ElapsedTicks + diff);
+
+                        diff = _ticksPerFrame - (_ticks + PerformanceCounter.ElapsedTicks - ticks);
+
                         if (diff < _spinTicks)
                         {
-                            do
-                            {
-                                // SpinWait is a little more HT/SMT friendly than aggressively updating/checking ticks.
-                                // The value of 5 still gives us quite a bit of precision (~0.0003ms variance at worst) while waiting a reasonable amount of time.
-                                Thread.SpinWait(5);
-
-                                ticks = _chrono.ElapsedTicks;
-                                _ticks += ticks - lastTicks;
-                                lastTicks = ticks;
-                            } while (_ticks < _ticksPerFrame);
+                            PreciseSleepHelper.SpinWaitUntilTimePoint(PerformanceCounter.ElapsedTicks + diff);
                         }
                         else
                         {
