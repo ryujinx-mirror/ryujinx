@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator.FriendService
+namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator.FriendService
 {
     enum PresenceStatus : uint
     {

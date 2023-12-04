@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Horizon.Usb
+namespace Ryujinx.Horizon.Usb
 {
     class UsbMain : IService
     {

@@ -1,4 +1,4 @@
-﻿using Ryujinx.HLE.HOS.Ipc;
+using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Services.Pcv.Clkrst.ClkrstManager;
 using Ryujinx.HLE.HOS.Services.Pcv.Types;
 using Ryujinx.Horizon.Common;

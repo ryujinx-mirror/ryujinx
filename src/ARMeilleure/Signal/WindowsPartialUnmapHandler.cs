@@ -1,4 +1,4 @@
-﻿using ARMeilleure.IntermediateRepresentation;
+using ARMeilleure.IntermediateRepresentation;
 using ARMeilleure.Translation;
 using Ryujinx.Common.Memory.PartialUnmaps;
 using System;

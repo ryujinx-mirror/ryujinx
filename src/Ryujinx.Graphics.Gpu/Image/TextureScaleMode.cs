@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Graphics.Gpu.Image
+namespace Ryujinx.Graphics.Gpu.Image
 {
     /// <summary>
     /// The scale mode for a given texture.

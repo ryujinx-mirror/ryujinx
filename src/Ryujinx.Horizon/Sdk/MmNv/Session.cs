@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Horizon.Sdk.MmNv
+namespace Ryujinx.Horizon.Sdk.MmNv
 {
     class Session
     {

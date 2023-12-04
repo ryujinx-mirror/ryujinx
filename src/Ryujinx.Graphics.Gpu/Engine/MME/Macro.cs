@@ -1,4 +1,4 @@
-﻿using Ryujinx.Graphics.Device;
+using Ryujinx.Graphics.Device;
 using Ryujinx.Graphics.Gpu.Engine.GPFifo;
 using System;
 

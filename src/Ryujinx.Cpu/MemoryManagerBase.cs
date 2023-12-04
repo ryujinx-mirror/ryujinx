@@ -1,4 +1,4 @@
-﻿using Ryujinx.Memory;
+using Ryujinx.Memory;
 using System.Diagnostics;
 using System.Threading;
 

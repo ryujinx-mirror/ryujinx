@@ -1,4 +1,4 @@
-﻿using ARMeilleure.Translation;
+using ARMeilleure.Translation;
 using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Configuration.Hid;
 using Ryujinx.Common.Logging;

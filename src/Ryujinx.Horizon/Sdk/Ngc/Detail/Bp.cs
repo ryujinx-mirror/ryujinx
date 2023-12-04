@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Horizon.Sdk.Ngc.Detail
+namespace Ryujinx.Horizon.Sdk.Ngc.Detail
 {
     class Bp
     {

@@ -1,4 +1,4 @@
-﻿#define SimdShImm32
+#define SimdShImm32
 
 using ARMeilleure.State;
 using NUnit.Framework;

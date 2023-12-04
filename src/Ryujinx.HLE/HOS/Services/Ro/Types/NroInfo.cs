@@ -1,4 +1,4 @@
-﻿using Ryujinx.HLE.Loaders.Executables;
+using Ryujinx.HLE.Loaders.Executables;
 
 namespace Ryujinx.HLE.HOS.Services.Ro
 {

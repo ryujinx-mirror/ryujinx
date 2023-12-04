@@ -1,4 +1,4 @@
-﻿using Ryujinx.Graphics.Gpu.Synchronization;
+using Ryujinx.Graphics.Gpu.Synchronization;
 using System.Collections.Generic;
 
 namespace Ryujinx.Graphics.Host1x

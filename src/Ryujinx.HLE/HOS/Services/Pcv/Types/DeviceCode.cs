@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.HLE.HOS.Services.Pcv.Types
+namespace Ryujinx.HLE.HOS.Services.Pcv.Types
 {
     enum DeviceCode
     {

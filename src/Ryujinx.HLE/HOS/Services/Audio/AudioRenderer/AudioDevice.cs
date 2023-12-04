@@ -1,4 +1,4 @@
-﻿using Ryujinx.Audio.Renderer.Device;
+using Ryujinx.Audio.Renderer.Device;
 using Ryujinx.Audio.Renderer.Server;
 using Ryujinx.HLE.HOS.Kernel;
 using Ryujinx.HLE.HOS.Kernel.Threading;

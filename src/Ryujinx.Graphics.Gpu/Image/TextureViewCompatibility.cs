@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Graphics.Gpu.Image
+namespace Ryujinx.Graphics.Gpu.Image
 {
     /// <summary>
     /// The level of view compatibility one texture has to another. 

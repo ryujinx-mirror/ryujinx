@@ -1,4 +1,4 @@
-﻿namespace ARMeilleure.Decoders
+namespace ARMeilleure.Decoders
 {
     class OpCode32SimdShImmLong : OpCode32Simd
     {

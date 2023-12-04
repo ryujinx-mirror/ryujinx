@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Graphics.Texture.Encoders
+namespace Ryujinx.Graphics.Texture.Encoders
 {
     enum EncodeMode
     {

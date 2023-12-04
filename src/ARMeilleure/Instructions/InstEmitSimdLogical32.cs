@@ -1,4 +1,4 @@
-﻿using ARMeilleure.Decoders;
+using ARMeilleure.Decoders;
 using ARMeilleure.IntermediateRepresentation;
 using ARMeilleure.Translation;
 

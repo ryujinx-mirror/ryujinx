@@ -1,4 +1,4 @@
-﻿using Ryujinx.Audio.Backends.SoundIo.Native;
+using Ryujinx.Audio.Backends.SoundIo.Native;
 using Ryujinx.Audio.Common;
 using Ryujinx.Audio.Integration;
 using Ryujinx.Memory;

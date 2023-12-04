@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Horizon.Ins
+namespace Ryujinx.Horizon.Ins
 {
     class InsMain : IService
     {

@@ -1,4 +1,4 @@
-﻿using Ryujinx.Horizon.Common;
+using Ryujinx.Horizon.Common;
 using Ryujinx.Horizon.Sdk.Lbl;
 using Ryujinx.Horizon.Sdk.Sf;
 

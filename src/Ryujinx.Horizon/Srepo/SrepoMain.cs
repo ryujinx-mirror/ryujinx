@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Horizon.Srepo
+namespace Ryujinx.Horizon.Srepo
 {
     class SrepoMain : IService
     {

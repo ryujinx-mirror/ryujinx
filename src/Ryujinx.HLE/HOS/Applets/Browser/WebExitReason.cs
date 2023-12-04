@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.HLE.HOS.Applets.Browser
+namespace Ryujinx.HLE.HOS.Applets.Browser
 {
     public enum WebExitReason : uint
     {

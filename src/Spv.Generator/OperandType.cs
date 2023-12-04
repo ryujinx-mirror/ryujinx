@@ -1,4 +1,4 @@
-﻿namespace Spv.Generator
+namespace Spv.Generator
 {
     public enum OperandType
     {

@@ -1,4 +1,4 @@
-﻿using ARMeilleure.IntermediateRepresentation;
+using ARMeilleure.IntermediateRepresentation;
 using ARMeilleure.State;
 using ARMeilleure.Translation;
 using static ARMeilleure.Instructions.InstEmitHelper;

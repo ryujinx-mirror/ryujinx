@@ -1,4 +1,4 @@
-﻿using Ryujinx.Audio.Common;
+using Ryujinx.Audio.Common;
 using Ryujinx.Audio.Integration;
 using Ryujinx.Common.Logging;
 using Ryujinx.Memory;

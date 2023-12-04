@@ -1,4 +1,4 @@
-﻿using Ryujinx.Horizon.Common;
+using Ryujinx.Horizon.Common;
 
 namespace Ryujinx.Horizon.Sdk.Sf.Cmif
 {

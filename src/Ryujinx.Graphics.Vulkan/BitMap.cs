@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Graphics.Vulkan
+namespace Ryujinx.Graphics.Vulkan
 {
     readonly struct BitMap
     {

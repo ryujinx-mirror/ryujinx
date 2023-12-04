@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading;
 
 namespace Ryujinx.Graphics.GAL.Multithreading

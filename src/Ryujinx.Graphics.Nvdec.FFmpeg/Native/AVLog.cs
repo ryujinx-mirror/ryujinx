@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Graphics.Nvdec.FFmpeg.Native
+namespace Ryujinx.Graphics.Nvdec.FFmpeg.Native
 {
     enum AVLog
     {

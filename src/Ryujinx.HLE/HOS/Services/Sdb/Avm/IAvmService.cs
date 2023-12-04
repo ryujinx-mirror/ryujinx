@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.HLE.HOS.Services.Am.Tcap
+namespace Ryujinx.HLE.HOS.Services.Am.Tcap
 {
     [Service("avm")] // 6.0.0+
     class IAvmService : IpcService

@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Common.Configuration.Multiplayer
+namespace Ryujinx.Common.Configuration.Multiplayer
 {
     public enum MultiplayerMode
     {

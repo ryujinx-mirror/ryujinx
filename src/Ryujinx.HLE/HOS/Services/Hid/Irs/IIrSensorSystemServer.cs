@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.HLE.HOS.Services.Hid.Irs
+namespace Ryujinx.HLE.HOS.Services.Hid.Irs
 {
     [Service("irs:sys")]
     class IIrSensorSystemServer : IpcService

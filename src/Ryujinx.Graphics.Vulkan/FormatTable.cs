@@ -1,4 +1,4 @@
-﻿using Ryujinx.Graphics.GAL;
+using Ryujinx.Graphics.GAL;
 using System;
 using VkFormat = Silk.NET.Vulkan.Format;
 

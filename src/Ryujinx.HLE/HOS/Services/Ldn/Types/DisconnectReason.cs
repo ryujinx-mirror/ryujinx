@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.HLE.HOS.Services.Ldn.Types
+namespace Ryujinx.HLE.HOS.Services.Ldn.Types
 {
     enum DisconnectReason : uint
     {

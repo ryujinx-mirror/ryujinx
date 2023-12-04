@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.HLE.HOS.Services.Ectx
+namespace Ryujinx.HLE.HOS.Services.Ectx
 {
     [Service("ectx:r")] // 11.0.0+
     class IReaderForSystem : IpcService

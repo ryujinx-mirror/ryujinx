@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Horizon.MmNv
+namespace Ryujinx.Horizon.MmNv
 {
     class MmNvMain : IService
     {

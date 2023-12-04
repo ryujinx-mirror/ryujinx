@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Graphics.Gpu.Engine.MME
+namespace Ryujinx.Graphics.Gpu.Engine.MME
 {
     /// <summary>
     /// GPU Macro Arithmetic and Logic unit binary register-to-register operation.

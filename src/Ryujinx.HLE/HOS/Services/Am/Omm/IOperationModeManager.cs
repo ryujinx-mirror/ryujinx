@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.HLE.HOS.Services.Am.Omm
+namespace Ryujinx.HLE.HOS.Services.Am.Omm
 {
     [Service("omm")]
     class IOperationModeManager : IpcService

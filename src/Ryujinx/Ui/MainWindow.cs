@@ -1,4 +1,4 @@
-﻿using ARMeilleure.Translation;
+using ARMeilleure.Translation;
 using Gtk;
 using LibHac.Common;
 using LibHac.Common.Keys;

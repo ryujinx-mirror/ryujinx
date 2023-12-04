@@ -1,4 +1,4 @@
-﻿using DynamicData;
+using DynamicData;
 using DynamicData.Binding;
 using Ryujinx.Ava.Common.Locale;
 using Ryujinx.Ava.UI.Models;

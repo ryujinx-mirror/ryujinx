@@ -1,4 +1,4 @@
-﻿using Ryujinx.HLE.HOS.Services.Time.TimeZone;
+using Ryujinx.HLE.HOS.Services.Time.TimeZone;
 using System;
 using System.Runtime.InteropServices;
 

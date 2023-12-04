@@ -1,4 +1,4 @@
-﻿using ARMeilleure.CodeGen.X86;
+using ARMeilleure.CodeGen.X86;
 using ARMeilleure.IntermediateRepresentation;
 using ARMeilleure.State;
 using System;

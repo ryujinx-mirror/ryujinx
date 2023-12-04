@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Horizon.Prepo
+namespace Ryujinx.Horizon.Prepo
 {
     class PrepoMain : IService
     {

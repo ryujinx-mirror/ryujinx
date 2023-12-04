@@ -1,4 +1,4 @@
-﻿using Ryujinx.Common.Logging.Formatters;
+using Ryujinx.Common.Logging.Formatters;
 using System;
 
 namespace Ryujinx.Common.Logging.Targets

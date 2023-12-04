@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.HLE.HOS.Services.Pm
+namespace Ryujinx.HLE.HOS.Services.Pm
 {
     [Service("pm:shell")]
     class IShellInterface : IpcService

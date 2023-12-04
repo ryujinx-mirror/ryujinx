@@ -1,4 +1,4 @@
-﻿using Ryujinx.Common.Memory;
+using Ryujinx.Common.Memory;
 using Ryujinx.HLE.HOS.Services.Mii.Types;
 using System.Runtime.InteropServices;
 

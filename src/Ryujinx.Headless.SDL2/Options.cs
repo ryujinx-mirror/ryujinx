@@ -1,4 +1,4 @@
-﻿using CommandLine;
+using CommandLine;
 using Ryujinx.Common.Configuration;
 using Ryujinx.HLE.HOS.SystemState;
 

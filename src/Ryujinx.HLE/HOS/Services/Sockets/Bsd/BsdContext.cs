@@ -1,4 +1,4 @@
-﻿using Ryujinx.HLE.HOS.Services.Sockets.Bsd.Types;
+using Ryujinx.HLE.HOS.Services.Sockets.Bsd.Types;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;

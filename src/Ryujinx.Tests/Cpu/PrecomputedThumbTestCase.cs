@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Tests.Cpu
+namespace Ryujinx.Tests.Cpu
 {
     public class PrecomputedThumbTestCase
     {

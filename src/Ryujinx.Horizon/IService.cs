@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Horizon
+namespace Ryujinx.Horizon
 {
     interface IService
     {

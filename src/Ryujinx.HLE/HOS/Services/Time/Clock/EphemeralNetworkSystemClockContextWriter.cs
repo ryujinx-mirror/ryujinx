@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.HLE.HOS.Services.Time.Clock
+namespace Ryujinx.HLE.HOS.Services.Time.Clock
 {
     class EphemeralNetworkSystemClockContextWriter : SystemClockContextUpdateCallback
     {

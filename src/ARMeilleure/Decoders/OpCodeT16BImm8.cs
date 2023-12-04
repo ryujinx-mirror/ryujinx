@@ -1,4 +1,4 @@
-﻿namespace ARMeilleure.Decoders
+namespace ARMeilleure.Decoders
 {
     class OpCodeT16BImm8 : OpCodeT16, IOpCode32BImm
     {

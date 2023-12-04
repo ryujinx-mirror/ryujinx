@@ -1,4 +1,4 @@
-﻿using Ryujinx.Common.Memory;
+using Ryujinx.Common.Memory;
 using System.Diagnostics;
 
 namespace Ryujinx.Graphics.Nvdec.Vp9.Types

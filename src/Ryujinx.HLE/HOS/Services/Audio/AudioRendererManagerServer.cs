@@ -1,4 +1,4 @@
-﻿using Ryujinx.Audio.Renderer.Parameter;
+using Ryujinx.Audio.Renderer.Parameter;
 using Ryujinx.Audio.Renderer.Server;
 using Ryujinx.Common;
 using Ryujinx.Common.Logging;

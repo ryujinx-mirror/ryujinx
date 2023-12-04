@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Memory.Range
+namespace Ryujinx.Memory.Range
 {
     /// <summary>
     /// Range of memory composed of an address and size.

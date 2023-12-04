@@ -1,4 +1,4 @@
-﻿using Ryujinx.Common;
+using Ryujinx.Common;
 using Ryujinx.Graphics.Device;
 using Ryujinx.Graphics.Texture;
 using System;

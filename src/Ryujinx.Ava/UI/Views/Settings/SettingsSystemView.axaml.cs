@@ -1,4 +1,4 @@
-﻿using Avalonia.Controls;
+using Avalonia.Controls;
 using Ryujinx.Ava.UI.ViewModels;
 using TimeZone = Ryujinx.Ava.UI.Models.TimeZone;
 

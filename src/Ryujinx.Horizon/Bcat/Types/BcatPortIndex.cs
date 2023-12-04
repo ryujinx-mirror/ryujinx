@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Horizon.Bcat.Types
+namespace Ryujinx.Horizon.Bcat.Types
 {
     enum BcatPortIndex
     {

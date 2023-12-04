@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Numerics;
 
 namespace Ryujinx.Horizon.Sdk.Ngc.Detail

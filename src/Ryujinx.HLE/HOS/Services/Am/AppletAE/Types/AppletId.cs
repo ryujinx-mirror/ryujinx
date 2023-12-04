@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.HLE.HOS.Services.Am.AppletAE
+namespace Ryujinx.HLE.HOS.Services.Am.AppletAE
 {
     enum AppletId
     {

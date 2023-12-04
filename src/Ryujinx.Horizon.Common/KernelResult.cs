@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Horizon.Common
+namespace Ryujinx.Horizon.Common
 {
     public static class KernelResult
     {

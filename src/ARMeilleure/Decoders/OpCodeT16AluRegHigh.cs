@@ -1,4 +1,4 @@
-﻿namespace ARMeilleure.Decoders
+namespace ARMeilleure.Decoders
 {
     class OpCodeT16AluRegHigh : OpCodeT16, IOpCode32AluReg
     {

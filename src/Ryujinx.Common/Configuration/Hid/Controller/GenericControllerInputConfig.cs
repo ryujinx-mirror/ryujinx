@@ -1,4 +1,4 @@
-﻿using Ryujinx.Common.Configuration.Hid.Controller.Motion;
+using Ryujinx.Common.Configuration.Hid.Controller.Motion;
 using System;
 using System.Text.Json.Serialization;
 

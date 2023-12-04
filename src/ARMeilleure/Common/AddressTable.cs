@@ -1,4 +1,4 @@
-﻿using ARMeilleure.Diagnostics;
+using ARMeilleure.Diagnostics;
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;

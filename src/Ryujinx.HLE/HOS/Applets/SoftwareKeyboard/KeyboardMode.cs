@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.HLE.HOS.Applets.SoftwareKeyboard
+namespace Ryujinx.HLE.HOS.Applets.SoftwareKeyboard
 {
     /// <summary>
     /// Identifies the variant of keyboard displayed on screen.

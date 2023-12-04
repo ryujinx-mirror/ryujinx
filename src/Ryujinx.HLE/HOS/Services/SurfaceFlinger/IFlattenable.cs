@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
+namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 {
     interface IFlattenable
     {

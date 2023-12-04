@@ -1,4 +1,4 @@
-﻿using Ryujinx.Common;
+using Ryujinx.Common;
 using Ryujinx.HLE.HOS.Services.Account.Acc.AccountService;
 
 namespace Ryujinx.HLE.HOS.Services.Account.Acc

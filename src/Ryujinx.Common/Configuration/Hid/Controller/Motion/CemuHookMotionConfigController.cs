@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Common.Configuration.Hid.Controller.Motion
+namespace Ryujinx.Common.Configuration.Hid.Controller.Motion
 {
     public class CemuHookMotionConfigController : MotionConfigController
     {

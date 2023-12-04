@@ -1,4 +1,4 @@
-﻿using Ryujinx.Graphics.GAL.Multithreading.Resources.Programs;
+using Ryujinx.Graphics.GAL.Multithreading.Resources.Programs;
 using System;
 using System.Collections.Generic;
 using System.Threading;

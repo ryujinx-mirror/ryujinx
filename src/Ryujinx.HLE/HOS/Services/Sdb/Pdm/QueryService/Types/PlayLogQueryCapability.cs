@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.HLE.HOS.Services.Sdb.Pdm.QueryService.Types
+namespace Ryujinx.HLE.HOS.Services.Sdb.Pdm.QueryService.Types
 {
     enum PlayLogQueryCapability
     {

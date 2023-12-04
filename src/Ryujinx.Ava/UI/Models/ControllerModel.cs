@@ -1,4 +1,4 @@
-﻿using Ryujinx.Common.Configuration.Hid;
+using Ryujinx.Common.Configuration.Hid;
 
 namespace Ryujinx.Ava.UI.Models
 {

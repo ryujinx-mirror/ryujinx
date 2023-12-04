@@ -1,4 +1,4 @@
-﻿using Microsoft.IO;
+using Microsoft.IO;
 using Ryujinx.Common.Memory;
 using Ryujinx.Memory;
 using System;

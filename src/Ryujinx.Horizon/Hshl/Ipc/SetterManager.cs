@@ -1,4 +1,4 @@
-﻿using Ryujinx.Horizon.Sdk.Hshl;
+using Ryujinx.Horizon.Sdk.Hshl;
 
 namespace Ryujinx.Horizon.Hshl.Ipc
 {

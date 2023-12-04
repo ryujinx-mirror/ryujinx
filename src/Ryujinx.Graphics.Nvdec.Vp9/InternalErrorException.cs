@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace Ryujinx.Graphics.Nvdec.Vp9
 {

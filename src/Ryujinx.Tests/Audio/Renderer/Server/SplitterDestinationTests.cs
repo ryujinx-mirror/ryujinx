@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+using NUnit.Framework;
 using Ryujinx.Audio.Renderer.Server.Splitter;
 using System.Runtime.CompilerServices;
 

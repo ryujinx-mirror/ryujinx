@@ -1,4 +1,4 @@
-﻿#define Bf32
+#define Bf32
 
 using NUnit.Framework;
 using System;

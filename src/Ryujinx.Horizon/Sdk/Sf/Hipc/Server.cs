@@ -1,4 +1,4 @@
-﻿using Ryujinx.Horizon.Sdk.OsTypes;
+using Ryujinx.Horizon.Sdk.OsTypes;
 using Ryujinx.Horizon.Sdk.Sf.Cmif;
 using Ryujinx.Horizon.Sdk.Sm;
 

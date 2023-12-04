@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.HLE.HOS.Services.Account.Acc.Types
+namespace Ryujinx.HLE.HOS.Services.Account.Acc.Types
 {
     internal struct UserProfileJson
     {

@@ -1,4 +1,4 @@
-﻿using ARMeilleure.CodeGen.Optimizations;
+using ARMeilleure.CodeGen.Optimizations;
 using ARMeilleure.IntermediateRepresentation;
 using ARMeilleure.Translation;
 using System.Collections.Generic;

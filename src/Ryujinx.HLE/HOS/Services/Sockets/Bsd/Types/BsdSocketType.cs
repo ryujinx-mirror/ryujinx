@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd.Types
+namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd.Types
 {
     enum BsdSocketType
     {

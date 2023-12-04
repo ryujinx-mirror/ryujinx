@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Audio.Backends.SDL2
+namespace Ryujinx.Audio.Backends.SDL2
 {
     class SDL2AudioBuffer
     {

@@ -1,4 +1,4 @@
-﻿using Ryujinx.Graphics.Nvdec.Vp9.Types;
+using Ryujinx.Graphics.Nvdec.Vp9.Types;
 using System.Diagnostics;
 
 namespace Ryujinx.Graphics.Nvdec.Vp9

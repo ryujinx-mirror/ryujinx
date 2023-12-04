@@ -1,4 +1,4 @@
-﻿using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator;
+using Ryujinx.HLE.HOS.Services.Ldn.UserServiceCreator;
 
 namespace Ryujinx.HLE.HOS.Services.Ldn
 {

@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.HLE.HOS.Services.BluetoothManager
+namespace Ryujinx.HLE.HOS.Services.BluetoothManager
 {
     [Service("btm:sys")]
     class IBtmSystem : IpcService

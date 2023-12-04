@@ -1,4 +1,4 @@
-﻿using Ryujinx.HLE.HOS.Ipc;
+using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Services.Account.Acc.AsyncContext;
 using Ryujinx.Horizon.Common;
 using System;

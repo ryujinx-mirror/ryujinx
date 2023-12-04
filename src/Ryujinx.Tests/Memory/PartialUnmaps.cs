@@ -1,4 +1,4 @@
-﻿using ARMeilleure.Signal;
+using ARMeilleure.Signal;
 using ARMeilleure.Translation;
 using NUnit.Framework;
 using Ryujinx.Common.Memory.PartialUnmaps;

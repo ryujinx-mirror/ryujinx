@@ -1,4 +1,4 @@
-﻿using Ryujinx.Graphics.Device;
+using Ryujinx.Graphics.Device;
 using Ryujinx.Graphics.Gpu.Synchronization;
 using System.Collections.Generic;
 using System.Threading;

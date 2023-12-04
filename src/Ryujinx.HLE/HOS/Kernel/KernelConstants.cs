@@ -1,4 +1,4 @@
-﻿using Ryujinx.HLE.HOS.Kernel.Memory;
+using Ryujinx.HLE.HOS.Kernel.Memory;
 
 namespace Ryujinx.HLE.HOS.Kernel
 {

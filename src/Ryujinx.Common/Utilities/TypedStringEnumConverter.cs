@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 using Ryujinx.Common.Logging;
 using System;
 using System.Text.Json;

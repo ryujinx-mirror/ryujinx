@@ -1,4 +1,4 @@
-﻿using Ryujinx.Horizon.Common;
+using Ryujinx.Horizon.Common;
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;

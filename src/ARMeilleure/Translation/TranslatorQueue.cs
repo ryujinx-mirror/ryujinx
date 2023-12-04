@@ -1,4 +1,4 @@
-﻿using ARMeilleure.Diagnostics;
+using ARMeilleure.Diagnostics;
 using ARMeilleure.State;
 using System;
 using System.Collections.Generic;

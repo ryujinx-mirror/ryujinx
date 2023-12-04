@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Input.Motion.CemuHook.Protocol
+namespace Ryujinx.Input.Motion.CemuHook.Protocol
 {
     public enum MessageType : uint
     {

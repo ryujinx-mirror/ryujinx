@@ -1,4 +1,4 @@
-﻿namespace ARMeilleure.State
+namespace ARMeilleure.State
 {
     public enum FPState
     {

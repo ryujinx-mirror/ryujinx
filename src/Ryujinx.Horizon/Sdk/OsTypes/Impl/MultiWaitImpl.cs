@@ -1,4 +1,4 @@
-﻿using Ryujinx.Common;
+using Ryujinx.Common;
 using Ryujinx.Horizon.Common;
 using System;
 using System.Collections.Generic;

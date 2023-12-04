@@ -1,4 +1,4 @@
-﻿using Ryujinx.Input.Motion;
+using Ryujinx.Input.Motion;
 using System;
 using System.Numerics;
 

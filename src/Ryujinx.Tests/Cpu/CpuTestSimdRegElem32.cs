@@ -1,4 +1,4 @@
-﻿#define SimdRegElem32
+#define SimdRegElem32
 
 using ARMeilleure.State;
 using NUnit.Framework;

@@ -1,4 +1,4 @@
-﻿using Ryujinx.HLE.HOS.Ipc;
+using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel;
 using Ryujinx.HLE.HOS.Kernel.Process;
 using Ryujinx.Horizon.Common;

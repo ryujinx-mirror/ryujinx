@@ -1,4 +1,4 @@
-﻿using LibHac.Ncm;
+using LibHac.Ncm;
 
 namespace Ryujinx.HLE.HOS.Services.Arp
 {

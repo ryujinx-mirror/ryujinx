@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Memory.Range
+namespace Ryujinx.Memory.Range
 {
     /// <summary>
     /// Range of memory that can be split in two.

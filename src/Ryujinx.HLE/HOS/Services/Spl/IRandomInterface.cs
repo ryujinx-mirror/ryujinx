@@ -1,4 +1,4 @@
-﻿using System.Security.Cryptography;
+using System.Security.Cryptography;
 
 namespace Ryujinx.HLE.HOS.Services.Spl
 {

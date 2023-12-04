@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Horizon.Sdk.Sf.Hipc
+namespace Ryujinx.Horizon.Sdk.Sf.Hipc
 {
     readonly struct HipcReceiveListEntry
     {

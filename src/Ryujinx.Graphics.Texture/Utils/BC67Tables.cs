@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Graphics.Texture.Utils
+namespace Ryujinx.Graphics.Texture.Utils
 {
     static class BC67Tables
     {

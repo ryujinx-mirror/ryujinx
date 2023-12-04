@@ -1,4 +1,4 @@
-﻿using Ryujinx.Common;
+using Ryujinx.Common;
 using Ryujinx.Horizon.Sdk.Sf.Cmif;
 using System;
 using System.Runtime.CompilerServices;

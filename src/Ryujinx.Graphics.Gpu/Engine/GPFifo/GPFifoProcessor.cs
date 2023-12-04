@@ -1,4 +1,4 @@
-﻿using Ryujinx.Graphics.Device;
+using Ryujinx.Graphics.Device;
 using Ryujinx.Graphics.Gpu.Engine.Compute;
 using Ryujinx.Graphics.Gpu.Engine.Dma;
 using Ryujinx.Graphics.Gpu.Engine.InlineToMemory;

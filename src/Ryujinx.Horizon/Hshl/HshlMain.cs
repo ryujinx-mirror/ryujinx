@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Horizon.Hshl
+namespace Ryujinx.Horizon.Hshl
 {
     class HshlMain : IService
     {

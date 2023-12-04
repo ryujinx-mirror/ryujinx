@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+using NUnit.Framework;
 using Ryujinx.HLE.HOS.Applets;
 using System.Text;
 

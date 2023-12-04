@@ -1,4 +1,4 @@
-﻿using Ryujinx.Audio.Renderer.Server.Effect;
+using Ryujinx.Audio.Renderer.Server.Effect;
 using Ryujinx.Common.Memory;
 using System.Runtime.InteropServices;
 

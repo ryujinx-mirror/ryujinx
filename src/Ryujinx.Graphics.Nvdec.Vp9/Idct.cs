@@ -1,4 +1,4 @@
-﻿using Ryujinx.Graphics.Nvdec.Vp9.Common;
+using Ryujinx.Graphics.Nvdec.Vp9.Common;
 using Ryujinx.Graphics.Nvdec.Vp9.Types;
 using System;
 using static Ryujinx.Graphics.Nvdec.Vp9.Dsp.InvTxfm;

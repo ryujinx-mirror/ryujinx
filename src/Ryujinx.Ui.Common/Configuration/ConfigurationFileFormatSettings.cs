@@ -1,4 +1,4 @@
-﻿using Ryujinx.Common.Utilities;
+using Ryujinx.Common.Utilities;
 
 namespace Ryujinx.Ui.Common.Configuration
 {

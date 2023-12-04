@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.HLE.HOS.Tamper.CodeEmitters
+namespace Ryujinx.HLE.HOS.Tamper.CodeEmitters
 {
     /// <summary>
     /// Code type 0 allows writing a static value to a memory address.

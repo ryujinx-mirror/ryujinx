@@ -1,4 +1,4 @@
-﻿using ARMeilleure.State;
+using ARMeilleure.State;
 using Ryujinx.Common.Memory;
 
 namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall

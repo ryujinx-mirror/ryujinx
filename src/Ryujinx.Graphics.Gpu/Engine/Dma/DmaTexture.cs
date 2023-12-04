@@ -1,4 +1,4 @@
-﻿using Ryujinx.Graphics.Gpu.Engine.Types;
+using Ryujinx.Graphics.Gpu.Engine.Types;
 
 namespace Ryujinx.Graphics.Gpu.Engine.Dma
 {

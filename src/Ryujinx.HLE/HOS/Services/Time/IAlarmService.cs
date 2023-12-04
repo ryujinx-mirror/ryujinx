@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.HLE.HOS.Services.Time
+namespace Ryujinx.HLE.HOS.Services.Time
 {
     [Service("time:al")] // 9.0.0+
     class IAlarmService : IpcService

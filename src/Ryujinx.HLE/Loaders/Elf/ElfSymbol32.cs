@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.HLE.Loaders.Elf
+namespace Ryujinx.HLE.Loaders.Elf
 {
     struct ElfSymbol32
     {

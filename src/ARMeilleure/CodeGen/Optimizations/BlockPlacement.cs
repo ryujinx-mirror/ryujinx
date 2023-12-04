@@ -1,4 +1,4 @@
-﻿using ARMeilleure.IntermediateRepresentation;
+using ARMeilleure.IntermediateRepresentation;
 using ARMeilleure.Translation;
 using System.Diagnostics;
 using static ARMeilleure.IntermediateRepresentation.Operand.Factory;

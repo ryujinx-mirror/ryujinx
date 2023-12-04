@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace Ryujinx.Graphics.GAL.Multithreading.Model
 {

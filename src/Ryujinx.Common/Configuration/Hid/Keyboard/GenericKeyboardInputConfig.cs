@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Common.Configuration.Hid.Keyboard
+namespace Ryujinx.Common.Configuration.Hid.Keyboard
 {
     public class GenericKeyboardInputConfig<TKey> : GenericInputConfigurationCommon<TKey> where TKey : unmanaged
     {

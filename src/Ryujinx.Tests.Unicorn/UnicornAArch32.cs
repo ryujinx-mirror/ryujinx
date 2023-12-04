@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using UnicornEngine.Const;
 
 namespace Ryujinx.Tests.Unicorn

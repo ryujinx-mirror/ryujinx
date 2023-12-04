@@ -1,4 +1,4 @@
-﻿namespace ARMeilleure.CodeGen.Linking
+namespace ARMeilleure.CodeGen.Linking
 {
     /// <summary>
     /// Types of <see cref="Symbol"/>.

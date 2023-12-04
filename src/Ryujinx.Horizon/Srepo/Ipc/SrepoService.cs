@@ -1,4 +1,4 @@
-﻿using Ryujinx.Horizon.Sdk.Srepo;
+using Ryujinx.Horizon.Sdk.Srepo;
 
 namespace Ryujinx.Horizon.Srepo.Ipc
 {

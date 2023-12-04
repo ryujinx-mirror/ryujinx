@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.HLE.HOS.Services.Ncm
+namespace Ryujinx.HLE.HOS.Services.Ncm
 {
     [Service("ncm")]
     class IContentManager : IpcService

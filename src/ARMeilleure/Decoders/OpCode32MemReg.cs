@@ -1,4 +1,4 @@
-﻿namespace ARMeilleure.Decoders
+namespace ARMeilleure.Decoders
 {
     class OpCode32MemReg : OpCode32Mem, IOpCode32MemReg
     {

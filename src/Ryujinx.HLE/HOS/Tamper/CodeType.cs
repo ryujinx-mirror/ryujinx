@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.HLE.HOS.Tamper
+namespace Ryujinx.HLE.HOS.Tamper
 {
     /// <summary>
     /// The opcodes specified for the Atmosphere Cheat VM.

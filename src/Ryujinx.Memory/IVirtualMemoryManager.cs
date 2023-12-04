@@ -1,4 +1,4 @@
-﻿using Ryujinx.Memory.Range;
+using Ryujinx.Memory.Range;
 using System;
 using System.Buffers;
 using System.Collections.Generic;

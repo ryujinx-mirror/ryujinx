@@ -1,4 +1,4 @@
-﻿using Ryujinx.Common.Configuration.Hid.Controller;
+using Ryujinx.Common.Configuration.Hid.Controller;
 using Ryujinx.Common.Configuration.Hid.Keyboard;
 using System.Text.Json.Serialization;
 

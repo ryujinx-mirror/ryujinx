@@ -1,4 +1,4 @@
-﻿using Ryujinx.Common.Memory;
+using Ryujinx.Common.Memory;
 
 namespace Ryujinx.HLE.HOS.Services.Fatal.Types
 {

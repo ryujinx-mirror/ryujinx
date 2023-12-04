@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Horizon.Sdk.Ngc
+namespace Ryujinx.Horizon.Sdk.Ngc
 {
     enum MaskMode
     {

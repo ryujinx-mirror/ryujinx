@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Memory.Range
+namespace Ryujinx.Memory.Range
 {
     public interface IMultiRangeItem
     {

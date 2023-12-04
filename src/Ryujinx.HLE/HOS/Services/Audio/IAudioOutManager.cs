@@ -1,4 +1,4 @@
-﻿using Ryujinx.Audio.Common;
+using Ryujinx.Audio.Common;
 using Ryujinx.HLE.HOS.Services.Audio.AudioOut;
 
 namespace Ryujinx.HLE.HOS.Services.Audio

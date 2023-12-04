@@ -1,4 +1,4 @@
-﻿using Ryujinx.Audio.Renderer.Parameter;
+using Ryujinx.Audio.Renderer.Parameter;
 using Ryujinx.HLE.HOS.Kernel.Memory;
 using Ryujinx.HLE.HOS.Services.Audio.AudioRenderer;
 

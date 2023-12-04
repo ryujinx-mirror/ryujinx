@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Common.Configuration.Hid
+namespace Ryujinx.Common.Configuration.Hid
 {
     public class RightJoyconCommonConfig<TButton>
     {

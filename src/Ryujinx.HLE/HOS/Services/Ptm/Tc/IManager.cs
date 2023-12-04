@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.HLE.HOS.Services.Ptm.Tc
+namespace Ryujinx.HLE.HOS.Services.Ptm.Tc
 {
     [Service("tc")]
     class IManager : IpcService

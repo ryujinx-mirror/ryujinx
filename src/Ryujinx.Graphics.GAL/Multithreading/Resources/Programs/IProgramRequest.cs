@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Graphics.GAL.Multithreading.Resources.Programs
+namespace Ryujinx.Graphics.GAL.Multithreading.Resources.Programs
 {
     interface IProgramRequest
     {

@@ -1,4 +1,4 @@
-﻿using Ryujinx.Graphics.GAL;
+using Ryujinx.Graphics.GAL;
 
 namespace Ryujinx.Graphics.Vulkan
 {

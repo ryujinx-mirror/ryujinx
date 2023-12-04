@@ -1,4 +1,4 @@
-﻿using Ryujinx.Graphics.Texture;
+using Ryujinx.Graphics.Texture;
 using Ryujinx.Graphics.Video;
 using System;
 

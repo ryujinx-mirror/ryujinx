@@ -1,4 +1,4 @@
-﻿// This file was auto-generated from NVIDIA official Maxwell definitions.
+// This file was auto-generated from NVIDIA official Maxwell definitions.
 
 namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
 {

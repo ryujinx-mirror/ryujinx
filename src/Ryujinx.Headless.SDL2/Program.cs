@@ -1,4 +1,4 @@
-﻿using ARMeilleure.Translation;
+using ARMeilleure.Translation;
 using CommandLine;
 using LibHac.Tools.FsSystem;
 using Ryujinx.Audio.Backends.SDL2;

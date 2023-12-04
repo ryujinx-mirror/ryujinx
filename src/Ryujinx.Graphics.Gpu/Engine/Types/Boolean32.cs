@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Graphics.Gpu.Engine.Types
+namespace Ryujinx.Graphics.Gpu.Engine.Types
 {
     /// <summary>
     /// Boolean value, stored as a 32-bits integer in memory.

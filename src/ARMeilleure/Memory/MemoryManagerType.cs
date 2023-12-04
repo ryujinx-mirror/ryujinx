@@ -1,4 +1,4 @@
-﻿namespace ARMeilleure.Memory
+namespace ARMeilleure.Memory
 {
     /// <summary>
     /// Indicates the type of a memory manager and the method it uses for memory mapping

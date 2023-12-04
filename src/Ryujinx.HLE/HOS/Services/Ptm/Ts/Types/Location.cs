@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.HLE.HOS.Services.Ptm.Ts.Types
+namespace Ryujinx.HLE.HOS.Services.Ptm.Ts.Types
 {
     enum Location : byte
     {

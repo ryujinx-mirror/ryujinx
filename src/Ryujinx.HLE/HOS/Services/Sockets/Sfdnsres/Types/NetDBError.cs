@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres
+namespace Ryujinx.HLE.HOS.Services.Sockets.Sfdnsres
 {
     enum NetDbError
     {

@@ -1,4 +1,4 @@
-﻿using Ryujinx.Common.Configuration.Hid;
+using Ryujinx.Common.Configuration.Hid;
 using Ryujinx.Common.Configuration.Hid.Controller;
 using Ryujinx.Common.Logging;
 using System;

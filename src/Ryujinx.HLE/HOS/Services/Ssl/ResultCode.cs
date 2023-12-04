@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.HLE.HOS.Services.Ssl
+namespace Ryujinx.HLE.HOS.Services.Ssl
 {
     public enum ResultCode
     {

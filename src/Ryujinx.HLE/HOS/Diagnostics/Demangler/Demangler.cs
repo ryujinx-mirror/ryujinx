@@ -1,4 +1,4 @@
-﻿using Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast;
+using Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast;
 using System;
 using System.Collections.Generic;
 using System.IO;

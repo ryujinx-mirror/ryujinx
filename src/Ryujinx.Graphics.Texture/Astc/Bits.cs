@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Graphics.Texture.Astc
+namespace Ryujinx.Graphics.Texture.Astc
 {
     internal static class Bits
     {

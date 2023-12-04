@@ -1,4 +1,4 @@
-﻿using Ryujinx.HLE.HOS.Services.Account.Acc.AsyncContext;
+using Ryujinx.HLE.HOS.Services.Account.Acc.AsyncContext;
 
 namespace Ryujinx.HLE.HOS.Services.Account.Acc
 {

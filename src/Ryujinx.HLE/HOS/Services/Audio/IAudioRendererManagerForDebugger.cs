@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.HLE.HOS.Services.Audio
+namespace Ryujinx.HLE.HOS.Services.Audio
 {
     [Service("audren:d")]
     class IAudioRendererManagerForDebugger : IpcService

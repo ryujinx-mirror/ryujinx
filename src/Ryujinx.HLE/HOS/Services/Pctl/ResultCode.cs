@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.HLE.HOS.Services.Pctl
+namespace Ryujinx.HLE.HOS.Services.Pctl
 {
     enum ResultCode
     {

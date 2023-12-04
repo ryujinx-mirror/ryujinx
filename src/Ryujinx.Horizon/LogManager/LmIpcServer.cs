@@ -1,4 +1,4 @@
-﻿using Ryujinx.Horizon.LogManager.Ipc;
+using Ryujinx.Horizon.LogManager.Ipc;
 using Ryujinx.Horizon.Sdk.Sf.Hipc;
 using Ryujinx.Horizon.Sdk.Sm;
 

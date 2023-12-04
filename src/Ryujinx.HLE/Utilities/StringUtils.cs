@@ -1,4 +1,4 @@
-﻿using LibHac.Common;
+using LibHac.Common;
 using Microsoft.IO;
 using Ryujinx.Common.Memory;
 using Ryujinx.HLE.HOS;

@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.HLE.HOS.Services.Ncm.Lr
+namespace Ryujinx.HLE.HOS.Services.Ncm.Lr
 {
     enum ResultCode
     {

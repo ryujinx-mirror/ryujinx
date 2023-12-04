@@ -1,4 +1,4 @@
-﻿using Silk.NET.Vulkan;
+using Silk.NET.Vulkan;
 using System;
 using System.Threading;
 using VkSemaphore = Silk.NET.Vulkan.Semaphore;

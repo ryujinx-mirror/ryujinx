@@ -1,4 +1,4 @@
-﻿using Gtk;
+using Gtk;
 using LibHac;
 using LibHac.Account;
 using LibHac.Common;

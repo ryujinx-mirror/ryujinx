@@ -1,4 +1,4 @@
-﻿using Ryujinx.Common;
+using Ryujinx.Common;
 
 namespace Ryujinx.Horizon.Sdk.Sf
 {

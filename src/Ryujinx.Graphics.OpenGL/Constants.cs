@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Graphics.OpenGL
+namespace Ryujinx.Graphics.OpenGL
 {
     static class Constants
     {

@@ -1,4 +1,4 @@
-﻿using Ryujinx.Graphics.GAL.Multithreading.Commands.CounterEvent;
+using Ryujinx.Graphics.GAL.Multithreading.Commands.CounterEvent;
 using Ryujinx.Graphics.GAL.Multithreading.Model;
 using System.Threading;
 

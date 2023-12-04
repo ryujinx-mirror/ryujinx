@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 
 namespace Ryujinx.HLE.HOS.Services.Sockets.Nsd.Manager
 {

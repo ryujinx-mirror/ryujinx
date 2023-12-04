@@ -1,4 +1,4 @@
-﻿using Ryujinx.Horizon.Sdk.Diag;
+using Ryujinx.Horizon.Sdk.Diag;
 using System.Text;
 
 namespace Ryujinx.Horizon.LogManager.Types

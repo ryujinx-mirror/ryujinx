@@ -1,4 +1,4 @@
-﻿using Ryujinx.HLE.HOS.Services.Hid.Types.SharedMemory.Npad;
+using Ryujinx.HLE.HOS.Services.Hid.Types.SharedMemory.Npad;
 
 namespace Ryujinx.HLE.Ui.Input
 {

@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Graphics.GAL
+namespace Ryujinx.Graphics.GAL
 {
     public enum AntiAliasing
     {

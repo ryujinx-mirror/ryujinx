@@ -1,4 +1,4 @@
-﻿using DiscordRPC;
+using DiscordRPC;
 using Ryujinx.Common;
 using Ryujinx.Ui.Common.Configuration;
 

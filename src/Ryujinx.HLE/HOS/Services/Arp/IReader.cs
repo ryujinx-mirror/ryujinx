@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.HLE.HOS.Services.Arp
+namespace Ryujinx.HLE.HOS.Services.Arp
 {
     [Service("arp:r")]
     class IReader : IpcService

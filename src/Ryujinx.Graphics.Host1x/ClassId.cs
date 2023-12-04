@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Graphics.Host1x
+namespace Ryujinx.Graphics.Host1x
 {
     public enum ClassId
     {

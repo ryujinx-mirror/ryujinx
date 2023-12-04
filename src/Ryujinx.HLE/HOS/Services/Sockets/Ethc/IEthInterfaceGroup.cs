@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.HLE.HOS.Services.Sockets.Ethc
+namespace Ryujinx.HLE.HOS.Services.Sockets.Ethc
 {
     [Service("ethc:i")]
     class IEthInterfaceGroup : IpcService

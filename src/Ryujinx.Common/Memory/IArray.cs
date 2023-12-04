@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Common.Memory
+namespace Ryujinx.Common.Memory
 {
     /// <summary>
     /// Array interface.

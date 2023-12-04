@@ -1,4 +1,4 @@
-﻿using Ryujinx.Common.Logging;
+using Ryujinx.Common.Logging;
 
 namespace Ryujinx.HLE.HOS.Services.Ptm.Psm
 {

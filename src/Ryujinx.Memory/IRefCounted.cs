@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Memory
+namespace Ryujinx.Memory
 {
     public interface IRefCounted
     {

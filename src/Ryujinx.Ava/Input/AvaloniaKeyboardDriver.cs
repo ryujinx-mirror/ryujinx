@@ -1,4 +1,4 @@
-﻿using Avalonia.Controls;
+using Avalonia.Controls;
 using Avalonia.Input;
 using Ryujinx.Ava.Common.Locale;
 using Ryujinx.Input;

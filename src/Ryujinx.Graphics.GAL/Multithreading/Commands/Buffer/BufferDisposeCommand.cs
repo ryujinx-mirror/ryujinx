@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Graphics.GAL.Multithreading.Commands.Buffer
+namespace Ryujinx.Graphics.GAL.Multithreading.Commands.Buffer
 {
     struct BufferDisposeCommand : IGALCommand, IGALCommand<BufferDisposeCommand>
     {

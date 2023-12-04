@@ -1,4 +1,4 @@
-﻿using Ryujinx.Cpu;
+using Ryujinx.Cpu;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using System;
 

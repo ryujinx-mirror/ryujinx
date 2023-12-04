@@ -1,4 +1,4 @@
-﻿namespace ARMeilleure.Memory
+namespace ARMeilleure.Memory
 {
     public interface IJitMemoryAllocator
     {

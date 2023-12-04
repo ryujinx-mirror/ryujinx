@@ -1,4 +1,4 @@
-﻿using Ryujinx.Common;
+using Ryujinx.Common;
 using Ryujinx.Common.Configuration;
 using ShellLink;
 using SixLabors.ImageSharp;

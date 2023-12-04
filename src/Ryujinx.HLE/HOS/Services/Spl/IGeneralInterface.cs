@@ -1,4 +1,4 @@
-﻿using Ryujinx.HLE.FileSystem;
+using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Services.Spl.Types;
 

@@ -1,4 +1,4 @@
-﻿using Ryujinx.Cpu;
+using Ryujinx.Cpu;
 using Ryujinx.Memory;
 using System;
 

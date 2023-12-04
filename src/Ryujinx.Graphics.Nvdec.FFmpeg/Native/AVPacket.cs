@@ -1,4 +1,4 @@
-﻿using AVBufferRef = System.IntPtr;
+using AVBufferRef = System.IntPtr;
 
 namespace Ryujinx.Graphics.Nvdec.FFmpeg.Native
 {

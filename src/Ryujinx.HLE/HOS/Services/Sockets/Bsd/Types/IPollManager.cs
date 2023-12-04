@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd.Types
 {

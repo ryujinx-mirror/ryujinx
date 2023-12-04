@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.HLE.HOS.Services.Sdb.Pdm
+namespace Ryujinx.HLE.HOS.Services.Sdb.Pdm
 {
     [Service("pdm:ntfy")]
     class INotifyService : IpcService

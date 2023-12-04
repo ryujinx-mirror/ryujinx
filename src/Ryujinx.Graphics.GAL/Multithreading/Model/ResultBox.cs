@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Graphics.GAL.Multithreading.Model
+namespace Ryujinx.Graphics.GAL.Multithreading.Model
 {
     public class ResultBox<T>
     {

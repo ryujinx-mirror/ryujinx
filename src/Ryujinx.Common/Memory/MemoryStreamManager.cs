@@ -1,4 +1,4 @@
-﻿using Microsoft.IO;
+using Microsoft.IO;
 using System;
 
 namespace Ryujinx.Common.Memory

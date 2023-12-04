@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+using NUnit.Framework;
 using Ryujinx.Memory;
 using Ryujinx.Memory.Tracking;
 using System;

@@ -1,4 +1,4 @@
-﻿using Ryujinx.Horizon.Sdk.Ovln;
+using Ryujinx.Horizon.Sdk.Ovln;
 
 namespace Ryujinx.Horizon.Ovln.Ipc
 {

@@ -1,4 +1,4 @@
-﻿using Ryujinx.Graphics.Nvdec.Vp9.Common;
+using Ryujinx.Graphics.Nvdec.Vp9.Common;
 using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;

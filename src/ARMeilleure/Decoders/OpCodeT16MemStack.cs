@@ -1,4 +1,4 @@
-﻿using ARMeilleure.Instructions;
+using ARMeilleure.Instructions;
 using ARMeilleure.State;
 using System;
 using System.Numerics;

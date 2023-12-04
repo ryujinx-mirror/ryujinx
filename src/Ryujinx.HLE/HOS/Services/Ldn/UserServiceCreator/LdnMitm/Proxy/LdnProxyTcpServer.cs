@@ -1,4 +1,4 @@
-﻿using NetCoreServer;
+using NetCoreServer;
 using Ryujinx.Common.Logging;
 using System;
 using System.Net;

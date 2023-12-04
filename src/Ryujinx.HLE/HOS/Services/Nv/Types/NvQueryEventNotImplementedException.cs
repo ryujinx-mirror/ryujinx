@@ -1,4 +1,4 @@
-﻿using Ryujinx.HLE.HOS.Services.Nv.NvDrvServices;
+using Ryujinx.HLE.HOS.Services.Nv.NvDrvServices;
 using System;
 using System.Text;
 

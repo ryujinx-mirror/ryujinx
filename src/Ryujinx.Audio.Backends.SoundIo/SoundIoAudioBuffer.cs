@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Audio.Backends.SoundIo
+namespace Ryujinx.Audio.Backends.SoundIo
 {
     class SoundIoAudioBuffer
     {

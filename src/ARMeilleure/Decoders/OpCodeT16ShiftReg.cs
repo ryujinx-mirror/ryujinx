@@ -1,4 +1,4 @@
-﻿namespace ARMeilleure.Decoders
+namespace ARMeilleure.Decoders
 {
     class OpCodeT16ShiftReg : OpCodeT16, IOpCode32AluRsReg
     {

@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Graphics.Texture
+namespace Ryujinx.Graphics.Texture
 {
     public readonly struct Region
     {

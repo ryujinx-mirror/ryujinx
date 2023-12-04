@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.HLE.HOS.Tamper.CodeEmitters
+namespace Ryujinx.HLE.HOS.Tamper.CodeEmitters
 {
     /// <summary>
     /// Marks the begin of a conditional block (started by Code Type 1, Code Type 8 or Code Type C0).

@@ -1,4 +1,4 @@
-﻿using Ryujinx.Common;
+using Ryujinx.Common;
 using Ryujinx.HLE.HOS.Services.Mii.StaticService;
 using Ryujinx.HLE.HOS.Services.Mii.Types;
 

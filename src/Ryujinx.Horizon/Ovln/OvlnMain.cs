@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Horizon.Ovln
+namespace Ryujinx.Horizon.Ovln
 {
     class OvlnMain : IService
     {

@@ -1,4 +1,4 @@
-﻿#define AluBinary32
+#define AluBinary32
 
 using ARMeilleure.State;
 using NUnit.Framework;

@@ -1,4 +1,4 @@
-﻿using MsgPack;
+using MsgPack;
 using System;
 using System.Text;
 

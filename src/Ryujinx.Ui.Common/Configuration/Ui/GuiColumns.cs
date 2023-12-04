@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Ui.Common.Configuration.Ui
+namespace Ryujinx.Ui.Common.Configuration.Ui
 {
     public struct GuiColumns
     {

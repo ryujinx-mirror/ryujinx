@@ -1,4 +1,4 @@
-﻿using Ryujinx.SDL2.Common;
+using Ryujinx.SDL2.Common;
 using System;
 using System.Collections.Generic;
 using static SDL2.SDL;

@@ -1,4 +1,4 @@
-﻿using Ryujinx.SDL2.Common;
+using Ryujinx.SDL2.Common;
 using System;
 
 namespace Ryujinx.Input.SDL2

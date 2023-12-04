@@ -1,4 +1,4 @@
-﻿using SPB.Graphics;
+using SPB.Graphics;
 using System;
 
 namespace Ryujinx.Ui

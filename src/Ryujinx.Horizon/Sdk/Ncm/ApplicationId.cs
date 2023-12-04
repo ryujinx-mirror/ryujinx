@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Horizon.Sdk.Ncm
+namespace Ryujinx.Horizon.Sdk.Ncm
 {
     readonly struct ApplicationId
     {

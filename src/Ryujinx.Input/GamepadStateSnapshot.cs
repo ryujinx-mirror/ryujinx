@@ -1,4 +1,4 @@
-﻿using Ryujinx.Common.Memory;
+using Ryujinx.Common.Memory;
 using System.Runtime.CompilerServices;
 
 namespace Ryujinx.Input

@@ -1,4 +1,4 @@
-﻿using Ryujinx.HLE.Exceptions;
+using Ryujinx.HLE.Exceptions;
 using Ryujinx.HLE.HOS.Tamper.Conditions;
 using Ryujinx.HLE.HOS.Tamper.Operations;
 using System;

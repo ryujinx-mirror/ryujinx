@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.HLE.HOS.Services.Olsc
+namespace Ryujinx.HLE.HOS.Services.Olsc
 {
     [Service("olsc:s")] // 4.0.0+
     class IOlscServiceForSystemService : IpcService

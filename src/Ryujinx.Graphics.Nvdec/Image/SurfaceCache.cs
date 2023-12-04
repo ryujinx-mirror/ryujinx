@@ -1,4 +1,4 @@
-﻿using Ryujinx.Graphics.Gpu.Memory;
+using Ryujinx.Graphics.Gpu.Memory;
 using Ryujinx.Graphics.Video;
 using System;
 using System.Diagnostics;

@@ -1,4 +1,4 @@
-﻿using Ryujinx.HLE.HOS.Services.Nfc.Nfp.NfpManager;
+using Ryujinx.HLE.HOS.Services.Nfc.Nfp.NfpManager;
 using System.Text.Json.Serialization;
 
 namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp

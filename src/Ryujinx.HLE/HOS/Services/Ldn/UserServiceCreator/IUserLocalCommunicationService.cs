@@ -1,4 +1,4 @@
-﻿using LibHac.Ns;
+using LibHac.Ns;
 using Ryujinx.Common;
 using Ryujinx.Common.Configuration.Multiplayer;
 using Ryujinx.Common.Logging;

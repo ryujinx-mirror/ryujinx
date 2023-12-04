@@ -1,4 +1,4 @@
-﻿using Ryujinx.HLE.HOS.Services.Sockets.Bsd;
+using Ryujinx.HLE.HOS.Services.Sockets.Bsd;
 using System;
 
 namespace Ryujinx.HLE.HOS.Services.Ssl.SslService

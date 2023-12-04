@@ -1,4 +1,4 @@
-﻿using Ryujinx.Graphics.Gpu.Memory;
+using Ryujinx.Graphics.Gpu.Memory;
 using Ryujinx.Graphics.Vic.Image;
 
 namespace Ryujinx.Graphics.Vic

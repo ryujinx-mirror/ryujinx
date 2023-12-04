@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Common.Logging.Formatters
+namespace Ryujinx.Common.Logging.Formatters
 {
     interface ILogFormatter
     {

@@ -1,4 +1,4 @@
-﻿using LibHac.Tools.FsSystem;
+using LibHac.Tools.FsSystem;
 using Ryujinx.Common;
 using Ryujinx.Cpu;
 using Ryujinx.HLE.HOS.Kernel.Memory;

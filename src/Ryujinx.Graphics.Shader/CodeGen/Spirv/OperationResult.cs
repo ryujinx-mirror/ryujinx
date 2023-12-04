@@ -1,4 +1,4 @@
-﻿using Ryujinx.Graphics.Shader.Translation;
+using Ryujinx.Graphics.Shader.Translation;
 using Spv.Generator;
 
 namespace Ryujinx.Graphics.Shader.CodeGen.Spirv

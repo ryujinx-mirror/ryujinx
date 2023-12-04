@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.HLE.HOS.Services.Friend
+namespace Ryujinx.HLE.HOS.Services.Friend
 {
     enum ResultCode
     {

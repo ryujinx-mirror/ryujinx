@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Horizon.Prepo.Types
+namespace Ryujinx.Horizon.Prepo.Types
 {
     enum PrepoPortIndex
     {

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 
 namespace Ryujinx.HLE.HOS.Services.Am.AppletAE

@@ -1,4 +1,4 @@
-﻿using Gtk;
+using Gtk;
 
 namespace Ryujinx.Ui.Widgets
 {

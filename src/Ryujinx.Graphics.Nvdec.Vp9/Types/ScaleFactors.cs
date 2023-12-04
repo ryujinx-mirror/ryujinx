@@ -1,4 +1,4 @@
-﻿using Ryujinx.Common.Memory;
+using Ryujinx.Common.Memory;
 using System.Runtime.CompilerServices;
 using static Ryujinx.Graphics.Nvdec.Vp9.Dsp.Convolve;
 using static Ryujinx.Graphics.Nvdec.Vp9.Dsp.Filter;

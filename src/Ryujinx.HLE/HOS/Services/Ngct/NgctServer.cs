@@ -1,4 +1,4 @@
-﻿using Ryujinx.Common.Logging;
+using Ryujinx.Common.Logging;
 using System.Text;
 
 namespace Ryujinx.HLE.HOS.Services.Ngct

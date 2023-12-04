@@ -1,4 +1,4 @@
-﻿using LibHac;
+using LibHac;
 using LibHac.Common;
 using Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy;
 

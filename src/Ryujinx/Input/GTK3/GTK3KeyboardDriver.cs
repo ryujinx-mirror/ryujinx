@@ -1,4 +1,4 @@
-﻿using Gdk;
+using Gdk;
 using Gtk;
 using System;
 using System.Collections.Generic;

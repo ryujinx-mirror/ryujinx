@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Horizon.Lbl
+namespace Ryujinx.Horizon.Lbl
 {
     class LblMain : IService
     {

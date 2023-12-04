@@ -1,4 +1,4 @@
-﻿using Ryujinx.Graphics.Shader.Instructions;
+using Ryujinx.Graphics.Shader.Instructions;
 using Ryujinx.Graphics.Shader.IntermediateRepresentation;
 using Ryujinx.Graphics.Shader.StructuredIr;
 using System.Collections.Generic;

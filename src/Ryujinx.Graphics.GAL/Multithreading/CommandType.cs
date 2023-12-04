@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Graphics.GAL.Multithreading
+namespace Ryujinx.Graphics.GAL.Multithreading
 {
     enum CommandType : byte
     {

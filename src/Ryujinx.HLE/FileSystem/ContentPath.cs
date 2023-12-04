@@ -1,4 +1,4 @@
-﻿using LibHac.Fs;
+using LibHac.Fs;
 using LibHac.Ncm;
 using Ryujinx.Common.Configuration;
 using System;

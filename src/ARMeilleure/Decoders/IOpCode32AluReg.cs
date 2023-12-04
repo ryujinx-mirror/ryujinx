@@ -1,4 +1,4 @@
-﻿namespace ARMeilleure.Decoders
+namespace ARMeilleure.Decoders
 {
     interface IOpCode32AluReg : IOpCode32Alu
     {

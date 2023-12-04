@@ -1,4 +1,4 @@
-﻿using LibHac.Common;
+using LibHac.Common;
 using LibHac.FsSystem;
 using LibHac.Loader;
 using LibHac.Ncm;

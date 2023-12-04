@@ -1,4 +1,4 @@
-﻿using ARMeilleure.Memory;
+using ARMeilleure.Memory;
 using ARMeilleure.Translation;
 
 namespace Ryujinx.Cpu.Jit

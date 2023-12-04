@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Horizon.Sm.Types
+namespace Ryujinx.Horizon.Sm.Types
 {
     enum SmPortIndex
     {

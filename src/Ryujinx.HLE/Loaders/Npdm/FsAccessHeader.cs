@@ -1,4 +1,4 @@
-﻿using Ryujinx.HLE.Exceptions;
+using Ryujinx.HLE.Exceptions;
 using System;
 using System.IO;
 

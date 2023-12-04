@@ -1,4 +1,4 @@
-﻿#define Alu32
+#define Alu32
 
 using NUnit.Framework;
 

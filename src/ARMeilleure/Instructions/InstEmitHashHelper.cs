@@ -1,4 +1,4 @@
-﻿// https://www.intel.com/content/dam/www/public/us/en/documents/white-papers/fast-crc-computation-generic-polynomials-pclmulqdq-paper.pdf
+// https://www.intel.com/content/dam/www/public/us/en/documents/white-papers/fast-crc-computation-generic-polynomials-pclmulqdq-paper.pdf
 
 using ARMeilleure.IntermediateRepresentation;
 using ARMeilleure.Translation;

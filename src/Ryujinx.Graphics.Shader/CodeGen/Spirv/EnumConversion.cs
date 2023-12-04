@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using static Spv.Specification;
 
 namespace Ryujinx.Graphics.Shader.CodeGen.Spirv

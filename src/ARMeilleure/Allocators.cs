@@ -1,4 +1,4 @@
-﻿using ARMeilleure.Common;
+using ARMeilleure.Common;
 using System;
 using System.Runtime.CompilerServices;
 

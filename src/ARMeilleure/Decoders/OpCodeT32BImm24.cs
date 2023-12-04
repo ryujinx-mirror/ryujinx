@@ -1,4 +1,4 @@
-﻿using ARMeilleure.Instructions;
+using ARMeilleure.Instructions;
 
 namespace ARMeilleure.Decoders
 {

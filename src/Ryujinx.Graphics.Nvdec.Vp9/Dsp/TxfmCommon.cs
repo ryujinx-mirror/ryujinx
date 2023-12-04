@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
+namespace Ryujinx.Graphics.Nvdec.Vp9.Dsp
 {
     internal static class TxfmCommon
     {

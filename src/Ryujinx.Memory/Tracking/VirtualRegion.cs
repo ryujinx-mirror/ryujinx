@@ -1,4 +1,4 @@
-﻿using Ryujinx.Memory.Range;
+using Ryujinx.Memory.Range;
 using System.Collections.Generic;
 
 namespace Ryujinx.Memory.Tracking

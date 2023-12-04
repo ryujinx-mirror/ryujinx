@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Horizon.Bcat
+namespace Ryujinx.Horizon.Bcat
 {
     internal class BcatMain : IService
     {

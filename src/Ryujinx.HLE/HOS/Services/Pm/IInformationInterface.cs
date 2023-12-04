@@ -1,4 +1,4 @@
-﻿using Ryujinx.HLE.HOS.Kernel.Process;
+using Ryujinx.HLE.HOS.Kernel.Process;
 
 namespace Ryujinx.HLE.HOS.Services.Pm
 {

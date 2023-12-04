@@ -1,4 +1,4 @@
-﻿using Ryujinx.Graphics.GAL;
+using Ryujinx.Graphics.GAL;
 using System.Collections.Generic;
 
 namespace Ryujinx.Graphics.Gpu.Memory

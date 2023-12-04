@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.HLE.HOS
+namespace Ryujinx.HLE.HOS
 {
     public enum ResultCode
     {

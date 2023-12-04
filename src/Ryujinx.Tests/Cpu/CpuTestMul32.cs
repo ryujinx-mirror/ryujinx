@@ -1,4 +1,4 @@
-﻿#define Mul32
+#define Mul32
 
 using NUnit.Framework;
 

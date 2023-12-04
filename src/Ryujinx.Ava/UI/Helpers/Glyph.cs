@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Ava.UI.Helpers
+namespace Ryujinx.Ava.UI.Helpers
 {
     public enum Glyph
     {

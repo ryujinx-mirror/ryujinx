@@ -1,4 +1,4 @@
-﻿using Ryujinx.Audio.Renderer.Dsp.Effect;
+using Ryujinx.Audio.Renderer.Dsp.Effect;
 using Ryujinx.Audio.Renderer.Dsp.State;
 using Ryujinx.Audio.Renderer.Parameter.Effect;
 using Ryujinx.Audio.Renderer.Server.Effect;

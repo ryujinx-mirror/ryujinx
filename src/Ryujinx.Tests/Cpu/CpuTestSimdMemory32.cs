@@ -1,4 +1,4 @@
-﻿#define SimdMemory32
+#define SimdMemory32
 
 using ARMeilleure.State;
 using NUnit.Framework;

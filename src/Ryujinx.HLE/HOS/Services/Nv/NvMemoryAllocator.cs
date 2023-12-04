@@ -1,4 +1,4 @@
-﻿using Ryujinx.Common.Collections;
+using Ryujinx.Common.Collections;
 using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.Gpu.Memory;
 using System;

@@ -1,4 +1,4 @@
-﻿using Ryujinx.Horizon.Sdk.OsTypes.Impl;
+using Ryujinx.Horizon.Sdk.OsTypes.Impl;
 
 namespace Ryujinx.Horizon.Sdk.OsTypes
 {

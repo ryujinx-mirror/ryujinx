@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.HLE.HOS.Services.Sockets.Nsd.Types
+namespace Ryujinx.HLE.HOS.Services.Sockets.Nsd.Types
 {
     enum ApplicationServerEnvironmentType : byte
     {

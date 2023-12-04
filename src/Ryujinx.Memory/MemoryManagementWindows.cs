@@ -1,4 +1,4 @@
-﻿using Ryujinx.Memory.WindowsShared;
+using Ryujinx.Memory.WindowsShared;
 using System;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;

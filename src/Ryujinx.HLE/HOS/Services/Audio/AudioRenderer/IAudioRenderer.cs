@@ -1,4 +1,4 @@
-﻿using Ryujinx.HLE.HOS.Kernel.Threading;
+using Ryujinx.HLE.HOS.Kernel.Threading;
 using System;
 
 namespace Ryujinx.HLE.HOS.Services.Audio.AudioRenderer

@@ -1,4 +1,4 @@
-﻿using Ryujinx.Horizon.Sdk.Sm;
+using Ryujinx.Horizon.Sdk.Sm;
 
 namespace Ryujinx.Horizon.Sm.Ipc
 {

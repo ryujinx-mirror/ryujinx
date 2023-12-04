@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Graphics.Nvdec.Types.Vp9
+namespace Ryujinx.Graphics.Nvdec.Types.Vp9
 {
     struct FrameStats
     {

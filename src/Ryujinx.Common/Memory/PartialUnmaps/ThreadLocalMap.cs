@@ -1,4 +1,4 @@
-﻿using System.Runtime.InteropServices;
+using System.Runtime.InteropServices;
 using System.Threading;
 using static Ryujinx.Common.Memory.PartialUnmaps.PartialUnmapHelpers;
 

@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Horizon.Psc
+namespace Ryujinx.Horizon.Psc
 {
     class PscMain : IService
     {

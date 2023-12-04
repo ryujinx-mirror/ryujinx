@@ -1,4 +1,4 @@
-﻿using ARMeilleure.IntermediateRepresentation;
+using ARMeilleure.IntermediateRepresentation;
 
 namespace ARMeilleure.CodeGen.X86
 {

@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.HLE.HOS.Services.Ssl.Types
+namespace Ryujinx.HLE.HOS.Services.Ssl.Types
 {
     enum CaCertificateId : uint
     {

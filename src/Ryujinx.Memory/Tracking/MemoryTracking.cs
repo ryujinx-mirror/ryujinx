@@ -1,4 +1,4 @@
-﻿using Ryujinx.Common.Pools;
+using Ryujinx.Common.Pools;
 using Ryujinx.Memory.Range;
 using System.Collections.Generic;
 

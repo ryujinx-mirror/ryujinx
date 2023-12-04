@@ -1,4 +1,4 @@
-﻿using Ryujinx.Common.GraphicsDriver.NVAPI;
+using Ryujinx.Common.GraphicsDriver.NVAPI;
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;

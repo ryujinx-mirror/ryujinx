@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Horizon.Sdk.Sf.Cmif
+namespace Ryujinx.Horizon.Sdk.Sf.Cmif
 {
     abstract partial class DomainServiceObject : ServerDomainBase, IServiceObject
     {

@@ -1,4 +1,4 @@
-﻿using Gtk;
+using Gtk;
 using Ryujinx.Common.Utilities;
 using Ryujinx.Ui.Common.Helper;
 using System.Net.Http;

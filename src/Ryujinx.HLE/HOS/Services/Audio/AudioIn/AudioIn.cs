@@ -1,4 +1,4 @@
-﻿using Ryujinx.Audio.Common;
+using Ryujinx.Audio.Common;
 using Ryujinx.Audio.Input;
 using Ryujinx.Audio.Integration;
 using Ryujinx.HLE.HOS.Kernel;

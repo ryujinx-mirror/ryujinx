@@ -1,4 +1,4 @@
-﻿using LibHac.Common;
+using LibHac.Common;
 using LibHac.Loader;
 using LibHac.Ns;
 using Ryujinx.Common.Logging;

@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Common.GraphicsDriver.NVAPI
+namespace Ryujinx.Common.GraphicsDriver.NVAPI
 {
     enum Nvapi : uint
     {

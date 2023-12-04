@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.HLE.HOS.Services.Caps
+namespace Ryujinx.HLE.HOS.Services.Caps
 {
     enum ResultCode
     {

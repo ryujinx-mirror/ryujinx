@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Graphics.GAL.Multithreading.Commands
+namespace Ryujinx.Graphics.GAL.Multithreading.Commands
 {
     struct SetDepthTestCommand : IGALCommand, IGALCommand<SetDepthTestCommand>
     {

@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostChannel
+namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostChannel
 {
     enum NvChannelPriority : uint
     {

@@ -1,4 +1,4 @@
-﻿using LibHac.Account;
+using LibHac.Account;
 using System;
 using System.Globalization;
 using System.IO;

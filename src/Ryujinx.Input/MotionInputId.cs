@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Input
+namespace Ryujinx.Input
 {
     /// <summary>
     /// Represent a motion sensor on a gamepad.

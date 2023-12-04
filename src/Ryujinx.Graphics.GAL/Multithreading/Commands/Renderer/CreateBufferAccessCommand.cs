@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Graphics.GAL.Multithreading.Commands.Renderer
+namespace Ryujinx.Graphics.GAL.Multithreading.Commands.Renderer
 {
     struct CreateBufferAccessCommand : IGALCommand, IGALCommand<CreateBufferAccessCommand>
     {

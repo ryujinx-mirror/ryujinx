@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.HLE.HOS.Services.Pcie
+namespace Ryujinx.HLE.HOS.Services.Pcie
 {
     [Service("pcie")]
     class IManager : IpcService

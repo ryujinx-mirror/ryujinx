@@ -1,4 +1,4 @@
-﻿using ARMeilleure.Common;
+using ARMeilleure.Common;
 using System.Runtime.Intrinsics;
 
 namespace ARMeilleure.Decoders

@@ -1,4 +1,4 @@
-﻿using ARMeilleure.Translation;
+using ARMeilleure.Translation;
 using Gdk;
 using Gtk;
 using Ryujinx.Common;

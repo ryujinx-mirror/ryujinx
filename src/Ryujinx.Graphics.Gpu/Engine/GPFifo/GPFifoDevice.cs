@@ -1,4 +1,4 @@
-﻿using Ryujinx.Graphics.Gpu.Memory;
+using Ryujinx.Graphics.Gpu.Memory;
 using System;
 using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;

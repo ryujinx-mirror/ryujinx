@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator.NotificationService
+namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator.NotificationService
 {
     enum NotificationEventType : uint
     {

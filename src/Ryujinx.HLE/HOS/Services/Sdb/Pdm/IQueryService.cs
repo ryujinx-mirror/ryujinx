@@ -1,4 +1,4 @@
-﻿using Ryujinx.HLE.HOS.Services.Sdb.Pdm.QueryService;
+using Ryujinx.HLE.HOS.Services.Sdb.Pdm.QueryService;
 
 namespace Ryujinx.HLE.HOS.Services.Sdb.Pdm
 {

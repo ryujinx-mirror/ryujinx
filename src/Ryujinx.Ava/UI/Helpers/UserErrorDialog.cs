@@ -1,4 +1,4 @@
-﻿using Ryujinx.Ava.Common.Locale;
+using Ryujinx.Ava.Common.Locale;
 using Ryujinx.Ui.Common;
 using Ryujinx.Ui.Common.Helper;
 using System.Threading.Tasks;

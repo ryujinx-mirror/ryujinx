@@ -1,4 +1,4 @@
-﻿#define SimdMov32
+#define SimdMov32
 
 using ARMeilleure.State;
 using NUnit.Framework;

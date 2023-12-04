@@ -1,4 +1,4 @@
-﻿using LibHac.Common;
+using LibHac.Common;
 using LibHac.Ns;
 
 namespace Ryujinx.HLE.HOS.Services.Ns

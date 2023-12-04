@@ -1,4 +1,4 @@
-﻿using Ryujinx.Graphics.GAL;
+using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.Gpu.Shader;
 
 namespace Ryujinx.Graphics.Gpu.Engine.Threed

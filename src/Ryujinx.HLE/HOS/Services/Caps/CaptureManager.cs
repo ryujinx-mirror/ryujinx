@@ -1,4 +1,4 @@
-﻿using Ryujinx.Common.Memory;
+using Ryujinx.Common.Memory;
 using Ryujinx.HLE.HOS.Services.Caps.Types;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;

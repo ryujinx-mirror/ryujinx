@@ -1,4 +1,4 @@
-﻿using Ryujinx.Graphics.Device;
+using Ryujinx.Graphics.Device;
 using Ryujinx.Graphics.Gpu.Memory;
 using Ryujinx.Graphics.Vic.Image;
 using Ryujinx.Graphics.Vic.Types;

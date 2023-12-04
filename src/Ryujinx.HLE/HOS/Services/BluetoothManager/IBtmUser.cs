@@ -1,4 +1,4 @@
-﻿using Ryujinx.HLE.HOS.Services.BluetoothManager.BtmUser;
+using Ryujinx.HLE.HOS.Services.BluetoothManager.BtmUser;
 
 namespace Ryujinx.HLE.HOS.Services.BluetoothManager
 {

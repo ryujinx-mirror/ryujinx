@@ -1,4 +1,4 @@
-﻿using Ryujinx.HLE.Exceptions;
+using Ryujinx.HLE.Exceptions;
 
 namespace Ryujinx.HLE.HOS.Tamper.CodeEmitters
 {

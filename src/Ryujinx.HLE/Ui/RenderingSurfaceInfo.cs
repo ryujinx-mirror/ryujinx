@@ -1,4 +1,4 @@
-﻿using Ryujinx.HLE.HOS.Services.SurfaceFlinger;
+using Ryujinx.HLE.HOS.Services.SurfaceFlinger;
 using System;
 
 namespace Ryujinx.HLE.Ui

@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Graphics.Nvdec.Vp9
+namespace Ryujinx.Graphics.Nvdec.Vp9
 {
     internal enum BitDepth
     {

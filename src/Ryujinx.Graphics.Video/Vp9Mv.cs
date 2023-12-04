@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Graphics.Video
+namespace Ryujinx.Graphics.Video
 {
     public struct Vp9Mv
     {

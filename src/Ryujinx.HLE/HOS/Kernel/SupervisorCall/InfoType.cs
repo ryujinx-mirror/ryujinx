@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
+namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
 {
     enum InfoType : uint
     {

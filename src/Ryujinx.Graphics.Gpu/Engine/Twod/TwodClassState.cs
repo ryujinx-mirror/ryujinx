@@ -1,4 +1,4 @@
-﻿// This file was auto-generated from NVIDIA official Maxwell definitions.
+// This file was auto-generated from NVIDIA official Maxwell definitions.
 
 using Ryujinx.Common.Memory;
 

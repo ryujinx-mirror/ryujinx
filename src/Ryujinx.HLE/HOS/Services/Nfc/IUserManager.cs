@@ -1,4 +1,4 @@
-﻿using Ryujinx.HLE.HOS.Services.Nfc.NfcManager;
+using Ryujinx.HLE.HOS.Services.Nfc.NfcManager;
 
 namespace Ryujinx.HLE.HOS.Services.Nfc
 {

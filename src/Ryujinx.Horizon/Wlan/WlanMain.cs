@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Horizon.Wlan
+namespace Ryujinx.Horizon.Wlan
 {
     class WlanMain : IService
     {

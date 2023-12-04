@@ -1,4 +1,4 @@
-﻿using Ryujinx.Common.Memory;
+using Ryujinx.Common.Memory;
 using Silk.NET.Vulkan;
 
 namespace Ryujinx.Graphics.Vulkan

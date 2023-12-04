@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Audio.Renderer.Dsp.Effect
+namespace Ryujinx.Audio.Renderer.Dsp.Effect
 {
     public struct ExponentialMovingAverage
     {

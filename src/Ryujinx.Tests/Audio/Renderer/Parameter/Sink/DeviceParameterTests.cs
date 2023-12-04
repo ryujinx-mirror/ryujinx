@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+using NUnit.Framework;
 using Ryujinx.Audio.Renderer.Parameter.Sink;
 using System.Runtime.CompilerServices;
 

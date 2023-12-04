@@ -1,4 +1,4 @@
-﻿using Ryujinx.Cpu;
+using Ryujinx.Cpu;
 using Ryujinx.HLE.Exceptions;
 using Ryujinx.HLE.HOS.Kernel.Memory;
 using Ryujinx.HLE.HOS.Services.Time.Clock;

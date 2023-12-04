@@ -1,4 +1,4 @@
-﻿using Gdk;
+using Gdk;
 using Ryujinx.Common.Configuration;
 using Ryujinx.Input.HLE;
 using Ryujinx.Ui.Helper;

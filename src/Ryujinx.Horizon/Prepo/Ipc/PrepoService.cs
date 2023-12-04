@@ -1,4 +1,4 @@
-﻿using MsgPack;
+using MsgPack;
 using MsgPack.Serialization;
 using Ryujinx.Common.Logging;
 using Ryujinx.Common.Utilities;

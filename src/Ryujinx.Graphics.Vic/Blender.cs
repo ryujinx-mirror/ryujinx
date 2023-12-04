@@ -1,4 +1,4 @@
-﻿using Ryujinx.Graphics.Vic.Image;
+using Ryujinx.Graphics.Vic.Image;
 using Ryujinx.Graphics.Vic.Types;
 using System;
 using System.Diagnostics;

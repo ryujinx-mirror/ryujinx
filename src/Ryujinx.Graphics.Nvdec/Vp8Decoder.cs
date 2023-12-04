@@ -1,4 +1,4 @@
-﻿using Ryujinx.Graphics.Nvdec.FFmpeg.Vp8;
+using Ryujinx.Graphics.Nvdec.FFmpeg.Vp8;
 using Ryujinx.Graphics.Nvdec.Image;
 using Ryujinx.Graphics.Nvdec.Types.Vp8;
 using Ryujinx.Graphics.Video;

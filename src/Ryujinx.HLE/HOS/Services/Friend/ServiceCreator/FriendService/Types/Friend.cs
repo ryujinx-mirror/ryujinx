@@ -1,4 +1,4 @@
-﻿using Ryujinx.HLE.HOS.Services.Account.Acc;
+using Ryujinx.HLE.HOS.Services.Account.Acc;
 using System.Runtime.InteropServices;
 
 namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator.FriendService

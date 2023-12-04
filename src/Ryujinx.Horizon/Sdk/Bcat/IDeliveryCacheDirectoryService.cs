@@ -1,4 +1,4 @@
-﻿using LibHac.Bcat;
+using LibHac.Bcat;
 using Ryujinx.Horizon.Common;
 using Ryujinx.Horizon.Sdk.Sf;
 using System;

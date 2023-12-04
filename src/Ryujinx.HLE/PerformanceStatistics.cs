@@ -1,4 +1,4 @@
-﻿using Ryujinx.Common;
+using Ryujinx.Common;
 using System.Timers;
 
 namespace Ryujinx.HLE

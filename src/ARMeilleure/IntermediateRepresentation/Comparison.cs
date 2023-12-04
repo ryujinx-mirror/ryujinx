@@ -1,4 +1,4 @@
-﻿namespace ARMeilleure.IntermediateRepresentation
+namespace ARMeilleure.IntermediateRepresentation
 {
     enum Comparison
     {

@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.HLE.HOS.Services.Hid.Types.SharedMemory.TouchScreen
+namespace Ryujinx.HLE.HOS.Services.Hid.Types.SharedMemory.TouchScreen
 {
     struct TouchState
     {

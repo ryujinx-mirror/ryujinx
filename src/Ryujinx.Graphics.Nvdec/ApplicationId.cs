@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Graphics.Nvdec
+namespace Ryujinx.Graphics.Nvdec
 {
     public enum ApplicationId
     {

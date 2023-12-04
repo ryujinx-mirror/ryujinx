@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.HLE.HOS.Services.Mii
+namespace Ryujinx.HLE.HOS.Services.Mii
 {
     public enum ResultCode
     {

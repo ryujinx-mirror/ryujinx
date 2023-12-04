@@ -1,4 +1,4 @@
-﻿using Ryujinx.Graphics.Nvdec.FFmpeg.H264;
+using Ryujinx.Graphics.Nvdec.FFmpeg.H264;
 using Ryujinx.Graphics.Nvdec.Image;
 using Ryujinx.Graphics.Nvdec.Types.H264;
 using Ryujinx.Graphics.Video;

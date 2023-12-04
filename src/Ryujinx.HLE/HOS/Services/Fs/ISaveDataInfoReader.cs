@@ -1,4 +1,4 @@
-﻿using LibHac;
+using LibHac;
 using LibHac.Common;
 using LibHac.Sf;
 

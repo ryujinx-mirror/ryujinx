@@ -1,4 +1,4 @@
-﻿using Ryujinx.Input;
+using Ryujinx.Input;
 using System;
 using System.Collections.Generic;
 using AvaKey = Avalonia.Input.Key;

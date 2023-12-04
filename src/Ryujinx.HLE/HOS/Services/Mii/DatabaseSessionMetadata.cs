@@ -1,4 +1,4 @@
-﻿using Ryujinx.HLE.HOS.Services.Mii.Types;
+using Ryujinx.HLE.HOS.Services.Mii.Types;
 
 namespace Ryujinx.HLE.HOS.Services.Mii
 {

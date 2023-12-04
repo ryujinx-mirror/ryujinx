@@ -1,4 +1,4 @@
-﻿using Ryujinx.HLE.Ui;
+using Ryujinx.HLE.Ui;
 using Ryujinx.Memory;
 using System;
 using System.Threading;

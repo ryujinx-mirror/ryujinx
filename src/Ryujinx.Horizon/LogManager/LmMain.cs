@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Horizon.LogManager
+namespace Ryujinx.Horizon.LogManager
 {
     class LmMain : IService
     {

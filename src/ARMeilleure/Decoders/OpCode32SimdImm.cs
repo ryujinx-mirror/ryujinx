@@ -1,4 +1,4 @@
-﻿namespace ARMeilleure.Decoders
+namespace ARMeilleure.Decoders
 {
     class OpCode32SimdImm : OpCode32SimdBase, IOpCode32SimdImm
     {

@@ -1,4 +1,4 @@
-﻿namespace ARMeilleure.Decoders
+namespace ARMeilleure.Decoders
 {
     class OpCodeT16ShiftImm : OpCodeT16, IOpCode32AluRsImm
     {

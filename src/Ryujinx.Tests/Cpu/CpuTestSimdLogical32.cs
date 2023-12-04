@@ -1,4 +1,4 @@
-﻿#define SimdLogical32
+#define SimdLogical32
 
 using ARMeilleure.State;
 using NUnit.Framework;

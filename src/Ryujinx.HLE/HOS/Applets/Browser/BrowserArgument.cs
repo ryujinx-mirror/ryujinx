@@ -1,4 +1,4 @@
-﻿using Ryujinx.HLE.HOS.Services.Account.Acc;
+using Ryujinx.HLE.HOS.Services.Account.Acc;
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;

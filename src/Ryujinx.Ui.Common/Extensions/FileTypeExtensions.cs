@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using static Ryujinx.Ui.Common.Configuration.ConfigurationState.UiSection;
 
 namespace Ryujinx.Ui.Common

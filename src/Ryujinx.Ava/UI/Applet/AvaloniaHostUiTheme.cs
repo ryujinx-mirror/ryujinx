@@ -1,4 +1,4 @@
-﻿using Avalonia.Media;
+using Avalonia.Media;
 using Ryujinx.Ava.UI.Windows;
 using Ryujinx.HLE.Ui;
 using System;

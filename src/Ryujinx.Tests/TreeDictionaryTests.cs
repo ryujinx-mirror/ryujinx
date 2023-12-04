@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+using NUnit.Framework;
 using Ryujinx.Common.Collections;
 using System;
 using System.Collections.Generic;

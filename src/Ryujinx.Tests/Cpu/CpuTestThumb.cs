@@ -1,4 +1,4 @@
-﻿using ARMeilleure.State;
+using ARMeilleure.State;
 using NUnit.Framework;
 
 namespace Ryujinx.Tests.Cpu

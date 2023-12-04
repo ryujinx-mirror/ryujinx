@@ -1,4 +1,4 @@
-﻿using Gtk;
+using Gtk;
 using Ryujinx.HLE.Ui;
 using System.Diagnostics;
 

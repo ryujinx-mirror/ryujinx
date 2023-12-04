@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.HLE.Loaders.Processes
+namespace Ryujinx.HLE.Loaders.Processes
 {
     static class ProcessConst
     {

@@ -1,4 +1,4 @@
-﻿using Ryujinx.Graphics.Texture.Utils;
+using Ryujinx.Graphics.Texture.Utils;
 using System;
 using System.Runtime.InteropServices;
 

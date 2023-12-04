@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.HLE.HOS.Services.Settings.Types
+namespace Ryujinx.HLE.HOS.Services.Settings.Types
 {
     enum PlatformRegion
     {

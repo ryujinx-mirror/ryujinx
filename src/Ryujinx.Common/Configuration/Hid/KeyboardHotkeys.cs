@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Common.Configuration.Hid
+namespace Ryujinx.Common.Configuration.Hid
 {
     // NOTE: Please don't change this to struct.
     //       This breaks Avalonia's TwoWay binding, which makes us unable to save new KeyboardHotkeys.
