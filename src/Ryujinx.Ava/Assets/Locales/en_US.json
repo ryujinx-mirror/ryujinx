@@ -600,6 +600,7 @@
   "Cancel": "Cancel",
   "Save": "Save",
   "Discard": "Discard",
+  "Paused": "Paused",
   "UserProfilesSetProfileImage": "Set Profile Image",
   "UserProfileEmptyNameError": "Name is required",
   "UserProfileNoImageError": "Profile image must be set",
