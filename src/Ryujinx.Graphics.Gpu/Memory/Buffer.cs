@@ -44,6 +44,11 @@ namespace Ryujinx.Graphics.Gpu.Memory
         public int UnmappedSequence { get; private set; }
 
         /// <summary>
+        /// Indicates if the buffer can be used in a sparse buffer mapping.
+        /// </summary>
+        public bool SparseCompatible { get; }
+
+        /// <summary>
         /// Ranges of the buffer that have been modified on the GPU.
         /// Ranges defined here cannot be updated from CPU until a CPU waiting sync point is reached.
         /// Then, write tracking will signal, wait for GPU sync (generated at the syncpoint) and flush these regions.
@@ -77,15 +82,25 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// <param name="physicalMemory">Physical memory where the buffer is mapped</param>
         /// <param name="address">Start address of the buffer</param>
         /// <param name="size">Size of the buffer in bytes</param>
+        /// <param name="sparseCompatible">Indicates if the buffer can be used in a sparse buffer mapping</param>
         /// <param name="baseBuffers">Buffers which this buffer contains, and will inherit tracking handles from</param>
-        public Buffer(GpuContext context, PhysicalMemory physicalMemory, ulong address, ulong size, IEnumerable<Buffer> baseBuffers = null)
+        public Buffer(
+            GpuContext context,
+            PhysicalMemory physicalMemory,
+            ulong address,
+            ulong size,
+            bool sparseCompatible,
+            IEnumerable<Buffer> baseBuffers = null)
         {
             _context = context;
             _physicalMemory = physicalMemory;
             Address = address;
             Size = size;
+            SparseCompatible = sparseCompatible;
 
-            Handle = context.Renderer.CreateBuffer((int)size, baseBuffers?.MaxBy(x => x.Size).Handle ?? BufferHandle.Null);
+            BufferAccess access = sparseCompatible ? BufferAccess.SparseCompatible : BufferAccess.Default;
+
+            Handle = context.Renderer.CreateBuffer((int)size, access, baseBuffers?.MaxBy(x => x.Size).Handle ?? BufferHandle.Null);
 
             _useGranular = size > GranularBufferThreshold;
 

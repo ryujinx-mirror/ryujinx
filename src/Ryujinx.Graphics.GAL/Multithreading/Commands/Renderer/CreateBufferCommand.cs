@@ -5,12 +5,14 @@ namespace Ryujinx.Graphics.GAL.Multithreading.Commands.Renderer
         public readonly CommandType CommandType => CommandType.CreateBuffer;
         private BufferHandle _threadedHandle;
         private int _size;
+        private BufferAccess _access;
         private BufferHandle _storageHint;
 
-        public void Set(BufferHandle threadedHandle, int size, BufferHandle storageHint)
+        public void Set(BufferHandle threadedHandle, int size, BufferAccess access, BufferHandle storageHint)
         {
             _threadedHandle = threadedHandle;
             _size = size;
+            _access = access;
             _storageHint = storageHint;
         }
 
@@ -23,7 +25,7 @@ namespace Ryujinx.Graphics.GAL.Multithreading.Commands.Renderer
                 hint = threaded.Buffers.MapBuffer(command._storageHint);
             }
 
-            threaded.Buffers.AssignBuffer(command._threadedHandle, renderer.CreateBuffer(command._size, hint));
+            threaded.Buffers.AssignBuffer(command._threadedHandle, renderer.CreateBuffer(command._size, command._access, hint));
         }
     }
 }

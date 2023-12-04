@@ -16,6 +16,11 @@ namespace Ryujinx.Memory.Range
         private bool HasSingleRange => _ranges == null;
 
         /// <summary>
+        /// Indicates that the range is fully unmapped.
+        /// </summary>
+        public bool IsUnmapped => HasSingleRange && _singleRange.Address == InvalidAddress;
+
+        /// <summary>
         /// Total of physical sub-ranges on the virtual memory region.
         /// </summary>
         public int Count => HasSingleRange ? 1 : _ranges.Length;
@@ -38,8 +43,18 @@ namespace Ryujinx.Memory.Range
         /// <exception cref="ArgumentNullException"><paramref name="ranges"/> is null</exception>
         public MultiRange(MemoryRange[] ranges)
         {
-            _singleRange = MemoryRange.Empty;
-            _ranges = ranges ?? throw new ArgumentNullException(nameof(ranges));
+            ArgumentNullException.ThrowIfNull(ranges);
+
+            if (ranges.Length == 1)
+            {
+                _singleRange = ranges[0];
+                _ranges = null;
+            }
+            else
+            {
+                _singleRange = MemoryRange.Empty;
+                _ranges = ranges;
+            }
         }
 
         /// <summary>
@@ -91,7 +106,7 @@ namespace Ryujinx.Memory.Range
                     offset -= range.Size;
                 }
 
-                return new MultiRange(ranges.ToArray());
+                return ranges.Count == 1 ? new MultiRange(ranges[0].Address, ranges[0].Size) : new MultiRange(ranges.ToArray());
             }
         }
 

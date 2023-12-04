@@ -16,13 +16,10 @@ namespace Ryujinx.Graphics.GAL
 
         void BackgroundContextAction(Action action, bool alwaysBackground = false);
 
-        BufferHandle CreateBuffer(int size, BufferHandle storageHint);
-        BufferHandle CreateBuffer(int size)
-        {
-            return CreateBuffer(size, BufferHandle.Null);
-        }
+        BufferHandle CreateBuffer(int size, BufferAccess access = BufferAccess.Default);
+        BufferHandle CreateBuffer(int size, BufferAccess access, BufferHandle storageHint);
         BufferHandle CreateBuffer(nint pointer, int size);
-        BufferHandle CreateBuffer(int size, BufferAccess access);
+        BufferHandle CreateBufferSparse(ReadOnlySpan<BufferRange> storageBuffers);
 
         IProgram CreateProgram(ShaderSource[] shaders, ShaderInfo info);
 

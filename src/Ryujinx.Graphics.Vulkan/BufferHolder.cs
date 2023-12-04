@@ -46,7 +46,7 @@ namespace Ryujinx.Graphics.Vulkan
 
         private bool _lastAccessIsWrite;
 
-        private readonly BufferAllocationType _baseType;
+        private BufferAllocationType _baseType;
         private BufferAllocationType _currentType;
         private bool _swapQueued;
 
@@ -109,6 +109,22 @@ namespace Ryujinx.Graphics.Vulkan
             _flushLock = new ReaderWriterLockSlim();
         }
 
+        public BufferHolder(VulkanRenderer gd, Device device, VkBuffer buffer, int size, Auto<MemoryAllocation>[] storageAllocations)
+        {
+            _gd = gd;
+            _device = device;
+            _waitable = new MultiFenceHolder(size);
+            _buffer = new Auto<DisposableBuffer>(new DisposableBuffer(gd.Api, device, buffer), _waitable, storageAllocations);
+            _bufferHandle = buffer.Handle;
+            Size = size;
+
+            _baseType = BufferAllocationType.Sparse;
+            _currentType = BufferAllocationType.Sparse;
+            DesiredType = BufferAllocationType.Sparse;
+
+            _flushLock = new ReaderWriterLockSlim();
+        }
+
         public bool TryBackingSwap(ref CommandBufferScoped? cbs)
         {
             if (_swapQueued && DesiredType != _currentType)
@@ -122,7 +138,7 @@ namespace Ryujinx.Graphics.Vulkan
                     var currentBuffer = _buffer;
                     IntPtr currentMap = _map;
 
-                    (VkBuffer buffer, MemoryAllocation allocation, BufferAllocationType resultType) = _gd.BufferManager.CreateBacking(_gd, Size, DesiredType, false, _currentType);
+                    (VkBuffer buffer, MemoryAllocation allocation, BufferAllocationType resultType) = _gd.BufferManager.CreateBacking(_gd, Size, DesiredType, false, false, _currentType);
 
                     if (buffer.Handle != 0)
                     {
@@ -250,6 +266,14 @@ namespace Ryujinx.Graphics.Vulkan
 
                     _gd.PipelineInternal.AddBackingSwap(this);
                 }
+            }
+        }
+
+        public void Pin()
+        {
+            if (_baseType == BufferAllocationType.Auto)
+            {
+                _baseType = _currentType;
             }
         }
 
@@ -504,6 +528,16 @@ namespace Ryujinx.Graphics.Vulkan
                     }
                 }
             }
+        }
+
+        public Auto<MemoryAllocation> GetAllocation()
+        {
+            return _allocationAuto;
+        }
+
+        public (DeviceMemory, ulong) GetDeviceMemoryAndOffset()
+        {
+            return (_allocation.Memory, _allocation.Offset);
         }
 
         public void SignalWrite(int offset, int size)
@@ -1072,7 +1106,7 @@ namespace Ryujinx.Graphics.Vulkan
             }
             else
             {
-                _allocationAuto.Dispose();
+                _allocationAuto?.Dispose();
             }
 
             _flushLock.EnterWriteLock();

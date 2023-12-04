@@ -8,5 +8,6 @@ namespace Ryujinx.Graphics.Vulkan
         HostMapped,
         DeviceLocal,
         DeviceLocalMapped,
+        Sparse,
     }
 }

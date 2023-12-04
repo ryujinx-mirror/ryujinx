@@ -424,12 +424,12 @@ namespace Ryujinx.Graphics.Vulkan
 
         public static BufferAllocationType Convert(this BufferAccess access)
         {
-            return access switch
+            if (access.HasFlag(BufferAccess.FlushPersistent) || access.HasFlag(BufferAccess.Stream))
             {
-                BufferAccess.FlushPersistent => BufferAllocationType.HostMapped,
-                BufferAccess.Stream => BufferAllocationType.HostMapped,
-                _ => BufferAllocationType.Auto,
-            };
+                return BufferAllocationType.HostMapped;
+            }
+
+            return BufferAllocationType.Auto;
         }
 
         private static T2 LogInvalidAndReturn<T1, T2>(T1 value, string name, T2 defaultValue = default)

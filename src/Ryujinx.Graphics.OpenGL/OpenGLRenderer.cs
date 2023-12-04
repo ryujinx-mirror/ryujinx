@@ -57,16 +57,11 @@ namespace Ryujinx.Graphics.OpenGL
             ResourcePool = new ResourcePool();
         }
 
-        public BufferHandle CreateBuffer(int size, BufferHandle storageHint)
-        {
-            return CreateBuffer(size, GAL.BufferAccess.Default);
-        }
-
         public BufferHandle CreateBuffer(int size, GAL.BufferAccess access)
         {
             BufferCount++;
 
-            if (access == GAL.BufferAccess.FlushPersistent)
+            if (access.HasFlag(GAL.BufferAccess.FlushPersistent))
             {
                 BufferHandle handle = Buffer.CreatePersistent(size);
 
@@ -80,7 +75,17 @@ namespace Ryujinx.Graphics.OpenGL
             }
         }
 
+        public BufferHandle CreateBuffer(int size, GAL.BufferAccess access, BufferHandle storageHint)
+        {
+            return CreateBuffer(size, access);
+        }
+
         public BufferHandle CreateBuffer(nint pointer, int size)
+        {
+            throw new NotSupportedException();
+        }
+
+        public BufferHandle CreateBufferSparse(ReadOnlySpan<BufferRange> storageBuffers)
         {
             throw new NotSupportedException();
         }
@@ -148,6 +153,7 @@ namespace Ryujinx.Graphics.OpenGL
                 supportsR4G4B4A4Format: true,
                 supportsSnormBufferTextureFormat: false,
                 supports5BitComponentFormat: true,
+                supportsSparseBuffer: false,
                 supportsBlendEquationAdvanced: HwCapabilities.SupportsBlendEquationAdvanced,
                 supportsFragmentShaderInterlock: HwCapabilities.SupportsFragmentShaderInterlock,
                 supportsFragmentShaderOrderingIntel: HwCapabilities.SupportsFragmentShaderOrdering,

@@ -5,6 +5,7 @@ namespace Ryujinx.Graphics.GAL.Multithreading
         Action,
         CreateBuffer,
         CreateBufferAccess,
+        CreateBufferSparse,
         CreateHostBuffer,
         CreateProgram,
         CreateSampler,

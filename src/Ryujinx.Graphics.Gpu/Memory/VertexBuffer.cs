@@ -1,3 +1,5 @@
+using Ryujinx.Memory.Range;
+
 namespace Ryujinx.Graphics.Gpu.Memory
 {
     /// <summary>
@@ -5,8 +7,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
     /// </summary>
     struct VertexBuffer
     {
-        public ulong Address;
-        public ulong Size;
+        public MultiRange Range;
         public int Stride;
         public int Divisor;
     }

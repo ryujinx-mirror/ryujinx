@@ -730,8 +730,8 @@ namespace Ryujinx.Graphics.Gpu.Shader
 
             codeA ??= memoryManager.GetSpan(vertexA.Address, vertexA.Size).ToArray();
             codeB ??= memoryManager.GetSpan(currentStage.Address, currentStage.Size).ToArray();
-            byte[] cb1DataA = memoryManager.Physical.GetSpan(cb1DataAddress, vertexA.Cb1DataSize).ToArray();
-            byte[] cb1DataB = memoryManager.Physical.GetSpan(cb1DataAddress, currentStage.Cb1DataSize).ToArray();
+            byte[] cb1DataA = ReadArray(memoryManager, cb1DataAddress, vertexA.Cb1DataSize);
+            byte[] cb1DataB = ReadArray(memoryManager, cb1DataAddress, currentStage.Cb1DataSize);
 
             ShaderDumpPaths pathsA = default;
             ShaderDumpPaths pathsB = default;
@@ -770,7 +770,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 ? channel.BufferManager.GetComputeUniformBufferAddress(1)
                 : channel.BufferManager.GetGraphicsUniformBufferAddress(StageToStageIndex(context.Stage), 1);
 
-            byte[] cb1Data = memoryManager.Physical.GetSpan(cb1DataAddress, context.Cb1DataSize).ToArray();
+            byte[] cb1Data = ReadArray(memoryManager, cb1DataAddress, context.Cb1DataSize);
             code ??= memoryManager.GetSpan(context.Address, context.Size).ToArray();
 
             ShaderDumpPaths paths = dumper?.Dump(code, context.Stage == ShaderStage.Compute) ?? default;
@@ -779,6 +779,23 @@ namespace Ryujinx.Graphics.Gpu.Shader
             paths.Prepend(program);
 
             return new TranslatedShader(new CachedShaderStage(program.Info, code, cb1Data), program);
+        }
+
+        /// <summary>
+        /// Reads data from physical memory, returns an empty array if the memory is unmapped or size is 0.
+        /// </summary>
+        /// <param name="memoryManager">Memory manager with the physical memory to read from</param>
+        /// <param name="address">Physical address of the region to read</param>
+        /// <param name="size">Size in bytes of the data</param>
+        /// <returns>An array with the data at the specified memory location</returns>
+        private static byte[] ReadArray(MemoryManager memoryManager, ulong address, int size)
+        {
+            if (address == MemoryManager.PteUnmapped || size == 0)
+            {
+                return Array.Empty<byte>();
+            }
+
+            return memoryManager.Physical.GetSpan(address, size).ToArray();
         }
 
         /// <summary>

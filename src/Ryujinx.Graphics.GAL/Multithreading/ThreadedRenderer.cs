@@ -263,10 +263,19 @@ namespace Ryujinx.Graphics.GAL.Multithreading
             }
         }
 
-        public BufferHandle CreateBuffer(int size, BufferHandle storageHint)
+        public BufferHandle CreateBuffer(int size, BufferAccess access)
         {
             BufferHandle handle = Buffers.CreateBufferHandle();
-            New<CreateBufferCommand>().Set(handle, size, storageHint);
+            New<CreateBufferAccessCommand>().Set(handle, size, access);
+            QueueCommand();
+
+            return handle;
+        }
+
+        public BufferHandle CreateBuffer(int size, BufferAccess access, BufferHandle storageHint)
+        {
+            BufferHandle handle = Buffers.CreateBufferHandle();
+            New<CreateBufferCommand>().Set(handle, size, access, storageHint);
             QueueCommand();
 
             return handle;
@@ -281,10 +290,10 @@ namespace Ryujinx.Graphics.GAL.Multithreading
             return handle;
         }
 
-        public BufferHandle CreateBuffer(int size, BufferAccess access)
+        public BufferHandle CreateBufferSparse(ReadOnlySpan<BufferRange> storageBuffers)
         {
             BufferHandle handle = Buffers.CreateBufferHandle();
-            New<CreateBufferAccessCommand>().Set(handle, size, access);
+            New<CreateBufferSparseCommand>().Set(handle, CopySpan(storageBuffers));
             QueueCommand();
 
             return handle;

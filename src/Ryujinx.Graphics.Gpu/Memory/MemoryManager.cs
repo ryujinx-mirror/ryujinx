@@ -40,6 +40,11 @@ namespace Ryujinx.Graphics.Gpu.Memory
         internal PhysicalMemory Physical { get; }
 
         /// <summary>
+        /// Virtual buffer cache.
+        /// </summary>
+        internal VirtualBufferCache VirtualBufferCache { get; }
+
+        /// <summary>
         /// Cache of GPU counters.
         /// </summary>
         internal CounterCache CounterCache { get; }
@@ -51,10 +56,12 @@ namespace Ryujinx.Graphics.Gpu.Memory
         internal MemoryManager(PhysicalMemory physicalMemory)
         {
             Physical = physicalMemory;
+            VirtualBufferCache = new VirtualBufferCache(this);
             CounterCache = new CounterCache();
             _pageTable = new ulong[PtLvl0Size][];
             MemoryUnmapped += Physical.TextureCache.MemoryUnmappedHandler;
             MemoryUnmapped += Physical.BufferCache.MemoryUnmappedHandler;
+            MemoryUnmapped += VirtualBufferCache.MemoryUnmappedHandler;
             MemoryUnmapped += CounterCache.MemoryUnmappedHandler;
         }
 
@@ -506,6 +513,11 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
                 va += PageSize;
                 regionSize += Math.Min(endVa - va, PageSize);
+            }
+
+            if (regions.Count == 0)
+            {
+                return new MultiRange(regionStart, regionSize);
             }
 
             regions.Add(new MemoryRange(regionStart, regionSize));
