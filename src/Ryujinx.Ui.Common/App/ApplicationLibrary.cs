@@ -136,6 +136,13 @@ namespace Ryujinx.Ui.App.Common
                             if (!fileInfo.Attributes.HasFlag(FileAttributes.Hidden) && extension is ".nsp" or ".pfs0" or ".xci" or ".nca" or ".nro" or ".nso")
                             {
                                 var fullPath = fileInfo.ResolveLinkTarget(true)?.FullName ?? fileInfo.FullName;
+
+                                if (!File.Exists(fullPath))
+                                {
+                                    Logger.Warning?.Print(LogClass.Application, $"Skipping invalid symlink: {fileInfo.FullName}");
+                                    continue;
+                                }
+
                                 applications.Add(fullPath);
                                 numApplicationsFound++;
                             }
