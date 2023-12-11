@@ -90,6 +90,7 @@ namespace Ryujinx.Ava.UI.ViewModels
         private string _pauseKey = "F5";
         private string _screenshotKey = "F8";
         private float _volume;
+        private float _volumeBeforeMute;
         private string _backendText;
 
         private bool _canUpdate = true;
@@ -550,6 +551,17 @@ namespace Ryujinx.Ava.UI.ViewModels
 
                 OnPropertyChanged(nameof(VolumeStatusText));
                 OnPropertyChanged(nameof(VolumeMuted));
+                OnPropertyChanged();
+            }
+        }
+
+        public float VolumeBeforeMute
+        {
+            get => _volumeBeforeMute;
+            set
+            {
+                _volumeBeforeMute = value;
+
                 OnPropertyChanged();
             }
         }

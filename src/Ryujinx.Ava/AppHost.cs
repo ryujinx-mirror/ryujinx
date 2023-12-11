@@ -1088,10 +1088,11 @@ namespace Ryujinx.Ava
                         case KeyboardHotkeyState.ToggleMute:
                             if (Device.IsAudioMuted())
                             {
-                                Device.SetVolume(ConfigurationState.Instance.System.AudioVolume);
+                                Device.SetVolume(_viewModel.VolumeBeforeMute);
                             }
                             else
                             {
+                                _viewModel.VolumeBeforeMute = Device.GetVolume();
                                 Device.SetVolume(0);
                             }
 

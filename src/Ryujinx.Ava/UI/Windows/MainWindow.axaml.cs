@@ -436,10 +436,11 @@ namespace Ryujinx.Ava.UI.Windows
             {
                 if (!volumeSplitButton.IsChecked)
                 {
-                    ViewModel.AppHost.Device.SetVolume(ConfigurationState.Instance.System.AudioVolume);
+                    ViewModel.AppHost.Device.SetVolume(ViewModel.VolumeBeforeMute);
                 }
                 else
                 {
+                    ViewModel.VolumeBeforeMute = ViewModel.AppHost.Device.GetVolume();
                     ViewModel.AppHost.Device.SetVolume(0);
                 }
 
