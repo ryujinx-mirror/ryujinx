@@ -10,14 +10,25 @@
     <string>Ryujinx</string>
     <key>CFBundleIconFile</key>
     <string>Ryujinx.icns</string>
-    <key>CFBundleTypeExtensions</key>
-    <array>
-        <string>nca</string>
-        <string>nro</string>
-        <string>nso</string>
-        <string>nsp</string>
-        <string>xci</string>
-    </array>
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>nca</string>
+				<string>nro</string>
+				<string>nso</string>
+				<string>nsp</string>
+				<string>xci</string>
+			</array>
+			<key>CFBundleTypeName</key>
+			<string>Nintendo Switch File</string>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+			<key>LSHandlerRank</key>
+			<string>Default</string>
+		</dict>
+	</array>
     <key>CFBundleIdentifier</key>
     <string>org.ryujinx.Ryujinx</string>
     <key>CFBundleInfoDictionaryVersion</key>
