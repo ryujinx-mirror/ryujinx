@@ -86,28 +86,16 @@
                         </Style>
                     </Styles>
                 </TreeView.Styles>
-                <TreeView.DataTemplates>
-                    <TreeDataTemplate DataType="model:CheatsList" ItemsSource="{Binding}">
+                <TreeView.ItemTemplate>
+                    <TreeDataTemplate ItemsSource="{Binding SubNodes}">
                         <StackPanel HorizontalAlignment="Left" Orientation="Horizontal">
                             <CheckBox MinWidth="20" IsChecked="{Binding IsEnabled}" />
-                            <TextBlock Width="150" Text="{Binding BuildId}" />
-                            <TextBlock Text="{Binding Path}" />
+                            <TextBlock Width="150" Text="{Binding CleanName}" IsVisible="{Binding !IsRootNode}" />
+                            <TextBlock Width="150" Text="{Binding BuildId}" IsVisible="{Binding IsRootNode}" />
+                            <TextBlock Text="{Binding Path}" IsVisible="{Binding IsRootNode}" />
                         </StackPanel>
                     </TreeDataTemplate>
-                    <DataTemplate x:DataType="model:CheatModel">
-                        <StackPanel
-                            Margin="0"
-                            HorizontalAlignment="Left"
-                            Orientation="Horizontal">
-                            <CheckBox
-                                MinWidth="20"
-                                Margin="5,0"
-                                Padding="0"
-                                IsChecked="{Binding IsEnabled}" />
-                            <TextBlock VerticalAlignment="Center" Text="{Binding CleanName}" />
-                        </StackPanel>
-                    </DataTemplate>
-                </TreeView.DataTemplates>
+                </TreeView.ItemTemplate>
             </TreeView>
         </Border>
         <DockPanel
