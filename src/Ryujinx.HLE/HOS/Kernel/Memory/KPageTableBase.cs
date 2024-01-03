@@ -675,7 +675,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                     KMemoryPermission.None,
                     MemoryAttribute.Mask,
                     MemoryAttribute.None,
-                    MemoryAttribute.IpcAndDeviceMapped,
+                    MemoryAttribute.IpcAndDeviceMapped | MemoryAttribute.PermissionLocked,
                     out MemoryState state,
                     out _,
                     out _);
@@ -687,7 +687,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                     state,
                     KMemoryPermission.None,
                     KMemoryPermission.None,
-                    MemoryAttribute.Mask,
+                    MemoryAttribute.Mask & ~MemoryAttribute.PermissionLocked,
                     MemoryAttribute.None);
 
                 if (success)
@@ -913,19 +913,27 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             return Result.Success;
         }
 
-        public Result SetMemoryAttribute(
-            ulong address,
-            ulong size,
-            MemoryAttribute attributeMask,
-            MemoryAttribute attributeValue)
+        public Result SetMemoryAttribute(ulong address, ulong size, MemoryAttribute attributeMask, MemoryAttribute attributeValue)
         {
             lock (_blockManager)
             {
+                MemoryState stateCheckMask = 0;
+
+                if (attributeMask.HasFlag(MemoryAttribute.Uncached))
+                {
+                    stateCheckMask = MemoryState.AttributeChangeAllowed;
+                }
+
+                if (attributeMask.HasFlag(MemoryAttribute.PermissionLocked))
+                {
+                    stateCheckMask |= MemoryState.PermissionLockAllowed;
+                }
+
                 if (CheckRange(
                     address,
                     size,
-                    MemoryState.AttributeChangeAllowed,
-                    MemoryState.AttributeChangeAllowed,
+                    stateCheckMask,
+                    stateCheckMask,
                     KMemoryPermission.None,
                     KMemoryPermission.None,
                     MemoryAttribute.BorrowedAndIpcMapped,

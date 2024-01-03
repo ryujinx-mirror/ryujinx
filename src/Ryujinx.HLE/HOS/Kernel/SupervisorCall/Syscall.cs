@@ -949,8 +949,16 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
 
             MemoryAttribute attributes = attributeMask | attributeValue;
 
+            const MemoryAttribute SupportedAttributes = MemoryAttribute.Uncached | MemoryAttribute.PermissionLocked;
+
             if (attributes != attributeMask ||
-               (attributes | MemoryAttribute.Uncached) != MemoryAttribute.Uncached)
+               (attributes | SupportedAttributes) != SupportedAttributes)
+            {
+                return KernelResult.InvalidCombination;
+            }
+
+            // The permission locked attribute can't be unset.
+            if ((attributeMask & MemoryAttribute.PermissionLocked) != (attributeValue & MemoryAttribute.PermissionLocked))
             {
                 return KernelResult.InvalidCombination;
             }
