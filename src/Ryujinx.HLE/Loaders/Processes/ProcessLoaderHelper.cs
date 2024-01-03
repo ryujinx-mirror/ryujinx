@@ -356,11 +356,22 @@ namespace Ryujinx.HLE.Loaders.Processes
                 return ProcessResult.Failed;
             }
 
+            string displayVersion;
+
+            if (metaLoader.GetProgramId() > 0x0100000000007FFF)
+            {
+                displayVersion = applicationControlProperties.Value.DisplayVersionString.ToString();
+            }
+            else
+            {
+                displayVersion = device.System.ContentManager.GetCurrentFirmwareVersion()?.VersionString ?? string.Empty;
+            }
+
             var processContextFactory = new ArmProcessContextFactory(
                 context.Device.System.TickSource,
                 context.Device.Gpu,
                 $"{programId:x16}",
-                applicationControlProperties.Value.DisplayVersionString.ToString(),
+                displayVersion,
                 diskCacheEnabled,
                 codeStart,
                 codeSize);
