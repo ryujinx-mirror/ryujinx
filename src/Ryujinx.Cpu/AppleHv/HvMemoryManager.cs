@@ -724,18 +724,6 @@ namespace Ryujinx.Cpu.AppleHv
         /// <inheritdoc/>
         public void Reprotect(ulong va, ulong size, MemoryPermission protection)
         {
-            if (protection.HasFlag(MemoryPermission.Execute))
-            {
-                // Some applications use unordered exclusive memory access instructions
-                // where it is not valid to do so, leading to memory re-ordering that
-                // makes the code behave incorrectly on some CPUs.
-                // To work around this, we force all such accesses to be ordered.
-
-                using WritableRegion writableRegion = GetWritableRegion(va, (int)size);
-
-                HvCodePatcher.RewriteUnorderedExclusiveInstructions(writableRegion.Memory.Span);
-            }
-
             // TODO
         }
 
