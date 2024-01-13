@@ -86,17 +86,17 @@
                                             HorizontalAlignment="Stretch"
                                             FontWeight="Bold"
                                             Text="{Binding TitleName}"
-                                            TextAlignment="Left"
+                                            TextAlignment="Start"
                                             TextWrapping="Wrap" />
                                         <TextBlock
                                             HorizontalAlignment="Stretch"
                                             Text="{Binding Developer}"
-                                            TextAlignment="Left"
+                                            TextAlignment="Start"
                                             TextWrapping="Wrap" />
                                         <TextBlock
                                             HorizontalAlignment="Stretch"
                                             Text="{Binding Version}"
-                                            TextAlignment="Left"
+                                            TextAlignment="Start"
                                             TextWrapping="Wrap" />
                                     </StackPanel>
                                 </Border>
@@ -110,12 +110,12 @@
                                     <TextBlock
                                         HorizontalAlignment="Stretch"
                                         Text="{Binding TitleId}"
-                                        TextAlignment="Left"
+                                        TextAlignment="Start"
                                         TextWrapping="Wrap" />
                                     <TextBlock
                                         HorizontalAlignment="Stretch"
                                         Text="{Binding FileExtension}"
-                                        TextAlignment="Left"
+                                        TextAlignment="Start"
                                         TextWrapping="Wrap" />
                                 </StackPanel>
                                 <StackPanel
@@ -127,17 +127,17 @@
                                     <TextBlock
                                         HorizontalAlignment="Stretch"
                                         Text="{Binding TimePlayedString}"
-                                        TextAlignment="Right"
+                                        TextAlignment="End"
                                         TextWrapping="Wrap" />
                                     <TextBlock
                                         HorizontalAlignment="Stretch"
                                         Text="{Binding LastPlayedString, Converter={helpers:LocalizedNeverConverter}}"
-                                        TextAlignment="Right"
+                                        TextAlignment="End"
                                         TextWrapping="Wrap" />
                                     <TextBlock
                                         HorizontalAlignment="Stretch"
                                         Text="{Binding FileSizeString}"
-                                        TextAlignment="Right"
+                                        TextAlignment="End"
                                         TextWrapping="Wrap" />
                                 </StackPanel>
                                 <ui:SymbolIcon

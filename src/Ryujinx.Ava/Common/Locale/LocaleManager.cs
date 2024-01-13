@@ -16,8 +16,10 @@ namespace Ryujinx.Ava.Common.Locale
         private readonly Dictionary<LocaleKeys, string> _localeStrings;
         private Dictionary<LocaleKeys, string> _localeDefaultStrings;
         private readonly ConcurrentDictionary<LocaleKeys, object[]> _dynamicValues;
+        private string _localeLanguageCode;
 
         public static LocaleManager Instance { get; } = new();
+        public event Action LocaleChanged;
 
         public LocaleManager()
         {
@@ -104,6 +106,15 @@ namespace Ryujinx.Ava.Common.Locale
             }
         }
 
+        public bool IsRTL()
+        {
+            return _localeLanguageCode switch
+            {
+                "he_IL" => true,
+                _ => false
+            };
+        }
+
         public string UpdateAndGetDynamicValue(LocaleKeys key, params object[] values)
         {
             _dynamicValues[key] = values;
@@ -124,6 +135,9 @@ namespace Ryujinx.Ava.Common.Locale
             {
                 this[item.Key] = item.Value;
             }
+
+            _localeLanguageCode = languageCode;
+            LocaleChanged?.Invoke();
         }
 
         private static Dictionary<LocaleKeys, string> LoadJsonLanguage(string languageCode = DefaultLanguageCode)

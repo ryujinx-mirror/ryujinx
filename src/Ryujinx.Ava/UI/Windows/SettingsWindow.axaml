@@ -101,6 +101,9 @@
                 <Style Selector="Grid#PlaceholderGrid">
                     <Setter Property="Height" Value="40" />
                 </Style>
+                <Style Selector="ui|NavigationViewItem ui|SymbolIcon">
+                    <Setter Property="FlowDirection" Value="LeftToRight" />
+                </Style>
             </ui:NavigationView.Styles>
         </ui:NavigationView>
         <ReversibleStackPanel

@@ -101,7 +101,7 @@
                         HorizontalAlignment="Stretch"
                         VerticalAlignment="Center"
                         SelectedIndex="0"
-                        ItemsSource="{Binding ProfilesList}" 
+                        ItemsSource="{Binding ProfilesList}"
                         Text="{Binding ProfileName, Mode=TwoWay}" />
                     <Button
                         Grid.Column="2"
@@ -218,6 +218,7 @@
         <Grid
             Name="SettingButtons"
             MinHeight="450"
+            FlowDirection="LeftToRight"
             IsVisible="{Binding ShowSettings}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />

@@ -119,6 +119,7 @@
     <None Remove="Assets\Locales\en_US.json" />
     <None Remove="Assets\Locales\es_ES.json" />
     <None Remove="Assets\Locales\fr_FR.json" />
+    <None Remove="Assets\Locales\he_IL.json" />
     <None Remove="Assets\Locales\de_DE.json" />
     <None Remove="Assets\Locales\it_IT.json" />
     <None Remove="Assets\Locales\ja_JP.json" />
@@ -143,6 +144,7 @@
     <EmbeddedResource Include="Assets\Locales\en_US.json" />
     <EmbeddedResource Include="Assets\Locales\es_ES.json" />
     <EmbeddedResource Include="Assets\Locales\fr_FR.json" />
+    <EmbeddedResource Include="Assets\Locales\he_IL.json" />
     <EmbeddedResource Include="Assets\Locales\de_DE.json" />
     <EmbeddedResource Include="Assets\Locales\it_IT.json" />
     <EmbeddedResource Include="Assets\Locales\ja_JP.json" />

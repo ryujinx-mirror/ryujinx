@@ -27,7 +27,7 @@
             Grid.Row="0"
             TextWrapping="Wrap"
             HorizontalAlignment="Left"
-            TextAlignment="Left"
+            TextAlignment="Start"
             Text="{locale:Locale ProfileImageSelectionNote}" />
         <StackPanel
             Grid.Row="2"

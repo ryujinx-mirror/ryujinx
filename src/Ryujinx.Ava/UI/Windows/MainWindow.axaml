@@ -158,7 +158,7 @@
                             FontWeight="Bold"
                             IsVisible="{Binding ShowLoadProgress}"
                             Text="{Binding LoadHeading}"
-                            TextAlignment="Left"
+                            TextAlignment="Start"
                             TextWrapping="Wrap"
                             MaxWidth="500" />
                         <Border
@@ -192,7 +192,7 @@
                             FontSize="18"
                             IsVisible="{Binding ShowLoadProgress}"
                             Text="{Binding CacheLoadStatus}"
-                            TextAlignment="Left"
+                            TextAlignment="Start"
                             MaxWidth="500" />
                     </Grid>
                 </Grid>

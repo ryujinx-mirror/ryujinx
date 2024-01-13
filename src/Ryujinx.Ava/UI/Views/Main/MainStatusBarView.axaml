@@ -88,7 +88,7 @@
                 IsVisible="{Binding !ShowLoadProgress}"
                 PointerReleased="VsyncStatus_PointerReleased"
                 Text="VSync"
-                TextAlignment="Left" />
+                TextAlignment="Start" />
             <Border
                 Width="2"
                 Height="12"
@@ -105,7 +105,7 @@
                 IsVisible="{Binding !ShowLoadProgress}"
                 PointerReleased="DockedStatus_PointerReleased"
                 Text="{Binding DockedStatusText}"
-                TextAlignment="Left" />
+                TextAlignment="Start" />
             <Border
                 Width="2"
                 Height="12"
@@ -225,7 +225,7 @@
                 VerticalAlignment="Center"
                 IsVisible="{Binding !ShowLoadProgress}"
                 Text="{Binding GameStatusText}"
-                TextAlignment="Left" />
+                TextAlignment="Start" />
             <Border
                 Width="2"
                 Height="12"
@@ -240,7 +240,7 @@
                 VerticalAlignment="Center"
                 IsVisible="{Binding !ShowLoadProgress}"
                 Text="{Binding FifoStatusText}"
-                TextAlignment="Left" />
+                TextAlignment="Start" />
             <Border
                 Width="2"
                 Height="12"
@@ -255,7 +255,7 @@
                 VerticalAlignment="Center"
                 IsVisible="{Binding !ShowLoadProgress}"
                 Text="{Binding BackendText}"
-                TextAlignment="Left" />
+                TextAlignment="Start" />
             <Border
                 Width="2"
                 Height="12"
@@ -270,7 +270,7 @@
                 VerticalAlignment="Center"
                 IsVisible="{Binding !ShowLoadProgress}"
                 Text="{Binding GpuNameText}"
-                TextAlignment="Left" />
+                TextAlignment="Start" />
         </StackPanel>
         <StackPanel
             Grid.Column="3"

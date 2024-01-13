@@ -49,7 +49,7 @@
                                     <TextBlock
                                         HorizontalAlignment="Stretch"
                                         Text="{Binding UserId}"
-                                        TextAlignment="Left"
+                                        TextAlignment="Start"
                                         TextWrapping="Wrap" />
                                     <Button Grid.Column="1"
                                             HorizontalAlignment="Right"

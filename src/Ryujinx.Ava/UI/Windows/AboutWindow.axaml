@@ -238,7 +238,7 @@
                     <TextBlock
                         FontSize="10"
                         Text="{locale:Locale AboutRyujinxContributorsButtonHeader}"
-                        TextAlignment="Right"
+                        TextAlignment="End"
                         ToolTip.Tip="{locale:Locale AboutRyujinxMaintainersContentTooltipMessage}" />
                 </Button>
             </StackPanel>
