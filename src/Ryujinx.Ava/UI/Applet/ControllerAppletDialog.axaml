@@ -1,0 +1,145 @@
+<UserControl
+    x:Class="Ryujinx.Ava.UI.Applet.ControllerAppletDialog"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:locale="clr-namespace:Ryujinx.Ava.Common.Locale"
+    xmlns:applet="using:Ryujinx.Ava.UI.Applet"
+    mc:Ignorable="d"
+    Width="400"
+    Focusable="True"
+    x:DataType="applet:ControllerAppletDialog">
+    <Grid
+        HorizontalAlignment="Stretch"
+        VerticalAlignment="Stretch">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <Border
+            Grid.Column="0"
+            Grid.Row="0"
+            Grid.ColumnSpan="2"
+            Margin="0 0 0 10"
+            BorderBrush="{DynamicResource ThemeControlBorderColor}"
+            BorderThickness="1"
+            CornerRadius="5">
+            <StackPanel
+                Spacing="10"
+                Margin="10">
+                <TextBlock
+                    Text="{locale:Locale ControllerAppletDescription}" />
+                <TextBlock
+                    IsVisible="{Binding IsDocked}"
+                    FontWeight="Bold"
+                    Text="{locale:Locale ControllerAppletDocked}" />
+            </StackPanel>
+        </Border>
+        <Border
+            Grid.Column="0"
+            Grid.Row="1"
+            BorderBrush="{DynamicResource ThemeControlBorderColor}"
+            BorderThickness="1"
+            CornerRadius="5"
+            Margin="0 0 10 0">
+            <StackPanel
+                Margin="10"
+                Spacing="10"
+                Orientation="Vertical">
+                <TextBlock
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    TextAlignment="Center"
+                    FontWeight="Bold"
+                    Text="{locale:Locale ControllerAppletControllers}" />
+                <StackPanel
+                    Spacing="10"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Orientation="Horizontal">
+                    <Image
+                        Height="50"
+                        Width="50"
+                        Stretch="Uniform"
+                        Source="{Binding ProControllerImage}"
+                        IsVisible="{Binding SupportsProController}" />
+                    <Image
+                        Height="50"
+                        Width="50"
+                        Stretch="Uniform"
+                        Source="{Binding JoyconPairImage}"
+                        IsVisible="{Binding SupportsJoyconPair}" />
+                    <Image
+                        Height="50"
+                        Width="50"
+                        Stretch="Uniform"
+                        Source="{Binding JoyconLeftImage}"
+                        IsVisible="{Binding SupportsLeftJoycon}" />
+                    <Image
+                        Height="50"
+                        Width="50"
+                        Stretch="Uniform"
+                        Source="{Binding JoyconRightImage}"
+                        IsVisible="{Binding SupportsRightJoycon}" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+        <Border
+            Grid.Column="1"
+            Grid.Row="1"
+            BorderBrush="{DynamicResource ThemeControlBorderColor}"
+            BorderThickness="1"
+            CornerRadius="5">
+            <StackPanel
+                Margin="10"
+                Spacing="10"
+                Orientation="Vertical">
+                <TextBlock
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    TextAlignment="Center"
+                    FontWeight="Bold"
+                    Text="{locale:Locale ControllerAppletPlayers}" />
+                <Border Height="50">
+                    <TextBlock
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        TextAlignment="Center"
+                        FontSize="40"
+                        FontWeight="Thin"
+                        Text="{Binding PlayerCount}" />
+                </Border>
+            </StackPanel>
+        </Border>
+        <Panel
+            Margin="0 24 0 0"
+            Grid.Column="0"
+            Grid.Row="2"
+            Grid.ColumnSpan="2">
+            <StackPanel
+                Orientation="Horizontal"
+                Spacing="10"
+                HorizontalAlignment="Right">
+                <Button
+                    Name="SaveButton"
+                    MinWidth="90"
+                    Command="{Binding OpenSettingsWindow}">
+                    <TextBlock Text="{locale:Locale DialogOpenSettingsWindowLabel}" />
+                </Button>
+                <Button
+                    Name="CancelButton"
+                    MinWidth="90"
+                    Command="{Binding Close}">
+                    <TextBlock Text="{locale:Locale SettingsButtonClose}" />
+                </Button>
+            </StackPanel>
+        </Panel>
+    </Grid>
+</UserControl>
+

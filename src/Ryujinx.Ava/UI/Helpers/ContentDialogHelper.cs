@@ -18,6 +18,7 @@ namespace Ryujinx.Ava.UI.Helpers
     public static class ContentDialogHelper
     {
         private static bool _isChoiceDialogOpen;
+        private static ContentDialogOverlayWindow _contentDialogOverlayWindow;
 
         private async static Task<UserResult> ShowContentDialog(
              string title,
@@ -310,16 +311,20 @@ namespace Ryujinx.Ava.UI.Helpers
         public static async Task<ContentDialogResult> ShowAsync(ContentDialog contentDialog)
         {
             ContentDialogResult result;
-
-            ContentDialogOverlayWindow contentDialogOverlayWindow = null;
+            bool isTopDialog = true;
 
             Window parent = GetMainWindow();
+
+            if (_contentDialogOverlayWindow != null)
+            {
+                isTopDialog = false;
+            }
 
             if (parent is MainWindow window)
             {
                 parent.Activate();
 
-                contentDialogOverlayWindow = new()
+                _contentDialogOverlayWindow = new ContentDialogOverlayWindow
                 {
                     Height = parent.Bounds.Height,
                     Width = parent.Bounds.Width,
@@ -331,14 +336,14 @@ namespace Ryujinx.Ava.UI.Helpers
 
                 void OverlayOnPositionChanged(object sender, PixelPointEventArgs e)
                 {
-                    contentDialogOverlayWindow.Position = parent.PointToScreen(new Point());
+                    _contentDialogOverlayWindow.Position = parent.PointToScreen(new Point());
                 }
 
-                contentDialogOverlayWindow.ContentDialog = contentDialog;
+                _contentDialogOverlayWindow.ContentDialog = contentDialog;
 
                 bool opened = false;
 
-                contentDialogOverlayWindow.Opened += OverlayOnActivated;
+                _contentDialogOverlayWindow.Opened += OverlayOnActivated;
 
                 async void OverlayOnActivated(object sender, EventArgs e)
                 {
@@ -349,12 +354,12 @@ namespace Ryujinx.Ava.UI.Helpers
 
                     opened = true;
 
-                    contentDialogOverlayWindow.Position = parent.PointToScreen(new Point());
+                    _contentDialogOverlayWindow.Position = parent.PointToScreen(new Point());
 
                     result = await ShowDialog();
                 }
 
-                result = await contentDialogOverlayWindow.ShowDialog<ContentDialogResult>(parent);
+                result = await _contentDialogOverlayWindow.ShowDialog<ContentDialogResult>(parent);
             }
             else
             {
@@ -363,11 +368,11 @@ namespace Ryujinx.Ava.UI.Helpers
 
             async Task<ContentDialogResult> ShowDialog()
             {
-                if (contentDialogOverlayWindow is not null)
+                if (_contentDialogOverlayWindow is not null)
                 {
-                    result = await contentDialog.ShowAsync(contentDialogOverlayWindow);
+                    result = await contentDialog.ShowAsync(_contentDialogOverlayWindow);
 
-                    contentDialogOverlayWindow!.Close();
+                    _contentDialogOverlayWindow!.Close();
                 }
                 else
                 {
@@ -379,13 +384,20 @@ namespace Ryujinx.Ava.UI.Helpers
                 return result;
             }
 
-            if (contentDialogOverlayWindow is not null)
+            if (isTopDialog && _contentDialogOverlayWindow is not null)
             {
-                contentDialogOverlayWindow.Content = null;
-                contentDialogOverlayWindow.Close();
+                _contentDialogOverlayWindow.Content = null;
+                _contentDialogOverlayWindow.Close();
             }
 
             return result;
+        }
+
+        public static Task ShowWindowAsync(Window dialogWindow, Window mainWindow = null)
+        {
+            mainWindow ??= GetMainWindow();
+
+            return dialogWindow.ShowDialog(_contentDialogOverlayWindow ?? mainWindow);
         }
 
         private static Window GetMainWindow()

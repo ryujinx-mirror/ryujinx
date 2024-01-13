@@ -122,6 +122,8 @@ namespace Ryujinx.Ava.UI.Views.Main
 
             await Window.SettingsWindow.ShowDialog(Window);
 
+            Window.SettingsWindow = null;
+
             ViewModel.LoadConfigurableHotKeys();
         }
 

@@ -132,6 +132,10 @@
     <None Remove="Assets\Locales\zh_TW.json" />
     <None Remove="Assets\Styles\Styles.xaml" />
     <None Remove="Assets\Styles\Themes.xaml" />
+    <None Remove="Assets\Icons\Controller_JoyConLeft.svg" />
+    <None Remove="Assets\Icons\Controller_JoyConPair.svg" />
+    <None Remove="Assets\Icons\Controller_JoyConRight.svg" />
+    <None Remove="Assets\Icons\Controller_ProCon.svg" />
   </ItemGroup>
 
   <ItemGroup>
@@ -151,6 +155,10 @@
     <EmbeddedResource Include="Assets\Locales\zh_CN.json" />
     <EmbeddedResource Include="Assets\Locales\zh_TW.json" />
     <EmbeddedResource Include="Assets\Styles\Styles.xaml" />
+    <EmbeddedResource Include="Assets\Icons\Controller_JoyConLeft.svg" />
+    <EmbeddedResource Include="Assets\Icons\Controller_JoyConPair.svg" />
+    <EmbeddedResource Include="Assets\Icons\Controller_JoyConRight.svg" />
+    <EmbeddedResource Include="Assets\Icons\Controller_ProCon.svg" />
   </ItemGroup>
   <ItemGroup>
     <AdditionalFiles Include="Assets\Locales\en_US.json" />

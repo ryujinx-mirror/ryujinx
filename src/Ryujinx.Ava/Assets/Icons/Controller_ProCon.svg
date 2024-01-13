@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 996.25 690.92">
+  <defs>
+    <style>
+      .cls-1 {
+        stroke: #fff;
+        stroke-miterlimit: 10;
+        stroke-width: 2px;
+      }
+
+      .cls-1, .cls-2 {
+        fill: #444542;
+      }
+
+      .cls-3 {
+        fill: #3b3b3b;
+      }
+
+      .cls-3, .cls-4, .cls-2, .cls-5, .cls-6, .cls-7 {
+        stroke-width: 0px;
+      }
+
+      .cls-4 {
+        fill: #3b3c3a;
+      }
+
+      .cls-5 {
+        fill: #454644;
+      }
+
+      .cls-6 {
+        fill: #20221f;
+      }
+
+      .cls-7 {
+        fill: #121212;
+      }
+    </style>
+  </defs>
+  <g id="Front">
+    <path id="Right_Grip" data-name="Right Grip" class="cls-6" d="m739.17,492.09c34,28.2,27.6,35.9,68.5,108.5,36.7,74.7,64.4,104.4,125.1,84.1h0c95.3-57.9,59.3-145.3,43.6-275.2-10-60.6-35.6-190.3-35.6-190.3l-201.6,272.9Z"/>
+    <path id="Left_Grip" data-name="Left Grip" class="cls-6" d="m55.47,219.19s-25.6,129.7-35.6,190.3c-15.7,129.9-51.7,217.2,43.6,275.1h0c60.8,20.3,88.4-9.4,125.1-84.1,40.9-72.7,34.5-80.3,68.5-108.5L55.47,219.19Z"/>
+    <path id="Right_Bumper" data-name="Right Bumper" class="cls-3" d="m649.47,19.99c10.1-4.3,39.7-22.5,58.7-19.7,59.5.9,166.7,17.7,172.6,81.2"/>
+    <path id="Left_Bumper" data-name="Left Bumper" class="cls-3" d="m115.57,81.49C121.47,18.09,228.57,1.29,288.17.29c19-2.8,48.6,15.4,58.7,19.7"/>
+    <path id="Background" class="cls-7" d="m739.17,492.09c35.5-30.8,68.5-74.7,96-113.5,26.9-36.3,94.7-136.7,105.6-159.3,0-2.4-6.3-30.1-12.8-56.2C892.27,3.49,675.37,19.69,498.17,19.69S104.07,3.49,68.27,162.99c-6.5,26-12.8,53.8-12.8,56.2,10.9,22.6,78.8,123,105.6,159.3,27.5,38.8,60.5,82.8,96,113.5"/>
+    <g id="Directional_Pad" data-name="Directional Pad">
+      <path id="Background-2" data-name="Background" class="cls-2" d="m439.37,325.09h-40c-2.8,0-5-2.2-5-5v-40c0-2.8-2.2-5-5-5h-30c-2.8,0-5,2.2-5,5v40c0,2.8-2.2,5-5,5h-40c-2.8,0-5,2.2-5,5v30c0,2.8,2.2,5,5,5h40c2.8,0,5,2.2,5,5v40c0,2.8,2.2,5,5,5h30c2.8,0,5-2.2,5-5v-40c0-2.8,2.2-5,5-5h40c2.8,0,5-2.2,5-5v-30c0-2.7-2.2-5-5-5Z"/>
+    </g>
+    <g id="R_Thumbstick" data-name="R Thumbstick">
+      <circle id="Background-3" data-name="Background" class="cls-6" cx="623.77" cy="345.09" r="55"/>
+      <circle id="Stick" class="cls-1" cx="623.77" cy="345.09" r="45"/>
+    </g>
+    <g id="L_Thumbstick" data-name="L Thumbstick">
+      <circle id="Background-4" data-name="Background" class="cls-6" cx="213.37" cy="206.39" r="55"/>
+      <circle id="Stick-2" data-name="Stick" class="cls-1" cx="213.37" cy="206.39" r="45" transform="translate(-24.53 383.95) rotate(-80.78)"/>
+    </g>
+    <g id="Minus_Button" data-name="Minus Button">
+      <circle id="_Background" data-name=" Background" class="cls-5" cx="374.17" cy="130.89" r="22.5"/>
+    </g>
+    <g id="Plus_Button" data-name="Plus Button">
+      <circle id="_Background-2" data-name=" Background" class="cls-5" cx="623.57" cy="131.19" r="22.5"/>
+    </g>
+    <g id="Home_Button" data-name="Home Button">
+      <circle id="_Background-3" data-name=" Background" class="cls-5" cx="578.57" cy="206.39" r="22.5"/>
+    </g>
+    <g id="Capture_Button" data-name="Capture Button">
+      <path class="cls-5" d="m441.77,228.09h-30c-2.8,0-5-2.2-5-5v-29.5c0-2.8,2.2-5,5-5h30c2.8,0,5,2.2,5,5v29.5c0,2.7-2.2,5-5,5Z"/>
+    </g>
+    <g id="Buttons">
+      <g id="A_Button" data-name="A Button">
+        <circle id="Background-5" data-name="Background" class="cls-4" cx="837.07" cy="206.39" r="35"/>
+      </g>
+      <g id="X_Button" data-name="X Button">
+        <circle id="Background-6" data-name="Background" class="cls-4" cx="767.07" cy="136.39" r="35"/>
+      </g>
+      <g id="Y_Button" data-name="Y Button">
+        <circle id="Background-7" data-name="Background" class="cls-4" cx="697.07" cy="206.39" r="35"/>
+      </g>
+      <g id="B_Button" data-name="B Button">
+        <circle id="Background-8" data-name="Background" class="cls-4" cx="767.07" cy="276.39" r="35"/>
+      </g>
+    </g>
+  </g>
+</svg>
