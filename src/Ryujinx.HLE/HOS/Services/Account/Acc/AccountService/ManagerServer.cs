@@ -1,10 +1,12 @@
+using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.HLE.HOS.Services.Account.Acc.AsyncContext;
 using System;
-using System.IdentityModel.Tokens.Jwt;
+using System.Collections.Generic;
 using System.Security.Cryptography;
+using System.Security.Principal;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -37,11 +39,6 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc.AccountService
 
             credentials.Key.KeyId = parameters.ToString();
 
-            var header = new JwtHeader(credentials)
-            {
-                { "jku", "https://e0d67c509fb203858ebcb2fe3f88c2aa.baas.nintendo.com/1.0.0/certificates" },
-            };
-
             byte[] rawUserId = new byte[0x10];
             RandomNumberGenerator.Fill(rawUserId);
 
@@ -51,23 +48,25 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc.AccountService
             byte[] deviceAccountId = new byte[0x10];
             RandomNumberGenerator.Fill(deviceId);
 
-            var payload = new JwtPayload
+            var descriptor = new SecurityTokenDescriptor
             {
-                { "sub", Convert.ToHexString(rawUserId).ToLower() },
-                { "aud", "ed9e2f05d286f7b8" },
-                { "di", Convert.ToHexString(deviceId).ToLower() },
-                { "sn", "XAW10000000000" },
-                { "bs:did", Convert.ToHexString(deviceAccountId).ToLower() },
-                { "iss", "https://e0d67c509fb203858ebcb2fe3f88c2aa.baas.nintendo.com" },
-                { "typ", "id_token" },
-                { "iat", DateTimeOffset.UtcNow.ToUnixTimeSeconds() },
-                { "jti", Guid.NewGuid().ToString() },
-                { "exp", (DateTimeOffset.UtcNow + TimeSpan.FromHours(3)).ToUnixTimeSeconds() },
+                Subject = new GenericIdentity(Convert.ToHexString(rawUserId).ToLower()),
+                SigningCredentials = credentials,
+                Audience = "ed9e2f05d286f7b8",
+                Issuer = "https://e0d67c509fb203858ebcb2fe3f88c2aa.baas.nintendo.com",
+                TokenType = "id_token",
+                IssuedAt = DateTime.UtcNow,
+                Expires = DateTime.UtcNow + TimeSpan.FromHours(3),
+                Claims = new Dictionary<string, object>
+                {
+                    { "jku", "https://e0d67c509fb203858ebcb2fe3f88c2aa.baas.nintendo.com/1.0.0/certificates" },
+                    { "di", Convert.ToHexString(deviceId).ToLower() },
+                    { "sn", "XAW10000000000" },
+                    { "bs:did", Convert.ToHexString(deviceAccountId).ToLower() }
+                }
             };
 
-            JwtSecurityToken securityToken = new(header, payload);
-
-            return new JwtSecurityTokenHandler().WriteToken(securityToken);
+            return new JsonWebTokenHandler().CreateToken(descriptor);
         }
 
         public ResultCode CheckAvailability(ServiceCtx context)

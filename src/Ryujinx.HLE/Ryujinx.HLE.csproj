@@ -23,10 +23,10 @@
   <ItemGroup>
     <PackageReference Include="Concentus" />
     <PackageReference Include="LibHac" />
+    <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" />
     <PackageReference Include="MsgPack.Cli" />
     <PackageReference Include="SixLabors.ImageSharp" />
     <PackageReference Include="SixLabors.ImageSharp.Drawing" />
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" />
     <PackageReference Include="NetCoreServer" />
   </ItemGroup>
 
