@@ -17,6 +17,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace Ryujinx.Ava.UI.ViewModels
@@ -188,17 +189,25 @@ namespace Ryujinx.Ava.UI.ViewModels
             _httpClient.Dispose();
         }
 
-        private bool TryGetAmiiboJson(string json, out AmiiboJson amiiboJson)
+        private static bool TryGetAmiiboJson(string json, out AmiiboJson amiiboJson)
         {
+            if (string.IsNullOrEmpty(json))
+            {
+                amiiboJson = JsonHelper.Deserialize(DefaultJson, _serializerContext.AmiiboJson);
+
+                return false;
+            }
+
             try
             {
-                amiiboJson = JsonHelper.Deserialize<AmiiboJson>(json, _serializerContext.AmiiboJson);
+                amiiboJson = JsonHelper.Deserialize(json, _serializerContext.AmiiboJson);
 
                 return true;
             }
-            catch
+            catch (JsonException exception)
             {
-                amiiboJson = JsonHelper.Deserialize<AmiiboJson>(DefaultJson, _serializerContext.AmiiboJson);
+                Logger.Error?.Print(LogClass.Application, $"Unable to deserialize amiibo data: {exception}");
+                amiiboJson = JsonHelper.Deserialize(DefaultJson, _serializerContext.AmiiboJson);
 
                 return false;
             }
@@ -208,27 +217,41 @@ namespace Ryujinx.Ava.UI.ViewModels
         {
             bool localIsValid = false;
             bool remoteIsValid = false;
-            AmiiboJson amiiboJson = JsonHelper.Deserialize<AmiiboJson>(DefaultJson, _serializerContext.AmiiboJson);
+            AmiiboJson amiiboJson = new();
 
             try
             {
-                localIsValid = TryGetAmiiboJson(File.ReadAllText(_amiiboJsonPath), out amiiboJson);
+                try
+                {
+                    if (File.Exists(_amiiboJsonPath))
+                    {
+                        localIsValid = TryGetAmiiboJson(await File.ReadAllTextAsync(_amiiboJsonPath), out amiiboJson);
+                    }
+                }
+                catch (Exception exception)
+                {
+                    Logger.Warning?.Print(LogClass.Application, $"Unable to read data from '{_amiiboJsonPath}': {exception}");
+                }
 
                 if (!localIsValid || await NeedsUpdate(amiiboJson.LastUpdated))
                 {
                     remoteIsValid = TryGetAmiiboJson(await DownloadAmiiboJson(), out amiiboJson);
                 }
             }
-            catch
+            catch (Exception exception)
             {
                 if (!(localIsValid || remoteIsValid))
                 {
+                    Logger.Error?.Print(LogClass.Application, $"Couldn't get valid amiibo data: {exception}");
+
                     // Neither local or remote files are valid JSON, close window.
                     ShowInfoDialog();
                     Close();
                 }
                 else if (!remoteIsValid)
                 {
+                    Logger.Warning?.Print(LogClass.Application, $"Couldn't update amiibo data: {exception}");
+
                     // Only the local file is valid, the local one should be used
                     // but the user should be warned.
                     ShowInfoDialog();
@@ -388,11 +411,18 @@ namespace Ryujinx.Ava.UI.ViewModels
 
         private async Task<bool> NeedsUpdate(DateTime oldLastModified)
         {
-            HttpResponseMessage response = await _httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Head, "https://amiibo.ryujinx.org/"));
-
-            if (response.IsSuccessStatusCode)
+            try
             {
-                return response.Content.Headers.LastModified != oldLastModified;
+                HttpResponseMessage response = await _httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Head, "https://amiibo.ryujinx.org/"));
+
+                if (response.IsSuccessStatusCode)
+                {
+                    return response.Content.Headers.LastModified != oldLastModified;
+                }
+            }
+            catch (HttpRequestException exception)
+            {
+                Logger.Error?.Print(LogClass.Application, $"Unable to check for amiibo data updates: {exception}");
             }
 
             return false;
@@ -400,21 +430,33 @@ namespace Ryujinx.Ava.UI.ViewModels
 
         private async Task<string> DownloadAmiiboJson()
         {
-            HttpResponseMessage response = await _httpClient.GetAsync("https://amiibo.ryujinx.org/");
-
-            if (response.IsSuccessStatusCode)
+            try
             {
-                string amiiboJsonString = await response.Content.ReadAsStringAsync();
+                HttpResponseMessage response = await _httpClient.GetAsync("https://amiibo.ryujinx.org/");
 
-                using (FileStream amiiboJsonStream = File.Create(_amiiboJsonPath, 4096, FileOptions.WriteThrough))
+                if (response.IsSuccessStatusCode)
                 {
-                    amiiboJsonStream.Write(Encoding.UTF8.GetBytes(amiiboJsonString));
+                    string amiiboJsonString = await response.Content.ReadAsStringAsync();
+
+                    try
+                    {
+                        using FileStream dlcJsonStream = File.Create(_amiiboJsonPath, 4096, FileOptions.WriteThrough);
+                        dlcJsonStream.Write(Encoding.UTF8.GetBytes(amiiboJsonString));
+                    }
+                    catch (Exception exception)
+                    {
+                        Logger.Warning?.Print(LogClass.Application, $"Couldn't write amiibo data to file '{_amiiboJsonPath}: {exception}'");
+                    }
+
+                    return amiiboJsonString;
                 }
 
-                return amiiboJsonString;
+                Logger.Error?.Print(LogClass.Application, $"Failed to download amiibo data. Response status code: {response.StatusCode}");
             }
-
-            Logger.Error?.Print(LogClass.Application, $"Failed to download amiibo data. Response status code: {response.StatusCode}");
+            catch (HttpRequestException exception)
+            {
+                Logger.Error?.Print(LogClass.Application, $"Failed to request amiibo data: {exception}");
+            }
 
             await ContentDialogHelper.CreateInfoDialog(LocaleManager.Instance[LocaleKeys.DialogAmiiboApiTitle],
                 LocaleManager.Instance[LocaleKeys.DialogAmiiboApiFailFetchMessage],
@@ -422,9 +464,7 @@ namespace Ryujinx.Ava.UI.ViewModels
                 "",
                 LocaleManager.Instance[LocaleKeys.RyujinxInfo]);
 
-            Close();
-
-            return DefaultJson;
+            return null;
         }
 
         private void Close()
