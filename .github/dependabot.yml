@@ -13,7 +13,7 @@ updates:
 
   - package-ecosystem: nuget
     directory: /
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 10
     schedule:
       interval: daily
     labels:
@@ -22,3 +22,19 @@ updates:
       - marysaka
     commit-message:
       prefix: nuget
+    groups:
+      Avalonia:
+        patterns:
+          - "*Avalonia*"
+      Silk.NET:
+        patterns:
+          - "Silk.NET*"
+      OpenTK:
+        patterns:
+          - "OpenTK*"
+      SixLabors:
+        patterns:
+          - "SixLabors*"
+      NUnit:
+        patterns:
+          - "NUnit*"
