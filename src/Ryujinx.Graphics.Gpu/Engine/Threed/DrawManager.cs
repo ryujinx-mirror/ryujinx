@@ -103,6 +103,8 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         /// <param name="argument">Method call argument</param>
         public void DrawEnd(ThreedClass engine, int argument)
         {
+            _drawState.DrawUsesEngineState = true;
+
             DrawEnd(
                 engine,
                 _state.State.IndexBufferState.First,
@@ -205,10 +207,6 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             }
             else
             {
-#pragma warning disable IDE0059 // Remove unnecessary value assignment
-                var drawState = _state.State.VertexBufferDrawState;
-#pragma warning restore IDE0059
-
                 DrawImpl(engine, drawVertexCount, 1, 0, drawFirstVertex, firstInstance, indexed: false);
             }
 
@@ -379,6 +377,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             bool oldDrawIndexed = _drawState.DrawIndexed;
 
             _drawState.DrawIndexed = true;
+            _drawState.DrawUsesEngineState = false;
             engine.ForceStateDirty(IndexBufferCountMethodOffset * 4);
 
             DrawEnd(engine, firstIndex, indexCount, 0, 0);
@@ -424,6 +423,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             bool oldDrawIndexed = _drawState.DrawIndexed;
 
             _drawState.DrawIndexed = false;
+            _drawState.DrawUsesEngineState = false;
             engine.ForceStateDirty(VertexBufferFirstMethodOffset * 4);
 
             DrawEnd(engine, 0, 0, firstVertex, vertexCount);
@@ -544,6 +544,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             _state.State.FirstInstance = (uint)firstInstance;
 
             _drawState.DrawIndexed = indexed;
+            _drawState.DrawUsesEngineState = true;
             _currentSpecState.SetHasConstantBufferDrawParameters(true);
 
             engine.UpdateState();
@@ -676,6 +677,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
 
             _drawState.DrawIndexed = indexed;
             _drawState.DrawIndirect = true;
+            _drawState.DrawUsesEngineState = true;
             _currentSpecState.SetHasConstantBufferDrawParameters(true);
 
             engine.UpdateState();
