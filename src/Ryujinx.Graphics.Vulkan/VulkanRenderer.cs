@@ -784,7 +784,7 @@ namespace Ryujinx.Graphics.Vulkan
 
         public void SetBufferData(BufferHandle buffer, int offset, ReadOnlySpan<byte> data)
         {
-            BufferManager.SetData(buffer, offset, data, _pipeline.CurrentCommandBuffer, _pipeline.EndRenderPass);
+            BufferManager.SetData(buffer, offset, data, _pipeline.CurrentCommandBuffer, _pipeline.EndRenderPassDelegate);
         }
 
         public void UpdateCounters()

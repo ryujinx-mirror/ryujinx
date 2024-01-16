@@ -30,6 +30,7 @@ namespace Ryujinx.Graphics.Vulkan
         public readonly PipelineCache PipelineCache;
 
         public readonly AutoFlushCounter AutoFlush;
+        public readonly Action EndRenderPassDelegate;
 
         protected PipelineDynamicState DynamicState;
         private PipelineState _newState;
@@ -92,6 +93,7 @@ namespace Ryujinx.Graphics.Vulkan
             Device = device;
 
             AutoFlush = new AutoFlushCounter(gd);
+            EndRenderPassDelegate = EndRenderPass;
 
             var pipelineCacheCreateInfo = new PipelineCacheCreateInfo
             {
