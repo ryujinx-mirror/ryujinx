@@ -61,7 +61,6 @@ namespace Ryujinx.Tests.Cpu
             _memory.Map(DataBaseAddress, Size, Size, MemoryMapFlags.Private);
 
             _context = CpuContext.CreateExecutionContext();
-            Translator.IsReadyForTranslation.Set();
 
             _cpuContext = new CpuContext(_memory, for64Bit: true);
 

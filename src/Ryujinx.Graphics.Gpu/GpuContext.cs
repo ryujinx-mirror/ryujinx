@@ -106,6 +106,8 @@ namespace Ryujinx.Graphics.Gpu
         private long _modifiedSequence;
         private readonly ulong _firstTimestamp;
 
+        private readonly ManualResetEvent _gpuReadyEvent;
+
         /// <summary>
         /// Creates a new instance of the GPU emulation context.
         /// </summary>
@@ -121,6 +123,7 @@ namespace Ryujinx.Graphics.Gpu
             Window = new Window(this);
 
             HostInitalized = new ManualResetEvent(false);
+            _gpuReadyEvent = new ManualResetEvent(false);
 
             SyncActions = new List<ISyncActionHandler>();
             SyncpointActions = new List<ISyncActionHandler>();
@@ -216,7 +219,7 @@ namespace Ryujinx.Graphics.Gpu
         /// Gets a sequence number for resource modification ordering. This increments on each call.
         /// </summary>
         /// <returns>A sequence number for resource modification ordering</returns>
-        public long GetModifiedSequence()
+        internal long GetModifiedSequence()
         {
             return _modifiedSequence++;
         }
@@ -225,7 +228,7 @@ namespace Ryujinx.Graphics.Gpu
         /// Gets the value of the GPU timer.
         /// </summary>
         /// <returns>The current GPU timestamp</returns>
-        public ulong GetTimestamp()
+        internal ulong GetTimestamp()
         {
             // Guest timestamp will start at 0, instead of host value.
             ulong ticks = ConvertNanosecondsToTicks((ulong)PerformanceCounter.ElapsedNanoseconds) - _firstTimestamp;
@@ -262,6 +265,16 @@ namespace Ryujinx.Graphics.Gpu
             {
                 physicalMemory.ShaderCache.Initialize(cancellationToken);
             }
+
+            _gpuReadyEvent.Set();
+        }
+
+        /// <summary>
+        /// Waits until the GPU is ready to receive commands.
+        /// </summary>
+        public void WaitUntilGpuReady()
+        {
+            _gpuReadyEvent.WaitOne();
         }
 
         /// <summary>
@@ -399,6 +412,7 @@ namespace Ryujinx.Graphics.Gpu
         {
             GPFifo.Dispose();
             HostInitalized.Dispose();
+            _gpuReadyEvent.Dispose();
 
             // Has to be disposed before processing deferred actions, as it will produce some.
             foreach (var physicalMemory in PhysicalMemoryRegistry.Values)

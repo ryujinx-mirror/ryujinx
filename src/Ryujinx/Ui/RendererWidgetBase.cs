@@ -1,4 +1,3 @@
-using ARMeilleure.Translation;
 using Gdk;
 using Gtk;
 using Ryujinx.Common;
@@ -450,7 +449,6 @@ namespace Ryujinx.Ui
             {
                 Device.Gpu.SetGpuThread();
                 Device.Gpu.InitializeShaderCache(_gpuCancellationTokenSource.Token);
-                Translator.IsReadyForTranslation.Set();
 
                 Renderer.Window.ChangeVSyncMode(Device.EnableDeviceVsync);
 

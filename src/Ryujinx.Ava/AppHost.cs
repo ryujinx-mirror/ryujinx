@@ -1,4 +1,3 @@
-using ARMeilleure.Translation;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -916,7 +915,6 @@ namespace Ryujinx.Ava
             {
                 Device.Gpu.SetGpuThread();
                 Device.Gpu.InitializeShaderCache(_gpuCancellationTokenSource.Token);
-                Translator.IsReadyForTranslation.Set();
 
                 _renderer.Window.ChangeVSyncMode(Device.EnableDeviceVsync);
 

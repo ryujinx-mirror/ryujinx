@@ -1,4 +1,3 @@
-using ARMeilleure.Translation;
 using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Configuration.Hid;
 using Ryujinx.Common.Logging;
@@ -276,7 +275,6 @@ namespace Ryujinx.Headless.SDL2
             {
                 Device.Gpu.SetGpuThread();
                 Device.Gpu.InitializeShaderCache(_gpuCancellationTokenSource.Token);
-                Translator.IsReadyForTranslation.Set();
 
                 while (_isActive)
                 {

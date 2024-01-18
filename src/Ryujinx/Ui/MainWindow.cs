@@ -1,4 +1,3 @@
-using ARMeilleure.Translation;
 using Gtk;
 using LibHac.Common;
 using LibHac.Common.Keys;
@@ -930,8 +929,6 @@ namespace Ryujinx.Ui
                 _currentEmulatedGamePath = path;
 
                 _deviceExitStatus.Reset();
-
-                Translator.IsReadyForTranslation.Reset();
 
                 Thread windowThread = new(CreateGameWindow)
                 {

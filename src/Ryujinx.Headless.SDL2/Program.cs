@@ -1,4 +1,3 @@
-using ARMeilleure.Translation;
 using CommandLine;
 using LibHac.Tools.FsSystem;
 using Ryujinx.Audio.Backends.SDL2;
@@ -710,9 +709,6 @@ namespace Ryujinx.Headless.SDL2
             }
 
             SetupProgressHandler();
-
-            Translator.IsReadyForTranslation.Reset();
-
             ExecutionEntrypoint();
 
             return true;
