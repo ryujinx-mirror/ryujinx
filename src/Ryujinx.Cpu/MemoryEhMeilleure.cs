@@ -1,4 +1,4 @@
-using ARMeilleure.Signal;
+using Ryujinx.Cpu.Signal;
 using Ryujinx.Memory;
 using Ryujinx.Memory.Tracking;
 using System;

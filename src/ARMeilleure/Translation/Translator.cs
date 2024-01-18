@@ -79,11 +79,6 @@ namespace ARMeilleure.Translation
             Stubs = new TranslatorStubs(this);
 
             FunctionTable.Fill = (ulong)Stubs.SlowDispatchStub;
-
-            if (memory.Type.IsHostMapped())
-            {
-                NativeSignalHandler.InitializeSignalHandler(allocator.GetPageSize());
-            }
         }
 
         public IPtcLoadState LoadDiskCache(string titleIdText, string displayVersion, bool enabled)

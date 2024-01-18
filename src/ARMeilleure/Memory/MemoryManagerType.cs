@@ -31,7 +31,7 @@ namespace ARMeilleure.Memory
         HostMappedUnsafe,
     }
 
-    static class MemoryManagerTypeExtensions
+    public static class MemoryManagerTypeExtensions
     {
         public static bool IsHostMapped(this MemoryManagerType type)
         {

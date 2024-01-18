@@ -4,7 +4,5 @@ namespace ARMeilleure.Memory
     {
         IJitMemoryBlock Allocate(ulong size);
         IJitMemoryBlock Reserve(ulong size);
-
-        ulong GetPageSize();
     }
 }
