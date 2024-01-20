@@ -1,3 +1,4 @@
+using ARMeilleure.Common;
 using ARMeilleure.Instructions;
 using ARMeilleure.IntermediateRepresentation;
 using ARMeilleure.State;
@@ -14,11 +15,11 @@ namespace ARMeilleure.Translation
     /// </summary>
     class TranslatorStubs : IDisposable
     {
-        private static readonly Lazy<IntPtr> _slowDispatchStub = new(GenerateSlowDispatchStub, isThreadSafe: true);
+        private readonly Lazy<IntPtr> _slowDispatchStub;
 
         private bool _disposed;
 
-        private readonly Translator _translator;
+        private readonly AddressTable<ulong> _functionTable;
         private readonly Lazy<IntPtr> _dispatchStub;
         private readonly Lazy<DispatcherFunction> _dispatchLoop;
         private readonly Lazy<WrapperFunction> _contextWrapper;
@@ -83,13 +84,14 @@ namespace ARMeilleure.Translation
         /// Initializes a new instance of the <see cref="TranslatorStubs"/> class with the specified
         /// <see cref="Translator"/> instance.
         /// </summary>
-        /// <param name="translator"><see cref="Translator"/> instance to use</param>
+        /// <param name="functionTable">Function table used to store pointers to the functions that the guest code will call</param>
         /// <exception cref="ArgumentNullException"><paramref name="translator"/> is null</exception>
-        public TranslatorStubs(Translator translator)
+        public TranslatorStubs(AddressTable<ulong> functionTable)
         {
-            ArgumentNullException.ThrowIfNull(translator);
+            ArgumentNullException.ThrowIfNull(functionTable);
 
-            _translator = translator;
+            _functionTable = functionTable;
+            _slowDispatchStub = new(GenerateSlowDispatchStub, isThreadSafe: true);
             _dispatchStub = new(GenerateDispatchStub, isThreadSafe: true);
             _dispatchLoop = new(GenerateDispatchLoop, isThreadSafe: true);
             _contextWrapper = new(GenerateContextWrapper, isThreadSafe: true);
@@ -151,15 +153,15 @@ namespace ARMeilleure.Translation
                 context.Add(nativeContext, Const((ulong)NativeContext.GetDispatchAddressOffset())));
 
             // Check if guest address is within range of the AddressTable.
-            Operand masked = context.BitwiseAnd(guestAddress, Const(~_translator.FunctionTable.Mask));
+            Operand masked = context.BitwiseAnd(guestAddress, Const(~_functionTable.Mask));
             context.BranchIfTrue(lblFallback, masked);
 
             Operand index = default;
-            Operand page = Const((long)_translator.FunctionTable.Base);
+            Operand page = Const((long)_functionTable.Base);
 
-            for (int i = 0; i < _translator.FunctionTable.Levels.Length; i++)
+            for (int i = 0; i < _functionTable.Levels.Length; i++)
             {
-                ref var level = ref _translator.FunctionTable.Levels[i];
+                ref var level = ref _functionTable.Levels[i];
 
                 // level.Mask is not used directly because it is more often bigger than 32-bits, so it will not
                 // be encoded as an immediate on x86's bitwise and operation.
@@ -167,7 +169,7 @@ namespace ARMeilleure.Translation
 
                 index = context.BitwiseAnd(context.ShiftRightUI(guestAddress, Const(level.Index)), mask);
 
-                if (i < _translator.FunctionTable.Levels.Length - 1)
+                if (i < _functionTable.Levels.Length - 1)
                 {
                     page = context.Load(OperandType.I64, context.Add(page, context.ShiftLeft(index, Const(3))));
                     context.BranchIfFalse(lblFallback, page);
@@ -196,7 +198,7 @@ namespace ARMeilleure.Translation
         /// Generates a <see cref="SlowDispatchStub"/>.
         /// </summary>
         /// <returns>Generated <see cref="SlowDispatchStub"/></returns>
-        private static IntPtr GenerateSlowDispatchStub()
+        private IntPtr GenerateSlowDispatchStub()
         {
             var context = new EmitterContext();
 
@@ -205,8 +207,7 @@ namespace ARMeilleure.Translation
             Operand guestAddress = context.Load(OperandType.I64,
                 context.Add(nativeContext, Const((ulong)NativeContext.GetDispatchAddressOffset())));
 
-            MethodInfo getFuncAddress = typeof(NativeInterface).GetMethod(nameof(NativeInterface.GetFunctionAddress));
-            Operand hostAddress = context.Call(getFuncAddress, guestAddress);
+            Operand hostAddress = context.Call(typeof(NativeInterface).GetMethod(nameof(NativeInterface.GetFunctionAddress)), guestAddress);
             context.Tailcall(hostAddress, nativeContext);
 
             var cfg = context.GetControlFlowGraph();

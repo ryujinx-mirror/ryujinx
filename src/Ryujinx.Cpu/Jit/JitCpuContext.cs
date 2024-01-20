@@ -13,7 +13,7 @@ namespace Ryujinx.Cpu.Jit
         public JitCpuContext(ITickSource tickSource, IMemoryManager memory, bool for64Bit)
         {
             _tickSource = tickSource;
-            _translator = new Translator(new JitMemoryAllocator(), memory, for64Bit);
+            _translator = new Translator(new JitMemoryAllocator(forJit: true), memory, for64Bit);
 
             if (memory.Type.IsHostMapped())
             {
@@ -56,6 +56,10 @@ namespace Ryujinx.Cpu.Jit
         public void PrepareCodeRange(ulong address, ulong size)
         {
             _translator.PrepareCodeRange(address, size);
+        }
+
+        public void Dispose()
+        {
         }
     }
 }

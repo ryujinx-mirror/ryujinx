@@ -8,6 +8,7 @@ namespace ARMeilleure.Memory
 
         void Commit(ulong offset, ulong size);
 
+        void MapAsRw(ulong offset, ulong size);
         void MapAsRx(ulong offset, ulong size);
         void MapAsRwx(ulong offset, ulong size);
     }

@@ -73,7 +73,7 @@ namespace ARMeilleure.Translation
             CountTable = new EntryTable<uint>();
             Functions = new TranslatorCache<TranslatedFunction>();
             FunctionTable = new AddressTable<ulong>(for64Bits ? _levels64Bit : _levels32Bit);
-            Stubs = new TranslatorStubs(this);
+            Stubs = new TranslatorStubs(FunctionTable);
 
             FunctionTable.Fill = (ulong)Stubs.SlowDispatchStub;
         }

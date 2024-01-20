@@ -40,5 +40,9 @@ namespace Ryujinx.Cpu.AppleHv
         public void PrepareCodeRange(ulong address, ulong size)
         {
         }
+
+        public void Dispose()
+        {
+        }
     }
 }

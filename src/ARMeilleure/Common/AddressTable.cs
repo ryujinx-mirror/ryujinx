@@ -9,7 +9,7 @@ namespace ARMeilleure.Common
     /// Represents a table of guest address to a value.
     /// </summary>
     /// <typeparam name="TEntry">Type of the value</typeparam>
-    unsafe class AddressTable<TEntry> : IDisposable where TEntry : unmanaged
+    public unsafe class AddressTable<TEntry> : IDisposable where TEntry : unmanaged
     {
         /// <summary>
         /// Represents a level in an <see cref="AddressTable{TEntry}"/>.

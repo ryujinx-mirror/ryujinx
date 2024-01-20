@@ -87,6 +87,8 @@ namespace Ryujinx.HLE.HOS
                 _memoryManager = null;
                 _gpuContext.UnregisterProcess(_pid);
             }
+
+            _cpuContext.Dispose();
         }
     }
 }
