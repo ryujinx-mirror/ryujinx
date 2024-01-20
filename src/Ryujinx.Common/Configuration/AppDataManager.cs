@@ -63,6 +63,17 @@ namespace Ryujinx.Common.Configuration
             string userProfilePath = Path.Combine(appDataPath, DefaultBaseDir);
             string portablePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, DefaultPortableDir);
 
+            // On macOS, check for a portable directory next to the app bundle as well.
+            if (OperatingSystem.IsMacOS() && !Directory.Exists(portablePath))
+            {
+                string bundlePath = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", ".."));
+                // Make sure we're actually running within an app bundle.
+                if (bundlePath.EndsWith(".app"))
+                {
+                    portablePath = Path.GetFullPath(Path.Combine(bundlePath, "..", DefaultPortableDir));
+                }
+            }
+
             if (Directory.Exists(portablePath))
             {
                 BaseDirPath = portablePath;
