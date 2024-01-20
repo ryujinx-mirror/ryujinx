@@ -102,7 +102,7 @@ namespace Ryujinx.Graphics.Vulkan
 
             gd.Api.CreatePipelineCache(device, pipelineCacheCreateInfo, null, out PipelineCache).ThrowOnError();
 
-            _descriptorSetUpdater = new DescriptorSetUpdater(gd, this);
+            _descriptorSetUpdater = new DescriptorSetUpdater(gd, device, this);
             _vertexBufferUpdater = new VertexBufferUpdater(gd);
 
             _transformFeedbackBuffers = new BufferState[Constants.MaxTransformFeedbackBuffers];

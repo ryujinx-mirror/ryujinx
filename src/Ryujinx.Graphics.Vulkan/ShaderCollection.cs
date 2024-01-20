@@ -26,6 +26,7 @@ namespace Ryujinx.Graphics.Vulkan
 
         public ResourceBindingSegment[][] ClearSegments { get; }
         public ResourceBindingSegment[][] BindingSegments { get; }
+        public DescriptorSetTemplate[] Templates { get; }
 
         public ProgramLinkStatus LinkStatus { get; private set; }
 
@@ -118,6 +119,7 @@ namespace Ryujinx.Graphics.Vulkan
 
             ClearSegments = BuildClearSegments(resourceLayout.Sets);
             BindingSegments = BuildBindingSegments(resourceLayout.SetUsages);
+            Templates = BuildTemplates();
 
             _compileTask = Task.CompletedTask;
             _firstBackgroundUse = false;
@@ -239,6 +241,23 @@ namespace Ryujinx.Graphics.Vulkan
             }
 
             return segments;
+        }
+
+        private DescriptorSetTemplate[] BuildTemplates()
+        {
+            var templates = new DescriptorSetTemplate[BindingSegments.Length];
+
+            for (int setIndex = 0; setIndex < BindingSegments.Length; setIndex++)
+            {
+                ResourceBindingSegment[] segments = BindingSegments[setIndex];
+
+                if (segments != null && segments.Length > 0)
+                {
+                    templates[setIndex] = new DescriptorSetTemplate(_gd, _device, segments, _plce, IsCompute ? PipelineBindPoint.Compute : PipelineBindPoint.Graphics, setIndex);
+                }
+            }
+
+            return templates;
         }
 
         private async Task BackgroundCompilation()
@@ -502,6 +521,11 @@ namespace Ryujinx.Graphics.Vulkan
                     {
                         pipeline.Dispose();
                     }
+                }
+
+                for (int i = 0; i < Templates.Length; i++)
+                {
+                    Templates[i]?.Dispose();
                 }
 
                 if (_dummyRenderPass.Value.Handle != 0)
