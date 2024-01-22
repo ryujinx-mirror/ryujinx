@@ -69,7 +69,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvMap
                 return NvInternalResult.InvalidInput;
             }
 
-            int size = BitUtils.AlignUp(arguments.Size, (int)MemoryManager.PageSize);
+            uint size = BitUtils.AlignUp(arguments.Size, (uint)MemoryManager.PageSize);
 
             arguments.Handle = CreateHandleFromMap(new NvMapHandle(size));
 
@@ -128,7 +128,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvMap
                 map.Align = arguments.Align;
                 map.Kind = (byte)arguments.Kind;
 
-                int size = BitUtils.AlignUp(map.Size, (int)MemoryManager.PageSize);
+                uint size = BitUtils.AlignUp(map.Size, (uint)MemoryManager.PageSize);
 
                 ulong address = arguments.Address;
 
@@ -191,7 +191,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvMap
             switch (arguments.Param)
             {
                 case NvMapHandleParam.Size:
-                    arguments.Result = map.Size;
+                    arguments.Result = (int)map.Size;
                     break;
                 case NvMapHandleParam.Align:
                     arguments.Result = map.Align;

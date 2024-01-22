@@ -636,7 +636,7 @@ namespace Ryujinx.Graphics.Vic.Image
         {
             if (linear)
             {
-                rm.Gmm.WriteMapped(ExtendOffset(offset), src);
+                rm.MemoryManager.Write(ExtendOffset(offset), src);
                 return;
             }
 
@@ -659,7 +659,7 @@ namespace Ryujinx.Graphics.Vic.Image
 
             LayoutConverter.ConvertLinearToBlockLinear(dst, width, height, dstStride, bytesPerPixel, gobBlocksInY, src);
 
-            rm.Gmm.WriteMapped(ExtendOffset(offset), dst);
+            rm.MemoryManager.Write(ExtendOffset(offset), dst);
 
             rm.BufferPool.Return(dstIndex);
         }

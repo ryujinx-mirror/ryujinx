@@ -1,5 +1,5 @@
 using Ryujinx.Common;
-using Ryujinx.Graphics.Gpu.Memory;
+using Ryujinx.Graphics.Device;
 using Ryujinx.Graphics.Texture;
 using Ryujinx.Graphics.Video;
 using System;
@@ -11,13 +11,13 @@ namespace Ryujinx.Graphics.Nvdec.Image
 {
     static class SurfaceReader
     {
-        public static void Read(MemoryManager gmm, ISurface surface, uint lumaOffset, uint chromaOffset)
+        public static void Read(DeviceMemoryManager mm, ISurface surface, uint lumaOffset, uint chromaOffset)
         {
             int width = surface.Width;
             int height = surface.Height;
             int stride = surface.Stride;
 
-            ReadOnlySpan<byte> luma = gmm.DeviceGetSpan(lumaOffset, GetBlockLinearSize(width, height, 1));
+            ReadOnlySpan<byte> luma = mm.DeviceGetSpan(lumaOffset, GetBlockLinearSize(width, height, 1));
 
             ReadLuma(surface.YPlane.AsSpan(), luma, stride, width, height);
 
@@ -25,7 +25,7 @@ namespace Ryujinx.Graphics.Nvdec.Image
             int uvHeight = surface.UvHeight;
             int uvStride = surface.UvStride;
 
-            ReadOnlySpan<byte> chroma = gmm.DeviceGetSpan(chromaOffset, GetBlockLinearSize(uvWidth, uvHeight, 2));
+            ReadOnlySpan<byte> chroma = mm.DeviceGetSpan(chromaOffset, GetBlockLinearSize(uvWidth, uvHeight, 2));
 
             ReadChroma(surface.UPlane.AsSpan(), surface.VPlane.AsSpan(), chroma, uvStride, uvWidth, uvHeight);
         }

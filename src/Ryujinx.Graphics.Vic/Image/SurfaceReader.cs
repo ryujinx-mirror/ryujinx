@@ -454,7 +454,7 @@ namespace Ryujinx.Graphics.Vic.Image
             int srcStride = GetPitch(width, bytesPerPixel);
             int inSize = srcStride * height;
 
-            ReadOnlySpan<byte> src = rm.Gmm.GetSpan(ExtendOffset(offset), inSize);
+            ReadOnlySpan<byte> src = rm.MemoryManager.GetSpan(ExtendOffset(offset), inSize);
 
             int outSize = dstStride * height;
             int bufferIndex = rm.BufferPool.RentMinimum(outSize, out byte[] buffer);
@@ -481,7 +481,7 @@ namespace Ryujinx.Graphics.Vic.Image
         {
             int inSize = GetBlockLinearSize(width, height, bytesPerPixel, gobBlocksInY);
 
-            ReadOnlySpan<byte> src = rm.Gmm.GetSpan(ExtendOffset(offset), inSize);
+            ReadOnlySpan<byte> src = rm.MemoryManager.GetSpan(ExtendOffset(offset), inSize);
 
             int outSize = dstStride * height;
             int bufferIndex = rm.BufferPool.RentMinimum(outSize, out byte[] buffer);

@@ -12,10 +12,10 @@ namespace Ryujinx.Graphics.Nvdec
 
         public static void Decode(NvdecDecoderContext context, ResourceManager rm, ref NvdecRegisters state)
         {
-            PictureInfo pictureInfo = rm.Gmm.DeviceRead<PictureInfo>(state.SetDrvPicSetupOffset);
+            PictureInfo pictureInfo = rm.MemoryManager.DeviceRead<PictureInfo>(state.SetDrvPicSetupOffset);
             H264PictureInfo info = pictureInfo.Convert();
 
-            ReadOnlySpan<byte> bitstream = rm.Gmm.DeviceGetSpan(state.SetInBufBaseOffset, (int)pictureInfo.BitstreamSize);
+            ReadOnlySpan<byte> bitstream = rm.MemoryManager.DeviceGetSpan(state.SetInBufBaseOffset, (int)pictureInfo.BitstreamSize);
 
             int width = (int)pictureInfo.PicWidthInMbs * MbSizeInPixels;
             int height = (int)pictureInfo.PicHeightInMbs * MbSizeInPixels;
@@ -34,7 +34,7 @@ namespace Ryujinx.Graphics.Nvdec
                 if (outputSurface.Field == FrameField.Progressive)
                 {
                     SurfaceWriter.Write(
-                        rm.Gmm,
+                        rm.MemoryManager,
                         outputSurface,
                         lumaOffset + pictureInfo.LumaFrameOffset,
                         chromaOffset + pictureInfo.ChromaFrameOffset);
@@ -42,7 +42,7 @@ namespace Ryujinx.Graphics.Nvdec
                 else
                 {
                     SurfaceWriter.WriteInterlaced(
-                        rm.Gmm,
+                        rm.MemoryManager,
                         outputSurface,
                         lumaOffset + pictureInfo.LumaTopFieldOffset,
                         chromaOffset + pictureInfo.ChromaTopFieldOffset,

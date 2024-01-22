@@ -250,12 +250,12 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostChannel
                 {
                     if (map.DmaMapAddress == 0)
                     {
-                        ulong va = _host1xContext.MemoryAllocator.GetFreeAddress((ulong)map.Size, out ulong freeAddressStartPosition, 1, MemoryManager.PageSize);
+                        ulong va = _host1xContext.MemoryAllocator.GetFreeAddress(map.Size, out ulong freeAddressStartPosition, 1, MemoryManager.PageSize);
 
-                        if (va != NvMemoryAllocator.PteUnmapped && va <= uint.MaxValue && (va + (uint)map.Size) <= uint.MaxValue)
+                        if (va != NvMemoryAllocator.PteUnmapped && va <= uint.MaxValue && (va + map.Size) <= uint.MaxValue)
                         {
-                            _host1xContext.MemoryAllocator.AllocateRange(va, (uint)map.Size, freeAddressStartPosition);
-                            _host1xContext.Smmu.Map(map.Address, va, (uint)map.Size, PteKind.Pitch); // FIXME: This should not use the GMMU.
+                            _host1xContext.MemoryAllocator.AllocateRange(va, map.Size, freeAddressStartPosition);
+                            _host1xContext.Smmu.Map(map.Address, va, map.Size);
                             map.DmaMapAddress = va;
                         }
                         else

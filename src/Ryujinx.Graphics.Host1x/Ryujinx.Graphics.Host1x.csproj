@@ -6,7 +6,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Ryujinx.Graphics.Device\Ryujinx.Graphics.Device.csproj" />
-    <ProjectReference Include="..\Ryujinx.Graphics.Gpu\Ryujinx.Graphics.Gpu.csproj" />
   </ItemGroup>
 
 </Project>

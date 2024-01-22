@@ -1,4 +1,5 @@
 using Ryujinx.Common;
+using Ryujinx.Graphics.Device;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.Gpu.Engine.GPFifo;
 using Ryujinx.Graphics.Gpu.Memory;
@@ -161,6 +162,22 @@ namespace Ryujinx.Graphics.Gpu
             }
 
             return new MemoryManager(physicalMemory);
+        }
+
+        /// <summary>
+        /// Creates a new device memory manager.
+        /// </summary>
+        /// <param name="pid">ID of the process that owns the memory manager</param>
+        /// <returns>The memory manager</returns>
+        /// <exception cref="ArgumentException">Thrown when <paramref name="pid"/> is invalid</exception>
+        public DeviceMemoryManager CreateDeviceMemoryManager(ulong pid)
+        {
+            if (!PhysicalMemoryRegistry.TryGetValue(pid, out var physicalMemory))
+            {
+                throw new ArgumentException("The PID is invalid or the process was not registered", nameof(pid));
+            }
+
+            return physicalMemory.CreateDeviceMemoryManager();
         }
 
         /// <summary>

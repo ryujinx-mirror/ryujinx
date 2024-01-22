@@ -266,7 +266,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostAsGpu
 
             if (size == 0)
             {
-                size = (uint)map.Size;
+                size = map.Size;
             }
 
             NvInternalResult result = NvInternalResult.Success;

@@ -1,5 +1,4 @@
 using Ryujinx.Graphics.Device;
-using Ryujinx.Graphics.Gpu.Memory;
 using Ryujinx.Graphics.Vic.Image;
 using Ryujinx.Graphics.Vic.Types;
 using System;
@@ -9,14 +8,14 @@ namespace Ryujinx.Graphics.Vic
 {
     public class VicDevice : IDeviceState
     {
-        private readonly MemoryManager _gmm;
+        private readonly DeviceMemoryManager _mm;
         private readonly ResourceManager _rm;
         private readonly DeviceState<VicRegisters> _state;
 
-        public VicDevice(MemoryManager gmm)
+        public VicDevice(DeviceMemoryManager mm)
         {
-            _gmm = gmm;
-            _rm = new ResourceManager(gmm, new BufferPool<Pixel>(), new BufferPool<byte>());
+            _mm = mm;
+            _rm = new ResourceManager(mm, new BufferPool<Pixel>(), new BufferPool<byte>());
             _state = new DeviceState<VicRegisters>(new Dictionary<string, RwCallback>
             {
                 { nameof(VicRegisters.Execute), new RwCallback(Execute, null) },
@@ -68,7 +67,7 @@ namespace Ryujinx.Graphics.Vic
 
         private T ReadIndirect<T>(uint offset) where T : unmanaged
         {
-            return _gmm.Read<T>((ulong)offset << 8);
+            return _mm.Read<T>((ulong)offset << 8);
         }
     }
 }

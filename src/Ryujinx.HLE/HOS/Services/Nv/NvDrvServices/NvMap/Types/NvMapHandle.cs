@@ -8,7 +8,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvMap
         public int Handle;
         public int Id;
 #pragma warning restore CS0649
-        public int Size;
+        public uint Size;
         public int Align;
         public int Kind;
         public ulong Address;
@@ -22,7 +22,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvMap
             _dupes = 1;
         }
 
-        public NvMapHandle(int size) : this()
+        public NvMapHandle(uint size) : this()
         {
             Size = size;
         }

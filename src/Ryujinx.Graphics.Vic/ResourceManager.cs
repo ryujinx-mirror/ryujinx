@@ -1,17 +1,17 @@
-using Ryujinx.Graphics.Gpu.Memory;
+using Ryujinx.Graphics.Device;
 using Ryujinx.Graphics.Vic.Image;
 
 namespace Ryujinx.Graphics.Vic
 {
     readonly struct ResourceManager
     {
-        public MemoryManager Gmm { get; }
+        public DeviceMemoryManager MemoryManager { get; }
         public BufferPool<Pixel> SurfacePool { get; }
         public BufferPool<byte> BufferPool { get; }
 
-        public ResourceManager(MemoryManager gmm, BufferPool<Pixel> surfacePool, BufferPool<byte> bufferPool)
+        public ResourceManager(DeviceMemoryManager mm, BufferPool<Pixel> surfacePool, BufferPool<byte> bufferPool)
         {
-            Gmm = gmm;
+            MemoryManager = mm;
             SurfacePool = surfacePool;
             BufferPool = bufferPool;
         }

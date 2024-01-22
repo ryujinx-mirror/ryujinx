@@ -1,4 +1,5 @@
 using Ryujinx.Cpu;
+using Ryujinx.Graphics.Device;
 using Ryujinx.Graphics.Gpu.Image;
 using Ryujinx.Graphics.Gpu.Shader;
 using Ryujinx.Memory;
@@ -80,6 +81,15 @@ namespace Ryujinx.Graphics.Gpu.Memory
             {
                 rc.DecrementReferenceCount();
             }
+        }
+
+        /// <summary>
+        /// Creates a new device memory manager.
+        /// </summary>
+        /// <returns>The memory manager</returns>
+        public DeviceMemoryManager CreateDeviceMemoryManager()
+        {
+            return new DeviceMemoryManager(_cpuMemory);
         }
 
         /// <summary>

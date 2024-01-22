@@ -1,5 +1,4 @@
 using Ryujinx.Graphics.Device;
-using Ryujinx.Graphics.Gpu.Synchronization;
 using System.Collections.Generic;
 using System.Threading;
 
@@ -7,10 +6,10 @@ namespace Ryujinx.Graphics.Host1x
 {
     public class Host1xClass : IDeviceState
     {
-        private readonly SynchronizationManager _syncMgr;
+        private readonly ISynchronizationManager _syncMgr;
         private readonly DeviceState<Host1xClassRegisters> _state;
 
-        public Host1xClass(SynchronizationManager syncMgr)
+        public Host1xClass(ISynchronizationManager syncMgr)
         {
             _syncMgr = syncMgr;
             _state = new DeviceState<Host1xClassRegisters>(new Dictionary<string, RwCallback>
