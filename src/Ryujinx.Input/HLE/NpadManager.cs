@@ -5,6 +5,7 @@ using Ryujinx.HLE.HOS.Services.Hid;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using CemuHookClient = Ryujinx.Input.Motion.CemuHook.Client;
 using ControllerType = Ryujinx.Common.Configuration.Hid.ControllerType;
@@ -69,7 +70,20 @@ namespace Ryujinx.Input.HLE
         private void HandleOnGamepadDisconnected(string obj)
         {
             // Force input reload
-            ReloadConfiguration(_inputConfig, _enableKeyboard, _enableMouse);
+            lock (_lock)
+            {
+                // Forcibly disconnect any controllers with this ID.
+                for (int i = 0; i < _controllers.Length; i++)
+                {
+                    if (_controllers[i]?.Id == obj)
+                    {
+                        _controllers[i]?.Dispose();
+                        _controllers[i] = null;
+                    }
+                }
+
+                ReloadConfiguration(_inputConfig, _enableKeyboard, _enableMouse);
+            }
         }
 
         private void HandleOnGamepadConnected(string id)
@@ -106,29 +120,46 @@ namespace Ryujinx.Input.HLE
         {
             lock (_lock)
             {
-                for (int i = 0; i < _controllers.Length; i++)
-                {
-                    _controllers[i]?.Dispose();
-                    _controllers[i] = null;
-                }
+                NpadController[] oldControllers = _controllers.ToArray();
 
                 List<InputConfig> validInputs = new();
 
                 foreach (InputConfig inputConfigEntry in inputConfig)
                 {
-                    NpadController controller = new(_cemuHookClient);
+                    NpadController controller;
+                    int index = (int)inputConfigEntry.PlayerIndex;
+
+                    if (oldControllers[index] != null)
+                    {
+                        // Try reuse the existing controller.
+                        controller = oldControllers[index];
+                        oldControllers[index] = null;
+                    }
+                    else
+                    {
+                        controller = new(_cemuHookClient);
+                    }
 
                     bool isValid = DriverConfigurationUpdate(ref controller, inputConfigEntry);
 
                     if (!isValid)
                     {
+                        _controllers[index] = null;
                         controller.Dispose();
                     }
                     else
                     {
-                        _controllers[(int)inputConfigEntry.PlayerIndex] = controller;
+                        _controllers[index] = controller;
                         validInputs.Add(inputConfigEntry);
                     }
+                }
+
+                for (int i = 0; i < oldControllers.Length; i++)
+                {
+                    // Disconnect any controllers that weren't reused by the new configuration.
+
+                    oldControllers[i]?.Dispose();
+                    oldControllers[i] = null;
                 }
 
                 _inputConfig = inputConfig;
