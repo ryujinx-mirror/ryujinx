@@ -51,6 +51,7 @@
 
   <ItemGroup Condition="'$(RuntimeIdentifier)' == 'osx-x64' OR '$(RuntimeIdentifier)' == 'osx-arm64' OR '$(RuntimeIdentifier)' == ''">
     <EmbeddedResource Include="..\..\distribution\macos\shortcut-template.plist" />
+    <EmbeddedResource Include="..\..\distribution\macos\shortcut-launch-script.sh" />
   </ItemGroup>
 
   <ItemGroup>
