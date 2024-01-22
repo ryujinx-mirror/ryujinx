@@ -790,8 +790,12 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                         texture = new Texture(_context, _physicalMemory, info, sizeInfo, range.Value, scaleMode);
 
+                        // If the new texture is larger than the existing one, we need to fill the remaining space with CPU data,
+                        // otherwise we only need the data that is copied from the existing texture, without loading the CPU data.
+                        bool updateNewTexture = texture.Width > overlap.Width || texture.Height > overlap.Height;
+
                         texture.InitializeGroup(true, true, new List<TextureIncompatibleOverlap>());
-                        texture.InitializeData(false, false);
+                        texture.InitializeData(false, updateNewTexture);
 
                         overlap.SynchronizeMemory();
                         overlap.CreateCopyDependency(texture, oInfo.FirstLayer, oInfo.FirstLevel, true);
