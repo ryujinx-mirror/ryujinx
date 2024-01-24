@@ -67,9 +67,18 @@ namespace Ryujinx.Graphics.Vulkan.Queries
             lock (_queryPool)
             {
                 count = Math.Min(count, _queryPool.Count);
-                for (int i = 0; i < count; i++)
+
+                if (count > 0)
                 {
-                    _queryPool.ElementAt(i).PoolReset(cmd, ResetSequence);
+                    foreach (BufferedQuery query in _queryPool)
+                    {
+                        query.PoolReset(cmd, ResetSequence);
+
+                        if (--count == 0)
+                        {
+                            break;
+                        }
+                    }
                 }
             }
         }
