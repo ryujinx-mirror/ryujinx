@@ -517,7 +517,10 @@ namespace ARMeilleure.Decoders
             SetA64("0x00111100>>>xxx100111xxxxxxxxxx", InstName.Sqrshrn_V,       InstEmit.Sqrshrn_V,       OpCodeSimdShImm.Create);
             SetA64("0111111100>>>xxx100011xxxxxxxxxx", InstName.Sqrshrun_S,      InstEmit.Sqrshrun_S,      OpCodeSimdShImm.Create);
             SetA64("0x10111100>>>xxx100011xxxxxxxxxx", InstName.Sqrshrun_V,      InstEmit.Sqrshrun_V,      OpCodeSimdShImm.Create);
+            SetA64("010111110>>>>xxx011101xxxxxxxxxx", InstName.Sqshl_Si,        InstEmit.Sqshl_Si,        OpCodeSimdShImm.Create);
             SetA64("0>001110<<1xxxxx010011xxxxxxxxxx", InstName.Sqshl_V,         InstEmit.Sqshl_V,         OpCodeSimdReg.Create);
+            SetA64("0000111100>>>xxx011101xxxxxxxxxx", InstName.Sqshl_Vi,        InstEmit.Sqshl_Vi,        OpCodeSimdShImm.Create);
+            SetA64("010011110>>>>xxx011101xxxxxxxxxx", InstName.Sqshl_Vi,        InstEmit.Sqshl_Vi,        OpCodeSimdShImm.Create);
             SetA64("0101111100>>>xxx100101xxxxxxxxxx", InstName.Sqshrn_S,        InstEmit.Sqshrn_S,        OpCodeSimdShImm.Create);
             SetA64("0x00111100>>>xxx100101xxxxxxxxxx", InstName.Sqshrn_V,        InstEmit.Sqshrn_V,        OpCodeSimdShImm.Create);
             SetA64("0111111100>>>xxx100001xxxxxxxxxx", InstName.Sqshrun_S,       InstEmit.Sqshrun_S,       OpCodeSimdShImm.Create);

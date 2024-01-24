@@ -311,6 +311,46 @@ namespace Ryujinx.Tests.Cpu
             };
         }
 
+        private static uint[] _ShlImm_S_D_()
+        {
+            return new[]
+            {
+                0x5F407400u, // SQSHL D0, D0, #0
+            };
+        }
+
+        private static uint[] _ShlImm_V_8B_16B_()
+        {
+            return new[]
+            {
+                0x0F087400u, // SQSHL V0.8B, V0.8B, #0
+            };
+        }
+
+        private static uint[] _ShlImm_V_4H_8H_()
+        {
+            return new[]
+            {
+                0x0F107400u, // SQSHL V0.4H, V0.4H, #0
+            };
+        }
+
+        private static uint[] _ShlImm_V_2S_4S_()
+        {
+            return new[]
+            {
+                0x0F207400u, // SQSHL V0.2S, V0.2S, #0
+            };
+        }
+
+        private static uint[] _ShlImm_V_2D_()
+        {
+            return new[]
+            {
+                0x4F407400u, // SQSHL V0.2D, V0.2D, #0
+            };
+        }
+
         private static uint[] _ShrImm_Sri_S_D_()
         {
             return new[]
@@ -807,6 +847,117 @@ namespace Ryujinx.Tests.Cpu
 
             V128 v0 = MakeVectorE0E1(z, z);
             V128 v1 = MakeVectorE0E1(q == 0u ? a : 0ul, q == 1u ? a : 0ul);
+
+            SingleOpcode(opcodes, v0: v0, v1: v1);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise]
+        public void ShlImm_S_D([ValueSource(nameof(_ShlImm_S_D_))] uint opcodes,
+                               [Values(0u)] uint rd,
+                               [Values(1u, 0u)] uint rn,
+                               [ValueSource(nameof(_1D_))] ulong z,
+                               [ValueSource(nameof(_1D_))] ulong a,
+                               [Values(1u, 64u)] uint shift)
+        {
+            uint immHb = (64 + shift) & 0x7F;
+
+            opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcodes |= (immHb << 16);
+
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0(a);
+
+            SingleOpcode(opcodes, v0: v0, v1: v1);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise]
+        public void ShlImm_V_8B_16B([ValueSource(nameof(_ShlImm_V_8B_16B_))] uint opcodes,
+                                    [Values(0u)] uint rd,
+                                    [Values(1u, 0u)] uint rn,
+                                    [ValueSource(nameof(_8B_))] ulong z,
+                                    [ValueSource(nameof(_8B_))] ulong a,
+                                    [Values(1u, 8u)] uint shift,
+                                    [Values(0b0u, 0b1u)] uint q) // <8B, 16B>
+        {
+            uint immHb = (8 + shift) & 0x7F;
+
+            opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcodes |= (immHb << 16);
+            opcodes |= ((q & 1) << 30);
+
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, a * q);
+
+            SingleOpcode(opcodes, v0: v0, v1: v1);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise]
+        public void ShlImm_V_4H_8H([ValueSource(nameof(_ShlImm_V_4H_8H_))] uint opcodes,
+                                   [Values(0u)] uint rd,
+                                   [Values(1u, 0u)] uint rn,
+                                   [ValueSource(nameof(_4H_))] ulong z,
+                                   [ValueSource(nameof(_4H_))] ulong a,
+                                   [Values(1u, 16u)] uint shift,
+                                   [Values(0b0u, 0b1u)] uint q) // <4H, 8H>
+        {
+            uint immHb = (16 + shift) & 0x7F;
+
+            opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcodes |= (immHb << 16);
+            opcodes |= ((q & 1) << 30);
+
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, a * q);
+
+            SingleOpcode(opcodes, v0: v0, v1: v1);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise]
+        public void ShlImm_V_2S_4S([ValueSource(nameof(_ShlImm_V_2S_4S_))] uint opcodes,
+                                   [Values(0u)] uint rd,
+                                   [Values(1u, 0u)] uint rn,
+                                   [ValueSource(nameof(_2S_))] ulong z,
+                                   [ValueSource(nameof(_2S_))] ulong a,
+                                   [Values(1u, 32u)] uint shift,
+                                   [Values(0b0u, 0b1u)] uint q) // <2S, 4S>
+        {
+            uint immHb = (32 + shift) & 0x7F;
+
+            opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcodes |= (immHb << 16);
+            opcodes |= (((q | (immHb >> 6)) & 1) << 30);
+
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, a * q);
+
+            SingleOpcode(opcodes, v0: v0, v1: v1);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise]
+        public void ShlImm_V_2D([ValueSource(nameof(_ShlImm_V_2D_))] uint opcodes,
+                                [Values(0u)] uint rd,
+                                [Values(1u, 0u)] uint rn,
+                                [ValueSource(nameof(_1D_))] ulong z,
+                                [ValueSource(nameof(_1D_))] ulong a,
+                                [Values(1u, 64u)] uint shift)
+        {
+            uint immHb = (64 + shift) & 0x7F;
+
+            opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcodes |= (immHb << 16);
+
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, a);
 
             SingleOpcode(opcodes, v0: v0, v1: v1);
 
