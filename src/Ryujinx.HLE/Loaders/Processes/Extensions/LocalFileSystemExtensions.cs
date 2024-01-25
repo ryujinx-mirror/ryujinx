@@ -26,7 +26,7 @@ namespace Ryujinx.HLE.Loaders.Processes
                 ProcessLoaderHelper.EnsureSaveData(device, new ApplicationId(programId), nacpData);
             }
 
-            ProcessResult processResult = exeFs.Load(device, nacpData, metaLoader);
+            ProcessResult processResult = exeFs.Load(device, nacpData, metaLoader, 0);
 
             // Load RomFS.
             if (!string.IsNullOrEmpty(romFsPath))

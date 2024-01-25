@@ -77,7 +77,7 @@ namespace Ryujinx.HLE.Loaders.Processes
             if (processResult.ProcessId == 0)
             {
                 // This is not a normal NSP, it's actually a ExeFS as a NSP
-                processResult = partitionFileSystem.Load(_device, new BlitStruct<ApplicationControlProperty>(1), partitionFileSystem.GetNpdm(), true);
+                processResult = partitionFileSystem.Load(_device, new BlitStruct<ApplicationControlProperty>(1), partitionFileSystem.GetNpdm(), 0, true);
             }
 
             if (processResult.ProcessId != 0 && _processesByPid.TryAdd(processResult.ProcessId, processResult))
@@ -198,7 +198,7 @@ namespace Ryujinx.HLE.Loaders.Processes
             }
             else
             {
-                programName = System.IO.Path.GetFileNameWithoutExtension(path);
+                programName = Path.GetFileNameWithoutExtension(path);
 
                 executable = new NsoExecutable(new LocalStorage(path, FileAccess.Read), programName);
             }
@@ -215,6 +215,7 @@ namespace Ryujinx.HLE.Loaders.Processes
                                                                        allowCodeMemoryForJit: true,
                                                                        programName,
                                                                        programId,
+                                                                       0,
                                                                        null,
                                                                        executable);
 

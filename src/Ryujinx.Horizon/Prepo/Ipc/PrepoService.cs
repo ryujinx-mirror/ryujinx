@@ -5,6 +5,7 @@ using Ryujinx.Common.Utilities;
 using Ryujinx.Horizon.Common;
 using Ryujinx.Horizon.Prepo.Types;
 using Ryujinx.Horizon.Sdk.Account;
+using Ryujinx.Horizon.Sdk.Arp;
 using Ryujinx.Horizon.Sdk.Prepo;
 using Ryujinx.Horizon.Sdk.Sf;
 using Ryujinx.Horizon.Sdk.Sf.Hipc;
@@ -22,14 +23,16 @@ namespace Ryujinx.Horizon.Prepo.Ipc
             System,
         }
 
+        private readonly ArpApi _arp;
         private readonly PrepoServicePermissionLevel _permissionLevel;
         private ulong _systemSessionId;
 
         private bool _immediateTransmissionEnabled;
         private bool _userAgreementCheckEnabled = true;
 
-        public PrepoService(PrepoServicePermissionLevel permissionLevel)
+        public PrepoService(ArpApi arp, PrepoServicePermissionLevel permissionLevel)
         {
+            _arp = arp;
             _permissionLevel = permissionLevel;
         }
 
@@ -165,7 +168,7 @@ namespace Ryujinx.Horizon.Prepo.Ipc
             return PrepoResult.PermissionDenied;
         }
 
-        private static Result ProcessPlayReport(PlayReportKind playReportKind, ReadOnlySpan<byte> gameRoomBuffer, ReadOnlySpan<byte> reportBuffer, ulong pid, Uid userId, bool withUserId = false, ApplicationId applicationId = default)
+        private Result ProcessPlayReport(PlayReportKind playReportKind, ReadOnlySpan<byte> gameRoomBuffer, ReadOnlySpan<byte> reportBuffer, ulong pid, Uid userId, bool withUserId = false, ApplicationId applicationId = default)
         {
             if (withUserId)
             {
@@ -199,8 +202,8 @@ namespace Ryujinx.Horizon.Prepo.Ipc
             builder.AppendLine("PlayReport log:");
             builder.AppendLine($" Kind: {playReportKind}");
 
-            // NOTE: The service calls arp:r using the pid to get the application id, if it fails PrepoResult.InvalidPid is returned.
-            //       Reports are stored internally and an event is signaled to transmit them.
+            // NOTE: Reports are stored internally and an event is signaled to transmit them.
+
             if (pid != 0)
             {
                 builder.AppendLine($" Pid: {pid}");
@@ -209,6 +212,16 @@ namespace Ryujinx.Horizon.Prepo.Ipc
             {
                 builder.AppendLine($" ApplicationId: {applicationId}");
             }
+
+            Result result = _arp.GetApplicationInstanceId(out ulong applicationInstanceId, pid);
+            if (result.IsFailure)
+            {
+                return PrepoResult.InvalidPid;
+            }
+
+            _arp.GetApplicationLaunchProperty(out ApplicationLaunchProperty applicationLaunchProperty, applicationInstanceId).AbortOnFailure();
+
+            builder.AppendLine($" ApplicationVersion: {applicationLaunchProperty.Version}");
 
             if (!userId.IsNull)
             {

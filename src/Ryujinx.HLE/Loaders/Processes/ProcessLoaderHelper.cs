@@ -19,6 +19,7 @@ using Ryujinx.HLE.HOS.Kernel.Process;
 using Ryujinx.HLE.Loaders.Executables;
 using Ryujinx.HLE.Loaders.Processes.Extensions;
 using Ryujinx.Horizon.Common;
+using Ryujinx.Horizon.Sdk.Arp;
 using System;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -229,6 +230,7 @@ namespace Ryujinx.HLE.Loaders.Processes
             bool allowCodeMemoryForJit,
             string name,
             ulong programId,
+            byte programIndex,
             byte[] arguments = null,
             params IExecutable[] executables)
         {
@@ -421,7 +423,7 @@ namespace Ryujinx.HLE.Loaders.Processes
             // Once everything is loaded, we can load cheats.
             device.Configuration.VirtualFileSystem.ModLoader.LoadCheats(programId, tamperInfo, device.TamperMachine);
 
-            return new ProcessResult(
+            ProcessResult processResult = new(
                 metaLoader,
                 applicationControlProperties,
                 diskCacheEnabled,
@@ -431,6 +433,25 @@ namespace Ryujinx.HLE.Loaders.Processes
                 meta.MainThreadPriority,
                 meta.MainThreadStackSize,
                 device.System.State.DesiredTitleLanguage);
+
+            // Register everything in arp service.
+            device.System.ServiceTable.ArpWriter.AcquireRegistrar(out IRegistrar registrar);
+            registrar.SetApplicationControlProperty(MemoryMarshal.Cast<byte, Horizon.Sdk.Ns.ApplicationControlProperty>(applicationControlProperties.ByteSpan)[0]);
+            // TODO: Handle Version and StorageId when it will be needed.
+            registrar.SetApplicationLaunchProperty(new ApplicationLaunchProperty()
+            {
+                ApplicationId = new Horizon.Sdk.Ncm.ApplicationId(programId),
+                Version = 0x00,
+                Storage = Horizon.Sdk.Ncm.StorageId.BuiltInUser,
+                PatchStorage = Horizon.Sdk.Ncm.StorageId.None,
+                ApplicationKind = ApplicationKind.Application,
+            });
+
+            device.System.ServiceTable.ArpReader.GetApplicationInstanceId(out ulong applicationInstanceId, process.Pid);
+            device.System.ServiceTable.ArpWriter.AcquireApplicationProcessPropertyUpdater(out IUpdater updater, applicationInstanceId);
+            updater.SetApplicationProcessProperty(process.Pid, new ApplicationProcessProperty() { ProgramIndex = programIndex });
+
+            return processResult;
         }
 
         public static Result LoadIntoMemory(KProcess process, IExecutable image, ulong baseAddress)

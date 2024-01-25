@@ -10,5 +10,12 @@ namespace Ryujinx.Horizon.Sdk.Sf.Cmif
         public Span<ushort> OutPointerSizes;
         public Span<uint> Objects;
         public int ServerPointerSize;
+        public int CurrentInPointerId;
+        public int SendBufferIndex;
+        public int RecvBufferIndex;
+        public int ExchBufferIndex;
+        public int SendStaticIndex;
+        public int RecvListIndex;
+        public int OutPointerSizeIndex;
     }
 }

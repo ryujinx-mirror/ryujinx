@@ -1,6 +1,6 @@
 namespace Ryujinx.Horizon.Sdk.Ncm
 {
-    readonly struct ApplicationId
+    public readonly struct ApplicationId
     {
         public readonly ulong Id;
 

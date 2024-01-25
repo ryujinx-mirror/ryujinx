@@ -61,7 +61,7 @@ namespace Ryujinx.HLE.Loaders.Processes.Extensions
 
             */
 
-            ProcessResult processResult = exeFs.Load(device, nacpData, metaLoader);
+            ProcessResult processResult = exeFs.Load(device, nacpData, metaLoader, (byte)nca.GetProgramIndex());
 
             // Load RomFS.
             if (romFs == null)

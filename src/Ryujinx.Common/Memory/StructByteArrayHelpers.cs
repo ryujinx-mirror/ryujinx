@@ -64,6 +64,18 @@ namespace Ryujinx.Common.Memory
     }
 
     [StructLayout(LayoutKind.Sequential, Size = Size, Pack = 1)]
+    public struct ByteArray3000 : IArray<byte>
+    {
+        private const int Size = 3000;
+
+        byte _element;
+
+        public readonly int Length => Size;
+        public ref byte this[int index] => ref AsSpan()[index];
+        public Span<byte> AsSpan() => MemoryMarshal.CreateSpan(ref _element, Size);
+    }
+
+    [StructLayout(LayoutKind.Sequential, Size = Size, Pack = 1)]
     public struct ByteArray4096 : IArray<byte>
     {
         private const int Size = 4096;
