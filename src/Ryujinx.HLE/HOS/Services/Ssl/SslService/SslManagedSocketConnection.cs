@@ -3,6 +3,7 @@ using Ryujinx.HLE.HOS.Services.Sockets.Bsd.Impl;
 using Ryujinx.HLE.HOS.Services.Ssl.Types;
 using System;
 using System.IO;
+using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Security.Authentication;
@@ -83,10 +84,40 @@ namespace Ryujinx.HLE.HOS.Services.Ssl.SslService
         }
 #pragma warning restore SYSLIB0039
 
+        /// <summary>
+        /// Retrieve the hostname of the current remote in case the provided hostname is null or empty.
+        /// </summary>
+        /// <param name="hostName">The current hostname</param>
+        /// <returns>Either the resolved or provided hostname</returns>
+        /// <remarks>
+        /// This is done to avoid getting an <see cref="System.Security.Authentication.AuthenticationException"/>
+        /// as the remote certificate will be rejected with <c>RemoteCertificateNameMismatch</c> due to an empty hostname.
+        /// This is not what the switch does!
+        /// It might just skip remote hostname verification if the hostname wasn't set with <see cref="ISslConnection.SetHostName"/> before.
+        /// TODO: Remove this as soon as we know how the switch deals with empty hostnames
+        /// </remarks>
+        private string RetrieveHostName(string hostName)
+        {
+            if (!string.IsNullOrEmpty(hostName))
+            {
+                return hostName;
+            }
+
+            try
+            {
+                return Dns.GetHostEntry(Socket.RemoteEndPoint.Address).HostName;
+            }
+            catch (SocketException)
+            {
+                return hostName;
+            }
+        }
+
         public ResultCode Handshake(string hostName)
         {
             StartSslOperation();
             _stream = new SslStream(new NetworkStream(((ManagedSocket)Socket).Socket, false), false, null, null);
+            hostName = RetrieveHostName(hostName);
             _stream.AuthenticateAsClient(hostName, null, TranslateSslVersion(_sslVersion), false);
             EndSslOperation();
 
