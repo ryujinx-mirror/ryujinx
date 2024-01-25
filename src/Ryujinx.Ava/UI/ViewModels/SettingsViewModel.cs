@@ -48,7 +48,6 @@ namespace Ryujinx.Ava.UI.ViewModels
         private readonly List<string> _gpuIds = new();
         private KeyboardHotkeys _keyboardHotkeys;
         private int _graphicsBackendIndex;
-        private string _customThemePath;
         private int _scalingFilter;
         private int _scalingFilterLevel;
 
@@ -160,7 +159,6 @@ namespace Ryujinx.Ava.UI.ViewModels
         public bool IsOpenAlEnabled { get; set; }
         public bool IsSoundIoEnabled { get; set; }
         public bool IsSDL2Enabled { get; set; }
-        public bool EnableCustomTheme { get; set; }
         public bool IsCustomResolutionScaleActive => _resolutionScale == 4;
         public bool IsScalingFilterActive => _scalingFilter == (int)Ryujinx.Common.Configuration.ScalingFilter.Fsr;
 
@@ -169,20 +167,6 @@ namespace Ryujinx.Ava.UI.ViewModels
 
         public string TimeZone { get; set; }
         public string ShaderDumpPath { get; set; }
-
-        public string CustomThemePath
-        {
-            get
-            {
-                return _customThemePath;
-            }
-            set
-            {
-                _customThemePath = value;
-
-                OnPropertyChanged();
-            }
-        }
 
         public int Language { get; set; }
         public int Region { get; set; }
@@ -426,8 +410,6 @@ namespace Ryujinx.Ava.UI.ViewModels
             GameDirectories.Clear();
             GameDirectories.AddRange(config.Ui.GameDirs.Value);
 
-            EnableCustomTheme = config.Ui.EnableCustomTheme;
-            CustomThemePath = config.Ui.CustomThemePath;
             BaseStyleIndex = config.Ui.BaseStyle == "Light" ? 0 : 1;
 
             // Input
@@ -515,8 +497,6 @@ namespace Ryujinx.Ava.UI.ViewModels
                 config.Ui.GameDirs.Value = gameDirs;
             }
 
-            config.Ui.EnableCustomTheme.Value = EnableCustomTheme;
-            config.Ui.CustomThemePath.Value = CustomThemePath;
             config.Ui.BaseStyle.Value = BaseStyleIndex == 0 ? "Light" : "Dark";
 
             // Input
