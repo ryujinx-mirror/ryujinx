@@ -66,12 +66,11 @@ namespace Ryujinx.Graphics.Vulkan.Effects
 
             ReadOnlySpan<float> resolutionBuffer = stackalloc float[] { view.Width, view.Height };
             int rangeSize = resolutionBuffer.Length * sizeof(float);
-            var bufferHandle = _renderer.BufferManager.CreateWithHandle(_renderer, rangeSize);
+            using var buffer = _renderer.BufferManager.ReserveOrCreate(_renderer, cbs, rangeSize);
 
-            _renderer.BufferManager.SetData(bufferHandle, 0, resolutionBuffer);
+            buffer.Holder.SetDataUnchecked(buffer.Offset, resolutionBuffer);
 
-            var bufferRanges = new BufferRange(bufferHandle, 0, rangeSize);
-            _pipeline.SetUniformBuffers(stackalloc[] { new BufferAssignment(2, bufferRanges) });
+            _pipeline.SetUniformBuffers(stackalloc[] { new BufferAssignment(2, buffer.Range) });
 
             var dispatchX = BitUtils.DivRoundUp(view.Width, IPostProcessingEffect.LocalGroupSize);
             var dispatchY = BitUtils.DivRoundUp(view.Height, IPostProcessingEffect.LocalGroupSize);
@@ -79,7 +78,6 @@ namespace Ryujinx.Graphics.Vulkan.Effects
             _pipeline.SetImage(0, _texture, FormatTable.ConvertRgba8SrgbToUnorm(view.Info.Format));
             _pipeline.DispatchCompute(dispatchX, dispatchY, 1);
 
-            _renderer.BufferManager.Delete(bufferHandle);
             _pipeline.ComputeBarrier();
 
             _pipeline.Finish();

@@ -142,19 +142,18 @@ namespace Ryujinx.Graphics.Vulkan.Effects
             };
 
             int rangeSize = dimensionsBuffer.Length * sizeof(float);
-            var bufferHandle = _renderer.BufferManager.CreateWithHandle(_renderer, rangeSize);
-            _renderer.BufferManager.SetData(bufferHandle, 0, dimensionsBuffer);
+            using var buffer = _renderer.BufferManager.ReserveOrCreate(_renderer, cbs, rangeSize);
+            buffer.Holder.SetDataUnchecked(buffer.Offset, dimensionsBuffer);
 
-            ReadOnlySpan<float> sharpeningBuffer = stackalloc float[] { 1.5f - (Level * 0.01f * 1.5f) };
-            var sharpeningBufferHandle = _renderer.BufferManager.CreateWithHandle(_renderer, sizeof(float));
-            _renderer.BufferManager.SetData(sharpeningBufferHandle, 0, sharpeningBuffer);
+            ReadOnlySpan<float> sharpeningBufferData = stackalloc float[] { 1.5f - (Level * 0.01f * 1.5f) };
+            using var sharpeningBuffer = _renderer.BufferManager.ReserveOrCreate(_renderer, cbs, sizeof(float));
+            sharpeningBuffer.Holder.SetDataUnchecked(sharpeningBuffer.Offset, sharpeningBufferData);
 
             int threadGroupWorkRegionDim = 16;
             int dispatchX = (width + (threadGroupWorkRegionDim - 1)) / threadGroupWorkRegionDim;
             int dispatchY = (height + (threadGroupWorkRegionDim - 1)) / threadGroupWorkRegionDim;
 
-            var bufferRanges = new BufferRange(bufferHandle, 0, rangeSize);
-            _pipeline.SetUniformBuffers(stackalloc[] { new BufferAssignment(2, bufferRanges) });
+            _pipeline.SetUniformBuffers(stackalloc[] { new BufferAssignment(2, buffer.Range) });
             _pipeline.SetImage(0, _intermediaryTexture, FormatTable.ConvertRgba8SrgbToUnorm(view.Info.Format));
             _pipeline.DispatchCompute(dispatchX, dispatchY, 1);
             _pipeline.ComputeBarrier();
@@ -162,16 +161,12 @@ namespace Ryujinx.Graphics.Vulkan.Effects
             // Sharpening pass
             _pipeline.SetProgram(_sharpeningProgram);
             _pipeline.SetTextureAndSampler(ShaderStage.Compute, 1, _intermediaryTexture, _sampler);
-            var sharpeningRange = new BufferRange(sharpeningBufferHandle, 0, sizeof(float));
-            _pipeline.SetUniformBuffers(stackalloc[] { new BufferAssignment(4, sharpeningRange) });
+            _pipeline.SetUniformBuffers(stackalloc[] { new BufferAssignment(4, sharpeningBuffer.Range) });
             _pipeline.SetImage(0, destinationTexture);
             _pipeline.DispatchCompute(dispatchX, dispatchY, 1);
             _pipeline.ComputeBarrier();
 
             _pipeline.Finish();
-
-            _renderer.BufferManager.Delete(bufferHandle);
-            _renderer.BufferManager.Delete(sharpeningBufferHandle);
         }
     }
 }

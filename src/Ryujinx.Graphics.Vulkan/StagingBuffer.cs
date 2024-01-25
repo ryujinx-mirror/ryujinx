@@ -1,5 +1,6 @@
 using Ryujinx.Common;
 using Ryujinx.Common.Logging;
+using Ryujinx.Graphics.GAL;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -29,6 +30,9 @@ namespace Ryujinx.Graphics.Vulkan
 
         private readonly VulkanRenderer _gd;
         private readonly BufferHolder _buffer;
+        private readonly int _resourceAlignment;
+
+        public readonly BufferHandle Handle;
 
         private readonly struct PendingCopy
         {
@@ -48,9 +52,10 @@ namespace Ryujinx.Graphics.Vulkan
         public StagingBuffer(VulkanRenderer gd, BufferManager bufferManager)
         {
             _gd = gd;
-            _buffer = bufferManager.Create(gd, BufferSize);
+            Handle = bufferManager.CreateWithHandle(gd, BufferSize, out _buffer);
             _pendingCopies = new Queue<PendingCopy>();
             _freeSize = BufferSize;
+            _resourceAlignment = (int)gd.Capabilities.MinResourceAlignment;
         }
 
         public void PushData(CommandBufferPool cbp, CommandBufferScoped? cbs, Action endRenderPass, BufferHolder dst, int dstOffset, ReadOnlySpan<byte> data)
@@ -197,7 +202,7 @@ namespace Ryujinx.Graphics.Vulkan
         /// Reserve a range on the staging buffer for the current command buffer and upload data to it.
         /// </summary>
         /// <param name="cbs">Command buffer to reserve the data on</param>
-        /// <param name="data">The data to upload</param>
+        /// <param name="size">The minimum size the reserved data requires</param>
         /// <param name="alignment">The required alignment for the buffer offset</param>
         /// <returns>The reserved range of the staging buffer</returns>
         public unsafe StagingBufferReserved? TryReserveData(CommandBufferScoped cbs, int size, int alignment)
@@ -221,6 +226,18 @@ namespace Ryujinx.Graphics.Vulkan
             }
 
             return ReserveDataImpl(cbs, size, alignment);
+        }
+
+        /// <summary>
+        /// Reserve a range on the staging buffer for the current command buffer and upload data to it.
+        /// Uses the most permissive byte alignment.
+        /// </summary>
+        /// <param name="cbs">Command buffer to reserve the data on</param>
+        /// <param name="size">The minimum size the reserved data requires</param>
+        /// <returns>The reserved range of the staging buffer</returns>
+        public unsafe StagingBufferReserved? TryReserveData(CommandBufferScoped cbs, int size)
+        {
+            return TryReserveData(cbs, size, _resourceAlignment);
         }
 
         private bool WaitFreeCompleted(CommandBufferPool cbp)
@@ -263,7 +280,7 @@ namespace Ryujinx.Graphics.Vulkan
         {
             if (disposing)
             {
-                _buffer.Dispose();
+                _gd.BufferManager.Delete(Handle);
 
                 while (_pendingCopies.TryDequeue(out var pc))
                 {

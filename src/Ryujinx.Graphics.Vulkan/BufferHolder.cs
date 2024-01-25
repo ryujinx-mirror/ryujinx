@@ -4,6 +4,7 @@ using Silk.NET.Vulkan;
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Threading;
 using VkBuffer = Silk.NET.Vulkan.Buffer;
 using VkFormat = Silk.NET.Vulkan.Format;
@@ -384,7 +385,7 @@ namespace Ryujinx.Graphics.Vulkan
             var baseData = new Span<byte>((void*)(_map + offset), size);
             var modData = _pendingData.AsSpan(offset, size);
 
-            StagingBufferReserved? newMirror = _gd.BufferManager.StagingBuffer.TryReserveData(cbs, size, (int)_gd.Capabilities.MinResourceAlignment);
+            StagingBufferReserved? newMirror = _gd.BufferManager.StagingBuffer.TryReserveData(cbs, size);
 
             if (newMirror != null)
             {
@@ -836,6 +837,11 @@ namespace Ryujinx.Graphics.Vulkan
             {
                 _gd.BufferManager.StagingBuffer.PushData(_gd.CommandBufferPool, null, null, this, offset, data);
             }
+        }
+
+        public unsafe void SetDataUnchecked<T>(int offset, ReadOnlySpan<T> data) where T : unmanaged
+        {
+            SetDataUnchecked(offset, MemoryMarshal.AsBytes(data));
         }
 
         public void SetDataInline(CommandBufferScoped cbs, Action endRenderPass, int dstOffset, ReadOnlySpan<byte> data)
