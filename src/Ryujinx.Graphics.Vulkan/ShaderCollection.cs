@@ -374,7 +374,7 @@ namespace Ryujinx.Graphics.Vulkan
             pipeline.StagesCount = (uint)_shaders.Length;
             pipeline.PipelineLayout = PipelineLayout;
 
-            pipeline.CreateGraphicsPipeline(_gd, _device, this, (_gd.Pipeline as PipelineBase).PipelineCache, renderPass.Value);
+            pipeline.CreateGraphicsPipeline(_gd, _device, this, (_gd.Pipeline as PipelineBase).PipelineCache, renderPass.Value, throwOnError: true);
             pipeline.Dispose();
         }
 
@@ -511,7 +511,7 @@ namespace Ryujinx.Graphics.Vulkan
                 {
                     foreach (Auto<DisposablePipeline> pipeline in _graphicsPipelineCache.Values)
                     {
-                        pipeline.Dispose();
+                        pipeline?.Dispose();
                     }
                 }
 
