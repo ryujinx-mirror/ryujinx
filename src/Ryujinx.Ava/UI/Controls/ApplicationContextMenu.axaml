@@ -47,13 +47,9 @@
         Header="{locale:Locale GameListContextMenuManageCheat}"
         ToolTip.Tip="{locale:Locale GameListContextMenuManageCheatToolTip}" />
     <MenuItem
-        Click="OpenModsDirectory_Click"
-        Header="{locale:Locale GameListContextMenuOpenModsDirectory}"
-        ToolTip.Tip="{locale:Locale GameListContextMenuOpenModsDirectoryToolTip}" />
-    <MenuItem
-        Click="OpenSdModsDirectory_Click"
-        Header="{locale:Locale GameListContextMenuOpenSdModsDirectory}"
-        ToolTip.Tip="{locale:Locale GameListContextMenuOpenSdModsDirectoryToolTip}" />
+        Click="OpenModManager_Click"
+        Header="{locale:Locale GameListContextMenuManageMod}"
+        ToolTip.Tip="{locale:Locale GameListContextMenuManageModToolTip}" />
     <Separator />
     <MenuItem Header="{locale:Locale GameListContextMenuCacheManagement}">
         <MenuItem

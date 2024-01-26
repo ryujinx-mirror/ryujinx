@@ -16,10 +16,7 @@ namespace Ryujinx.HLE.Loaders.Processes
             var nacpData = new BlitStruct<ApplicationControlProperty>(1);
             ulong programId = metaLoader.GetProgramId();
 
-            device.Configuration.VirtualFileSystem.ModLoader.CollectMods(
-                new[] { programId },
-                ModLoader.GetModsBasePath(),
-                ModLoader.GetSdModsBasePath());
+            device.Configuration.VirtualFileSystem.ModLoader.CollectMods(new[] { programId });
 
             if (programId != 0)
             {

@@ -31,7 +31,7 @@ namespace Ryujinx.Ui.Windows
             _buildIdTextView.Buffer.Text = $"BuildId: {ApplicationData.GetApplicationBuildId(virtualFileSystem, titlePath)}";
 
             string modsBasePath = ModLoader.GetModsBasePath();
-            string titleModsPath = ModLoader.GetTitleDir(modsBasePath, titleId.ToString("X16"));
+            string titleModsPath = ModLoader.GetApplicationDir(modsBasePath, titleId.ToString("X16"));
 
             _enabledCheatsPath = System.IO.Path.Combine(titleModsPath, "cheats", "enabled.txt");
 

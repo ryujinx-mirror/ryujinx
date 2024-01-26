@@ -39,6 +39,7 @@ namespace Ryujinx.Ava.UI.ViewModels
 
         private string _search;
         private readonly ulong _titleId;
+        private readonly IStorageProvider _storageProvider;
 
         private static readonly DownloadableContentJsonSerializerContext _serializerContext = new(JsonHelper.GetDefaultSerializerOptions());
 
@@ -90,8 +91,6 @@ namespace Ryujinx.Ava.UI.ViewModels
             get => string.Format(LocaleManager.Instance[LocaleKeys.DlcWindowHeading], DownloadableContents.Count);
         }
 
-        public IStorageProvider StorageProvider;
-
         public DownloadableContentManagerViewModel(VirtualFileSystem virtualFileSystem, ulong titleId)
         {
             _virtualFileSystem = virtualFileSystem;
@@ -100,7 +99,7 @@ namespace Ryujinx.Ava.UI.ViewModels
 
             if (Application.Current.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
-                StorageProvider = desktop.MainWindow.StorageProvider;
+                _storageProvider = desktop.MainWindow.StorageProvider;
             }
 
             _downloadableContentJsonPath = Path.Combine(AppDataManager.GamesDirPath, titleId.ToString("x16"), "dlc.json");
@@ -194,7 +193,7 @@ namespace Ryujinx.Ava.UI.ViewModels
             {
                 Dispatcher.UIThread.InvokeAsync(async () =>
                 {
-                    await ContentDialogHelper.CreateErrorDialog(string.Format(LocaleManager.Instance[LocaleKeys.DialogLoadNcaErrorMessage], ex.Message, containerPath));
+                    await ContentDialogHelper.CreateErrorDialog(string.Format(LocaleManager.Instance[LocaleKeys.DialogLoadFileErrorMessage], ex.Message, containerPath));
                 });
             }
 
@@ -203,7 +202,7 @@ namespace Ryujinx.Ava.UI.ViewModels
 
         public async void Add()
         {
-            var result = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+            var result = await _storageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
             {
                 Title = LocaleManager.Instance[LocaleKeys.SelectDlcDialogTitle],
                 AllowMultiple = true,
