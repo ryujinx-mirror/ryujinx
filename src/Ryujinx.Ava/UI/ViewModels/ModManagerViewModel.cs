@@ -8,8 +8,10 @@ using Ryujinx.Ava.Common.Locale;
 using Ryujinx.Ava.UI.Helpers;
 using Ryujinx.Ava.UI.Models;
 using Ryujinx.Common.Configuration;
+using Ryujinx.Common.Logging;
 using Ryujinx.Common.Utilities;
 using Ryujinx.HLE.HOS;
+using System;
 using System.IO;
 using System.Linq;
 
@@ -181,7 +183,30 @@ namespace Ryujinx.Ava.UI.ViewModels
 
         public void Delete(ModModel model)
         {
-            Directory.Delete(model.Path, true);
+            var modsDir = ModLoader.GetApplicationDir(ModLoader.GetSdModsBasePath(), _applicationId.ToString("x16"));
+            var parentDir = String.Empty;
+
+            foreach (var dir in Directory.GetDirectories(modsDir, "*", SearchOption.TopDirectoryOnly))
+            {
+                if (Directory.GetDirectories(dir, "*", SearchOption.AllDirectories).Contains(model.Path))
+                {
+                    parentDir = dir;
+                }
+            }
+
+            if (parentDir == String.Empty)
+            {
+                Dispatcher.UIThread.Post(async () =>
+                {
+                    await ContentDialogHelper.CreateErrorDialog(LocaleManager.Instance.UpdateAndGetDynamicValue(
+                        LocaleKeys.DialogModDeleteNoParentMessage,
+                        parentDir));
+                });
+                return;
+            }
+
+            Logger.Info?.Print(LogClass.Application, $"Deleting mod at \"{model.Path}\"");
+            Directory.Delete(parentDir, true);
 
             Mods.Remove(model);
             OnPropertyChanged(nameof(ModCount));
@@ -190,8 +215,42 @@ namespace Ryujinx.Ava.UI.ViewModels
 
         private void AddMod(DirectoryInfo directory)
         {
-            var directories = Directory.GetDirectories(directory.ToString(), "*", SearchOption.AllDirectories);
+            string[] directories;
+
+            try
+            {
+                directories = Directory.GetDirectories(directory.ToString(), "*", SearchOption.AllDirectories);
+            }
+            catch (Exception exception)
+            {
+                Dispatcher.UIThread.Post(async () =>
+                {
+                    await ContentDialogHelper.CreateErrorDialog(LocaleManager.Instance.UpdateAndGetDynamicValue(
+                        LocaleKeys.DialogLoadFileErrorMessage,
+                        exception.ToString(),
+                        directory));
+                });
+                return;
+            }
+
             var destinationDir = ModLoader.GetApplicationDir(ModLoader.GetSdModsBasePath(), _applicationId.ToString("x16"));
+
+            // TODO: More robust checking for valid mod folders
+            var isDirectoryValid = true;
+
+            if (directories.Length == 0)
+            {
+                isDirectoryValid = false;
+            }
+
+            if (!isDirectoryValid)
+            {
+                Dispatcher.UIThread.Post(async () =>
+                {
+                    await ContentDialogHelper.CreateErrorDialog(LocaleManager.Instance[LocaleKeys.DialogModInvalidMessage]);
+                });
+                return;
+            }
 
             foreach (var dir in directories)
             {
@@ -202,7 +261,10 @@ namespace Ryujinx.Ava.UI.ViewModels
                 {
                     Dispatcher.UIThread.Post(async () =>
                     {
-                        await ContentDialogHelper.CreateErrorDialog(LocaleManager.Instance.UpdateAndGetDynamicValue(LocaleKeys.DialogLoadFileErrorMessage, LocaleKeys.DialogModAlreadyExistsMessage, dirToCreate));
+                        await ContentDialogHelper.CreateErrorDialog(LocaleManager.Instance.UpdateAndGetDynamicValue(
+                            LocaleKeys.DialogLoadFileErrorMessage,
+                            LocaleManager.Instance[LocaleKeys.DialogModAlreadyExistsMessage],
+                            dirToCreate));
                     });
 
                     return;
@@ -239,7 +301,7 @@ namespace Ryujinx.Ava.UI.ViewModels
         {
             foreach (var mod in Mods)
             {
-                Directory.Delete(mod.Path, true);
+                Delete(mod);
             }
 
             Mods.Clear();

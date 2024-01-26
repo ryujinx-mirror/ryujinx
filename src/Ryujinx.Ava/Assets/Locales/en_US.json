@@ -383,6 +383,8 @@
   "DialogControllerSettingsModifiedConfirmSubMessage": "Do you want to save?",
   "DialogLoadFileErrorMessage": "{0}. Errored File: {1}",
   "DialogModAlreadyExistsMessage": "Mod already exists",
+  "DialogModInvalidMessage": "The specified directory does not contain a mod!",
+  "DialogModDeleteNoParentMessage": "Failed to Delete: Could not find the parent directory for mod \"{0}\"!",
   "DialogDlcNoDlcErrorMessage": "The specified file does not contain a DLC for the selected title!",
   "DialogPerformanceCheckLoggingEnabledMessage": "You have trace logging enabled, which is designed to be used by developers only.",
   "DialogPerformanceCheckLoggingEnabledConfirmMessage": "For optimal performance, it's recommended to disable trace logging. Would you like to disable trace logging now?",

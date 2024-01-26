@@ -324,7 +324,7 @@ namespace Ryujinx.HLE.HOS
                 return;
             }
 
-            Logger.Info?.Print(LogClass.ModLoader, $"Searching mods for {((applicationId & 0x1000) != 0 ? "DLC" : "Application")} {applicationId:X16}");
+            Logger.Info?.Print(LogClass.ModLoader, $"Searching mods for {((applicationId & 0x1000) != 0 ? "DLC" : "Application")} {applicationId:X16} in \"{contentsDir.FullName}\"");
 
             var applicationDir = FindApplicationDir(contentsDir, $"{applicationId:x16}");
 
