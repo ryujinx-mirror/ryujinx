@@ -84,6 +84,7 @@ namespace Ryujinx.Graphics.Vulkan
         internal bool IsTBDR { get; private set; }
         internal bool IsSharedMemory { get; private set; }
         public string GpuVendor { get; private set; }
+        public string GpuDriver { get; private set; }
         public string GpuRenderer { get; private set; }
         public string GpuVersion { get; private set; }
 
@@ -636,7 +637,7 @@ namespace Ryujinx.Graphics.Vulkan
 
         public HardwareInfo GetHardwareInfo()
         {
-            return new HardwareInfo(GpuVendor, GpuRenderer);
+            return new HardwareInfo(GpuVendor, GpuRenderer, GpuDriver);
         }
 
         /// <summary>
@@ -693,6 +694,8 @@ namespace Ryujinx.Graphics.Vulkan
         {
             var properties = _physicalDevice.PhysicalDeviceProperties;
 
+            var hasDriverProperties = _physicalDevice.TryGetPhysicalDeviceDriverPropertiesKHR(Api, out var driverProperties);
+
             string vendorName = VendorUtils.GetNameFromId(properties.VendorID);
 
             Vendor = VendorUtils.FromId(properties.VendorID);
@@ -707,6 +710,7 @@ namespace Ryujinx.Graphics.Vulkan
                 Vendor == Vendor.ImgTec;
 
             GpuVendor = vendorName;
+            GpuDriver = hasDriverProperties ? Marshal.PtrToStringAnsi((IntPtr)driverProperties.DriverName) : vendorName; // Fall back to vendor name if driver name isn't available.
             GpuRenderer = Marshal.PtrToStringAnsi((IntPtr)properties.DeviceName);
             GpuVersion = $"Vulkan v{ParseStandardVulkanVersion(properties.ApiVersion)}, Driver v{ParseDriverVersion(ref properties)}";
 

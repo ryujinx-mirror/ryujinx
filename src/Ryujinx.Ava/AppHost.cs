@@ -978,7 +978,7 @@ namespace Ryujinx.Ava
                 ConfigurationState.Instance.Graphics.AspectRatio.Value.ToText(),
                 LocaleManager.Instance[LocaleKeys.Game] + $": {Device.Statistics.GetGameFrameRate():00.00} FPS ({Device.Statistics.GetGameFrameTime():00.00} ms)",
                 $"FIFO: {Device.Statistics.GetFifoPercent():00.00} %",
-                $"GPU: {_renderer.GetHardwareInfo().GpuVendor}"));
+                $"GPU: {_renderer.GetHardwareInfo().GpuDriver}"));
         }
 
         public async Task ShowExitPrompt()

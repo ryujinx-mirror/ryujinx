@@ -77,7 +77,7 @@ namespace Ryujinx.Ui
         private readonly IKeyboard _keyboardInterface;
         private readonly GraphicsDebugLevel _glLogLevel;
         private string _gpuBackendName;
-        private string _gpuVendorName;
+        private string _gpuDriverName;
         private bool _isMouseInClient;
 
         public RendererWidgetBase(InputManager inputManager, GraphicsDebugLevel glLogLevel)
@@ -141,9 +141,9 @@ namespace Ryujinx.Ui
 
         protected abstract string GetGpuBackendName();
 
-        private string GetGpuVendorName()
+        private string GetGpuDriverName()
         {
-            return Renderer.GetHardwareInfo().GpuVendor;
+            return Renderer.GetHardwareInfo().GpuDriver;
         }
 
         private void HideCursorStateChanged(object sender, ReactiveEventArgs<HideCursorMode> state)
@@ -443,7 +443,7 @@ namespace Ryujinx.Ui
             Renderer.Window.SetScalingFilterLevel(ConfigurationState.Instance.Graphics.ScalingFilterLevel.Value);
 
             _gpuBackendName = GetGpuBackendName();
-            _gpuVendorName = GetGpuVendorName();
+            _gpuDriverName = GetGpuDriverName();
 
             Device.Gpu.Renderer.RunLoop(() =>
             {
@@ -494,7 +494,7 @@ namespace Ryujinx.Ui
                             ConfigurationState.Instance.Graphics.AspectRatio.Value.ToText(),
                             $"Game: {Device.Statistics.GetGameFrameRate():00.00} FPS ({Device.Statistics.GetGameFrameTime():00.00} ms)",
                             $"FIFO: {Device.Statistics.GetFifoPercent():0.00} %",
-                            $"GPU: {_gpuVendorName}"));
+                            $"GPU: {_gpuDriverName}"));
 
                         _ticks = Math.Min(_ticks - _ticksPerFrame, _ticksPerFrame);
                     }

@@ -121,7 +121,7 @@ namespace Ryujinx.Graphics.OpenGL
 
         public HardwareInfo GetHardwareInfo()
         {
-            return new HardwareInfo(GpuVendor, GpuRenderer);
+            return new HardwareInfo(GpuVendor, GpuRenderer, GpuVendor); // OpenGL does not provide a driver name, vendor name is closest analogue.
         }
 
         public PinnedSpan<byte> GetBufferData(BufferHandle buffer, int offset, int size)
