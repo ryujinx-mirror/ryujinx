@@ -8,7 +8,7 @@ on:
       - '!.github/**'
       - '!*.yml'
       - '!*.config'
-      - '!README.md'
+      - '!*.md'
       - '.github/workflows/*.yml'
 
 permissions:

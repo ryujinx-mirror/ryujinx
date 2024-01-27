@@ -10,7 +10,7 @@ on:
       - '*.yml'
       - '*.json'
       - '*.config'
-      - 'README.md'
+      - '*.md'
 
 concurrency: release
 

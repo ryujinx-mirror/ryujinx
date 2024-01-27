@@ -17,8 +17,8 @@ tab_width = 4
 end_of_line = lf
 insert_final_newline = true
 
-# JSON files
-[*.json]
+# Markdown, JSON, YAML, props and csproj files
+[*.{md,json,yml,props,csproj}]
 
 # Indentation and spacing
 indent_size = 2

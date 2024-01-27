@@ -21,27 +21,8 @@ jobs:
            repository: Ryujinx/Ryujinx
            ref: master
 
-      - name: Checkout Ryujinx-Mako
-        uses: actions/checkout@v4
-        with:
-            repository: Ryujinx/Ryujinx-Mako
-            ref: master
-            path: '.ryujinx-mako'
-
-      - name: Setup Ryujinx-Mako
-        uses: ./.ryujinx-mako/.github/actions/setup-mako
-
       - name: Update labels based on changes
         uses: actions/labeler@v5
         with:
           sync-labels: true
           dot: true
-
-      - name: Assign reviewers
-        run: |
-            poetry -n -C .ryujinx-mako run ryujinx-mako update-reviewers ${{ github.repository }} ${{ github.event.pull_request.number }} .github/reviewers.yml
-        shell: bash
-        env:
-            MAKO_APP_ID: ${{ secrets.MAKO_APP_ID }}
-            MAKO_PRIVATE_KEY: ${{ secrets.MAKO_PRIVATE_KEY }}
-            MAKO_INSTALLATION_ID: ${{ secrets.MAKO_INSTALLATION_ID }}
