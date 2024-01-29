@@ -121,7 +121,14 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
         {
             IPEndPoint endPoint = isRemote ? socket.RemoteEndPoint : socket.LocalEndPoint;
 
-            context.Memory.Write(bufferPosition, BsdSockAddr.FromIPEndPoint(endPoint));
+            if (endPoint != null)
+            {
+                context.Memory.Write(bufferPosition, BsdSockAddr.FromIPEndPoint(endPoint));
+            }
+            else
+            {
+                context.Memory.Write(bufferPosition, new BsdSockAddr());
+            }
         }
 
         [CommandCmif(0)]
