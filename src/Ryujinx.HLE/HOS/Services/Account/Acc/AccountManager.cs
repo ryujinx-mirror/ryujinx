@@ -4,6 +4,7 @@ using LibHac.Fs;
 using LibHac.Fs.Shim;
 using Ryujinx.Common;
 using Ryujinx.Common.Logging;
+using Ryujinx.Horizon.Sdk.Account;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -11,7 +12,7 @@ using System.Linq;
 
 namespace Ryujinx.HLE.HOS.Services.Account.Acc
 {
-    public class AccountManager
+    public class AccountManager : IEmulatorAccountManager
     {
         public static readonly UserId DefaultUserId = new("00000000000000010000000000000000");
 
@@ -106,6 +107,11 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
             _accountSaveDataManager.Save(_profiles);
         }
 
+        public void OpenUserOnlinePlay(Uid userId)
+        {
+            OpenUserOnlinePlay(new UserId((long)userId.Low, (long)userId.High));
+        }
+
         public void OpenUserOnlinePlay(UserId userId)
         {
             if (_profiles.TryGetValue(userId.ToString(), out UserProfile profile))
@@ -125,6 +131,11 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
             }
 
             _accountSaveDataManager.Save(_profiles);
+        }
+
+        public void CloseUserOnlinePlay(Uid userId)
+        {
+            CloseUserOnlinePlay(new UserId((long)userId.Low, (long)userId.High));
         }
 
         public void CloseUserOnlinePlay(UserId userId)

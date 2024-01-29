@@ -6,16 +6,16 @@ using System.Runtime.InteropServices;
 namespace Ryujinx.Horizon.Sdk.Account
 {
     [StructLayout(LayoutKind.Sequential)]
-    readonly record struct Uid
+    public readonly record struct Uid
     {
-        public readonly long High;
-        public readonly long Low;
+        public readonly ulong High;
+        public readonly ulong Low;
 
         public bool IsNull => (Low | High) == 0;
 
         public static Uid Null => new(0, 0);
 
-        public Uid(long low, long high)
+        public Uid(ulong low, ulong high)
         {
             Low = low;
             High = high;
@@ -23,8 +23,8 @@ namespace Ryujinx.Horizon.Sdk.Account
 
         public Uid(byte[] bytes)
         {
-            High = BitConverter.ToInt64(bytes, 0);
-            Low = BitConverter.ToInt64(bytes, 8);
+            High = BitConverter.ToUInt64(bytes, 0);
+            Low = BitConverter.ToUInt64(bytes, 8);
         }
 
         public Uid(string hex)
@@ -34,8 +34,8 @@ namespace Ryujinx.Horizon.Sdk.Account
                 throw new ArgumentException("Invalid Hex value!", nameof(hex));
             }
 
-            Low = Convert.ToInt64(hex[16..], 16);
-            High = Convert.ToInt64(hex[..16], 16);
+            Low = Convert.ToUInt64(hex[16..], 16);
+            High = Convert.ToUInt64(hex[..16], 16);
         }
 
         public void Write(BinaryWriter binaryWriter)
