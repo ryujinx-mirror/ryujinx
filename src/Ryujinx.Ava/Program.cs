@@ -35,7 +35,7 @@ namespace Ryujinx.Ava
 
         public static void Main(string[] args)
         {
-            Version = ReleaseInformation.GetVersion();
+            Version = ReleaseInformation.Version;
 
             if (OperatingSystem.IsWindows() && !OperatingSystem.IsWindowsVersionAtLeast(10, 0, 17134))
             {
@@ -125,8 +125,8 @@ namespace Ryujinx.Ava
 
         public static void ReloadConfig()
         {
-            string localConfigurationPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Config.json");
-            string appDataConfigurationPath = Path.Combine(AppDataManager.BaseDirPath, "Config.json");
+            string localConfigurationPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, ReleaseInformation.ConfigName);
+            string appDataConfigurationPath = Path.Combine(AppDataManager.BaseDirPath, ReleaseInformation.ConfigName);
 
             // Now load the configuration as the other subsystems are now registered
             if (File.Exists(localConfigurationPath))

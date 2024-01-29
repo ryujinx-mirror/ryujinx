@@ -78,7 +78,7 @@ namespace Ryujinx.Ui.Widgets
             _extractExeFsMenuItem.Sensitive = hasNca;
             _extractLogoMenuItem.Sensitive = hasNca;
 
-            _createShortcutMenuItem.Sensitive = !ReleaseInformation.IsFlatHubBuild();
+            _createShortcutMenuItem.Sensitive = !ReleaseInformation.IsFlatHubBuild;
 
             PopupAtPointer(null);
         }

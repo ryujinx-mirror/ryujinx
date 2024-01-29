@@ -1,6 +1,7 @@
 using Gdk;
 using Gtk;
 using Ryujinx.Common;
+using Ryujinx.Common.Configuration;
 using Ryujinx.Ui;
 using Ryujinx.Ui.Common.Configuration;
 using Ryujinx.Ui.Common.Helper;
@@ -52,7 +53,7 @@ namespace Ryujinx.Modules
                 ProcessStartInfo processStart = new(ryuName)
                 {
                     UseShellExecute = true,
-                    WorkingDirectory = ReleaseInformation.GetBaseApplicationDirectory(),
+                    WorkingDirectory = AppDomain.CurrentDomain.BaseDirectory
                 };
 
                 foreach (string argument in CommandLineState.Arguments)

@@ -61,7 +61,7 @@ namespace Ryujinx.Headless.SDL2
 
         static void Main(string[] args)
         {
-            Version = ReleaseInformation.GetVersion();
+            Version = ReleaseInformation.Version;
 
             // Make process DPI aware for proper window sizing on high-res screens.
             ForceDpiAware.Windows();
@@ -427,11 +427,26 @@ namespace Ryujinx.Headless.SDL2
 
             if (!option.DisableFileLog)
             {
-                Logger.AddTarget(new AsyncLogTargetWrapper(
-                    new FileLogTarget(ReleaseInformation.GetBaseApplicationDirectory(), "file"),
-                    1000,
-                    AsyncLogTargetOverflowAction.Block
-                ));
+                FileStream logFile = FileLogTarget.PrepareLogFile(AppDomain.CurrentDomain.BaseDirectory);
+
+                if (logFile == null)
+                {
+                    logFile = FileLogTarget.PrepareLogFile(AppDataManager.BaseDirPath);
+
+                    if (logFile == null)
+                    {
+                        Logger.Error?.Print(LogClass.Application, "No writable log directory available. Make sure either the application directory or the Ryujinx directory is writable.");
+                    }
+                }
+
+                if (logFile != null)
+                {
+                    Logger.AddTarget(new AsyncLogTargetWrapper(
+                        new FileLogTarget("file", logFile),
+                        1000,
+                        AsyncLogTargetOverflowAction.Block
+                    ));
+                }
             }
 
             // Setup graphics configuration

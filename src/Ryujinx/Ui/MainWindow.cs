@@ -1376,7 +1376,12 @@ namespace Ryujinx.Ui
 
         private void OpenLogsFolder_Pressed(object sender, EventArgs args)
         {
-            string logPath = System.IO.Path.Combine(ReleaseInformation.GetBaseApplicationDirectory(), "Logs");
+            string logPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs");
+
+            if (ReleaseInformation.IsValid)
+            {
+                logPath = System.IO.Path.Combine(AppDataManager.BaseDirPath, "Logs");
+            }
 
             new DirectoryInfo(logPath).Create();
 

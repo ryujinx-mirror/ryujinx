@@ -357,7 +357,7 @@ namespace Ryujinx.Ava.UI.ViewModels
 
         public bool OpenBcatSaveDirectoryEnabled => !SelectedApplication.ControlHolder.ByteSpan.IsZeros() && SelectedApplication.ControlHolder.Value.BcatDeliveryCacheStorageSize > 0;
 
-        public bool CreateShortcutEnabled => !ReleaseInformation.IsFlatHubBuild();
+        public bool CreateShortcutEnabled => !ReleaseInformation.IsFlatHubBuild;
 
         public string LoadHeading
         {
@@ -1350,7 +1350,12 @@ namespace Ryujinx.Ava.UI.ViewModels
 
         public void OpenLogsFolder()
         {
-            string logPath = Path.Combine(ReleaseInformation.GetBaseApplicationDirectory(), "Logs");
+            string logPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs");
+
+            if (ReleaseInformation.IsValid)
+            {
+                logPath = Path.Combine(AppDataManager.BaseDirPath, "Logs");
+            }
 
             new DirectoryInfo(logPath).Create();
 

@@ -1,4 +1,5 @@
 using Gtk;
+using Ryujinx.Common;
 using Ryujinx.Common.Logging;
 using Ryujinx.Ui.Common.Configuration;
 using System.IO;
@@ -24,7 +25,7 @@ namespace Ryujinx.Ui.Helper
             }
             else
             {
-                Logger.Warning?.Print(LogClass.Application, $"The \"custom_theme_path\" section in \"Config.json\" contains an invalid path: \"{ConfigurationState.Instance.Ui.CustomThemePath}\".");
+                Logger.Warning?.Print(LogClass.Application, $"The \"custom_theme_path\" section in \"{ReleaseInformation.ConfigName}\" contains an invalid path: \"{ConfigurationState.Instance.Ui.CustomThemePath}\".");
 
                 ConfigurationState.Instance.Ui.CustomThemePath.Value = "";
                 ConfigurationState.Instance.Ui.EnableCustomTheme.Value = false;
