@@ -180,7 +180,7 @@ namespace Ryujinx.Ava.UI.ViewModels
 
                 if (!string.IsNullOrWhiteSpace(_controllerImage))
                 {
-                    SvgSource source = new();
+                    SvgSource source = new(default(Uri));
 
                     source.Load(EmbeddedResources.GetStream(_controllerImage));
 
