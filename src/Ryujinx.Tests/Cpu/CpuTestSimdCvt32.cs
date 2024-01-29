@@ -511,6 +511,45 @@ namespace Ryujinx.Tests.Cpu
 
             CompareAgainstUnicorn();
         }
+
+        [Test, Pairwise, Description("VRINTR.F<size> <Sd>, <Sm>")]
+        [Platform(Exclude = "Linux,MacOsX")] // Instruction isn't testable due to Unicorn.
+        public void Vrintr([Values(0u, 1u)] uint rd,
+                           [Values(0u, 1u)] uint rm,
+                           [Values(2u, 3u)] uint size,
+                           [ValueSource(nameof(_1D_F_))] ulong s0,
+                           [ValueSource(nameof(_1D_F_))] ulong s1,
+                           [ValueSource(nameof(_1D_F_))] ulong s2,
+                           [Values(RMode.Rn, RMode.Rm, RMode.Rp)] RMode rMode)
+        {
+            uint opcode = 0xEEB60A40;
+
+            V128 v0, v1, v2;
+
+            if (size == 2)
+            {
+                opcode |= ((rm & 0x1e) >> 1) | ((rm & 0x1) << 5);
+                opcode |= ((rd & 0x1e) << 11) | ((rd & 0x1) << 22);
+                v0 = MakeVectorE0E1((uint)BitConverter.SingleToInt32Bits(s0), (uint)BitConverter.SingleToInt32Bits(s0));
+                v1 = MakeVectorE0E1((uint)BitConverter.SingleToInt32Bits(s1), (uint)BitConverter.SingleToInt32Bits(s0));
+                v2 = MakeVectorE0E1((uint)BitConverter.SingleToInt32Bits(s2), (uint)BitConverter.SingleToInt32Bits(s1));
+            }
+            else
+            {
+                opcode |= ((rm & 0xf) << 0) | ((rm & 0x10) << 1);
+                opcode |= ((rd & 0xf) << 12) | ((rd & 0x10) << 18);
+                v0 = MakeVectorE0E1((uint)BitConverter.DoubleToInt64Bits(s0), (uint)BitConverter.DoubleToInt64Bits(s0));
+                v1 = MakeVectorE0E1((uint)BitConverter.DoubleToInt64Bits(s1), (uint)BitConverter.DoubleToInt64Bits(s0));
+                v2 = MakeVectorE0E1((uint)BitConverter.DoubleToInt64Bits(s2), (uint)BitConverter.DoubleToInt64Bits(s1));
+            }
+
+            opcode |= ((size & 3) << 8);
+
+            int fpscr = (int)rMode << (int)Fpcr.RMode;
+            SingleOpcode(opcode, v0: v0, v1: v1, v2: v2, fpscr: fpscr);
+
+            CompareAgainstUnicorn();
+        }
 #endif
     }
 }

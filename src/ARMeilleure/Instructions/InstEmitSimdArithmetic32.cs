@@ -1115,6 +1115,13 @@ namespace ARMeilleure.Instructions
             }
         }
 
+        public static void Vpadal(ArmEmitterContext context)
+        {
+            OpCode32Simd op = (OpCode32Simd)context.CurrOp;
+
+            EmitVectorPairwiseTernaryLongOpI32(context, (op1, op2, op3) => context.Add(context.Add(op1, op2), op3), op.Opc != 1);
+        }
+
         public static void Vpaddl(ArmEmitterContext context)
         {
             OpCode32Simd op = (OpCode32Simd)context.CurrOp;

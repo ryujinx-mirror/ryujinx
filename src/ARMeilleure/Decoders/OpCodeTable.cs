@@ -875,6 +875,7 @@ namespace ARMeilleure.Decoders
             SetVfp("<<<<11100x10xxxxxxxx101xx1x0xxxx", InstName.Vnmul,  InstEmit32.Vnmul_S,  OpCode32SimdRegS.Create,        OpCode32SimdRegS.CreateT32);
             SetVfp("111111101x1110xxxxxx101x01x0xxxx", InstName.Vrint,  InstEmit32.Vrint_RM, OpCode32SimdS.Create,           OpCode32SimdS.CreateT32);
             SetVfp("<<<<11101x110110xxxx101x11x0xxxx", InstName.Vrint,  InstEmit32.Vrint_Z,  OpCode32SimdS.Create,           OpCode32SimdS.CreateT32);
+            SetVfp("<<<<11101x110110xxxx101x01x0xxxx", InstName.Vrintr, InstEmit32.Vrintr_S, OpCode32SimdS.Create,           OpCode32SimdS.CreateT32);
             SetVfp("<<<<11101x110111xxxx101x01x0xxxx", InstName.Vrintx, InstEmit32.Vrintx_S, OpCode32SimdS.Create,           OpCode32SimdS.CreateT32);
             SetVfp("<<<<11101x110001xxxx101x11x0xxxx", InstName.Vsqrt,  InstEmit32.Vsqrt_S,  OpCode32SimdS.Create,           OpCode32SimdS.CreateT32);
             SetVfp("111111100xxxxxxxxxxx101xx0x0xxxx", InstName.Vsel,   InstEmit32.Vsel,     OpCode32SimdSel.Create,         OpCode32SimdSel.CreateT32);
@@ -995,6 +996,7 @@ namespace ARMeilleure.Decoders
             SetAsimd("1111001x1x000xxxxxxx<<x10x01xxxx", InstName.Vorr,        InstEmit32.Vorr_II,      OpCode32SimdImm.Create,         OpCode32SimdImm.CreateT32);
             SetAsimd("111100100x<<xxxxxxxx1011x0x1xxxx", InstName.Vpadd,       InstEmit32.Vpadd_I,      OpCode32SimdReg.Create,         OpCode32SimdReg.CreateT32);
             SetAsimd("111100110x00xxxxxxxx1101x0x0xxxx", InstName.Vpadd,       InstEmit32.Vpadd_V,      OpCode32SimdReg.Create,         OpCode32SimdReg.CreateT32);
+            SetAsimd("111100111x11<<00xxxx0110xxx0xxxx", InstName.Vpadal,      InstEmit32.Vpadal,       OpCode32SimdCmpZ.Create,        OpCode32SimdCmpZ.CreateT32);
             SetAsimd("111100111x11<<00xxxx0010xxx0xxxx", InstName.Vpaddl,      InstEmit32.Vpaddl,       OpCode32SimdCmpZ.Create,        OpCode32SimdCmpZ.CreateT32);
             SetAsimd("1111001x0x<<xxxxxxxx1010x0x0xxxx", InstName.Vpmax,       InstEmit32.Vpmax_I,      OpCode32SimdReg.Create,         OpCode32SimdReg.CreateT32);
             SetAsimd("111100110x00xxxxxxxx1111x0x0xxxx", InstName.Vpmax,       InstEmit32.Vpmax_V,      OpCode32SimdReg.Create,         OpCode32SimdReg.CreateT32);
