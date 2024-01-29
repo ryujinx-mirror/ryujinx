@@ -16,7 +16,7 @@
 		Click="CreateApplicationShortcut_Click"
 		Header="{locale:Locale GameListContextMenuCreateShortcut}"
         IsEnabled="{Binding CreateShortcutEnabled}"
-		ToolTip.Tip="{locale:Locale GameListContextMenuCreateShortcutToolTip}" />
+		ToolTip.Tip="{OnPlatform Default={locale:Locale GameListContextMenuCreateShortcutToolTip}, macOS={locale:Locale GameListContextMenuCreateShortcutToolTipMacOS}}" />
     <Separator />
     <MenuItem
         Click="OpenUserSaveDirectory_Click"

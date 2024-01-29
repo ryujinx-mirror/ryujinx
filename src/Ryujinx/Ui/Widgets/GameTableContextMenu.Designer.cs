@@ -1,4 +1,5 @@
 ﻿using Gtk;
+using System;
 
 namespace Ryujinx.Ui.Widgets
 {
@@ -193,7 +194,7 @@ namespace Ryujinx.Ui.Widgets
             //
             _createShortcutMenuItem = new MenuItem("Create Application Shortcut")
             {
-                TooltipText = "Create a Desktop Shortcut that launches the selected Application."
+                TooltipText = OperatingSystem.IsMacOS() ? "Create a shortcut in macOS's Applications folder that launches the selected Application" : "Create a Desktop Shortcut that launches the selected Application."
             };
             _createShortcutMenuItem.Activated += CreateShortcut_Clicked;
 
