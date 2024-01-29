@@ -18,6 +18,7 @@ using System.Collections.Specialized;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using LazyFile = Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy.LazyFile;
 using Path = System.IO.Path;
 
 namespace Ryujinx.HLE.HOS
@@ -512,7 +513,7 @@ namespace Ryujinx.HLE.HOS
 
                 using (IFileSystem fs = new LocalFileSystem(mod.Path.FullName))
                 {
-                    AddFiles(fs, mod.Name, fileSet, builder);
+                    AddFiles(fs, mod.Name, mod.Path.FullName, fileSet, builder);
                 }
                 count++;
             }
@@ -528,7 +529,7 @@ namespace Ryujinx.HLE.HOS
                 Logger.Info?.Print(LogClass.ModLoader, $"Found 'romfs.bin' for Application {applicationId:X16}");
                 using (IFileSystem fs = new RomFsFileSystem(mod.Path.OpenRead().AsStorage()))
                 {
-                    AddFiles(fs, mod.Name, fileSet, builder);
+                    AddFiles(fs, mod.Name, mod.Path.FullName, fileSet, builder);
                 }
                 count++;
             }
@@ -561,18 +562,18 @@ namespace Ryujinx.HLE.HOS
             return newStorage;
         }
 
-        private static void AddFiles(IFileSystem fs, string modName, ISet<string> fileSet, RomFsBuilder builder)
+        private static void AddFiles(IFileSystem fs, string modName, string rootPath, ISet<string> fileSet, RomFsBuilder builder)
         {
             foreach (var entry in fs.EnumerateEntries()
+                                    .AsParallel()
                                     .Where(f => f.Type == DirectoryEntryType.File)
                                     .OrderBy(f => f.FullPath, StringComparer.Ordinal))
             {
-                using var file = new UniqueRef<IFile>();
+                var file = new LazyFile(entry.FullPath, rootPath, fs);
 
-                fs.OpenFile(ref file.Ref, entry.FullPath.ToU8Span(), OpenMode.Read).ThrowIfFailure();
                 if (fileSet.Add(entry.FullPath))
                 {
-                    builder.AddFile(entry.FullPath, file.Release());
+                    builder.AddFile(entry.FullPath, file);
                 }
                 else
                 {
