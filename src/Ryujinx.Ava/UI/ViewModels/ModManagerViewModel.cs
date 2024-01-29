@@ -102,13 +102,14 @@ namespace Ryujinx.Ava.UI.ViewModels
 
             foreach (var path in modsBasePaths)
             {
+                var inSd = path == ModLoader.GetSdModsBasePath();
                 var modCache = new ModLoader.ModCache();
 
                 ModLoader.QueryContentsDir(modCache, new DirectoryInfo(Path.Combine(path, "contents")), applicationId);
 
                 foreach (var mod in modCache.RomfsDirs)
                 {
-                    var modModel = new ModModel(mod.Path.Parent.FullName, mod.Name, mod.Enabled);
+                    var modModel = new ModModel(mod.Path.Parent.FullName, mod.Name, mod.Enabled, inSd);
                     if (Mods.All(x => x.Path != mod.Path.Parent.FullName))
                     {
                         Mods.Add(modModel);
@@ -117,12 +118,12 @@ namespace Ryujinx.Ava.UI.ViewModels
 
                 foreach (var mod in modCache.RomfsContainers)
                 {
-                    Mods.Add(new ModModel(mod.Path.FullName, mod.Name, mod.Enabled));
+                    Mods.Add(new ModModel(mod.Path.FullName, mod.Name, mod.Enabled, inSd));
                 }
 
                 foreach (var mod in modCache.ExefsDirs)
                 {
-                    var modModel = new ModModel(mod.Path.Parent.FullName, mod.Name, mod.Enabled);
+                    var modModel = new ModModel(mod.Path.Parent.FullName, mod.Name, mod.Enabled, inSd);
                     if (Mods.All(x => x.Path != mod.Path.Parent.FullName))
                     {
                         Mods.Add(modModel);
@@ -131,7 +132,7 @@ namespace Ryujinx.Ava.UI.ViewModels
 
                 foreach (var mod in modCache.ExefsContainers)
                 {
-                    Mods.Add(new ModModel(mod.Path.FullName, mod.Name, mod.Enabled));
+                    Mods.Add(new ModModel(mod.Path.FullName, mod.Name, mod.Enabled, inSd));
                 }
             }
 
@@ -183,30 +184,43 @@ namespace Ryujinx.Ava.UI.ViewModels
 
         public void Delete(ModModel model)
         {
-            var modsDir = ModLoader.GetApplicationDir(ModLoader.GetSdModsBasePath(), _applicationId.ToString("x16"));
-            var parentDir = String.Empty;
+            var isSubdir = true;
+            var pathToDelete = model.Path;
+            var basePath = model.InSd ? ModLoader.GetSdModsBasePath() : ModLoader.GetModsBasePath();
+            var modsDir = ModLoader.GetApplicationDir(basePath, _applicationId.ToString("x16"));
 
-            foreach (var dir in Directory.GetDirectories(modsDir, "*", SearchOption.TopDirectoryOnly))
+            if (new DirectoryInfo(model.Path).Parent?.FullName == modsDir)
             {
-                if (Directory.GetDirectories(dir, "*", SearchOption.AllDirectories).Contains(model.Path))
+                isSubdir = false;
+            }
+
+            if (isSubdir)
+            {
+                var parentDir = String.Empty;
+
+                foreach (var dir in Directory.GetDirectories(modsDir, "*", SearchOption.TopDirectoryOnly))
                 {
-                    parentDir = dir;
+                    if (Directory.GetDirectories(dir, "*", SearchOption.AllDirectories).Contains(model.Path))
+                    {
+                        parentDir = dir;
+                        break;
+                    }
+                }
+
+                if (parentDir == String.Empty)
+                {
+                    Dispatcher.UIThread.Post(async () =>
+                    {
+                        await ContentDialogHelper.CreateErrorDialog(LocaleManager.Instance.UpdateAndGetDynamicValue(
+                            LocaleKeys.DialogModDeleteNoParentMessage,
+                            model.Path));
+                    });
+                    return;
                 }
             }
 
-            if (parentDir == String.Empty)
-            {
-                Dispatcher.UIThread.Post(async () =>
-                {
-                    await ContentDialogHelper.CreateErrorDialog(LocaleManager.Instance.UpdateAndGetDynamicValue(
-                        LocaleKeys.DialogModDeleteNoParentMessage,
-                        parentDir));
-                });
-                return;
-            }
-
-            Logger.Info?.Print(LogClass.Application, $"Deleting mod at \"{model.Path}\"");
-            Directory.Delete(parentDir, true);
+            Logger.Info?.Print(LogClass.Application, $"Deleting mod at \"{pathToDelete}\"");
+            Directory.Delete(pathToDelete, true);
 
             Mods.Remove(model);
             OnPropertyChanged(nameof(ModCount));

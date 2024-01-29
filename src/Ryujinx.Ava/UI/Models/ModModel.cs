@@ -17,14 +17,16 @@ namespace Ryujinx.Ava.UI.Models
             }
         }
 
+        public bool InSd { get; }
         public string Path { get; }
         public string Name { get; }
 
-        public ModModel(string path, string name, bool enabled)
+        public ModModel(string path, string name, bool enabled, bool inSd)
         {
             Path = path;
             Name = name;
             Enabled = enabled;
+            InSd = inSd;
         }
     }
 }
