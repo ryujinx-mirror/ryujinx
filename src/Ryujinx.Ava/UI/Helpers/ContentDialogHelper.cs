@@ -388,6 +388,7 @@ namespace Ryujinx.Ava.UI.Helpers
             {
                 _contentDialogOverlayWindow.Content = null;
                 _contentDialogOverlayWindow.Close();
+                _contentDialogOverlayWindow = null;
             }
 
             return result;

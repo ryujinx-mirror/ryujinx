@@ -263,7 +263,7 @@ namespace Ryujinx.Ava.UI.Windows
             }
         }
 
-        private void CheckLaunchState()
+        private async Task CheckLaunchState()
         {
             if (OperatingSystem.IsLinux() && LinuxHelper.VmMaxMapCount < LinuxHelper.RecommendedVmMaxMapCount)
             {
@@ -271,23 +271,11 @@ namespace Ryujinx.Ava.UI.Windows
 
                 if (LinuxHelper.PkExecPath is not null)
                 {
-                    Dispatcher.UIThread.Post(async () =>
-                    {
-                        if (OperatingSystem.IsLinux())
-                        {
-                            await ShowVmMaxMapCountDialog();
-                        }
-                    });
+                    await Dispatcher.UIThread.InvokeAsync(ShowVmMaxMapCountDialog);
                 }
                 else
                 {
-                    Dispatcher.UIThread.Post(async () =>
-                    {
-                        if (OperatingSystem.IsLinux())
-                        {
-                            await ShowVmMaxMapCountWarning();
-                        }
-                    });
+                    await Dispatcher.UIThread.InvokeAsync(ShowVmMaxMapCountWarning);
                 }
             }
 
@@ -304,12 +292,12 @@ namespace Ryujinx.Ava.UI.Windows
             {
                 ShowKeyErrorOnLoad = false;
 
-                Dispatcher.UIThread.Post(async () => await UserErrorDialog.ShowUserErrorDialog(UserError.NoKeys));
+                await Dispatcher.UIThread.InvokeAsync(async () => await UserErrorDialog.ShowUserErrorDialog(UserError.NoKeys));
             }
 
             if (ConfigurationState.Instance.CheckUpdatesOnStart.Value && Updater.CanUpdate(false))
             {
-                Updater.BeginParse(this, false).ContinueWith(task =>
+                await Updater.BeginParse(this, false).ContinueWith(task =>
                 {
                     Logger.Error?.Print(LogClass.Application, $"Updater Error: {task.Exception}");
                 }, TaskContinuationOptions.OnlyOnFaulted);
@@ -404,7 +392,9 @@ namespace Ryujinx.Ava.UI.Windows
 
             LoadApplications();
 
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
             CheckLaunchState();
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
         }
 
         private void SetMainContent(Control content = null)
