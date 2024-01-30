@@ -9,6 +9,7 @@ namespace Ryujinx.Horizon.Sdk.Sf.Hipc
         public Span<HipcBufferDescriptor> ReceiveBuffers;
         public Span<HipcBufferDescriptor> ExchangeBuffers;
         public Span<uint> DataWords;
+        public Span<uint> DataWordsPadded;
         public Span<HipcReceiveListEntry> ReceiveList;
         public Span<int> CopyHandles;
         public Span<int> MoveHandles;

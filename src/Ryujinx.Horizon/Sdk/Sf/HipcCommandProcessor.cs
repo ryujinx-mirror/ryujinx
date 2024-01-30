@@ -206,7 +206,7 @@ namespace Ryujinx.Horizon.Sdk.Sf
                         }
                         else
                         {
-                            var data = MemoryMarshal.Cast<uint, byte>(context.Request.Data.DataWords);
+                            var data = MemoryMarshal.Cast<uint, byte>(context.Request.Data.DataWordsPadded);
                             var recvPointerSizes = MemoryMarshal.Cast<byte, ushort>(data[runtimeMetadata.UnfixedOutPointerSizeOffset..]);
 
                             size = recvPointerSizes[unfixedRecvPointerIndex++];
