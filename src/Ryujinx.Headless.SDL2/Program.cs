@@ -427,11 +427,11 @@ namespace Ryujinx.Headless.SDL2
 
             if (!option.DisableFileLog)
             {
-                FileStream logFile = FileLogTarget.PrepareLogFile(AppDomain.CurrentDomain.BaseDirectory);
+                FileStream logFile = FileLogTarget.PrepareLogFile(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs"));
 
                 if (logFile == null)
                 {
-                    logFile = FileLogTarget.PrepareLogFile(AppDataManager.BaseDirPath);
+                    logFile = FileLogTarget.PrepareLogFile(Path.Combine(AppDataManager.BaseDirPath, "Logs"));
 
                     if (logFile == null)
                     {

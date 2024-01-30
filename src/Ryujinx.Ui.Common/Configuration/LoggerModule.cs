@@ -9,6 +9,8 @@ namespace Ryujinx.Ui.Common.Configuration
 {
     public static class LoggerModule
     {
+        public static string LogDirectoryPath { get; private set; }
+
         public static void Initialize()
         {
             ConfigurationState.Instance.Logger.EnableDebug.Event += ReloadEnableDebug;
@@ -82,20 +84,25 @@ namespace Ryujinx.Ui.Common.Configuration
         {
             if (e.NewValue)
             {
-                FileStream logFile = FileLogTarget.PrepareLogFile(AppDomain.CurrentDomain.BaseDirectory);
+                string logDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs");
+                FileStream logFile = FileLogTarget.PrepareLogFile(logDir);
 
                 if (logFile == null)
                 {
-                    logFile = FileLogTarget.PrepareLogFile(AppDataManager.BaseDirPath);
+                    logDir = Path.Combine(AppDataManager.BaseDirPath, "Logs");
+                    logFile = FileLogTarget.PrepareLogFile(logDir);
 
                     if (logFile == null)
                     {
                         Logger.Error?.Print(LogClass.Application, "No writable log directory available. Make sure either the application directory or the Ryujinx directory is writable.");
+                        LogDirectoryPath = null;
                         Logger.RemoveTarget("file");
 
                         return;
                     }
                 }
+
+                LogDirectoryPath = logDir;
 
                 Logger.AddTarget(new AsyncLogTargetWrapper(
                     new FileLogTarget("file", logFile),
