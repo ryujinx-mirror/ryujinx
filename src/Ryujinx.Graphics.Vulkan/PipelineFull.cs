@@ -51,7 +51,7 @@ namespace Ryujinx.Graphics.Vulkan
             {
                 // We can't use CmdClearAttachments if not writing all components,
                 // because on Vulkan, the pipeline state does not affect clears.
-                var dstTexture = FramebufferParams.GetAttachment(index);
+                var dstTexture = FramebufferParams.GetColorView(index);
                 if (dstTexture == null)
                 {
                     return;
@@ -71,7 +71,6 @@ namespace Ryujinx.Graphics.Vulkan
                     componentMask,
                     (int)FramebufferParams.Width,
                     (int)FramebufferParams.Height,
-                    FramebufferParams.AttachmentFormats[index],
                     FramebufferParams.GetAttachmentComponentType(index),
                     ClearScissor);
             }
@@ -92,7 +91,7 @@ namespace Ryujinx.Graphics.Vulkan
             {
                 // We can't use CmdClearAttachments if not clearing all (mask is all ones, 0xFF) or none (mask is 0) of the stencil bits,
                 // because on Vulkan, the pipeline state does not affect clears.
-                var dstTexture = FramebufferParams.GetDepthStencilAttachment();
+                var dstTexture = FramebufferParams.GetDepthStencilView();
                 if (dstTexture == null)
                 {
                     return;

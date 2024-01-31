@@ -12,6 +12,8 @@ namespace Ryujinx.Graphics.Vulkan
         private readonly Auto<DisposableImageView>[] _attachments;
         private readonly TextureView[] _colors;
         private readonly TextureView _depthStencil;
+        private readonly TextureView[] _colorsCanonical;
+        private readonly TextureView _baseAttachment;
         private readonly uint _validColorAttachments;
 
         public uint Width { get; }
@@ -28,25 +30,31 @@ namespace Ryujinx.Graphics.Vulkan
         public bool HasDepthStencil { get; }
         public int ColorAttachmentsCount => AttachmentsCount - (HasDepthStencil ? 1 : 0);
 
-        public FramebufferParams(
-            Device device,
-            Auto<DisposableImageView> view,
-            uint width,
-            uint height,
-            uint samples,
-            bool isDepthStencil,
-            VkFormat format)
+        public FramebufferParams(Device device, TextureView view, uint width, uint height)
         {
+            bool isDepthStencil = view.Info.Format.IsDepthOrStencil();
+
             _device = device;
-            _attachments = new[] { view };
+            _attachments = new[] { view.GetImageViewForAttachment() };
             _validColorAttachments = isDepthStencil ? 0u : 1u;
+            _baseAttachment = view;
+
+            if (isDepthStencil)
+            {
+                _depthStencil = view;
+            }
+            else
+            {
+                _colors = new TextureView[] { view };
+                _colorsCanonical = _colors;
+            }
 
             Width = width;
             Height = height;
             Layers = 1;
 
-            AttachmentSamples = new[] { samples };
-            AttachmentFormats = new[] { format };
+            AttachmentSamples = new[] { (uint)view.Info.Samples };
+            AttachmentFormats = new[] { view.VkFormat };
             AttachmentIndices = isDepthStencil ? Array.Empty<int>() : new[] { 0 };
 
             AttachmentsCount = 1;
@@ -64,6 +72,7 @@ namespace Ryujinx.Graphics.Vulkan
 
             _attachments = new Auto<DisposableImageView>[count];
             _colors = new TextureView[colorsCount];
+            _colorsCanonical = colors.Select(color => color is TextureView view && view.Valid ? view : null).ToArray();
 
             AttachmentSamples = new uint[count];
             AttachmentFormats = new VkFormat[count];
@@ -86,6 +95,7 @@ namespace Ryujinx.Graphics.Vulkan
                     _attachments[index] = texture.GetImageViewForAttachment();
                     _colors[index] = texture;
                     _validColorAttachments |= 1u << bindIndex;
+                    _baseAttachment = texture;
 
                     AttachmentSamples[index] = (uint)texture.Info.Samples;
                     AttachmentFormats[index] = texture.VkFormat;
@@ -115,6 +125,7 @@ namespace Ryujinx.Graphics.Vulkan
             {
                 _attachments[count - 1] = dsTexture.GetImageViewForAttachment();
                 _depthStencil = dsTexture;
+                _baseAttachment ??= dsTexture;
 
                 AttachmentSamples[count - 1] = (uint)dsTexture.Info.Samples;
                 AttachmentFormats[count - 1] = dsTexture.VkFormat;
@@ -251,19 +262,11 @@ namespace Ryujinx.Graphics.Vulkan
 
         public void InsertClearBarrier(CommandBufferScoped cbs, int index)
         {
-            if (_colors != null)
-            {
-                int realIndex = Array.IndexOf(AttachmentIndices, index);
-
-                if (realIndex != -1)
-                {
-                    _colors[realIndex].Storage?.InsertReadToWriteBarrier(
-                        cbs,
-                        AccessFlags.ColorAttachmentWriteBit,
-                        PipelineStageFlags.ColorAttachmentOutputBit,
-                        insideRenderPass: true);
-                }
-            }
+            _colorsCanonical?[index]?.Storage?.InsertReadToWriteBarrier(
+               cbs,
+               AccessFlags.ColorAttachmentWriteBit,
+               PipelineStageFlags.ColorAttachmentOutputBit,
+               insideRenderPass: true);
         }
 
         public void InsertClearBarrierDS(CommandBufferScoped cbs)
@@ -273,6 +276,62 @@ namespace Ryujinx.Graphics.Vulkan
                 AccessFlags.DepthStencilAttachmentWriteBit,
                 PipelineStageFlags.LateFragmentTestsBit,
                 insideRenderPass: true);
+        }
+
+        public TextureView[] GetAttachmentViews()
+        {
+            var result = new TextureView[_attachments.Length];
+
+            _colors?.CopyTo(result, 0);
+
+            if (_depthStencil != null)
+            {
+                result[^1] = _depthStencil;
+            }
+
+            return result;
+        }
+
+        public RenderPassCacheKey GetRenderPassCacheKey()
+        {
+            return new RenderPassCacheKey(_depthStencil, _colorsCanonical);
+        }
+
+        public void InsertLoadOpBarriers(CommandBufferScoped cbs)
+        {
+            if (_colors != null)
+            {
+                foreach (var color in _colors)
+                {
+                    // If Clear or DontCare were used, this would need to be write bit.
+                    color.Storage?.InsertWriteToReadBarrier(cbs, AccessFlags.ColorAttachmentReadBit, PipelineStageFlags.ColorAttachmentOutputBit);
+                    color.Storage?.SetModification(AccessFlags.ColorAttachmentWriteBit, PipelineStageFlags.ColorAttachmentOutputBit);
+                }
+            }
+
+            if (_depthStencil != null)
+            {
+                _depthStencil.Storage?.InsertWriteToReadBarrier(cbs, AccessFlags.DepthStencilAttachmentReadBit, PipelineStageFlags.EarlyFragmentTestsBit);
+                _depthStencil.Storage?.SetModification(AccessFlags.DepthStencilAttachmentWriteBit, PipelineStageFlags.LateFragmentTestsBit);
+            }
+        }
+
+        public (Auto<DisposableRenderPass> renderPass, Auto<DisposableFramebuffer> framebuffer) GetPassAndFramebuffer(
+            VulkanRenderer gd,
+            Device device,
+            CommandBufferScoped cbs)
+        {
+            return _baseAttachment.GetPassAndFramebuffer(gd, device, cbs, this);
+        }
+
+        public TextureView GetColorView(int index)
+        {
+            return _colorsCanonical[index];
+        }
+
+        public TextureView GetDepthStencilView()
+        {
+            return _depthStencil;
         }
     }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace Ryujinx.Graphics.Vulkan
 {
@@ -20,20 +21,29 @@ namespace Ryujinx.Graphics.Vulkan
             public TValue Value;
         }
 
-        private readonly Entry[][] _hashTable = new Entry[TotalBuckets][];
+        private struct Bucket
+        {
+            public int Length;
+            public Entry[] Entries;
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public readonly Span<Entry> AsSpan()
+            {
+                return Entries == null ? Span<Entry>.Empty : Entries.AsSpan(0, Length);
+            }
+        }
+
+        private readonly Bucket[] _hashTable = new Bucket[TotalBuckets];
 
         public IEnumerable<TKey> Keys
         {
             get
             {
-                foreach (Entry[] bucket in _hashTable)
+                foreach (Bucket bucket in _hashTable)
                 {
-                    if (bucket != null)
+                    for (int i = 0; i < bucket.Length; i++)
                     {
-                        foreach (Entry entry in bucket)
-                        {
-                            yield return entry.Key;
-                        }
+                        yield return bucket.Entries[i].Key;
                     }
                 }
             }
@@ -43,14 +53,11 @@ namespace Ryujinx.Graphics.Vulkan
         {
             get
             {
-                foreach (Entry[] bucket in _hashTable)
+                foreach (Bucket bucket in _hashTable)
                 {
-                    if (bucket != null)
+                    for (int i = 0; i < bucket.Length; i++)
                     {
-                        foreach (Entry entry in bucket)
-                        {
-                            yield return entry.Value;
-                        }
+                        yield return bucket.Entries[i].Value;
                     }
                 }
             }
@@ -68,40 +75,64 @@ namespace Ryujinx.Graphics.Vulkan
             int hashCode = key.GetHashCode();
             int bucketIndex = hashCode & TotalBucketsMask;
 
-            var bucket = _hashTable[bucketIndex];
-            if (bucket != null)
+            ref var bucket = ref _hashTable[bucketIndex];
+            if (bucket.Entries != null)
             {
                 int index = bucket.Length;
 
-                Array.Resize(ref _hashTable[bucketIndex], index + 1);
+                if (index >= bucket.Entries.Length)
+                {
+                    Array.Resize(ref bucket.Entries, index + 1);
+                }
 
-                _hashTable[bucketIndex][index] = entry;
+                bucket.Entries[index] = entry;
             }
             else
             {
-                _hashTable[bucketIndex] = new[]
+                bucket.Entries = new[]
                 {
                     entry,
                 };
             }
+
+            bucket.Length++;
+        }
+
+        public bool Remove(ref TKey key)
+        {
+            int hashCode = key.GetHashCode();
+
+            ref var bucket = ref _hashTable[hashCode & TotalBucketsMask];
+            var entries = bucket.AsSpan();
+            for (int i = 0; i < entries.Length; i++)
+            {
+                ref var entry = ref entries[i];
+
+                if (entry.Hash == hashCode && entry.Key.Equals(ref key))
+                {
+                    entries[(i + 1)..].CopyTo(entries[i..]);
+                    bucket.Length--;
+
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public bool TryGetValue(ref TKey key, out TValue value)
         {
             int hashCode = key.GetHashCode();
 
-            var bucket = _hashTable[hashCode & TotalBucketsMask];
-            if (bucket != null)
+            var entries = _hashTable[hashCode & TotalBucketsMask].AsSpan();
+            for (int i = 0; i < entries.Length; i++)
             {
-                for (int i = 0; i < bucket.Length; i++)
-                {
-                    ref var entry = ref bucket[i];
+                ref var entry = ref entries[i];
 
-                    if (entry.Hash == hashCode && entry.Key.Equals(ref key))
-                    {
-                        value = entry.Value;
-                        return true;
-                    }
+                if (entry.Hash == hashCode && entry.Key.Equals(ref key))
+                {
+                    value = entry.Value;
+                    return true;
                 }
             }
 

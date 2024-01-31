@@ -9,21 +9,16 @@ namespace Ryujinx.Graphics.Vulkan
         {
         }
 
-        public void SetRenderTarget(Auto<DisposableImageView> view, uint width, uint height, bool isDepthStencil, VkFormat format)
+        public void SetRenderTarget(TextureView view, uint width, uint height)
         {
-            SetRenderTarget(view, width, height, 1u, isDepthStencil, format);
-        }
-
-        public void SetRenderTarget(Auto<DisposableImageView> view, uint width, uint height, uint samples, bool isDepthStencil, VkFormat format)
-        {
-            CreateFramebuffer(view, width, height, samples, isDepthStencil, format);
+            CreateFramebuffer(view, width, height);
             CreateRenderPass();
             SignalStateChange();
         }
 
-        private void CreateFramebuffer(Auto<DisposableImageView> view, uint width, uint height, uint samples, bool isDepthStencil, VkFormat format)
+        private void CreateFramebuffer(TextureView view, uint width, uint height)
         {
-            FramebufferParams = new FramebufferParams(Device, view, width, height, samples, isDepthStencil, format);
+            FramebufferParams = new FramebufferParams(Device, view, width, height);
             UpdatePipelineAttachmentFormats();
         }
 

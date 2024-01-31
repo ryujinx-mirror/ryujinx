@@ -256,17 +256,8 @@ namespace Ryujinx.Graphics.Vulkan
 
             using var cbs = gd.CommandBufferPool.Rent();
 
-            var dstFormat = dst.VkFormat;
-            var dstSamples = dst.Info.Samples;
-
             for (int l = 0; l < levels; l++)
             {
-                int srcWidth = Math.Max(1, src.Width >> l);
-                int srcHeight = Math.Max(1, src.Height >> l);
-
-                int dstWidth = Math.Max(1, dst.Width >> l);
-                int dstHeight = Math.Max(1, dst.Height >> l);
-
                 var mipSrcRegion = new Extents2D(
                     srcRegion.X1 >> l,
                     srcRegion.Y1 >> l,
@@ -290,11 +281,7 @@ namespace Ryujinx.Graphics.Vulkan
                             gd,
                             cbs,
                             srcView,
-                            dst.GetImageViewForAttachment(),
-                            dstWidth,
-                            dstHeight,
-                            dstSamples,
-                            dstFormat,
+                            dstView,
                             mipSrcRegion,
                             mipDstRegion);
                     }
@@ -304,12 +291,7 @@ namespace Ryujinx.Graphics.Vulkan
                             gd,
                             cbs,
                             srcView,
-                            dst.GetImageViewForAttachment(),
-                            dstWidth,
-                            dstHeight,
-                            dstSamples,
-                            dstFormat,
-                            false,
+                            dstView,
                             mipSrcRegion,
                             mipDstRegion,
                             linearFilter,
@@ -367,12 +349,7 @@ namespace Ryujinx.Graphics.Vulkan
                         gd,
                         cbs,
                         srcView,
-                        dstView.GetImageViewForAttachment(),
-                        dstView.Width,
-                        dstView.Height,
-                        dstView.Info.Samples,
-                        dstView.VkFormat,
-                        dstView.Info.Format.IsDepthOrStencil(),
+                        dstView,
                         extents,
                         extents,
                         false);
@@ -394,12 +371,7 @@ namespace Ryujinx.Graphics.Vulkan
             VulkanRenderer gd,
             CommandBufferScoped cbs,
             TextureView src,
-            Auto<DisposableImageView> dst,
-            int dstWidth,
-            int dstHeight,
-            int dstSamples,
-            VkFormat dstFormat,
-            bool dstIsDepthOrStencil,
+            TextureView dst,
             Extents2D srcRegion,
             Extents2D dstRegion,
             bool linearFilter,
@@ -453,6 +425,8 @@ namespace Ryujinx.Graphics.Vulkan
                 0f,
                 1f);
 
+            bool dstIsDepthOrStencil = dst.Info.Format.IsDepthOrStencil();
+
             if (dstIsDepthOrStencil)
             {
                 _pipeline.SetProgram(src.Info.Target.IsMultisample() ? _programDepthBlitMs : _programDepthBlit);
@@ -471,7 +445,10 @@ namespace Ryujinx.Graphics.Vulkan
                 _pipeline.SetProgram(_programColorBlit);
             }
 
-            _pipeline.SetRenderTarget(dst, (uint)dstWidth, (uint)dstHeight, (uint)dstSamples, dstIsDepthOrStencil, dstFormat);
+            int dstWidth = dst.Width;
+            int dstHeight = dst.Height;
+
+            _pipeline.SetRenderTarget(dst, (uint)dstWidth, (uint)dstHeight);
             _pipeline.SetRenderTargetColorMasks(new uint[] { 0xf });
             _pipeline.SetScissors(stackalloc Rectangle<int>[] { new Rectangle<int>(0, 0, dstWidth, dstHeight) });
 
@@ -496,11 +473,7 @@ namespace Ryujinx.Graphics.Vulkan
             VulkanRenderer gd,
             CommandBufferScoped cbs,
             TextureView src,
-            Auto<DisposableImageView> dst,
-            int dstWidth,
-            int dstHeight,
-            int dstSamples,
-            VkFormat dstFormat,
+            TextureView dst,
             Extents2D srcRegion,
             Extents2D dstRegion)
         {
@@ -548,7 +521,10 @@ namespace Ryujinx.Graphics.Vulkan
                 0f,
                 1f);
 
-            _pipeline.SetRenderTarget(dst, (uint)dstWidth, (uint)dstHeight, (uint)dstSamples, true, dstFormat);
+            int dstWidth = dst.Width;
+            int dstHeight = dst.Height;
+
+            _pipeline.SetRenderTarget(dst, (uint)dstWidth, (uint)dstHeight);
             _pipeline.SetScissors(stackalloc Rectangle<int>[] { new Rectangle<int>(0, 0, dstWidth, dstHeight) });
             _pipeline.SetViewports(viewports);
             _pipeline.SetPrimitiveTopology(PrimitiveTopology.TriangleStrip);
@@ -660,12 +636,11 @@ namespace Ryujinx.Graphics.Vulkan
 
         public void Clear(
             VulkanRenderer gd,
-            Auto<DisposableImageView> dst,
+            TextureView dst,
             ReadOnlySpan<float> clearColor,
             uint componentMask,
             int dstWidth,
             int dstHeight,
-            VkFormat dstFormat,
             ComponentType type,
             Rectangle<int> scissor)
         {
@@ -710,7 +685,7 @@ namespace Ryujinx.Graphics.Vulkan
             }
 
             _pipeline.SetProgram(program);
-            _pipeline.SetRenderTarget(dst, (uint)dstWidth, (uint)dstHeight, false, dstFormat);
+            _pipeline.SetRenderTarget(dst, (uint)dstWidth, (uint)dstHeight);
             _pipeline.SetRenderTargetColorMasks(new[] { componentMask });
             _pipeline.SetViewports(viewports);
             _pipeline.SetScissors(stackalloc Rectangle<int>[] { scissor });
@@ -721,7 +696,7 @@ namespace Ryujinx.Graphics.Vulkan
 
         public void Clear(
             VulkanRenderer gd,
-            Auto<DisposableImageView> dst,
+            TextureView dst,
             float depthValue,
             bool depthMask,
             int stencilValue,
@@ -757,7 +732,7 @@ namespace Ryujinx.Graphics.Vulkan
                 1f);
 
             _pipeline.SetProgram(_programDepthStencilClear);
-            _pipeline.SetRenderTarget(dst, (uint)dstWidth, (uint)dstHeight, true, dstFormat);
+            _pipeline.SetRenderTarget(dst, (uint)dstWidth, (uint)dstHeight);
             _pipeline.SetViewports(viewports);
             _pipeline.SetScissors(stackalloc Rectangle<int>[] { scissor });
             _pipeline.SetPrimitiveTopology(PrimitiveTopology.TriangleStrip);
@@ -1163,12 +1138,7 @@ namespace Ryujinx.Graphics.Vulkan
                     var srcView = Create2DLayerView(src, srcLayer + z, 0);
                     var dstView = Create2DLayerView(dst, dstLayer + z, 0);
 
-                    _pipeline.SetRenderTarget(
-                        dstView.GetImageViewForAttachment(),
-                        (uint)dst.Width,
-                        (uint)dst.Height,
-                        true,
-                        dst.VkFormat);
+                    _pipeline.SetRenderTarget(dstView, (uint)dst.Width, (uint)dst.Height);
 
                     CopyMSDraw(srcView, aspectFlags, fromMS: true);
 
@@ -1294,13 +1264,7 @@ namespace Ryujinx.Graphics.Vulkan
                     var srcView = Create2DLayerView(src, srcLayer + z, 0);
                     var dstView = Create2DLayerView(dst, dstLayer + z, 0);
 
-                    _pipeline.SetRenderTarget(
-                        dstView.GetImageViewForAttachment(),
-                        (uint)dst.Width,
-                        (uint)dst.Height,
-                        (uint)samples,
-                        true,
-                        dst.VkFormat);
+                    _pipeline.SetRenderTarget(dstView, (uint)dst.Width, (uint)dst.Height);
 
                     CopyMSDraw(srcView, aspectFlags, fromMS: false);
 
@@ -1328,13 +1292,7 @@ namespace Ryujinx.Graphics.Vulkan
                     var dstView = Create2DLayerView(dst, dstLayer + z, 0);
 
                     _pipeline.SetTextureAndSamplerIdentitySwizzle(ShaderStage.Fragment, 0, srcView, null);
-                    _pipeline.SetRenderTarget(
-                        dstView.GetView(format).GetImageViewForAttachment(),
-                        (uint)dst.Width,
-                        (uint)dst.Height,
-                        (uint)samples,
-                        false,
-                        vkFormat);
+                    _pipeline.SetRenderTarget(dstView.GetView(format), (uint)dst.Width, (uint)dst.Height);
 
                     _pipeline.Draw(4, 1, 0, 0);
 
@@ -1471,9 +1429,9 @@ namespace Ryujinx.Graphics.Vulkan
             };
 
             var info = new TextureCreateInfo(
-                from.Info.Width,
-                from.Info.Height,
-                from.Info.Depth,
+                Math.Max(1, from.Info.Width >> level),
+                Math.Max(1, from.Info.Height >> level),
+                1,
                 1,
                 from.Info.Samples,
                 from.Info.BlockWidth,

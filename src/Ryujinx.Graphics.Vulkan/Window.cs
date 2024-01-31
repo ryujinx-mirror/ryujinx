@@ -20,7 +20,7 @@ namespace Ryujinx.Graphics.Vulkan
         private SwapchainKHR _swapchain;
 
         private Image[] _swapchainImages;
-        private Auto<DisposableImageView>[] _swapchainImageViews;
+        private TextureView[] _swapchainImageViews;
 
         private Semaphore[] _imageAvailableSemaphores;
         private Semaphore[] _renderFinishedSemaphores;
@@ -143,6 +143,23 @@ namespace Ryujinx.Graphics.Vulkan
                 Clipped = true,
             };
 
+            var textureCreateInfo = new TextureCreateInfo(
+                _width,
+                _height,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                FormatTable.GetFormat(surfaceFormat.Format),
+                DepthStencilMode.Depth,
+                Target.Texture2D,
+                SwizzleComponent.Red,
+                SwizzleComponent.Green,
+                SwizzleComponent.Blue,
+                SwizzleComponent.Alpha);
+
             _gd.SwapchainApi.CreateSwapchain(_device, swapchainCreateInfo, null, out _swapchain).ThrowOnError();
 
             _gd.SwapchainApi.GetSwapchainImages(_device, _swapchain, &imageCount, null);
@@ -154,11 +171,11 @@ namespace Ryujinx.Graphics.Vulkan
                 _gd.SwapchainApi.GetSwapchainImages(_device, _swapchain, &imageCount, pSwapchainImages);
             }
 
-            _swapchainImageViews = new Auto<DisposableImageView>[imageCount];
+            _swapchainImageViews = new TextureView[imageCount];
 
             for (int i = 0; i < _swapchainImageViews.Length; i++)
             {
-                _swapchainImageViews[i] = CreateSwapchainImageView(_swapchainImages[i], surfaceFormat.Format);
+                _swapchainImageViews[i] = CreateSwapchainImageView(_swapchainImages[i], surfaceFormat.Format, textureCreateInfo);
             }
 
             var semaphoreCreateInfo = new SemaphoreCreateInfo
@@ -181,7 +198,7 @@ namespace Ryujinx.Graphics.Vulkan
             }
         }
 
-        private unsafe Auto<DisposableImageView> CreateSwapchainImageView(Image swapchainImage, VkFormat format)
+        private unsafe TextureView CreateSwapchainImageView(Image swapchainImage, VkFormat format, TextureCreateInfo info)
         {
             var componentMapping = new ComponentMapping(
                 ComponentSwizzle.R,
@@ -204,7 +221,8 @@ namespace Ryujinx.Graphics.Vulkan
             };
 
             _gd.Api.CreateImageView(_device, imageCreateInfo, null, out var imageView).ThrowOnError();
-            return new Auto<DisposableImageView>(new DisposableImageView(_gd.Api, _device, imageView));
+
+            return new TextureView(_gd, _device, new DisposableImageView(_gd.Api, _device, imageView), info, format);
         }
 
         private static SurfaceFormatKHR ChooseSwapSurfaceFormat(SurfaceFormatKHR[] availableFormats, bool colorSpacePassthroughEnabled)
@@ -406,7 +424,7 @@ namespace Ryujinx.Graphics.Vulkan
                 _scalingFilter.Run(
                     view,
                     cbs,
-                    _swapchainImageViews[nextImage],
+                    _swapchainImageViews[nextImage].GetImageViewForAttachment(),
                     _format,
                     _width,
                     _height,
@@ -421,11 +439,6 @@ namespace Ryujinx.Graphics.Vulkan
                     cbs,
                     view,
                     _swapchainImageViews[nextImage],
-                    _width,
-                    _height,
-                    1,
-                    _format,
-                    false,
                     new Extents2D(srcX0, srcY0, srcX1, srcY1),
                     new Extents2D(dstX0, dstY1, dstX1, dstY0),
                     _isLinear,

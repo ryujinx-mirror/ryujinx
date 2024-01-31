@@ -1,5 +1,6 @@
 using Ryujinx.Graphics.GAL;
 using System;
+using System.Collections.Generic;
 using VkFormat = Silk.NET.Vulkan.Format;
 
 namespace Ryujinx.Graphics.Vulkan
@@ -7,10 +8,12 @@ namespace Ryujinx.Graphics.Vulkan
     static class FormatTable
     {
         private static readonly VkFormat[] _table;
+        private static readonly Dictionary<VkFormat, Format> _reverseMap;
 
         static FormatTable()
         {
             _table = new VkFormat[Enum.GetNames(typeof(Format)).Length];
+            _reverseMap = new Dictionary<VkFormat, Format>();
 
 #pragma warning disable IDE0055 // Disable formatting
             Add(Format.R8Unorm,             VkFormat.R8Unorm);
@@ -164,11 +167,22 @@ namespace Ryujinx.Graphics.Vulkan
         private static void Add(Format format, VkFormat vkFormat)
         {
             _table[(int)format] = vkFormat;
+            _reverseMap[vkFormat] = format;
         }
 
         public static VkFormat GetFormat(Format format)
         {
             return _table[(int)format];
+        }
+
+        public static Format GetFormat(VkFormat format)
+        {
+            if (!_reverseMap.TryGetValue(format, out Format result))
+            {
+                return Format.B8G8R8A8Unorm;
+            }
+
+            return result;
         }
 
         public static Format ConvertRgba8SrgbToUnorm(Format format)

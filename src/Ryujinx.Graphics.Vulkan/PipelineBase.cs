@@ -55,6 +55,7 @@ namespace Ryujinx.Graphics.Vulkan
         protected FramebufferParams FramebufferParams;
         private Auto<DisposableFramebuffer> _framebuffer;
         private Auto<DisposableRenderPass> _renderPass;
+        private RenderPassHolder _nullRenderPass;
         private int _writtenAttachmentCount;
 
         private bool _framebufferUsingColorWriteMask;
@@ -1488,98 +1489,22 @@ namespace Ryujinx.Graphics.Vulkan
 
         protected unsafe void CreateRenderPass()
         {
-            const int MaxAttachments = Constants.MaxRenderTargets + 1;
-
-            AttachmentDescription[] attachmentDescs = null;
-
-            var subpass = new SubpassDescription
-            {
-                PipelineBindPoint = PipelineBindPoint.Graphics,
-            };
-
-            AttachmentReference* attachmentReferences = stackalloc AttachmentReference[MaxAttachments];
-
             var hasFramebuffer = FramebufferParams != null;
-
-            if (hasFramebuffer && FramebufferParams.AttachmentsCount != 0)
-            {
-                attachmentDescs = new AttachmentDescription[FramebufferParams.AttachmentsCount];
-
-                for (int i = 0; i < FramebufferParams.AttachmentsCount; i++)
-                {
-                    attachmentDescs[i] = new AttachmentDescription(
-                        0,
-                        FramebufferParams.AttachmentFormats[i],
-                        TextureStorage.ConvertToSampleCountFlags(Gd.Capabilities.SupportedSampleCounts, FramebufferParams.AttachmentSamples[i]),
-                        AttachmentLoadOp.Load,
-                        AttachmentStoreOp.Store,
-                        AttachmentLoadOp.Load,
-                        AttachmentStoreOp.Store,
-                        ImageLayout.General,
-                        ImageLayout.General);
-                }
-
-                int colorAttachmentsCount = FramebufferParams.ColorAttachmentsCount;
-
-                if (colorAttachmentsCount > MaxAttachments - 1)
-                {
-                    colorAttachmentsCount = MaxAttachments - 1;
-                }
-
-                if (colorAttachmentsCount != 0)
-                {
-                    int maxAttachmentIndex = FramebufferParams.MaxColorAttachmentIndex;
-                    subpass.ColorAttachmentCount = (uint)maxAttachmentIndex + 1;
-                    subpass.PColorAttachments = &attachmentReferences[0];
-
-                    // Fill with VK_ATTACHMENT_UNUSED to cover any gaps.
-                    for (int i = 0; i <= maxAttachmentIndex; i++)
-                    {
-                        subpass.PColorAttachments[i] = new AttachmentReference(Vk.AttachmentUnused, ImageLayout.Undefined);
-                    }
-
-                    for (int i = 0; i < colorAttachmentsCount; i++)
-                    {
-                        int bindIndex = FramebufferParams.AttachmentIndices[i];
-
-                        subpass.PColorAttachments[bindIndex] = new AttachmentReference((uint)i, ImageLayout.General);
-                    }
-                }
-
-                if (FramebufferParams.HasDepthStencil)
-                {
-                    uint dsIndex = (uint)FramebufferParams.AttachmentsCount - 1;
-
-                    subpass.PDepthStencilAttachment = &attachmentReferences[MaxAttachments - 1];
-                    *subpass.PDepthStencilAttachment = new AttachmentReference(dsIndex, ImageLayout.General);
-                }
-            }
-
-            var subpassDependency = PipelineConverter.CreateSubpassDependency();
-
-            fixed (AttachmentDescription* pAttachmentDescs = attachmentDescs)
-            {
-                var renderPassCreateInfo = new RenderPassCreateInfo
-                {
-                    SType = StructureType.RenderPassCreateInfo,
-                    PAttachments = pAttachmentDescs,
-                    AttachmentCount = attachmentDescs != null ? (uint)attachmentDescs.Length : 0,
-                    PSubpasses = &subpass,
-                    SubpassCount = 1,
-                    PDependencies = &subpassDependency,
-                    DependencyCount = 1,
-                };
-
-                Gd.Api.CreateRenderPass(Device, renderPassCreateInfo, null, out var renderPass).ThrowOnError();
-
-                _renderPass?.Dispose();
-                _renderPass = new Auto<DisposableRenderPass>(new DisposableRenderPass(Gd.Api, Device, renderPass));
-            }
 
             EndRenderPass();
 
-            _framebuffer?.Dispose();
-            _framebuffer = hasFramebuffer ? FramebufferParams.Create(Gd.Api, Cbs, _renderPass) : null;
+            if (!hasFramebuffer || FramebufferParams.AttachmentsCount == 0)
+            {
+                // Use the null framebuffer.
+                _nullRenderPass ??= new RenderPassHolder(Gd, Device, new RenderPassCacheKey(), FramebufferParams);
+
+                _renderPass = _nullRenderPass.GetRenderPass();
+                _framebuffer = _nullRenderPass.GetFramebuffer(Gd, Cbs, FramebufferParams);
+            }
+            else
+            {
+                (_renderPass, _framebuffer) = FramebufferParams.GetPassAndFramebuffer(Gd, Device, Cbs);
+            }
         }
 
         protected void SignalStateChange()
@@ -1770,8 +1695,7 @@ namespace Ryujinx.Graphics.Vulkan
         {
             if (disposing)
             {
-                _renderPass?.Dispose();
-                _framebuffer?.Dispose();
+                _nullRenderPass?.Dispose();
                 _newState.Dispose();
                 _descriptorSetUpdater.Dispose();
                 _vertexBufferUpdater.Dispose();
