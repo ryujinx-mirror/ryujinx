@@ -287,7 +287,7 @@ namespace Ryujinx.HLE.HOS.Services
                             _wakeEvent.WritableEvent.Clear();
                         }
                     }
-                    else if (rc == KernelResult.PortRemoteClosed && signaledIndex >= 0)
+                    else if (rc == KernelResult.PortRemoteClosed && signaledIndex >= 0 && SmObjectFactory != null)
                     {
                         DestroySession(handles[signaledIndex]);
                     }
