@@ -1630,12 +1630,6 @@ namespace Ryujinx.Graphics.Gpu.Image
                 return;
             }
 
-            // If size is zero, we have nothing to flush.
-            if (size == 0)
-            {
-                return;
-            }
-
             // There is a small gap here where the action is removed but _actionRegistered is still 1.
             // In this case it will skip registering the action, but here we are already handling it,
             // so there shouldn't be any issue as it's the same handler for all actions.
