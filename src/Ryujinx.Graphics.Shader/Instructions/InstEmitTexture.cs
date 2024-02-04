@@ -592,7 +592,10 @@ namespace Ryujinx.Graphics.Shader.Instructions
                     flags |= TextureFlags.Offset;
                 }
 
-                sourcesList.Add(Const((int)tld4sOp.TexComp));
+                if (!tld4sOp.Dc)
+                {
+                    sourcesList.Add(Const((int)tld4sOp.TexComp));
+                }
             }
             else
             {
