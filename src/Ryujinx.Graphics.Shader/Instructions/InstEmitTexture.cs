@@ -578,12 +578,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 type = SamplerType.Texture2D;
                 flags = TextureFlags.Gather;
 
-                if (tld4sOp.Dc)
-                {
-                    sourcesList.Add(Rb());
-
-                    type |= SamplerType.Shadow;
-                }
+                int depthCompareIndex = sourcesList.Count;
 
                 if (tld4sOp.Aoffi)
                 {
@@ -592,7 +587,13 @@ namespace Ryujinx.Graphics.Shader.Instructions
                     flags |= TextureFlags.Offset;
                 }
 
-                if (!tld4sOp.Dc)
+                if (tld4sOp.Dc)
+                {
+                    sourcesList.Insert(depthCompareIndex, Rb());
+
+                    type |= SamplerType.Shadow;
+                }
+                else
                 {
                     sourcesList.Add(Const((int)tld4sOp.TexComp));
                 }
