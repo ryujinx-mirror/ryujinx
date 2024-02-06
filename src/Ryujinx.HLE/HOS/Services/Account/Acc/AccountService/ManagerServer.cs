@@ -22,6 +22,9 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc.AccountService
         private readonly UserId _userId;
 #pragma warning restore IDE0052
 
+        private byte[] _cachedTokenData;
+        private DateTime _cachedTokenExpiry;
+
         public ManagerServer(UserId userId)
         {
             _userId = userId;
@@ -144,7 +147,13 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc.AccountService
             }
             */
 
-            byte[] tokenData = Encoding.ASCII.GetBytes(GenerateIdToken());
+            if (_cachedTokenData == null || DateTime.UtcNow > _cachedTokenExpiry)
+            {
+                _cachedTokenExpiry = DateTime.UtcNow + TimeSpan.FromHours(3);
+                _cachedTokenData = Encoding.ASCII.GetBytes(GenerateIdToken());
+            }
+
+            byte[] tokenData = _cachedTokenData;
 
             context.Memory.Write(bufferPosition, tokenData);
             context.ResponseData.Write(tokenData.Length);
