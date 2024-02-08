@@ -161,6 +161,7 @@ namespace Ryujinx.Graphics.Vulkan
             Add(Format.A1B5G5R5Unorm,       VkFormat.R5G5B5A1UnormPack16);
             Add(Format.B8G8R8A8Unorm,       VkFormat.B8G8R8A8Unorm);
             Add(Format.B8G8R8A8Srgb,        VkFormat.B8G8R8A8Srgb);
+            Add(Format.B10G10R10A2Unorm,    VkFormat.A2R10G10B10UnormPack32);
 #pragma warning restore IDE0055
         }
 
