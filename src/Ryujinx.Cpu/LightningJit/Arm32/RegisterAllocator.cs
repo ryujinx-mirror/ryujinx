@@ -106,6 +106,7 @@ namespace Ryujinx.Cpu.LightningJit.Arm32
                 if ((regMask & AbiConstants.ReservedRegsMask) == 0)
                 {
                     _gprMask |= regMask;
+                    UsedGprsMask |= regMask;
 
                     return firstCalleeSaved;
                 }

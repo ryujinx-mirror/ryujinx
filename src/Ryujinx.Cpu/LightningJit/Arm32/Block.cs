@@ -10,6 +10,7 @@ namespace Ryujinx.Cpu.LightningJit.Arm32
         public readonly List<InstInfo> Instructions;
         public readonly bool EndsWithBranch;
         public readonly bool HasHostCall;
+        public readonly bool HasHostCallSkipContext;
         public readonly bool IsTruncated;
         public readonly bool IsLoopEnd;
         public readonly bool IsThumb;
@@ -20,6 +21,7 @@ namespace Ryujinx.Cpu.LightningJit.Arm32
             List<InstInfo> instructions,
             bool endsWithBranch,
             bool hasHostCall,
+            bool hasHostCallSkipContext,
             bool isTruncated,
             bool isLoopEnd,
             bool isThumb)
@@ -31,6 +33,7 @@ namespace Ryujinx.Cpu.LightningJit.Arm32
             Instructions = instructions;
             EndsWithBranch = endsWithBranch;
             HasHostCall = hasHostCall;
+            HasHostCallSkipContext = hasHostCallSkipContext;
             IsTruncated = isTruncated;
             IsLoopEnd = isLoopEnd;
             IsThumb = isThumb;
@@ -57,6 +60,7 @@ namespace Ryujinx.Cpu.LightningJit.Arm32
                 Instructions.GetRange(0, splitIndex),
                 false,
                 HasHostCall,
+                HasHostCallSkipContext,
                 false,
                 false,
                 IsThumb);
@@ -67,6 +71,7 @@ namespace Ryujinx.Cpu.LightningJit.Arm32
                 Instructions.GetRange(splitIndex, splitCount),
                 EndsWithBranch,
                 HasHostCall,
+                HasHostCallSkipContext,
                 IsTruncated,
                 IsLoopEnd,
                 IsThumb);

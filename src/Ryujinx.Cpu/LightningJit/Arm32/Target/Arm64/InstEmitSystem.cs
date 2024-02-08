@@ -354,11 +354,18 @@ namespace Ryujinx.Cpu.LightningJit.Arm32.Target.Arm64
             // All instructions that might do a host call should be included here.
             // That is required to reserve space on the stack for caller saved registers.
 
+            return name == InstName.Mrrc;
+        }
+
+        public static bool NeedsCallSkipContext(InstName name)
+        {
+            // All instructions that might do a host call should be included here.
+            // That is required to reserve space on the stack for caller saved registers.
+
             switch (name)
             {
                 case InstName.Mcr:
                 case InstName.Mrc:
-                case InstName.Mrrc:
                 case InstName.Svc:
                 case InstName.Udf:
                     return true;
@@ -372,7 +379,7 @@ namespace Ryujinx.Cpu.LightningJit.Arm32.Target.Arm64
             Assembler asm = new(writer);
 
             WriteCall(ref asm, regAlloc, GetBkptHandlerPtr(), skipContext: true, spillBaseOffset, null, pc, imm);
-            WriteSyncPoint(writer, ref asm, regAlloc, tailMerger, skipContext: true, spillBaseOffset);
+            WriteSyncPoint(writer, ref asm, regAlloc, tailMerger, spillBaseOffset);
         }
 
         public static void WriteSvc(CodeWriter writer, RegisterAllocator regAlloc, TailMerger tailMerger, int spillBaseOffset, uint pc, uint svcId)
@@ -380,7 +387,7 @@ namespace Ryujinx.Cpu.LightningJit.Arm32.Target.Arm64
             Assembler asm = new(writer);
 
             WriteCall(ref asm, regAlloc, GetSvcHandlerPtr(), skipContext: true, spillBaseOffset, null, pc, svcId);
-            WriteSyncPoint(writer, ref asm, regAlloc, tailMerger, skipContext: true, spillBaseOffset);
+            WriteSyncPoint(writer, ref asm, regAlloc, tailMerger, spillBaseOffset);
         }
 
         public static void WriteUdf(CodeWriter writer, RegisterAllocator regAlloc, TailMerger tailMerger, int spillBaseOffset, uint pc, uint imm)
@@ -388,7 +395,7 @@ namespace Ryujinx.Cpu.LightningJit.Arm32.Target.Arm64
             Assembler asm = new(writer);
 
             WriteCall(ref asm, regAlloc, GetUdfHandlerPtr(), skipContext: true, spillBaseOffset, null, pc, imm);
-            WriteSyncPoint(writer, ref asm, regAlloc, tailMerger, skipContext: true, spillBaseOffset);
+            WriteSyncPoint(writer, ref asm, regAlloc, tailMerger, spillBaseOffset);
         }
 
         public static void WriteReadCntpct(CodeWriter writer, RegisterAllocator regAlloc, int spillBaseOffset, int rt, int rt2)
@@ -422,14 +429,14 @@ namespace Ryujinx.Cpu.LightningJit.Arm32.Target.Arm64
             WriteFill(ref asm, regAlloc, resultMask, skipContext: false, spillBaseOffset, tempRegister);
         }
 
-        public static void WriteSyncPoint(CodeWriter writer, RegisterAllocator regAlloc, TailMerger tailMerger, int spillBaseOffset)
-        {
-            Assembler asm = new(writer);
-
-            WriteSyncPoint(writer, ref asm, regAlloc, tailMerger, skipContext: false, spillBaseOffset);
-        }
-
-        private static void WriteSyncPoint(CodeWriter writer, ref Assembler asm, RegisterAllocator regAlloc, TailMerger tailMerger, bool skipContext, int spillBaseOffset)
+        public static void WriteSyncPoint(
+            CodeWriter writer,
+            ref Assembler asm,
+            RegisterAllocator regAlloc,
+            TailMerger tailMerger,
+            int spillBaseOffset,
+            Action storeToContext = null,
+            Action loadFromContext = null)
         {
             int tempRegister = regAlloc.AllocateTempGprRegister();
 
@@ -440,7 +447,8 @@ namespace Ryujinx.Cpu.LightningJit.Arm32.Target.Arm64
             int branchIndex = writer.InstructionPointer;
             asm.Cbnz(rt, 0);
 
-            WriteSpill(ref asm, regAlloc, 1u << tempRegister, skipContext, spillBaseOffset, tempRegister);
+            storeToContext?.Invoke();
+            WriteSpill(ref asm, regAlloc, 1u << tempRegister, skipContext: true, spillBaseOffset, tempRegister);
 
             Operand rn = Register(tempRegister == 0 ? 1 : 0);
 
@@ -449,7 +457,8 @@ namespace Ryujinx.Cpu.LightningJit.Arm32.Target.Arm64
 
             tailMerger.AddConditionalZeroReturn(writer, asm, Register(0, OperandType.I32));
 
-            WriteFill(ref asm, regAlloc, 1u << tempRegister, skipContext, spillBaseOffset, tempRegister);
+            WriteFill(ref asm, regAlloc, 1u << tempRegister, skipContext: true, spillBaseOffset, tempRegister);
+            loadFromContext?.Invoke();
 
             asm.LdrRiUn(rt, Register(regAlloc.FixedContextRegister), NativeContextOffsets.CounterOffset);
 
@@ -514,29 +523,37 @@ namespace Ryujinx.Cpu.LightningJit.Arm32.Target.Arm64
 
         private static void WriteSpill(ref Assembler asm, RegisterAllocator regAlloc, uint exceptMask, bool skipContext, int spillOffset, int tempRegister)
         {
-            WriteSpillOrFill(ref asm, regAlloc, skipContext, exceptMask, spillOffset, tempRegister, spill: true);
+            if (skipContext)
+            {
+                InstEmitFlow.WriteSpillSkipContext(ref asm, regAlloc, spillOffset);
+            }
+            else
+            {
+                WriteSpillOrFill(ref asm, regAlloc, exceptMask, spillOffset, tempRegister, spill: true);
+            }
         }
 
         private static void WriteFill(ref Assembler asm, RegisterAllocator regAlloc, uint exceptMask, bool skipContext, int spillOffset, int tempRegister)
         {
-            WriteSpillOrFill(ref asm, regAlloc, skipContext, exceptMask, spillOffset, tempRegister, spill: false);
+            if (skipContext)
+            {
+                InstEmitFlow.WriteFillSkipContext(ref asm, regAlloc, spillOffset);
+            }
+            else
+            {
+                WriteSpillOrFill(ref asm, regAlloc, exceptMask, spillOffset, tempRegister, spill: false);
+            }
         }
 
         private static void WriteSpillOrFill(
             ref Assembler asm,
             RegisterAllocator regAlloc,
-            bool skipContext,
             uint exceptMask,
             int spillOffset,
             int tempRegister,
             bool spill)
         {
             uint gprMask = regAlloc.UsedGprsMask & ~(AbiConstants.GprCalleeSavedRegsMask | exceptMask);
-
-            if (skipContext)
-            {
-                gprMask &= ~Compiler.UsableGprsMask;
-            }
 
             if (!spill)
             {
@@ -599,11 +616,6 @@ namespace Ryujinx.Cpu.LightningJit.Arm32.Target.Arm64
             }
 
             uint fpSimdMask = regAlloc.UsedFpSimdMask;
-
-            if (skipContext)
-            {
-                fpSimdMask &= ~Compiler.UsableFpSimdMask;
-            }
 
             while (fpSimdMask != 0)
             {
