@@ -2,15 +2,13 @@ using Ryujinx.Common;
 using Ryujinx.Common.Configuration;
 using ShellLink;
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
-using System.Drawing.Drawing2D;
-using System.Drawing.Imaging;
 using System.IO;
 using System.Runtime.Versioning;
-using Image = System.Drawing.Image;
 
 namespace Ryujinx.Ui.Common.Helper
 {
@@ -23,12 +21,9 @@ namespace Ryujinx.Ui.Common.Helper
             iconPath += ".ico";
 
             MemoryStream iconDataStream = new(iconData);
-            using Image image = Image.FromStream(iconDataStream);
-            using Bitmap bitmap = new(128, 128);
-            using System.Drawing.Graphics graphic = System.Drawing.Graphics.FromImage(bitmap);
-            graphic.InterpolationMode = InterpolationMode.HighQualityBicubic;
-            graphic.DrawImage(image, 0, 0, 128, 128);
-            SaveBitmapAsIcon(bitmap, iconPath);
+            var image = Image.Load(iconDataStream);
+            image.Mutate(x => x.Resize(128, 128));
+            SaveBitmapAsIcon(image, iconPath);
 
             var shortcut = Shortcut.CreateShortcut(basePath, GetArgsString(applicationFilePath), iconPath, 0);
             shortcut.StringData.NameString = cleanedAppName;
@@ -42,7 +37,7 @@ namespace Ryujinx.Ui.Common.Helper
             var desktopFile = EmbeddedResources.ReadAllText("Ryujinx.Ui.Common/shortcut-template.desktop");
             iconPath += ".png";
 
-            var image = SixLabors.ImageSharp.Image.Load<Rgba32>(iconData);
+            var image = Image.Load<Rgba32>(iconData);
             image.SaveAsPng(iconPath);
 
             using StreamWriter outputFile = new(Path.Combine(desktopPath, cleanedAppName + ".desktop"));
@@ -83,7 +78,7 @@ namespace Ryujinx.Ui.Common.Helper
             }
 
             const string IconName = "icon.png";
-            var image = SixLabors.ImageSharp.Image.Load<Rgba32>(iconData);
+            var image = Image.Load<Rgba32>(iconData);
             image.SaveAsPng(Path.Combine(resourceFolderPath, IconName));
 
             // plist file
@@ -147,7 +142,7 @@ namespace Ryujinx.Ui.Common.Helper
         /// <param name="source">The source bitmap image that will be saved as an .ico file</param>
         /// <param name="filePath">The location that the new .ico file will be saved too (Make sure to include '.ico' in the path).</param>
         [SupportedOSPlatform("windows")]
-        private static void SaveBitmapAsIcon(Bitmap source, string filePath)
+        private static void SaveBitmapAsIcon(Image source, string filePath)
         {
             // Code Modified From https://stackoverflow.com/a/11448060/368354 by Benlitz
             byte[] header = { 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 32, 0, 0, 0, 0, 0, 22, 0, 0, 0 };
@@ -155,7 +150,7 @@ namespace Ryujinx.Ui.Common.Helper
 
             fs.Write(header);
             // Writing actual data
-            source.Save(fs, ImageFormat.Png);
+            source.Save(fs, PngFormat.Instance);
             // Getting data length (file length minus header)
             long dataLength = fs.Length - header.Length;
             // Write it in the correct place
