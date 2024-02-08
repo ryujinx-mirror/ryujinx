@@ -3,7 +3,6 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:flex="clr-namespace:Avalonia.Flexbox;assembly=Avalonia.Flexbox"
     xmlns:locale="clr-namespace:Ryujinx.Ava.Common.Locale"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
@@ -49,13 +48,11 @@
                         Grid.Column="0"
                         Height="80"
                         Source="resm:Ryujinx.Ui.Common.Resources.Logo_Ryujinx.png?assembly=Ryujinx.Ui.Common" />
-                    <flex:FlexPanel
+                    <WrapPanel
                         Grid.Column="2"
-                        HorizontalAlignment="Stretch"
-                        VerticalAlignment="Stretch"
-                        Direction="Column"
-                        JustifyContent="SpaceAround"
-                        RowSpacing="2">
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Center"
+                        Orientation="Vertical">
                         <TextBlock
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center"
@@ -71,7 +68,7 @@
                             Text="(REE-YOU-JINX)"
                             TextAlignment="Center"
                             Width="110" />
-                    </flex:FlexPanel>
+                    </WrapPanel>
                 </Grid>
                 <TextBlock
                     HorizontalAlignment="Center"
