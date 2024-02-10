@@ -45,7 +45,7 @@
     <EmbeddedResource Include="Resources\Logo_Twitter_Light.png" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(RuntimeIdentifier)' == 'linux-x64' OR '$(RuntimeIdentifier)' == ''">
+  <ItemGroup Condition="'$(RuntimeIdentifier)' == 'linux-x64' OR '$(RuntimeIdentifier)' == 'linux-arm64' OR '$(RuntimeIdentifier)' == ''">
     <EmbeddedResource Include="..\..\distribution\linux\shortcut-template.desktop" />
   </ItemGroup>
 

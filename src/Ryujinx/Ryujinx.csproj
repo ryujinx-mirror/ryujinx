@@ -21,11 +21,11 @@
 
   <ItemGroup>
     <PackageReference Include="Ryujinx.GtkSharp" />
-    <PackageReference Include="GtkSharp.Dependencies" Condition="'$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64' AND '$(RuntimeIdentifier)' != 'osx-arm64'" />
+    <PackageReference Include="GtkSharp.Dependencies" Condition="'$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'linux-arm64' AND '$(RuntimeIdentifier)' != 'osx-x64' AND '$(RuntimeIdentifier)' != 'osx-arm64'" />
     <PackageReference Include="GtkSharp.Dependencies.osx" Condition="'$(RuntimeIdentifier)' == 'osx-x64' OR '$(RuntimeIdentifier)' == 'osx-arm64'" />
     <PackageReference Include="Ryujinx.Graphics.Nvdec.Dependencies" />
-    <PackageReference Include="Ryujinx.Audio.OpenAL.Dependencies" Condition="'$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64' AND '$(RuntimeIdentifier)' != 'osx-arm64'" />
-    <PackageReference Include="Ryujinx.Graphics.Vulkan.Dependencies.MoltenVK" Condition="'$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'win-x64'" />
+    <PackageReference Include="Ryujinx.Audio.OpenAL.Dependencies" Condition="'$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'linux-arm64' AND '$(RuntimeIdentifier)' != 'osx-x64' AND '$(RuntimeIdentifier)' != 'osx-arm64'" />
+    <PackageReference Include="Ryujinx.Graphics.Vulkan.Dependencies.MoltenVK" Condition="'$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'linux-arm64' AND '$(RuntimeIdentifier)' != 'win-x64'" />
     <PackageReference Include="OpenTK.Core" />
     <PackageReference Include="OpenTK.Graphics" />
     <PackageReference Include="SPB" />
@@ -49,7 +49,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="..\..\distribution\windows\alsoft.ini" Condition="'$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64'">
+    <Content Include="..\..\distribution\windows\alsoft.ini" Condition="'$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'linux-arm64' AND '$(RuntimeIdentifier)' != 'osx-x64'">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <TargetPath>alsoft.ini</TargetPath>
     </Content>

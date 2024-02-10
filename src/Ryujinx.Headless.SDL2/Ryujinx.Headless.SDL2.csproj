@@ -34,7 +34,7 @@
 
   <ItemGroup>
     <PackageReference Include="CommandLineParser" />
-    <PackageReference Include="Ryujinx.Graphics.Vulkan.Dependencies.MoltenVK" Condition="'$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'win-x64'" />
+    <PackageReference Include="Ryujinx.Graphics.Vulkan.Dependencies.MoltenVK" Condition="'$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'linux-arm64' AND '$(RuntimeIdentifier)' != 'win-x64'" />
   </ItemGroup>
 
   <ItemGroup>
