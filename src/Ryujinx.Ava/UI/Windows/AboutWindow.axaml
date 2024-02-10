@@ -44,31 +44,37 @@
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
-                    <Image
-                        Grid.Column="0"
-                        Height="80"
-                        Source="resm:Ryujinx.Ui.Common.Resources.Logo_Ryujinx.png?assembly=Ryujinx.Ui.Common" />
-                    <WrapPanel
-                        Grid.Column="2"
-                        HorizontalAlignment="Right"
-                        VerticalAlignment="Center"
-                        Orientation="Vertical">
-                        <TextBlock
+                    <StackPanel
+                        Grid.Column="1"
+                        Orientation="Horizontal"
+                        HorizontalAlignment="Center"
+                        Spacing="10">
+                        <Image
+                            Height="80"
+                            Source="resm:Ryujinx.Ui.Common.Resources.Logo_Ryujinx.png?assembly=Ryujinx.Ui.Common"
                             HorizontalAlignment="Center"
+                            IsHitTestVisible="True" />
+                        <WrapPanel
+                            HorizontalAlignment="Right"
                             VerticalAlignment="Center"
-                            FontSize="28"
-                            FontWeight="Bold"
-                            Text="Ryujinx"
-                            TextAlignment="Center"
-                            Width="110" />
-                        <TextBlock
-                            HorizontalAlignment="Center"
-                            VerticalAlignment="Center"
-                            FontSize="11"
-                            Text="(REE-YOU-JINX)"
-                            TextAlignment="Center"
-                            Width="110" />
-                    </WrapPanel>
+                            Orientation="Vertical">
+                            <TextBlock
+                                FontSize="28"
+                                FontWeight="Bold"
+                                Text="Ryujinx"
+                                TextAlignment="Start"
+                                Width="110"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center" />
+                            <TextBlock
+                                FontSize="11"
+                                Text="(REE-YOU-JINX)"
+                                TextAlignment="Start"
+                                Width="110"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center" />
+                        </WrapPanel>
+                    </StackPanel>
                 </Grid>
                 <TextBlock
                     HorizontalAlignment="Center"
