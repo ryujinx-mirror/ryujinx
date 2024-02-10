@@ -1,3 +1,4 @@
+using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Logging;
 using System;
 using System.Collections.Concurrent;
@@ -93,7 +94,7 @@ namespace Ryujinx.SDL2.Common
 
                 SDL_EventState(SDL_EventType.SDL_CONTROLLERSENSORUPDATE, SDL_DISABLE);
 
-                string gamepadDbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "SDL_GameControllerDB.txt");
+                string gamepadDbPath = Path.Combine(AppDataManager.BaseDirPath, "SDL_GameControllerDB.txt");
 
                 if (File.Exists(gamepadDbPath))
                 {
