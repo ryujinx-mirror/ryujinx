@@ -248,7 +248,7 @@ namespace Ryujinx.Graphics.OpenGL
         {
             // alwaysBackground is ignored, since we cannot switch from the current context.
 
-            if (IOpenGLContext.HasContext())
+            if (_window.BackgroundContext.HasContext())
             {
                 action(); // We have a context already - use that (assuming it is the main one).
             }

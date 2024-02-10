@@ -30,6 +30,8 @@ namespace Ryujinx.Graphics.OpenGL
             _thread.Start();
         }
 
+        public bool HasContext() => _backgroundContext.HasContext();
+
         private void Run()
         {
             InBackground = true;

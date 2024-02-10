@@ -96,6 +96,8 @@ namespace Ryujinx.Headless.SDL2.OpenGL
                 }
             }
 
+            public bool HasContext() => SDL_GL_GetCurrentContext() != IntPtr.Zero;
+
             public void Dispose()
             {
                 SDL_GL_DeleteContext(_context);

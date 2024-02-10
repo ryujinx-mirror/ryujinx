@@ -29,6 +29,8 @@ namespace Ryujinx.Ui
             _context.MakeCurrent(_window);
         }
 
+        public bool HasContext() => _context.IsCurrent;
+
         public static SPBOpenGLContext CreateBackgroundContext(OpenGLContextBase sharedContext)
         {
             OpenGLContextBase context = PlatformHelper.CreateOpenGLContext(FramebufferFormat.Default, 3, 3, OpenGLContextFlags.Compat, true, sharedContext);
