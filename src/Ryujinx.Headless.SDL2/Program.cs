@@ -427,16 +427,12 @@ namespace Ryujinx.Headless.SDL2
 
             if (!option.DisableFileLog)
             {
-                FileStream logFile = FileLogTarget.PrepareLogFile(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs"));
+                string logDir = AppDataManager.LogsDirPath;
+                FileStream logFile = null;
 
-                if (logFile == null)
+                if (!string.IsNullOrEmpty(logDir))
                 {
-                    logFile = FileLogTarget.PrepareLogFile(Path.Combine(AppDataManager.BaseDirPath, "Logs"));
-
-                    if (logFile == null)
-                    {
-                        Logger.Error?.Print(LogClass.Application, "No writable log directory available. Make sure either the application directory or the Ryujinx directory is writable.");
-                    }
+                    logFile = FileLogTarget.PrepareLogFile(logDir);
                 }
 
                 if (logFile != null)
@@ -446,6 +442,10 @@ namespace Ryujinx.Headless.SDL2
                         1000,
                         AsyncLogTargetOverflowAction.Block
                     ));
+                }
+                else
+                {
+                    Logger.Error?.Print(LogClass.Application, "No writable log directory available. Make sure either the Logs directory, Application Data, or the Ryujinx directory is writable.");
                 }
             }
 
