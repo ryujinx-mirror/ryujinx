@@ -233,8 +233,15 @@ namespace Ryujinx.Common.Configuration
         // Should be removed, when the existence of the old directory isn't checked anymore.
         private static bool IsPathSymlink(string path)
         {
-            FileAttributes attributes = File.GetAttributes(path);
-            return (attributes & FileAttributes.ReparsePoint) == FileAttributes.ReparsePoint;
+            try
+            {
+                FileAttributes attributes = File.GetAttributes(path);
+                return (attributes & FileAttributes.ReparsePoint) == FileAttributes.ReparsePoint;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         [SupportedOSPlatform("macos")]
