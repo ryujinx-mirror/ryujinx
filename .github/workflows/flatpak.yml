@@ -58,33 +58,69 @@ jobs:
       - name: Generate nuget_sources.json
         shell: python
         run: |
+          import hashlib
           from pathlib import Path
           import base64
           import binascii
           import json
           import os
+          import urllib.request
 
           sources = []
 
-          for path in Path(os.environ['NUGET_PACKAGES']).glob('**/*.nupkg.sha512'):
-            name = path.parent.parent.name
-            version = path.parent.name
-            filename = '{}.{}.nupkg'.format(name, version)
-            url = 'https://api.nuget.org/v3-flatcontainer/{}/{}/{}'.format(name, version, filename)
 
-            with path.open() as fp:
-                sha512 = binascii.hexlify(base64.b64decode(fp.read())).decode('ascii')
+          def create_source_from_external(name, version):
+              full_dir_path = Path(os.environ["NUGET_PACKAGES"]).joinpath(name).joinpath(version)
+              os.makedirs(full_dir_path, exist_ok=True)
 
-            sources.append({
-                'type': 'file',
-                'url': url,
-                'sha512': sha512,
-                'dest': os.environ['NUGET_SOURCES_DESTDIR'],
-                'dest-filename': filename,
-            })
+              filename = "{}.{}.nupkg".format(name, version)
+              url = "https://api.nuget.org/v3-flatcontainer/{}/{}/{}".format(
+                  name, version, filename
+              )
 
-          with open('flathub/nuget_sources.json', 'w') as fp:
-            json.dump(sources, fp, indent=4)
+              print(f"Processing {url}...")
+              response = urllib.request.urlopen(url)
+              sha512 = hashlib.sha512(response.read()).hexdigest()
+
+              return {
+                  "type": "file",
+                  "url": url,
+                  "sha512": sha512,
+                  "dest": os.environ["NUGET_SOURCES_DESTDIR"],
+                  "dest-filename": filename,
+              }
+
+
+          has_added_x64_apphost = False
+
+          for path in Path(os.environ["NUGET_PACKAGES"]).glob("**/*.nupkg.sha512"):
+              name = path.parent.parent.name
+              version = path.parent.name
+              filename = "{}.{}.nupkg".format(name, version)
+              url = "https://api.nuget.org/v3-flatcontainer/{}/{}/{}".format(
+                  name, version, filename
+              )
+
+              with path.open() as fp:
+                  sha512 = binascii.hexlify(base64.b64decode(fp.read())).decode("ascii")
+
+              sources.append(
+                  {
+                      "type": "file",
+                      "url": url,
+                      "sha512": sha512,
+                      "dest": os.environ["NUGET_SOURCES_DESTDIR"],
+                      "dest-filename": filename,
+                  }
+              )
+
+              # .NET will not add current installed application host to the list, force inject it here.
+              if not has_added_x64_apphost and name.startswith('microsoft.netcore.app.host'):
+                  sources.append(create_source_from_external("microsoft.netcore.app.host.linux-x64", version))
+                  has_added_x64_apphost = True
+
+          with open("flathub/nuget_sources.json", "w") as fp:
+              json.dump(sources, fp, indent=4)
 
       - name: Update flatpak metadata
         id: metadata
