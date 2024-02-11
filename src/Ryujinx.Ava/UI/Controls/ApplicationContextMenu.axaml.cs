@@ -126,6 +126,32 @@ namespace Ryujinx.Ava.UI.Controls
             }
         }
 
+        public void OpenModsDirectory_Click(object sender, RoutedEventArgs args)
+        {
+            var viewModel = (sender as MenuItem)?.DataContext as MainWindowViewModel;
+
+            if (viewModel?.SelectedApplication != null)
+            {
+                string modsBasePath = ModLoader.GetModsBasePath();
+                string titleModsPath = ModLoader.GetApplicationDir(modsBasePath, viewModel.SelectedApplication.TitleId);
+
+                OpenHelper.OpenFolder(titleModsPath);
+            }
+        }
+
+        public void OpenSdModsDirectory_Click(object sender, RoutedEventArgs args)
+        {
+            var viewModel = (sender as MenuItem)?.DataContext as MainWindowViewModel;
+
+            if (viewModel?.SelectedApplication != null)
+            {
+                string sdModsBasePath = ModLoader.GetSdModsBasePath();
+                string titleModsPath = ModLoader.GetApplicationDir(sdModsBasePath, viewModel.SelectedApplication.TitleId);
+
+                OpenHelper.OpenFolder(titleModsPath);
+            }
+        }
+
         public async void OpenModManager_Click(object sender, RoutedEventArgs args)
         {
             var viewModel = (sender as MenuItem)?.DataContext as MainWindowViewModel;

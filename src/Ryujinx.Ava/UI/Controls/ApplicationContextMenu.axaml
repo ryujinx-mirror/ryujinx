@@ -51,6 +51,15 @@
         Header="{locale:Locale GameListContextMenuManageMod}"
         ToolTip.Tip="{locale:Locale GameListContextMenuManageModToolTip}" />
     <Separator />
+    <MenuItem
+        Click="OpenModsDirectory_Click"
+        Header="{locale:Locale GameListContextMenuOpenModsDirectory}"
+        ToolTip.Tip="{locale:Locale GameListContextMenuOpenModsDirectoryToolTip}" />
+    <MenuItem
+        Click="OpenSdModsDirectory_Click"
+        Header="{locale:Locale GameListContextMenuOpenSdModsDirectory}"
+        ToolTip.Tip="{locale:Locale GameListContextMenuOpenSdModsDirectoryToolTip}" />
+    <Separator />
     <MenuItem Header="{locale:Locale GameListContextMenuCacheManagement}">
         <MenuItem
             Click="PurgePtcCache_Click"
