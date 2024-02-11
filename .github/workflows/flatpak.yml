@@ -51,7 +51,9 @@ jobs:
       - name: Restore Nuget packages
         # With .NET 8.0.100, Microsoft.NET.ILLink.Tasks isn't restored by default and only seems to appears when publishing.
         # So we just publish to grab the dependencies
-        run: dotnet publish -c Release -r linux-x64 Ryujinx/${{ env.RYUJINX_PROJECT_FILE }} --self-contained
+        run: |
+          dotnet publish -c Release -r linux-x64 Ryujinx/${{ env.RYUJINX_PROJECT_FILE }} --self-contained
+          dotnet publish -c Release -r linux-arm64 Ryujinx/${{ env.RYUJINX_PROJECT_FILE }} --self-contained
 
       - name: Generate nuget_sources.json
         shell: python
