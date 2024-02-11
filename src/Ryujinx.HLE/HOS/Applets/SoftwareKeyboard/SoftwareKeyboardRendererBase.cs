@@ -1,4 +1,4 @@
-using Ryujinx.HLE.Ui;
+using Ryujinx.HLE.UI;
 using Ryujinx.Memory;
 using SixLabors.Fonts;
 using SixLabors.ImageSharp;
@@ -63,7 +63,7 @@ namespace Ryujinx.HLE.HOS.Applets.SoftwareKeyboard
         private Point _logoPosition;
         private float _messagePositionY;
 
-        public SoftwareKeyboardRendererBase(IHostUiTheme uiTheme)
+        public SoftwareKeyboardRendererBase(IHostUITheme uiTheme)
         {
             int ryujinxLogoSize = 32;
 
@@ -205,7 +205,7 @@ namespace Ryujinx.HLE.HOS.Applets.SoftwareKeyboard
             });
         }
 
-        public void DrawMutableElements(SoftwareKeyboardUiState state)
+        public void DrawMutableElements(SoftwareKeyboardUIState state)
         {
             if (_surface == null)
             {
@@ -322,7 +322,7 @@ namespace Ryujinx.HLE.HOS.Applets.SoftwareKeyboard
             return new RectangleF(rectangle.X, rectangle.Y, rectangle.Width, rectangle.Height);
         }
 
-        private void DrawTextBox(IImageProcessingContext context, SoftwareKeyboardUiState state)
+        private void DrawTextBox(IImageProcessingContext context, SoftwareKeyboardUIState state)
         {
             var inputTextRectangle = MeasureString(state.InputText, _inputTextFont);
 

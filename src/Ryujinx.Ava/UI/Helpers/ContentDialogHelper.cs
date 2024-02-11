@@ -383,7 +383,7 @@ namespace Ryujinx.Ava.UI.Helpers
                 {
                     result = ContentDialogResult.None;
 
-                    Logger.Warning?.Print(LogClass.Ui, "Content dialog overlay failed to populate. Default value has been returned.");
+                    Logger.Warning?.Print(LogClass.UI, "Content dialog overlay failed to populate. Default value has been returned.");
                 }
 
                 return result;

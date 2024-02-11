@@ -45,7 +45,7 @@
     <ProjectReference Include="..\Ryujinx.Graphics.OpenGL\Ryujinx.Graphics.OpenGL.csproj" />
     <ProjectReference Include="..\Ryujinx.Graphics.Vulkan\Ryujinx.Graphics.Vulkan.csproj" />
     <ProjectReference Include="..\Ryujinx.Graphics.Gpu\Ryujinx.Graphics.Gpu.csproj" />
-    <ProjectReference Include="..\Ryujinx.Ui.Common\Ryujinx.Ui.Common.csproj" />
+    <ProjectReference Include="..\Ryujinx.UI.Common\Ryujinx.UI.Common.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -80,24 +80,24 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Ui\MainWindow.glade" />
-    <None Remove="Ui\Widgets\ProfileDialog.glade" />
-    <None Remove="Ui\Windows\CheatWindow.glade" />
-    <None Remove="Ui\Windows\ControllerWindow.glade" />
-    <None Remove="Ui\Windows\DlcWindow.glade" />
-    <None Remove="Ui\Windows\SettingsWindow.glade" />
-    <None Remove="Ui\Windows\TitleUpdateWindow.glade" />
+    <None Remove="UI\MainWindow.glade" />
+    <None Remove="UI\Widgets\ProfileDialog.glade" />
+    <None Remove="UI\Windows\CheatWindow.glade" />
+    <None Remove="UI\Windows\ControllerWindow.glade" />
+    <None Remove="UI\Windows\DlcWindow.glade" />
+    <None Remove="UI\Windows\SettingsWindow.glade" />
+    <None Remove="UI\Windows\TitleUpdateWindow.glade" />
     <None Remove="Modules\Updater\UpdateDialog.glade" />
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Ui\MainWindow.glade" />
-    <EmbeddedResource Include="Ui\Widgets\ProfileDialog.glade" />
-    <EmbeddedResource Include="Ui\Windows\CheatWindow.glade" />
-    <EmbeddedResource Include="Ui\Windows\ControllerWindow.glade" />
-    <EmbeddedResource Include="Ui\Windows\DlcWindow.glade" />
-    <EmbeddedResource Include="Ui\Windows\SettingsWindow.glade" />
-    <EmbeddedResource Include="Ui\Windows\TitleUpdateWindow.glade" />
+    <EmbeddedResource Include="UI\MainWindow.glade" />
+    <EmbeddedResource Include="UI\Widgets\ProfileDialog.glade" />
+    <EmbeddedResource Include="UI\Windows\CheatWindow.glade" />
+    <EmbeddedResource Include="UI\Windows\ControllerWindow.glade" />
+    <EmbeddedResource Include="UI\Windows\DlcWindow.glade" />
+    <EmbeddedResource Include="UI\Windows\SettingsWindow.glade" />
+    <EmbeddedResource Include="UI\Windows\TitleUpdateWindow.glade" />
     <EmbeddedResource Include="Modules\Updater\UpdateDialog.glade" />
   </ItemGroup>
 

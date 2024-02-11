@@ -19,7 +19,7 @@ using Ryujinx.Common.Configuration.Hid.Keyboard;
 using Ryujinx.Common.Logging;
 using Ryujinx.Common.Utilities;
 using Ryujinx.Input;
-using Ryujinx.Ui.Common.Configuration;
+using Ryujinx.UI.Common.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -35,10 +35,10 @@ namespace Ryujinx.Ava.UI.ViewModels
     public class ControllerInputViewModel : BaseModel, IDisposable
     {
         private const string Disabled = "disabled";
-        private const string ProControllerResource = "Ryujinx.Ui.Common/Resources/Controller_ProCon.svg";
-        private const string JoyConPairResource = "Ryujinx.Ui.Common/Resources/Controller_JoyConPair.svg";
-        private const string JoyConLeftResource = "Ryujinx.Ui.Common/Resources/Controller_JoyConLeft.svg";
-        private const string JoyConRightResource = "Ryujinx.Ui.Common/Resources/Controller_JoyConRight.svg";
+        private const string ProControllerResource = "Ryujinx.UI.Common/Resources/Controller_ProCon.svg";
+        private const string JoyConPairResource = "Ryujinx.UI.Common/Resources/Controller_JoyConPair.svg";
+        private const string JoyConLeftResource = "Ryujinx.UI.Common/Resources/Controller_JoyConLeft.svg";
+        private const string JoyConRightResource = "Ryujinx.UI.Common/Resources/Controller_JoyConRight.svg";
         private const string KeyboardString = "keyboard";
         private const string ControllerString = "controller";
         private readonly MainWindow _mainWindow;

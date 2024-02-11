@@ -1,7 +1,7 @@
 using Avalonia.Data.Converters;
 using Avalonia.Markup.Xaml;
 using Ryujinx.Ava.Common.Locale;
-using Ryujinx.Ui.Common.Helper;
+using Ryujinx.UI.Common.Helper;
 using System;
 using System.Globalization;
 

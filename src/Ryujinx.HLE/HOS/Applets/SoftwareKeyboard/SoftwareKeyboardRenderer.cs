@@ -1,4 +1,4 @@
-using Ryujinx.HLE.Ui;
+using Ryujinx.HLE.UI;
 using Ryujinx.Memory;
 using System;
 using System.Threading;
@@ -15,13 +15,13 @@ namespace Ryujinx.HLE.HOS.Applets.SoftwareKeyboard
 
         private readonly object _stateLock = new();
 
-        private readonly SoftwareKeyboardUiState _state = new();
+        private readonly SoftwareKeyboardUIState _state = new();
         private readonly SoftwareKeyboardRendererBase _renderer;
 
         private readonly TimedAction _textBoxBlinkTimedAction = new();
         private readonly TimedAction _renderAction = new();
 
-        public SoftwareKeyboardRenderer(IHostUiTheme uiTheme)
+        public SoftwareKeyboardRenderer(IHostUITheme uiTheme)
         {
             _renderer = new SoftwareKeyboardRendererBase(uiTheme);
 
@@ -29,7 +29,7 @@ namespace Ryujinx.HLE.HOS.Applets.SoftwareKeyboard
             StartRenderer(_renderAction, _renderer, _state, _stateLock);
         }
 
-        private static void StartTextBoxBlinker(TimedAction timedAction, SoftwareKeyboardUiState state, object stateLock)
+        private static void StartTextBoxBlinker(TimedAction timedAction, SoftwareKeyboardUIState state, object stateLock)
         {
             timedAction.Reset(() =>
             {
@@ -45,9 +45,9 @@ namespace Ryujinx.HLE.HOS.Applets.SoftwareKeyboard
             }, TextBoxBlinkSleepMilliseconds);
         }
 
-        private static void StartRenderer(TimedAction timedAction, SoftwareKeyboardRendererBase renderer, SoftwareKeyboardUiState state, object stateLock)
+        private static void StartRenderer(TimedAction timedAction, SoftwareKeyboardRendererBase renderer, SoftwareKeyboardUIState state, object stateLock)
         {
-            SoftwareKeyboardUiState internalState = new();
+            SoftwareKeyboardUIState internalState = new();
 
             bool canCreateSurface = false;
             bool needsUpdate = true;

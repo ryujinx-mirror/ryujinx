@@ -39,12 +39,12 @@ namespace Ryujinx.Ava.UI.Helpers
 
         public void Log(AvaLogLevel level, string area, object source, string messageTemplate)
         {
-            GetLog(level)?.PrintMsg(RyuLogClass.Ui, Format(level, area, messageTemplate, source, null));
+            GetLog(level)?.PrintMsg(RyuLogClass.UI, Format(level, area, messageTemplate, source, null));
         }
 
         public void Log(AvaLogLevel level, string area, object source, string messageTemplate, params object[] propertyValues)
         {
-            GetLog(level)?.PrintMsg(RyuLogClass.Ui, Format(level, area, messageTemplate, source, propertyValues));
+            GetLog(level)?.PrintMsg(RyuLogClass.UI, Format(level, area, messageTemplate, source, propertyValues));
         }
 
         private static string Format(AvaLogLevel level, string area, string template, object source, object[] v)

@@ -34,7 +34,7 @@
             Height="80"
             MinWidth="50"
             Margin="5,10,20,10"
-            Source="resm:Ryujinx.Ui.Common.Resources.Logo_Ryujinx.png?assembly=Ryujinx.Ui.Common" />
+            Source="resm:Ryujinx.UI.Common.Resources.Logo_Ryujinx.png?assembly=Ryujinx.UI.Common" />
         <TextBlock
             Grid.Row="1"
             Grid.Column="1"

@@ -45,7 +45,7 @@
                     <TextBlock VerticalAlignment="Center" Text="{locale:Locale SettingsTabHotkeysShowUiHotkey}" Width="230" />
                     <ToggleButton Width="90" Height="27" Checked="Button_Checked" Unchecked="Button_Unchecked">
                         <TextBlock
-                            Text="{Binding KeyboardHotkeys.ShowUi, Mode=TwoWay, Converter={StaticResource Key}}"
+                            Text="{Binding KeyboardHotkeys.ShowUI, Mode=TwoWay, Converter={StaticResource Key}}"
                             TextAlignment="Center" />
                     </ToggleButton>
                 </StackPanel>

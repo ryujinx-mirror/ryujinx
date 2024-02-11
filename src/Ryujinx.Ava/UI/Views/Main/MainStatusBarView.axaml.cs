@@ -5,7 +5,7 @@ using Avalonia.Interactivity;
 using Ryujinx.Ava.UI.Windows;
 using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Logging;
-using Ryujinx.Ui.Common.Configuration;
+using Ryujinx.UI.Common.Configuration;
 using System;
 
 namespace Ryujinx.Ava.UI.Views.Main

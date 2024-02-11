@@ -1,7 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Ryujinx.Common.Configuration;
-using Ryujinx.Ui.Common.Configuration;
+using Ryujinx.UI.Common.Configuration;
 using System;
 
 namespace Ryujinx.Ava.UI.Renderer

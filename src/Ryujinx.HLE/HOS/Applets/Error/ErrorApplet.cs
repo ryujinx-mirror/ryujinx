@@ -166,13 +166,13 @@ namespace Ryujinx.HLE.HOS.Applets.Error
 
             string[] buttons = GetButtonsText(module, description, "DlgBtn");
 
-            bool showDetails = _horizon.Device.UiHandler.DisplayErrorAppletDialog($"Error Code: {module}-{description:0000}", "\n" + message, buttons);
+            bool showDetails = _horizon.Device.UIHandler.DisplayErrorAppletDialog($"Error Code: {module}-{description:0000}", "\n" + message, buttons);
             if (showDetails)
             {
                 message = GetMessageText(module, description, "FlvMsg");
                 buttons = GetButtonsText(module, description, "FlvBtn");
 
-                _horizon.Device.UiHandler.DisplayErrorAppletDialog($"Details: {module}-{description:0000}", "\n" + message, buttons);
+                _horizon.Device.UIHandler.DisplayErrorAppletDialog($"Details: {module}-{description:0000}", "\n" + message, buttons);
             }
         }
 
@@ -200,12 +200,12 @@ namespace Ryujinx.HLE.HOS.Applets.Error
 
             buttons.Add("OK");
 
-            bool showDetails = _horizon.Device.UiHandler.DisplayErrorAppletDialog($"Error Number: {applicationErrorArg.ErrorNumber}", "\n" + messageText, buttons.ToArray());
+            bool showDetails = _horizon.Device.UIHandler.DisplayErrorAppletDialog($"Error Number: {applicationErrorArg.ErrorNumber}", "\n" + messageText, buttons.ToArray());
             if (showDetails)
             {
                 buttons.RemoveAt(0);
 
-                _horizon.Device.UiHandler.DisplayErrorAppletDialog($"Error Number: {applicationErrorArg.ErrorNumber} (Details)", "\n" + detailsText, buttons.ToArray());
+                _horizon.Device.UIHandler.DisplayErrorAppletDialog($"Error Number: {applicationErrorArg.ErrorNumber} (Details)", "\n" + detailsText, buttons.ToArray());
             }
         }
 

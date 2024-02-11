@@ -97,7 +97,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
 
             if (titleId == 0)
             {
-                context.Device.UiHandler.ExecuteProgram(context.Device, ProgramSpecifyKind.RestartProgram, titleId);
+                context.Device.UIHandler.ExecuteProgram(context.Device, ProgramSpecifyKind.RestartProgram, titleId);
             }
             else
             {
@@ -524,7 +524,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
 
             Logger.Stub?.PrintStub(LogClass.ServiceAm, new { kind, value });
 
-            context.Device.UiHandler.ExecuteProgram(context.Device, kind, value);
+            context.Device.UIHandler.ExecuteProgram(context.Device, kind, value);
 
             return ResultCode.Success;
         }

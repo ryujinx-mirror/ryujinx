@@ -36,7 +36,7 @@ namespace Ryujinx.Ava.UI.Applet
 
         private readonly MainWindow _mainWindow;
 
-        public ControllerAppletDialog(MainWindow mainWindow, ControllerAppletUiArgs args)
+        public ControllerAppletDialog(MainWindow mainWindow, ControllerAppletUIArgs args)
         {
             if (args.PlayerCountMin == args.PlayerCountMax)
             {
@@ -69,7 +69,7 @@ namespace Ryujinx.Ava.UI.Applet
             InitializeComponent();
         }
 
-        public static async Task<UserResult> ShowControllerAppletDialog(MainWindow window, ControllerAppletUiArgs args)
+        public static async Task<UserResult> ShowControllerAppletDialog(MainWindow window, ControllerAppletUIArgs args)
         {
             ContentDialog contentDialog = new();
             UserResult result = UserResult.Cancel;

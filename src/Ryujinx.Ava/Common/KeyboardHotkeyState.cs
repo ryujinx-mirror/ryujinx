@@ -5,7 +5,7 @@ namespace Ryujinx.Ava.Common
         None,
         ToggleVSync,
         Screenshot,
-        ShowUi,
+        ShowUI,
         Pause,
         ToggleMute,
         ResScaleUp,

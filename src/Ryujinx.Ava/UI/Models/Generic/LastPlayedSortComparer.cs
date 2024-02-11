@@ -1,4 +1,4 @@
-using Ryujinx.Ui.App.Common;
+using Ryujinx.UI.App.Common;
 using System;
 using System.Collections.Generic;
 

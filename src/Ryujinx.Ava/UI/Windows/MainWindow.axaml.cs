@@ -18,10 +18,10 @@ using Ryujinx.HLE.HOS.Services.Account.Acc;
 using Ryujinx.Input.HLE;
 using Ryujinx.Input.SDL2;
 using Ryujinx.Modules;
-using Ryujinx.Ui.App.Common;
-using Ryujinx.Ui.Common;
-using Ryujinx.Ui.Common.Configuration;
-using Ryujinx.Ui.Common.Helper;
+using Ryujinx.UI.App.Common;
+using Ryujinx.UI.Common;
+using Ryujinx.UI.Common.Configuration;
+using Ryujinx.UI.Common.Helper;
 using System;
 using System.IO;
 using System.Runtime.Versioning;
@@ -40,7 +40,7 @@ namespace Ryujinx.Ava.UI.Windows
         private static bool _deferLoad;
         private static string _launchPath;
         private static bool _startFullscreen;
-        internal readonly AvaHostUiHandler UiHandler;
+        internal readonly AvaHostUIHandler UiHandler;
 
         public VirtualFileSystem VirtualFileSystem { get; private set; }
         public ContentManager ContentManager { get; private set; }
@@ -69,7 +69,7 @@ namespace Ryujinx.Ava.UI.Windows
             InitializeComponent();
             Load();
 
-            UiHandler = new AvaHostUiHandler(this);
+            UiHandler = new AvaHostUIHandler(this);
 
             ViewModel.Title = $"Ryujinx {Program.Version}";
 
@@ -319,13 +319,13 @@ namespace Ryujinx.Ava.UI.Windows
 
         private void SetWindowSizePosition()
         {
-            PixelPoint savedPoint = new(ConfigurationState.Instance.Ui.WindowStartup.WindowPositionX,
-                                        ConfigurationState.Instance.Ui.WindowStartup.WindowPositionY);
+            PixelPoint savedPoint = new(ConfigurationState.Instance.UI.WindowStartup.WindowPositionX,
+                                        ConfigurationState.Instance.UI.WindowStartup.WindowPositionY);
 
-            ViewModel.WindowHeight = ConfigurationState.Instance.Ui.WindowStartup.WindowSizeHeight * Program.WindowScaleFactor;
-            ViewModel.WindowWidth = ConfigurationState.Instance.Ui.WindowStartup.WindowSizeWidth * Program.WindowScaleFactor;
+            ViewModel.WindowHeight = ConfigurationState.Instance.UI.WindowStartup.WindowSizeHeight * Program.WindowScaleFactor;
+            ViewModel.WindowWidth = ConfigurationState.Instance.UI.WindowStartup.WindowSizeWidth * Program.WindowScaleFactor;
 
-            ViewModel.WindowState = ConfigurationState.Instance.Ui.WindowStartup.WindowMaximized.Value ? WindowState.Maximized : WindowState.Normal;
+            ViewModel.WindowState = ConfigurationState.Instance.UI.WindowStartup.WindowMaximized.Value ? WindowState.Maximized : WindowState.Normal;
 
             if (CheckScreenBounds(savedPoint))
             {
@@ -353,13 +353,13 @@ namespace Ryujinx.Ava.UI.Windows
 
         private void SaveWindowSizePosition()
         {
-            ConfigurationState.Instance.Ui.WindowStartup.WindowSizeHeight.Value = (int)Height;
-            ConfigurationState.Instance.Ui.WindowStartup.WindowSizeWidth.Value = (int)Width;
+            ConfigurationState.Instance.UI.WindowStartup.WindowSizeHeight.Value = (int)Height;
+            ConfigurationState.Instance.UI.WindowStartup.WindowSizeWidth.Value = (int)Width;
 
-            ConfigurationState.Instance.Ui.WindowStartup.WindowPositionX.Value = Position.X;
-            ConfigurationState.Instance.Ui.WindowStartup.WindowPositionY.Value = Position.Y;
+            ConfigurationState.Instance.UI.WindowStartup.WindowPositionX.Value = Position.X;
+            ConfigurationState.Instance.UI.WindowStartup.WindowPositionY.Value = Position.Y;
 
-            ConfigurationState.Instance.Ui.WindowStartup.WindowMaximized.Value = WindowState == WindowState.Maximized;
+            ConfigurationState.Instance.UI.WindowStartup.WindowMaximized.Value = WindowState == WindowState.Maximized;
 
             MainWindowViewModel.SaveConfig();
         }
@@ -512,12 +512,12 @@ namespace Ryujinx.Ava.UI.Windows
             _ = fileType switch
             {
 #pragma warning disable IDE0055 // Disable formatting
-                "NSP"  => ConfigurationState.Instance.Ui.ShownFileTypes.NSP.Value  = !ConfigurationState.Instance.Ui.ShownFileTypes.NSP,
-                "PFS0" => ConfigurationState.Instance.Ui.ShownFileTypes.PFS0.Value = !ConfigurationState.Instance.Ui.ShownFileTypes.PFS0,
-                "XCI"  => ConfigurationState.Instance.Ui.ShownFileTypes.XCI.Value  = !ConfigurationState.Instance.Ui.ShownFileTypes.XCI,
-                "NCA"  => ConfigurationState.Instance.Ui.ShownFileTypes.NCA.Value  = !ConfigurationState.Instance.Ui.ShownFileTypes.NCA,
-                "NRO"  => ConfigurationState.Instance.Ui.ShownFileTypes.NRO.Value  = !ConfigurationState.Instance.Ui.ShownFileTypes.NRO,
-                "NSO"  => ConfigurationState.Instance.Ui.ShownFileTypes.NSO.Value  = !ConfigurationState.Instance.Ui.ShownFileTypes.NSO,
+                "NSP"  => ConfigurationState.Instance.UI.ShownFileTypes.NSP.Value  = !ConfigurationState.Instance.UI.ShownFileTypes.NSP,
+                "PFS0" => ConfigurationState.Instance.UI.ShownFileTypes.PFS0.Value = !ConfigurationState.Instance.UI.ShownFileTypes.PFS0,
+                "XCI"  => ConfigurationState.Instance.UI.ShownFileTypes.XCI.Value  = !ConfigurationState.Instance.UI.ShownFileTypes.XCI,
+                "NCA"  => ConfigurationState.Instance.UI.ShownFileTypes.NCA.Value  = !ConfigurationState.Instance.UI.ShownFileTypes.NCA,
+                "NRO"  => ConfigurationState.Instance.UI.ShownFileTypes.NRO.Value  = !ConfigurationState.Instance.UI.ShownFileTypes.NRO,
+                "NSO"  => ConfigurationState.Instance.UI.ShownFileTypes.NSO.Value  = !ConfigurationState.Instance.UI.ShownFileTypes.NSO,
                 _  => throw new ArgumentOutOfRangeException(fileType),
 #pragma warning restore IDE0055
             };
@@ -537,7 +537,7 @@ namespace Ryujinx.Ava.UI.Windows
 
             Thread applicationLibraryThread = new(() =>
             {
-                ApplicationLibrary.LoadApplications(ConfigurationState.Instance.Ui.GameDirs, ConfigurationState.Instance.System.Language);
+                ApplicationLibrary.LoadApplications(ConfigurationState.Instance.UI.GameDirs, ConfigurationState.Instance.System.Language);
 
                 _isLoading = false;
             })

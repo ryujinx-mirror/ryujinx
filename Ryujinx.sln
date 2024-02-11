@@ -71,7 +71,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ryujinx.Graphics.Nvdec.FFmp
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ryujinx.Ava", "src\Ryujinx.Ava\Ryujinx.Ava.csproj", "{7C1B2721-13DA-4B62-B046-C626605ECCE6}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ryujinx.Ui.Common", "src\Ryujinx.Ui.Common\Ryujinx.Ui.Common.csproj", "{BA161CA0-CD65-4E6E-B644-51C8D1E542DC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ryujinx.UI.Common", "src\Ryujinx.UI.Common\Ryujinx.UI.Common.csproj", "{BA161CA0-CD65-4E6E-B644-51C8D1E542DC}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ryujinx.Horizon.Generators", "src\Ryujinx.Horizon.Generators\Ryujinx.Horizon.Generators.csproj", "{6AE2A5E8-4C5A-48B9-997B-E1455C0355C6}"
 EndProject
@@ -79,7 +79,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ryujinx.Graphics.Vulkan", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Spv.Generator", "src\Spv.Generator\Spv.Generator.csproj", "{2BCB3D7A-38C0-4FE7-8FDA-374C6AD56D0E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ryujinx.Ui.LocaleGenerator", "src\Ryujinx.Ui.LocaleGenerator\Ryujinx.Ui.LocaleGenerator.csproj", "{77D01AD9-2C98-478E-AE1D-8F7100738FB4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ryujinx.UI.LocaleGenerator", "src\Ryujinx.UI.LocaleGenerator\Ryujinx.UI.LocaleGenerator.csproj", "{77D01AD9-2C98-478E-AE1D-8F7100738FB4}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ryujinx.Horizon.Common", "src\Ryujinx.Horizon.Common\Ryujinx.Horizon.Common.csproj", "{77F96ECE-4952-42DB-A528-DED25572A573}"
 EndProject

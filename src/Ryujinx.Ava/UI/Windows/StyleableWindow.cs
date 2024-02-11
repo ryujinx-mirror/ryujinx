@@ -4,7 +4,7 @@ using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Ryujinx.Ava.Common.Locale;
-using Ryujinx.Ui.Common.Configuration;
+using Ryujinx.UI.Common.Configuration;
 using System.IO;
 using System.Reflection;
 
@@ -19,7 +19,7 @@ namespace Ryujinx.Ava.UI.Windows
             WindowStartupLocation = WindowStartupLocation.CenterOwner;
             TransparencyLevelHint = new[] { WindowTransparencyLevel.None };
 
-            using Stream stream = Assembly.GetAssembly(typeof(ConfigurationState)).GetManifestResourceStream("Ryujinx.Ui.Common.Resources.Logo_Ryujinx.png");
+            using Stream stream = Assembly.GetAssembly(typeof(ConfigurationState)).GetManifestResourceStream("Ryujinx.UI.Common.Resources.Logo_Ryujinx.png");
 
             Icon = new WindowIcon(stream);
             stream.Position = 0;

@@ -3,7 +3,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Ryujinx.Ava.UI.Helpers;
 using Ryujinx.Ava.UI.ViewModels;
-using Ryujinx.Ui.App.Common;
+using Ryujinx.UI.App.Common;
 using System;
 
 namespace Ryujinx.Ava.UI.Controls
