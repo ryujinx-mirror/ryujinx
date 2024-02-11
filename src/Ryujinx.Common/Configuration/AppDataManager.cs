@@ -2,6 +2,7 @@ using Ryujinx.Common.Logging;
 using Ryujinx.Common.Utilities;
 using System;
 using System.IO;
+using System.Runtime.Versioning;
 
 namespace Ryujinx.Common.Configuration
 {
@@ -95,18 +96,9 @@ namespace Ryujinx.Common.Configuration
 
             BaseDirPath = Path.GetFullPath(BaseDirPath); // convert relative paths
 
-            // NOTE: Moves the Ryujinx folder in `~/.config` to `~/Library/Application Support` if one is found
-            // and a Ryujinx folder does not already exist in Application Support.
-            // Also creates a symlink from `~/.config/Ryujinx` to `~/Library/Application Support/Ryujinx` to preserve backwards compatibility.
-            // This should be removed in the future.
-            if (OperatingSystem.IsMacOS() && Mode == LaunchMode.UserProfile)
+            if (IsPathSymlink(BaseDirPath))
             {
-                string oldConfigPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), DefaultBaseDir);
-                if (Path.Exists(oldConfigPath) && !IsPathSymlink(oldConfigPath) && !Path.Exists(BaseDirPath))
-                {
-                    FileSystemUtils.MoveDirectory(oldConfigPath, BaseDirPath);
-                    Directory.CreateSymbolicLink(oldConfigPath, BaseDirPath);
-                }
+                Logger.Warning?.Print(LogClass.Application, $"Application data directory is a symlink. This may be unintended.");
             }
 
             SetupBasePaths();
@@ -243,6 +235,82 @@ namespace Ryujinx.Common.Configuration
         {
             FileAttributes attributes = File.GetAttributes(path);
             return (attributes & FileAttributes.ReparsePoint) == FileAttributes.ReparsePoint;
+        }
+
+        [SupportedOSPlatform("macos")]
+        public static void FixMacOSConfigurationFolders()
+        {
+            string oldConfigPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                ".config", DefaultBaseDir);
+            if (Path.Exists(oldConfigPath) && !IsPathSymlink(oldConfigPath) && !Path.Exists(BaseDirPath))
+            {
+                FileSystemUtils.MoveDirectory(oldConfigPath, BaseDirPath);
+                Directory.CreateSymbolicLink(oldConfigPath, BaseDirPath);
+            }
+
+            string correctApplicationDataDirectoryPath =
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), DefaultBaseDir);
+            if (IsPathSymlink(correctApplicationDataDirectoryPath))
+            {
+                //copy the files somewhere temporarily
+                string tempPath = Path.Combine(Path.GetTempPath(), DefaultBaseDir);
+                try
+                {
+                    FileSystemUtils.CopyDirectory(correctApplicationDataDirectoryPath, tempPath, true);
+                }
+                catch (Exception exception)
+                {
+                    Logger.Error?.Print(LogClass.Application,
+                        $"Critical error copying Ryujinx application data into the temp folder. {exception}");
+                    try
+                    {
+                        FileSystemInfo resolvedDirectoryInfo =
+                            Directory.ResolveLinkTarget(correctApplicationDataDirectoryPath, true);
+                        string resolvedPath = resolvedDirectoryInfo.FullName;
+                        Logger.Error?.Print(LogClass.Application, $"Please manually move your Ryujinx data from {resolvedPath} to {correctApplicationDataDirectoryPath}, and remove the symlink.");
+                    }
+                    catch (Exception symlinkException)
+                    {
+                        Logger.Error?.Print(LogClass.Application, $"Unable to resolve the symlink for Ryujinx application data: {symlinkException}. Follow the symlink at {correctApplicationDataDirectoryPath} and move your data back to the Application Support folder.");
+                    }
+                    return;
+                }
+
+                //delete the symlink
+                try
+                {
+                    //This will fail if this is an actual directory, so there is no way we can actually delete user data here.
+                    File.Delete(correctApplicationDataDirectoryPath);
+                }
+                catch (Exception exception)
+                {
+                    Logger.Error?.Print(LogClass.Application,
+                        $"Critical error deleting the Ryujinx application data folder symlink at {correctApplicationDataDirectoryPath}. {exception}");
+                    try
+                    {
+                        FileSystemInfo resolvedDirectoryInfo =
+                            Directory.ResolveLinkTarget(correctApplicationDataDirectoryPath, true);
+                        string resolvedPath = resolvedDirectoryInfo.FullName;
+                        Logger.Error?.Print(LogClass.Application, $"Please manually move your Ryujinx data from {resolvedPath} to {correctApplicationDataDirectoryPath}, and remove the symlink.");
+                    }
+                    catch (Exception symlinkException)
+                    {
+                        Logger.Error?.Print(LogClass.Application, $"Unable to resolve the symlink for Ryujinx application data: {symlinkException}. Follow the symlink at {correctApplicationDataDirectoryPath} and move your data back to the Application Support folder.");
+                    }
+                    return;
+                }
+
+                //put the files back
+                try
+                {
+                    FileSystemUtils.CopyDirectory(tempPath, correctApplicationDataDirectoryPath, true);
+                }
+                catch (Exception exception)
+                {
+                    Logger.Error?.Print(LogClass.Application,
+                        $"Critical error copying Ryujinx application data into the correct location. {exception}. Please manually move your application data from {tempPath} to {correctApplicationDataDirectoryPath}.");
+                }
+            }
         }
 
         public static string GetModsPath() => CustomModsPath ?? Directory.CreateDirectory(Path.Combine(BaseDirPath, DefaultModsDir)).FullName;
