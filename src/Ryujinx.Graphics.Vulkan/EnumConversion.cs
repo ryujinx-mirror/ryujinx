@@ -376,7 +376,7 @@ namespace Ryujinx.Graphics.Vulkan
         {
             return format switch
             {
-                Format.D16Unorm or Format.D32Float => ImageAspectFlags.DepthBit,
+                Format.D16Unorm or Format.D32Float or Format.X8UintD24Unorm => ImageAspectFlags.DepthBit,
                 Format.S8Uint => ImageAspectFlags.StencilBit,
                 Format.D24UnormS8Uint or
                 Format.D32FloatS8Uint or
@@ -389,7 +389,7 @@ namespace Ryujinx.Graphics.Vulkan
         {
             return format switch
             {
-                Format.D16Unorm or Format.D32Float => ImageAspectFlags.DepthBit,
+                Format.D16Unorm or Format.D32Float or Format.X8UintD24Unorm => ImageAspectFlags.DepthBit,
                 Format.S8Uint => ImageAspectFlags.StencilBit,
                 Format.D24UnormS8Uint or
                 Format.D32FloatS8Uint or

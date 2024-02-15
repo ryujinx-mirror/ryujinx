@@ -242,7 +242,8 @@ namespace Ryujinx.Graphics.Gpu.Image
                     return TextureMatchQuality.FormatAlias;
                 }
                 else if ((lhs.FormatInfo.Format == Format.D24UnormS8Uint ||
-                          lhs.FormatInfo.Format == Format.S8UintD24Unorm) && rhs.FormatInfo.Format == Format.B8G8R8A8Unorm)
+                          lhs.FormatInfo.Format == Format.S8UintD24Unorm ||
+                          lhs.FormatInfo.Format == Format.X8UintD24Unorm) && rhs.FormatInfo.Format == Format.B8G8R8A8Unorm)
                 {
                     return TextureMatchQuality.FormatAlias;
                 }

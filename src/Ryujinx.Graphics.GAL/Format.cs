@@ -148,6 +148,7 @@ namespace Ryujinx.Graphics.GAL
         B8G8R8A8Unorm,
         B8G8R8A8Srgb,
         B10G10R10A2Unorm,
+        X8UintD24Unorm,
     }
 
     public static class FormatExtensions
@@ -269,6 +270,7 @@ namespace Ryujinx.Graphics.GAL
                 case Format.D16Unorm:
                     return 2;
                 case Format.S8UintD24Unorm:
+                case Format.X8UintD24Unorm:
                 case Format.D32Float:
                 case Format.D24UnormS8Uint:
                     return 4;
@@ -349,6 +351,7 @@ namespace Ryujinx.Graphics.GAL
                 case Format.D16Unorm:
                 case Format.D24UnormS8Uint:
                 case Format.S8UintD24Unorm:
+                case Format.X8UintD24Unorm:
                 case Format.D32Float:
                 case Format.D32FloatS8Uint:
                     return true;
@@ -633,6 +636,7 @@ namespace Ryujinx.Graphics.GAL
                 case Format.D16Unorm:
                 case Format.D24UnormS8Uint:
                 case Format.S8UintD24Unorm:
+                case Format.X8UintD24Unorm:
                 case Format.D32Float:
                 case Format.D32FloatS8Uint:
                 case Format.S8Uint:

@@ -154,9 +154,8 @@ namespace Ryujinx.Graphics.Vulkan
             {
                 Format.S8Uint => Format.R8Unorm,
                 Format.D16Unorm => Format.R16Unorm,
-                Format.S8UintD24Unorm => Format.R8G8B8A8Unorm,
+                Format.D24UnormS8Uint or Format.S8UintD24Unorm or Format.X8UintD24Unorm => Format.R8G8B8A8Unorm,
                 Format.D32Float => Format.R32Float,
-                Format.D24UnormS8Uint => Format.R8G8B8A8Unorm,
                 Format.D32FloatS8Uint => Format.R32G32Float,
                 _ => throw new ArgumentException($"\"{format}\" is not a supported depth or stencil format."),
             };

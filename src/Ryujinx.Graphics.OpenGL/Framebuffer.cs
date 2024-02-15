@@ -119,11 +119,11 @@ namespace Ryujinx.Graphics.OpenGL
 
         private static FramebufferAttachment GetAttachment(Format format)
         {
-            if (IsPackedDepthStencilFormat(format))
+            if (FormatTable.IsPackedDepthStencil(format))
             {
                 return FramebufferAttachment.DepthStencilAttachment;
             }
-            else if (IsDepthOnlyFormat(format))
+            else if (FormatTable.IsDepthOnly(format))
             {
                 return FramebufferAttachment.DepthAttachment;
             }
@@ -131,18 +131,6 @@ namespace Ryujinx.Graphics.OpenGL
             {
                 return FramebufferAttachment.StencilAttachment;
             }
-        }
-
-        private static bool IsPackedDepthStencilFormat(Format format)
-        {
-            return format == Format.D24UnormS8Uint ||
-                   format == Format.D32FloatS8Uint ||
-                   format == Format.S8UintD24Unorm;
-        }
-
-        private static bool IsDepthOnlyFormat(Format format)
-        {
-            return format == Format.D16Unorm || format == Format.D32Float;
         }
 
         public int GetColorLayerCount(int index)

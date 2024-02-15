@@ -220,7 +220,7 @@ namespace Ryujinx.Graphics.Vulkan
 
         public static bool IsD24S8(Format format)
         {
-            return format == Format.D24UnormS8Uint || format == Format.S8UintD24Unorm;
+            return format == Format.D24UnormS8Uint || format == Format.S8UintD24Unorm || format == Format.X8UintD24Unorm;
         }
 
         private static bool IsRGB16IntFloat(Format format)

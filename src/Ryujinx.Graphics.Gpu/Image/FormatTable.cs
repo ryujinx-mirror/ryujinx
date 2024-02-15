@@ -185,6 +185,7 @@ namespace Ryujinx.Graphics.Gpu.Image
             G24R8RUintGUnormBUnormAUnorm     = G24R8             | RUint  | GUnorm | BUnorm | AUnorm,        // 0x24a0e
             Z24S8RUintGUnormBUnormAUnorm     = Z24S8             | RUint  | GUnorm | BUnorm | AUnorm,        // 0x24a29
             Z24S8RUintGUnormBUintAUint       = Z24S8             | RUint  | GUnorm | BUint  | AUint,         // 0x48a29
+            X8Z24RUnormGUintBUintAUint       = X8Z24             | RUnorm | GUint  | BUint  | AUint,         // 0x4912a
             S8Z24RUnormGUintBUintAUint       = S8Z24             | RUnorm | GUint  | BUint  | AUint,         // 0x4912b
             R32B24G8RFloatGUintBUnormAUnorm  = R32B24G8          | RFloat | GUint  | BUnorm | AUnorm,        // 0x25385
             Zf32X24S8RFloatGUintBUnormAUnorm = Zf32X24S8         | RFloat | GUint  | BUnorm | AUnorm,        // 0x253b0
@@ -410,6 +411,7 @@ namespace Ryujinx.Graphics.Gpu.Image
             { TextureFormat.G24R8RUintGUnormBUnormAUnorm,     new FormatInfo(Format.D24UnormS8Uint,    1,  1,  4,  2) },
             { TextureFormat.Z24S8RUintGUnormBUnormAUnorm,     new FormatInfo(Format.D24UnormS8Uint,    1,  1,  4,  2) },
             { TextureFormat.Z24S8RUintGUnormBUintAUint,       new FormatInfo(Format.D24UnormS8Uint,    1,  1,  4,  2) },
+            { TextureFormat.X8Z24RUnormGUintBUintAUint,       new FormatInfo(Format.X8UintD24Unorm,    1,  1,  4,  2) },
             { TextureFormat.S8Z24RUnormGUintBUintAUint,       new FormatInfo(Format.S8UintD24Unorm,    1,  1,  4,  2) },
             { TextureFormat.R32B24G8RFloatGUintBUnormAUnorm,  new FormatInfo(Format.D32FloatS8Uint,    1,  1,  8,  2) },
             { TextureFormat.Zf32X24S8RFloatGUintBUnormAUnorm, new FormatInfo(Format.D32FloatS8Uint,    1,  1,  8,  2) },
