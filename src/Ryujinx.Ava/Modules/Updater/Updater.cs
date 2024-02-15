@@ -68,7 +68,8 @@ namespace Ryujinx.Modules
             }
             else if (OperatingSystem.IsLinux())
             {
-                _platformExt = "linux_x64.tar.gz";
+                var arch = RuntimeInformation.OSArchitecture == Architecture.Arm64 ? "arm64" : "x64";
+                _platformExt = $"linux_{arch}.tar.gz";
             }
 
             Version newVersion;
@@ -637,20 +638,6 @@ namespace Ryujinx.Modules
         public static bool CanUpdate(bool showWarnings)
         {
 #if !DISABLE_UPDATER
-            if (RuntimeInformation.OSArchitecture != Architecture.X64 && !OperatingSystem.IsMacOS())
-            {
-                if (showWarnings)
-                {
-                    Dispatcher.UIThread.InvokeAsync(() =>
-                        ContentDialogHelper.CreateWarningDialog(
-                            LocaleManager.Instance[LocaleKeys.DialogUpdaterArchNotSupportedMessage],
-                            LocaleManager.Instance[LocaleKeys.DialogUpdaterArchNotSupportedSubMessage])
-                    );
-                }
-
-                return false;
-            }
-
             if (!NetworkInterface.GetIsNetworkAvailable())
             {
                 if (showWarnings)

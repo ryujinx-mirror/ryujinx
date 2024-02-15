@@ -333,8 +333,6 @@
   "DialogUpdaterAddingFilesMessage": "Adding New Update...",
   "DialogUpdaterCompleteMessage": "Update Complete!",
   "DialogUpdaterRestartMessage": "Do you want to restart Ryujinx now?",
-  "DialogUpdaterArchNotSupportedMessage": "You are not running a supported system architecture!",
-  "DialogUpdaterArchNotSupportedSubMessage": "(Only x64 systems are supported!)",
   "DialogUpdaterNoInternetMessage": "You are not connected to the Internet!",
   "DialogUpdaterNoInternetSubMessage": "Please verify that you have a working Internet connection!",
   "DialogUpdaterDirtyBuildMessage": "You Cannot update a Dirty build of Ryujinx!",

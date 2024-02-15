@@ -78,7 +78,8 @@ namespace Ryujinx.Modules
             }
             else if (OperatingSystem.IsLinux())
             {
-                _platformExt = "linux_x64.tar.gz";
+                var arch = RuntimeInformation.OSArchitecture == Architecture.Arm64 ? "arm64" : "x64";
+                _platformExt = $"linux_{arch}.tar.gz";
                 artifactIndex = 0;
             }
 
@@ -512,16 +513,6 @@ namespace Ryujinx.Modules
         public static bool CanUpdate(bool showWarnings)
         {
 #if !DISABLE_UPDATER
-            if (RuntimeInformation.OSArchitecture != Architecture.X64)
-            {
-                if (showWarnings)
-                {
-                    GtkDialog.CreateWarningDialog("You are not running a supported system architecture!", "(Only x64 systems are supported!)");
-                }
-
-                return false;
-            }
-
             if (!NetworkInterface.GetIsNetworkAvailable())
             {
                 if (showWarnings)
