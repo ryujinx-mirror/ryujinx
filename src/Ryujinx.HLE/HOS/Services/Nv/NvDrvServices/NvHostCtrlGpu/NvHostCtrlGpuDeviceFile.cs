@@ -50,6 +50,12 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostCtrlGpu
                     case 0x06:
                         result = CallIoctlMethod<GetTpcMasksArguments>(GetTpcMasks, arguments);
                         break;
+                    case 0x12:
+                        result = CallIoctlMethod<NumVsmsArguments>(NumVsms, arguments);
+                        break;
+                    case 0x13:
+                        result = CallIoctlMethod<VsmsMappingArguments>(VsmsMapping, arguments);
+                        break;
                     case 0x14:
                         result = CallIoctlMethod<GetActiveSlotMaskArguments>(GetActiveSlotMask, arguments);
                         break;
@@ -75,6 +81,12 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostCtrlGpu
                         break;
                     case 0x06:
                         result = CallIoctlMethod<GetTpcMasksArguments, int>(GetTpcMasks, arguments, inlineOutBuffer);
+                        break;
+                    case 0x12:
+                        result = CallIoctlMethod<NumVsmsArguments>(NumVsms, arguments);
+                        break;
+                    case 0x13:
+                        result = CallIoctlMethod<VsmsMappingArguments>(VsmsMapping, arguments);
                         break;
                 }
             }
@@ -212,6 +224,27 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostCtrlGpu
                 tpcMask = 3;
                 arguments.TpcMask = tpcMask;
             }
+
+            return NvInternalResult.Success;
+        }
+
+        private NvInternalResult NumVsms(ref NumVsmsArguments arguments)
+        {
+            Logger.Stub?.PrintStub(LogClass.ServiceNv);
+
+            arguments.NumVsms = 2;
+
+            return NvInternalResult.Success;
+        }
+
+        private NvInternalResult VsmsMapping(ref VsmsMappingArguments arguments)
+        {
+            Logger.Stub?.PrintStub(LogClass.ServiceNv);
+
+            arguments.Sm0GpcIndex = 0;
+            arguments.Sm0TpcIndex = 0;
+            arguments.Sm1GpcIndex = 0;
+            arguments.Sm1TpcIndex = 1;
 
             return NvInternalResult.Success;
         }
