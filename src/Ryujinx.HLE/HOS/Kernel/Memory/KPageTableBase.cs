@@ -673,9 +673,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                     MemoryState.UnmapProcessCodeMemoryAllowed,
                     KMemoryPermission.None,
                     KMemoryPermission.None,
-                    MemoryAttribute.Mask,
+                    MemoryAttribute.Mask & ~MemoryAttribute.PermissionLocked,
                     MemoryAttribute.None,
-                    MemoryAttribute.IpcAndDeviceMapped | MemoryAttribute.PermissionLocked,
+                    MemoryAttribute.IpcAndDeviceMapped,
                     out MemoryState state,
                     out _,
                     out _);
