@@ -976,7 +976,7 @@ namespace Ryujinx.Graphics.Vulkan
 
             _program = internalProgram;
 
-            _descriptorSetUpdater.SetProgram(internalProgram);
+            _descriptorSetUpdater.SetProgram(Cbs, internalProgram, _currentPipelineHandle != 0);
 
             _newState.PipelineLayout = internalProgram.PipelineLayout;
             _newState.StagesCount = (uint)stages.Length;

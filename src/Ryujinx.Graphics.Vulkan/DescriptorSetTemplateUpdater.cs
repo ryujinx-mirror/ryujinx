@@ -52,9 +52,21 @@ namespace Ryujinx.Graphics.Vulkan
             return new DescriptorSetTemplateWriter(new Span<byte>(_data.Pointer, template.Size));
         }
 
+        public DescriptorSetTemplateWriter Begin(int maxSize)
+        {
+            EnsureSize(maxSize);
+
+            return new DescriptorSetTemplateWriter(new Span<byte>(_data.Pointer, maxSize));
+        }
+
         public void Commit(VulkanRenderer gd, Device device, DescriptorSet set)
         {
             gd.Api.UpdateDescriptorSetWithTemplate(device, set, _activeTemplate.Template, _data.Pointer);
+        }
+
+        public void CommitPushDescriptor(VulkanRenderer gd, CommandBufferScoped cbs, DescriptorSetTemplate template, PipelineLayout layout)
+        {
+            gd.PushDescriptorApi.CmdPushDescriptorSetWithTemplate(cbs.CommandBuffer, template.Template, layout, 0, _data.Pointer);
         }
 
         public void Dispose()

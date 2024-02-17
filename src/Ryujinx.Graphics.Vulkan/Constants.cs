@@ -16,6 +16,7 @@ namespace Ryujinx.Graphics.Vulkan
         public const int MaxStorageBufferBindings = MaxStorageBuffersPerStage * MaxShaderStages;
         public const int MaxTextureBindings = MaxTexturesPerStage * MaxShaderStages;
         public const int MaxImageBindings = MaxImagesPerStage * MaxShaderStages;
+        public const int MaxPushDescriptorBinding = 64;
 
         public const ulong SparseBufferAlignment = 0x10000;
     }

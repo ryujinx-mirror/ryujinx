@@ -4,6 +4,7 @@ using Ryujinx.Graphics.Shader;
 using Silk.NET.Vulkan;
 using System;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using CompareOp = Ryujinx.Graphics.GAL.CompareOp;
 using Format = Ryujinx.Graphics.GAL.Format;
 using SamplerCreateInfo = Ryujinx.Graphics.GAL.SamplerCreateInfo;
@@ -61,6 +62,8 @@ namespace Ryujinx.Graphics.Vulkan
         private BitMapStruct<Array2<long>> _storageSet;
         private BitMapStruct<Array2<long>> _uniformMirrored;
         private BitMapStruct<Array2<long>> _storageMirrored;
+        private readonly int[] _uniformSetPd;
+        private int _pdSequence = 1;
 
         private bool _updateDescriptorCacheCbIndex;
 
@@ -105,6 +108,8 @@ namespace Ryujinx.Graphics.Vulkan
             _images = new DescriptorImageInfo[Constants.MaxImagesPerStage];
             _bufferTextures = new BufferView[Constants.MaxTexturesPerStage];
             _bufferImages = new BufferView[Constants.MaxImagesPerStage];
+
+            _uniformSetPd = new int[Constants.MaxUniformBufferBindings];
 
             var initialImageInfo = new DescriptorImageInfo
             {
@@ -193,6 +198,7 @@ namespace Ryujinx.Graphics.Vulkan
                         if (BindingOverlaps(ref info, bindingOffset, offset, size))
                         {
                             _uniformSet.Clear(binding);
+                            _uniformSetPd[binding] = 0;
                             SignalDirty(DirtyFlags.Uniform);
                         }
                     }
@@ -223,8 +229,30 @@ namespace Ryujinx.Graphics.Vulkan
             });
         }
 
-        public void SetProgram(ShaderCollection program)
+        public void AdvancePdSequence()
         {
+            if (++_pdSequence == 0)
+            {
+                _pdSequence = 1;
+            }
+        }
+
+        public void SetProgram(CommandBufferScoped cbs, ShaderCollection program, bool isBound)
+        {
+            if (!program.HasSameLayout(_program))
+            {
+                // When the pipeline layout changes, push descriptor bindings are invalidated.
+
+                AdvancePdSequence();
+
+                if (_gd.IsNvidiaPreTuring && !program.UsePushDescriptors && _program?.UsePushDescriptors == true && isBound)
+                {
+                    // On older nvidia GPUs, we need to clear out the active push descriptor bindings when switching
+                    // to normal descriptors. Keeping them bound can prevent buffers from binding properly in future.
+                    ClearAndBindUniformBufferPd(cbs);
+                }
+            }
+
             _program = program;
             _updateDescriptorCacheCbIndex = true;
             _dirty = DirtyFlags.All;
@@ -402,6 +430,7 @@ namespace Ryujinx.Graphics.Vulkan
                 if (!currentBufferRef.Equals(newRef) || currentInfo.Range != info.Range)
                 {
                     _uniformSet.Clear(index);
+                    _uniformSetPd[index] = 0;
 
                     currentInfo = info;
                     currentBufferRef = newRef;
@@ -671,15 +700,19 @@ namespace Ryujinx.Graphics.Vulkan
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void UpdateAndBindUniformBufferPd(CommandBufferScoped cbs, PipelineBindPoint pbp)
         {
+            int sequence = _pdSequence;
             var bindingSegments = _program.BindingSegments[PipelineBase.UniformSetIndex];
             var dummyBuffer = _dummyBuffer?.GetBuffer();
+
+            long updatedBindings = 0;
+            DescriptorSetTemplateWriter writer = _templateUpdater.Begin(32 * Unsafe.SizeOf<DescriptorBufferInfo>());
 
             foreach (ResourceBindingSegment segment in bindingSegments)
             {
                 int binding = segment.Binding;
                 int count = segment.Count;
 
-                bool doUpdate = false;
+                ReadOnlySpan<DescriptorBufferInfo> uniformBuffers = _uniformBuffers;
 
                 for (int i = 0; i < count; i++)
                 {
@@ -688,16 +721,57 @@ namespace Ryujinx.Graphics.Vulkan
                     if (_uniformSet.Set(index))
                     {
                         ref BufferRef buffer = ref _uniformBufferRefs[index];
-                        UpdateBuffer(cbs, ref _uniformBuffers[index], ref buffer, dummyBuffer, true);
-                        doUpdate = true;
+
+                        bool mirrored = UpdateBuffer(cbs, ref _uniformBuffers[index], ref buffer, dummyBuffer, true);
+
+                        _uniformMirrored.Set(index, mirrored);
+                    }
+
+                    if (_uniformSetPd[index] != sequence)
+                    {
+                        // Need to set this push descriptor (even if the buffer binding has not changed)
+
+                        _uniformSetPd[index] = sequence;
+                        updatedBindings |= 1L << index;
+
+                        writer.Push(MemoryMarshal.CreateReadOnlySpan(ref _uniformBuffers[index], 1));
                     }
                 }
+            }
 
-                if (doUpdate)
+            if (updatedBindings > 0)
+            {
+                DescriptorSetTemplate template = _program.GetPushDescriptorTemplate(updatedBindings);
+                _templateUpdater.CommitPushDescriptor(_gd, cbs, template, _program.PipelineLayout);
+            }
+        }
+
+        private void ClearAndBindUniformBufferPd(CommandBufferScoped cbs)
+        {
+            var bindingSegments = _program.BindingSegments[PipelineBase.UniformSetIndex];
+
+            long updatedBindings = 0;
+            DescriptorSetTemplateWriter writer = _templateUpdater.Begin(32 * Unsafe.SizeOf<DescriptorBufferInfo>());
+
+            foreach (ResourceBindingSegment segment in bindingSegments)
+            {
+                int binding = segment.Binding;
+                int count = segment.Count;
+
+                for (int i = 0; i < count; i++)
                 {
-                    ReadOnlySpan<DescriptorBufferInfo> uniformBuffers = _uniformBuffers;
-                    UpdateBuffers(cbs, pbp, binding, uniformBuffers.Slice(binding, count), DescriptorType.UniformBuffer);
+                    int index = binding + i;
+                    updatedBindings |= 1L << index;
+
+                    var bufferInfo = new DescriptorBufferInfo();
+                    writer.Push(MemoryMarshal.CreateReadOnlySpan(ref bufferInfo, 1));
                 }
+            }
+
+            if (updatedBindings > 0)
+            {
+                DescriptorSetTemplate template = _program.GetPushDescriptorTemplate(updatedBindings);
+                _templateUpdater.CommitPushDescriptor(_gd, cbs, template, _program.PipelineLayout);
             }
         }
 
@@ -724,6 +798,7 @@ namespace Ryujinx.Graphics.Vulkan
 
             _uniformSet.Clear();
             _storageSet.Clear();
+            AdvancePdSequence();
         }
 
         private static void SwapBuffer(BufferRef[] list, Auto<DisposableBuffer> from, Auto<DisposableBuffer> to)

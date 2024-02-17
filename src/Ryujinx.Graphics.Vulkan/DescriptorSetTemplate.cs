@@ -1,19 +1,32 @@
 using Ryujinx.Graphics.GAL;
 using Silk.NET.Vulkan;
 using System;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 
 namespace Ryujinx.Graphics.Vulkan
 {
     class DescriptorSetTemplate : IDisposable
     {
+        /// <summary>
+        /// Renderdoc seems to crash when doing a templated uniform update with count > 1 on a push descriptor.
+        /// When this is true, consecutive buffers are always updated individually.
+        /// </summary>
+        private const bool RenderdocPushCountBug = true;
+
         private readonly VulkanRenderer _gd;
         private readonly Device _device;
 
         public readonly DescriptorUpdateTemplate Template;
         public readonly int Size;
 
-        public unsafe DescriptorSetTemplate(VulkanRenderer gd, Device device, ResourceBindingSegment[] segments, PipelineLayoutCacheEntry plce, PipelineBindPoint pbp, int setIndex)
+        public unsafe DescriptorSetTemplate(
+            VulkanRenderer gd,
+            Device device,
+            ResourceBindingSegment[] segments,
+            PipelineLayoutCacheEntry plce,
+            PipelineBindPoint pbp,
+            int setIndex)
         {
             _gd = gd;
             _device = device;
@@ -125,6 +138,93 @@ namespace Ryujinx.Graphics.Vulkan
                 PDescriptorUpdateEntries = entries,
 
                 TemplateType = DescriptorUpdateTemplateType.DescriptorSet,
+                DescriptorSetLayout = plce.DescriptorSetLayouts[setIndex],
+                PipelineBindPoint = pbp,
+                PipelineLayout = plce.PipelineLayout,
+                Set = (uint)setIndex,
+            };
+
+            DescriptorUpdateTemplate result;
+            gd.Api.CreateDescriptorUpdateTemplate(device, &info, null, &result).ThrowOnError();
+
+            Template = result;
+        }
+
+        public unsafe DescriptorSetTemplate(
+            VulkanRenderer gd,
+            Device device,
+            ResourceDescriptorCollection descriptors,
+            long updateMask,
+            PipelineLayoutCacheEntry plce,
+            PipelineBindPoint pbp,
+            int setIndex)
+        {
+            _gd = gd;
+            _device = device;
+
+            // Create a template from the set usages. Assumes the descriptor set is updated in segment order then binding order.
+            int segmentCount = BitOperations.PopCount((ulong)updateMask);
+
+            DescriptorUpdateTemplateEntry* entries = stackalloc DescriptorUpdateTemplateEntry[segmentCount];
+            int entry = 0;
+            nuint structureOffset = 0;
+
+            void AddBinding(int binding, int count)
+            {
+                entries[entry++] = new DescriptorUpdateTemplateEntry()
+                {
+                    DescriptorType = DescriptorType.UniformBuffer,
+                    DstBinding = (uint)binding,
+                    DescriptorCount = (uint)count,
+                    Offset = structureOffset,
+                    Stride = (nuint)Unsafe.SizeOf<DescriptorBufferInfo>()
+                };
+
+                structureOffset += (nuint)(Unsafe.SizeOf<DescriptorBufferInfo>() * count);
+            }
+
+            int startBinding = 0;
+            int bindingCount = 0;
+
+            foreach (ResourceDescriptor descriptor in descriptors.Descriptors)
+            {
+                for (int i = 0; i < descriptor.Count; i++)
+                {
+                    int binding = descriptor.Binding + i;
+
+                    if ((updateMask & (1L << binding)) != 0)
+                    {
+                        if (bindingCount > 0 && (RenderdocPushCountBug || startBinding + bindingCount != binding))
+                        {
+                            AddBinding(startBinding, bindingCount);
+
+                            bindingCount = 0;
+                        }
+
+                        if (bindingCount == 0)
+                        {
+                            startBinding = binding;
+                        }
+
+                        bindingCount++;
+                    }
+                }
+            }
+
+            if (bindingCount > 0)
+            {
+                AddBinding(startBinding, bindingCount);
+            }
+
+            Size = (int)structureOffset;
+
+            var info = new DescriptorUpdateTemplateCreateInfo()
+            {
+                SType = StructureType.DescriptorUpdateTemplateCreateInfo,
+                DescriptorUpdateEntryCount = (uint)entry,
+                PDescriptorUpdateEntries = entries,
+
+                TemplateType = DescriptorUpdateTemplateType.PushDescriptorsKhr,
                 DescriptorSetLayout = plce.DescriptorSetLayouts[setIndex],
                 PipelineBindPoint = pbp,
                 PipelineLayout = plce.PipelineLayout,

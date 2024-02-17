@@ -31,6 +31,11 @@ namespace Ryujinx.Graphics.Vulkan
         private int _dsLastCbIndex;
         private int _dsLastSubmissionCount;
 
+        private readonly Dictionary<long, DescriptorSetTemplate> _pdTemplates;
+        private readonly ResourceDescriptorCollection _pdDescriptors;
+        private long _lastPdUsage;
+        private DescriptorSetTemplate _lastPdTemplate;
+
         private PipelineLayoutCacheEntry(VulkanRenderer gd, Device device, int setsCount)
         {
             _gd = gd;
@@ -71,6 +76,12 @@ namespace Ryujinx.Graphics.Vulkan
                 }
 
                 _consumedDescriptorsPerSet[setIndex] = count;
+            }
+
+            if (usePushDescriptors)
+            {
+                _pdDescriptors = setDescriptors[0];
+                _pdTemplates = new();
             }
         }
 
@@ -143,10 +154,39 @@ namespace Ryujinx.Graphics.Vulkan
             return output[..count];
         }
 
+        public DescriptorSetTemplate GetPushDescriptorTemplate(PipelineBindPoint pbp, long updateMask)
+        {
+            if (_lastPdUsage == updateMask && _lastPdTemplate != null)
+            {
+                // Most likely result is that it asks to update the same buffers.
+                return _lastPdTemplate;
+            }
+
+            if (!_pdTemplates.TryGetValue(updateMask, out DescriptorSetTemplate template))
+            {
+                template = new DescriptorSetTemplate(_gd, _device, _pdDescriptors, updateMask, this, pbp, 0);
+
+                _pdTemplates.Add(updateMask, template);
+            }
+
+            _lastPdUsage = updateMask;
+            _lastPdTemplate = template;
+
+            return template;
+        }
+
         protected virtual unsafe void Dispose(bool disposing)
         {
             if (disposing)
             {
+                if (_pdTemplates != null)
+                {
+                    foreach (DescriptorSetTemplate template in _pdTemplates.Values)
+                    {
+                        template.Dispose();
+                    }
+                }
+
                 for (int i = 0; i < _dsCache.Length; i++)
                 {
                     for (int j = 0; j < _dsCache[i].Length; j++)

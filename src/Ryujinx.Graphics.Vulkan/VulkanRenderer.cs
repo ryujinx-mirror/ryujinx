@@ -76,10 +76,15 @@ namespace Ryujinx.Graphics.Vulkan
         private readonly Func<string[]> _getRequiredExtensions;
         private readonly string _preferredGpuId;
 
+        private int[] _pdReservedBindings;
+        private readonly static int[] _pdReservedBindingsNvn = { 3, 18, 21, 36, 30 };
+        private readonly static int[] _pdReservedBindingsOgl = { 17, 18, 34, 35, 36 };
+
         internal Vendor Vendor { get; private set; }
         internal bool IsAmdWindows { get; private set; }
         internal bool IsIntelWindows { get; private set; }
         internal bool IsAmdGcn { get; private set; }
+        internal bool IsNvidiaPreTuring { get; private set; }
         internal bool IsMoltenVk { get; private set; }
         internal bool IsTBDR { get; private set; }
         internal bool IsSharedMemory { get; private set; }
@@ -190,6 +195,19 @@ namespace Ryujinx.Graphics.Vulkan
             {
                 SType = StructureType.PhysicalDevicePortabilitySubsetPropertiesKhr,
             };
+
+            bool supportsPushDescriptors = _physicalDevice.IsDeviceExtensionPresent(KhrPushDescriptor.ExtensionName);
+
+            PhysicalDevicePushDescriptorPropertiesKHR propertiesPushDescriptor = new PhysicalDevicePushDescriptorPropertiesKHR()
+            {
+                SType = StructureType.PhysicalDevicePushDescriptorPropertiesKhr
+            };
+
+            if (supportsPushDescriptors)
+            {
+                propertiesPushDescriptor.PNext = properties2.PNext;
+                properties2.PNext = &propertiesPushDescriptor;
+            }
 
             PhysicalDeviceFeatures2 features2 = new()
             {
@@ -320,7 +338,8 @@ namespace Ryujinx.Graphics.Vulkan
                 _physicalDevice.IsDeviceExtensionPresent(ExtExtendedDynamicState.ExtensionName),
                 features2.Features.MultiViewport && !(IsMoltenVk && Vendor == Vendor.Amd), // Workaround for AMD on MoltenVK issue
                 featuresRobustness2.NullDescriptor || IsMoltenVk,
-                _physicalDevice.IsDeviceExtensionPresent(KhrPushDescriptor.ExtensionName),
+                supportsPushDescriptors && !IsMoltenVk,
+                propertiesPushDescriptor.MaxPushDescriptors,
                 featuresPrimitiveTopologyListRestart.PrimitiveTopologyListRestart,
                 featuresPrimitiveTopologyListRestart.PrimitiveTopologyPatchListRestart,
                 supportsTransformFeedback,
@@ -398,6 +417,25 @@ namespace Ryujinx.Graphics.Vulkan
             _window = new Window(this, _surface, _physicalDevice.PhysicalDevice, _device);
 
             _initialized = true;
+        }
+
+        internal int[] GetPushDescriptorReservedBindings(bool isOgl)
+        {
+            // The first call of this method determines what push descriptor layout is used for all shaders on this renderer.
+            // This is chosen to minimize shaders that can't fit their uniforms on the device's max number of push descriptors.
+            if (_pdReservedBindings == null)
+            {
+                if (Capabilities.MaxPushDescriptors <= Constants.MaxUniformBuffersPerStage * 2)
+                {
+                    _pdReservedBindings = isOgl ? _pdReservedBindingsOgl : _pdReservedBindingsNvn;
+                }
+                else
+                {
+                    _pdReservedBindings = Array.Empty<int>();
+                }
+            }
+
+            return _pdReservedBindings;
         }
 
         public BufferHandle CreateBuffer(int size, BufferAccess access)
@@ -715,6 +753,20 @@ namespace Ryujinx.Graphics.Vulkan
             GpuVersion = $"Vulkan v{ParseStandardVulkanVersion(properties.ApiVersion)}, Driver v{ParseDriverVersion(ref properties)}";
 
             IsAmdGcn = !IsMoltenVk && Vendor == Vendor.Amd && VendorUtils.AmdGcnRegex().IsMatch(GpuRenderer);
+
+            if (Vendor == Vendor.Nvidia)
+            {
+                var match = VendorUtils.NvidiaConsumerClassRegex().Match(GpuRenderer);
+
+                if (match != null && int.TryParse(match.Groups[2].Value, out int gpuNumber))
+                {
+                    IsNvidiaPreTuring = gpuNumber < 2000;
+                }
+                else if (GpuDriver.Contains("TITAN") && !GpuDriver.Contains("RTX"))
+                {
+                    IsNvidiaPreTuring = true;
+                }
+            }
 
             Logger.Notice.Print(LogClass.Gpu, $"{GpuVendor} {GpuRenderer} ({GpuVersion})");
         }
