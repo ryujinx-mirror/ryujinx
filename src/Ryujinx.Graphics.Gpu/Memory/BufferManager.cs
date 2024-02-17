@@ -484,7 +484,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
                     if (binding.IsImage)
                     {
-                        _context.Renderer.Pipeline.SetImage(binding.BindingInfo.Binding, binding.Texture, binding.Format);
+                        _context.Renderer.Pipeline.SetImage(binding.Stage, binding.BindingInfo.Binding, binding.Texture, binding.Format);
                     }
                     else
                     {

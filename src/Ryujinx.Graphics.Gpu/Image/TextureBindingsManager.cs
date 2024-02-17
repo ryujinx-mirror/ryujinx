@@ -634,7 +634,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                         state.Texture = hostTextureRebind;
                         state.ImageFormat = format;
 
-                        _context.Renderer.Pipeline.SetImage(bindingInfo.Binding, hostTextureRebind, format);
+                        _context.Renderer.Pipeline.SetImage(stage, bindingInfo.Binding, hostTextureRebind, format);
                     }
 
                     continue;
@@ -692,7 +692,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                         state.ImageFormat = format;
 
-                        _context.Renderer.Pipeline.SetImage(bindingInfo.Binding, hostTexture, format);
+                        _context.Renderer.Pipeline.SetImage(stage, bindingInfo.Binding, hostTexture, format);
                     }
 
                     state.CachedTexture = texture;

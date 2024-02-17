@@ -1039,7 +1039,7 @@ namespace Ryujinx.Graphics.Vulkan
                     var dstView = Create2DLayerView(dst, dstLayer + z, dstLevel + l);
 
                     _pipeline.SetTextureAndSamplerIdentitySwizzle(ShaderStage.Compute, 0, srcView, null);
-                    _pipeline.SetImage(0, dstView, dstFormat);
+                    _pipeline.SetImage(ShaderStage.Compute, 0, dstView, dstFormat);
 
                     int dispatchX = (Math.Min(srcView.Info.Width, dstView.Info.Width) + 31) / 32;
                     int dispatchY = (Math.Min(srcView.Info.Height, dstView.Info.Height) + 31) / 32;
@@ -1168,7 +1168,7 @@ namespace Ryujinx.Graphics.Vulkan
                     var dstView = Create2DLayerView(dst, dstLayer + z, 0);
 
                     _pipeline.SetTextureAndSamplerIdentitySwizzle(ShaderStage.Compute, 0, srcView, null);
-                    _pipeline.SetImage(0, dstView, format);
+                    _pipeline.SetImage(ShaderStage.Compute, 0, dstView, format);
 
                     _pipeline.DispatchCompute(dispatchX, dispatchY, 1);
 

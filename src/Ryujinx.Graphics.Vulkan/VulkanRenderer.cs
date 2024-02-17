@@ -68,6 +68,8 @@ namespace Ryujinx.Graphics.Vulkan
         internal HelperShader HelperShader { get; private set; }
         internal PipelineFull PipelineInternal => _pipeline;
 
+        internal BarrierBatch Barriers { get; private set; }
+
         public IPipeline Pipeline => _pipeline;
 
         public IWindow Window => _window;
@@ -380,6 +382,8 @@ namespace Ryujinx.Graphics.Vulkan
             _pipeline.Initialize();
 
             HelperShader = new HelperShader(this, _device);
+
+            Barriers = new BarrierBatch(this);
 
             _counters = new Counters(this, _device, _pipeline);
         }
@@ -914,6 +918,7 @@ namespace Ryujinx.Graphics.Vulkan
             BufferManager.Dispose();
             DescriptorSetManager.Dispose();
             PipelineLayoutCache.Dispose();
+            Barriers.Dispose();
 
             MemoryAllocator.Dispose();
 

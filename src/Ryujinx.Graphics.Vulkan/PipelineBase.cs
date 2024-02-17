@@ -36,6 +36,7 @@ namespace Ryujinx.Graphics.Vulkan
         private PipelineState _newState;
         private bool _graphicsStateDirty;
         private bool _computeStateDirty;
+        private bool _bindingBarriersDirty;
         private PrimitiveTopology _topology;
 
         private ulong _currentPipelineHandle;
@@ -248,13 +249,13 @@ namespace Ryujinx.Graphics.Vulkan
                 CreateRenderPass();
             }
 
+            Gd.Barriers.Flush(Cbs.CommandBuffer, RenderPassActive, EndRenderPassDelegate);
+
             BeginRenderPass();
 
             var clearValue = new ClearValue(new ClearColorValue(color.Red, color.Green, color.Blue, color.Alpha));
             var attachment = new ClearAttachment(ImageAspectFlags.ColorBit, (uint)index, clearValue);
             var clearRect = FramebufferParams.GetClearRect(ClearScissor, layer, layerCount);
-
-            FramebufferParams.InsertClearBarrier(Cbs, index);
 
             Gd.Api.CmdClearAttachments(CommandBuffer, 1, &attachment, 1, &clearRect);
         }
@@ -286,12 +287,12 @@ namespace Ryujinx.Graphics.Vulkan
                 CreateRenderPass();
             }
 
+            Gd.Barriers.Flush(Cbs.CommandBuffer, RenderPassActive, EndRenderPassDelegate);
+
             BeginRenderPass();
 
             var attachment = new ClearAttachment(flags, 0, clearValue);
             var clearRect = FramebufferParams.GetClearRect(ClearScissor, layer, layerCount);
-
-            FramebufferParams.InsertClearBarrierDS(Cbs);
 
             Gd.Api.CmdClearAttachments(CommandBuffer, 1, &attachment, 1, &clearRect);
         }
@@ -887,9 +888,9 @@ namespace Ryujinx.Graphics.Vulkan
             SignalStateChange();
         }
 
-        public void SetImage(int binding, ITexture image, Format imageFormat)
+        public void SetImage(ShaderStage stage, int binding, ITexture image, Format imageFormat)
         {
-            _descriptorSetUpdater.SetImage(binding, image, imageFormat);
+            _descriptorSetUpdater.SetImage(Cbs, stage, binding, image, imageFormat);
         }
 
         public void SetImage(int binding, Auto<DisposableImageView> image)
@@ -977,6 +978,7 @@ namespace Ryujinx.Graphics.Vulkan
             _program = internalProgram;
 
             _descriptorSetUpdater.SetProgram(Cbs, internalProgram, _currentPipelineHandle != 0);
+            _bindingBarriersDirty = true;
 
             _newState.PipelineLayout = internalProgram.PipelineLayout;
             _newState.StagesCount = (uint)stages.Length;
@@ -1066,7 +1068,6 @@ namespace Ryujinx.Graphics.Vulkan
         private void SetRenderTargetsInternal(ITexture[] colors, ITexture depthStencil, bool filterWriteMasked)
         {
             CreateFramebuffer(colors, depthStencil, filterWriteMasked);
-            FramebufferParams?.UpdateModifications();
             CreateRenderPass();
             SignalStateChange();
             SignalAttachmentChange();
@@ -1520,7 +1521,17 @@ namespace Ryujinx.Graphics.Vulkan
                 CreatePipeline(PipelineBindPoint.Compute);
                 _computeStateDirty = false;
                 Pbp = PipelineBindPoint.Compute;
+
+                if (_bindingBarriersDirty)
+                {
+                    // Stale barriers may have been activated by switching program. Emit any that are relevant.
+                    _descriptorSetUpdater.InsertBindingBarriers(Cbs);
+
+                    _bindingBarriersDirty = false;
+                }
             }
+
+            Gd.Barriers.Flush(Cbs.CommandBuffer, RenderPassActive, EndRenderPassDelegate);
 
             _descriptorSetUpdater.UpdateAndBindDescriptorSets(Cbs, PipelineBindPoint.Compute);
         }
@@ -1575,7 +1586,17 @@ namespace Ryujinx.Graphics.Vulkan
 
                 _graphicsStateDirty = false;
                 Pbp = PipelineBindPoint.Graphics;
+
+                if (_bindingBarriersDirty)
+                {
+                    // Stale barriers may have been activated by switching program. Emit any that are relevant.
+                    _descriptorSetUpdater.InsertBindingBarriers(Cbs);
+
+                    _bindingBarriersDirty = false;
+                }
             }
+
+            Gd.Barriers.Flush(Cbs.CommandBuffer, RenderPassActive, EndRenderPassDelegate);
 
             _descriptorSetUpdater.UpdateAndBindDescriptorSets(Cbs, PipelineBindPoint.Graphics);
 
@@ -1630,6 +1651,8 @@ namespace Ryujinx.Graphics.Vulkan
         {
             if (!RenderPassActive)
             {
+                FramebufferParams.InsertLoadOpBarriers(Gd, Cbs);
+
                 var renderArea = new Rect2D(null, new Extent2D(FramebufferParams.Width, FramebufferParams.Height));
                 var clearValue = new ClearValue();
 

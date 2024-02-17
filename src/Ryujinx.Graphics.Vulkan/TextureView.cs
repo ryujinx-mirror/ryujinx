@@ -497,6 +497,30 @@ namespace Ryujinx.Graphics.Vulkan
                 null);
         }
 
+        public static ImageMemoryBarrier GetImageBarrier(
+            Image image,
+            AccessFlags srcAccessMask,
+            AccessFlags dstAccessMask,
+            ImageAspectFlags aspectFlags,
+            int firstLayer,
+            int firstLevel,
+            int layers,
+            int levels)
+        {
+            return new()
+            {
+                SType = StructureType.ImageMemoryBarrier,
+                SrcAccessMask = srcAccessMask,
+                DstAccessMask = dstAccessMask,
+                SrcQueueFamilyIndex = Vk.QueueFamilyIgnored,
+                DstQueueFamilyIndex = Vk.QueueFamilyIgnored,
+                Image = image,
+                OldLayout = ImageLayout.General,
+                NewLayout = ImageLayout.General,
+                SubresourceRange = new ImageSubresourceRange(aspectFlags, (uint)firstLevel, (uint)levels, (uint)firstLayer, (uint)layers),
+            };
+        }
+
         public static unsafe void InsertImageBarrier(
             Vk api,
             CommandBuffer commandBuffer,
@@ -511,18 +535,15 @@ namespace Ryujinx.Graphics.Vulkan
             int layers,
             int levels)
         {
-            ImageMemoryBarrier memoryBarrier = new()
-            {
-                SType = StructureType.ImageMemoryBarrier,
-                SrcAccessMask = srcAccessMask,
-                DstAccessMask = dstAccessMask,
-                SrcQueueFamilyIndex = Vk.QueueFamilyIgnored,
-                DstQueueFamilyIndex = Vk.QueueFamilyIgnored,
-                Image = image,
-                OldLayout = ImageLayout.General,
-                NewLayout = ImageLayout.General,
-                SubresourceRange = new ImageSubresourceRange(aspectFlags, (uint)firstLevel, (uint)levels, (uint)firstLayer, (uint)layers),
-            };
+            ImageMemoryBarrier memoryBarrier = GetImageBarrier(
+                image,
+                srcAccessMask,
+                dstAccessMask,
+                aspectFlags,
+                firstLayer,
+                firstLevel,
+                layers,
+                levels);
 
             api.CmdPipelineBarrier(
                 commandBuffer,

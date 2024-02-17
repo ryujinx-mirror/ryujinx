@@ -58,7 +58,7 @@ namespace Ryujinx.Graphics.GAL
 
         void SetIndexBuffer(BufferRange buffer, IndexType type);
 
-        void SetImage(int binding, ITexture texture, Format imageFormat);
+        void SetImage(ShaderStage stage, int binding, ITexture texture, Format imageFormat);
 
         void SetLineParameters(float width, bool smooth);
 

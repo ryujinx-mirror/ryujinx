@@ -243,41 +243,6 @@ namespace Ryujinx.Graphics.Vulkan
             return new Auto<DisposableFramebuffer>(new DisposableFramebuffer(api, _device, framebuffer), null, _attachments);
         }
 
-        public void UpdateModifications()
-        {
-            if (_colors != null)
-            {
-                for (int index = 0; index < _colors.Length; index++)
-                {
-                    _colors[index].Storage.SetModification(
-                        AccessFlags.ColorAttachmentWriteBit,
-                        PipelineStageFlags.ColorAttachmentOutputBit);
-                }
-            }
-
-            _depthStencil?.Storage.SetModification(
-                AccessFlags.DepthStencilAttachmentWriteBit,
-                PipelineStageFlags.LateFragmentTestsBit);
-        }
-
-        public void InsertClearBarrier(CommandBufferScoped cbs, int index)
-        {
-            _colorsCanonical?[index]?.Storage?.InsertReadToWriteBarrier(
-               cbs,
-               AccessFlags.ColorAttachmentWriteBit,
-               PipelineStageFlags.ColorAttachmentOutputBit,
-               insideRenderPass: true);
-        }
-
-        public void InsertClearBarrierDS(CommandBufferScoped cbs)
-        {
-            _depthStencil?.Storage?.InsertReadToWriteBarrier(
-                cbs,
-                AccessFlags.DepthStencilAttachmentWriteBit,
-                PipelineStageFlags.LateFragmentTestsBit,
-                insideRenderPass: true);
-        }
-
         public TextureView[] GetAttachmentViews()
         {
             var result = new TextureView[_attachments.Length];
@@ -297,23 +262,20 @@ namespace Ryujinx.Graphics.Vulkan
             return new RenderPassCacheKey(_depthStencil, _colorsCanonical);
         }
 
-        public void InsertLoadOpBarriers(CommandBufferScoped cbs)
+        public void InsertLoadOpBarriers(VulkanRenderer gd, CommandBufferScoped cbs)
         {
             if (_colors != null)
             {
                 foreach (var color in _colors)
                 {
                     // If Clear or DontCare were used, this would need to be write bit.
-                    color.Storage?.InsertWriteToReadBarrier(cbs, AccessFlags.ColorAttachmentReadBit, PipelineStageFlags.ColorAttachmentOutputBit);
-                    color.Storage?.SetModification(AccessFlags.ColorAttachmentWriteBit, PipelineStageFlags.ColorAttachmentOutputBit);
+                    color.Storage?.QueueLoadOpBarrier(cbs, false);
                 }
             }
 
-            if (_depthStencil != null)
-            {
-                _depthStencil.Storage?.InsertWriteToReadBarrier(cbs, AccessFlags.DepthStencilAttachmentReadBit, PipelineStageFlags.EarlyFragmentTestsBit);
-                _depthStencil.Storage?.SetModification(AccessFlags.DepthStencilAttachmentWriteBit, PipelineStageFlags.LateFragmentTestsBit);
-            }
+            _depthStencil?.Storage?.QueueLoadOpBarrier(cbs, true);
+
+            gd.Barriers.Flush(cbs.CommandBuffer, false, null);
         }
 
         public (Auto<DisposableRenderPass> renderPass, Auto<DisposableFramebuffer> framebuffer) GetPassAndFramebuffer(

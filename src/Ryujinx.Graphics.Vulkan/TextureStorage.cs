@@ -433,99 +433,65 @@ namespace Ryujinx.Graphics.Vulkan
             return FormatCapabilities.IsD24S8(Info.Format) && VkFormat == VkFormat.D32SfloatS8Uint;
         }
 
-        public void SetModification(AccessFlags accessFlags, PipelineStageFlags stage)
+        public void QueueLoadOpBarrier(CommandBufferScoped cbs, bool depthStencil)
         {
-            _lastModificationAccess = accessFlags;
-            _lastModificationStage = stage;
-        }
+            PipelineStageFlags srcStageFlags = _lastReadStage | _lastModificationStage;
+            PipelineStageFlags dstStageFlags = depthStencil ?
+                PipelineStageFlags.EarlyFragmentTestsBit | PipelineStageFlags.LateFragmentTestsBit :
+                PipelineStageFlags.ColorAttachmentOutputBit;
 
-        public void InsertReadToWriteBarrier(CommandBufferScoped cbs, AccessFlags dstAccessFlags, PipelineStageFlags dstStageFlags, bool insideRenderPass)
-        {
-            var lastReadStage = _lastReadStage;
+            AccessFlags srcAccessFlags = _lastModificationAccess | _lastReadAccess;
+            AccessFlags dstAccessFlags = depthStencil ?
+                AccessFlags.DepthStencilAttachmentWriteBit | AccessFlags.DepthStencilAttachmentReadBit :
+                AccessFlags.ColorAttachmentWriteBit | AccessFlags.ColorAttachmentReadBit;
 
-            if (insideRenderPass)
+            if (srcAccessFlags != AccessFlags.None)
             {
-                // We can't have barrier from compute inside a render pass,
-                // as it is invalid to specify compute in the subpass dependency stage mask.
+                ImageAspectFlags aspectFlags = Info.Format.ConvertAspectFlags();
+                ImageMemoryBarrier barrier = TextureView.GetImageBarrier(
+                    _imageAuto.Get(cbs).Value,
+                    srcAccessFlags,
+                    dstAccessFlags,
+                    aspectFlags,
+                    0,
+                    0,
+                    _info.GetLayers(),
+                    _info.Levels);
 
-                lastReadStage &= ~PipelineStageFlags.ComputeShaderBit;
-            }
+                _gd.Barriers.QueueBarrier(barrier, srcStageFlags, dstStageFlags);
 
-            if (lastReadStage != PipelineStageFlags.None)
-            {
-                // This would result in a validation error, but is
-                // required on MoltenVK as the generic barrier results in
-                // severe texture flickering in some scenarios.
-                if (_gd.IsMoltenVk)
-                {
-                    ImageAspectFlags aspectFlags = Info.Format.ConvertAspectFlags();
-                    TextureView.InsertImageBarrier(
-                        _gd.Api,
-                        cbs.CommandBuffer,
-                        _imageAuto.Get(cbs).Value,
-                        _lastReadAccess,
-                        dstAccessFlags,
-                        _lastReadStage,
-                        dstStageFlags,
-                        aspectFlags,
-                        0,
-                        0,
-                        _info.GetLayers(),
-                        _info.Levels);
-                }
-                else
-                {
-                    TextureView.InsertMemoryBarrier(
-                        _gd.Api,
-                        cbs.CommandBuffer,
-                        _lastReadAccess,
-                        dstAccessFlags,
-                        lastReadStage,
-                        dstStageFlags);
-                }
-
-                _lastReadAccess = AccessFlags.None;
                 _lastReadStage = PipelineStageFlags.None;
+                _lastReadAccess = AccessFlags.None;
             }
+
+            _lastModificationStage = depthStencil ?
+                PipelineStageFlags.LateFragmentTestsBit :
+                PipelineStageFlags.ColorAttachmentOutputBit;
+
+            _lastModificationAccess = depthStencil ?
+                AccessFlags.DepthStencilAttachmentWriteBit :
+                AccessFlags.ColorAttachmentWriteBit;
         }
 
-        public void InsertWriteToReadBarrier(CommandBufferScoped cbs, AccessFlags dstAccessFlags, PipelineStageFlags dstStageFlags)
+        public void QueueWriteToReadBarrier(CommandBufferScoped cbs, AccessFlags dstAccessFlags, PipelineStageFlags dstStageFlags)
         {
             _lastReadAccess |= dstAccessFlags;
             _lastReadStage |= dstStageFlags;
 
             if (_lastModificationAccess != AccessFlags.None)
             {
-                // This would result in a validation error, but is
-                // required on MoltenVK as the generic barrier results in
-                // severe texture flickering in some scenarios.
-                if (_gd.IsMoltenVk)
-                {
-                    ImageAspectFlags aspectFlags = Info.Format.ConvertAspectFlags();
-                    TextureView.InsertImageBarrier(
-                        _gd.Api,
-                        cbs.CommandBuffer,
-                        _imageAuto.Get(cbs).Value,
-                        _lastModificationAccess,
-                        dstAccessFlags,
-                        _lastModificationStage,
-                        dstStageFlags,
-                        aspectFlags,
-                        0,
-                        0,
-                        _info.GetLayers(),
-                        _info.Levels);
-                }
-                else
-                {
-                    TextureView.InsertMemoryBarrier(
-                        _gd.Api,
-                        cbs.CommandBuffer,
-                        _lastModificationAccess,
-                        dstAccessFlags,
-                        _lastModificationStage,
-                        dstStageFlags);
-                }
+                ImageAspectFlags aspectFlags = Info.Format.ConvertAspectFlags();
+                ImageMemoryBarrier barrier = TextureView.GetImageBarrier(
+                    _imageAuto.Get(cbs).Value,
+                    _lastModificationAccess,
+                    dstAccessFlags,
+                    aspectFlags,
+                    0,
+                    0,
+                    _info.GetLayers(),
+                    _info.Levels);
+
+                _gd.Barriers.QueueBarrier(barrier, _lastModificationStage, dstStageFlags);
 
                 _lastModificationAccess = AccessFlags.None;
             }

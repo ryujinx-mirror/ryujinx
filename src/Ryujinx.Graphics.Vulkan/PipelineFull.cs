@@ -269,6 +269,7 @@ namespace Ryujinx.Graphics.Vulkan
                 PreloadCbs = null;
             }
 
+            Gd.Barriers.Flush(Cbs.CommandBuffer, false, null);
             CommandBuffer = (Cbs = Gd.CommandBufferPool.ReturnAndRent(Cbs)).CommandBuffer;
             Gd.RegisterFlush();
 
