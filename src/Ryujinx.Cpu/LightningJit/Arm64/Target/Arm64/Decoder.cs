@@ -8,7 +8,7 @@ namespace Ryujinx.Cpu.LightningJit.Arm64.Target.Arm64
 {
     static class Decoder
     {
-        private const int MaxInstructionsPerBlock = 1000;
+        private const int MaxInstructionsPerFunction = 10000;
 
         private const uint NzcvFlags = 0xfu << 28;
         private const uint CFlag = 0x1u << 29;
@@ -22,10 +22,11 @@ namespace Ryujinx.Cpu.LightningJit.Arm64.Target.Arm64
 
             bool hasHostCall = false;
             bool hasMemoryInstruction = false;
+            int totalInsts = 0;
 
             while (true)
             {
-                Block block = Decode(cpuPreset, memoryManager, address, ref useMask, ref hasHostCall, ref hasMemoryInstruction);
+                Block block = Decode(cpuPreset, memoryManager, address, ref totalInsts, ref useMask, ref hasHostCall, ref hasMemoryInstruction);
 
                 if (!block.IsTruncated && TryGetBranchTarget(block, out ulong targetAddress))
                 {
@@ -230,6 +231,7 @@ namespace Ryujinx.Cpu.LightningJit.Arm64.Target.Arm64
             CpuPreset cpuPreset,
             IMemoryManager memoryManager,
             ulong address,
+            ref int totalInsts,
             ref RegisterMask useMask,
             ref bool hasHostCall,
             ref bool hasMemoryInstruction)
@@ -272,7 +274,7 @@ namespace Ryujinx.Cpu.LightningJit.Arm64.Target.Arm64
 
                 uint tempGprUseMask = gprUseMask | instGprReadMask | instGprWriteMask;
 
-                if (CalculateAvailableTemps(tempGprUseMask) < CalculateRequiredGprTemps(tempGprUseMask) || insts.Count >= MaxInstructionsPerBlock)
+                if (CalculateAvailableTemps(tempGprUseMask) < CalculateRequiredGprTemps(tempGprUseMask) || totalInsts++ >= MaxInstructionsPerFunction)
                 {
                     isTruncated = true;
                     address -= 4UL;
