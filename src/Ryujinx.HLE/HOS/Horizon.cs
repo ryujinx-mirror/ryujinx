@@ -250,7 +250,6 @@ namespace Ryujinx.HLE.HOS
             SurfaceFlinger = new SurfaceFlinger(device);
 
             InitializeAudioRenderer(TickSource);
-            InitializeServices();
         }
 
         private void InitializeAudioRenderer(ITickSource tickSource)
@@ -301,7 +300,7 @@ namespace Ryujinx.HLE.HOS
             AudioManager.Start();
         }
 
-        private void InitializeServices()
+        public void InitializeServices()
         {
             SmRegistry = new SmRegistry();
             SmServer = new ServerBase(KernelContext, "SmServer", () => new IUserInterface(KernelContext, SmRegistry));

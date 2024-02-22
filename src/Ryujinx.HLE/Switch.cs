@@ -55,6 +55,7 @@ namespace Ryujinx.HLE
             Processes         = new ProcessLoader(this);
             TamperMachine     = new TamperMachine();
 
+            System.InitializeServices();
             System.State.SetLanguage(Configuration.SystemLanguage);
             System.State.SetRegion(Configuration.Region);
 
