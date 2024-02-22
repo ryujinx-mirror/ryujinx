@@ -111,6 +111,7 @@ namespace Ryujinx.Graphics.Vulkan
             bool usePushDescriptors = !isMinimal &&
                 VulkanConfiguration.UsePushDescriptors &&
                 _gd.Capabilities.SupportsPushDescriptors &&
+                !_gd.IsNvidiaPreTuring &&
                 !IsCompute &&
                 CanUsePushDescriptors(gd, resourceLayout, IsCompute);
 
