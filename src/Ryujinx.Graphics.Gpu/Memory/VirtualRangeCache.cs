@@ -6,9 +6,9 @@ using System.Threading;
 namespace Ryujinx.Graphics.Gpu.Memory
 {
     /// <summary>
-    /// Virtual buffer cache.
+    /// Virtual range cache.
     /// </summary>
-    class VirtualBufferCache
+    class VirtualRangeCache
     {
         private readonly MemoryManager _memoryManager;
 
@@ -68,10 +68,10 @@ namespace Ryujinx.Graphics.Gpu.Memory
         private int _hasDeferredUnmaps;
 
         /// <summary>
-        /// Creates a new instance of the virtual buffer cache.
+        /// Creates a new instance of the virtual range cache.
         /// </summary>
-        /// <param name="memoryManager">Memory manager that the virtual buffer cache belongs to</param>
-        public VirtualBufferCache(MemoryManager memoryManager)
+        /// <param name="memoryManager">Memory manager that the virtual range cache belongs to</param>
+        public VirtualRangeCache(MemoryManager memoryManager)
         {
             _memoryManager = memoryManager;
             _virtualRanges = new RangeList<VirtualRange>();
@@ -102,10 +102,9 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// </summary>
         /// <param name="gpuVa">GPU virtual address to get the physical range from</param>
         /// <param name="size">Size in bytes of the region</param>
-        /// <param name="supportsSparse">Indicates host support for sparse buffer mapping of non-contiguous ranges</param>
         /// <param name="range">Physical range for the specified GPU virtual region</param>
         /// <returns>True if the range already existed, false if a new one was created and added</returns>
-        public bool TryGetOrAddRange(ulong gpuVa, ulong size, bool supportsSparse, out MultiRange range)
+        public bool TryGetOrAddRange(ulong gpuVa, ulong size, out MultiRange range)
         {
             VirtualRange[] overlaps = _virtualRangeOverlaps;
             int overlapsCount;
@@ -158,7 +157,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
                 }
                 else
                 {
-                    found = true;
+                    found = overlap0.Range.Count == 1 || IsSparseAligned(overlap0.Range);
                     range = overlap0.Range.Slice(gpuVa - overlap0.Address, size);
                 }
             }
@@ -175,11 +174,10 @@ namespace Ryujinx.Graphics.Gpu.Memory
             ShrinkOverlapsBufferIfNeeded();
 
             // If the the range is not properly aligned for sparse mapping,
-            // or if the host does not support sparse mapping, let's just
-            // force it to a single range.
+            // let's just force it to a single range.
             // This might cause issues in some applications that uses sparse
             // mappings.
-            if (!IsSparseAligned(range) || !supportsSparse)
+            if (!IsSparseAligned(range))
             {
                 range = new MultiRange(range.GetSubRange(0).Address, size);
             }

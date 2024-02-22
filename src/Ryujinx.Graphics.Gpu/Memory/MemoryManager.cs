@@ -40,9 +40,9 @@ namespace Ryujinx.Graphics.Gpu.Memory
         internal PhysicalMemory Physical { get; }
 
         /// <summary>
-        /// Virtual buffer cache.
+        /// Virtual range cache.
         /// </summary>
-        internal VirtualBufferCache VirtualBufferCache { get; }
+        internal VirtualRangeCache VirtualRangeCache { get; }
 
         /// <summary>
         /// Cache of GPU counters.
@@ -56,12 +56,12 @@ namespace Ryujinx.Graphics.Gpu.Memory
         internal MemoryManager(PhysicalMemory physicalMemory)
         {
             Physical = physicalMemory;
-            VirtualBufferCache = new VirtualBufferCache(this);
+            VirtualRangeCache = new VirtualRangeCache(this);
             CounterCache = new CounterCache();
             _pageTable = new ulong[PtLvl0Size][];
             MemoryUnmapped += Physical.TextureCache.MemoryUnmappedHandler;
             MemoryUnmapped += Physical.BufferCache.MemoryUnmappedHandler;
-            MemoryUnmapped += VirtualBufferCache.MemoryUnmappedHandler;
+            MemoryUnmapped += VirtualRangeCache.MemoryUnmappedHandler;
             MemoryUnmapped += CounterCache.MemoryUnmappedHandler;
         }
 
