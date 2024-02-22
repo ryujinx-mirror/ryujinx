@@ -144,6 +144,7 @@ namespace Ryujinx.Graphics.Vulkan
                                     i -= deleteCount;
 
                                     firstMatch = -1;
+                                    end = list.Count;
                                 }
                             }
                         }
