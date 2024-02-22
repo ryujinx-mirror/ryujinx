@@ -165,12 +165,10 @@ namespace Ryujinx.Audio.Output
         /// Get the list of all audio outputs name.
         /// </summary>
         /// <returns>The list of all audio outputs name</returns>
-#pragma warning disable CA1822 // Mark member as static
         public string[] ListAudioOuts()
         {
             return new[] { Constants.DefaultDeviceOutputName };
         }
-#pragma warning restore CA1822
 
         /// <summary>
         /// Open a new <see cref="AudioOutputSystem"/>.
@@ -182,9 +180,6 @@ namespace Ryujinx.Audio.Output
         /// <param name="inputDeviceName">The input device name wanted by the user</param>
         /// <param name="sampleFormat">The sample format to use</param>
         /// <param name="parameter">The user configuration</param>
-        /// <param name="appletResourceUserId">The applet resource user id of the application</param>
-        /// <param name="processHandle">The process handle of the application</param>
-        /// <param name="volume">The volume level to request</param>
         /// <returns>A <see cref="ResultCode"/> reporting an error or a success</returns>
         public ResultCode OpenAudioOut(out string outputDeviceName,
                                        out AudioOutputConfiguration outputConfiguration,
@@ -192,16 +187,13 @@ namespace Ryujinx.Audio.Output
                                        IVirtualMemoryManager memoryManager,
                                        string inputDeviceName,
                                        SampleFormat sampleFormat,
-                                       ref AudioInputConfiguration parameter,
-                                       ulong appletResourceUserId,
-                                       uint processHandle,
-                                       float volume)
+                                       ref AudioInputConfiguration parameter)
         {
             int sessionId = AcquireSessionId();
 
             _sessionsBufferEvents[sessionId].Clear();
 
-            IHardwareDeviceSession deviceSession = _deviceDriver.OpenDeviceSession(IHardwareDeviceDriver.Direction.Output, memoryManager, sampleFormat, parameter.SampleRate, parameter.ChannelCount, volume);
+            IHardwareDeviceSession deviceSession = _deviceDriver.OpenDeviceSession(IHardwareDeviceDriver.Direction.Output, memoryManager, sampleFormat, parameter.SampleRate, parameter.ChannelCount);
 
             AudioOutputSystem audioOut = new(this, _lock, deviceSession, _sessionsBufferEvents[sessionId]);
 
@@ -232,41 +224,6 @@ namespace Ryujinx.Audio.Output
             }
 
             return result;
-        }
-
-        /// <summary>
-        /// Sets the volume for all output devices.
-        /// </summary>
-        /// <param name="volume">The volume to set.</param>
-        public void SetVolume(float volume)
-        {
-            if (_sessions != null)
-            {
-                foreach (AudioOutputSystem session in _sessions)
-                {
-                    session?.SetVolume(volume);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Gets the volume for all output devices.
-        /// </summary>
-        /// <returns>A float indicating the volume level.</returns>
-        public float GetVolume()
-        {
-            if (_sessions != null)
-            {
-                foreach (AudioOutputSystem session in _sessions)
-                {
-                    if (session != null)
-                    {
-                        return session.GetVolume();
-                    }
-                }
-            }
-
-            return 0.0f;
         }
 
         public void Dispose()

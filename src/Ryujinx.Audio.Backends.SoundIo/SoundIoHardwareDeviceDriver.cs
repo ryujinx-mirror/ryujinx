@@ -19,6 +19,25 @@ namespace Ryujinx.Audio.Backends.SoundIo
         private readonly ConcurrentDictionary<SoundIoHardwareDeviceSession, byte> _sessions;
         private int _disposeState;
 
+        private float _volume = 1f;
+
+        public float Volume
+        {
+            get
+            {
+                return _volume;
+            }
+            set
+            {
+                _volume = value;
+
+                foreach (SoundIoHardwareDeviceSession session in _sessions.Keys)
+                {
+                    session.UpdateMasterVolume(value);
+                }
+            }
+        }
+
         public SoundIoHardwareDeviceDriver()
         {
             _audioContext = SoundIoContext.Create();
@@ -122,7 +141,7 @@ namespace Ryujinx.Audio.Backends.SoundIo
             return _pauseEvent;
         }
 
-        public IHardwareDeviceSession OpenDeviceSession(Direction direction, IVirtualMemoryManager memoryManager, SampleFormat sampleFormat, uint sampleRate, uint channelCount, float volume)
+        public IHardwareDeviceSession OpenDeviceSession(Direction direction, IVirtualMemoryManager memoryManager, SampleFormat sampleFormat, uint sampleRate, uint channelCount)
         {
             if (channelCount == 0)
             {
@@ -134,14 +153,12 @@ namespace Ryujinx.Audio.Backends.SoundIo
                 sampleRate = Constants.TargetSampleRate;
             }
 
-            volume = Math.Clamp(volume, 0, 1);
-
             if (direction != Direction.Output)
             {
                 throw new NotImplementedException("Input direction is currently not implemented on SoundIO backend!");
             }
 
-            SoundIoHardwareDeviceSession session = new(this, memoryManager, sampleFormat, sampleRate, channelCount, volume);
+            SoundIoHardwareDeviceSession session = new(this, memoryManager, sampleFormat, sampleRate, channelCount);
 
             _sessions.TryAdd(session, 0);
 

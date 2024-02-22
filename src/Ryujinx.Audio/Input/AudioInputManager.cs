@@ -166,7 +166,6 @@ namespace Ryujinx.Audio.Input
         /// </summary>
         /// <param name="filtered">If true, filter disconnected devices</param>
         /// <returns>The list of all audio inputs name</returns>
-#pragma warning disable CA1822 // Mark member as static
         public string[] ListAudioIns(bool filtered)
         {
             if (filtered)
@@ -176,7 +175,6 @@ namespace Ryujinx.Audio.Input
 
             return new[] { Constants.DefaultDeviceInputName };
         }
-#pragma warning restore CA1822
 
         /// <summary>
         /// Open a new <see cref="AudioInputSystem"/>.
@@ -188,8 +186,6 @@ namespace Ryujinx.Audio.Input
         /// <param name="inputDeviceName">The input device name wanted by the user</param>
         /// <param name="sampleFormat">The sample format to use</param>
         /// <param name="parameter">The user configuration</param>
-        /// <param name="appletResourceUserId">The applet resource user id of the application</param>
-        /// <param name="processHandle">The process handle of the application</param>
         /// <returns>A <see cref="ResultCode"/> reporting an error or a success</returns>
         public ResultCode OpenAudioIn(out string outputDeviceName,
                                       out AudioOutputConfiguration outputConfiguration,
@@ -197,9 +193,7 @@ namespace Ryujinx.Audio.Input
                                       IVirtualMemoryManager memoryManager,
                                       string inputDeviceName,
                                       SampleFormat sampleFormat,
-                                      ref AudioInputConfiguration parameter,
-                                      ulong appletResourceUserId,
-                                      uint processHandle)
+                                      ref AudioInputConfiguration parameter)
         {
             int sessionId = AcquireSessionId();
 

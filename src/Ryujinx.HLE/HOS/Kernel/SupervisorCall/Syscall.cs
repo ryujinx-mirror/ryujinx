@@ -8,6 +8,7 @@ using Ryujinx.HLE.HOS.Kernel.Memory;
 using Ryujinx.HLE.HOS.Kernel.Process;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.Horizon.Common;
+using Ryujinx.Memory;
 using System;
 using System.Buffers;
 using System.Threading;
@@ -3141,6 +3142,37 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             return Result.Success;
         }
 #pragma warning restore CA1822
+
+        // Not actual syscalls, used by HLE services and such.
+
+        public IExternalEvent GetExternalEvent(int handle)
+        {
+            KWritableEvent writableEvent = KernelStatic.GetCurrentProcess().HandleTable.GetObject<KWritableEvent>(handle);
+
+            if (writableEvent == null)
+            {
+                return null;
+            }
+
+            return new ExternalEvent(writableEvent);
+        }
+
+        public IVirtualMemoryManager GetMemoryManagerByProcessHandle(int handle)
+        {
+            return KernelStatic.GetCurrentProcess().HandleTable.GetKProcess(handle).CpuMemory;
+        }
+
+        public ulong GetTransferMemoryAddress(int handle)
+        {
+            KTransferMemory transferMemory = KernelStatic.GetCurrentProcess().HandleTable.GetObject<KTransferMemory>(handle);
+
+            if (transferMemory == null)
+            {
+                return 0;
+            }
+
+            return transferMemory.Address;
+        }
 
         private static bool IsPointingInsideKernel(ulong address)
         {

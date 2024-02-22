@@ -14,13 +14,17 @@ namespace Ryujinx.Audio.Backends.Dummy
 
         public static bool IsSupported => true;
 
+        public float Volume { get; set; }
+
         public DummyHardwareDeviceDriver()
         {
             _updateRequiredEvent = new ManualResetEvent(false);
             _pauseEvent = new ManualResetEvent(true);
+
+            Volume = 1f;
         }
 
-        public IHardwareDeviceSession OpenDeviceSession(Direction direction, IVirtualMemoryManager memoryManager, SampleFormat sampleFormat, uint sampleRate, uint channelCount, float volume)
+        public IHardwareDeviceSession OpenDeviceSession(Direction direction, IVirtualMemoryManager memoryManager, SampleFormat sampleFormat, uint sampleRate, uint channelCount)
         {
             if (sampleRate == 0)
             {
@@ -34,7 +38,7 @@ namespace Ryujinx.Audio.Backends.Dummy
 
             if (direction == Direction.Output)
             {
-                return new DummyHardwareDeviceSessionOutput(this, memoryManager, sampleFormat, sampleRate, channelCount, volume);
+                return new DummyHardwareDeviceSessionOutput(this, memoryManager, sampleFormat, sampleRate, channelCount);
             }
 
             return new DummyHardwareDeviceSessionInput(this, memoryManager);

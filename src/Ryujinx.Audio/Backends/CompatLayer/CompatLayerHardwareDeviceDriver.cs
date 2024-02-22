@@ -16,6 +16,12 @@ namespace Ryujinx.Audio.Backends.CompatLayer
 
         public static bool IsSupported => true;
 
+        public float Volume
+        {
+            get => _realDriver.Volume;
+            set => _realDriver.Volume = value;
+        }
+
         public CompatLayerHardwareDeviceDriver(IHardwareDeviceDriver realDevice)
         {
             _realDriver = realDevice;
@@ -90,7 +96,7 @@ namespace Ryujinx.Audio.Backends.CompatLayer
             throw new ArgumentException("No valid sample format configuration found!");
         }
 
-        public IHardwareDeviceSession OpenDeviceSession(Direction direction, IVirtualMemoryManager memoryManager, SampleFormat sampleFormat, uint sampleRate, uint channelCount, float volume)
+        public IHardwareDeviceSession OpenDeviceSession(Direction direction, IVirtualMemoryManager memoryManager, SampleFormat sampleFormat, uint sampleRate, uint channelCount)
         {
             if (channelCount == 0)
             {
@@ -101,8 +107,6 @@ namespace Ryujinx.Audio.Backends.CompatLayer
             {
                 sampleRate = Constants.TargetSampleRate;
             }
-
-            volume = Math.Clamp(volume, 0, 1);
 
             if (!_realDriver.SupportsDirection(direction))
             {
@@ -119,7 +123,7 @@ namespace Ryujinx.Audio.Backends.CompatLayer
             SampleFormat hardwareSampleFormat = SelectHardwareSampleFormat(sampleFormat);
             uint hardwareChannelCount = SelectHardwareChannelCount(channelCount);
 
-            IHardwareDeviceSession realSession = _realDriver.OpenDeviceSession(direction, memoryManager, hardwareSampleFormat, sampleRate, hardwareChannelCount, volume);
+            IHardwareDeviceSession realSession = _realDriver.OpenDeviceSession(direction, memoryManager, hardwareSampleFormat, sampleRate, hardwareChannelCount);
 
             if (hardwareChannelCount == channelCount && hardwareSampleFormat == sampleFormat)
             {

@@ -66,6 +66,7 @@ namespace Ryujinx.Horizon.Usb
         public void Shutdown()
         {
             _serverManager.Dispose();
+            _sm.Dispose();
         }
     }
 }

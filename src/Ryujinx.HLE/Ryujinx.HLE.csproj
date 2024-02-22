@@ -21,7 +21,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Concentus" />
     <PackageReference Include="LibHac" />
     <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" />
     <PackageReference Include="MsgPack.Cli" />
@@ -29,11 +28,6 @@
     <PackageReference Include="SixLabors.ImageSharp.Drawing" />
     <PackageReference Include="NetCoreServer" />
   </ItemGroup>
-
-  <!-- Due to Concentus. -->
-  <PropertyGroup>
-    <NoWarn>NU1605</NoWarn>
-  </PropertyGroup>
 
   <ItemGroup>
     <None Remove="Homebrew.npdm" />

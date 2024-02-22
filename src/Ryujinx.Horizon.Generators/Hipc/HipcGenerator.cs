@@ -286,13 +286,13 @@ namespace Ryujinx.Horizon.Generators.Hipc
                 {
                     if (IsNonSpanOutBuffer(compilation, parameter))
                     {
-                        generator.AppendLine($"using var {argName} = CommandSerialization.GetWritableRegion(processor.GetBufferRange({outArgIndex++}));");
+                        generator.AppendLine($"using var {argName} = CommandSerialization.GetWritableRegion(processor.GetBufferRange({index}));");
 
                         argName = $"out {GenerateSpanCastElement0(canonicalTypeName, $"{argName}.Memory.Span")}";
                     }
                     else
                     {
-                        outParameters.Add(new OutParameter(argName, canonicalTypeName, index, argType));
+                        outParameters.Add(new OutParameter(argName, canonicalTypeName, outArgIndex++, argType));
 
                         argName = $"out {canonicalTypeName} {argName}";
                     }

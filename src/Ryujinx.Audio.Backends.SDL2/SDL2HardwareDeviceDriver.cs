@@ -20,6 +20,8 @@ namespace Ryujinx.Audio.Backends.SDL2
 
         private readonly bool _supportSurroundConfiguration;
 
+        public float Volume { get; set; }
+
         // TODO: Add this to SDL2-CS
         // NOTE: We use a DllImport here because of marshaling issue for spec.
 #pragma warning disable SYSLIB1054
@@ -48,6 +50,8 @@ namespace Ryujinx.Audio.Backends.SDL2
             {
                 _supportSurroundConfiguration = spec.channels >= 6;
             }
+
+            Volume = 1f;
         }
 
         public static bool IsSupported => IsSupportedInternal();
@@ -74,7 +78,7 @@ namespace Ryujinx.Audio.Backends.SDL2
             return _pauseEvent;
         }
 
-        public IHardwareDeviceSession OpenDeviceSession(Direction direction, IVirtualMemoryManager memoryManager, SampleFormat sampleFormat, uint sampleRate, uint channelCount, float volume)
+        public IHardwareDeviceSession OpenDeviceSession(Direction direction, IVirtualMemoryManager memoryManager, SampleFormat sampleFormat, uint sampleRate, uint channelCount)
         {
             if (channelCount == 0)
             {
@@ -91,7 +95,7 @@ namespace Ryujinx.Audio.Backends.SDL2
                 throw new NotImplementedException("Input direction is currently not implemented on SDL2 backend!");
             }
 
-            SDL2HardwareDeviceSession session = new(this, memoryManager, sampleFormat, sampleRate, channelCount, volume);
+            SDL2HardwareDeviceSession session = new(this, memoryManager, sampleFormat, sampleRate, channelCount);
 
             _sessions.TryAdd(session, 0);
 

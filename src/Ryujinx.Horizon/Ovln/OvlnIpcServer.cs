@@ -43,6 +43,7 @@ namespace Ryujinx.Horizon.Ovln
         public void Shutdown()
         {
             _serverManager.Dispose();
+            _sm.Dispose();
         }
     }
 }

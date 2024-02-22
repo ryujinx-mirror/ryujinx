@@ -20,6 +20,25 @@ namespace Ryujinx.Audio.Backends.OpenAL
         private bool _stillRunning;
         private readonly Thread _updaterThread;
 
+        private float _volume;
+
+        public float Volume
+        {
+            get
+            {
+                return _volume;
+            }
+            set
+            {
+                _volume = value;
+
+                foreach (OpenALHardwareDeviceSession session in _sessions.Keys)
+                {
+                    session.UpdateMasterVolume(value);
+                }
+            }
+        }
+
         public OpenALHardwareDeviceDriver()
         {
             _device = ALC.OpenDevice("");
@@ -33,6 +52,8 @@ namespace Ryujinx.Audio.Backends.OpenAL
             {
                 Name = "HardwareDeviceDriver.OpenAL",
             };
+
+            _volume = 1f;
 
             _updaterThread.Start();
         }
@@ -52,7 +73,7 @@ namespace Ryujinx.Audio.Backends.OpenAL
             }
         }
 
-        public IHardwareDeviceSession OpenDeviceSession(Direction direction, IVirtualMemoryManager memoryManager, SampleFormat sampleFormat, uint sampleRate, uint channelCount, float volume)
+        public IHardwareDeviceSession OpenDeviceSession(Direction direction, IVirtualMemoryManager memoryManager, SampleFormat sampleFormat, uint sampleRate, uint channelCount)
         {
             if (channelCount == 0)
             {
@@ -73,7 +94,7 @@ namespace Ryujinx.Audio.Backends.OpenAL
                 throw new ArgumentException($"{channelCount}");
             }
 
-            OpenALHardwareDeviceSession session = new(this, memoryManager, sampleFormat, sampleRate, channelCount, volume);
+            OpenALHardwareDeviceSession session = new(this, memoryManager, sampleFormat, sampleRate, channelCount);
 
             _sessions.TryAdd(session, 0);
 

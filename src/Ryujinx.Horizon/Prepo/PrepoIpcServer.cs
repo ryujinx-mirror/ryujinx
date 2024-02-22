@@ -51,6 +51,7 @@ namespace Ryujinx.Horizon.Prepo
         {
             _arp.Dispose();
             _serverManager.Dispose();
+            _sm.Dispose();
         }
     }
 }

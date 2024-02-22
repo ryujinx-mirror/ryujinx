@@ -13,9 +13,9 @@ namespace Ryujinx.Audio.Integration
 
         private readonly byte[] _buffer;
 
-        public HardwareDeviceImpl(IHardwareDeviceDriver deviceDriver, uint channelCount, uint sampleRate, float volume)
+        public HardwareDeviceImpl(IHardwareDeviceDriver deviceDriver, uint channelCount, uint sampleRate)
         {
-            _session = deviceDriver.OpenDeviceSession(IHardwareDeviceDriver.Direction.Output, null, SampleFormat.PcmInt16, sampleRate, channelCount, volume);
+            _session = deviceDriver.OpenDeviceSession(IHardwareDeviceDriver.Direction.Output, null, SampleFormat.PcmInt16, sampleRate, channelCount);
             _channelCount = channelCount;
             _sampleRate = sampleRate;
             _currentBufferTag = 0;

@@ -56,6 +56,7 @@ namespace Ryujinx.Horizon.Arp
         {
             _applicationInstanceManager.Dispose();
             _serverManager.Dispose();
+            _sm.Dispose();
         }
     }
 }

@@ -16,7 +16,9 @@ namespace Ryujinx.Audio.Integration
             Output,
         }
 
-        IHardwareDeviceSession OpenDeviceSession(Direction direction, IVirtualMemoryManager memoryManager, SampleFormat sampleFormat, uint sampleRate, uint channelCount, float volume = 1f);
+        float Volume { get; set; }
+
+        IHardwareDeviceSession OpenDeviceSession(Direction direction, IVirtualMemoryManager memoryManager, SampleFormat sampleFormat, uint sampleRate, uint channelCount);
 
         ManualResetEvent GetUpdateRequiredEvent();
         ManualResetEvent GetPauseEvent();

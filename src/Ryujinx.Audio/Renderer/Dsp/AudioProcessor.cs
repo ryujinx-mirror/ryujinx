@@ -45,7 +45,6 @@ namespace Ryujinx.Audio.Renderer.Dsp
             _event = new ManualResetEvent(false);
         }
 
-#pragma warning disable IDE0051 // Remove unused private member
         private static uint GetHardwareChannelCount(IHardwareDeviceDriver deviceDriver)
         {
             // Get the real device driver (In case the compat layer is on top of it).
@@ -59,9 +58,8 @@ namespace Ryujinx.Audio.Renderer.Dsp
             // NOTE: We default to stereo as this will get downmixed to mono by the compat layer if it's not compatible.
             return 2;
         }
-#pragma warning restore IDE0051
 
-        public void Start(IHardwareDeviceDriver deviceDriver, float volume)
+        public void Start(IHardwareDeviceDriver deviceDriver)
         {
             OutputDevices = new IHardwareDevice[Constants.AudioRendererSessionCountMax];
 
@@ -70,7 +68,7 @@ namespace Ryujinx.Audio.Renderer.Dsp
             for (int i = 0; i < OutputDevices.Length; i++)
             {
                 // TODO: Don't hardcode sample rate.
-                OutputDevices[i] = new HardwareDeviceImpl(deviceDriver, channelCount, Constants.TargetSampleRate, volume);
+                OutputDevices[i] = new HardwareDeviceImpl(deviceDriver, channelCount, Constants.TargetSampleRate);
             }
 
             _mailbox = new Mailbox<MailboxMessage>();
@@ -231,33 +229,6 @@ namespace Ryujinx.Audio.Renderer.Dsp
             _mailbox.SendResponse(MailboxMessage.Stop);
         }
 
-        public float GetVolume()
-        {
-            if (OutputDevices != null)
-            {
-                foreach (IHardwareDevice outputDevice in OutputDevices)
-                {
-                    if (outputDevice != null)
-                    {
-                        return outputDevice.GetVolume();
-                    }
-                }
-            }
-
-            return 0f;
-        }
-
-        public void SetVolume(float volume)
-        {
-            if (OutputDevices != null)
-            {
-                foreach (IHardwareDevice outputDevice in OutputDevices)
-                {
-                    outputDevice?.SetVolume(volume);
-                }
-            }
-        }
-
         public void Dispose()
         {
             GC.SuppressFinalize(this);
@@ -269,6 +240,7 @@ namespace Ryujinx.Audio.Renderer.Dsp
             if (disposing)
             {
                 _event.Dispose();
+                _mailbox?.Dispose();
             }
         }
     }

@@ -1,3 +1,4 @@
+using Ryujinx.Memory;
 using System;
 
 namespace Ryujinx.Horizon.Common
@@ -29,5 +30,9 @@ namespace Ryujinx.Horizon.Common
         Result CreatePort(out int serverPortHandle, out int clientPortHandle, int maxSessions, bool isLight, string name);
         Result ManageNamedPort(out int handle, string name, int maxSessions);
         Result ConnectToPort(out int clientSessionHandle, int clientPortHandle);
+
+        IExternalEvent GetExternalEvent(int handle);
+        IVirtualMemoryManager GetMemoryManagerByProcessHandle(int handle);
+        ulong GetTransferMemoryAddress(int handle);
     }
 }

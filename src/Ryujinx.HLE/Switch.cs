@@ -117,12 +117,12 @@ namespace Ryujinx.HLE
 
         public void SetVolume(float volume)
         {
-            System.SetVolume(Math.Clamp(volume, 0, 1));
+            AudioDeviceDriver.Volume = Math.Clamp(volume, 0f, 1f);
         }
 
         public float GetVolume()
         {
-            return System.GetVolume();
+            return AudioDeviceDriver.Volume;
         }
 
         public void EnableCheats()
@@ -132,7 +132,7 @@ namespace Ryujinx.HLE
 
         public bool IsAudioMuted()
         {
-            return System.GetVolume() == 0;
+            return AudioDeviceDriver.Volume == 0;
         }
 
         public void DisposeGpu()

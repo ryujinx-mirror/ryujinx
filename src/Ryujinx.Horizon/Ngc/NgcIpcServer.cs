@@ -3,7 +3,6 @@ using Ryujinx.Horizon.Sdk.Fs;
 using Ryujinx.Horizon.Sdk.Ngc.Detail;
 using Ryujinx.Horizon.Sdk.Sf.Hipc;
 using Ryujinx.Horizon.Sdk.Sm;
-using System;
 
 namespace Ryujinx.Horizon.Ngc
 {
@@ -46,6 +45,7 @@ namespace Ryujinx.Horizon.Ngc
         {
             _serverManager.Dispose();
             _profanityFilter.Dispose();
+            _sm.Dispose();
         }
     }
 }

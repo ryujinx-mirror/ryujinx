@@ -42,6 +42,7 @@ namespace Ryujinx.Horizon.Ins
         public void Shutdown()
         {
             _serverManager.Dispose();
+            _sm.Dispose();
         }
     }
 }

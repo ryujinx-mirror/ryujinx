@@ -38,6 +38,7 @@ namespace Ryujinx.Horizon.MmNv
         public void Shutdown()
         {
             _serverManager.Dispose();
+            _sm.Dispose();
         }
     }
 }

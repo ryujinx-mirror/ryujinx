@@ -18,16 +18,18 @@ namespace Ryujinx.Audio.Backends.SoundIo
         private readonly DynamicRingBuffer _ringBuffer;
         private ulong _playedSampleCount;
         private readonly ManualResetEvent _updateRequiredEvent;
+        private float _volume;
         private int _disposeState;
 
-        public SoundIoHardwareDeviceSession(SoundIoHardwareDeviceDriver driver, IVirtualMemoryManager memoryManager, SampleFormat requestedSampleFormat, uint requestedSampleRate, uint requestedChannelCount, float requestedVolume) : base(memoryManager, requestedSampleFormat, requestedSampleRate, requestedChannelCount)
+        public SoundIoHardwareDeviceSession(SoundIoHardwareDeviceDriver driver, IVirtualMemoryManager memoryManager, SampleFormat requestedSampleFormat, uint requestedSampleRate, uint requestedChannelCount) : base(memoryManager, requestedSampleFormat, requestedSampleRate, requestedChannelCount)
         {
             _driver = driver;
             _updateRequiredEvent = _driver.GetUpdateRequiredEvent();
             _queuedBuffers = new ConcurrentQueue<SoundIoAudioBuffer>();
             _ringBuffer = new DynamicRingBuffer();
+            _volume = 1f;
 
-            SetupOutputStream(requestedVolume);
+            SetupOutputStream(driver.Volume);
         }
 
         private void SetupOutputStream(float requestedVolume)
@@ -47,7 +49,7 @@ namespace Ryujinx.Audio.Backends.SoundIo
 
         public override float GetVolume()
         {
-            return _outputStream.Volume;
+            return _volume;
         }
 
         public override void PrepareToClose() { }
@@ -63,7 +65,14 @@ namespace Ryujinx.Audio.Backends.SoundIo
 
         public override void SetVolume(float volume)
         {
-            _outputStream.SetVolume(volume);
+            _volume = volume;
+
+            _outputStream.SetVolume(_driver.Volume * volume);
+        }
+
+        public void UpdateMasterVolume(float newVolume)
+        {
+            _outputStream.SetVolume(newVolume * _volume);
         }
 
         public override void Start()

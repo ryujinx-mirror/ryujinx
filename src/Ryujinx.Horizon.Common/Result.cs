@@ -36,6 +36,11 @@ namespace Ryujinx.Horizon.Common
             ErrorCode = module | (description << ModuleBits);
         }
 
+        public Result(int errorCode)
+        {
+            ErrorCode = errorCode;
+        }
+
         public readonly override bool Equals(object obj)
         {
             return obj is Result result && result.Equals(this);

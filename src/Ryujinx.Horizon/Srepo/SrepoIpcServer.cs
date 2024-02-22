@@ -41,6 +41,7 @@ namespace Ryujinx.Horizon.Srepo
         public void Shutdown()
         {
             _serverManager.Dispose();
+            _sm.Dispose();
         }
     }
 }

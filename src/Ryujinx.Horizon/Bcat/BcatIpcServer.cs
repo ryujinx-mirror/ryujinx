@@ -44,6 +44,7 @@ namespace Ryujinx.Horizon.Bcat
         public void Shutdown()
         {
             _serverManager.Dispose();
+            _sm.Dispose();
         }
     }
 }

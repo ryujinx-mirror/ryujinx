@@ -4,12 +4,6 @@ using LibHac.Fs;
 using LibHac.Fs.Shim;
 using LibHac.FsSystem;
 using LibHac.Tools.FsSystem;
-using Ryujinx.Audio;
-using Ryujinx.Audio.Input;
-using Ryujinx.Audio.Integration;
-using Ryujinx.Audio.Output;
-using Ryujinx.Audio.Renderer.Device;
-using Ryujinx.Audio.Renderer.Server;
 using Ryujinx.Cpu;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.HOS.Kernel;
@@ -20,7 +14,6 @@ using Ryujinx.HLE.HOS.Services;
 using Ryujinx.HLE.HOS.Services.Account.Acc;
 using Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.SystemAppletProxy;
 using Ryujinx.HLE.HOS.Services.Apm;
-using Ryujinx.HLE.HOS.Services.Audio.AudioRenderer;
 using Ryujinx.HLE.HOS.Services.Caps;
 using Ryujinx.HLE.HOS.Services.Mii;
 using Ryujinx.HLE.HOS.Services.Nfc.Nfp.NfpManager;
@@ -61,11 +54,6 @@ namespace Ryujinx.HLE.HOS
         internal ITickSource TickSource { get; }
 
         internal SurfaceFlinger SurfaceFlinger { get; private set; }
-        internal AudioManager AudioManager { get; private set; }
-        internal AudioOutputManager AudioOutputManager { get; private set; }
-        internal AudioInputManager AudioInputManager { get; private set; }
-        internal AudioRendererManager AudioRendererManager { get; private set; }
-        internal VirtualDeviceSessionRegistry AudioDeviceSessionRegistry { get; private set; }
 
         public SystemStateMgr State { get; private set; }
 
@@ -79,8 +67,6 @@ namespace Ryujinx.HLE.HOS
 
         internal ServerBase SmServer { get; private set; }
         internal ServerBase BsdServer { get; private set; }
-        internal ServerBase AudRenServer { get; private set; }
-        internal ServerBase AudOutServer { get; private set; }
         internal ServerBase FsServer { get; private set; }
         internal ServerBase HidServer { get; private set; }
         internal ServerBase NvDrvServer { get; private set; }
@@ -248,56 +234,6 @@ namespace Ryujinx.HLE.HOS
             HostSyncpoint = new NvHostSyncpt(device);
 
             SurfaceFlinger = new SurfaceFlinger(device);
-
-            InitializeAudioRenderer(TickSource);
-        }
-
-        private void InitializeAudioRenderer(ITickSource tickSource)
-        {
-            AudioManager = new AudioManager();
-            AudioOutputManager = new AudioOutputManager();
-            AudioInputManager = new AudioInputManager();
-            AudioRendererManager = new AudioRendererManager(tickSource);
-            AudioRendererManager.SetVolume(Device.Configuration.AudioVolume);
-            AudioDeviceSessionRegistry = new VirtualDeviceSessionRegistry(Device.AudioDeviceDriver);
-
-            IWritableEvent[] audioOutputRegisterBufferEvents = new IWritableEvent[Constants.AudioOutSessionCountMax];
-
-            for (int i = 0; i < audioOutputRegisterBufferEvents.Length; i++)
-            {
-                KEvent registerBufferEvent = new(KernelContext);
-
-                audioOutputRegisterBufferEvents[i] = new AudioKernelEvent(registerBufferEvent);
-            }
-
-            AudioOutputManager.Initialize(Device.AudioDeviceDriver, audioOutputRegisterBufferEvents);
-            AudioOutputManager.SetVolume(Device.Configuration.AudioVolume);
-
-            IWritableEvent[] audioInputRegisterBufferEvents = new IWritableEvent[Constants.AudioInSessionCountMax];
-
-            for (int i = 0; i < audioInputRegisterBufferEvents.Length; i++)
-            {
-                KEvent registerBufferEvent = new(KernelContext);
-
-                audioInputRegisterBufferEvents[i] = new AudioKernelEvent(registerBufferEvent);
-            }
-
-            AudioInputManager.Initialize(Device.AudioDeviceDriver, audioInputRegisterBufferEvents);
-
-            IWritableEvent[] systemEvents = new IWritableEvent[Constants.AudioRendererSessionCountMax];
-
-            for (int i = 0; i < systemEvents.Length; i++)
-            {
-                KEvent systemEvent = new(KernelContext);
-
-                systemEvents[i] = new AudioKernelEvent(systemEvent);
-            }
-
-            AudioManager.Initialize(Device.AudioDeviceDriver.GetUpdateRequiredEvent(), AudioOutputManager.Update, AudioInputManager.Update);
-
-            AudioRendererManager.Initialize(systemEvents, Device.AudioDeviceDriver);
-
-            AudioManager.Start();
         }
 
         public void InitializeServices()
@@ -310,8 +246,6 @@ namespace Ryujinx.HLE.HOS
             SmServer.InitDone.WaitOne();
 
             BsdServer = new ServerBase(KernelContext, "BsdServer");
-            AudRenServer = new ServerBase(KernelContext, "AudioRendererServer");
-            AudOutServer = new ServerBase(KernelContext, "AudioOutServer");
             FsServer = new ServerBase(KernelContext, "FsServer");
             HidServer = new ServerBase(KernelContext, "HidServer");
             NvDrvServer = new ServerBase(KernelContext, "NvservicesServer");
@@ -329,7 +263,13 @@ namespace Ryujinx.HLE.HOS
             HorizonFsClient fsClient = new(this);
 
             ServiceTable = new ServiceTable();
-            var services = ServiceTable.GetServices(new HorizonOptions(Device.Configuration.IgnoreMissingServices, LibHacHorizonManager.BcatClient, fsClient, AccountManager));
+            var services = ServiceTable.GetServices(new HorizonOptions
+                (Device.Configuration.IgnoreMissingServices,
+                LibHacHorizonManager.BcatClient,
+                fsClient,
+                AccountManager,
+                Device.AudioDeviceDriver,
+                TickSource));
 
             foreach (var service in services)
             {
@@ -382,17 +322,6 @@ namespace Ryujinx.HLE.HOS
 
                 Device.Configuration.RefreshInputConfig?.Invoke();
             }
-        }
-
-        public void SetVolume(float volume)
-        {
-            AudioOutputManager.SetVolume(volume);
-            AudioRendererManager.SetVolume(volume);
-        }
-
-        public float GetVolume()
-        {
-            return AudioOutputManager.GetVolume() == 0 ? AudioRendererManager.GetVolume() : AudioOutputManager.GetVolume();
         }
 
         public void ReturnFocus()
@@ -458,11 +387,7 @@ namespace Ryujinx.HLE.HOS
                 // "Soft" stops AudioRenderer and AudioManager to avoid some sound between resume and stop.
                 if (IsPaused)
                 {
-                    AudioManager.StopUpdates();
-
                     TogglePauseEmulation(false);
-
-                    AudioRendererManager.StopSendingCommands();
                 }
 
                 KProcess terminationProcess = new(KernelContext);
@@ -512,12 +437,6 @@ namespace Ryujinx.HLE.HOS
                 // Destroy nvservices channels as KThread could be waiting on some user events.
                 // This is safe as KThread that are likely to call ioctls are going to be terminated by the post handler hook on the SVC facade.
                 INvDrvServices.Destroy();
-
-                AudioManager.Dispose();
-                AudioOutputManager.Dispose();
-                AudioInputManager.Dispose();
-
-                AudioRendererManager.Dispose();
 
                 if (LibHacHorizonManager.ApplicationClient != null)
                 {
