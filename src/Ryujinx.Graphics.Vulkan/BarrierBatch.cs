@@ -95,6 +95,7 @@ namespace Ryujinx.Graphics.Vulkan
                     List<BarrierWithStageFlags<T>> list) where T : unmanaged
                 {
                     int firstMatch = -1;
+                    int end = list.Count;
 
                     for (int i = 0; i < list.Count; i++)
                     {
@@ -111,6 +112,7 @@ namespace Ryujinx.Graphics.Vulkan
 
                             if (count >= target.Length)
                             {
+                                end = i + 1;
                                 break;
                             }
                         }
@@ -128,6 +130,7 @@ namespace Ryujinx.Graphics.Vulkan
 
                                 if (count >= target.Length)
                                 {
+                                    end = i + 1;
                                     break;
                                 }
                             }
@@ -146,13 +149,13 @@ namespace Ryujinx.Graphics.Vulkan
                         }
                     }
 
-                    if (firstMatch == 0)
+                    if (firstMatch == 0 && end == list.Count)
                     {
                         list.Clear();
                     }
                     else if (firstMatch != -1)
                     {
-                        int deleteCount = list.Count - firstMatch;
+                        int deleteCount = end - firstMatch;
 
                         list.RemoveRange(firstMatch, deleteCount);
                     }
