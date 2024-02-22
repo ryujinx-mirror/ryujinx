@@ -1117,7 +1117,7 @@ namespace Ryujinx.Graphics.OpenGL
                 prg.Bind();
             }
 
-            if (prg.HasFragmentShader && _fragmentOutputMap != (uint)prg.FragmentOutputMap)
+            if (_fragmentOutputMap != (uint)prg.FragmentOutputMap)
             {
                 _fragmentOutputMap = (uint)prg.FragmentOutputMap;
 
