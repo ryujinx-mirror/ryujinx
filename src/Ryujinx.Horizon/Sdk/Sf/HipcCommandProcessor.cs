@@ -127,7 +127,7 @@ namespace Ryujinx.Horizon.Sdk.Sf
             return _bufferRanges[argIndex];
         }
 
-        public Result ProcessBuffers(ref ServiceDispatchContext context, bool[] isBufferMapAlias, ServerMessageRuntimeMetadata runtimeMetadata)
+        public Result ProcessBuffers(ref ServiceDispatchContext context, scoped Span<bool> isBufferMapAlias, ServerMessageRuntimeMetadata runtimeMetadata)
         {
             bool mapAliasBuffersValid = true;
 
@@ -246,7 +246,7 @@ namespace Ryujinx.Horizon.Sdk.Sf
             return mode == HipcBufferMode.Normal;
         }
 
-        public void SetOutBuffers(HipcMessageData response, bool[] isBufferMapAlias)
+        public void SetOutBuffers(HipcMessageData response, ReadOnlySpan<bool> isBufferMapAlias)
         {
             int recvPointerIndex = 0;
 

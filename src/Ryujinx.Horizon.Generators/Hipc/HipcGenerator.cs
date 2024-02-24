@@ -74,6 +74,7 @@ namespace Ryujinx.Horizon.Generators.Hipc
                 generator.AppendLine("using Ryujinx.Horizon.Sdk.Sf.Cmif;");
                 generator.AppendLine("using Ryujinx.Horizon.Sdk.Sf.Hipc;");
                 generator.AppendLine("using System;");
+                generator.AppendLine("using System.Collections.Frozen;");
                 generator.AppendLine("using System.Collections.Generic;");
                 generator.AppendLine("using System.Runtime.CompilerServices;");
                 generator.AppendLine("using System.Runtime.InteropServices;");
@@ -115,67 +116,76 @@ namespace Ryujinx.Horizon.Generators.Hipc
         private static void GenerateMethodTable(CodeGenerator generator, Compilation compilation, CommandInterface commandInterface)
         {
             generator.EnterScope($"public IReadOnlyDictionary<int, CommandHandler> GetCommandHandlers()");
-            generator.EnterScope($"return new Dictionary<int, CommandHandler>()");
 
-            foreach (var method in commandInterface.CommandImplementations)
+            if (commandInterface.CommandImplementations.Count == 0)
             {
-                foreach (var commandId in GetAttributeAguments(compilation, method, TypeCommandAttribute, 0))
+                generator.AppendLine("return FrozenDictionary<int, CommandHandler>.Empty;");
+            }
+            else
+            {
+                generator.EnterScope($"return FrozenDictionary.ToFrozenDictionary(new []");
+
+                foreach (var method in commandInterface.CommandImplementations)
                 {
-                    string[] args = new string[method.ParameterList.Parameters.Count];
-
-                    if (args.Length == 0)
+                    foreach (var commandId in GetAttributeArguments(compilation, method, TypeCommandAttribute, 0))
                     {
-                        generator.AppendLine($"{{ {commandId}, new CommandHandler({method.Identifier.Text}, Array.Empty<CommandArg>()) }},");
-                    }
-                    else
-                    {
-                        int index = 0;
+                        string[] args = new string[method.ParameterList.Parameters.Count];
 
-                        foreach (var parameter in method.ParameterList.Parameters)
+                        if (args.Length == 0)
                         {
-                            string canonicalTypeName = GetCanonicalTypeNameWithGenericArguments(compilation, parameter.Type);
-                            CommandArgType argType = GetCommandArgType(compilation, parameter);
+                            generator.AppendLine($"KeyValuePair.Create({commandId}, new CommandHandler({method.Identifier.Text}, Array.Empty<CommandArg>())),");
+                        }
+                        else
+                        {
+                            int index = 0;
 
-                            string arg;
-
-                            if (argType == CommandArgType.Buffer)
+                            foreach (var parameter in method.ParameterList.Parameters)
                             {
-                                string bufferFlags = GetFirstAttributeAgument(compilation, parameter, TypeBufferAttribute, 0);
-                                string bufferFixedSize = GetFirstAttributeAgument(compilation, parameter, TypeBufferAttribute, 1);
+                                string canonicalTypeName = GetCanonicalTypeNameWithGenericArguments(compilation, parameter.Type);
+                                CommandArgType argType = GetCommandArgType(compilation, parameter);
 
-                                if (bufferFixedSize != null)
+                                string arg;
+
+                                if (argType == CommandArgType.Buffer)
                                 {
-                                    arg = $"new CommandArg({bufferFlags} | HipcBufferFlags.FixedSize, {bufferFixedSize})";
+                                    string bufferFlags = GetFirstAttributeArgument(compilation, parameter, TypeBufferAttribute, 0);
+                                    string bufferFixedSize = GetFirstAttributeArgument(compilation, parameter, TypeBufferAttribute, 1);
+
+                                    if (bufferFixedSize != null)
+                                    {
+                                        arg = $"new CommandArg({bufferFlags} | HipcBufferFlags.FixedSize, {bufferFixedSize})";
+                                    }
+                                    else
+                                    {
+                                        arg = $"new CommandArg({bufferFlags})";
+                                    }
+                                }
+                                else if (argType == CommandArgType.InArgument || argType == CommandArgType.OutArgument)
+                                {
+                                    string alignment = GetTypeAlignmentExpression(compilation, parameter.Type);
+
+                                    arg = $"new CommandArg(CommandArgType.{argType}, Unsafe.SizeOf<{canonicalTypeName}>(), {alignment})";
                                 }
                                 else
                                 {
-                                    arg = $"new CommandArg({bufferFlags})";
+                                    arg = $"new CommandArg(CommandArgType.{argType})";
                                 }
-                            }
-                            else if (argType == CommandArgType.InArgument || argType == CommandArgType.OutArgument)
-                            {
-                                string alignment = GetTypeAlignmentExpression(compilation, parameter.Type);
 
-                                arg = $"new CommandArg(CommandArgType.{argType}, Unsafe.SizeOf<{canonicalTypeName}>(), {alignment})";
-                            }
-                            else
-                            {
-                                arg = $"new CommandArg(CommandArgType.{argType})";
+                                args[index++] = arg;
                             }
 
-                            args[index++] = arg;
+                            generator.AppendLine($"KeyValuePair.Create({commandId}, new CommandHandler({method.Identifier.Text}, {string.Join(", ", args)})),");
                         }
-
-                        generator.AppendLine($"{{ {commandId}, new CommandHandler({method.Identifier.Text}, {string.Join(", ", args)}) }},");
                     }
                 }
+
+                generator.LeaveScope(");");
             }
 
-            generator.LeaveScope(";");
             generator.LeaveScope();
         }
 
-        private static IEnumerable<string> GetAttributeAguments(Compilation compilation, SyntaxNode syntaxNode, string attributeName, int argIndex)
+        private static IEnumerable<string> GetAttributeArguments(Compilation compilation, SyntaxNode syntaxNode, string attributeName, int argIndex)
         {
             ISymbol symbol = compilation.GetSemanticModel(syntaxNode.SyntaxTree).GetDeclaredSymbol(syntaxNode);
 
@@ -188,9 +198,9 @@ namespace Ryujinx.Horizon.Generators.Hipc
             }
         }
 
-        private static string GetFirstAttributeAgument(Compilation compilation, SyntaxNode syntaxNode, string attributeName, int argIndex)
+        private static string GetFirstAttributeArgument(Compilation compilation, SyntaxNode syntaxNode, string attributeName, int argIndex)
         {
-            return GetAttributeAguments(compilation, syntaxNode, attributeName, argIndex).FirstOrDefault();
+            return GetAttributeArguments(compilation, syntaxNode, attributeName, argIndex).FirstOrDefault();
         }
 
         private static void GenerateMethod(CodeGenerator generator, Compilation compilation, MethodDeclarationSyntax method)
@@ -233,7 +243,7 @@ namespace Ryujinx.Horizon.Generators.Hipc
 
                 if (buffersCount != 0)
                 {
-                    generator.AppendLine($"bool[] {IsBufferMapAliasVariableName} = new bool[{method.ParameterList.Parameters.Count}];");
+                    generator.AppendLine($"Span<bool> {IsBufferMapAliasVariableName} = stackalloc bool[{method.ParameterList.Parameters.Count}];");
                     generator.AppendLine();
 
                     generator.AppendLine($"{ResultVariableName} = processor.ProcessBuffers(ref context, {IsBufferMapAliasVariableName}, runtimeMetadata);");
@@ -719,7 +729,9 @@ namespace Ryujinx.Horizon.Generators.Hipc
 
         private static string GenerateSpanCast(string targetType, string input)
         {
-            return $"MemoryMarshal.Cast<byte, {targetType}>({input})";
+            return targetType == "byte"
+                ? input
+                : $"MemoryMarshal.Cast<byte, {targetType}>({input})";
         }
 
         private static bool HasAttribute(Compilation compilation, ParameterSyntax parameterSyntax, string fullAttributeName)
