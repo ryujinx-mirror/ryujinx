@@ -59,7 +59,7 @@ namespace Ryujinx.Ava
                 {
                     EnableMultiTouch = true,
                     EnableIme = true,
-                    EnableInputFocusProxy = true,
+                    EnableInputFocusProxy = Environment.GetEnvironmentVariable("XDG_CURRENT_DESKTOP") == "gamescope",
                     RenderingMode = new[] { X11RenderingMode.Glx, X11RenderingMode.Software },
                 })
                 .With(new Win32PlatformOptions
