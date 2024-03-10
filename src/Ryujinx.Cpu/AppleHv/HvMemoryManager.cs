@@ -16,12 +16,8 @@ namespace Ryujinx.Cpu.AppleHv
     /// Represents a CPU memory manager which maps guest virtual memory directly onto the Hypervisor page table.
     /// </summary>
     [SupportedOSPlatform("macos")]
-    public class HvMemoryManager : MemoryManagerBase, IMemoryManager, IVirtualMemoryManagerTracked, IWritableBlock
+    public class HvMemoryManager : VirtualMemoryManagerRefCountedBase<ulong, ulong>, IMemoryManager, IVirtualMemoryManagerTracked, IWritableBlock
     {
-        public const int PageBits = 12;
-        public const int PageSize = 1 << PageBits;
-        public const int PageMask = PageSize - 1;
-
         public const int PageToPteShift = 5; // 32 pages (2 bits each) in one ulong page table entry.
         public const ulong BlockMappedMask = 0x5555555555555555; // First bit of each table entry set.
 
@@ -38,8 +34,6 @@ namespace Ryujinx.Cpu.AppleHv
         }
 
         private readonly InvalidAccessHandler _invalidAccessHandler;
-
-        private readonly ulong _addressSpaceSize;
 
         private readonly HvAddressSpace _addressSpace;
 
@@ -62,6 +56,8 @@ namespace Ryujinx.Cpu.AppleHv
 
         public event Action<ulong, ulong> UnmapEvent;
 
+        protected override ulong AddressSpaceSize { get; }
+
         /// <summary>
         /// Creates a new instance of the Hypervisor memory manager.
         /// </summary>
@@ -73,7 +69,7 @@ namespace Ryujinx.Cpu.AppleHv
             _backingMemory = backingMemory;
             _pageTable = new PageTable<ulong>();
             _invalidAccessHandler = invalidAccessHandler;
-            _addressSpaceSize = addressSpaceSize;
+            AddressSpaceSize = addressSpaceSize;
 
             ulong asSize = PageSize;
             int asBits = PageBits;
@@ -90,42 +86,6 @@ namespace Ryujinx.Cpu.AppleHv
 
             _pageBitmap = new ulong[1 << (AddressSpaceBits - (PageBits + PageToPteShift))];
             Tracking = new MemoryTracking(this, PageSize, invalidAccessHandler);
-        }
-
-        /// <summary>
-        /// Checks if the virtual address is part of the addressable space.
-        /// </summary>
-        /// <param name="va">Virtual address</param>
-        /// <returns>True if the virtual address is part of the addressable space</returns>
-        private bool ValidateAddress(ulong va)
-        {
-            return va < _addressSpaceSize;
-        }
-
-        /// <summary>
-        /// Checks if the combination of virtual address and size is part of the addressable space.
-        /// </summary>
-        /// <param name="va">Virtual address of the range</param>
-        /// <param name="size">Size of the range in bytes</param>
-        /// <returns>True if the combination of virtual address and size is part of the addressable space</returns>
-        private bool ValidateAddressAndSize(ulong va, ulong size)
-        {
-            ulong endVa = va + size;
-            return endVa >= va && endVa >= size && endVa <= _addressSpaceSize;
-        }
-
-        /// <summary>
-        /// Ensures the combination of virtual address and size is part of the addressable space.
-        /// </summary>
-        /// <param name="va">Virtual address of the range</param>
-        /// <param name="size">Size of the range in bytes</param>
-        /// <exception cref="InvalidMemoryRegionException">Throw when the memory region specified outside the addressable space</exception>
-        private void AssertValidAddressAndSize(ulong va, ulong size)
-        {
-            if (!ValidateAddressAndSize(va, size))
-            {
-                throw new InvalidMemoryRegionException($"va=0x{va:X16}, size=0x{size:X16}");
-            }
         }
 
         /// <inheritdoc/>
@@ -209,9 +169,19 @@ namespace Ryujinx.Cpu.AppleHv
         }
 
         /// <inheritdoc/>
-        public void Read(ulong va, Span<byte> data)
+        public override void Read(ulong va, Span<byte> data)
         {
-            ReadImpl(va, data);
+            try
+            {
+                base.Read(va, data);
+            }
+            catch (InvalidMemoryRegionException)
+            {
+                if (_invalidAccessHandler == null || !_invalidAccessHandler(va))
+                {
+                    throw;
+                }
+            }
         }
 
         /// <inheritdoc/>
@@ -340,7 +310,7 @@ namespace Ryujinx.Cpu.AppleHv
             {
                 Span<byte> data = new byte[size];
 
-                ReadImpl(va, data);
+                base.Read(va, data);
 
                 return data;
             }
@@ -367,7 +337,7 @@ namespace Ryujinx.Cpu.AppleHv
             {
                 Memory<byte> memory = new byte[size];
 
-                ReadImpl(va, memory.Span);
+                base.Read(va, memory.Span);
 
                 return new WritableRegion(this, va, memory);
             }
@@ -574,48 +544,6 @@ namespace Ryujinx.Cpu.AppleHv
             regions.Add(new MemoryRange(regionStart, regionSize));
 
             return regions;
-        }
-
-        private void ReadImpl(ulong va, Span<byte> data)
-        {
-            if (data.Length == 0)
-            {
-                return;
-            }
-
-            try
-            {
-                AssertValidAddressAndSize(va, (ulong)data.Length);
-
-                int offset = 0, size;
-
-                if ((va & PageMask) != 0)
-                {
-                    ulong pa = GetPhysicalAddressChecked(va);
-
-                    size = Math.Min(data.Length, PageSize - (int)(va & PageMask));
-
-                    _backingMemory.GetSpan(pa, size).CopyTo(data[..size]);
-
-                    offset += size;
-                }
-
-                for (; offset < data.Length; offset += size)
-                {
-                    ulong pa = GetPhysicalAddressChecked(va + (ulong)offset);
-
-                    size = Math.Min(data.Length - offset, PageSize);
-
-                    _backingMemory.GetSpan(pa, size).CopyTo(data.Slice(offset, size));
-                }
-            }
-            catch (InvalidMemoryRegionException)
-            {
-                if (_invalidAccessHandler == null || !_invalidAccessHandler(va))
-                {
-                    throw;
-                }
-            }
         }
 
         /// <inheritdoc/>
@@ -936,6 +864,10 @@ namespace Ryujinx.Cpu.AppleHv
             _addressSpace.Dispose();
         }
 
-        private static void ThrowInvalidMemoryRegionException(string message) => throw new InvalidMemoryRegionException(message);
+        protected override Span<byte> GetPhysicalAddressSpan(ulong pa, int size)
+            => _backingMemory.GetSpan(pa, size);
+
+        protected override ulong TranslateVirtualAddressForRead(ulong va)
+            => GetPhysicalAddressChecked(va);
     }
 }

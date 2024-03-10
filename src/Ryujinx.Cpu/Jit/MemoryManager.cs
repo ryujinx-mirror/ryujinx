@@ -14,12 +14,8 @@ namespace Ryujinx.Cpu.Jit
     /// <summary>
     /// Represents a CPU memory manager.
     /// </summary>
-    public sealed class MemoryManager : MemoryManagerBase, IMemoryManager, IVirtualMemoryManagerTracked, IWritableBlock
+    public sealed class MemoryManager : VirtualMemoryManagerRefCountedBase<ulong, ulong>, IMemoryManager, IVirtualMemoryManagerTracked, IWritableBlock
     {
-        public const int PageBits = 12;
-        public const int PageSize = 1 << PageBits;
-        public const int PageMask = PageSize - 1;
-
         private const int PteSize = 8;
 
         private const int PointerTagBit = 62;
@@ -35,8 +31,6 @@ namespace Ryujinx.Cpu.Jit
         /// </summary>
         public int AddressSpaceBits { get; }
 
-        private readonly ulong _addressSpaceSize;
-
         private readonly MemoryBlock _pageTable;
 
         /// <summary>
@@ -49,6 +43,8 @@ namespace Ryujinx.Cpu.Jit
         public MemoryTracking Tracking { get; }
 
         public event Action<ulong, ulong> UnmapEvent;
+
+        protected override ulong AddressSpaceSize { get; }
 
         /// <summary>
         /// Creates a new instance of the memory manager.
@@ -71,7 +67,7 @@ namespace Ryujinx.Cpu.Jit
             }
 
             AddressSpaceBits = asBits;
-            _addressSpaceSize = asSize;
+            AddressSpaceSize = asSize;
             _pageTable = new MemoryBlock((asSize / PageSize) * PteSize);
 
             Tracking = new MemoryTracking(this, PageSize);
@@ -153,9 +149,19 @@ namespace Ryujinx.Cpu.Jit
         }
 
         /// <inheritdoc/>
-        public void Read(ulong va, Span<byte> data)
+        public override void Read(ulong va, Span<byte> data)
         {
-            ReadImpl(va, data);
+            try
+            {
+                base.Read(va, data);
+            }
+            catch (InvalidMemoryRegionException)
+            {
+                if (_invalidAccessHandler == null || !_invalidAccessHandler(va))
+                {
+                    throw;
+                }
+            }
         }
 
         /// <inheritdoc/>
@@ -290,7 +296,7 @@ namespace Ryujinx.Cpu.Jit
             {
                 Span<byte> data = new byte[size];
 
-                ReadImpl(va, data);
+                base.Read(va, data);
 
                 return data;
             }
@@ -462,48 +468,6 @@ namespace Ryujinx.Cpu.Jit
             return regions;
         }
 
-        private void ReadImpl(ulong va, Span<byte> data)
-        {
-            if (data.Length == 0)
-            {
-                return;
-            }
-
-            try
-            {
-                AssertValidAddressAndSize(va, (ulong)data.Length);
-
-                int offset = 0, size;
-
-                if ((va & PageMask) != 0)
-                {
-                    ulong pa = GetPhysicalAddressInternal(va);
-
-                    size = Math.Min(data.Length, PageSize - (int)(va & PageMask));
-
-                    _backingMemory.GetSpan(pa, size).CopyTo(data[..size]);
-
-                    offset += size;
-                }
-
-                for (; offset < data.Length; offset += size)
-                {
-                    ulong pa = GetPhysicalAddressInternal(va + (ulong)offset);
-
-                    size = Math.Min(data.Length - offset, PageSize);
-
-                    _backingMemory.GetSpan(pa, size).CopyTo(data.Slice(offset, size));
-                }
-            }
-            catch (InvalidMemoryRegionException)
-            {
-                if (_invalidAccessHandler == null || !_invalidAccessHandler(va))
-                {
-                    throw;
-                }
-            }
-        }
-
         /// <inheritdoc/>
         public bool IsRangeMapped(ulong va, ulong size)
         {
@@ -542,37 +506,6 @@ namespace Ryujinx.Cpu.Jit
             }
 
             return _pageTable.Read<ulong>((va / PageSize) * PteSize) != 0;
-        }
-
-        private bool ValidateAddress(ulong va)
-        {
-            return va < _addressSpaceSize;
-        }
-
-        /// <summary>
-        /// Checks if the combination of virtual address and size is part of the addressable space.
-        /// </summary>
-        /// <param name="va">Virtual address of the range</param>
-        /// <param name="size">Size of the range in bytes</param>
-        /// <returns>True if the combination of virtual address and size is part of the addressable space</returns>
-        private bool ValidateAddressAndSize(ulong va, ulong size)
-        {
-            ulong endVa = va + size;
-            return endVa >= va && endVa >= size && endVa <= _addressSpaceSize;
-        }
-
-        /// <summary>
-        /// Ensures the combination of virtual address and size is part of the addressable space.
-        /// </summary>
-        /// <param name="va">Virtual address of the range</param>
-        /// <param name="size">Size of the range in bytes</param>
-        /// <exception cref="InvalidMemoryRegionException">Throw when the memory region specified outside the addressable space</exception>
-        private void AssertValidAddressAndSize(ulong va, ulong size)
-        {
-            if (!ValidateAddressAndSize(va, size))
-            {
-                throw new InvalidMemoryRegionException($"va=0x{va:X16}, size=0x{size:X16}");
-            }
         }
 
         private ulong GetPhysicalAddressInternal(ulong va)
@@ -691,5 +624,11 @@ namespace Ryujinx.Cpu.Jit
         /// Disposes of resources used by the memory manager.
         /// </summary>
         protected override void Destroy() => _pageTable.Dispose();
+
+        protected override Span<byte> GetPhysicalAddressSpan(ulong pa, int size)
+            => _backingMemory.GetSpan(pa, size);
+
+        protected override ulong TranslateVirtualAddressForRead(ulong va)
+            => GetPhysicalAddressInternal(va);
     }
 }

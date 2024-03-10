@@ -13,12 +13,8 @@ namespace Ryujinx.Cpu.Jit
     /// <summary>
     /// Represents a CPU memory manager which maps guest virtual memory directly onto a host virtual region.
     /// </summary>
-    public sealed class MemoryManagerHostMapped : MemoryManagerBase, IMemoryManager, IVirtualMemoryManagerTracked, IWritableBlock
+    public sealed class MemoryManagerHostMapped : VirtualMemoryManagerRefCountedBase<ulong, ulong>, IMemoryManager, IVirtualMemoryManagerTracked, IWritableBlock
     {
-        public const int PageBits = 12;
-        public const int PageSize = 1 << PageBits;
-        public const int PageMask = PageSize - 1;
-
         public const int PageToPteShift = 5; // 32 pages (2 bits each) in one ulong page table entry.
         public const ulong BlockMappedMask = 0x5555555555555555; // First bit of each table entry set.
 
@@ -39,8 +35,6 @@ namespace Ryujinx.Cpu.Jit
 
         private readonly AddressSpace _addressSpace;
 
-        public ulong AddressSpaceSize { get; }
-
         private readonly PageTable<ulong> _pageTable;
 
         private readonly MemoryEhMeilleure _memoryEh;
@@ -59,6 +53,8 @@ namespace Ryujinx.Cpu.Jit
         public MemoryTracking Tracking { get; }
 
         public event Action<ulong, ulong> UnmapEvent;
+
+        protected override ulong AddressSpaceSize { get; }
 
         /// <summary>
         /// Creates a new instance of the host mapped memory manager.
@@ -89,42 +85,6 @@ namespace Ryujinx.Cpu.Jit
 
             Tracking = new MemoryTracking(this, (int)MemoryBlock.GetPageSize(), invalidAccessHandler);
             _memoryEh = new MemoryEhMeilleure(_addressSpace.Base, _addressSpace.Mirror, Tracking);
-        }
-
-        /// <summary>
-        /// Checks if the virtual address is part of the addressable space.
-        /// </summary>
-        /// <param name="va">Virtual address</param>
-        /// <returns>True if the virtual address is part of the addressable space</returns>
-        private bool ValidateAddress(ulong va)
-        {
-            return va < AddressSpaceSize;
-        }
-
-        /// <summary>
-        /// Checks if the combination of virtual address and size is part of the addressable space.
-        /// </summary>
-        /// <param name="va">Virtual address of the range</param>
-        /// <param name="size">Size of the range in bytes</param>
-        /// <returns>True if the combination of virtual address and size is part of the addressable space</returns>
-        private bool ValidateAddressAndSize(ulong va, ulong size)
-        {
-            ulong endVa = va + size;
-            return endVa >= va && endVa >= size && endVa <= AddressSpaceSize;
-        }
-
-        /// <summary>
-        /// Ensures the combination of virtual address and size is part of the addressable space.
-        /// </summary>
-        /// <param name="va">Virtual address of the range</param>
-        /// <param name="size">Size of the range in bytes</param>
-        /// <exception cref="InvalidMemoryRegionException">Throw when the memory region specified outside the addressable space</exception>
-        private void AssertValidAddressAndSize(ulong va, ulong size)
-        {
-            if (!ValidateAddressAndSize(va, size))
-            {
-                throw new InvalidMemoryRegionException($"va=0x{va:X16}, size=0x{size:X16}");
-            }
         }
 
         /// <summary>
@@ -235,7 +195,7 @@ namespace Ryujinx.Cpu.Jit
         }
 
         /// <inheritdoc/>
-        public void Read(ulong va, Span<byte> data)
+        public override void Read(ulong va, Span<byte> data)
         {
             try
             {
@@ -816,6 +776,10 @@ namespace Ryujinx.Cpu.Jit
             _memoryEh.Dispose();
         }
 
-        private static void ThrowInvalidMemoryRegionException(string message) => throw new InvalidMemoryRegionException(message);
+        protected override Span<byte> GetPhysicalAddressSpan(ulong pa, int size)
+            => _addressSpace.Mirror.GetSpan(pa, size);
+
+        protected override ulong TranslateVirtualAddressForRead(ulong va)
+            => va;
     }
 }
