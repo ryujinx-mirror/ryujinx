@@ -466,7 +466,7 @@ namespace Ryujinx.HLE.HOS.Applets.SoftwareKeyboard
 
         private void DrawPadButton(IImageProcessingContext context, PointF point, Image icon, string label, bool pressed, bool enabled)
         {
-            // Use relative positions so we can center the the entire drawing later.
+            // Use relative positions so we can center the entire drawing later.
 
             float iconX = 0;
             float iconY = 0;
@@ -522,7 +522,7 @@ namespace Ryujinx.HLE.HOS.Applets.SoftwareKeyboard
         {
             var labelRectangle = MeasureString(ControllerToggleText, _labelsTextFont);
 
-            // Use relative positions so we can center the the entire drawing later.
+            // Use relative positions so we can center the entire drawing later.
 
             float keyWidth = _keyModeIcon.Width;
             float keyHeight = _keyModeIcon.Height;
