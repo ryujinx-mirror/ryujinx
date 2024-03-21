@@ -104,7 +104,7 @@ namespace Ryujinx.Ava.Common.Locale
         {
             return _localeLanguageCode switch
             {
-                "he_IL" => true,
+                "ar_SA" or "he_IL" => true,
                 _ => false
             };
         }
