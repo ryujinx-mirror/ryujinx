@@ -341,7 +341,7 @@
   "DialogThemeRestartMessage": "ערכת הנושא נשמרה. יש צורך בהפעלה מחדש כדי להחיל את ערכת הנושא.",
   "DialogThemeRestartSubMessage": "האם ברצונך להפעיל מחדש?",
   "DialogFirmwareInstallEmbeddedMessage": "האם תרצו להתקין את הקושחה המוטמעת במשחק הזה? (קושחה {0})",
-  "DialogFirmwareInstallEmbeddedSuccessMessage": "לא נמצאה קושחה מותקנת אבל ריוג'ינקס הצליח להתקין קושחה {0} מהמשחק שסופק. \\nהאמולטור יופעל כעת.",
+  "DialogFirmwareInstallEmbeddedSuccessMessage": "לא נמצאה קושחה מותקנת אבל ריוג'ינקס הצליח להתקין קושחה {0} מהמשחק שסופק. \nהאמולטור יופעל כעת.",
   "DialogFirmwareNoFirmwareInstalledMessage": "לא מותקנת קושחה",
   "DialogFirmwareInstalledMessage": "הקושחה {0} הותקנה",
   "DialogInstallFileTypesSuccessMessage": "סוגי קבצים הותקנו בהצלחה!",

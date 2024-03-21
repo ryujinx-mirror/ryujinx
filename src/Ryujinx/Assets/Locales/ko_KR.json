@@ -341,7 +341,7 @@
   "DialogThemeRestartMessage": "테마가 저장되었습니다. 테마를 적용하려면 다시 시작해야 합니다.",
   "DialogThemeRestartSubMessage": "다시 시작하겠습니까?",
   "DialogFirmwareInstallEmbeddedMessage": "이 게임에 내장된 펌웨어를 설치하겠습니까? (펌웨어 {0})",
-  "DialogFirmwareInstallEmbeddedSuccessMessage": "설치된 펌웨어가 없지만 Ryujinx가 제공된 게임에서 펌웨어 {0}을(를) 설치할 수 있었습니다.\\n이제 에뮬레이터가 시작됩니다.",
+  "DialogFirmwareInstallEmbeddedSuccessMessage": "설치된 펌웨어가 없지만 Ryujinx가 제공된 게임에서 펌웨어 {0}을(를) 설치할 수 있었습니다.\n이제 에뮬레이터가 시작됩니다.",
   "DialogFirmwareNoFirmwareInstalledMessage": "설치된 펌웨어 없음",
   "DialogFirmwareInstalledMessage": "펌웨어 {0}이(가) 설치됨",
   "DialogInstallFileTypesSuccessMessage": "파일 형식을 성공적으로 설치했습니다!",

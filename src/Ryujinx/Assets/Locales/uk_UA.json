@@ -341,7 +341,7 @@
   "DialogThemeRestartMessage": "Тему збережено. Щоб застосувати тему, потрібен перезапуск.",
   "DialogThemeRestartSubMessage": "Ви хочете перезапустити",
   "DialogFirmwareInstallEmbeddedMessage": "Бажаєте встановити прошивку, вбудовану в цю гру?  (Прошивка {0})",
-  "DialogFirmwareInstallEmbeddedSuccessMessage": "Встановлену прошивку не знайдено, але Ryujinx вдалося встановити прошивку {0} з наданої гри.\\nТепер запуститься емулятор.",
+  "DialogFirmwareInstallEmbeddedSuccessMessage": "Встановлену прошивку не знайдено, але Ryujinx вдалося встановити прошивку {0} з наданої гри.\nТепер запуститься емулятор.",
   "DialogFirmwareNoFirmwareInstalledMessage": "Прошивка не встановлена",
   "DialogFirmwareInstalledMessage": "Встановлено прошивку {0}",
   "DialogInstallFileTypesSuccessMessage": "Успішно встановлено типи файлів!",

@@ -341,7 +341,7 @@
   "DialogThemeRestartMessage": "บันทึกธีมแล้ว จำเป็นต้องรีสตาร์ทเพื่อใช้ธีม",
   "DialogThemeRestartSubMessage": "คุณต้องการรีสตาร์ทหรือไม่?",
   "DialogFirmwareInstallEmbeddedMessage": "คุณต้องการติดตั้งเฟิร์มแวร์ที่ฝังอยู่ในเกมนี้หรือไม่? (เฟิร์มแวร์ {0})",
-  "DialogFirmwareInstallEmbeddedSuccessMessage": "ไม่พบเฟิร์มแวร์ที่ติดตั้งไว้ แต่ รียูจินซ์ สามารถติดตั้งเฟิร์มแวร์ได้ {0} จากเกมที่ให้มา\\nตอนนี้โปรแกรมจำลองจะเริ่มทำงาน",
+  "DialogFirmwareInstallEmbeddedSuccessMessage": "ไม่พบเฟิร์มแวร์ที่ติดตั้งไว้ แต่ รียูจินซ์ สามารถติดตั้งเฟิร์มแวร์ได้ {0} จากเกมที่ให้มา\nตอนนี้โปรแกรมจำลองจะเริ่มทำงาน",
   "DialogFirmwareNoFirmwareInstalledMessage": "ไม่มีการติดตั้งเฟิร์มแวร์",
   "DialogFirmwareInstalledMessage": "เฟิร์มแวร์ทำการติดตั้งแล้ว {0}",
   "DialogInstallFileTypesSuccessMessage": "ติดตั้งประเภทไฟล์สำเร็จแล้ว!",

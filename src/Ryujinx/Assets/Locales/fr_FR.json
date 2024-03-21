@@ -341,7 +341,7 @@
   "DialogThemeRestartMessage": "Le thème a été enregistré. Un redémarrage est requis pour appliquer le thème.",
   "DialogThemeRestartSubMessage": "Voulez-vous redémarrer",
   "DialogFirmwareInstallEmbeddedMessage": "Voulez-vous installer le firmware intégré dans ce jeu ? (Firmware {0})",
-  "DialogFirmwareInstallEmbeddedSuccessMessage": "Aucun firmware installé n'a été trouvé mais Ryujinx a pu installer le firmware {0} à partir du jeu fourni.\\nL'émulateur va maintenant démarrer.",
+  "DialogFirmwareInstallEmbeddedSuccessMessage": "Aucun firmware installé n'a été trouvé mais Ryujinx a pu installer le firmware {0} à partir du jeu fourni.\nL'émulateur va maintenant démarrer.",
   "DialogFirmwareNoFirmwareInstalledMessage": "Aucun Firmware installé",
   "DialogFirmwareInstalledMessage": "Le firmware {0} a été installé",
   "DialogInstallFileTypesSuccessMessage": "Types de fichiers installés avec succès!",

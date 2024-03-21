@@ -341,7 +341,7 @@
   "DialogThemeRestartMessage": "テーマがセーブされました. テーマを適用するには再起動が必要です.",
   "DialogThemeRestartSubMessage": "再起動しますか",
   "DialogFirmwareInstallEmbeddedMessage": "このゲームに含まれるファームウェアをインストールしてよろしいですか? (ファームウェア {0})",
-  "DialogFirmwareInstallEmbeddedSuccessMessage": "ファームウェアがインストールされていませんが, ゲームに含まれるファームウェア {0} をインストールできます.\\nエミュレータが開始します.",
+  "DialogFirmwareInstallEmbeddedSuccessMessage": "ファームウェアがインストールされていませんが, ゲームに含まれるファームウェア {0} をインストールできます.\nエミュレータが開始します.",
   "DialogFirmwareNoFirmwareInstalledMessage": "ファームウェアがインストールされていません",
   "DialogFirmwareInstalledMessage": "ファームウェア {0} がインストールされました",
   "DialogInstallFileTypesSuccessMessage": "ファイル形式のインストールに成功しました!",

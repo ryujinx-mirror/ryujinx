@@ -341,7 +341,7 @@
   "DialogThemeRestartMessage": "تم حفظ السمة. إعادة التشغيل مطلوبة لتطبيق السمة.",
   "DialogThemeRestartSubMessage": "هل تريد إعادة التشغيل",
   "DialogFirmwareInstallEmbeddedMessage": "هل ترغب في تثبيت البرنامج الثابت المدمج في هذه اللعبة؟ (البرنامج الثابت {0})",
-  "DialogFirmwareInstallEmbeddedSuccessMessage": "لم يتم العثور على أي برنامج ثابت مثبت ولكن Ryujinx كان قادراً على تثبيت البرنامج الثابت {0} من اللعبة المقدمة.\\nسيبدأ المحاكي الآن.",
+  "DialogFirmwareInstallEmbeddedSuccessMessage": "لم يتم العثور على أي برنامج ثابت مثبت ولكن Ryujinx كان قادراً على تثبيت البرنامج الثابت {0} من اللعبة المقدمة.\nسيبدأ المحاكي الآن.",
   "DialogFirmwareNoFirmwareInstalledMessage": "لا يوجد برنامج ثابت مثبت",
   "DialogFirmwareInstalledMessage": "تم تثبيت البرنامج الثابت {0}",
   "DialogInstallFileTypesSuccessMessage": "تم تثبيت أنواع الملفات بنجاح!",

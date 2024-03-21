@@ -341,7 +341,7 @@
   "DialogThemeRestartMessage": "Theme has been saved. A restart is needed to apply the theme.",
   "DialogThemeRestartSubMessage": "Do you want to restart",
   "DialogFirmwareInstallEmbeddedMessage": "Would you like to install the firmware embedded in this game? (Firmware {0})",
-  "DialogFirmwareInstallEmbeddedSuccessMessage": "No installed firmware was found but Ryujinx was able to install firmware {0} from the provided game.\\nThe emulator will now start.",
+  "DialogFirmwareInstallEmbeddedSuccessMessage": "No installed firmware was found but Ryujinx was able to install firmware {0} from the provided game.\nThe emulator will now start.",
   "DialogFirmwareNoFirmwareInstalledMessage": "No Firmware Installed",
   "DialogFirmwareInstalledMessage": "Firmware {0} was installed",
   "DialogInstallFileTypesSuccessMessage": "Successfully installed file types!",

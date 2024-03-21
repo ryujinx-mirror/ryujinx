@@ -412,7 +412,7 @@
   "MenuBarOptionsResumeEmulation": "继续",
   "AboutUrlTooltipMessage": "在浏览器中打开 Ryujinx 模拟器官网。",
   "AboutDisclaimerMessage": "Ryujinx 与 Nintendo™ 以及其合作伙伴没有任何关联。",
-  "AboutAmiiboDisclaimerMessage": "我们的 Amiibo 模拟使用了\nAmiiboAPI (www.amiiboapi.com) ",
+  "AboutAmiiboDisclaimerMessage": "我们的 Amiibo 模拟使用了\nAmiiboAPI (www.amiiboapi.com)。",
   "AboutPatreonUrlTooltipMessage": "在浏览器中打开 Ryujinx 的 Patreon 赞助页。",
   "AboutGithubUrlTooltipMessage": "在浏览器中打开 Ryujinx 的 GitHub 代码库。",
   "AboutDiscordUrlTooltipMessage": "在浏览器中打开 Ryujinx 的 Discord 邀请链接。",
