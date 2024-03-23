@@ -237,11 +237,6 @@ namespace Ryujinx.Ava.UI.ViewModels
             get => new(_networkInterfaces.Keys);
         }
 
-        public AvaloniaList<string> MultiplayerModes
-        {
-            get => new(Enum.GetNames<MultiplayerMode>());
-        }
-
         public KeyboardHotkeys KeyboardHotkeys
         {
             get => _keyboardHotkeys;
