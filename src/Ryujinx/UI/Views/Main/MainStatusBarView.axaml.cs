@@ -33,7 +33,7 @@ namespace Ryujinx.Ava.UI.Views.Main
 
         private void VsyncStatus_PointerReleased(object sender, PointerReleasedEventArgs e)
         {
-            Window.ViewModel.AppHost.Device.EnableDeviceVsync = !Window.ViewModel.AppHost.Device.EnableDeviceVsync;
+            Window.ViewModel.AppHost.ToggleVSync();
 
             Logger.Info?.Print(LogClass.Application, $"VSync toggled to: {Window.ViewModel.AppHost.Device.EnableDeviceVsync}");
         }

@@ -420,6 +420,12 @@ namespace Ryujinx.Ava
             Device.Configuration.MultiplayerMode = e.NewValue;
         }
 
+        public void ToggleVSync()
+        {
+            Device.EnableDeviceVsync = !Device.EnableDeviceVsync;
+            _renderer.Window.ChangeVSyncMode(Device.EnableDeviceVsync);
+        }
+
         public void Stop()
         {
             _isActive = false;
@@ -1068,8 +1074,7 @@ namespace Ryujinx.Ava
                     switch (currentHotkeyState)
                     {
                         case KeyboardHotkeyState.ToggleVSync:
-                            Device.EnableDeviceVsync = !Device.EnableDeviceVsync;
-
+                            ToggleVSync();
                             break;
                         case KeyboardHotkeyState.Screenshot:
                             ScreenshotRequested = true;
