@@ -1,3 +1,4 @@
+using Silk.NET.Vulkan;
 using System.Text.RegularExpressions;
 
 namespace Ryujinx.Graphics.Vulkan
@@ -59,6 +60,37 @@ namespace Ryujinx.Graphics.Vulkan
                 0x10005 => "Mesa",
                 0x10006 => "PoCL",
                 _ => $"0x{id:X}",
+            };
+        }
+
+        public static string GetFriendlyDriverName(DriverId id)
+        {
+            return id switch
+            {
+                DriverId.AmdProprietary => "AMD",
+                DriverId.AmdOpenSource => "AMD (Open)",
+                DriverId.ArmProprietary => "ARM",
+                DriverId.BroadcomProprietary => "Broadcom",
+                DriverId.CoreaviProprietary => "CoreAVI",
+                DriverId.GgpProprietary => "GGP",
+                DriverId.GoogleSwiftshader => "SwiftShader",
+                DriverId.ImaginationProprietary => "Imagination",
+                DriverId.IntelOpenSourceMesa => "Intel (Open)",
+                DriverId.IntelProprietaryWindows => "Intel",
+                DriverId.JuiceProprietary => "Juice",
+                DriverId.MesaDozen => "Dozen",
+                DriverId.MesaLlvmpipe => "LLVMpipe",
+                DriverId.MesaPanvk => "PanVK",
+                DriverId.MesaRadv => "RADV",
+                DriverId.MesaTurnip => "Turnip",
+                DriverId.MesaV3DV => "V3DV",
+                DriverId.MesaVenus => "Venus",
+                DriverId.Moltenvk => "MoltenVK",
+                DriverId.NvidiaProprietary => "NVIDIA",
+                DriverId.QualcommProprietary => "Qualcomm",
+                DriverId.SamsungProprietary => "Samsung",
+                DriverId.VerisiliconProprietary => "Verisilicon",
+                _ => id.ToString(),
             };
         }
     }
