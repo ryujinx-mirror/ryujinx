@@ -247,7 +247,7 @@ namespace Ryujinx.Cpu.LightningJit.Arm64
                     }
                 }
 
-                if (!flags.HasFlag(InstFlags.ReadRt))
+                if (!flags.HasFlag(InstFlags.ReadRt) || name.IsPartialRegisterUpdateMemory())
                 {
                     if (flags.HasFlag(InstFlags.Rt))
                     {
@@ -281,7 +281,7 @@ namespace Ryujinx.Cpu.LightningJit.Arm64
                     gprMask |= MaskFromIndex(ExtractRd(flags, encoding));
                 }
 
-                if (!flags.HasFlag(InstFlags.ReadRt))
+                if (!flags.HasFlag(InstFlags.ReadRt) || name.IsPartialRegisterUpdateMemory())
                 {
                     if (flags.HasFlag(InstFlags.Rt))
                     {

@@ -1,15 +1,12 @@
+using ARMeilleure.Memory;
 using Ryujinx.Cpu.LightningJit.CodeGen.Arm64;
 using System;
-using System.Diagnostics;
 using System.Numerics;
 
 namespace Ryujinx.Cpu.LightningJit.Arm64
 {
     class RegisterAllocator
     {
-        public const int MaxTemps = 1;
-        public const int MaxTempsInclFixed = MaxTemps + 2;
-
         private uint _gprMask;
         private readonly uint _fpSimdMask;
         private readonly uint _pStateMask;
@@ -25,7 +22,7 @@ namespace Ryujinx.Cpu.LightningJit.Arm64
         public uint AllFpSimdMask => _fpSimdMask;
         public uint AllPStateMask => _pStateMask;
 
-        public RegisterAllocator(uint gprMask, uint fpSimdMask, uint pStateMask, bool hasHostCall)
+        public RegisterAllocator(MemoryManagerType mmType, uint gprMask, uint fpSimdMask, uint pStateMask, bool hasHostCall)
         {
             _gprMask = gprMask;
             _fpSimdMask = fpSimdMask;
@@ -56,7 +53,7 @@ namespace Ryujinx.Cpu.LightningJit.Arm64
 
             BuildRegisterMap(_registerMap);
 
-            Span<int> tempRegisters = stackalloc int[MaxTemps];
+            Span<int> tempRegisters = stackalloc int[CalculateMaxTemps(mmType)];
 
             for (int index = 0; index < tempRegisters.Length; index++)
             {
@@ -149,6 +146,16 @@ namespace Ryujinx.Cpu.LightningJit.Arm64
         private static void FreeTempRegister(ref uint mask, int index)
         {
             mask &= ~(1u << index);
+        }
+
+        public static int CalculateMaxTemps(MemoryManagerType mmType)
+        {
+            return mmType.IsHostMapped() ? 1 : 2;
+        }
+
+        public static int CalculateMaxTempsInclFixed(MemoryManagerType mmType)
+        {
+            return CalculateMaxTemps(mmType) + 2;
         }
     }
 }

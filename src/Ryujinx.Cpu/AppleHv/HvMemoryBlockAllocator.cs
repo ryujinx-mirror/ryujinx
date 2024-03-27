@@ -38,7 +38,7 @@ namespace Ryujinx.Cpu.AppleHv
 
         private readonly HvIpaAllocator _ipaAllocator;
 
-        public HvMemoryBlockAllocator(HvIpaAllocator ipaAllocator, int blockAlignment) : base(blockAlignment, MemoryAllocationFlags.None)
+        public HvMemoryBlockAllocator(HvIpaAllocator ipaAllocator, ulong blockAlignment) : base(blockAlignment, MemoryAllocationFlags.None)
         {
             _ipaAllocator = ipaAllocator;
         }

@@ -316,7 +316,7 @@ namespace Ryujinx.Cpu.LightningJit.Arm64.Target.Arm64
             uint pStateUseMask = multiBlock.GlobalUseMask.PStateMask;
 
             CodeWriter writer = new();
-            RegisterAllocator regAlloc = new(gprUseMask, fpSimdUseMask, pStateUseMask, multiBlock.HasHostCall);
+            RegisterAllocator regAlloc = new(memoryManager.Type, gprUseMask, fpSimdUseMask, pStateUseMask, multiBlock.HasHostCall);
             RegisterSaveRestore rsr = new(
                 regAlloc.AllGprMask & AbiConstants.GprCalleeSavedRegsMask,
                 regAlloc.AllFpSimdMask & AbiConstants.FpSimdCalleeSavedRegsMask,

@@ -70,7 +70,7 @@ namespace Ryujinx.Cpu.Signal
             config = new SignalHandlerConfig();
         }
 
-        public static void InitializeSignalHandler(ulong pageSize, Func<IntPtr, IntPtr, IntPtr> customSignalHandlerFactory = null)
+        public static void InitializeSignalHandler(Func<IntPtr, IntPtr, IntPtr> customSignalHandlerFactory = null)
         {
             if (_initialized)
             {
@@ -90,7 +90,7 @@ namespace Ryujinx.Cpu.Signal
 
                 if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
                 {
-                    _signalHandlerPtr = MapCode(NativeSignalHandlerGenerator.GenerateUnixSignalHandler(_handlerConfig, rangeStructSize, pageSize));
+                    _signalHandlerPtr = MapCode(NativeSignalHandlerGenerator.GenerateUnixSignalHandler(_handlerConfig, rangeStructSize));
 
                     if (customSignalHandlerFactory != null)
                     {
@@ -107,7 +107,7 @@ namespace Ryujinx.Cpu.Signal
                     config.StructAddressOffset = 40; // ExceptionInformation1
                     config.StructWriteOffset = 32; // ExceptionInformation0
 
-                    _signalHandlerPtr = MapCode(NativeSignalHandlerGenerator.GenerateWindowsSignalHandler(_handlerConfig, rangeStructSize, pageSize));
+                    _signalHandlerPtr = MapCode(NativeSignalHandlerGenerator.GenerateWindowsSignalHandler(_handlerConfig, rangeStructSize));
 
                     if (customSignalHandlerFactory != null)
                     {
@@ -174,6 +174,11 @@ namespace Ryujinx.Cpu.Signal
             }
 
             return false;
+        }
+
+        public static bool SupportsFaultAddressPatching()
+        {
+            return NativeSignalHandlerGenerator.SupportsFaultAddressPatchingForHost();
         }
     }
 }

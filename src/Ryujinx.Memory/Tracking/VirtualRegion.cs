@@ -70,9 +70,12 @@ namespace Ryujinx.Memory.Tracking
         {
             _lastPermission = MemoryPermission.Invalid;
 
-            foreach (RegionHandle handle in Handles)
+            if (!Guest)
             {
-                handle.SignalMappingChanged(mapped);
+                foreach (RegionHandle handle in Handles)
+                {
+                    handle.SignalMappingChanged(mapped);
+                }
             }
         }
 

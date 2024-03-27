@@ -143,7 +143,7 @@ namespace Ryujinx.Cpu
             }
         }
 
-        public PrivateMemoryAllocator(int blockAlignment, MemoryAllocationFlags allocationFlags) : base(blockAlignment, allocationFlags)
+        public PrivateMemoryAllocator(ulong blockAlignment, MemoryAllocationFlags allocationFlags) : base(blockAlignment, allocationFlags)
         {
         }
 
@@ -180,10 +180,10 @@ namespace Ryujinx.Cpu
 
         private readonly List<T> _blocks;
 
-        private readonly int _blockAlignment;
+        private readonly ulong _blockAlignment;
         private readonly MemoryAllocationFlags _allocationFlags;
 
-        public PrivateMemoryAllocatorImpl(int blockAlignment, MemoryAllocationFlags allocationFlags)
+        public PrivateMemoryAllocatorImpl(ulong blockAlignment, MemoryAllocationFlags allocationFlags)
         {
             _blocks = new List<T>();
             _blockAlignment = blockAlignment;
@@ -212,7 +212,7 @@ namespace Ryujinx.Cpu
                 }
             }
 
-            ulong blockAlignedSize = BitUtils.AlignUp(size, (ulong)_blockAlignment);
+            ulong blockAlignedSize = BitUtils.AlignUp(size, _blockAlignment);
 
             var memory = new MemoryBlock(blockAlignedSize, _allocationFlags);
             var newBlock = createBlock(memory, blockAlignedSize);

@@ -165,6 +165,29 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
         /// <inheritdoc/>
         protected override Result MapForeign(IEnumerable<HostMemoryRange> regions, ulong va, ulong size)
         {
+            ulong backingStart = (ulong)Context.Memory.Pointer;
+            ulong backingEnd = backingStart + Context.Memory.Size;
+
+            KPageList pageList = new();
+
+            foreach (HostMemoryRange region in regions)
+            {
+                // If the range is inside the physical memory, it is shared and we should increment the page count,
+                // otherwise it is private and we don't need to increment the page count.
+
+                if (region.Address >= backingStart && region.Address < backingEnd)
+                {
+                    pageList.AddRange(region.Address - backingStart + DramMemoryMap.DramBase, region.Size / PageSize);
+                }
+            }
+
+            using var scopedPageList = new KScopedPageList(Context.MemoryManager, pageList);
+
+            foreach (var pageNode in pageList)
+            {
+                Context.CommitMemory(pageNode.Address - DramMemoryMap.DramBase, pageNode.PagesCount * PageSize);
+            }
+
             ulong offset = 0;
 
             foreach (var region in regions)
@@ -173,6 +196,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
                 offset += region.Size;
             }
+
+            scopedPageList.SignalSuccess();
 
             return Result.Success;
         }

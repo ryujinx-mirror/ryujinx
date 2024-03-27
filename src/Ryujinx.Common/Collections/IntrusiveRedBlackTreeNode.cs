@@ -5,10 +5,10 @@ namespace Ryujinx.Common.Collections
     /// </summary>
     public class IntrusiveRedBlackTreeNode<T> where T : IntrusiveRedBlackTreeNode<T>
     {
-        internal bool Color = true;
-        internal T Left;
-        internal T Right;
-        internal T Parent;
+        public bool Color = true;
+        public T Left;
+        public T Right;
+        public T Parent;
 
         public T Predecessor => IntrusiveRedBlackTreeImpl<T>.PredecessorOf((T)this);
         public T Successor => IntrusiveRedBlackTreeImpl<T>.SuccessorOf((T)this);

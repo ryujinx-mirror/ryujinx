@@ -68,9 +68,9 @@ namespace Ryujinx.Cpu.LightningJit
 
             FunctionTable.Fill = (ulong)Stubs.SlowDispatchStub;
 
-            if (memory.Type.IsHostMapped())
+            if (memory.Type.IsHostMappedOrTracked())
             {
-                NativeSignalHandler.InitializeSignalHandler(MemoryBlock.GetPageSize());
+                NativeSignalHandler.InitializeSignalHandler();
             }
         }
 

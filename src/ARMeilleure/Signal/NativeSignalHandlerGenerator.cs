@@ -21,10 +21,8 @@ namespace ARMeilleure.Signal
 
         private const uint EXCEPTION_ACCESS_VIOLATION = 0xc0000005;
 
-        private static Operand EmitGenericRegionCheck(EmitterContext context, IntPtr signalStructPtr, Operand faultAddress, Operand isWrite, int rangeStructSize, ulong pageSize)
+        private static Operand EmitGenericRegionCheck(EmitterContext context, IntPtr signalStructPtr, Operand faultAddress, Operand isWrite, int rangeStructSize)
         {
-            ulong pageMask = pageSize - 1;
-
             Operand inRegionLocal = context.AllocateLocal(OperandType.I32);
             context.Copy(inRegionLocal, Const(0));
 
@@ -51,7 +49,7 @@ namespace ARMeilleure.Signal
                 // Only call tracking if in range.
                 context.BranchIfFalse(nextLabel, inRange, BasicBlockFrequency.Cold);
 
-                Operand offset = context.BitwiseAnd(context.Subtract(faultAddress, rangeAddress), Const(~pageMask));
+                Operand offset = context.Subtract(faultAddress, rangeAddress);
 
                 // Call the tracking action, with the pointer's relative offset to the base address.
                 Operand trackingActionPtr = context.Load(OperandType.I64, Const((ulong)signalStructPtr + rangeBaseOffset + 20));
@@ -62,8 +60,10 @@ namespace ARMeilleure.Signal
 
                 // Tracking action should be non-null to call it, otherwise assume false return.
                 context.BranchIfFalse(skipActionLabel, trackingActionPtr);
-                Operand result = context.Call(trackingActionPtr, OperandType.I32, offset, Const(pageSize), isWrite);
-                context.Copy(inRegionLocal, result);
+                Operand result = context.Call(trackingActionPtr, OperandType.I64, offset, Const(1UL), isWrite);
+                context.Copy(inRegionLocal, context.ICompareNotEqual(result, Const(0UL)));
+
+                GenerateFaultAddressPatchCode(context, faultAddress, result);
 
                 context.MarkLabel(skipActionLabel);
 
@@ -155,7 +155,7 @@ namespace ARMeilleure.Signal
             throw new PlatformNotSupportedException();
         }
 
-        public static byte[] GenerateUnixSignalHandler(IntPtr signalStructPtr, int rangeStructSize, ulong pageSize)
+        public static byte[] GenerateUnixSignalHandler(IntPtr signalStructPtr, int rangeStructSize)
         {
             EmitterContext context = new();
 
@@ -168,7 +168,7 @@ namespace ARMeilleure.Signal
 
             Operand isWrite = context.ICompareNotEqual(writeFlag, Const(0L)); // Normalize to 0/1.
 
-            Operand isInRegion = EmitGenericRegionCheck(context, signalStructPtr, faultAddress, isWrite, rangeStructSize, pageSize);
+            Operand isInRegion = EmitGenericRegionCheck(context, signalStructPtr, faultAddress, isWrite, rangeStructSize);
 
             Operand endLabel = Label();
 
@@ -203,7 +203,7 @@ namespace ARMeilleure.Signal
             return Compiler.Compile(cfg, argTypes, OperandType.None, CompilerOptions.HighCq, RuntimeInformation.ProcessArchitecture).Code;
         }
 
-        public static byte[] GenerateWindowsSignalHandler(IntPtr signalStructPtr, int rangeStructSize, ulong pageSize)
+        public static byte[] GenerateWindowsSignalHandler(IntPtr signalStructPtr, int rangeStructSize)
         {
             EmitterContext context = new();
 
@@ -232,7 +232,7 @@ namespace ARMeilleure.Signal
 
             Operand isWrite = context.ICompareNotEqual(writeFlag, Const(0L)); // Normalize to 0/1.
 
-            Operand isInRegion = EmitGenericRegionCheck(context, signalStructPtr, faultAddress, isWrite, rangeStructSize, pageSize);
+            Operand isInRegion = EmitGenericRegionCheck(context, signalStructPtr, faultAddress, isWrite, rangeStructSize);
 
             Operand endLabel = Label();
 
@@ -255,6 +255,87 @@ namespace ARMeilleure.Signal
             OperandType[] argTypes = new OperandType[] { OperandType.I64 };
 
             return Compiler.Compile(cfg, argTypes, OperandType.I32, CompilerOptions.HighCq, RuntimeInformation.ProcessArchitecture).Code;
+        }
+
+        private static void GenerateFaultAddressPatchCode(EmitterContext context, Operand faultAddress, Operand newAddress)
+        {
+            if (RuntimeInformation.ProcessArchitecture == Architecture.Arm64)
+            {
+                if (SupportsFaultAddressPatchingForHostOs())
+                {
+                    Operand lblSkip = Label();
+
+                    context.BranchIf(lblSkip, faultAddress, newAddress, Comparison.Equal);
+
+                    Operand ucontextPtr = context.LoadArgument(OperandType.I64, 2);
+                    Operand pcCtxAddress = default;
+                    ulong baseRegsOffset = 0;
+
+                    if (OperatingSystem.IsLinux())
+                    {
+                        pcCtxAddress = context.Add(ucontextPtr, Const(440UL));
+                        baseRegsOffset = 184UL;
+                    }
+                    else if (OperatingSystem.IsMacOS() || OperatingSystem.IsIOS())
+                    {
+                        ucontextPtr = context.Load(OperandType.I64, context.Add(ucontextPtr, Const(48UL)));
+
+                        pcCtxAddress = context.Add(ucontextPtr, Const(272UL));
+                        baseRegsOffset = 16UL;
+                    }
+
+                    Operand pc = context.Load(OperandType.I64, pcCtxAddress);
+
+                    Operand reg = GetAddressRegisterFromArm64Instruction(context, pc);
+                    Operand reg64 = context.ZeroExtend32(OperandType.I64, reg);
+                    Operand regCtxAddress = context.Add(ucontextPtr, context.Add(context.ShiftLeft(reg64, Const(3)), Const(baseRegsOffset)));
+                    Operand regAddress = context.Load(OperandType.I64, regCtxAddress);
+
+                    Operand addressDelta = context.Subtract(regAddress, faultAddress);
+
+                    context.Store(regCtxAddress, context.Add(newAddress, addressDelta));
+
+                    context.MarkLabel(lblSkip);
+                }
+            }
+        }
+
+        private static Operand GetAddressRegisterFromArm64Instruction(EmitterContext context, Operand pc)
+        {
+            Operand inst = context.Load(OperandType.I32, pc);
+            Operand reg = context.AllocateLocal(OperandType.I32);
+
+            Operand isSysInst = context.ICompareEqual(context.BitwiseAnd(inst, Const(0xFFF80000)), Const(0xD5080000));
+
+            Operand lblSys = Label();
+            Operand lblEnd = Label();
+
+            context.BranchIfTrue(lblSys, isSysInst, BasicBlockFrequency.Cold);
+
+            context.Copy(reg, context.BitwiseAnd(context.ShiftRightUI(inst, Const(5)), Const(0x1F)));
+            context.Branch(lblEnd);
+
+            context.MarkLabel(lblSys);
+            context.Copy(reg, context.BitwiseAnd(inst, Const(0x1F)));
+
+            context.MarkLabel(lblEnd);
+
+            return reg;
+        }
+
+        public static bool SupportsFaultAddressPatchingForHost()
+        {
+            return SupportsFaultAddressPatchingForHostArch() && SupportsFaultAddressPatchingForHostOs();
+        }
+
+        private static bool SupportsFaultAddressPatchingForHostArch()
+        {
+            return RuntimeInformation.ProcessArchitecture == Architecture.Arm64;
+        }
+
+        private static bool SupportsFaultAddressPatchingForHostOs()
+        {
+            return OperatingSystem.IsLinux() || OperatingSystem.IsMacOS() || OperatingSystem.IsIOS();
         }
     }
 }
