@@ -87,6 +87,7 @@ namespace Ryujinx.Graphics.Vulkan
         internal bool IsIntelWindows { get; private set; }
         internal bool IsAmdGcn { get; private set; }
         internal bool IsNvidiaPreTuring { get; private set; }
+        internal bool IsIntelArc { get; private set; }
         internal bool IsMoltenVk { get; private set; }
         internal bool IsTBDR { get; private set; }
         internal bool IsSharedMemory { get; private set; }
@@ -309,6 +310,51 @@ namespace Ryujinx.Graphics.Vulkan
                                              featuresCustomBorderColor.CustomBorderColorWithoutFormat;
 
             ref var properties = ref properties2.Properties;
+
+            var hasDriverProperties = _physicalDevice.TryGetPhysicalDeviceDriverPropertiesKHR(Api, out var driverProperties);
+
+            string vendorName = VendorUtils.GetNameFromId(properties.VendorID);
+
+            Vendor = VendorUtils.FromId(properties.VendorID);
+
+            IsAmdWindows = Vendor == Vendor.Amd && OperatingSystem.IsWindows();
+            IsIntelWindows = Vendor == Vendor.Intel && OperatingSystem.IsWindows();
+            IsTBDR =
+                Vendor == Vendor.Apple ||
+                Vendor == Vendor.Qualcomm ||
+                Vendor == Vendor.ARM ||
+                Vendor == Vendor.Broadcom ||
+                Vendor == Vendor.ImgTec;
+
+            GpuVendor = vendorName;
+            GpuDriver = hasDriverProperties ? Marshal.PtrToStringAnsi((IntPtr)driverProperties.DriverName) : vendorName; // Fall back to vendor name if driver name isn't available.
+
+            fixed (byte* deviceName = properties.DeviceName)
+            {
+                GpuRenderer = Marshal.PtrToStringAnsi((IntPtr)deviceName);
+            }
+
+            GpuVersion = $"Vulkan v{ParseStandardVulkanVersion(properties.ApiVersion)}, Driver v{ParseDriverVersion(ref properties)}";
+
+            IsAmdGcn = !IsMoltenVk && Vendor == Vendor.Amd && VendorUtils.AmdGcnRegex().IsMatch(GpuRenderer);
+
+            if (Vendor == Vendor.Nvidia)
+            {
+                var match = VendorUtils.NvidiaConsumerClassRegex().Match(GpuRenderer);
+
+                if (match != null && int.TryParse(match.Groups[2].Value, out int gpuNumber))
+                {
+                    IsNvidiaPreTuring = gpuNumber < 2000;
+                }
+                else if (GpuDriver.Contains("TITAN") && !GpuDriver.Contains("RTX"))
+                {
+                    IsNvidiaPreTuring = true;
+                }
+            }
+            else if (Vendor == Vendor.Intel)
+            {
+                IsIntelArc = GpuRenderer.StartsWith("Intel(R) Arc(TM)");
+            }
 
             ulong minResourceAlignment = Math.Max(
                 Math.Max(
@@ -732,49 +778,6 @@ namespace Ryujinx.Graphics.Vulkan
             return ParseStandardVulkanVersion(driverVersionRaw);
         }
 
-        private unsafe void PrintGpuInformation()
-        {
-            var properties = _physicalDevice.PhysicalDeviceProperties;
-
-            var hasDriverProperties = _physicalDevice.TryGetPhysicalDeviceDriverPropertiesKHR(Api, out var driverProperties);
-
-            string vendorName = VendorUtils.GetNameFromId(properties.VendorID);
-
-            Vendor = VendorUtils.FromId(properties.VendorID);
-
-            IsAmdWindows = Vendor == Vendor.Amd && OperatingSystem.IsWindows();
-            IsIntelWindows = Vendor == Vendor.Intel && OperatingSystem.IsWindows();
-            IsTBDR =
-                Vendor == Vendor.Apple ||
-                Vendor == Vendor.Qualcomm ||
-                Vendor == Vendor.ARM ||
-                Vendor == Vendor.Broadcom ||
-                Vendor == Vendor.ImgTec;
-
-            GpuVendor = vendorName;
-            GpuDriver = hasDriverProperties ? Marshal.PtrToStringAnsi((IntPtr)driverProperties.DriverName) : vendorName; // Fall back to vendor name if driver name isn't available.
-            GpuRenderer = Marshal.PtrToStringAnsi((IntPtr)properties.DeviceName);
-            GpuVersion = $"Vulkan v{ParseStandardVulkanVersion(properties.ApiVersion)}, Driver v{ParseDriverVersion(ref properties)}";
-
-            IsAmdGcn = !IsMoltenVk && Vendor == Vendor.Amd && VendorUtils.AmdGcnRegex().IsMatch(GpuRenderer);
-
-            if (Vendor == Vendor.Nvidia)
-            {
-                var match = VendorUtils.NvidiaConsumerClassRegex().Match(GpuRenderer);
-
-                if (match != null && int.TryParse(match.Groups[2].Value, out int gpuNumber))
-                {
-                    IsNvidiaPreTuring = gpuNumber < 2000;
-                }
-                else if (GpuDriver.Contains("TITAN") && !GpuDriver.Contains("RTX"))
-                {
-                    IsNvidiaPreTuring = true;
-                }
-            }
-
-            Logger.Notice.Print(LogClass.Gpu, $"{GpuVendor} {GpuRenderer} ({GpuVersion})");
-        }
-
         internal PrimitiveTopology TopologyRemap(PrimitiveTopology topology)
         {
             return topology switch
@@ -796,6 +799,11 @@ namespace Ryujinx.Graphics.Vulkan
                 PrimitiveTopology.TriangleFan or PrimitiveTopology.Polygon => Capabilities.PortabilitySubset.HasFlag(PortabilitySubsetFlags.NoTriangleFans),
                 _ => false,
             };
+        }
+
+        private void PrintGpuInformation()
+        {
+            Logger.Notice.Print(LogClass.Gpu, $"{GpuVendor} {GpuRenderer} ({GpuVersion})");
         }
 
         public void Initialize(GraphicsDebugLevel logLevel)

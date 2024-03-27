@@ -111,8 +111,8 @@ namespace Ryujinx.Graphics.Vulkan
             bool usePushDescriptors = !isMinimal &&
                 VulkanConfiguration.UsePushDescriptors &&
                 _gd.Capabilities.SupportsPushDescriptors &&
-                !_gd.IsNvidiaPreTuring &&
                 !IsCompute &&
+                !HasPushDescriptorsBug(gd) &&
                 CanUsePushDescriptors(gd, resourceLayout, IsCompute);
 
             ReadOnlyCollection<ResourceDescriptorCollection> sets = usePushDescriptors ?
@@ -145,6 +145,12 @@ namespace Ryujinx.Graphics.Vulkan
 
             _compileTask = BackgroundCompilation();
             _firstBackgroundUse = !fromCache;
+        }
+
+        private static bool HasPushDescriptorsBug(VulkanRenderer gd)
+        {
+            // Those GPUs/drivers do not work properly with push descriptors, so we must force disable them.
+            return gd.IsNvidiaPreTuring || (gd.IsIntelArc && gd.IsIntelWindows);
         }
 
         private static bool CanUsePushDescriptors(VulkanRenderer gd, ResourceLayout layout, bool isCompute)
