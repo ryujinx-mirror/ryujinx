@@ -182,11 +182,10 @@ namespace Ryujinx.Graphics.Gpu.Image
 
         /// <summary>
         /// Discards all data for this handle.
-        /// This clears all dirty flags, modified flags, and pending copies from other handles.
+        /// This clears all dirty flags and pending copies from other handles.
         /// </summary>
         public void DiscardData()
         {
-            Modified = false;
             DeferredCopy = null;
 
             foreach (RegionHandle handle in Handles)

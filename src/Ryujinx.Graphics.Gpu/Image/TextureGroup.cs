@@ -282,7 +282,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
         /// <summary>
         /// Discards all data for a given texture.
-        /// This clears all dirty flags, modified flags, and pending copies from other textures.
+        /// This clears all dirty flags and pending copies from other textures.
         /// </summary>
         /// <param name="texture">The texture being discarded</param>
         public void DiscardData(Texture texture)
