@@ -8,14 +8,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 
 namespace Ryujinx.Cpu.Jit
 {
     /// <summary>
     /// Represents a CPU memory manager which maps guest virtual memory directly onto a host virtual region.
     /// </summary>
-    public sealed class MemoryManagerHostTracked : VirtualMemoryManagerRefCountedBase<ulong, ulong>, IWritableBlock, IMemoryManager, IVirtualMemoryManagerTracked
+    public sealed class MemoryManagerHostTracked : VirtualMemoryManagerRefCountedBase, IMemoryManager, IVirtualMemoryManagerTracked
     {
         private readonly InvalidAccessHandler _invalidAccessHandler;
         private readonly bool _unsafeMode;
@@ -101,12 +100,6 @@ namespace Ryujinx.Cpu.Jit
         }
 
         /// <inheritdoc/>
-        public void MapForeign(ulong va, nuint hostPointer, ulong size)
-        {
-            throw new NotSupportedException();
-        }
-
-        /// <inheritdoc/>
         public void Unmap(ulong va, ulong size)
         {
             AssertValidAddressAndSize(va, size);
@@ -120,18 +113,11 @@ namespace Ryujinx.Cpu.Jit
             _nativePageTable.Unmap(va, size);
         }
 
-        public T Read<T>(ulong va) where T : unmanaged
-        {
-            return MemoryMarshal.Cast<byte, T>(GetSpan(va, Unsafe.SizeOf<T>()))[0];
-        }
-
-        public T ReadTracked<T>(ulong va) where T : unmanaged
+        public override T ReadTracked<T>(ulong va)
         {
             try
             {
-                SignalMemoryTracking(va, (ulong)Unsafe.SizeOf<T>(), false);
-
-                return Read<T>(va);
+                return base.ReadTracked<T>(va);
             }
             catch (InvalidMemoryRegionException)
             {
@@ -146,37 +132,38 @@ namespace Ryujinx.Cpu.Jit
 
         public override void Read(ulong va, Span<byte> data)
         {
-            ReadImpl(va, data);
-        }
-
-        public void Write<T>(ulong va, T value) where T : unmanaged
-        {
-            Write(va, MemoryMarshal.Cast<T, byte>(MemoryMarshal.CreateSpan(ref value, 1)));
-        }
-
-        public void Write(ulong va, ReadOnlySpan<byte> data)
-        {
             if (data.Length == 0)
             {
                 return;
             }
 
-            SignalMemoryTracking(va, (ulong)data.Length, true);
-
-            WriteImpl(va, data);
-        }
-
-        public void WriteUntracked(ulong va, ReadOnlySpan<byte> data)
-        {
-            if (data.Length == 0)
+            try
             {
-                return;
-            }
+                AssertValidAddressAndSize(va, (ulong)data.Length);
 
-            WriteImpl(va, data);
+                ulong endVa = va + (ulong)data.Length;
+                int offset = 0;
+
+                while (va < endVa)
+                {
+                    (MemoryBlock memory, ulong rangeOffset, ulong copySize) = GetMemoryOffsetAndSize(va, (ulong)(data.Length - offset));
+
+                    memory.GetSpan(rangeOffset, (int)copySize).CopyTo(data.Slice(offset, (int)copySize));
+
+                    va += copySize;
+                    offset += (int)copySize;
+                }
+            }
+            catch (InvalidMemoryRegionException)
+            {
+                if (_invalidAccessHandler == null || !_invalidAccessHandler(va))
+                {
+                    throw;
+                }
+            }
         }
 
-        public bool WriteWithRedundancyCheck(ulong va, ReadOnlySpan<byte> data)
+        public override bool WriteWithRedundancyCheck(ulong va, ReadOnlySpan<byte> data)
         {
             if (data.Length == 0)
             {
@@ -206,35 +193,7 @@ namespace Ryujinx.Cpu.Jit
             }
         }
 
-        private void WriteImpl(ulong va, ReadOnlySpan<byte> data)
-        {
-            try
-            {
-                AssertValidAddressAndSize(va, (ulong)data.Length);
-
-                ulong endVa = va + (ulong)data.Length;
-                int offset = 0;
-
-                while (va < endVa)
-                {
-                    (MemoryBlock memory, ulong rangeOffset, ulong copySize) = GetMemoryOffsetAndSize(va, (ulong)(data.Length - offset));
-
-                    data.Slice(offset, (int)copySize).CopyTo(memory.GetSpan(rangeOffset, (int)copySize));
-
-                    va += copySize;
-                    offset += (int)copySize;
-                }
-            }
-            catch (InvalidMemoryRegionException)
-            {
-                if (_invalidAccessHandler == null || !_invalidAccessHandler(va))
-                {
-                    throw;
-                }
-            }
-        }
-
-        public ReadOnlySpan<byte> GetSpan(ulong va, int size, bool tracked = false)
+        public override ReadOnlySpan<byte> GetSpan(ulong va, int size, bool tracked = false)
         {
             if (size == 0)
             {
@@ -254,13 +213,13 @@ namespace Ryujinx.Cpu.Jit
             {
                 Span<byte> data = new byte[size];
 
-                ReadImpl(va, data);
+                Read(va, data);
 
                 return data;
             }
         }
 
-        public WritableRegion GetWritableRegion(ulong va, int size, bool tracked = false)
+        public override WritableRegion GetWritableRegion(ulong va, int size, bool tracked = false)
         {
             if (size == 0)
             {
@@ -280,7 +239,7 @@ namespace Ryujinx.Cpu.Jit
             {
                 Memory<byte> memory = new byte[size];
 
-                ReadImpl(va, memory.Span);
+                Read(va, memory.Span);
 
                 return new WritableRegion(this, va, memory);
             }
@@ -299,7 +258,7 @@ namespace Ryujinx.Cpu.Jit
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool IsMapped(ulong va)
+        public override bool IsMapped(ulong va)
         {
             return ValidateAddress(va) && _pages.IsMapped(va);
         }
@@ -310,8 +269,6 @@ namespace Ryujinx.Cpu.Jit
 
             return _pages.IsRangeMapped(va, size);
         }
-
-        private static void ThrowMemoryNotContiguous() => throw new MemoryNotContiguousException();
 
         private bool TryGetVirtualContiguous(ulong va, int size, out MemoryBlock memory, out ulong offset)
         {
@@ -491,44 +448,11 @@ namespace Ryujinx.Cpu.Jit
             return regions;
         }
 
-        private void ReadImpl(ulong va, Span<byte> data)
-        {
-            if (data.Length == 0)
-            {
-                return;
-            }
-
-            try
-            {
-                AssertValidAddressAndSize(va, (ulong)data.Length);
-
-                ulong endVa = va + (ulong)data.Length;
-                int offset = 0;
-
-                while (va < endVa)
-                {
-                    (MemoryBlock memory, ulong rangeOffset, ulong copySize) = GetMemoryOffsetAndSize(va, (ulong)(data.Length - offset));
-
-                    memory.GetSpan(rangeOffset, (int)copySize).CopyTo(data.Slice(offset, (int)copySize));
-
-                    va += copySize;
-                    offset += (int)copySize;
-                }
-            }
-            catch (InvalidMemoryRegionException)
-            {
-                if (_invalidAccessHandler == null || !_invalidAccessHandler(va))
-                {
-                    throw;
-                }
-            }
-        }
-
         /// <inheritdoc/>
         /// <remarks>
         /// This function also validates that the given range is both valid and mapped, and will throw if it is not.
         /// </remarks>
-        public void SignalMemoryTracking(ulong va, ulong size, bool write, bool precise = false, int? exemptId = null)
+        public override void SignalMemoryTracking(ulong va, ulong size, bool write, bool precise = false, int? exemptId = null)
         {
             AssertValidAddressAndSize(va, size);
 
@@ -541,23 +465,6 @@ namespace Ryujinx.Cpu.Jit
             // Software table, used for managed memory tracking.
 
             _pages.SignalMemoryTracking(Tracking, va, size, write, exemptId);
-        }
-
-        /// <summary>
-        /// Computes the number of pages in a virtual address range.
-        /// </summary>
-        /// <param name="va">Virtual address of the range</param>
-        /// <param name="size">Size of the range</param>
-        /// <param name="startVa">The virtual address of the beginning of the first page</param>
-        /// <remarks>This function does not differentiate between allocated and unallocated pages.</remarks>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private int GetPagesCount(ulong va, ulong size, out ulong startVa)
-        {
-            // WARNING: Always check if ulong does not overflow during the operations.
-            startVa = va & ~(ulong)PageMask;
-            ulong vaSpan = (va - startVa + size + PageMask) & ~(ulong)PageMask;
-
-            return (int)(vaSpan / PageSize);
         }
 
         public RegionHandle BeginTracking(ulong address, ulong size, int id, RegionFlags flags = RegionFlags.None)
@@ -618,10 +525,44 @@ namespace Ryujinx.Cpu.Jit
             _nativePageTable.Dispose();
         }
 
-        protected override Span<byte> GetPhysicalAddressSpan(ulong pa, int size)
+        protected override Memory<byte> GetPhysicalAddressMemory(nuint pa, int size)
+            => _backingMemory.GetMemory(pa, size);
+
+        protected override Span<byte> GetPhysicalAddressSpan(nuint pa, int size)
             => _backingMemory.GetSpan(pa, size);
 
-        protected override ulong TranslateVirtualAddressForRead(ulong va)
-            => GetPhysicalAddressInternal(va);
+        protected override void WriteImpl(ulong va, ReadOnlySpan<byte> data)
+        {
+            try
+            {
+                AssertValidAddressAndSize(va, (ulong)data.Length);
+
+                ulong endVa = va + (ulong)data.Length;
+                int offset = 0;
+
+                while (va < endVa)
+                {
+                    (MemoryBlock memory, ulong rangeOffset, ulong copySize) = GetMemoryOffsetAndSize(va, (ulong)(data.Length - offset));
+
+                    data.Slice(offset, (int)copySize).CopyTo(memory.GetSpan(rangeOffset, (int)copySize));
+
+                    va += copySize;
+                    offset += (int)copySize;
+                }
+            }
+            catch (InvalidMemoryRegionException)
+            {
+                if (_invalidAccessHandler == null || !_invalidAccessHandler(va))
+                {
+                    throw;
+                }
+            }
+        }
+
+        protected override nuint TranslateVirtualAddressChecked(ulong va)
+            => (nuint)GetPhysicalAddressChecked(va);
+
+        protected override nuint TranslateVirtualAddressUnchecked(ulong va)
+            => (nuint)GetPhysicalAddressInternal(va);
     }
 }
