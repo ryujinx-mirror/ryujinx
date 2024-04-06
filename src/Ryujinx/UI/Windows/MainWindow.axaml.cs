@@ -285,7 +285,7 @@ namespace Ryujinx.Ava.UI.Windows
                 {
                     _deferLoad = false;
 
-                    ViewModel.LoadApplication(_launchPath, _startFullscreen).Wait();
+                    await ViewModel.LoadApplication(_launchPath, _startFullscreen);
                 }
             }
             else
