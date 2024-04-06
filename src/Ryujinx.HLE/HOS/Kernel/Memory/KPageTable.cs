@@ -11,7 +11,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
     {
         private readonly IVirtualMemoryManager _cpuMemory;
 
-        protected override bool Supports4KBPages => _cpuMemory.Supports4KBPages;
+        protected override bool UsesPrivateAllocations => _cpuMemory.UsesPrivateAllocations;
 
         public KPageTable(KernelContext context, IVirtualMemoryManager cpuMemory, ulong reservedAddressSpaceSize) : base(context, reservedAddressSpaceSize)
         {

@@ -28,7 +28,7 @@ namespace Ryujinx.Cpu.AppleHv
 
         private readonly ManagedPageFlags _pages;
 
-        public bool Supports4KBPages => true;
+        public bool UsesPrivateAllocations => false;
 
         public int AddressSpaceBits { get; }
 

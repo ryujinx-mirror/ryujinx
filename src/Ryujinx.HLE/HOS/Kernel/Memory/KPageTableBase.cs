@@ -32,7 +32,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
         private const int MaxBlocksNeededForInsertion = 2;
 
         protected readonly KernelContext Context;
-        protected virtual bool Supports4KBPages => true;
+        protected virtual bool UsesPrivateAllocations => false;
 
         public ulong AddrSpaceStart { get; private set; }
         public ulong AddrSpaceEnd { get; private set; }
@@ -1947,16 +1947,16 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
                 Result result;
 
-                if (srcPageTable.Supports4KBPages)
+                if (srcPageTable.UsesPrivateAllocations)
+                {
+                    result = MapForeign(srcPageTable.GetHostRegions(addressRounded, alignedSize), currentVa, alignedSize);
+                }
+                else
                 {
                     KPageList pageList = new();
                     srcPageTable.GetPhysicalRegions(addressRounded, alignedSize, pageList);
 
                     result = MapPages(currentVa, pageList, permission, MemoryMapFlags.None);
-                }
-                else
-                {
-                    result = MapForeign(srcPageTable.GetHostRegions(addressRounded, alignedSize), currentVa, alignedSize);
                 }
 
                 if (result != Result.Success)

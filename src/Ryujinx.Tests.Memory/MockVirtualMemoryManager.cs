@@ -8,7 +8,7 @@ namespace Ryujinx.Tests.Memory
 {
     public class MockVirtualMemoryManager : IVirtualMemoryManager
     {
-        public bool Supports4KBPages => true;
+        public bool UsesPrivateAllocations => false;
 
         public bool NoMappings = false;
 

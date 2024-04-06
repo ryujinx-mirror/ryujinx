@@ -27,7 +27,7 @@ namespace Ryujinx.Cpu.Jit
         private readonly ManagedPageFlags _pages;
 
         /// <inheritdoc/>
-        public bool Supports4KBPages => MemoryBlock.GetPageSize() == PageSize;
+        public bool UsesPrivateAllocations => false;
 
         public int AddressSpaceBits { get; }
 

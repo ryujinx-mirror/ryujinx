@@ -2,7 +2,6 @@ using Ryujinx.Common;
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Process;
 using Ryujinx.Horizon.Common;
-using Ryujinx.Memory;
 
 namespace Ryujinx.HLE.HOS.Kernel.Memory
 {
@@ -49,17 +48,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                 return KernelResult.InvalidPermission;
             }
 
-            // On platforms with page size > 4 KB, this can fail due to the address not being page aligned,
-            // we can return an error to force the application to retry with a different address.
-
-            try
-            {
-                return memoryManager.MapPages(address, _pageList, MemoryState.SharedMemory, permission);
-            }
-            catch (InvalidMemoryRegionException)
-            {
-                return KernelResult.InvalidMemState;
-            }
+            return memoryManager.MapPages(address, _pageList, MemoryState.SharedMemory, permission);
         }
 
         public Result UnmapFromProcess(KPageTableBase memoryManager, ulong address, ulong size, KProcess process)

@@ -8,10 +8,10 @@ namespace Ryujinx.Memory
     public interface IVirtualMemoryManager
     {
         /// <summary>
-        /// Indicates whenever the memory manager supports aliasing pages at 4KB granularity.
+        /// Indicates whether the memory manager creates private allocations when the <see cref="MemoryMapFlags.Private"/> flag is set on map.
         /// </summary>
-        /// <returns>True if 4KB pages are supported by the memory manager, false otherwise</returns>
-        bool Supports4KBPages { get; }
+        /// <returns>True if private mappings might be used, false otherwise</returns>
+        bool UsesPrivateAllocations { get; }
 
         /// <summary>
         /// Maps a virtual memory range into a physical memory range.
