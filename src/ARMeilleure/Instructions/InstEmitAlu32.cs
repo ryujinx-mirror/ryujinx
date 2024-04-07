@@ -19,6 +19,12 @@ namespace ARMeilleure.Instructions
             Operand n = GetAluN(context);
             Operand m = GetAluM(context, setCarry: false);
 
+            if (op.Rn == RegisterAlias.Aarch32Pc && op is OpCodeT32AluImm12)
+            {
+                // For ADR, PC is always 4 bytes aligned, even in Thumb mode.
+                n = context.BitwiseAnd(n, Const(~3u));
+            }
+
             Operand res = context.Add(n, m);
 
             if (ShouldSetFlags(context))
@@ -466,6 +472,12 @@ namespace ARMeilleure.Instructions
 
             Operand n = GetAluN(context);
             Operand m = GetAluM(context, setCarry: false);
+
+            if (op.Rn == RegisterAlias.Aarch32Pc && op is OpCodeT32AluImm12)
+            {
+                // For ADR, PC is always 4 bytes aligned, even in Thumb mode.
+                n = context.BitwiseAnd(n, Const(~3u));
+            }
 
             Operand res = context.Subtract(n, m);
 
