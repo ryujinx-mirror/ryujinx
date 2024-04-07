@@ -57,23 +57,11 @@ namespace Ryujinx.Horizon.Sdk.Audio.Detail
 
         [CmifCommand(4)]
         public Result RequestUpdate(
-            [Buffer(HipcBufferFlags.Out | HipcBufferFlags.MapAlias)] Span<byte> output,
-            [Buffer(HipcBufferFlags.Out | HipcBufferFlags.MapAlias)] Span<byte> performanceOutput,
-            [Buffer(HipcBufferFlags.In | HipcBufferFlags.MapAlias)] ReadOnlySpan<byte> input)
+            [Buffer(HipcBufferFlags.Out | HipcBufferFlags.MapAlias)] Memory<byte> output,
+            [Buffer(HipcBufferFlags.Out | HipcBufferFlags.MapAlias)] Memory<byte> performanceOutput,
+            [Buffer(HipcBufferFlags.In | HipcBufferFlags.MapAlias)] ReadOnlySequence<byte> input)
         {
-            using IMemoryOwner<byte> outputOwner = ByteMemoryPool.Rent(output.Length);
-            using IMemoryOwner<byte> performanceOutputOwner = ByteMemoryPool.Rent(performanceOutput.Length);
-
-            Memory<byte> outputMemory = outputOwner.Memory;
-            Memory<byte> performanceOutputMemory = performanceOutputOwner.Memory;
-
-            using MemoryHandle outputHandle = outputMemory.Pin();
-            using MemoryHandle performanceOutputHandle = performanceOutputMemory.Pin();
-
-            Result result = new Result((int)_renderSystem.Update(outputMemory, performanceOutputMemory, input.ToArray()));
-
-            outputMemory.Span.CopyTo(output);
-            performanceOutputMemory.Span.CopyTo(performanceOutput);
+            Result result = new Result((int)_renderSystem.Update(output, performanceOutput, input));
 
             return result;
         }
@@ -127,9 +115,9 @@ namespace Ryujinx.Horizon.Sdk.Audio.Detail
 
         [CmifCommand(10)] // 3.0.0+
         public Result RequestUpdateAuto(
-            [Buffer(HipcBufferFlags.Out | HipcBufferFlags.AutoSelect)] Span<byte> output,
-            [Buffer(HipcBufferFlags.Out | HipcBufferFlags.AutoSelect)] Span<byte> performanceOutput,
-            [Buffer(HipcBufferFlags.In | HipcBufferFlags.AutoSelect)] ReadOnlySpan<byte> input)
+            [Buffer(HipcBufferFlags.Out | HipcBufferFlags.AutoSelect)] Memory<byte> output,
+            [Buffer(HipcBufferFlags.Out | HipcBufferFlags.AutoSelect)] Memory<byte> performanceOutput,
+            [Buffer(HipcBufferFlags.In | HipcBufferFlags.AutoSelect)] ReadOnlySequence<byte> input)
         {
             return RequestUpdate(output, performanceOutput, input);
         }

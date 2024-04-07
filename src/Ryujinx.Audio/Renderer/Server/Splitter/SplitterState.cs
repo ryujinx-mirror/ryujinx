@@ -1,4 +1,5 @@
 using Ryujinx.Audio.Renderer.Parameter;
+using Ryujinx.Common.Extensions;
 using System;
 using System.Buffers;
 using System.Diagnostics;
@@ -122,7 +123,7 @@ namespace Ryujinx.Audio.Renderer.Server.Splitter
         /// <param name="context">The splitter context.</param>
         /// <param name="parameter">The user parameter.</param>
         /// <param name="input">The raw input data after the <paramref name="parameter"/>.</param>
-        public void Update(SplitterContext context, ref SplitterInParameter parameter, ReadOnlySpan<byte> input)
+        public void Update(SplitterContext context, in SplitterInParameter parameter, ref SequenceReader<byte> input)
         {
             ClearLinks();
 
@@ -139,9 +140,9 @@ namespace Ryujinx.Audio.Renderer.Server.Splitter
 
             if (destinationCount > 0)
             {
-                ReadOnlySpan<int> destinationIds = MemoryMarshal.Cast<byte, int>(input);
+                input.ReadLittleEndian(out int destinationId);
 
-                Memory<SplitterDestination> destination = context.GetDestinationMemory(destinationIds[0]);
+                Memory<SplitterDestination> destination = context.GetDestinationMemory(destinationId);
 
                 SetDestination(ref destination.Span[0]);
 
@@ -149,7 +150,9 @@ namespace Ryujinx.Audio.Renderer.Server.Splitter
 
                 for (int i = 1; i < destinationCount; i++)
                 {
-                    Memory<SplitterDestination> nextDestination = context.GetDestinationMemory(destinationIds[i]);
+                    input.ReadLittleEndian(out destinationId);
+
+                    Memory<SplitterDestination> nextDestination = context.GetDestinationMemory(destinationId);
 
                     destination.Span[0].Link(ref nextDestination.Span[0]);
                     destination = nextDestination;

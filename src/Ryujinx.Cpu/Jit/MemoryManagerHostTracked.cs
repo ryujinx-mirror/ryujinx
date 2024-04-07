@@ -1,10 +1,12 @@
 using ARMeilleure.Memory;
+using Ryujinx.Common.Memory;
 using Ryujinx.Cpu.Jit.HostTracked;
 using Ryujinx.Cpu.Signal;
 using Ryujinx.Memory;
 using Ryujinx.Memory.Range;
 using Ryujinx.Memory.Tracking;
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -237,11 +239,11 @@ namespace Ryujinx.Cpu.Jit
             }
             else
             {
-                Memory<byte> memory = new byte[size];
+                IMemoryOwner<byte> memoryOwner = ByteMemoryPool.Rent(size);
 
-                Read(va, memory.Span);
+                Read(va, memoryOwner.Memory.Span);
 
-                return new WritableRegion(this, va, memory);
+                return new WritableRegion(this, va, memoryOwner);
             }
         }
 

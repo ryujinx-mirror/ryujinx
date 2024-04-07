@@ -44,18 +44,18 @@ namespace Ryujinx.Audio.Renderer.Server.Sink
 
         public override SinkType TargetSinkType => SinkType.CircularBuffer;
 
-        public override void Update(out BehaviourParameter.ErrorInfo errorInfo, ref SinkInParameter parameter, ref SinkOutStatus outStatus, PoolMapper mapper)
+        public override void Update(out BehaviourParameter.ErrorInfo errorInfo, in SinkInParameter parameter, ref SinkOutStatus outStatus, PoolMapper mapper)
         {
             errorInfo = new BehaviourParameter.ErrorInfo();
             outStatus = new SinkOutStatus();
 
-            Debug.Assert(IsTypeValid(ref parameter));
+            Debug.Assert(IsTypeValid(in parameter));
 
             ref CircularBufferParameter inputDeviceParameter = ref MemoryMarshal.Cast<byte, CircularBufferParameter>(parameter.SpecificData)[0];
 
             if (parameter.IsUsed != IsUsed || ShouldSkip)
             {
-                UpdateStandardParameter(ref parameter);
+                UpdateStandardParameter(in parameter);
 
                 if (parameter.IsUsed)
                 {

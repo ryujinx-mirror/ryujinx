@@ -8,7 +8,7 @@ namespace Ryujinx.Audio.Renderer.Parameter
     /// <summary>
     /// Output information for behaviour.
     /// </summary>
-    /// <remarks>This is used to report errors to the user during <see cref="Server.AudioRenderSystem.Update(Memory{byte}, Memory{byte}, ReadOnlyMemory{byte})"/> processing.</remarks>
+    /// <remarks>This is used to report errors to the user during <see cref="Server.AudioRenderSystem.Update(Memory{byte}, Memory{byte}, System.Buffers.ReadOnlySequence{byte})"/> processing.</remarks>
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct BehaviourErrorInfoOutStatus
     {

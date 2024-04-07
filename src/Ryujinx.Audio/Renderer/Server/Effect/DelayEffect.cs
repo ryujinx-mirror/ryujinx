@@ -37,19 +37,19 @@ namespace Ryujinx.Audio.Renderer.Server.Effect
             return GetSingleBuffer();
         }
 
-        public override void Update(out BehaviourParameter.ErrorInfo updateErrorInfo, ref EffectInParameterVersion1 parameter, PoolMapper mapper)
+        public override void Update(out BehaviourParameter.ErrorInfo updateErrorInfo, in EffectInParameterVersion1 parameter, PoolMapper mapper)
         {
-            Update(out updateErrorInfo, ref parameter, mapper);
+            Update(out updateErrorInfo, in parameter, mapper);
         }
 
-        public override void Update(out BehaviourParameter.ErrorInfo updateErrorInfo, ref EffectInParameterVersion2 parameter, PoolMapper mapper)
+        public override void Update(out BehaviourParameter.ErrorInfo updateErrorInfo, in EffectInParameterVersion2 parameter, PoolMapper mapper)
         {
-            Update(out updateErrorInfo, ref parameter, mapper);
+            Update(out updateErrorInfo, in parameter, mapper);
         }
 
-        public void Update<T>(out BehaviourParameter.ErrorInfo updateErrorInfo, ref T parameter, PoolMapper mapper) where T : unmanaged, IEffectInParameter
+        public void Update<T>(out BehaviourParameter.ErrorInfo updateErrorInfo, in T parameter, PoolMapper mapper) where T : unmanaged, IEffectInParameter
         {
-            Debug.Assert(IsTypeValid(ref parameter));
+            Debug.Assert(IsTypeValid(in parameter));
 
             ref DelayParameter delayParameter = ref MemoryMarshal.Cast<byte, DelayParameter>(parameter.SpecificData)[0];
 
@@ -57,7 +57,7 @@ namespace Ryujinx.Audio.Renderer.Server.Effect
 
             if (delayParameter.IsChannelCountMaxValid())
             {
-                UpdateParameterBase(ref parameter);
+                UpdateParameterBase(in parameter);
 
                 UsageState oldParameterStatus = Parameter.Status;
 

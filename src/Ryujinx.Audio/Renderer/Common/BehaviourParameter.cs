@@ -25,7 +25,7 @@ namespace Ryujinx.Audio.Renderer.Common
         public ulong Flags;
 
         /// <summary>
-        /// Represents an error during <see cref="Server.AudioRenderSystem.Update(System.Memory{byte}, System.Memory{byte}, System.ReadOnlyMemory{byte})"/>.
+        /// Represents an error during <see cref="Server.AudioRenderSystem.Update(System.Memory{byte}, System.Memory{byte}, System.Buffers.ReadOnlySequence{byte})"/>.
         /// </summary>
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public struct ErrorInfo

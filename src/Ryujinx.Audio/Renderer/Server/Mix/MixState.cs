@@ -195,7 +195,7 @@ namespace Ryujinx.Audio.Renderer.Server.Mix
         /// <param name="parameter">The input parameter of the mix.</param>
         /// <param name="splitterContext">The splitter context.</param>
         /// <returns>Return true, new connections were done on the adjacency matrix.</returns>
-        private bool UpdateConnection(EdgeMatrix edgeMatrix, ref MixParameter parameter, ref SplitterContext splitterContext)
+        private bool UpdateConnection(EdgeMatrix edgeMatrix, in MixParameter parameter, ref SplitterContext splitterContext)
         {
             bool hasNewConnections;
 
@@ -259,7 +259,7 @@ namespace Ryujinx.Audio.Renderer.Server.Mix
         /// <param name="splitterContext">The splitter context.</param>
         /// <param name="behaviourContext">The behaviour context.</param>
         /// <returns>Return true if the mix was changed.</returns>
-        public bool Update(EdgeMatrix edgeMatrix, ref MixParameter parameter, EffectContext effectContext, SplitterContext splitterContext, BehaviourContext behaviourContext)
+        public bool Update(EdgeMatrix edgeMatrix, in MixParameter parameter, EffectContext effectContext, SplitterContext splitterContext, BehaviourContext behaviourContext)
         {
             bool isDirty;
 
@@ -273,7 +273,7 @@ namespace Ryujinx.Audio.Renderer.Server.Mix
 
             if (behaviourContext.IsSplitterSupported())
             {
-                isDirty = UpdateConnection(edgeMatrix, ref parameter, ref splitterContext);
+                isDirty = UpdateConnection(edgeMatrix, in parameter, ref splitterContext);
             }
             else
             {

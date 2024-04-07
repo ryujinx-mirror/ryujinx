@@ -1,5 +1,7 @@
 using Ryujinx.Common;
+using Ryujinx.Common.Memory;
 using System;
+using System.Buffers;
 
 namespace Ryujinx.Audio.Backends.Common
 {
@@ -12,7 +14,8 @@ namespace Ryujinx.Audio.Backends.Common
 
         private readonly object _lock = new();
 
-        private byte[] _buffer;
+        private IMemoryOwner<byte> _bufferOwner;
+        private Memory<byte> _buffer;
         private int _size;
         private int _headOffset;
         private int _tailOffset;
@@ -21,7 +24,8 @@ namespace Ryujinx.Audio.Backends.Common
 
         public DynamicRingBuffer(int initialCapacity = RingBufferAlignment)
         {
-            _buffer = new byte[initialCapacity];
+            _bufferOwner = ByteMemoryPool.RentCleared(initialCapacity);
+            _buffer = _bufferOwner.Memory;
         }
 
         public void Clear()
@@ -33,16 +37,16 @@ namespace Ryujinx.Audio.Backends.Common
 
         public void Clear(int size)
         {
+            if (size == 0)
+            {
+                return;
+            }
+
             lock (_lock)
             {
                 if (size > _size)
                 {
                     size = _size;
-                }
-
-                if (size == 0)
-                {
-                    return;
                 }
 
                 _headOffset = (_headOffset + size) % _buffer.Length;
@@ -58,28 +62,31 @@ namespace Ryujinx.Audio.Backends.Common
 
         private void SetCapacityLocked(int capacity)
         {
-            byte[] buffer = new byte[capacity];
+            IMemoryOwner<byte> newBufferOwner = ByteMemoryPool.RentCleared(capacity);
+            Memory<byte> newBuffer = newBufferOwner.Memory;
 
             if (_size > 0)
             {
                 if (_headOffset < _tailOffset)
                 {
-                    Buffer.BlockCopy(_buffer, _headOffset, buffer, 0, _size);
+                    _buffer.Slice(_headOffset, _size).CopyTo(newBuffer);
                 }
                 else
                 {
-                    Buffer.BlockCopy(_buffer, _headOffset, buffer, 0, _buffer.Length - _headOffset);
-                    Buffer.BlockCopy(_buffer, 0, buffer, _buffer.Length - _headOffset, _tailOffset);
+                    _buffer[_headOffset..].CopyTo(newBuffer);
+                    _buffer[.._tailOffset].CopyTo(newBuffer[(_buffer.Length - _headOffset)..]);
                 }
             }
 
-            _buffer = buffer;
+            _bufferOwner.Dispose();
+
+            _bufferOwner = newBufferOwner;
+            _buffer = newBuffer;
             _headOffset = 0;
             _tailOffset = _size;
         }
 
-
-        public void Write<T>(T[] buffer, int index, int count)
+        public void Write(ReadOnlySpan<byte> buffer, int index, int count)
         {
             if (count == 0)
             {
@@ -99,17 +106,17 @@ namespace Ryujinx.Audio.Backends.Common
 
                     if (tailLength >= count)
                     {
-                        Buffer.BlockCopy(buffer, index, _buffer, _tailOffset, count);
+                        buffer.Slice(index, count).CopyTo(_buffer.Span[_tailOffset..]);
                     }
                     else
                     {
-                        Buffer.BlockCopy(buffer, index, _buffer, _tailOffset, tailLength);
-                        Buffer.BlockCopy(buffer, index + tailLength, _buffer, 0, count - tailLength);
+                        buffer.Slice(index, tailLength).CopyTo(_buffer.Span[_tailOffset..]);
+                        buffer.Slice(index + tailLength, count - tailLength).CopyTo(_buffer.Span);
                     }
                 }
                 else
                 {
-                    Buffer.BlockCopy(buffer, index, _buffer, _tailOffset, count);
+                    buffer.Slice(index, count).CopyTo(_buffer.Span[_tailOffset..]);
                 }
 
                 _size += count;
@@ -117,8 +124,13 @@ namespace Ryujinx.Audio.Backends.Common
             }
         }
 
-        public int Read<T>(T[] buffer, int index, int count)
+        public int Read(Span<byte> buffer, int index, int count)
         {
+            if (count == 0)
+            {
+                return 0;
+            }
+
             lock (_lock)
             {
                 if (count > _size)
@@ -126,14 +138,9 @@ namespace Ryujinx.Audio.Backends.Common
                     count = _size;
                 }
 
-                if (count == 0)
-                {
-                    return 0;
-                }
-
                 if (_headOffset < _tailOffset)
                 {
-                    Buffer.BlockCopy(_buffer, _headOffset, buffer, index, count);
+                    _buffer.Span.Slice(_headOffset, count).CopyTo(buffer[index..]);
                 }
                 else
                 {
@@ -141,12 +148,12 @@ namespace Ryujinx.Audio.Backends.Common
 
                     if (tailLength >= count)
                     {
-                        Buffer.BlockCopy(_buffer, _headOffset, buffer, index, count);
+                        _buffer.Span.Slice(_headOffset, count).CopyTo(buffer[index..]);
                     }
                     else
                     {
-                        Buffer.BlockCopy(_buffer, _headOffset, buffer, index, tailLength);
-                        Buffer.BlockCopy(_buffer, 0, buffer, index + tailLength, count - tailLength);
+                        _buffer.Span.Slice(_headOffset, tailLength).CopyTo(buffer[index..]);
+                        _buffer.Span[..(count - tailLength)].CopyTo(buffer[(index + tailLength)..]);
                     }
                 }
 

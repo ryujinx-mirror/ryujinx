@@ -249,7 +249,7 @@ namespace Ryujinx.Audio.Renderer.Server.MemoryPool
         /// <param name="inParameter">Input user parameter.</param>
         /// <param name="outStatus">Output user parameter.</param>
         /// <returns>Returns the <see cref="UpdateResult"/> of the operations performed.</returns>
-        public UpdateResult Update(ref MemoryPoolState memoryPool, ref MemoryPoolInParameter inParameter, ref MemoryPoolOutStatus outStatus)
+        public UpdateResult Update(ref MemoryPoolState memoryPool, in MemoryPoolInParameter inParameter, ref MemoryPoolOutStatus outStatus)
         {
             MemoryPoolUserState inputState = inParameter.State;
 

@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Diagnostics;
 using static Ryujinx.Audio.Renderer.Common.BehaviourParameter;
 
@@ -273,7 +274,7 @@ namespace Ryujinx.Audio.Renderer.Server
         }
 
         /// <summary>
-        /// Check if the audio renderer should trust the user destination count in <see cref="Splitter.SplitterState.Update(Splitter.SplitterContext, ref Parameter.SplitterInParameter, ReadOnlySpan{byte})"/>.
+        /// Check if the audio renderer should trust the user destination count in <see cref="Renderer.Server.Splitter.SplitterState.Update(Renderer.Server.Splitter.SplitterContext, Renderer.Parameter.SplitterInParameter, SequenceReader{byte})"/>.
         /// </summary>
         /// <returns>True if the audio renderer should trust the user destination count.</returns>
         public bool IsSplitterBugFixed()

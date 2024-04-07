@@ -59,7 +59,7 @@ namespace Ryujinx.Audio.Renderer.Server.Sink
         /// </summary>
         /// <param name="parameter">The user parameter.</param>
         /// <returns>Return true, if the <see cref="SinkType"/> sent by the user match the internal <see cref="SinkType"/>.</returns>
-        public bool IsTypeValid(ref SinkInParameter parameter)
+        public bool IsTypeValid(in SinkInParameter parameter)
         {
             return parameter.Type == TargetSinkType;
         }
@@ -76,7 +76,7 @@ namespace Ryujinx.Audio.Renderer.Server.Sink
         /// Update the internal common parameters from user parameter.
         /// </summary>
         /// <param name="parameter">The user parameter.</param>
-        protected void UpdateStandardParameter(ref SinkInParameter parameter)
+        protected void UpdateStandardParameter(in SinkInParameter parameter)
         {
             if (IsUsed != parameter.IsUsed)
             {
@@ -92,9 +92,9 @@ namespace Ryujinx.Audio.Renderer.Server.Sink
         /// <param name="parameter">The user parameter.</param>
         /// <param name="outStatus">The user output status.</param>
         /// <param name="mapper">The mapper to use.</param>
-        public virtual void Update(out ErrorInfo errorInfo, ref SinkInParameter parameter, ref SinkOutStatus outStatus, PoolMapper mapper)
+        public virtual void Update(out ErrorInfo errorInfo, in SinkInParameter parameter, ref SinkOutStatus outStatus, PoolMapper mapper)
         {
-            Debug.Assert(IsTypeValid(ref parameter));
+            Debug.Assert(IsTypeValid(in parameter));
 
             errorInfo = new ErrorInfo();
         }
