@@ -140,7 +140,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             return _infoTable[(int)(inst & Instruction.Mask)];
         }
 
-        public static string GetSoureExpr(CodeGenContext context, IAstNode node, AggregateType dstType)
+        public static string GetSourceExpr(CodeGenContext context, IAstNode node, AggregateType dstType)
         {
             return ReinterpretCast(context, node, OperandManager.GetNodeDestType(context, node), dstType);
         }

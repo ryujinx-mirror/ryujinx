@@ -241,7 +241,9 @@ namespace Ryujinx.Graphics.Vulkan
 
                     if (currentDescriptor.Binding + currentCount != descriptor.Binding ||
                         currentDescriptor.Type != descriptor.Type ||
-                        currentDescriptor.Stages != descriptor.Stages)
+                        currentDescriptor.Stages != descriptor.Stages ||
+                        currentDescriptor.Count > 1 ||
+                        descriptor.Count > 1)
                     {
                         if (currentCount != 0)
                         {
@@ -249,7 +251,8 @@ namespace Ryujinx.Graphics.Vulkan
                                 currentDescriptor.Binding,
                                 currentCount,
                                 currentDescriptor.Type,
-                                currentDescriptor.Stages));
+                                currentDescriptor.Stages,
+                                currentDescriptor.Count > 1));
                         }
 
                         currentDescriptor = descriptor;
@@ -267,7 +270,8 @@ namespace Ryujinx.Graphics.Vulkan
                         currentDescriptor.Binding,
                         currentCount,
                         currentDescriptor.Type,
-                        currentDescriptor.Stages));
+                        currentDescriptor.Stages,
+                        currentDescriptor.Count > 1));
                 }
 
                 segments[setIndex] = currentSegments.ToArray();
@@ -293,7 +297,9 @@ namespace Ryujinx.Graphics.Vulkan
 
                     if (currentUsage.Binding + currentCount != usage.Binding ||
                         currentUsage.Type != usage.Type ||
-                        currentUsage.Stages != usage.Stages)
+                        currentUsage.Stages != usage.Stages ||
+                        currentUsage.ArrayLength > 1 ||
+                        usage.ArrayLength > 1)
                     {
                         if (currentCount != 0)
                         {
@@ -301,11 +307,12 @@ namespace Ryujinx.Graphics.Vulkan
                                 currentUsage.Binding,
                                 currentCount,
                                 currentUsage.Type,
-                                currentUsage.Stages));
+                                currentUsage.Stages,
+                                currentUsage.ArrayLength > 1));
                         }
 
                         currentUsage = usage;
-                        currentCount = 1;
+                        currentCount = usage.ArrayLength;
                     }
                     else
                     {
@@ -319,7 +326,8 @@ namespace Ryujinx.Graphics.Vulkan
                         currentUsage.Binding,
                         currentCount,
                         currentUsage.Type,
-                        currentUsage.Stages));
+                        currentUsage.Stages,
+                        currentUsage.ArrayLength > 1));
                 }
 
                 segments[setIndex] = currentSegments.ToArray();
@@ -344,7 +352,13 @@ namespace Ryujinx.Graphics.Vulkan
 
                 if (segments != null && segments.Length > 0)
                 {
-                    templates[setIndex] = new DescriptorSetTemplate(_gd, _device, segments, _plce, IsCompute ? PipelineBindPoint.Compute : PipelineBindPoint.Graphics, setIndex);
+                    templates[setIndex] = new DescriptorSetTemplate(
+                        _gd,
+                        _device,
+                        segments,
+                        _plce,
+                        IsCompute ? PipelineBindPoint.Compute : PipelineBindPoint.Graphics,
+                        setIndex);
                 }
             }
 

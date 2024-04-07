@@ -107,8 +107,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                 if (texture.CacheNode != _textures.Last)
                 {
                     _textures.Remove(texture.CacheNode);
-
-                    texture.CacheNode = _textures.AddLast(texture);
+                    _textures.AddLast(texture.CacheNode);
                 }
 
                 if (_totalSize > MaxTextureSizeCapacity && _textures.Count >= MinCountForDeletion)

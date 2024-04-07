@@ -13,8 +13,8 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             IAstNode src0 = operation.GetSource(0);
             IAstNode src1 = operation.GetSource(1);
 
-            string src0Expr = GetSoureExpr(context, src0, GetSrcVarType(operation.Inst, 0));
-            string src1Expr = GetSoureExpr(context, src1, GetSrcVarType(operation.Inst, 1));
+            string src0Expr = GetSourceExpr(context, src0, GetSrcVarType(operation.Inst, 0));
+            string src1Expr = GetSourceExpr(context, src1, GetSrcVarType(operation.Inst, 1));
 
             return $"packDouble2x32(uvec2({src0Expr}, {src1Expr}))";
         }
@@ -24,8 +24,8 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             IAstNode src0 = operation.GetSource(0);
             IAstNode src1 = operation.GetSource(1);
 
-            string src0Expr = GetSoureExpr(context, src0, GetSrcVarType(operation.Inst, 0));
-            string src1Expr = GetSoureExpr(context, src1, GetSrcVarType(operation.Inst, 1));
+            string src0Expr = GetSourceExpr(context, src0, GetSrcVarType(operation.Inst, 0));
+            string src1Expr = GetSourceExpr(context, src1, GetSrcVarType(operation.Inst, 1));
 
             return $"packHalf2x16(vec2({src0Expr}, {src1Expr}))";
         }
@@ -34,7 +34,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
         {
             IAstNode src = operation.GetSource(0);
 
-            string srcExpr = GetSoureExpr(context, src, GetSrcVarType(operation.Inst, 0));
+            string srcExpr = GetSourceExpr(context, src, GetSrcVarType(operation.Inst, 0));
 
             return $"unpackDouble2x32({srcExpr}){GetMask(operation.Index)}";
         }
@@ -43,7 +43,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
         {
             IAstNode src = operation.GetSource(0);
 
-            string srcExpr = GetSoureExpr(context, src, GetSrcVarType(operation.Inst, 0));
+            string srcExpr = GetSourceExpr(context, src, GetSrcVarType(operation.Inst, 0));
 
             return $"unpackHalf2x16({srcExpr}){GetMask(operation.Index)}";
         }

@@ -38,7 +38,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 
             AggregateType type = GetSrcVarType(operation.Inst, 0);
 
-            string srcExpr = GetSoureExpr(context, src, type);
+            string srcExpr = GetSourceExpr(context, src, type);
             string zero;
 
             if (type == AggregateType.FP64)
@@ -80,7 +80,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 
                     for (int argIndex = operation.SourcesCount - arity + 2; argIndex < operation.SourcesCount; argIndex++)
                     {
-                        builder.Append($", {GetSoureExpr(context, operation.GetSource(argIndex), dstType)}");
+                        builder.Append($", {GetSourceExpr(context, operation.GetSource(argIndex), dstType)}");
                     }
                 }
                 else
@@ -94,7 +94,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 
                         AggregateType dstType = GetSrcVarType(inst, argIndex);
 
-                        builder.Append(GetSoureExpr(context, operation.GetSource(argIndex), dstType));
+                        builder.Append(GetSourceExpr(context, operation.GetSource(argIndex), dstType));
                     }
                 }
 
@@ -107,7 +107,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
                 // Return may optionally have a return value (and in this case it is unary).
                 if (inst == Instruction.Return && operation.SourcesCount != 0)
                 {
-                    return $"{op} {GetSoureExpr(context, operation.GetSource(0), context.CurrentFunction.ReturnType)}";
+                    return $"{op} {GetSourceExpr(context, operation.GetSource(0), context.CurrentFunction.ReturnType)}";
                 }
 
                 int arity = (int)(info.Type & InstType.ArityMask);
@@ -118,7 +118,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
                 {
                     IAstNode src = operation.GetSource(index);
 
-                    string srcExpr = GetSoureExpr(context, src, GetSrcVarType(inst, index));
+                    string srcExpr = GetSourceExpr(context, src, GetSrcVarType(inst, index));
 
                     bool isLhs = arity == 2 && index == 0;
 

@@ -12,7 +12,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
         {
             AggregateType dstType = GetSrcVarType(operation.Inst, 0);
 
-            string arg = GetSoureExpr(context, operation.GetSource(0), dstType);
+            string arg = GetSourceExpr(context, operation.GetSource(0), dstType);
             char component = "xyzw"[operation.Index];
 
             if (context.HostCapabilities.SupportsShaderBallot)

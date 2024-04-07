@@ -9,8 +9,8 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
     {
         public static string Shuffle(CodeGenContext context, AstOperation operation)
         {
-            string value = GetSoureExpr(context, operation.GetSource(0), AggregateType.FP32);
-            string index = GetSoureExpr(context, operation.GetSource(1), AggregateType.U32);
+            string value = GetSourceExpr(context, operation.GetSource(0), AggregateType.FP32);
+            string index = GetSourceExpr(context, operation.GetSource(1), AggregateType.U32);
 
             if (context.HostCapabilities.SupportsShaderBallot)
             {

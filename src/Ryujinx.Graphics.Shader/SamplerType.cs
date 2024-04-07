@@ -16,9 +16,8 @@ namespace Ryujinx.Graphics.Shader
         Mask = 0xff,
 
         Array = 1 << 8,
-        Indexed = 1 << 9,
-        Multisample = 1 << 10,
-        Shadow = 1 << 11,
+        Multisample = 1 << 9,
+        Shadow = 1 << 10,
     }
 
     static class SamplerTypeExtensions
@@ -34,6 +33,36 @@ namespace Ryujinx.Graphics.Shader
                 SamplerType.TextureCube => 3,
                 _ => throw new ArgumentException($"Invalid sampler type \"{type}\"."),
             };
+        }
+
+        public static string ToShortSamplerType(this SamplerType type)
+        {
+            string typeName = (type & SamplerType.Mask) switch
+            {
+                SamplerType.Texture1D => "1d",
+                SamplerType.TextureBuffer => "b",
+                SamplerType.Texture2D => "2d",
+                SamplerType.Texture3D => "3d",
+                SamplerType.TextureCube => "cube",
+                _ => throw new ArgumentException($"Invalid sampler type \"{type}\"."),
+            };
+
+            if ((type & SamplerType.Multisample) != 0)
+            {
+                typeName += "ms";
+            }
+
+            if ((type & SamplerType.Array) != 0)
+            {
+                typeName += "a";
+            }
+
+            if ((type & SamplerType.Shadow) != 0)
+            {
+                typeName += "s";
+            }
+
+            return typeName;
         }
 
         public static string ToGlslSamplerType(this SamplerType type)

@@ -898,6 +898,11 @@ namespace Ryujinx.Graphics.Vulkan
             _descriptorSetUpdater.SetImage(binding, image);
         }
 
+        public void SetImageArray(ShaderStage stage, int binding, IImageArray array)
+        {
+            _descriptorSetUpdater.SetImageArray(Cbs, stage, binding, array);
+        }
+
         public void SetIndexBuffer(BufferRange buffer, IndexType type)
         {
             if (buffer.Handle != BufferHandle.Null)
@@ -1146,6 +1151,11 @@ namespace Ryujinx.Graphics.Vulkan
             _descriptorSetUpdater.SetTextureAndSamplerIdentitySwizzle(Cbs, stage, binding, texture, sampler);
         }
 
+        public void SetTextureArray(ShaderStage stage, int binding, ITextureArray array)
+        {
+            _descriptorSetUpdater.SetTextureArray(Cbs, stage, binding, array);
+        }
+
         public void SetTransformFeedbackBuffers(ReadOnlySpan<BufferRange> buffers)
         {
             PauseTransformFeedbackInternal();
@@ -1373,6 +1383,16 @@ namespace Ryujinx.Graphics.Vulkan
             _descriptorSetUpdater.SwapBuffer(from, to);
 
             SignalCommandBufferChange();
+        }
+
+        public void ForceTextureDirty()
+        {
+            _descriptorSetUpdater.ForceTextureDirty();
+        }
+
+        public void ForceImageDirty()
+        {
+            _descriptorSetUpdater.ForceImageDirty();
         }
 
         public unsafe void TextureBarrier()

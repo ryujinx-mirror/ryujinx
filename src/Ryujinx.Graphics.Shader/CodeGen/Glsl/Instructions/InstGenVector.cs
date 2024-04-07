@@ -13,7 +13,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             IAstNode vector = operation.GetSource(0);
             IAstNode index = operation.GetSource(1);
 
-            string vectorExpr = GetSoureExpr(context, vector, OperandManager.GetNodeDestType(context, vector));
+            string vectorExpr = GetSourceExpr(context, vector, OperandManager.GetNodeDestType(context, vector));
 
             if (index is AstOperand indexOperand && indexOperand.Type == OperandType.Constant)
             {
@@ -23,7 +23,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             }
             else
             {
-                string indexExpr = GetSoureExpr(context, index, GetSrcVarType(operation.Inst, 1));
+                string indexExpr = GetSourceExpr(context, index, GetSrcVarType(operation.Inst, 1));
 
                 return $"{vectorExpr}[{indexExpr}]";
             }
