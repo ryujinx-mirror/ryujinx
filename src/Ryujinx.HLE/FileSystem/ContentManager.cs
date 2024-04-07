@@ -104,20 +104,15 @@ namespace Ryujinx.HLE.FileSystem
 
                 foreach (StorageId storageId in Enum.GetValues<StorageId>())
                 {
-                    string contentDirectory = null;
-                    string contentPathString = null;
-                    string registeredDirectory = null;
-
-                    try
-                    {
-                        contentPathString = ContentPath.GetContentPath(storageId);
-                        contentDirectory = ContentPath.GetRealPath(contentPathString);
-                        registeredDirectory = Path.Combine(contentDirectory, "registered");
-                    }
-                    catch (NotSupportedException)
+                    if (!ContentPath.TryGetContentPath(storageId, out var contentPathString))
                     {
                         continue;
                     }
+                    if (!ContentPath.TryGetRealPath(contentPathString, out var contentDirectory))
+                    {
+                        continue;
+                    }
+                    var registeredDirectory = Path.Combine(contentDirectory, "registered");
 
                     Directory.CreateDirectory(registeredDirectory);
 
@@ -471,8 +466,8 @@ namespace Ryujinx.HLE.FileSystem
 
         public void InstallFirmware(string firmwareSource)
         {
-            string contentPathString = ContentPath.GetContentPath(StorageId.BuiltInSystem);
-            string contentDirectory = ContentPath.GetRealPath(contentPathString);
+            ContentPath.TryGetContentPath(StorageId.BuiltInSystem, out var contentPathString);
+            ContentPath.TryGetRealPath(contentPathString, out var contentDirectory);
             string registeredDirectory = Path.Combine(contentDirectory, "registered");
             string temporaryDirectory = Path.Combine(contentDirectory, "temp");
 

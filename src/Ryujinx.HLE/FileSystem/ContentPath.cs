@@ -26,17 +26,19 @@ namespace Ryujinx.HLE.FileSystem
         public const string Nintendo = "Nintendo";
         public const string Contents = "Contents";
 
-        public static string GetRealPath(string switchContentPath)
+        public static bool TryGetRealPath(string switchContentPath, out string realPath)
         {
-            return switchContentPath switch
+            realPath = switchContentPath switch
             {
                 SystemContent => Path.Combine(AppDataManager.BaseDirPath, SystemNandPath, Contents),
                 UserContent => Path.Combine(AppDataManager.BaseDirPath, UserNandPath, Contents),
                 SdCardContent => Path.Combine(GetSdCardPath(), Nintendo, Contents),
                 System => Path.Combine(AppDataManager.BaseDirPath, SystemNandPath),
                 User => Path.Combine(AppDataManager.BaseDirPath, UserNandPath),
-                _ => throw new NotSupportedException($"Content Path \"`{switchContentPath}`\" is not supported."),
+                _ => null,
             };
+
+            return realPath != null;
         }
 
         public static string GetContentPath(ContentStorageId contentStorageId)
@@ -50,15 +52,17 @@ namespace Ryujinx.HLE.FileSystem
             };
         }
 
-        public static string GetContentPath(StorageId storageId)
+        public static bool TryGetContentPath(StorageId storageId, out string contentPath)
         {
-            return storageId switch
+            contentPath = storageId switch
             {
                 StorageId.BuiltInSystem => SystemContent,
                 StorageId.BuiltInUser => UserContent,
                 StorageId.SdCard => SdCardContent,
-                _ => throw new NotSupportedException($"Storage Id \"`{storageId}`\" is not supported."),
+                _ => null,
             };
+
+            return contentPath != null;
         }
 
         public static StorageId GetStorageId(string contentPathString)
