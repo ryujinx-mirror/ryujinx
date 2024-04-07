@@ -27,6 +27,7 @@ namespace Ryujinx.Ava
         public static string Version { get; private set; }
         public static string ConfigurationPath { get; private set; }
         public static bool PreviewerDetached { get; private set; }
+        public static bool UseHardwareAcceleration { get; private set; }
 
         [LibraryImport("user32.dll", SetLastError = true)]
         public static partial int MessageBoxA(IntPtr hWnd, [MarshalAs(UnmanagedType.LPStr)] string text, [MarshalAs(UnmanagedType.LPStr)] string caption, uint type);
@@ -60,14 +61,14 @@ namespace Ryujinx.Ava
                     EnableMultiTouch = true,
                     EnableIme = true,
                     EnableInputFocusProxy = Environment.GetEnvironmentVariable("XDG_CURRENT_DESKTOP") == "gamescope",
-                    RenderingMode = ConfigurationState.Instance.EnableHardwareAcceleration ?
+                    RenderingMode = UseHardwareAcceleration ?
                         new[] { X11RenderingMode.Glx, X11RenderingMode.Software } :
                         new[] { X11RenderingMode.Software },
                 })
                 .With(new Win32PlatformOptions
                 {
                     WinUICompositionBackdropCornerRadius = 8.0f,
-                    RenderingMode = ConfigurationState.Instance.EnableHardwareAcceleration ?
+                    RenderingMode = UseHardwareAcceleration ?
                         new[] { Win32RenderingMode.AngleEgl, Win32RenderingMode.Software } :
                         new[] { Win32RenderingMode.Software },
                 })
@@ -165,6 +166,8 @@ namespace Ryujinx.Ava
                 }
             }
 
+            UseHardwareAcceleration = ConfigurationState.Instance.EnableHardwareAcceleration.Value;
+
             // Check if graphics backend was overridden
             if (CommandLineState.OverrideGraphicsBackend != null)
             {
@@ -199,7 +202,7 @@ namespace Ryujinx.Ava
             // Check if hardware-acceleration was overridden.
             if (CommandLineState.OverrideHardwareAcceleration != null)
             {
-                ConfigurationState.Instance.EnableHardwareAcceleration.Value = CommandLineState.OverrideHardwareAcceleration.Value;
+                UseHardwareAcceleration = CommandLineState.OverrideHardwareAcceleration.Value;
             }
         }
 

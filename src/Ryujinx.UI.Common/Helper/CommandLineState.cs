@@ -91,9 +91,6 @@ namespace Ryujinx.UI.Common.Helper
                     case "--software-gui":
                         OverrideHardwareAcceleration = false;
                         break;
-                    case "--hardware-gui":
-                        OverrideHardwareAcceleration = true;
-                        break;
                     default:
                         LaunchPathArg = arg;
                         break;
