@@ -61,6 +61,9 @@ namespace Ryujinx.Horizon.Sdk.Audio.Detail
             [Buffer(HipcBufferFlags.Out | HipcBufferFlags.MapAlias)] Memory<byte> performanceOutput,
             [Buffer(HipcBufferFlags.In | HipcBufferFlags.MapAlias)] ReadOnlySequence<byte> input)
         {
+            using MemoryHandle outputHandle = output.Pin();
+            using MemoryHandle performanceOutputHandle = performanceOutput.Pin();
+
             Result result = new Result((int)_renderSystem.Update(output, performanceOutput, input));
 
             return result;
