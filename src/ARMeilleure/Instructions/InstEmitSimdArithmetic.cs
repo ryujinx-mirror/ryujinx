@@ -2426,7 +2426,11 @@ namespace ARMeilleure.Instructions
             }
             else if (Optimizations.FastFP && Optimizations.UseSse41 && sizeF == 0)
             {
-                Operand res = EmitSse41Round32Exp8OpF(context, context.AddIntrinsic(Intrinsic.X86Rsqrtss, GetVec(op.Rn)), scalar: true);
+                // RSQRTSS handles subnormals as zero, which differs from Arm, so we can't use it here.
+
+                Operand res = context.AddIntrinsic(Intrinsic.X86Sqrtss, GetVec(op.Rn));
+                res = context.AddIntrinsic(Intrinsic.X86Rcpss, res);
+                res = EmitSse41Round32Exp8OpF(context, res, scalar: true);
 
                 context.Copy(GetVec(op.Rd), context.VectorZeroUpper96(res));
             }
@@ -2451,7 +2455,11 @@ namespace ARMeilleure.Instructions
             }
             else if (Optimizations.FastFP && Optimizations.UseSse41 && sizeF == 0)
             {
-                Operand res = EmitSse41Round32Exp8OpF(context, context.AddIntrinsic(Intrinsic.X86Rsqrtps, GetVec(op.Rn)), scalar: false);
+                // RSQRTPS handles subnormals as zero, which differs from Arm, so we can't use it here.
+
+                Operand res = context.AddIntrinsic(Intrinsic.X86Sqrtps, GetVec(op.Rn));
+                res = context.AddIntrinsic(Intrinsic.X86Rcpps, res);
+                res = EmitSse41Round32Exp8OpF(context, res, scalar: false);
 
                 if (op.RegisterSize == RegisterSize.Simd64)
                 {
