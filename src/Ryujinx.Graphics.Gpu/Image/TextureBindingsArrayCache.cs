@@ -224,7 +224,8 @@ namespace Ryujinx.Graphics.Gpu.Image
             /// Synchronizes memory for all textures in the array.
             /// </summary>
             /// <param name="isStore">Indicates if the texture may be modified by the access</param>
-            public void SynchronizeMemory(bool isStore)
+            /// <param name="blacklistScale">Indicates if the texture should be blacklisted for scaling</param>
+            public void SynchronizeMemory(bool isStore, bool blacklistScale)
             {
                 foreach (Texture texture in Textures.Keys)
                 {
@@ -233,6 +234,13 @@ namespace Ryujinx.Graphics.Gpu.Image
                     if (isStore)
                     {
                         texture.SignalModified();
+                    }
+
+                    if (blacklistScale && texture.ScaleMode != TextureScaleMode.Blacklisted)
+                    {
+                        // Scaling textures used on arrays is currently not supported.
+
+                        texture.BlacklistScale();
                     }
                 }
             }
@@ -467,6 +475,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             bool poolsModified = entry.PoolsModified();
             bool isStore = bindingInfo.Flags.HasFlag(TextureUsageFlags.ImageStore);
+            bool resScaleUnsupported = bindingInfo.Flags.HasFlag(TextureUsageFlags.ResScaleUnsupported);
 
             ReadOnlySpan<int> cachedTextureBuffer;
             ReadOnlySpan<int> cachedSamplerBuffer;
@@ -475,7 +484,7 @@ namespace Ryujinx.Graphics.Gpu.Image
             {
                 if (entry.MatchesSequenceNumber(_context.SequenceNumber))
                 {
-                    entry.SynchronizeMemory(isStore);
+                    entry.SynchronizeMemory(isStore, resScaleUnsupported);
 
                     if (isImage)
                     {
@@ -504,7 +513,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                 if (entry.MatchesBufferData(cachedTextureBuffer, cachedSamplerBuffer, separateSamplerBuffer, samplerWordOffset))
                 {
-                    entry.SynchronizeMemory(isStore);
+                    entry.SynchronizeMemory(isStore, resScaleUnsupported);
 
                     if (isImage)
                     {
@@ -568,6 +577,13 @@ namespace Ryujinx.Graphics.Gpu.Image
                     if (isStore)
                     {
                         texture.SignalModified();
+                    }
+
+                    if (resScaleUnsupported && texture.ScaleMode != TextureScaleMode.Blacklisted)
+                    {
+                        // Scaling textures used on arrays is currently not supported.
+
+                        texture.BlacklistScale();
                     }
                 }
 
