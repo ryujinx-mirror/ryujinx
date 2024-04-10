@@ -159,6 +159,11 @@ namespace Ryujinx.Audio.Renderer.Server.Splitter
                 }
             }
 
+            if (destinationCount < parameter.DestinationCount)
+            {
+                input.Advance((parameter.DestinationCount - destinationCount) * sizeof(int));
+            }
+
             Debug.Assert(parameter.Id == Id);
 
             if (parameter.Id == Id)
