@@ -15,8 +15,7 @@ namespace Ryujinx.HLE.HOS.Tamper.CodeEmitters
         private const int OffsetRegisterIndex = 6;
         private const int ValueImmediateIndex = 8;
 
-        private const int ValueImmediateSize8 = 8;
-        private const int ValueImmediateSize16 = 16;
+        private const int ValueImmediateSize = 16;
 
         public static void Emit(byte[] instruction, CompilationContext context)
         {
@@ -32,8 +31,7 @@ namespace Ryujinx.HLE.HOS.Tamper.CodeEmitters
             Register sourceRegister = context.GetRegister(instruction[AddressRegisterIndex]);
             byte incrementAddressRegister = instruction[IncrementAddressRegisterIndex];
             byte useOffsetRegister = instruction[UseOffsetRegisterIndex];
-            int valueImmediateSize = operationWidth <= 4 ? ValueImmediateSize8 : ValueImmediateSize16;
-            ulong immediate = InstructionHelper.GetImmediate(instruction, ValueImmediateIndex, valueImmediateSize);
+            ulong immediate = InstructionHelper.GetImmediate(instruction, ValueImmediateIndex, ValueImmediateSize);
             Value<ulong> storeValue = new(immediate);
 
             Pointer destinationMemory;
