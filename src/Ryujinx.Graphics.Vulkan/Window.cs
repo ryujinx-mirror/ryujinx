@@ -330,6 +330,7 @@ namespace Ryujinx.Graphics.Vulkan
                     _swapchainIsDirty)
                 {
                     RecreateSwapchain();
+                    semaphoreIndex = (_frameIndex - 1) % _imageAvailableSemaphores.Length;
                 }
                 else
                 {
