@@ -1,5 +1,7 @@
 using Ryujinx.Common;
+using Ryujinx.Common.Memory;
 using System;
+using System.Buffers;
 using System.Buffers.Binary;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
@@ -12,7 +14,7 @@ namespace Ryujinx.Graphics.Texture
         private const int BlockWidth = 4;
         private const int BlockHeight = 4;
 
-        public static byte[] DecodeBC1(ReadOnlySpan<byte> data, int width, int height, int depth, int levels, int layers)
+        public static IMemoryOwner<byte> DecodeBC1(ReadOnlySpan<byte> data, int width, int height, int depth, int levels, int layers)
         {
             int size = 0;
 
@@ -21,12 +23,12 @@ namespace Ryujinx.Graphics.Texture
                 size += Math.Max(1, width >> l) * Math.Max(1, height >> l) * Math.Max(1, depth >> l) * layers * 4;
             }
 
-            byte[] output = new byte[size];
+            IMemoryOwner<byte> output = ByteMemoryPool.Rent(size);
 
             Span<byte> tile = stackalloc byte[BlockWidth * BlockHeight * 4];
 
             Span<uint> tileAsUint = MemoryMarshal.Cast<byte, uint>(tile);
-            Span<uint> outputAsUint = MemoryMarshal.Cast<byte, uint>(output);
+            Span<uint> outputAsUint = MemoryMarshal.Cast<byte, uint>(output.Memory.Span);
 
             Span<Vector128<byte>> tileAsVector128 = MemoryMarshal.Cast<byte, Vector128<byte>>(tile);
 
@@ -100,7 +102,7 @@ namespace Ryujinx.Graphics.Texture
             return output;
         }
 
-        public static byte[] DecodeBC2(ReadOnlySpan<byte> data, int width, int height, int depth, int levels, int layers)
+        public static IMemoryOwner<byte> DecodeBC2(ReadOnlySpan<byte> data, int width, int height, int depth, int levels, int layers)
         {
             int size = 0;
 
@@ -109,12 +111,12 @@ namespace Ryujinx.Graphics.Texture
                 size += Math.Max(1, width >> l) * Math.Max(1, height >> l) * Math.Max(1, depth >> l) * layers * 4;
             }
 
-            byte[] output = new byte[size];
+            IMemoryOwner<byte> output = ByteMemoryPool.Rent(size);
 
             Span<byte> tile = stackalloc byte[BlockWidth * BlockHeight * 4];
 
             Span<uint> tileAsUint = MemoryMarshal.Cast<byte, uint>(tile);
-            Span<uint> outputAsUint = MemoryMarshal.Cast<byte, uint>(output);
+            Span<uint> outputAsUint = MemoryMarshal.Cast<byte, uint>(output.Memory.Span);
 
             Span<Vector128<byte>> tileAsVector128 = MemoryMarshal.Cast<byte, Vector128<byte>>(tile);
 
@@ -195,7 +197,7 @@ namespace Ryujinx.Graphics.Texture
             return output;
         }
 
-        public static byte[] DecodeBC3(ReadOnlySpan<byte> data, int width, int height, int depth, int levels, int layers)
+        public static IMemoryOwner<byte> DecodeBC3(ReadOnlySpan<byte> data, int width, int height, int depth, int levels, int layers)
         {
             int size = 0;
 
@@ -204,13 +206,13 @@ namespace Ryujinx.Graphics.Texture
                 size += Math.Max(1, width >> l) * Math.Max(1, height >> l) * Math.Max(1, depth >> l) * layers * 4;
             }
 
-            byte[] output = new byte[size];
+            IMemoryOwner<byte> output = ByteMemoryPool.Rent(size);
 
             Span<byte> tile = stackalloc byte[BlockWidth * BlockHeight * 4];
             Span<byte> rPal = stackalloc byte[8];
 
             Span<uint> tileAsUint = MemoryMarshal.Cast<byte, uint>(tile);
-            Span<uint> outputAsUint = MemoryMarshal.Cast<byte, uint>(output);
+            Span<uint> outputAsUint = MemoryMarshal.Cast<byte, uint>(output.Memory.Span);
 
             Span<Vector128<byte>> tileAsVector128 = MemoryMarshal.Cast<byte, Vector128<byte>>(tile);
 
@@ -292,7 +294,7 @@ namespace Ryujinx.Graphics.Texture
             return output;
         }
 
-        public static byte[] DecodeBC4(ReadOnlySpan<byte> data, int width, int height, int depth, int levels, int layers, bool signed)
+        public static IMemoryOwner<byte> DecodeBC4(ReadOnlySpan<byte> data, int width, int height, int depth, int levels, int layers, bool signed)
         {
             int size = 0;
 
@@ -304,8 +306,8 @@ namespace Ryujinx.Graphics.Texture
             // Backends currently expect a stride alignment of 4 bytes, so output width must be aligned.
             int alignedWidth = BitUtils.AlignUp(width, 4);
 
-            byte[] output = new byte[size];
-            Span<byte> outputSpan = new(output);
+            IMemoryOwner<byte> output = ByteMemoryPool.Rent(size);
+            Span<byte> outputSpan = output.Memory.Span;
 
             ReadOnlySpan<ulong> data64 = MemoryMarshal.Cast<byte, ulong>(data);
 
@@ -400,7 +402,7 @@ namespace Ryujinx.Graphics.Texture
             return output;
         }
 
-        public static byte[] DecodeBC5(ReadOnlySpan<byte> data, int width, int height, int depth, int levels, int layers, bool signed)
+        public static IMemoryOwner<byte> DecodeBC5(ReadOnlySpan<byte> data, int width, int height, int depth, int levels, int layers, bool signed)
         {
             int size = 0;
 
@@ -412,7 +414,7 @@ namespace Ryujinx.Graphics.Texture
             // Backends currently expect a stride alignment of 4 bytes, so output width must be aligned.
             int alignedWidth = BitUtils.AlignUp(width, 2);
 
-            byte[] output = new byte[size];
+            IMemoryOwner<byte> output = ByteMemoryPool.Rent(size);
 
             ReadOnlySpan<ulong> data64 = MemoryMarshal.Cast<byte, ulong>(data);
 
@@ -421,7 +423,7 @@ namespace Ryujinx.Graphics.Texture
             Span<byte> rPal = stackalloc byte[8];
             Span<byte> gPal = stackalloc byte[8];
 
-            Span<ushort> outputAsUshort = MemoryMarshal.Cast<byte, ushort>(output);
+            Span<ushort> outputAsUshort = MemoryMarshal.Cast<byte, ushort>(output.Memory.Span);
 
             Span<uint> rTileAsUint = MemoryMarshal.Cast<byte, uint>(rTile);
             Span<uint> gTileAsUint = MemoryMarshal.Cast<byte, uint>(gTile);
@@ -525,7 +527,7 @@ namespace Ryujinx.Graphics.Texture
             return output;
         }
 
-        public static byte[] DecodeBC6(ReadOnlySpan<byte> data, int width, int height, int depth, int levels, int layers, bool signed)
+        public static IMemoryOwner<byte> DecodeBC6(ReadOnlySpan<byte> data, int width, int height, int depth, int levels, int layers, bool signed)
         {
             int size = 0;
 
@@ -534,7 +536,8 @@ namespace Ryujinx.Graphics.Texture
                 size += Math.Max(1, width >> l) * Math.Max(1, height >> l) * Math.Max(1, depth >> l) * layers * 8;
             }
 
-            byte[] output = new byte[size];
+            IMemoryOwner<byte> output = ByteMemoryPool.Rent(size);
+            Span<byte> outputSpan = output.Memory.Span;
 
             int inputOffset = 0;
             int outputOffset = 0;
@@ -548,7 +551,7 @@ namespace Ryujinx.Graphics.Texture
                 {
                     for (int z = 0; z < depth; z++)
                     {
-                        BC6Decoder.Decode(output.AsSpan()[outputOffset..], data[inputOffset..], width, height, signed);
+                        BC6Decoder.Decode(outputSpan[outputOffset..], data[inputOffset..], width, height, signed);
 
                         inputOffset += w * h * 16;
                         outputOffset += width * height * 8;
@@ -563,7 +566,7 @@ namespace Ryujinx.Graphics.Texture
             return output;
         }
 
-        public static byte[] DecodeBC7(ReadOnlySpan<byte> data, int width, int height, int depth, int levels, int layers)
+        public static IMemoryOwner<byte> DecodeBC7(ReadOnlySpan<byte> data, int width, int height, int depth, int levels, int layers)
         {
             int size = 0;
 
@@ -572,7 +575,8 @@ namespace Ryujinx.Graphics.Texture
                 size += Math.Max(1, width >> l) * Math.Max(1, height >> l) * Math.Max(1, depth >> l) * layers * 4;
             }
 
-            byte[] output = new byte[size];
+            IMemoryOwner<byte> output = ByteMemoryPool.Rent(size);
+            Span<byte> outputSpan = output.Memory.Span;
 
             int inputOffset = 0;
             int outputOffset = 0;
@@ -586,7 +590,7 @@ namespace Ryujinx.Graphics.Texture
                 {
                     for (int z = 0; z < depth; z++)
                     {
-                        BC7Decoder.Decode(output.AsSpan()[outputOffset..], data[inputOffset..], width, height);
+                        BC7Decoder.Decode(outputSpan[outputOffset..], data[inputOffset..], width, height);
 
                         inputOffset += w * h * 16;
                         outputOffset += width * height * 4;

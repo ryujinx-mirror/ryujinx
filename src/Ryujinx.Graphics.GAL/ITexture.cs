@@ -1,4 +1,4 @@
-using Ryujinx.Common.Memory;
+using System.Buffers;
 
 namespace Ryujinx.Graphics.GAL
 {
@@ -17,10 +17,34 @@ namespace Ryujinx.Graphics.GAL
         PinnedSpan<byte> GetData();
         PinnedSpan<byte> GetData(int layer, int level);
 
-        void SetData(SpanOrArray<byte> data);
-        void SetData(SpanOrArray<byte> data, int layer, int level);
-        void SetData(SpanOrArray<byte> data, int layer, int level, Rectangle<int> region);
+        /// <summary>
+        /// Sets the texture data. The data passed as a <see cref="IMemoryOwner{Byte}" /> will be disposed when
+        /// the operation completes.
+        /// </summary>
+        /// <param name="data">Texture data bytes</param>
+        void SetData(IMemoryOwner<byte> data);
+
+        /// <summary>
+        /// Sets the texture data. The data passed as a <see cref="IMemoryOwner{Byte}" /> will be disposed when
+        /// the operation completes.
+        /// </summary>
+        /// <param name="data">Texture data bytes</param>
+        /// <param name="layer">Target layer</param>
+        /// <param name="level">Target level</param>
+        void SetData(IMemoryOwner<byte> data, int layer, int level);
+
+        /// <summary>
+        /// Sets the texture data. The data passed as a <see cref="IMemoryOwner{Byte}" /> will be disposed when
+        /// the operation completes.
+        /// </summary>
+        /// <param name="data">Texture data bytes</param>
+        /// <param name="layer">Target layer</param>
+        /// <param name="level">Target level</param>
+        /// <param name="region">Target sub-region of the texture to update</param>
+        void SetData(IMemoryOwner<byte> data, int layer, int level, Rectangle<int> region);
+
         void SetStorage(BufferRange buffer);
+
         void Release();
     }
 }

@@ -3,6 +3,7 @@ using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.Shader;
 using Silk.NET.Vulkan;
 using System;
+using System.Buffers;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using CompareOp = Ryujinx.Graphics.GAL.CompareOp;
@@ -216,7 +217,7 @@ namespace Ryujinx.Graphics.Vulkan
 
         public void Initialize()
         {
-            Span<byte> dummyTextureData = stackalloc byte[4];
+            IMemoryOwner<byte> dummyTextureData = ByteMemoryPool.RentCleared(4);
             _dummyTexture.SetData(dummyTextureData);
         }
 

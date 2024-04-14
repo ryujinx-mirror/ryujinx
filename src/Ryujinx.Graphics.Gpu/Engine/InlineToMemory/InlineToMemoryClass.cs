@@ -1,4 +1,5 @@
 using Ryujinx.Common;
+using Ryujinx.Common.Memory;
 using Ryujinx.Graphics.Device;
 using Ryujinx.Graphics.Texture;
 using System;
@@ -198,7 +199,8 @@ namespace Ryujinx.Graphics.Gpu.Engine.InlineToMemory
                     if (target != null)
                     {
                         target.SynchronizeMemory();
-                        target.SetData(data, 0, 0, new GAL.Rectangle<int>(_dstX, _dstY, _lineLengthIn / target.Info.FormatInfo.BytesPerPixel, _lineCount));
+                        var dataCopy = ByteMemoryPool.RentCopy(data);
+                        target.SetData(dataCopy, 0, 0, new GAL.Rectangle<int>(_dstX, _dstY, _lineLengthIn / target.Info.FormatInfo.BytesPerPixel, _lineCount));
                         target.SignalModified();
 
                         return;

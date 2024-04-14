@@ -33,7 +33,8 @@ namespace Ryujinx.Graphics.OpenGL.Effects.Smaa
 
         public int Quality
         {
-            get => _quality; set
+            get => _quality;
+            set
             {
                 _quality = Math.Clamp(value, 0, _qualities.Length - 1);
             }
@@ -150,8 +151,8 @@ namespace Ryujinx.Graphics.OpenGL.Effects.Smaa
             _areaTexture = new TextureStorage(_renderer, areaInfo);
             _searchTexture = new TextureStorage(_renderer, searchInfo);
 
-            var areaTexture = EmbeddedResources.Read("Ryujinx.Graphics.OpenGL/Effects/Textures/SmaaAreaTexture.bin");
-            var searchTexture = EmbeddedResources.Read("Ryujinx.Graphics.OpenGL/Effects/Textures/SmaaSearchTexture.bin");
+            var areaTexture = EmbeddedResources.ReadFileToRentedMemory("Ryujinx.Graphics.OpenGL/Effects/Textures/SmaaAreaTexture.bin");
+            var searchTexture = EmbeddedResources.ReadFileToRentedMemory("Ryujinx.Graphics.OpenGL/Effects/Textures/SmaaSearchTexture.bin");
 
             var areaView = _areaTexture.CreateDefaultView();
             var searchView = _searchTexture.CreateDefaultView();
