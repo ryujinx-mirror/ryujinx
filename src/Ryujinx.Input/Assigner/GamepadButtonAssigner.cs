@@ -49,9 +49,9 @@ namespace Ryujinx.Input.Assigner
             CollectButtonStats();
         }
 
-        public bool HasAnyButtonPressed()
+        public bool IsAnyButtonPressed()
         {
-            return _detector.HasAnyButtonPressed();
+            return _detector.IsAnyButtonPressed();
         }
 
         public bool ShouldCancel()
@@ -59,16 +59,11 @@ namespace Ryujinx.Input.Assigner
             return _gamepad == null || !_gamepad.IsConnected;
         }
 
-        public string GetPressedButton()
+        public Button? GetPressedButton()
         {
             IEnumerable<GamepadButtonInputId> pressedButtons = _detector.GetPressedButtons();
 
-            if (pressedButtons.Any())
-            {
-                return !_forStick ? pressedButtons.First().ToString() : ((StickInputId)pressedButtons.First()).ToString();
-            }
-
-            return "";
+            return !_forStick ? new(pressedButtons.FirstOrDefault()) : new((StickInputId)pressedButtons.FirstOrDefault());
         }
 
         private void CollectButtonStats()
@@ -123,7 +118,7 @@ namespace Ryujinx.Input.Assigner
                 _stats = new Dictionary<GamepadButtonInputId, InputSummary>();
             }
 
-            public bool HasAnyButtonPressed()
+            public bool IsAnyButtonPressed()
             {
                 return _stats.Values.Any(CheckButtonPressed);
             }
