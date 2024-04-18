@@ -770,7 +770,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                 ? _channel.BufferManager.GetComputeUniformBufferAddress(textureBufferIndex)
                 : _channel.BufferManager.GetGraphicsUniformBufferAddress(stageIndex, textureBufferIndex);
 
-            int handle = textureBufferAddress != 0
+            int handle = textureBufferAddress != MemoryManager.PteUnmapped
                 ? _channel.MemoryManager.Physical.Read<int>(textureBufferAddress + (uint)textureWordOffset * 4)
                 : 0;
 
@@ -790,7 +790,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                         ? _channel.BufferManager.GetComputeUniformBufferAddress(samplerBufferIndex)
                         : _channel.BufferManager.GetGraphicsUniformBufferAddress(stageIndex, samplerBufferIndex);
 
-                    samplerHandle = samplerBufferAddress != 0
+                    samplerHandle = samplerBufferAddress != MemoryManager.PteUnmapped
                         ? _channel.MemoryManager.Physical.Read<int>(samplerBufferAddress + (uint)samplerWordOffset * 4)
                         : 0;
                 }
