@@ -212,7 +212,7 @@ namespace Ryujinx.Audio.Renderer.Server
         /// <summary>
         /// Check if the audio renderer should fix the GC-ADPCM context not being provided to the DSP.
         /// </summary>
-        /// <returns>True if if the audio renderer should fix it.</returns>
+        /// <returns>True if the audio renderer should fix it.</returns>
         public bool IsAdpcmLoopContextBugFixed()
         {
             return CheckFeatureSupported(UserRevision, BaseRevisionMagic + Revision2);

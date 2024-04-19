@@ -44,7 +44,7 @@ namespace Ryujinx.Common.Extensions
         /// <remarks>
         /// DO NOT use <paramref name="copyDestinationIfRequiredDoNotUse"/> after calling this method, as it will only
         /// contain a value if the value couldn't be referenced directly because it spans multiple <see cref="ReadOnlyMemory{Byte}"/> segments.
-        /// To discourage use, it is recommended to to call this method like the following:
+        /// To discourage use, it is recommended to call this method like the following:
         /// <c>
         ///     ref readonly MyStruct value = ref sequenceReader.GetRefOrRefToCopy{MyStruct}(out _);
         /// </c>
