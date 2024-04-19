@@ -143,7 +143,7 @@ namespace Ryujinx.HLE.HOS
 
             try
             {
-                ControllerKeys pressedKeys = (ControllerKeys)Thread.VolatileRead(ref _pressedKeys);
+                ControllerKeys pressedKeys = (ControllerKeys)Volatile.Read(ref _pressedKeys);
                 program.Process.TamperedCodeMemory = false;
                 program.Execute(pressedKeys);
 
@@ -175,14 +175,14 @@ namespace Ryujinx.HLE.HOS
             {
                 if (input.PlayerId == PlayerIndex.Player1 || input.PlayerId == PlayerIndex.Handheld)
                 {
-                    Thread.VolatileWrite(ref _pressedKeys, (long)input.Buttons);
+                    Volatile.Write(ref _pressedKeys, (long)input.Buttons);
 
                     return;
                 }
             }
 
             // Clear the input because player one is not conected.
-            Thread.VolatileWrite(ref _pressedKeys, 0);
+            Volatile.Write(ref _pressedKeys, 0);
         }
     }
 }

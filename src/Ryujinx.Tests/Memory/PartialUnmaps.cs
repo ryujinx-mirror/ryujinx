@@ -388,14 +388,14 @@ namespace Ryujinx.Tests.Memory
                     {
                         rwLock.AcquireReaderLock();
 
-                        int originalValue = Thread.VolatileRead(ref value);
+                        int originalValue = Volatile.Read(ref value);
 
                         count++;
 
                         // Spin a bit.
                         for (int i = 0; i < 100; i++)
                         {
-                            if (Thread.VolatileRead(ref readersAllowed) == 0)
+                            if (Volatile.Read(ref readersAllowed) == 0)
                             {
                                 error = true;
                                 running = false;
@@ -403,7 +403,7 @@ namespace Ryujinx.Tests.Memory
                         }
 
                         // Should not change while the lock is held.
-                        if (Thread.VolatileRead(ref value) != originalValue)
+                        if (Volatile.Read(ref value) != originalValue)
                         {
                             error = true;
                             running = false;
