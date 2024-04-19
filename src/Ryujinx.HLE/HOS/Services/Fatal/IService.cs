@@ -60,7 +60,7 @@ namespace Ryujinx.HLE.HOS.Services.Fatal
             errorReport.AppendLine($"\tResultCode: {((int)resultCode & 0x1FF) + 2000}-{((int)resultCode >> 9) & 0x3FFF:d4}");
             errorReport.AppendLine($"\tFatalPolicy: {fatalPolicy}");
 
-            if (cpuContext != null)
+            if (!cpuContext.IsEmpty)
             {
                 errorReport.AppendLine("CPU Context:");
 

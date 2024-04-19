@@ -302,12 +302,12 @@ namespace Ryujinx.Graphics.Vulkan
                         SubmitInfo sInfo = new()
                         {
                             SType = StructureType.SubmitInfo,
-                            WaitSemaphoreCount = waitSemaphores != null ? (uint)waitSemaphores.Length : 0,
+                            WaitSemaphoreCount = !waitSemaphores.IsEmpty ? (uint)waitSemaphores.Length : 0,
                             PWaitSemaphores = pWaitSemaphores,
                             PWaitDstStageMask = pWaitDstStageMask,
                             CommandBufferCount = 1,
                             PCommandBuffers = &commandBuffer,
-                            SignalSemaphoreCount = signalSemaphores != null ? (uint)signalSemaphores.Length : 0,
+                            SignalSemaphoreCount = !signalSemaphores.IsEmpty ? (uint)signalSemaphores.Length : 0,
                             PSignalSemaphores = pSignalSemaphores,
                         };
 
