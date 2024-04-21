@@ -1,8 +1,10 @@
 using Ryujinx.Audio.Backends.Common;
 using Ryujinx.Audio.Common;
 using Ryujinx.Common.Logging;
+using Ryujinx.Common.Memory;
 using Ryujinx.Memory;
 using System;
+using System.Buffers;
 using System.Collections.Concurrent;
 using System.Threading;
 
@@ -87,7 +89,9 @@ namespace Ryujinx.Audio.Backends.SDL2
                 return;
             }
 
-            byte[] samples = new byte[frameCount * _bytesPerFrame];
+            using IMemoryOwner<byte> samplesOwner = ByteMemoryPool.Rent(frameCount * _bytesPerFrame);
+
+            Span<byte> samples = samplesOwner.Memory.Span;
 
             _ringBuffer.Read(samples, 0, samples.Length);
 

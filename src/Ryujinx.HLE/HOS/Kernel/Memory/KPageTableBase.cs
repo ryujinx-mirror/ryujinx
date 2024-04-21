@@ -5,6 +5,7 @@ using Ryujinx.Horizon.Common;
 using Ryujinx.Memory;
 using Ryujinx.Memory.Range;
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics;
 
@@ -1568,7 +1569,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
                     while (size > 0)
                     {
-                        ulong copySize = 0x100000; // Copy chunck size. Any value will do, moderate sizes are recommended.
+                        ulong copySize = int.MaxValue;
 
                         if (copySize > size)
                         {
@@ -1577,11 +1578,11 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
                         if (toServer)
                         {
-                            currentProcess.CpuMemory.Write(serverAddress, GetSpan(clientAddress, (int)copySize));
+                            currentProcess.CpuMemory.Write(serverAddress, GetReadOnlySequence(clientAddress, (int)copySize));
                         }
                         else
                         {
-                            Write(clientAddress, currentProcess.CpuMemory.GetSpan(serverAddress, (int)copySize));
+                            Write(clientAddress, currentProcess.CpuMemory.GetReadOnlySequence(serverAddress, (int)copySize));
                         }
 
                         serverAddress += copySize;
@@ -1911,9 +1912,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                     Context.Memory.Fill(GetDramAddressFromPa(dstFirstPagePa), unusedSizeBefore, (byte)_ipcFillValue);
 
                     ulong copySize = addressRounded <= endAddr ? addressRounded - address : size;
-                    var data = srcPageTable.GetSpan(addressTruncated + unusedSizeBefore, (int)copySize);
+                    var data = srcPageTable.GetReadOnlySequence(addressTruncated + unusedSizeBefore, (int)copySize);
 
-                    Context.Memory.Write(GetDramAddressFromPa(dstFirstPagePa + unusedSizeBefore), data);
+                    ((IWritableBlock)Context.Memory).Write(GetDramAddressFromPa(dstFirstPagePa + unusedSizeBefore), data);
 
                     firstPageFillAddress += unusedSizeBefore + copySize;
 
@@ -1977,9 +1978,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                 if (send)
                 {
                     ulong copySize = endAddr - endAddrTruncated;
-                    var data = srcPageTable.GetSpan(endAddrTruncated, (int)copySize);
+                    var data = srcPageTable.GetReadOnlySequence(endAddrTruncated, (int)copySize);
 
-                    Context.Memory.Write(GetDramAddressFromPa(dstLastPagePa), data);
+                    ((IWritableBlock)Context.Memory).Write(GetDramAddressFromPa(dstLastPagePa), data);
 
                     lastPageFillAddr += copySize;
 
@@ -2944,6 +2945,18 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
         protected abstract void GetPhysicalRegions(ulong va, ulong size, KPageList pageList);
 
         /// <summary>
+        /// Gets a read-only sequence of data from CPU mapped memory.
+        /// </summary>
+        /// <remarks>
+        /// Allows reading non-contiguous memory without first copying it to a newly allocated single contiguous block.
+        /// </remarks>
+        /// <param name="va">Virtual address of the data</param>
+        /// <param name="size">Size of the data</param>
+        /// <returns>A read-only sequence of the data</returns>
+        /// <exception cref="Ryujinx.Memory.InvalidMemoryRegionException">Throw for unhandled invalid or unmapped memory accesses</exception>
+        protected abstract ReadOnlySequence<byte> GetReadOnlySequence(ulong va, int size);
+
+        /// <summary>
         /// Gets a read-only span of data from CPU mapped memory.
         /// </summary>
         /// <remarks>
@@ -2952,7 +2965,6 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
         /// </remarks>
         /// <param name="va">Virtual address of the data</param>
         /// <param name="size">Size of the data</param>
-        /// <param name="tracked">True if read tracking is triggered on the span</param>
         /// <returns>A read-only span of the data</returns>
         /// <exception cref="Ryujinx.Memory.InvalidMemoryRegionException">Throw for unhandled invalid or unmapped memory accesses</exception>
         protected abstract ReadOnlySpan<byte> GetSpan(ulong va, int size);
@@ -3059,6 +3071,14 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
         /// <param name="va">Virtual address of the region</param>
         /// <param name="size">Size of the region</param>
         protected abstract void SignalMemoryTracking(ulong va, ulong size, bool write);
+
+        /// <summary>
+        /// Writes data to CPU mapped memory, with write tracking.
+        /// </summary>
+        /// <param name="va">Virtual address to write the data into</param>
+        /// <param name="data">Data to be written</param>
+        /// <exception cref="Ryujinx.Memory.InvalidMemoryRegionException">Throw for unhandled invalid or unmapped memory accesses</exception>
+        protected abstract void Write(ulong va, ReadOnlySequence<byte> data);
 
         /// <summary>
         /// Writes data to CPU mapped memory, with write tracking.

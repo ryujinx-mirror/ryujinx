@@ -570,7 +570,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
                 }
                 else
                 {
-                    serverProcess.CpuMemory.Write(copyDst, clientProcess.CpuMemory.GetSpan(copySrc, (int)copySize));
+                    serverProcess.CpuMemory.Write(copyDst, clientProcess.CpuMemory.GetReadOnlySequence(copySrc, (int)copySize));
                 }
 
                 if (clientResult != Result.Success)
@@ -858,7 +858,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
                 }
                 else
                 {
-                    clientProcess.CpuMemory.Write(copyDst, serverProcess.CpuMemory.GetSpan(copySrc, (int)copySize));
+                    clientProcess.CpuMemory.Write(copyDst, serverProcess.CpuMemory.GetReadOnlySequence(copySrc, (int)copySize));
                 }
             }
 
