@@ -85,6 +85,70 @@ namespace Ryujinx.Cpu.Jit
             _addressSpace = new(Tracking, backingMemory, _nativePageTable, useProtectionMirrors);
         }
 
+        public override ReadOnlySequence<byte> GetReadOnlySequence(ulong va, int size, bool tracked = false)
+        {
+            if (size == 0)
+            {
+                return ReadOnlySequence<byte>.Empty;
+            }
+
+            try
+            {
+                if (tracked)
+                {
+                    SignalMemoryTracking(va, (ulong)size, false);
+                }
+                else
+                {
+                    AssertValidAddressAndSize(va, (ulong)size);
+                }
+
+                ulong endVa = va + (ulong)size;
+                int offset = 0;
+
+                BytesReadOnlySequenceSegment first = null, last = null;
+
+                while (va < endVa)
+                {
+                    (MemoryBlock memory, ulong rangeOffset, ulong copySize) = GetMemoryOffsetAndSize(va, (ulong)(size - offset));
+
+                    Memory<byte> physicalMemory = memory.GetMemory(rangeOffset, (int)copySize);
+
+                    if (first is null)
+                    {
+                        first = last = new BytesReadOnlySequenceSegment(physicalMemory);
+                    }
+                    else
+                    {
+                        if (last.IsContiguousWith(physicalMemory, out nuint contiguousStart, out int contiguousSize))
+                        {
+                            Memory<byte> contiguousPhysicalMemory = new NativeMemoryManager<byte>(contiguousStart, contiguousSize).Memory;
+
+                            last.Replace(contiguousPhysicalMemory);
+                        }
+                        else
+                        {
+                            last = last.Append(physicalMemory);
+                        }
+                    }
+
+                    va += copySize;
+                    offset += (int)copySize;
+                }
+
+                return new ReadOnlySequence<byte>(first, 0, last, (int)(size - last.RunningIndex));
+            }
+            catch (InvalidMemoryRegionException)
+            {
+                if (_invalidAccessHandler == null || !_invalidAccessHandler(va))
+                {
+                    throw;
+                }
+
+                return ReadOnlySequence<byte>.Empty;
+            }
+        }
+
         /// <inheritdoc/>
         public void Map(ulong va, ulong pa, ulong size, MemoryMapFlags flags)
         {

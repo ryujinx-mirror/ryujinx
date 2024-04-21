@@ -8,6 +8,11 @@ namespace Ryujinx.Memory
         private readonly T* _pointer;
         private readonly int _length;
 
+        public NativeMemoryManager(nuint pointer, int length)
+            : this((T*)pointer, length)
+        {
+        }
+
         public NativeMemoryManager(T* pointer, int length)
         {
             _pointer = pointer;
