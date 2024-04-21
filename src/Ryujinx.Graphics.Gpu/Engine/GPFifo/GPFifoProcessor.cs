@@ -4,6 +4,7 @@ using Ryujinx.Graphics.Gpu.Engine.Dma;
 using Ryujinx.Graphics.Gpu.Engine.InlineToMemory;
 using Ryujinx.Graphics.Gpu.Engine.Threed;
 using Ryujinx.Graphics.Gpu.Engine.Twod;
+using Ryujinx.Graphics.Gpu.Image;
 using Ryujinx.Graphics.Gpu.Memory;
 using System;
 using System.Runtime.CompilerServices;
@@ -27,6 +28,11 @@ namespace Ryujinx.Graphics.Gpu.Engine.GPFifo
         /// Channel memory manager.
         /// </summary>
         public MemoryManager MemoryManager => _channel.MemoryManager;
+
+        /// <summary>
+        /// Channel texture manager.
+        /// </summary>
+        public TextureManager TextureManager => _channel.TextureManager;
 
         /// <summary>
         /// 3D Engine.
