@@ -185,11 +185,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
             {
                 if (texture.ArrayLength > 1)
                 {
-                    bool isBuffer = (texture.Type & SamplerType.Mask) == SamplerType.TextureBuffer;
-
-                    ResourceType type = isBuffer
-                        ? (isImage ? ResourceType.BufferImage : ResourceType.BufferTexture)
-                        : (isImage ? ResourceType.Image : ResourceType.TextureAndSampler);
+                    ResourceType type = GetTextureResourceType(texture, isImage);
 
                     _resourceDescriptors[setIndex].Add(new ResourceDescriptor(texture.Binding, texture.ArrayLength, type, stages));
                 }
@@ -242,13 +238,35 @@ namespace Ryujinx.Graphics.Gpu.Shader
         {
             foreach (TextureDescriptor texture in textures)
             {
-                bool isBuffer = (texture.Type & SamplerType.Mask) == SamplerType.TextureBuffer;
-
-                ResourceType type = isBuffer
-                    ? (isImage ? ResourceType.BufferImage : ResourceType.BufferTexture)
-                    : (isImage ? ResourceType.Image : ResourceType.TextureAndSampler);
+                ResourceType type = GetTextureResourceType(texture, isImage);
 
                 _resourceUsages[setIndex].Add(new ResourceUsage(texture.Binding, texture.ArrayLength, type, stages));
+            }
+        }
+
+        private static ResourceType GetTextureResourceType(TextureDescriptor texture, bool isImage)
+        {
+            bool isBuffer = (texture.Type & SamplerType.Mask) == SamplerType.TextureBuffer;
+
+            if (isBuffer)
+            {
+                return isImage ? ResourceType.BufferImage : ResourceType.BufferTexture;
+            }
+            else if (isImage)
+            {
+                return ResourceType.Image;
+            }
+            else if (texture.Type == SamplerType.None)
+            {
+                return ResourceType.Sampler;
+            }
+            else if (texture.Separate)
+            {
+                return ResourceType.Texture;
+            }
+            else
+            {
+                return ResourceType.TextureAndSampler;
             }
         }
 

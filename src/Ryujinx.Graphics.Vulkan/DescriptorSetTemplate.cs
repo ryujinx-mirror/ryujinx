@@ -43,11 +43,11 @@ namespace Ryujinx.Graphics.Vulkan
                 int binding = segment.Binding;
                 int count = segment.Count;
 
-                if (setIndex == PipelineBase.UniformSetIndex)
+                if (IsBufferType(segment.Type))
                 {
                     entries[seg] = new DescriptorUpdateTemplateEntry()
                     {
-                        DescriptorType = DescriptorType.UniformBuffer,
+                        DescriptorType = segment.Type.Convert(),
                         DstBinding = (uint)binding,
                         DescriptorCount = (uint)count,
                         Offset = structureOffset,
@@ -56,76 +56,31 @@ namespace Ryujinx.Graphics.Vulkan
 
                     structureOffset += (nuint)(Unsafe.SizeOf<DescriptorBufferInfo>() * count);
                 }
-                else if (setIndex == PipelineBase.StorageSetIndex)
+                else if (IsBufferTextureType(segment.Type))
                 {
                     entries[seg] = new DescriptorUpdateTemplateEntry()
                     {
-                        DescriptorType = DescriptorType.StorageBuffer,
+                        DescriptorType = segment.Type.Convert(),
                         DstBinding = (uint)binding,
                         DescriptorCount = (uint)count,
                         Offset = structureOffset,
-                        Stride = (nuint)Unsafe.SizeOf<DescriptorBufferInfo>()
+                        Stride = (nuint)Unsafe.SizeOf<BufferView>()
                     };
 
-                    structureOffset += (nuint)(Unsafe.SizeOf<DescriptorBufferInfo>() * count);
+                    structureOffset += (nuint)(Unsafe.SizeOf<BufferView>() * count);
                 }
-                else if (setIndex == PipelineBase.TextureSetIndex)
+                else
                 {
-                    if (segment.Type != ResourceType.BufferTexture)
+                    entries[seg] = new DescriptorUpdateTemplateEntry()
                     {
-                        entries[seg] = new DescriptorUpdateTemplateEntry()
-                        {
-                            DescriptorType = DescriptorType.CombinedImageSampler,
-                            DstBinding = (uint)binding,
-                            DescriptorCount = (uint)count,
-                            Offset = structureOffset,
-                            Stride = (nuint)Unsafe.SizeOf<DescriptorImageInfo>()
-                        };
+                        DescriptorType = segment.Type.Convert(),
+                        DstBinding = (uint)binding,
+                        DescriptorCount = (uint)count,
+                        Offset = structureOffset,
+                        Stride = (nuint)Unsafe.SizeOf<DescriptorImageInfo>()
+                    };
 
-                        structureOffset += (nuint)(Unsafe.SizeOf<DescriptorImageInfo>() * count);
-                    }
-                    else
-                    {
-                        entries[seg] = new DescriptorUpdateTemplateEntry()
-                        {
-                            DescriptorType = DescriptorType.UniformTexelBuffer,
-                            DstBinding = (uint)binding,
-                            DescriptorCount = (uint)count,
-                            Offset = structureOffset,
-                            Stride = (nuint)Unsafe.SizeOf<BufferView>()
-                        };
-
-                        structureOffset += (nuint)(Unsafe.SizeOf<BufferView>() * count);
-                    }
-                }
-                else if (setIndex == PipelineBase.ImageSetIndex)
-                {
-                    if (segment.Type != ResourceType.BufferImage)
-                    {
-                        entries[seg] = new DescriptorUpdateTemplateEntry()
-                        {
-                            DescriptorType = DescriptorType.StorageImage,
-                            DstBinding = (uint)binding,
-                            DescriptorCount = (uint)count,
-                            Offset = structureOffset,
-                            Stride = (nuint)Unsafe.SizeOf<DescriptorImageInfo>()
-                        };
-
-                        structureOffset += (nuint)(Unsafe.SizeOf<DescriptorImageInfo>() * count);
-                    }
-                    else
-                    {
-                        entries[seg] = new DescriptorUpdateTemplateEntry()
-                        {
-                            DescriptorType = DescriptorType.StorageTexelBuffer,
-                            DstBinding = (uint)binding,
-                            DescriptorCount = (uint)count,
-                            Offset = structureOffset,
-                            Stride = (nuint)Unsafe.SizeOf<BufferView>()
-                        };
-
-                        structureOffset += (nuint)(Unsafe.SizeOf<BufferView>() * count);
-                    }
+                    structureOffset += (nuint)(Unsafe.SizeOf<DescriptorImageInfo>() * count);
                 }
             }
 
@@ -235,6 +190,16 @@ namespace Ryujinx.Graphics.Vulkan
             gd.Api.CreateDescriptorUpdateTemplate(device, &info, null, &result).ThrowOnError();
 
             Template = result;
+        }
+
+        private static bool IsBufferType(ResourceType type)
+        {
+            return type == ResourceType.UniformBuffer || type == ResourceType.StorageBuffer;
+        }
+
+        private static bool IsBufferTextureType(ResourceType type)
+        {
+            return type == ResourceType.BufferTexture || type == ResourceType.BufferImage;
         }
 
         public unsafe void Dispose()

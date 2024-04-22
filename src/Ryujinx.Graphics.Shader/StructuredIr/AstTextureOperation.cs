@@ -9,6 +9,9 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
         public TextureFlags Flags { get; }
 
         public int Binding { get; }
+        public int SamplerBinding { get; }
+
+        public bool IsSeparate => SamplerBinding >= 0;
 
         public AstTextureOperation(
             Instruction inst,
@@ -16,6 +19,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             TextureFormat format,
             TextureFlags flags,
             int binding,
+            int samplerBinding,
             int index,
             params IAstNode[] sources) : base(inst, StorageKind.None, false, index, sources, sources.Length)
         {
@@ -23,6 +27,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             Format = format;
             Flags = flags;
             Binding = binding;
+            SamplerBinding = samplerBinding;
         }
     }
 }

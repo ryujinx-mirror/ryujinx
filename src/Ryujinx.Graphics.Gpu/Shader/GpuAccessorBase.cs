@@ -213,6 +213,8 @@ namespace Ryujinx.Graphics.Gpu.Shader
 
         public bool QueryHostSupportsScaledVertexFormats() => _context.Capabilities.SupportsScaledVertexFormats;
 
+        public bool QueryHostSupportsSeparateSampler() => _context.Capabilities.SupportsSeparateSampler;
+
         public bool QueryHostSupportsShaderBallot() => _context.Capabilities.SupportsShaderBallot;
 
         public bool QueryHostSupportsShaderBarrierDivergence() => _context.Capabilities.SupportsShaderBarrierDivergence;

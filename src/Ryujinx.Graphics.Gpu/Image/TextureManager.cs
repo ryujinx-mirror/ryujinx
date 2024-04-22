@@ -15,6 +15,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
         private readonly TextureBindingsManager _cpBindingsManager;
         private readonly TextureBindingsManager _gpBindingsManager;
+        private readonly TextureBindingsArrayCache _bindingsArrayCache;
         private readonly TexturePoolCache _texturePoolCache;
         private readonly SamplerPoolCache _samplerPoolCache;
 
@@ -46,8 +47,9 @@ namespace Ryujinx.Graphics.Gpu.Image
             TexturePoolCache texturePoolCache = new(context);
             SamplerPoolCache samplerPoolCache = new(context);
 
-            _cpBindingsManager = new TextureBindingsManager(context, channel, texturePoolCache, samplerPoolCache, isCompute: true);
-            _gpBindingsManager = new TextureBindingsManager(context, channel, texturePoolCache, samplerPoolCache, isCompute: false);
+            _bindingsArrayCache = new TextureBindingsArrayCache(context, channel);
+            _cpBindingsManager = new TextureBindingsManager(context, channel, _bindingsArrayCache, texturePoolCache, samplerPoolCache, isCompute: true);
+            _gpBindingsManager = new TextureBindingsManager(context, channel, _bindingsArrayCache, texturePoolCache, samplerPoolCache, isCompute: false);
             _texturePoolCache = texturePoolCache;
             _samplerPoolCache = samplerPoolCache;
 
@@ -384,7 +386,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         {
             ulong poolAddress = _channel.MemoryManager.Translate(poolGpuVa);
 
-            TexturePool texturePool = _texturePoolCache.FindOrCreate(_channel, poolAddress, maximumId);
+            TexturePool texturePool = _texturePoolCache.FindOrCreate(_channel, poolAddress, maximumId, _bindingsArrayCache);
 
             return texturePool;
         }

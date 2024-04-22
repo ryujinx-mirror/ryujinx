@@ -639,12 +639,25 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 
         private static string GetSamplerName(CodeGenContext context, AstTextureOperation texOp, ref int srcIndex)
         {
-            TextureDefinition definition = context.Properties.Textures[texOp.Binding];
-            string name = definition.Name;
+            TextureDefinition textureDefinition = context.Properties.Textures[texOp.Binding];
+            string name = textureDefinition.Name;
 
-            if (definition.ArrayLength != 1)
+            if (textureDefinition.ArrayLength != 1)
             {
                 name = $"{name}[{GetSourceExpr(context, texOp.GetSource(srcIndex++), AggregateType.S32)}]";
+            }
+
+            if (texOp.IsSeparate)
+            {
+                TextureDefinition samplerDefinition = context.Properties.Textures[texOp.SamplerBinding];
+                string samplerName = samplerDefinition.Name;
+
+                if (samplerDefinition.ArrayLength != 1)
+                {
+                    samplerName = $"{samplerName}[{GetSourceExpr(context, texOp.GetSource(srcIndex++), AggregateType.S32)}]";
+                }
+
+                name = $"{texOp.Type.ToGlslSamplerType()}({name}, {samplerName})";
             }
 
             return name;

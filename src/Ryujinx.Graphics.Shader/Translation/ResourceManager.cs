@@ -29,7 +29,7 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         private readonly HashSet<int> _usedConstantBufferBindings;
 
-        private readonly record struct TextureInfo(int CbufSlot, int Handle, int ArrayLength, SamplerType Type, TextureFormat Format);
+        private readonly record struct TextureInfo(int CbufSlot, int Handle, int ArrayLength, bool Separate, SamplerType Type, TextureFormat Format);
 
         private struct TextureMeta
         {
@@ -225,7 +225,8 @@ namespace Ryujinx.Graphics.Shader.Translation
             TextureFlags flags,
             int cbufSlot,
             int handle,
-            int arrayLength = 1)
+            int arrayLength = 1,
+            bool separate = false)
         {
             inst &= Instruction.Mask;
             bool isImage = inst.IsImage();
@@ -239,7 +240,18 @@ namespace Ryujinx.Graphics.Shader.Translation
                 format = TextureFormat.Unknown;
             }
 
-            int binding = GetTextureOrImageBinding(cbufSlot, handle, arrayLength, type, format, isImage, intCoords, isWrite, accurateType, coherent);
+            int binding = GetTextureOrImageBinding(
+                cbufSlot,
+                handle,
+                arrayLength,
+                type,
+                format,
+                isImage,
+                intCoords,
+                isWrite,
+                accurateType,
+                coherent,
+                separate);
 
             _gpuAccessor.RegisterTexture(handle, cbufSlot);
 
@@ -256,9 +268,10 @@ namespace Ryujinx.Graphics.Shader.Translation
             bool intCoords,
             bool write,
             bool accurateType,
-            bool coherent)
+            bool coherent,
+            bool separate)
         {
-            var dimensions = type.GetDimensions();
+            var dimensions = type == SamplerType.None ? 0 : type.GetDimensions();
             var dict = isImage ? _usedImages : _usedTextures;
 
             var usageFlags = TextureUsageFlags.None;
@@ -290,7 +303,7 @@ namespace Ryujinx.Graphics.Shader.Translation
             // For array textures, we also want to use type as key,
             // since we may have texture handles stores in the same buffer, but for textures with different types.
             var keyType = arrayLength > 1 ? type : SamplerType.None;
-            var info = new TextureInfo(cbufSlot, handle, arrayLength, keyType, format);
+            var info = new TextureInfo(cbufSlot, handle, arrayLength, separate, keyType, format);
             var meta = new TextureMeta()
             {
                 AccurateType = accurateType,
@@ -332,6 +345,10 @@ namespace Ryujinx.Graphics.Shader.Translation
                     ? $"{prefix}_tcb_{handle:X}_{format.ToGlslFormat()}"
                     : $"{prefix}_cb{cbufSlot}_{handle:X}_{format.ToGlslFormat()}";
             }
+            else if (type == SamplerType.None)
+            {
+                nameSuffix = cbufSlot < 0 ? $"s_tcb_{handle:X}" : $"s_cb{cbufSlot}_{handle:X}";
+            }
             else
             {
                 nameSuffix = cbufSlot < 0 ? $"{prefix}_tcb_{handle:X}" : $"{prefix}_cb{cbufSlot}_{handle:X}";
@@ -341,6 +358,7 @@ namespace Ryujinx.Graphics.Shader.Translation
                 isImage ? 3 : 2,
                 binding,
                 arrayLength,
+                separate,
                 $"{_stagePrefix}_{nameSuffix}",
                 meta.Type,
                 info.Format,
@@ -495,6 +513,7 @@ namespace Ryujinx.Graphics.Shader.Translation
                     info.CbufSlot,
                     info.Handle,
                     info.ArrayLength,
+                    info.Separate,
                     meta.UsageFlags));
             }
 
@@ -514,6 +533,7 @@ namespace Ryujinx.Graphics.Shader.Translation
                         info.CbufSlot,
                         info.Handle,
                         info.ArrayLength,
+                        info.Separate,
                         meta.UsageFlags));
                 }
             }

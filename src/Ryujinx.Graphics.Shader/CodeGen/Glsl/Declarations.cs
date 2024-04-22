@@ -6,7 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Numerics;
 
 namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 {
@@ -352,7 +351,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                     arrayDecl = "[]";
                 }
 
-                string samplerTypeName = definition.Type.ToGlslSamplerType();
+                string samplerTypeName = definition.Separate ? definition.Type.ToGlslTextureType() : definition.Type.ToGlslSamplerType();
 
                 string layout = string.Empty;
 

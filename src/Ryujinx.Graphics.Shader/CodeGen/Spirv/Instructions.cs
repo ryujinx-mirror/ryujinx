@@ -838,16 +838,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             }
 
             SamplerDeclaration declaration = context.Samplers[texOp.Binding];
-            SpvInstruction image = declaration.Image;
-
-            if (declaration.IsIndexed)
-            {
-                SpvInstruction textureIndex = Src(AggregateType.S32);
-
-                image = context.AccessChain(declaration.SampledImagePointerType, image, textureIndex);
-            }
-
-            image = context.Load(declaration.SampledImageType, image);
+            SpvInstruction image = GenerateSampledImageLoad(context, texOp, declaration, ref srcIndex);
 
             int pCount = texOp.Type.GetDimensions();
 
@@ -1171,16 +1162,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             }
 
             SamplerDeclaration declaration = context.Samplers[texOp.Binding];
-            SpvInstruction image = declaration.Image;
-
-            if (declaration.IsIndexed)
-            {
-                SpvInstruction textureIndex = Src(AggregateType.S32);
-
-                image = context.AccessChain(declaration.SampledImagePointerType, image, textureIndex);
-            }
-
-            image = context.Load(declaration.SampledImageType, image);
+            SpvInstruction image = GenerateSampledImageLoad(context, texOp, declaration, ref srcIndex);
 
             int coordsCount = texOp.Type.GetDimensions();
 
@@ -1449,17 +1431,11 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
         {
             AstTextureOperation texOp = (AstTextureOperation)operation;
 
+            int srcIndex = 0;
+
             SamplerDeclaration declaration = context.Samplers[texOp.Binding];
-            SpvInstruction image = declaration.Image;
+            SpvInstruction image = GenerateSampledImageLoad(context, texOp, declaration, ref srcIndex);
 
-            if (declaration.IsIndexed)
-            {
-                SpvInstruction textureIndex = context.GetS32(texOp.GetSource(0));
-
-                image = context.AccessChain(declaration.SampledImagePointerType, image, textureIndex);
-            }
-
-            image = context.Load(declaration.SampledImageType, image);
             image = context.Image(declaration.ImageType, image);
 
             SpvInstruction result = context.ImageQuerySamples(context.TypeS32(), image);
@@ -1471,17 +1447,11 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
         {
             AstTextureOperation texOp = (AstTextureOperation)operation;
 
+            int srcIndex = 0;
+
             SamplerDeclaration declaration = context.Samplers[texOp.Binding];
-            SpvInstruction image = declaration.Image;
+            SpvInstruction image = GenerateSampledImageLoad(context, texOp, declaration, ref srcIndex);
 
-            if (declaration.IsIndexed)
-            {
-                SpvInstruction textureIndex = context.GetS32(texOp.GetSource(0));
-
-                image = context.AccessChain(declaration.SampledImagePointerType, image, textureIndex);
-            }
-
-            image = context.Load(declaration.SampledImageType, image);
             image = context.Image(declaration.ImageType, image);
 
             if (texOp.Index == 3)
@@ -1506,8 +1476,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
 
                 if (hasLod)
                 {
-                    int lodSrcIndex = declaration.IsIndexed ? 1 : 0;
-                    var lod = context.GetS32(operation.GetSource(lodSrcIndex));
+                    var lod = context.GetS32(operation.GetSource(srcIndex));
                     result = context.ImageQuerySizeLod(resultType, image, lod);
                 }
                 else
@@ -1903,6 +1872,43 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
 
                 return context.CompositeExtract(context.GetType(swizzledResultType), vector, (SpvLiteralInteger)componentIndex);
             }
+        }
+
+        private static SpvInstruction GenerateSampledImageLoad(CodeGenContext context, AstTextureOperation texOp, SamplerDeclaration declaration, ref int srcIndex)
+        {
+            SpvInstruction image = declaration.Image;
+
+            if (declaration.IsIndexed)
+            {
+                SpvInstruction textureIndex = context.Get(AggregateType.S32, texOp.GetSource(srcIndex++));
+
+                image = context.AccessChain(declaration.SampledImagePointerType, image, textureIndex);
+            }
+
+            if (texOp.IsSeparate)
+            {
+                image = context.Load(declaration.ImageType, image);
+
+                SamplerDeclaration samplerDeclaration = context.Samplers[texOp.SamplerBinding];
+
+                SpvInstruction sampler = samplerDeclaration.Image;
+
+                if (samplerDeclaration.IsIndexed)
+                {
+                    SpvInstruction samplerIndex = context.Get(AggregateType.S32, texOp.GetSource(srcIndex++));
+
+                    sampler = context.AccessChain(samplerDeclaration.SampledImagePointerType, sampler, samplerIndex);
+                }
+
+                sampler = context.Load(samplerDeclaration.ImageType, sampler);
+                image = context.SampledImage(declaration.SampledImageType, image, sampler);
+            }
+            else
+            {
+                image = context.Load(declaration.SampledImageType, image);
+            }
+
+            return image;
         }
 
         private static OperationResult GenerateUnary(

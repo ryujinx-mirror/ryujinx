@@ -9,6 +9,7 @@ namespace Ryujinx.Graphics.Shader
         SeparateSamplerHandle = 1,
         SeparateSamplerId = 2,
         SeparateConstantSamplerHandle = 3,
+        Direct = 4,
     }
 
     public static class TextureHandle

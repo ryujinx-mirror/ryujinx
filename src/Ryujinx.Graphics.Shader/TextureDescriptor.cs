@@ -13,6 +13,8 @@ namespace Ryujinx.Graphics.Shader
         public readonly int HandleIndex;
         public readonly int ArrayLength;
 
+        public readonly bool Separate;
+
         public readonly TextureUsageFlags Flags;
 
         public TextureDescriptor(
@@ -22,6 +24,7 @@ namespace Ryujinx.Graphics.Shader
             int cbufSlot,
             int handleIndex,
             int arrayLength,
+            bool separate,
             TextureUsageFlags flags)
         {
             Binding = binding;
@@ -30,6 +33,7 @@ namespace Ryujinx.Graphics.Shader
             CbufSlot = cbufSlot;
             HandleIndex = handleIndex;
             ArrayLength = arrayLength;
+            Separate = separate;
             Flags = flags;
         }
     }

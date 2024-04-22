@@ -216,6 +216,11 @@ namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
 
             newSources[index] = source;
 
+            if (source != null && source.Type == OperandType.LocalVariable)
+            {
+                source.UseOps.Add(this);
+            }
+
             _sources = newSources;
         }
 

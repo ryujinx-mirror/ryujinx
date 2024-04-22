@@ -121,6 +121,15 @@ namespace Ryujinx.Graphics.Gpu.Shader
         }
 
         /// <inheritdoc/>
+        public int QuerySamplerArrayLengthFromPool()
+        {
+            int length = _state.SamplerPoolMaximumId + 1;
+            _state.SpecializationState?.RegisterTextureArrayLengthFromPool(isSampler: true, length);
+
+            return length;
+        }
+
+        /// <inheritdoc/>
         public SamplerType QuerySamplerType(int handle, int cbufSlot)
         {
             _state.SpecializationState?.RecordTextureSamplerType(_stageIndex, handle, cbufSlot);
@@ -139,6 +148,15 @@ namespace Ryujinx.Graphics.Gpu.Shader
             _state.SpecializationState?.RegisterTextureArrayLengthFromBuffer(_stageIndex, 0, slot, arrayLength);
 
             return arrayLength;
+        }
+
+        /// <inheritdoc/>
+        public int QueryTextureArrayLengthFromPool()
+        {
+            int length = _state.PoolState.TexturePoolMaximumId + 1;
+            _state.SpecializationState?.RegisterTextureArrayLengthFromPool(isSampler: false, length);
+
+            return length;
         }
 
         //// <inheritdoc/>

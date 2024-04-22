@@ -9,6 +9,7 @@ namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
         public TextureFlags Flags { get; private set; }
 
         public int Binding { get; private set; }
+        public int SamplerBinding { get; private set; }
 
         public TextureOperation(
             Instruction inst,
@@ -24,12 +25,20 @@ namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
             Format = format;
             Flags = flags;
             Binding = binding;
+            SamplerBinding = -1;
         }
 
         public void TurnIntoArray(int binding)
         {
             Flags &= ~TextureFlags.Bindless;
             Binding = binding;
+        }
+
+        public void TurnIntoArray(int textureBinding, int samplerBinding)
+        {
+            TurnIntoArray(textureBinding);
+
+            SamplerBinding = samplerBinding;
         }
 
         public void SetBinding(int binding)

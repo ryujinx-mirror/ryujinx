@@ -126,6 +126,8 @@ namespace Ryujinx.Graphics.Gpu.Engine.Compute
             ulong samplerPoolGpuVa = ((ulong)_state.State.SetTexSamplerPoolAOffsetUpper << 32) | _state.State.SetTexSamplerPoolB;
             ulong texturePoolGpuVa = ((ulong)_state.State.SetTexHeaderPoolAOffsetUpper << 32) | _state.State.SetTexHeaderPoolB;
 
+            int samplerPoolMaximumId = _state.State.SetTexSamplerPoolCMaximumIndex;
+
             GpuChannelPoolState poolState = new(
                 texturePoolGpuVa,
                 _state.State.SetTexHeaderPoolCMaximumIndex,
@@ -139,7 +141,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Compute
                 sharedMemorySize,
                 _channel.BufferManager.HasUnalignedStorageBuffers);
 
-            CachedShaderProgram cs = memoryManager.Physical.ShaderCache.GetComputeShader(_channel, poolState, computeState, shaderGpuVa);
+            CachedShaderProgram cs = memoryManager.Physical.ShaderCache.GetComputeShader(_channel, samplerPoolMaximumId, poolState, computeState, shaderGpuVa);
 
             _context.Renderer.Pipeline.SetProgram(cs.HostProgram);
 
@@ -184,7 +186,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Compute
                     sharedMemorySize,
                     _channel.BufferManager.HasUnalignedStorageBuffers);
 
-                cs = memoryManager.Physical.ShaderCache.GetComputeShader(_channel, poolState, computeState, shaderGpuVa);
+                cs = memoryManager.Physical.ShaderCache.GetComputeShader(_channel, samplerPoolMaximumId, poolState, computeState, shaderGpuVa);
 
                 _context.Renderer.Pipeline.SetProgram(cs.HostProgram);
             }

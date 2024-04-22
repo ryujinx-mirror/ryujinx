@@ -27,13 +27,6 @@ namespace Ryujinx.Graphics.Shader
         ReadOnlySpan<ulong> GetCode(ulong address, int minimumSize);
 
         /// <summary>
-        /// Gets the size in bytes of a bound constant buffer for the current shader stage.
-        /// </summary>
-        /// <param name="slot">The number of the constant buffer to get the size from</param>
-        /// <returns>Size in bytes</returns>
-        int QueryTextureArrayLengthFromBuffer(int slot);
-
-        /// <summary>
         /// Queries the binding number of a constant buffer.
         /// </summary>
         /// <param name="index">Constant buffer index</param>
@@ -299,6 +292,15 @@ namespace Ryujinx.Graphics.Shader
         }
 
         /// <summary>
+        /// Queries host API support for separate textures and samplers.
+        /// </summary>
+        /// <returns>True if the API supports samplers and textures to be combined on the shader, false otherwise</returns>
+        bool QueryHostSupportsSeparateSampler()
+        {
+            return true;
+        }
+
+        /// <summary>
         /// Queries host GPU shader ballot support.
         /// </summary>
         /// <returns>True if the GPU and driver supports shader ballot, false otherwise</returns>
@@ -389,6 +391,12 @@ namespace Ryujinx.Graphics.Shader
         }
 
         /// <summary>
+        /// Gets the maximum number of samplers that the bound texture pool may have.
+        /// </summary>
+        /// <returns>Maximum amount of samplers that the pool may have</returns>
+        int QuerySamplerArrayLengthFromPool();
+
+        /// <summary>
         /// Queries sampler type information.
         /// </summary>
         /// <param name="handle">Texture handle</param>
@@ -398,6 +406,19 @@ namespace Ryujinx.Graphics.Shader
         {
             return SamplerType.Texture2D;
         }
+
+        /// <summary>
+        /// Gets the size in bytes of a bound constant buffer for the current shader stage.
+        /// </summary>
+        /// <param name="slot">The number of the constant buffer to get the size from</param>
+        /// <returns>Size in bytes</returns>
+        int QueryTextureArrayLengthFromBuffer(int slot);
+
+        /// <summary>
+        /// Gets the maximum number of textures that the bound texture pool may have.
+        /// </summary>
+        /// <returns>Maximum amount of textures that the pool may have</returns>
+        int QueryTextureArrayLengthFromPool();
 
         /// <summary>
         /// Queries texture coordinate normalization information.

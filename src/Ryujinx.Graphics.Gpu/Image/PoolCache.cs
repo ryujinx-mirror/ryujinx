@@ -62,8 +62,9 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <param name="channel">GPU channel that the texture pool cache belongs to</param>
         /// <param name="address">Start address of the texture pool</param>
         /// <param name="maximumId">Maximum ID of the texture pool</param>
+        /// <param name="bindingsArrayCache">Cache of texture array bindings</param>
         /// <returns>The found or newly created texture pool</returns>
-        public T FindOrCreate(GpuChannel channel, ulong address, int maximumId)
+        public T FindOrCreate(GpuChannel channel, ulong address, int maximumId, TextureBindingsArrayCache bindingsArrayCache)
         {
             // Remove old entries from the cache, if possible.
             while (_pools.Count > MaxCapacity && (_currentTimestamp - _pools.First.Value.CacheTimestamp) >= MinDeltaForRemoval)
@@ -73,6 +74,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                 _pools.RemoveFirst();
                 oldestPool.Dispose();
                 oldestPool.CacheNode = null;
+                bindingsArrayCache.RemoveAllWithPool(oldestPool);
             }
 
             T pool;
@@ -87,8 +89,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                     if (pool.CacheNode != _pools.Last)
                     {
                         _pools.Remove(pool.CacheNode);
-
-                        pool.CacheNode = _pools.AddLast(pool);
+                        _pools.AddLast(pool.CacheNode);
                     }
 
                     pool.CacheTimestamp = _currentTimestamp;

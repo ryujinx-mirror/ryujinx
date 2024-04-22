@@ -45,6 +45,11 @@ namespace Ryujinx.Graphics.Gpu.Image
         public TextureUsageFlags Flags { get; }
 
         /// <summary>
+        /// Indicates that the binding is for a sampler.
+        /// </summary>
+        public bool IsSamplerOnly { get; }
+
+        /// <summary>
         /// Constructs the texture binding information structure.
         /// </summary>
         /// <param name="target">The shader sampler target type</param>
@@ -74,8 +79,17 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <param name="cbufSlot">Constant buffer slot where the texture handle is located</param>
         /// <param name="handle">The shader texture handle (read index into the texture constant buffer)</param>
         /// <param name="flags">The texture's usage flags, indicating how it is used in the shader</param>
-        public TextureBindingInfo(Target target, int binding, int arrayLength, int cbufSlot, int handle, TextureUsageFlags flags) : this(target, (Format)0, binding, arrayLength, cbufSlot, handle, flags)
+        /// <param name="isSamplerOnly">Indicates that the binding is for a sampler</param>
+        public TextureBindingInfo(
+            Target target,
+            int binding,
+            int arrayLength,
+            int cbufSlot,
+            int handle,
+            TextureUsageFlags flags,
+            bool isSamplerOnly) : this(target, 0, binding, arrayLength, cbufSlot, handle, flags)
         {
+            IsSamplerOnly = isSamplerOnly;
         }
     }
 }

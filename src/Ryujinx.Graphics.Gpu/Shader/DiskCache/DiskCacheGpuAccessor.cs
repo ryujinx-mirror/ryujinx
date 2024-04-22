@@ -110,6 +110,13 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
         }
 
         /// <inheritdoc/>
+        /// <exception cref="DiskCacheLoadException">Pool length is not available on the cache</exception>
+        public int QuerySamplerArrayLengthFromPool()
+        {
+            return QueryArrayLengthFromPool(isSampler: true);
+        }
+
+        /// <inheritdoc/>
         public SamplerType QuerySamplerType(int handle, int cbufSlot)
         {
             _newSpecState.RecordTextureSamplerType(_stageIndex, handle, cbufSlot);
@@ -117,6 +124,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
         }
 
         /// <inheritdoc/>
+        /// <exception cref="DiskCacheLoadException">Constant buffer derived length is not available on the cache</exception>
         public int QueryTextureArrayLengthFromBuffer(int slot)
         {
             if (!_oldSpecState.TextureArrayFromBufferRegistered(_stageIndex, 0, slot))
@@ -128,6 +136,13 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
             _newSpecState.RegisterTextureArrayLengthFromBuffer(_stageIndex, 0, slot, arrayLength);
 
             return arrayLength;
+        }
+
+        /// <inheritdoc/>
+        /// <exception cref="DiskCacheLoadException">Pool length is not available on the cache</exception>
+        public int QueryTextureArrayLengthFromPool()
+        {
+            return QueryArrayLengthFromPool(isSampler: false);
         }
 
         /// <inheritdoc/>
@@ -170,6 +185,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
         }
 
         /// <inheritdoc/>
+        /// <exception cref="DiskCacheLoadException">Texture information is not available on the cache</exception>
         public void RegisterTexture(int handle, int cbufSlot)
         {
             if (!_oldSpecState.TextureRegistered(_stageIndex, handle, cbufSlot))
@@ -181,6 +197,25 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
             TextureTarget target = _oldSpecState.GetTextureTarget(_stageIndex, handle, cbufSlot);
             bool coordNormalized = _oldSpecState.GetCoordNormalized(_stageIndex, handle, cbufSlot);
             _newSpecState.RegisterTexture(_stageIndex, handle, cbufSlot, format, formatSrgb, target, coordNormalized);
+        }
+
+        /// <summary>
+        /// Gets the cached texture or sampler pool capacity.
+        /// </summary>
+        /// <param name="isSampler">True to get sampler pool length, false for texture pool length</param>
+        /// <returns>Pool length</returns>
+        /// <exception cref="DiskCacheLoadException">Pool length is not available on the cache</exception>
+        private int QueryArrayLengthFromPool(bool isSampler)
+        {
+            if (!_oldSpecState.TextureArrayFromPoolRegistered(isSampler))
+            {
+                throw new DiskCacheLoadException(DiskCacheLoadResult.MissingTextureArrayLength);
+            }
+
+            int arrayLength = _oldSpecState.GetTextureArrayFromPoolLength(isSampler);
+            _newSpecState.RegisterTextureArrayLengthFromPool(isSampler, arrayLength);
+
+            return arrayLength;
         }
     }
 }

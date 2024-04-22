@@ -58,7 +58,17 @@ namespace Ryujinx.ShaderTools
                 return MemoryMarshal.Cast<byte, ulong>(new ReadOnlySpan<byte>(_data)[(int)address..]);
             }
 
+            public int QuerySamplerArrayLengthFromPool()
+            {
+                return DefaultArrayLength;
+            }
+
             public int QueryTextureArrayLengthFromBuffer(int slot)
+            {
+                return DefaultArrayLength;
+            }
+
+            public int QueryTextureArrayLengthFromPool()
             {
                 return DefaultArrayLength;
             }

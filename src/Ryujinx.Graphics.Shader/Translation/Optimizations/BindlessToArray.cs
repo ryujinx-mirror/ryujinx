@@ -11,7 +11,7 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
         private const int HardcodedArrayLengthOgl = 4;
 
         // 1 and 0 elements are not considered arrays anymore.
-        private const int MinimumArrayLength = 2;
+        public const int MinimumArrayLength = 2;
 
         public static void RunPassOgl(BasicBlock block, ResourceManager resourceManager)
         {
