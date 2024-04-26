@@ -20,7 +20,7 @@ jobs:
           - { name: win-x64,     os: windows-latest, zip_os_name: win_x64     }
           - { name: linux-x64,   os: ubuntu-latest,  zip_os_name: linux_x64   }
           - { name: linux-arm64, os: ubuntu-latest,  zip_os_name: linux_arm64 }
-          - { name: osx-x64,     os: macOS-latest,   zip_os_name: osx_x64     }
+          - { name: osx-x64,     os: macos-13,       zip_os_name: osx_x64     }
 
       fail-fast: false
     steps:
@@ -41,12 +41,12 @@ jobs:
       - name: Change config filename
         run: sed -r --in-place 's/\%\%RYUJINX_CONFIG_FILE_NAME\%\%/PRConfig\.json/g;' src/Ryujinx.Common/ReleaseInformation.cs
         shell: bash
-        if: github.event_name == 'pull_request' && matrix.platform.os != 'macOS-latest'
+        if: github.event_name == 'pull_request' && matrix.platform.os != 'macos-13'
 
       - name: Change config filename for macOS
         run: sed -r -i '' 's/\%\%RYUJINX_CONFIG_FILE_NAME\%\%/PRConfig\.json/g;' src/Ryujinx.Common/ReleaseInformation.cs
         shell: bash
-        if: github.event_name == 'pull_request' && matrix.platform.os == 'macOS-latest'
+        if: github.event_name == 'pull_request' && matrix.platform.os == 'macos-13'
 
       - name: Build
         run: dotnet build -c "${{ matrix.configuration }}" -p:Version="${{ env.RYUJINX_BASE_VERSION }}" -p:SourceRevisionId="${{ steps.git_short_hash.outputs.result }}" -p:ExtraDefineConstants=DISABLE_UPDATER
@@ -61,15 +61,15 @@ jobs:
 
       - name: Publish Ryujinx
         run: dotnet publish -c "${{ matrix.configuration }}" -r "${{ matrix.platform.name }}" -o ./publish -p:Version="${{ env.RYUJINX_BASE_VERSION }}" -p:DebugType=embedded -p:SourceRevisionId="${{ steps.git_short_hash.outputs.result }}" -p:ExtraDefineConstants=DISABLE_UPDATER src/Ryujinx --self-contained true
-        if: github.event_name == 'pull_request' && matrix.platform.os != 'macOS-latest'
+        if: github.event_name == 'pull_request' && matrix.platform.os != 'macos-13'
 
       - name: Publish Ryujinx.Headless.SDL2
         run: dotnet publish -c "${{ matrix.configuration }}" -r "${{ matrix.platform.name }}" -o ./publish_sdl2_headless -p:Version="${{ env.RYUJINX_BASE_VERSION }}" -p:DebugType=embedded -p:SourceRevisionId="${{ steps.git_short_hash.outputs.result }}" -p:ExtraDefineConstants=DISABLE_UPDATER src/Ryujinx.Headless.SDL2 --self-contained true
-        if: github.event_name == 'pull_request' && matrix.platform.os != 'macOS-latest'
+        if: github.event_name == 'pull_request' && matrix.platform.os != 'macos-13'
 
       - name: Publish Ryujinx.Gtk3
         run: dotnet publish -c "${{ matrix.configuration }}" -r "${{ matrix.platform.name }}" -o ./publish_gtk -p:Version="${{ env.RYUJINX_BASE_VERSION }}" -p:DebugType=embedded -p:SourceRevisionId="${{ steps.git_short_hash.outputs.result }}" -p:ExtraDefineConstants=DISABLE_UPDATER src/Ryujinx.Gtk3 --self-contained true
-        if: github.event_name == 'pull_request' && matrix.platform.os != 'macOS-latest'
+        if: github.event_name == 'pull_request' && matrix.platform.os != 'macos-13'
 
       - name: Set executable bit
         run: |
@@ -83,21 +83,21 @@ jobs:
         with:
           name: ryujinx-${{ matrix.configuration }}-${{ env.RYUJINX_BASE_VERSION }}+${{ steps.git_short_hash.outputs.result }}-${{ matrix.platform.zip_os_name }}
           path: publish
-        if: github.event_name == 'pull_request' && matrix.platform.os != 'macOS-latest'
+        if: github.event_name == 'pull_request' && matrix.platform.os != 'macos-13'
 
       - name: Upload Ryujinx.Headless.SDL2 artifact
         uses: actions/upload-artifact@v4
         with:
           name: sdl2-ryujinx-headless-${{ matrix.configuration }}-${{ env.RYUJINX_BASE_VERSION }}+${{ steps.git_short_hash.outputs.result }}-${{ matrix.platform.zip_os_name }}
           path: publish_sdl2_headless
-        if: github.event_name == 'pull_request' && matrix.platform.os != 'macOS-latest'
+        if: github.event_name == 'pull_request' && matrix.platform.os != 'macos-13'
 
       - name: Upload Ryujinx.Gtk3 artifact
         uses: actions/upload-artifact@v4
         with:
           name: gtk-ryujinx-${{ matrix.configuration }}-${{ env.RYUJINX_BASE_VERSION }}+${{ steps.git_short_hash.outputs.result }}-${{ matrix.platform.zip_os_name }}
           path: publish_gtk
-        if: github.event_name == 'pull_request' && matrix.platform.os != 'macOS-latest'
+        if: github.event_name == 'pull_request' && matrix.platform.os != 'macos-13'
 
   build_macos:
     name: macOS Universal (${{ matrix.configuration }})
