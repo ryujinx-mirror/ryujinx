@@ -487,38 +487,35 @@ namespace Ryujinx.Input.HLE
             return value;
         }
 
-        public KeyboardInput? GetHLEKeyboardInput()
+        public static KeyboardInput GetHLEKeyboardInput(IGamepadDriver KeyboardDriver)
         {
-            if (_gamepad is IKeyboard keyboard)
+            var keyboard = KeyboardDriver.GetGamepad("0") as IKeyboard;
+
+            KeyboardStateSnapshot keyboardState = keyboard.GetKeyboardStateSnapshot();
+
+            KeyboardInput hidKeyboard = new()
             {
-                KeyboardStateSnapshot keyboardState = keyboard.GetKeyboardStateSnapshot();
+                Modifier = 0,
+                Keys = new ulong[0x4],
+            };
 
-                KeyboardInput hidKeyboard = new()
-                {
-                    Modifier = 0,
-                    Keys = new ulong[0x4],
-                };
+            foreach (HLEKeyboardMappingEntry entry in _keyMapping)
+            {
+                ulong value = keyboardState.IsPressed(entry.TargetKey) ? 1UL : 0UL;
 
-                foreach (HLEKeyboardMappingEntry entry in _keyMapping)
-                {
-                    ulong value = keyboardState.IsPressed(entry.TargetKey) ? 1UL : 0UL;
-
-                    hidKeyboard.Keys[entry.Target / 0x40] |= (value << (entry.Target % 0x40));
-                }
-
-                foreach (HLEKeyboardMappingEntry entry in _keyModifierMapping)
-                {
-                    int value = keyboardState.IsPressed(entry.TargetKey) ? 1 : 0;
-
-                    hidKeyboard.Modifier |= value << entry.Target;
-                }
-
-                return hidKeyboard;
+                hidKeyboard.Keys[entry.Target / 0x40] |= (value << (entry.Target % 0x40));
             }
 
-            return null;
-        }
+            foreach (HLEKeyboardMappingEntry entry in _keyModifierMapping)
+            {
+                int value = keyboardState.IsPressed(entry.TargetKey) ? 1 : 0;
 
+                hidKeyboard.Modifier |= value << entry.Target;
+            }
+
+            return hidKeyboard;
+
+        }
 
         protected virtual void Dispose(bool disposing)
         {
