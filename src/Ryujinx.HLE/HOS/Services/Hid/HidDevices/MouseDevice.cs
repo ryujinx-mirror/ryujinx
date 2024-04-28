@@ -23,8 +23,8 @@ namespace Ryujinx.HLE.HOS.Services.Hid
                 newState.Buttons = (MouseButton)buttons;
                 newState.X = mouseX;
                 newState.Y = mouseY;
-                newState.DeltaX = mouseX - previousEntry.DeltaX;
-                newState.DeltaY = mouseY - previousEntry.DeltaY;
+                newState.DeltaX = mouseX - previousEntry.X;
+                newState.DeltaY = mouseY - previousEntry.Y;
                 newState.WheelDeltaX = scrollX;
                 newState.WheelDeltaY = scrollY;
                 newState.Attributes = connected ? MouseAttribute.IsConnected : MouseAttribute.None;
