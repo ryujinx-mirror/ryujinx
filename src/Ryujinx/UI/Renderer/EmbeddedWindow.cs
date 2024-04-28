@@ -157,7 +157,7 @@ namespace Ryujinx.Ava.UI.Renderer
                 lpfnWndProc = Marshal.GetFunctionPointerForDelegate(_wndProcDelegate),
                 style = ClassStyles.CsOwndc,
                 lpszClassName = Marshal.StringToHGlobalUni(_className),
-                hCursor = CreateArrowCursor(),
+                hCursor = CreateArrowCursor()
             };
 
             RegisterClassEx(ref wndClassEx);

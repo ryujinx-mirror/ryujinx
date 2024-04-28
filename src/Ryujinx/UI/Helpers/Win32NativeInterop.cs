@@ -111,8 +111,5 @@ namespace Ryujinx.Ava.UI.Helpers
 
         [LibraryImport("user32.dll", SetLastError = true)]
         public static partial IntPtr SetWindowLongPtrW(IntPtr hWnd, int nIndex, IntPtr value);
-
-        [LibraryImport("user32.dll", SetLastError = true)]
-        public static partial IntPtr SetWindowLongW(IntPtr hWnd, int nIndex, int value);
     }
 }

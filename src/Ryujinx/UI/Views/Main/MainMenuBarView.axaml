@@ -1,4 +1,4 @@
-﻿<UserControl
+<UserControl
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -16,7 +16,8 @@
             Name="Menu"
             Height="35"
             Margin="0"
-            HorizontalAlignment="Left">
+            HorizontalAlignment="Left"
+            IsOpen="{Binding IsSubMenuOpen, Mode=OneWayToSource}">
             <Menu.ItemsPanel>
                 <ItemsPanelTemplate>
                     <DockPanel Margin="0" HorizontalAlignment="Stretch" />
