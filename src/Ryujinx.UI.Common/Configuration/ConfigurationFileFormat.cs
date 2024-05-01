@@ -15,7 +15,7 @@ namespace Ryujinx.UI.Common.Configuration
         /// <summary>
         /// The current version of the file format
         /// </summary>
-        public const int CurrentVersion = 50;
+        public const int CurrentVersion = 51;
 
         /// <summary>
         /// Version of the configuration file format
@@ -161,6 +161,11 @@ namespace Ryujinx.UI.Common.Configuration
         /// Show "Confirm Exit" Dialog
         /// </summary>
         public bool ShowConfirmExit { get; set; }
+
+        /// <summary>
+        /// Enables or disables save window size, position and state on close.
+        /// </summary>
+        public bool RememberWindowState { get; set; }
 
         /// <summary>
         /// Enables hardware-accelerated rendering for Avalonia

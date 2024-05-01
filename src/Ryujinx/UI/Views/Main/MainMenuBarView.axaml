@@ -186,6 +186,12 @@
                     <MenuItem Header="{locale:Locale MenuBarToolsUninstallFileTypes}" Click="UninstallFileTypes_Click"/>
                 </MenuItem>
             </MenuItem>
+            <MenuItem VerticalAlignment="Center" Header="{locale:Locale MenuBarView}">
+                <MenuItem VerticalAlignment="Center" Header="{locale:Locale MenuBarViewWindow}">
+                    <MenuItem Header="{locale:Locale MenuBarViewWindow720}" Tag="720" Click="ChangeWindowSize_Click" />
+                    <MenuItem Header="{locale:Locale MenuBarViewWindow1080}" Tag="1080" Click="ChangeWindowSize_Click" />
+                </MenuItem>
+            </MenuItem>
             <MenuItem VerticalAlignment="Center" Header="{locale:Locale MenuBarHelp}">
                 <MenuItem
                     Name="UpdateMenuItem"
