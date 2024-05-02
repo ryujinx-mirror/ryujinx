@@ -412,10 +412,11 @@ namespace Ryujinx.Ava.UI.ViewModels
             Language = (int)config.System.Language.Value;
             TimeZone = config.System.TimeZone;
 
-            DateTime currentDateTime = DateTime.Now;
-
+            DateTime currentHostDateTime = DateTime.Now;
+            TimeSpan systemDateTimeOffset = TimeSpan.FromSeconds(config.System.SystemTimeOffset);
+            DateTime currentDateTime = currentHostDateTime.Add(systemDateTimeOffset);
             CurrentDate = currentDateTime.Date;
-            CurrentTime = currentDateTime.TimeOfDay.Add(TimeSpan.FromSeconds(config.System.SystemTimeOffset));
+            CurrentTime = currentDateTime.TimeOfDay;
 
             EnableVsync = config.Graphics.EnableVsync;
             EnableFsIntegrityChecks = config.System.EnableFsIntegrityChecks;
