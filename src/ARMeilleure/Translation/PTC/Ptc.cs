@@ -857,8 +857,14 @@ namespace ARMeilleure.Translation.PTC
 
             Stopwatch sw = Stopwatch.StartNew();
 
-            threads.ForEach((thread) => thread.Start());
-            threads.ForEach((thread) => thread.Join());
+            foreach (var thread in threads)
+            {
+                thread.Start();
+            }
+            foreach (var thread in threads)
+            {
+                thread.Join();
+            }
 
             threads.Clear();
 
