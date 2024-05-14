@@ -390,7 +390,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         {
             _views.Remove(texture);
 
-            Group.RemoveView(texture);
+            Group.RemoveView(_views, texture);
 
             texture._viewStorage = texture;
 

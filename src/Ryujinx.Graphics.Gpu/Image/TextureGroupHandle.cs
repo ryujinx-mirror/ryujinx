@@ -121,7 +121,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         public TextureGroupHandle(TextureGroup group,
                                   int offset,
                                   ulong size,
-                                  List<Texture> views,
+                                  IEnumerable<Texture> views,
                                   int firstLayer,
                                   int firstLevel,
                                   int baseSlice,
@@ -201,8 +201,8 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// Calculate a list of which views overlap this handle.
         /// </summary>
         /// <param name="group">The parent texture group, used to find a view's base CPU VA offset</param>
-        /// <param name="views">The list of views to search for overlaps</param>
-        public void RecalculateOverlaps(TextureGroup group, List<Texture> views)
+        /// <param name="views">The views to search for overlaps</param>
+        public void RecalculateOverlaps(TextureGroup group, IEnumerable<Texture> views)
         {
             // Overlaps can be accessed from the memory tracking signal handler, so access must be atomic.
             lock (Overlaps)

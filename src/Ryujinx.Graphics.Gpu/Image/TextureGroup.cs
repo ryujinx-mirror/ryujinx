@@ -88,9 +88,9 @@ namespace Ryujinx.Graphics.Gpu.Image
         private MultiRange TextureRange => Storage.Range;
 
         /// <summary>
-        /// The views list from the storage texture.
+        /// The views array from the storage texture.
         /// </summary>
-        private List<Texture> _views;
+        private Texture[] _views;
         private TextureGroupHandle[] _handles;
         private bool[] _loadNeeded;
 
@@ -1074,7 +1074,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         public void UpdateViews(List<Texture> views, Texture texture)
         {
             // This is saved to calculate overlapping views for each handle.
-            _views = views;
+            _views = views.ToArray();
 
             bool layerViews = _hasLayerViews;
             bool mipViews = _hasMipViews;
@@ -1136,9 +1136,13 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <summary>
         /// Removes a view from the group, removing it from all overlap lists.
         /// </summary>
+        /// <param name="views">The views list of the storage texture</param>
         /// <param name="view">View to remove from the group</param>
-        public void RemoveView(Texture view)
+        public void RemoveView(List<Texture> views, Texture view)
         {
+            // This is saved to calculate overlapping views for each handle.
+            _views = views.ToArray();
+
             int offset = FindOffset(view);
 
             foreach (TextureGroupHandle handle in _handles)
@@ -1605,9 +1609,11 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             Storage.SignalModifiedDirty();
 
-            if (_views != null)
+            Texture[] views = _views;
+
+            if (views != null)
             {
-                foreach (Texture texture in _views)
+                foreach (Texture texture in views)
                 {
                     texture.SignalModifiedDirty();
                 }
