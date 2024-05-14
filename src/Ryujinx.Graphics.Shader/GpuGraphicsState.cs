@@ -103,6 +103,11 @@ namespace Ryujinx.Graphics.Shader
         public readonly bool OriginUpperLeft;
 
         /// <summary>
+        /// Indicates that the primitive ID values on the shader should be halved due to quad to triangles conversion.
+        /// </summary>
+        public readonly bool HalvePrimitiveId;
+
+        /// <summary>
         /// Creates a new GPU graphics state.
         /// </summary>
         /// <param name="earlyZForce">Early Z force enable</param>
@@ -124,6 +129,7 @@ namespace Ryujinx.Graphics.Shader
         /// <param name="dualSourceBlendEnable">Indicates whether dual source blend is enabled</param>
         /// <param name="yNegateEnabled">Indicates if negation of the viewport Y axis is enabled</param>
         /// <param name="originUpperLeft">If true, indicates that the fragment origin is the upper left corner of the viewport, otherwise it is the lower left corner</param>
+        /// <param name="halvePrimitiveId">Indicates that the primitive ID values on the shader should be halved due to quad to triangles conversion</param>
         public GpuGraphicsState(
             bool earlyZForce,
             InputTopology topology,
@@ -143,7 +149,8 @@ namespace Ryujinx.Graphics.Shader
             in Array8<AttributeType> fragmentOutputTypes,
             bool dualSourceBlendEnable,
             bool yNegateEnabled,
-            bool originUpperLeft)
+            bool originUpperLeft,
+            bool halvePrimitiveId)
         {
             EarlyZForce = earlyZForce;
             Topology = topology;
@@ -164,6 +171,7 @@ namespace Ryujinx.Graphics.Shader
             DualSourceBlendEnable = dualSourceBlendEnable;
             YNegateEnabled = yNegateEnabled;
             OriginUpperLeft = originUpperLeft;
+            HalvePrimitiveId = halvePrimitiveId;
         }
     }
 }

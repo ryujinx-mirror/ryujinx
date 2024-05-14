@@ -84,6 +84,10 @@ namespace Ryujinx.Graphics.Shader.Instructions
                                 value = context.IConvertU32ToFP32(value);
                             }
                         }
+                        else if (offset == AttributeConsts.PrimitiveId && context.TranslatorContext.Definitions.HalvePrimitiveId)
+                        {
+                            value = context.ShiftRightS32(value, Const(1));
+                        }
 
                         context.Copy(Register(rd), value);
                     }
@@ -186,6 +190,12 @@ namespace Ryujinx.Graphics.Shader.Instructions
                             res = context.FPSubtract(viewportHeight, res);
                         }
                     }
+                }
+                else if (op.Imm10 == AttributeConsts.PrimitiveId && context.TranslatorContext.Definitions.HalvePrimitiveId)
+                {
+                    // If quads are used, but the host does not support them, they need to be converted to triangles.
+                    // Since each quad becomes 2 triangles, we need to compensate here and divide primitive ID by 2.
+                    res = context.ShiftRightS32(res, Const(1));
                 }
                 else if (op.Imm10 == AttributeConsts.FrontFacing && context.TranslatorContext.GpuAccessor.QueryHostHasFrontFacingBug())
                 {

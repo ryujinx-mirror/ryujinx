@@ -66,9 +66,9 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
 
             if (nvHandle.AsgOp is not Operation handleOp ||
                 handleOp.Inst != Instruction.Load ||
-                handleOp.StorageKind != StorageKind.Input)
+                (handleOp.StorageKind != StorageKind.Input && handleOp.StorageKind != StorageKind.StorageBuffer))
             {
-                // Right now, we only allow bindless access when the handle comes from a shader input.
+                // Right now, we only allow bindless access when the handle comes from a shader input or storage buffer.
                 // This is an artificial limitation to prevent it from being used in cases where it
                 // would have a large performance impact of loading all textures in the pool.
                 // It might be removed in the future, if we can mitigate the performance impact.

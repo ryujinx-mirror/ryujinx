@@ -17,6 +17,8 @@ namespace Ryujinx.Graphics.Gpu.Shader
         private readonly int _stageIndex;
         private readonly bool _compute;
         private readonly bool _isVulkan;
+        private readonly bool _hasGeometryShader;
+        private readonly bool _supportsQuads;
 
         /// <summary>
         /// Creates a new instance of the GPU state accessor for graphics shader translation.
@@ -25,12 +27,20 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// <param name="channel">GPU channel</param>
         /// <param name="state">Current GPU state</param>
         /// <param name="stageIndex">Graphics shader stage index (0 = Vertex, 4 = Fragment)</param>
-        public GpuAccessor(GpuContext context, GpuChannel channel, GpuAccessorState state, int stageIndex) : base(context, state.ResourceCounts, stageIndex)
+        /// <param name="hasGeometryShader">Indicates if a geometry shader is present</param>
+        public GpuAccessor(
+            GpuContext context,
+            GpuChannel channel,
+            GpuAccessorState state,
+            int stageIndex,
+            bool hasGeometryShader) : base(context, state.ResourceCounts, stageIndex)
         {
-            _isVulkan = context.Capabilities.Api == TargetApi.Vulkan;
             _channel = channel;
             _state = state;
             _stageIndex = stageIndex;
+            _isVulkan = context.Capabilities.Api == TargetApi.Vulkan;
+            _hasGeometryShader = hasGeometryShader;
+            _supportsQuads = context.Capabilities.SupportsQuads;
 
             if (stageIndex == (int)ShaderStage.Geometry - 1)
             {
@@ -105,7 +115,11 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// <inheritdoc/>
         public GpuGraphicsState QueryGraphicsState()
         {
-            return _state.GraphicsState.CreateShaderGraphicsState(!_isVulkan, _isVulkan || _state.GraphicsState.YNegateEnabled);
+            return _state.GraphicsState.CreateShaderGraphicsState(
+                !_isVulkan,
+                _supportsQuads,
+                _hasGeometryShader,
+                _isVulkan || _state.GraphicsState.YNegateEnabled);
         }
 
         /// <inheritdoc/>

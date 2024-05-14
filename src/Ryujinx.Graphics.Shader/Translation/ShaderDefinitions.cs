@@ -45,6 +45,8 @@ namespace Ryujinx.Graphics.Shader.Translation
         public bool YNegateEnabled => _graphicsState.YNegateEnabled;
         public bool OriginUpperLeft => _graphicsState.OriginUpperLeft;
 
+        public bool HalvePrimitiveId => _graphicsState.HalvePrimitiveId;
+
         public ImapPixelType[] ImapTypes { get; }
         public bool IaIndexing { get; private set; }
         public bool OaIndexing { get; private set; }

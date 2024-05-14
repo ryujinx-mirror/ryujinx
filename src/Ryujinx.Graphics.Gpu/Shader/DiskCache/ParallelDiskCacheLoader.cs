@@ -601,6 +601,8 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
 
             TargetApi api = _context.Capabilities.Api;
 
+            bool hasCachedGs = guestShaders[4].HasValue;
+
             for (int stageIndex = Constants.ShaderStages - 1; stageIndex >= 0; stageIndex--)
             {
                 if (guestShaders[stageIndex + 1].HasValue)
@@ -610,7 +612,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
                     byte[] guestCode = shader.Code;
                     byte[] cb1Data = shader.Cb1Data;
 
-                    DiskCacheGpuAccessor gpuAccessor = new(_context, guestCode, cb1Data, specState, newSpecState, counts, stageIndex);
+                    DiskCacheGpuAccessor gpuAccessor = new(_context, guestCode, cb1Data, specState, newSpecState, counts, stageIndex, hasCachedGs);
                     TranslatorContext currentStage = DecodeGraphicsShader(gpuAccessor, api, DefaultFlags, 0);
 
                     if (nextStage != null)
@@ -623,7 +625,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
                         byte[] guestCodeA = guestShaders[0].Value.Code;
                         byte[] cb1DataA = guestShaders[0].Value.Cb1Data;
 
-                        DiskCacheGpuAccessor gpuAccessorA = new(_context, guestCodeA, cb1DataA, specState, newSpecState, counts, 0);
+                        DiskCacheGpuAccessor gpuAccessorA = new(_context, guestCodeA, cb1DataA, specState, newSpecState, counts, 0, hasCachedGs);
                         translatorContexts[0] = DecodeGraphicsShader(gpuAccessorA, api, DefaultFlags | TranslationFlags.VertexA, 0);
                     }
 
@@ -711,7 +713,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
             GuestCodeAndCbData shader = guestShaders[0].Value;
             ResourceCounts counts = new();
             ShaderSpecializationState newSpecState = new(ref specState.ComputeState);
-            DiskCacheGpuAccessor gpuAccessor = new(_context, shader.Code, shader.Cb1Data, specState, newSpecState, counts, 0);
+            DiskCacheGpuAccessor gpuAccessor = new(_context, shader.Code, shader.Cb1Data, specState, newSpecState, counts, 0, false);
             gpuAccessor.InitializeReservedCounts(tfEnabled: false, vertexAsCompute: false);
 
             TranslatorContext translatorContext = DecodeComputeShader(gpuAccessor, _context.Capabilities.Api, 0);

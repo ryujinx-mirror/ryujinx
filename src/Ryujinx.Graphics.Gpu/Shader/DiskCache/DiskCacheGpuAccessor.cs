@@ -18,6 +18,8 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
         private readonly ShaderSpecializationState _newSpecState;
         private readonly int _stageIndex;
         private readonly bool _isVulkan;
+        private readonly bool _hasGeometryShader;
+        private readonly bool _supportsQuads;
 
         /// <summary>
         /// Creates a new instance of the cached GPU state accessor for shader translation.
@@ -29,6 +31,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
         /// <param name="newSpecState">Shader specialization state of the recompiled shader</param>
         /// <param name="counts">Resource counts shared across all shader stages</param>
         /// <param name="stageIndex">Shader stage index</param>
+        /// <param name="hasGeometryShader">Indicates if a geometry shader is present</param>
         public DiskCacheGpuAccessor(
             GpuContext context,
             ReadOnlyMemory<byte> data,
@@ -36,7 +39,8 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
             ShaderSpecializationState oldSpecState,
             ShaderSpecializationState newSpecState,
             ResourceCounts counts,
-            int stageIndex) : base(context, counts, stageIndex)
+            int stageIndex,
+            bool hasGeometryShader) : base(context, counts, stageIndex)
         {
             _data = data;
             _cb1Data = cb1Data;
@@ -44,6 +48,8 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
             _newSpecState = newSpecState;
             _stageIndex = stageIndex;
             _isVulkan = context.Capabilities.Api == TargetApi.Vulkan;
+            _hasGeometryShader = hasGeometryShader;
+            _supportsQuads = context.Capabilities.SupportsQuads;
 
             if (stageIndex == (int)ShaderStage.Geometry - 1)
             {
@@ -100,7 +106,11 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
         /// <inheritdoc/>
         public GpuGraphicsState QueryGraphicsState()
         {
-            return _oldSpecState.GraphicsState.CreateShaderGraphicsState(!_isVulkan, _isVulkan || _oldSpecState.GraphicsState.YNegateEnabled);
+            return _oldSpecState.GraphicsState.CreateShaderGraphicsState(
+                !_isVulkan,
+                _supportsQuads,
+                _hasGeometryShader,
+                _isVulkan || _oldSpecState.GraphicsState.YNegateEnabled);
         }
 
         /// <inheritdoc/>

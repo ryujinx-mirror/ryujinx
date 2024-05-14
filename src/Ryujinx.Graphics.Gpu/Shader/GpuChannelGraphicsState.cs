@@ -106,8 +106,11 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// Creates a new graphics state from this state that can be used for shader generation.
         /// </summary>
         /// <param name="hostSupportsAlphaTest">Indicates if the host API supports alpha test operations</param>
+        /// <param name="hostSupportsQuads">Indicates if the host API supports quad primitives</param>
+        /// <param name="hasGeometryShader">Indicates if a geometry shader is used</param>
+        /// <param name="originUpperLeft">If true, indicates that the fragment origin is the upper left corner of the viewport, otherwise it is the lower left corner</param>
         /// <returns>GPU graphics state that can be used for shader translation</returns>
-        public readonly GpuGraphicsState CreateShaderGraphicsState(bool hostSupportsAlphaTest, bool originUpperLeft)
+        public readonly GpuGraphicsState CreateShaderGraphicsState(bool hostSupportsAlphaTest, bool hostSupportsQuads, bool hasGeometryShader, bool originUpperLeft)
         {
             AlphaTestOp alphaTestOp;
 
@@ -130,6 +133,9 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 };
             }
 
+            bool isQuad = Topology == PrimitiveTopology.Quads || Topology == PrimitiveTopology.QuadStrip;
+            bool halvePrimitiveId = !hostSupportsQuads && !hasGeometryShader && isQuad;
+
             return new GpuGraphicsState(
                 EarlyZForce,
                 ConvertToInputTopology(Topology, TessellationMode),
@@ -149,7 +155,8 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 in FragmentOutputTypes,
                 DualSourceBlendEnable,
                 YNegateEnabled,
-                originUpperLeft);
+                originUpperLeft,
+                halvePrimitiveId);
         }
 
         /// <summary>
