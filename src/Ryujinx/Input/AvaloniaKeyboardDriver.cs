@@ -94,7 +94,7 @@ namespace Ryujinx.Ava.Input
             return _pressedKeys.Contains(nativeKey);
         }
 
-        public void ResetKeys()
+        public void Clear()
         {
             _pressedKeys.Clear();
         }
