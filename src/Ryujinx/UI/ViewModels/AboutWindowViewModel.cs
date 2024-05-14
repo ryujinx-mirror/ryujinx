@@ -1,6 +1,8 @@
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
+using Avalonia.Styling;
 using Avalonia.Threading;
+using Ryujinx.Ava.Common;
 using Ryujinx.Ava.Common.Locale;
 using Ryujinx.Common.Utilities;
 using Ryujinx.UI.Common.Configuration;
@@ -11,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace Ryujinx.Ava.UI.ViewModels
 {
-    public class AboutWindowViewModel : BaseModel
+    public class AboutWindowViewModel : BaseModel, IDisposable
     {
         private Bitmap _githubLogo;
         private Bitmap _discordLogo;
@@ -86,23 +88,39 @@ namespace Ryujinx.Ava.UI.ViewModels
         public AboutWindowViewModel()
         {
             Version = Program.Version;
-
-            if (ConfigurationState.Instance.UI.BaseStyle.Value == "Light")
-            {
-                GithubLogo = new Bitmap(AssetLoader.Open(new Uri("resm:Ryujinx.UI.Common.Resources.Logo_GitHub_Light.png?assembly=Ryujinx.UI.Common")));
-                DiscordLogo = new Bitmap(AssetLoader.Open(new Uri("resm:Ryujinx.UI.Common.Resources.Logo_Discord_Light.png?assembly=Ryujinx.UI.Common")));
-                PatreonLogo = new Bitmap(AssetLoader.Open(new Uri("resm:Ryujinx.UI.Common.Resources.Logo_Patreon_Light.png?assembly=Ryujinx.UI.Common")));
-                TwitterLogo = new Bitmap(AssetLoader.Open(new Uri("resm:Ryujinx.UI.Common.Resources.Logo_Twitter_Light.png?assembly=Ryujinx.UI.Common")));
-            }
-            else
-            {
-                GithubLogo = new Bitmap(AssetLoader.Open(new Uri("resm:Ryujinx.UI.Common.Resources.Logo_GitHub_Dark.png?assembly=Ryujinx.UI.Common")));
-                DiscordLogo = new Bitmap(AssetLoader.Open(new Uri("resm:Ryujinx.UI.Common.Resources.Logo_Discord_Dark.png?assembly=Ryujinx.UI.Common")));
-                PatreonLogo = new Bitmap(AssetLoader.Open(new Uri("resm:Ryujinx.UI.Common.Resources.Logo_Patreon_Dark.png?assembly=Ryujinx.UI.Common")));
-                TwitterLogo = new Bitmap(AssetLoader.Open(new Uri("resm:Ryujinx.UI.Common.Resources.Logo_Twitter_Dark.png?assembly=Ryujinx.UI.Common")));
-            }
-
+            UpdateLogoTheme(ConfigurationState.Instance.UI.BaseStyle.Value);
             Dispatcher.UIThread.InvokeAsync(DownloadPatronsJson);
+
+            ThemeManager.ThemeChanged += ThemeManager_ThemeChanged;
+        }
+
+        private void ThemeManager_ThemeChanged(object sender, EventArgs e)
+        {
+            Dispatcher.UIThread.Post(() => UpdateLogoTheme(ConfigurationState.Instance.UI.BaseStyle.Value));
+        }
+
+        private void UpdateLogoTheme(string theme)
+        {
+            bool isDarkTheme = theme == "Dark" || (theme == "Auto" && App.DetectSystemTheme() == ThemeVariant.Dark);
+
+            string basePath = "resm:Ryujinx.UI.Common.Resources.";
+            string themeSuffix = isDarkTheme ? "Dark.png" : "Light.png";
+
+            GithubLogo = LoadBitmap($"{basePath}Logo_GitHub_{themeSuffix}?assembly=Ryujinx.UI.Common");
+            DiscordLogo = LoadBitmap($"{basePath}Logo_Discord_{themeSuffix}?assembly=Ryujinx.UI.Common");
+            PatreonLogo = LoadBitmap($"{basePath}Logo_Patreon_{themeSuffix}?assembly=Ryujinx.UI.Common");
+            TwitterLogo = LoadBitmap($"{basePath}Logo_Twitter_{themeSuffix}?assembly=Ryujinx.UI.Common");
+        }
+
+        private Bitmap LoadBitmap(string uri)
+        {
+            return new Bitmap(Avalonia.Platform.AssetLoader.Open(new Uri(uri)));
+        }
+
+        public void Dispose()
+        {
+            ThemeManager.ThemeChanged -= ThemeManager_ThemeChanged;
+            GC.SuppressFinalize(this);
         }
 
         private async Task DownloadPatronsJson()

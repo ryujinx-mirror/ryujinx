@@ -1,8 +1,10 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using Avalonia.Platform;
 using Avalonia.Styling;
 using Avalonia.Threading;
+using Ryujinx.Ava.Common;
 using Ryujinx.Ava.Common.Locale;
 using Ryujinx.Ava.UI.Helpers;
 using Ryujinx.Ava.UI.Windows;
@@ -84,7 +86,7 @@ namespace Ryujinx.Ava
             ApplyConfiguredTheme();
         }
 
-        private void ApplyConfiguredTheme()
+        public void ApplyConfiguredTheme()
         {
             try
             {
@@ -92,13 +94,18 @@ namespace Ryujinx.Ava
 
                 if (string.IsNullOrWhiteSpace(baseStyle))
                 {
-                    ConfigurationState.Instance.UI.BaseStyle.Value = "Dark";
+                    ConfigurationState.Instance.UI.BaseStyle.Value = "Auto";
 
                     baseStyle = ConfigurationState.Instance.UI.BaseStyle;
                 }
 
+                ThemeVariant systemTheme = DetectSystemTheme();
+
+                ThemeManager.OnThemeChanged();
+
                 RequestedThemeVariant = baseStyle switch
                 {
+                    "Auto" => systemTheme,
                     "Light" => ThemeVariant.Light,
                     "Dark" => ThemeVariant.Dark,
                     _ => ThemeVariant.Default,
@@ -110,6 +117,29 @@ namespace Ryujinx.Ava
 
                 ShowRestartDialog();
             }
+        }
+
+        /// <summary>
+        /// Converts a PlatformThemeVariant value to the corresponding ThemeVariant value.
+        /// </summary>
+        public static ThemeVariant ConvertThemeVariant(PlatformThemeVariant platformThemeVariant) =>
+            platformThemeVariant switch
+            {
+                PlatformThemeVariant.Dark => ThemeVariant.Dark,
+                PlatformThemeVariant.Light => ThemeVariant.Light,
+                _ => ThemeVariant.Default,
+            };
+
+        public static ThemeVariant DetectSystemTheme()
+        {
+            if (Application.Current is App app)
+            {
+                var colorValues = app.PlatformSettings.GetColorValues();
+
+                return ConvertThemeVariant(colorValues.ThemeVariant);
+            }
+
+            return ThemeVariant.Default;
         }
     }
 }

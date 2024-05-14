@@ -66,6 +66,9 @@
                                   HorizontalContentAlignment="Left"
                                   MinWidth="100">
                             <ComboBoxItem>
+                                <TextBlock Text="{locale:Locale SettingsTabGeneralThemeAuto}" />
+                            </ComboBoxItem>
+                            <ComboBoxItem>
                                 <TextBlock Text="{locale:Locale SettingsTabGeneralThemeLight}" />
                             </ComboBoxItem>
                             <ComboBoxItem>
