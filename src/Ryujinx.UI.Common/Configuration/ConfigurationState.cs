@@ -11,6 +11,7 @@ using Ryujinx.UI.Common.Configuration.UI;
 using Ryujinx.UI.Common.Helper;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text.Json.Nodes;
 
 namespace Ryujinx.UI.Common.Configuration
@@ -1594,7 +1595,9 @@ namespace Ryujinx.UI.Common.Configuration
 
         private static void LogValueChange<T>(ReactiveEventArgs<T> eventArgs, string valueName)
         {
-            Ryujinx.Common.Logging.Logger.Info?.Print(LogClass.Configuration, $"{valueName} set to: {eventArgs.NewValue}");
+            string message = string.Create(CultureInfo.InvariantCulture, $"{valueName} set to: {eventArgs.NewValue}");
+
+            Ryujinx.Common.Logging.Logger.Info?.Print(LogClass.Configuration, message);
         }
 
         public static void Initialize()

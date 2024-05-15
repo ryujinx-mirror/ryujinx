@@ -45,7 +45,7 @@ namespace Ryujinx.UI.App.Common
 
             if (!System.IO.Path.Exists(titleFilePath))
             {
-                Logger.Error?.Print(LogClass.Application, $"File does not exists. {titleFilePath}");
+                Logger.Error?.Print(LogClass.Application, $"File \"{titleFilePath}\" does not exist.");
                 return string.Empty;
             }
 
