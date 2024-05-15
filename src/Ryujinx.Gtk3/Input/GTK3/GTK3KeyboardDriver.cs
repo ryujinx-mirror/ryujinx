@@ -81,11 +81,6 @@ namespace Ryujinx.Input.GTK3
             return _pressedKeys.Contains(nativeKey);
         }
 
-        public void Clear()
-        {
-            _pressedKeys.Clear();
-        }
-
         public IGamepad GetGamepad(string id)
         {
             if (!_keyboardIdentifers[0].Equals(id))

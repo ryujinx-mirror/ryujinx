@@ -174,11 +174,6 @@ namespace Ryujinx.Input.HLE
         {
             lock (_lock)
             {
-                foreach (InputConfig inputConfig in _inputConfig)
-                {
-                    _controllers[(int)inputConfig.PlayerIndex].GamepadDriver.Clear();
-                }
-
                 _blockInputUpdates = false;
             }
         }
