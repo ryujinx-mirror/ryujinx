@@ -141,7 +141,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
 
             if (algorithm == CompressionAlgorithm.Deflate)
             {
-                _activeStream = new DeflateStream(_stream, CompressionLevel.SmallestSize, true);
+                _activeStream = new DeflateStream(_stream, CompressionLevel.Fastest, true);
             }
         }
 
@@ -206,7 +206,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
                     stream.Write(data);
                     break;
                 case CompressionAlgorithm.Deflate:
-                    stream = new DeflateStream(stream, CompressionLevel.SmallestSize, true);
+                    stream = new DeflateStream(stream, CompressionLevel.Fastest, true);
                     stream.Write(data);
                     stream.Dispose();
                     break;
