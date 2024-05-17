@@ -210,5 +210,53 @@ namespace Ryujinx.Audio.Renderer.Server
                 _ => throw new NotImplementedException($"{command.Parameter.ChannelCount}"),
             };
         }
+
+        public override uint Estimate(BiquadFilterAndMixCommand command)
+        {
+            Debug.Assert(SampleCount == 160 || SampleCount == 240);
+
+            if (command.HasVolumeRamp)
+            {
+                if (SampleCount == 160)
+                {
+                    return 5204;
+                }
+
+                return 6683;
+            }
+            else
+            {
+                if (SampleCount == 160)
+                {
+                    return 3427;
+                }
+
+                return 4752;
+            }
+        }
+
+        public override uint Estimate(MultiTapBiquadFilterAndMixCommand command)
+        {
+            Debug.Assert(SampleCount == 160 || SampleCount == 240);
+
+            if (command.HasVolumeRamp)
+            {
+                if (SampleCount == 160)
+                {
+                    return 7939;
+                }
+
+                return 10669;
+            }
+            else
+            {
+                if (SampleCount == 160)
+                {
+                    return 6256;
+                }
+
+                return 8683;
+            }
+        }
     }
 }

@@ -15,6 +15,8 @@ namespace Ryujinx.Audio.Renderer.Server.Splitter
     {
         public const int Alignment = 0x10;
 
+        private delegate void SplitterDestinationAction(SplitterDestination destination, int index);
+
         /// <summary>
         /// The unique id of this <see cref="SplitterState"/>.
         /// </summary>
@@ -26,7 +28,7 @@ namespace Ryujinx.Audio.Renderer.Server.Splitter
         public uint SampleRate;
 
         /// <summary>
-        /// Count of splitter destinations (<see cref="SplitterDestination"/>).
+        /// Count of splitter destinations.
         /// </summary>
         public int DestinationCount;
 
@@ -37,20 +39,25 @@ namespace Ryujinx.Audio.Renderer.Server.Splitter
         public bool HasNewConnection;
 
         /// <summary>
-        /// Linked list of <see cref="SplitterDestination"/>.
+        /// Linked list of <see cref="SplitterDestinationVersion1"/>.
         /// </summary>
-        private unsafe SplitterDestination* _destinationsData;
+        private unsafe SplitterDestinationVersion1* _destinationDataV1;
 
         /// <summary>
-        /// Span to the first element of the linked list of <see cref="SplitterDestination"/>.
+        /// Linked list of <see cref="SplitterDestinationVersion2"/>.
         /// </summary>
-        public readonly Span<SplitterDestination> Destinations
+        private unsafe SplitterDestinationVersion2* _destinationDataV2;
+
+        /// <summary>
+        /// First element of the linked list of splitter destinations data.
+        /// </summary>
+        public readonly SplitterDestination Destination
         {
             get
             {
                 unsafe
                 {
-                    return (IntPtr)_destinationsData != IntPtr.Zero ? new Span<SplitterDestination>(_destinationsData, 1) : Span<SplitterDestination>.Empty;
+                    return new SplitterDestination(_destinationDataV1, _destinationDataV2);
                 }
             }
         }
@@ -64,20 +71,20 @@ namespace Ryujinx.Audio.Renderer.Server.Splitter
             Id = id;
         }
 
-        public readonly Span<SplitterDestination> GetData(int index)
+        public readonly SplitterDestination GetData(int index)
         {
             int i = 0;
 
-            Span<SplitterDestination> result = Destinations;
+            SplitterDestination result = Destination;
 
             while (i < index)
             {
-                if (result.IsEmpty)
+                if (result.IsNull)
                 {
                     break;
                 }
 
-                result = result[0].Next;
+                result = result.Next;
                 i++;
             }
 
@@ -93,25 +100,25 @@ namespace Ryujinx.Audio.Renderer.Server.Splitter
         }
 
         /// <summary>
-        /// Utility function to apply a given <see cref="SpanAction{T, TArg}"/> to all <see cref="Destinations"/>.
+        /// Utility function to apply an action to all <see cref="Destination"/>.
         /// </summary>
         /// <param name="action">The action to execute on each elements.</param>
-        private readonly void ForEachDestination(SpanAction<SplitterDestination, int> action)
+        private readonly void ForEachDestination(SplitterDestinationAction action)
         {
-            Span<SplitterDestination> temp = Destinations;
+            SplitterDestination temp = Destination;
 
             int i = 0;
 
             while (true)
             {
-                if (temp.IsEmpty)
+                if (temp.IsNull)
                 {
                     break;
                 }
 
-                Span<SplitterDestination> next = temp[0].Next;
+                SplitterDestination next = temp.Next;
 
-                action.Invoke(temp, i++);
+                action(temp, i++);
 
                 temp = next;
             }
@@ -142,9 +149,9 @@ namespace Ryujinx.Audio.Renderer.Server.Splitter
             {
                 input.ReadLittleEndian(out int destinationId);
 
-                Memory<SplitterDestination> destination = context.GetDestinationMemory(destinationId);
+                SplitterDestination destination = context.GetDestination(destinationId);
 
-                SetDestination(ref destination.Span[0]);
+                SetDestination(destination);
 
                 DestinationCount = destinationCount;
 
@@ -152,9 +159,9 @@ namespace Ryujinx.Audio.Renderer.Server.Splitter
                 {
                     input.ReadLittleEndian(out destinationId);
 
-                    Memory<SplitterDestination> nextDestination = context.GetDestinationMemory(destinationId);
+                    SplitterDestination nextDestination = context.GetDestination(destinationId);
 
-                    destination.Span[0].Link(ref nextDestination.Span[0]);
+                    destination.Link(nextDestination);
                     destination = nextDestination;
                 }
             }
@@ -174,16 +181,21 @@ namespace Ryujinx.Audio.Renderer.Server.Splitter
         }
 
         /// <summary>
-        /// Set the head of the linked list of <see cref="Destinations"/>.
+        /// Set the head of the linked list of <see cref="Destination"/>.
         /// </summary>
-        /// <param name="newValue">A reference to a <see cref="SplitterDestination"/>.</param>
-        public void SetDestination(ref SplitterDestination newValue)
+        /// <param name="newValue">New destination value.</param>
+        public void SetDestination(SplitterDestination newValue)
         {
             unsafe
             {
-                fixed (SplitterDestination* newValuePtr = &newValue)
+                fixed (SplitterDestinationVersion1* newValuePtr = &newValue.GetV1RefOrNull())
                 {
-                    _destinationsData = newValuePtr;
+                    _destinationDataV1 = newValuePtr;
+                }
+
+                fixed (SplitterDestinationVersion2* newValuePtr = &newValue.GetV2RefOrNull())
+                {
+                    _destinationDataV2 = newValuePtr;
                 }
             }
         }
@@ -193,19 +205,20 @@ namespace Ryujinx.Audio.Renderer.Server.Splitter
         /// </summary>
         public readonly void UpdateInternalState()
         {
-            ForEachDestination((destination, _) => destination[0].UpdateInternalState());
+            ForEachDestination((destination, _) => destination.UpdateInternalState());
         }
 
         /// <summary>
-        /// Clear all links from the <see cref="Destinations"/>.
+        /// Clear all links from the <see cref="Destination"/>.
         /// </summary>
         public void ClearLinks()
         {
-            ForEachDestination((destination, _) => destination[0].Unlink());
+            ForEachDestination((destination, _) => destination.Unlink());
 
             unsafe
             {
-                _destinationsData = (SplitterDestination*)IntPtr.Zero;
+                _destinationDataV1 = null;
+                _destinationDataV2 = null;
             }
         }
 
@@ -219,7 +232,8 @@ namespace Ryujinx.Audio.Renderer.Server.Splitter
             {
                 unsafe
                 {
-                    splitter._destinationsData = (SplitterDestination*)IntPtr.Zero;
+                    splitter._destinationDataV1 = null;
+                    splitter._destinationDataV2 = null;
                 }
 
                 splitter.DestinationCount = 0;

@@ -24,7 +24,14 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
 
         public Memory<VoiceUpdateState> State { get; }
 
-        public MixRampGroupedCommand(uint mixBufferCount, uint inputBufferIndex, uint outputBufferIndex, Span<float> volume0, Span<float> volume1, Memory<VoiceUpdateState> state, int nodeId)
+        public MixRampGroupedCommand(
+            uint mixBufferCount,
+            uint inputBufferIndex,
+            uint outputBufferIndex,
+            ReadOnlySpan<float> volume0,
+            ReadOnlySpan<float> volume1,
+            Memory<VoiceUpdateState> state,
+            int nodeId)
         {
             Enabled = true;
             MixBufferCount = mixBufferCount;
@@ -48,7 +55,12 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static float ProcessMixRampGrouped(Span<float> outputBuffer, ReadOnlySpan<float> inputBuffer, float volume0, float volume1, int sampleCount)
+        private static float ProcessMixRampGrouped(
+            Span<float> outputBuffer,
+            ReadOnlySpan<float> inputBuffer,
+            float volume0,
+            float volume1,
+            int sampleCount)
         {
             float ramp = (volume1 - volume0) / sampleCount;
             float volume = volume0;

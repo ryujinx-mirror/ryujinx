@@ -4,13 +4,13 @@ using System;
 
 namespace Ryujinx.Audio.Renderer.Dsp.Command
 {
-    public class GroupedBiquadFilterCommand : ICommand
+    public class MultiTapBiquadFilterCommand : ICommand
     {
         public bool Enabled { get; set; }
 
         public int NodeId { get; }
 
-        public CommandType CommandType => CommandType.GroupedBiquadFilter;
+        public CommandType CommandType => CommandType.MultiTapBiquadFilter;
 
         public uint EstimatedProcessingTime { get; set; }
 
@@ -20,7 +20,7 @@ namespace Ryujinx.Audio.Renderer.Dsp.Command
         private readonly int _outputBufferIndex;
         private readonly bool[] _isInitialized;
 
-        public GroupedBiquadFilterCommand(int baseIndex, ReadOnlySpan<BiquadFilterParameter> filters, Memory<BiquadFilterState> biquadFilterStateMemory, int inputBufferOffset, int outputBufferOffset, ReadOnlySpan<bool> isInitialized, int nodeId)
+        public MultiTapBiquadFilterCommand(int baseIndex, ReadOnlySpan<BiquadFilterParameter> filters, Memory<BiquadFilterState> biquadFilterStateMemory, int inputBufferOffset, int outputBufferOffset, ReadOnlySpan<bool> isInitialized, int nodeId)
         {
             _parameters = filters.ToArray();
             _biquadFilterStates = biquadFilterStateMemory;

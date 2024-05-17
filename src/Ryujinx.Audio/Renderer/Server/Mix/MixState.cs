@@ -225,11 +225,11 @@ namespace Ryujinx.Audio.Renderer.Server.Mix
 
                     for (int i = 0; i < splitter.DestinationCount; i++)
                     {
-                        Span<SplitterDestination> destination = splitter.GetData(i);
+                        SplitterDestination destination = splitter.GetData(i);
 
-                        if (!destination.IsEmpty)
+                        if (!destination.IsNull)
                         {
-                            int destinationMixId = destination[0].DestinationId;
+                            int destinationMixId = destination.DestinationId;
 
                             if (destinationMixId != UnusedMixId)
                             {

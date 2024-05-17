@@ -1,115 +1,198 @@
 using Ryujinx.Audio.Renderer.Parameter;
-using Ryujinx.Common.Utilities;
 using System;
 using System.Diagnostics;
-using System.Runtime.InteropServices;
+using System.Runtime.CompilerServices;
 
 namespace Ryujinx.Audio.Renderer.Server.Splitter
 {
     /// <summary>
     /// Server state for a splitter destination.
     /// </summary>
-    [StructLayout(LayoutKind.Sequential, Size = 0xE0, Pack = Alignment)]
-    public struct SplitterDestination
+    public ref struct SplitterDestination
     {
-        public const int Alignment = 0x10;
+        private ref SplitterDestinationVersion1 _v1;
+        private ref SplitterDestinationVersion2 _v2;
 
         /// <summary>
-        /// The unique id of this <see cref="SplitterDestination"/>.
+        /// Checks if the splitter destination data reference is null.
         /// </summary>
-        public int Id;
+        public bool IsNull => Unsafe.IsNullRef(ref _v1) && Unsafe.IsNullRef(ref _v2);
 
         /// <summary>
-        /// The mix to output the result of the splitter.
+        /// The splitter unique id.
         /// </summary>
-        public int DestinationId;
-
-        /// <summary>
-        /// Mix buffer volumes storage.
-        /// </summary>
-        private MixArray _mix;
-        private MixArray _previousMix;
-
-        /// <summary>
-        /// Pointer to the next linked element.
-        /// </summary>
-        private unsafe SplitterDestination* _next;
-
-        /// <summary>
-        /// Set to true if in use.
-        /// </summary>
-        [MarshalAs(UnmanagedType.I1)]
-        public bool IsUsed;
-
-        /// <summary>
-        /// Set to true if the internal state need to be updated.
-        /// </summary>
-        [MarshalAs(UnmanagedType.I1)]
-        public bool NeedToUpdateInternalState;
-
-        [StructLayout(LayoutKind.Sequential, Size = 4 * Constants.MixBufferCountMax, Pack = 1)]
-        private struct MixArray { }
-
-        /// <summary>
-        /// Mix buffer volumes.
-        /// </summary>
-        /// <remarks>Used when a splitter id is specified in the mix.</remarks>
-        public Span<float> MixBufferVolume => SpanHelpers.AsSpan<MixArray, float>(ref _mix);
-
-        /// <summary>
-        /// Previous mix buffer volumes.
-        /// </summary>
-        /// <remarks>Used when a splitter id is specified in the mix.</remarks>
-        public Span<float> PreviousMixBufferVolume => SpanHelpers.AsSpan<MixArray, float>(ref _previousMix);
-
-        /// <summary>
-        /// Get the  <see cref="Span{SplitterDestination}"/> of the next element or <see cref="Span{SplitterDestination}.Empty"/> if not present.
-        /// </summary>
-        public readonly Span<SplitterDestination> Next
+        public int Id
         {
             get
             {
-                unsafe
+                if (Unsafe.IsNullRef(ref _v2))
                 {
-                    return _next != null ? new Span<SplitterDestination>(_next, 1) : Span<SplitterDestination>.Empty;
+                    if (Unsafe.IsNullRef(ref _v1))
+                    {
+                        return 0;
+                    }
+                    else
+                    {
+                        return _v1.Id;
+                    }
+                }
+                else
+                {
+                    return _v2.Id;
                 }
             }
         }
 
         /// <summary>
-        /// Create a new <see cref="SplitterDestination"/>.
+        /// The mix to output the result of the splitter.
         /// </summary>
-        /// <param name="id">The unique id of this <see cref="SplitterDestination"/>.</param>
-        public SplitterDestination(int id) : this()
+        public int DestinationId
         {
-            Id = id;
-            DestinationId = Constants.UnusedMixId;
-
-            ClearVolumes();
+            get
+            {
+                if (Unsafe.IsNullRef(ref _v2))
+                {
+                    if (Unsafe.IsNullRef(ref _v1))
+                    {
+                        return 0;
+                    }
+                    else
+                    {
+                        return _v1.DestinationId;
+                    }
+                }
+                else
+                {
+                    return _v2.DestinationId;
+                }
+            }
         }
 
         /// <summary>
-        /// Update the <see cref="SplitterDestination"/> from user parameter.
+        /// Mix buffer volumes.
+        /// </summary>
+        /// <remarks>Used when a splitter id is specified in the mix.</remarks>
+        public Span<float> MixBufferVolume
+        {
+            get
+            {
+                if (Unsafe.IsNullRef(ref _v2))
+                {
+                    if (Unsafe.IsNullRef(ref _v1))
+                    {
+                        return Span<float>.Empty;
+                    }
+                    else
+                    {
+                        return _v1.MixBufferVolume;
+                    }
+                }
+                else
+                {
+                    return _v2.MixBufferVolume;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Previous mix buffer volumes.
+        /// </summary>
+        /// <remarks>Used when a splitter id is specified in the mix.</remarks>
+        public Span<float> PreviousMixBufferVolume
+        {
+            get
+            {
+                if (Unsafe.IsNullRef(ref _v2))
+                {
+                    if (Unsafe.IsNullRef(ref _v1))
+                    {
+                        return Span<float>.Empty;
+                    }
+                    else
+                    {
+                        return _v1.PreviousMixBufferVolume;
+                    }
+                }
+                else
+                {
+                    return _v2.PreviousMixBufferVolume;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Get the <see cref="SplitterDestination"/> of the next element or null if not present.
+        /// </summary>
+        public readonly SplitterDestination Next
+        {
+            get
+            {
+                unsafe
+                {
+                    if (Unsafe.IsNullRef(ref _v2))
+                    {
+                        if (Unsafe.IsNullRef(ref _v1))
+                        {
+                            return new SplitterDestination();
+                        }
+                        else
+                        {
+                            return new SplitterDestination(ref _v1.Next);
+                        }
+                    }
+                    else
+                    {
+                        return new SplitterDestination(ref _v2.Next);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Creates a new splitter destination wrapper for the version 1 splitter destination data.
+        /// </summary>
+        /// <param name="v1">Version 1 splitter destination data</param>
+        public SplitterDestination(ref SplitterDestinationVersion1 v1)
+        {
+            _v1 = ref v1;
+            _v2 = ref Unsafe.NullRef<SplitterDestinationVersion2>();
+        }
+
+        /// <summary>
+        /// Creates a new splitter destination wrapper for the version 2 splitter destination data.
+        /// </summary>
+        /// <param name="v2">Version 2 splitter destination data</param>
+        public SplitterDestination(ref SplitterDestinationVersion2 v2)
+        {
+
+            _v1 = ref Unsafe.NullRef<SplitterDestinationVersion1>();
+            _v2 = ref v2;
+        }
+
+        /// <summary>
+        /// Creates a new splitter destination wrapper for the splitter destination data.
+        /// </summary>
+        /// <param name="v1">Version 1 splitter destination data</param>
+        /// <param name="v2">Version 2 splitter destination data</param>
+        public unsafe SplitterDestination(SplitterDestinationVersion1* v1, SplitterDestinationVersion2* v2)
+        {
+            _v1 = ref Unsafe.AsRef<SplitterDestinationVersion1>(v1);
+            _v2 = ref Unsafe.AsRef<SplitterDestinationVersion2>(v2);
+        }
+
+        /// <summary>
+        /// Update the splitter destination data from user parameter.
         /// </summary>
         /// <param name="parameter">The user parameter.</param>
-        public void Update(SplitterDestinationInParameter parameter)
+        public void Update<T>(in T parameter) where T : ISplitterDestinationInParameter
         {
-            Debug.Assert(Id == parameter.Id);
-
-            if (parameter.IsMagicValid() && Id == parameter.Id)
+            if (Unsafe.IsNullRef(ref _v2))
             {
-                DestinationId = parameter.DestinationId;
-
-                parameter.MixBufferVolume.CopyTo(MixBufferVolume);
-
-                if (!IsUsed && parameter.IsUsed)
-                {
-                    MixBufferVolume.CopyTo(PreviousMixBufferVolume);
-
-                    NeedToUpdateInternalState = false;
-                }
-
-                IsUsed = parameter.IsUsed;
+                _v1.Update(parameter);
+            }
+            else
+            {
+                _v2.Update(parameter);
             }
         }
 
@@ -118,12 +201,14 @@ namespace Ryujinx.Audio.Renderer.Server.Splitter
         /// </summary>
         public void UpdateInternalState()
         {
-            if (IsUsed && NeedToUpdateInternalState)
+            if (Unsafe.IsNullRef(ref _v2))
             {
-                MixBufferVolume.CopyTo(PreviousMixBufferVolume);
+                _v1.UpdateInternalState();
             }
-
-            NeedToUpdateInternalState = false;
+            else
+            {
+                _v2.UpdateInternalState();
+            }
         }
 
         /// <summary>
@@ -131,16 +216,23 @@ namespace Ryujinx.Audio.Renderer.Server.Splitter
         /// </summary>
         public void MarkAsNeedToUpdateInternalState()
         {
-            NeedToUpdateInternalState = true;
+            if (Unsafe.IsNullRef(ref _v2))
+            {
+                _v1.MarkAsNeedToUpdateInternalState();
+            }
+            else
+            {
+                _v2.MarkAsNeedToUpdateInternalState();
+            }
         }
 
         /// <summary>
-        /// Return true if the <see cref="SplitterDestination"/> is used and has a destination.
+        /// Return true if the splitter destination is used and has a destination.
         /// </summary>
-        /// <returns>True if the <see cref="SplitterDestination"/> is used and has a destination.</returns>
+        /// <returns>True if the splitter destination is used and has a destination.</returns>
         public readonly bool IsConfigured()
         {
-            return IsUsed && DestinationId != Constants.UnusedMixId;
+            return Unsafe.IsNullRef(ref _v2) ? _v1.IsConfigured() : _v2.IsConfigured();
         }
 
         /// <summary>
@@ -150,9 +242,17 @@ namespace Ryujinx.Audio.Renderer.Server.Splitter
         /// <returns>The volume for the given destination.</returns>
         public float GetMixVolume(int destinationIndex)
         {
-            Debug.Assert(destinationIndex >= 0 && destinationIndex < Constants.MixBufferCountMax);
+            return Unsafe.IsNullRef(ref _v2) ? _v1.GetMixVolume(destinationIndex) : _v2.GetMixVolume(destinationIndex);
+        }
 
-            return MixBufferVolume[destinationIndex];
+        /// <summary>
+        /// Get the previous volume for a given destination.
+        /// </summary>
+        /// <param name="destinationIndex">The destination index to use.</param>
+        /// <returns>The volume for the given destination.</returns>
+        public float GetMixVolumePrev(int destinationIndex)
+        {
+            return Unsafe.IsNullRef(ref _v2) ? _v1.GetMixVolumePrev(destinationIndex) : _v2.GetMixVolumePrev(destinationIndex);
         }
 
         /// <summary>
@@ -160,22 +260,33 @@ namespace Ryujinx.Audio.Renderer.Server.Splitter
         /// </summary>
         public void ClearVolumes()
         {
-            MixBufferVolume.Clear();
-            PreviousMixBufferVolume.Clear();
+            if (Unsafe.IsNullRef(ref _v2))
+            {
+                _v1.ClearVolumes();
+            }
+            else
+            {
+                _v2.ClearVolumes();
+            }
         }
 
         /// <summary>
-        /// Link the next element to the given <see cref="SplitterDestination"/>.
+        /// Link the next element to the given splitter destination.
         /// </summary>
-        /// <param name="next">The given <see cref="SplitterDestination"/> to link.</param>
-        public void Link(ref SplitterDestination next)
+        /// <param name="next">The given splitter destination to link.</param>
+        public void Link(SplitterDestination next)
         {
-            unsafe
+            if (Unsafe.IsNullRef(ref _v2))
             {
-                fixed (SplitterDestination* nextPtr = &next)
-                {
-                    _next = nextPtr;
-                }
+                Debug.Assert(!Unsafe.IsNullRef(ref next._v1));
+
+                _v1.Link(ref next._v1);
+            }
+            else
+            {
+                Debug.Assert(!Unsafe.IsNullRef(ref next._v2));
+
+                _v2.Link(ref next._v2);
             }
         }
 
@@ -184,10 +295,74 @@ namespace Ryujinx.Audio.Renderer.Server.Splitter
         /// </summary>
         public void Unlink()
         {
-            unsafe
+            if (Unsafe.IsNullRef(ref _v2))
             {
-                _next = null;
+                _v1.Unlink();
             }
+            else
+            {
+                _v2.Unlink();
+            }
+        }
+
+        /// <summary>
+        /// Checks if any biquad filter is enabled.
+        /// </summary>
+        /// <returns>True if any biquad filter is enabled.</returns>
+        public bool IsBiquadFilterEnabled()
+        {
+            return !Unsafe.IsNullRef(ref _v2) && _v2.IsBiquadFilterEnabled();
+        }
+
+        /// <summary>
+        /// Checks if any biquad filter was previously enabled.
+        /// </summary>
+        /// <returns>True if any biquad filter was previously enabled.</returns>
+        public bool IsBiquadFilterEnabledPrev()
+        {
+            return !Unsafe.IsNullRef(ref _v2) && _v2.IsBiquadFilterEnabledPrev();
+        }
+
+        /// <summary>
+        /// Gets the biquad filter parameters.
+        /// </summary>
+        /// <param name="index">Biquad filter index (0 or 1).</param>
+        /// <returns>Biquad filter parameters.</returns>
+        public ref BiquadFilterParameter GetBiquadFilterParameter(int index)
+        {
+            Debug.Assert(!Unsafe.IsNullRef(ref _v2));
+
+            return ref _v2.GetBiquadFilterParameter(index);
+        }
+
+        /// <summary>
+        /// Checks if any biquad filter was previously enabled.
+        /// </summary>
+        /// <param name="index">Biquad filter index (0 or 1).</param>
+        public void UpdateBiquadFilterEnabledPrev(int index)
+        {
+            if (!Unsafe.IsNullRef(ref _v2))
+            {
+                _v2.UpdateBiquadFilterEnabledPrev(index);
+            }
+        }
+
+        /// <summary>
+        /// Get the reference for the version 1 splitter destination data, or null if version 2 is being used or the destination is null.
+        /// </summary>
+        /// <returns>Reference for the version 1 splitter destination data.</returns>
+        public ref SplitterDestinationVersion1 GetV1RefOrNull()
+        {
+            return ref _v1;
+        }
+
+        /// <summary>
+        /// Get the reference for the version 2 splitter destination data, or null if version 1 is being used or the destination is null.
+        /// </summary>
+        /// <returns>Reference for the version 2 splitter destination data.</returns>
+        public ref SplitterDestinationVersion2 GetV2RefOrNull()
+        {
+            return ref _v2;
         }
     }
 }

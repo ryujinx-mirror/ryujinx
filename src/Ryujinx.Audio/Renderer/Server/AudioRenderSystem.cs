@@ -1,6 +1,7 @@
 using Ryujinx.Audio.Integration;
 using Ryujinx.Audio.Renderer.Common;
 using Ryujinx.Audio.Renderer.Dsp.Command;
+using Ryujinx.Audio.Renderer.Dsp.State;
 using Ryujinx.Audio.Renderer.Parameter;
 using Ryujinx.Audio.Renderer.Server.Effect;
 using Ryujinx.Audio.Renderer.Server.MemoryPool;
@@ -173,6 +174,22 @@ namespace Ryujinx.Audio.Renderer.Server
                 return ResultCode.WorkBufferTooSmall;
             }
 
+            Memory<BiquadFilterState> splitterBqfStates = Memory<BiquadFilterState>.Empty;
+
+            if (_behaviourContext.IsBiquadFilterParameterForSplitterEnabled() &&
+                parameter.SplitterCount > 0 &&
+                parameter.SplitterDestinationCount > 0)
+            {
+                splitterBqfStates = workBufferAllocator.Allocate<BiquadFilterState>(parameter.SplitterDestinationCount * SplitterContext.BqfStatesPerDestination, 0x10);
+
+                if (splitterBqfStates.IsEmpty)
+                {
+                    return ResultCode.WorkBufferTooSmall;
+                }
+
+                splitterBqfStates.Span.Clear();
+            }
+
             // Invalidate DSP cache on what was currently allocated with workBuffer.
             AudioProcessorMemoryManager.InvalidateDspCache(_dspMemoryPoolState.Translate(workBuffer, workBufferAllocator.Offset), workBufferAllocator.Offset);
 
@@ -292,7 +309,7 @@ namespace Ryujinx.Audio.Renderer.Server
                 state = MemoryPoolState.Create(MemoryPoolState.LocationType.Cpu);
             }
 
-            if (!_splitterContext.Initialize(ref _behaviourContext, ref parameter, workBufferAllocator))
+            if (!_splitterContext.Initialize(ref _behaviourContext, ref parameter, workBufferAllocator, splitterBqfStates))
             {
                 return ResultCode.WorkBufferTooSmall;
             }
@@ -774,6 +791,13 @@ namespace Ryujinx.Audio.Renderer.Server
 
             // Splitter
             size = SplitterContext.GetWorkBufferSize(size, ref behaviourContext, ref parameter);
+
+            if (behaviourContext.IsBiquadFilterParameterForSplitterEnabled() &&
+                parameter.SplitterCount > 0 &&
+                parameter.SplitterDestinationCount > 0)
+            {
+                size = WorkBufferAllocator.GetTargetSize<BiquadFilterState>(size, parameter.SplitterDestinationCount * SplitterContext.BqfStatesPerDestination, 0x10);
+            }
 
             // DSP Voice
             size = WorkBufferAllocator.GetTargetSize<VoiceUpdateState>(size, parameter.VoiceCount, VoiceUpdateState.Align);

@@ -1,3 +1,4 @@
+using Ryujinx.Common.Memory;
 using Ryujinx.Common.Utilities;
 using System;
 using System.Runtime.InteropServices;
@@ -5,10 +6,10 @@ using System.Runtime.InteropServices;
 namespace Ryujinx.Audio.Renderer.Parameter
 {
     /// <summary>
-    /// Input header for a splitter destination update.
+    /// Input header for a splitter destination version 1 update.
     /// </summary>
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public struct SplitterDestinationInParameter
+    public struct SplitterDestinationInParameterVersion1 : ISplitterDestinationInParameter
     {
         /// <summary>
         /// Magic of the input header.
@@ -41,7 +42,7 @@ namespace Ryujinx.Audio.Renderer.Parameter
         /// </summary>
         private unsafe fixed byte _reserved[3];
 
-        [StructLayout(LayoutKind.Sequential, Size = 4 * Constants.MixBufferCountMax, Pack = 1)]
+        [StructLayout(LayoutKind.Sequential, Size = sizeof(float) * Constants.MixBufferCountMax, Pack = 1)]
         private struct MixArray { }
 
         /// <summary>
@@ -49,6 +50,14 @@ namespace Ryujinx.Audio.Renderer.Parameter
         /// </summary>
         /// <remarks>Used when a splitter id is specified in the mix.</remarks>
         public Span<float> MixBufferVolume => SpanHelpers.AsSpan<MixArray, float>(ref _mixBufferVolume);
+
+        readonly int ISplitterDestinationInParameter.Id => Id;
+
+        readonly int ISplitterDestinationInParameter.DestinationId => DestinationId;
+
+        readonly Array2<BiquadFilterParameter> ISplitterDestinationInParameter.BiquadFilters => default;
+
+        readonly bool ISplitterDestinationInParameter.IsUsed => IsUsed;
 
         /// <summary>
         /// The expected constant of any input header.

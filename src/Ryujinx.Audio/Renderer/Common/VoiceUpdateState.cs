@@ -15,7 +15,6 @@ namespace Ryujinx.Audio.Renderer.Common
     {
         public const int Align = 0x10;
         public const int BiquadStateOffset = 0x0;
-        public const int BiquadStateSize = 0x10;
 
         /// <summary>
         /// The state of the biquad filters of this voice.
