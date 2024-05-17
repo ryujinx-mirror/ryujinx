@@ -122,6 +122,7 @@ namespace Ryujinx.Ava.UI.Applet
             {
                 try
                 {
+                    _parent.ViewModel.AppHost.NpadManager.BlockInputUpdates();
                     var response = await SwkbdAppletDialog.ShowInputDialog(LocaleManager.Instance[LocaleKeys.SoftwareKeyboard], args);
 
                     if (response.Result == UserResult.Ok)
@@ -143,6 +144,7 @@ namespace Ryujinx.Ava.UI.Applet
             });
 
             dialogCloseEvent.WaitOne();
+            _parent.ViewModel.AppHost.NpadManager.UnblockInputUpdates();
 
             userText = error ? null : inputText;
 

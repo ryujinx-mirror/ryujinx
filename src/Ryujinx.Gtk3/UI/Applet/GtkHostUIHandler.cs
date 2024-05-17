@@ -107,6 +107,8 @@ namespace Ryujinx.UI.Applet
                     swkbdDialog.SetInputLengthValidation(args.StringLengthMin, args.StringLengthMax);
                     swkbdDialog.SetInputValidation(args.KeyboardMode);
 
+                    ((MainWindow)_parent).RendererWidget.NpadManager.BlockInputUpdates();
+
                     if (swkbdDialog.Run() == (int)ResponseType.Ok)
                     {
                         inputText = swkbdDialog.InputEntry.Text;
@@ -128,6 +130,7 @@ namespace Ryujinx.UI.Applet
             });
 
             dialogCloseEvent.WaitOne();
+            ((MainWindow)_parent).RendererWidget.NpadManager.UnblockInputUpdates();
 
             userText = error ? null : inputText;
 
