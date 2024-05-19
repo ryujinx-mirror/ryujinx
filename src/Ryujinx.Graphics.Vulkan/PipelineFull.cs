@@ -222,20 +222,6 @@ namespace Ryujinx.Graphics.Vulkan
             }
         }
 
-        private void TryBackingSwaps()
-        {
-            CommandBufferScoped? cbs = null;
-
-            _backingSwaps.RemoveAll(holder => holder.TryBackingSwap(ref cbs));
-
-            cbs?.Dispose();
-        }
-
-        public void AddBackingSwap(BufferHolder holder)
-        {
-            _backingSwaps.Add(holder);
-        }
-
         public void Restore()
         {
             if (Pipeline != null)
@@ -290,8 +276,6 @@ namespace Ryujinx.Graphics.Vulkan
             }
 
             Gd.ResetCounterPool();
-
-            TryBackingSwaps();
 
             Restore();
         }

@@ -17,7 +17,6 @@ namespace Ryujinx.Graphics.GAL
         void BackgroundContextAction(Action action, bool alwaysBackground = false);
 
         BufferHandle CreateBuffer(int size, BufferAccess access = BufferAccess.Default);
-        BufferHandle CreateBuffer(int size, BufferAccess access, BufferHandle storageHint);
         BufferHandle CreateBuffer(nint pointer, int size);
         BufferHandle CreateBufferSparse(ReadOnlySpan<BufferRange> storageBuffers);
 

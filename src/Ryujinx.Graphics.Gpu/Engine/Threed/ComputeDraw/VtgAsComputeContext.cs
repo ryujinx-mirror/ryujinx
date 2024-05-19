@@ -438,7 +438,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed.ComputeDraw
 
             ReadOnlySpan<byte> dataBytes = MemoryMarshal.Cast<int, byte>(data);
 
-            BufferHandle buffer = _context.Renderer.CreateBuffer(dataBytes.Length);
+            BufferHandle buffer = _context.Renderer.CreateBuffer(dataBytes.Length, BufferAccess.DeviceMemory);
             _context.Renderer.SetBufferData(buffer, 0, dataBytes);
 
             return new IndexBuffer(buffer, count, dataBytes.Length);
@@ -529,7 +529,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed.ComputeDraw
         {
             if (_dummyBuffer == BufferHandle.Null)
             {
-                _dummyBuffer = _context.Renderer.CreateBuffer(DummyBufferSize);
+                _dummyBuffer = _context.Renderer.CreateBuffer(DummyBufferSize, BufferAccess.DeviceMemory);
                 _context.Renderer.Pipeline.ClearBuffer(_dummyBuffer, 0, DummyBufferSize, 0);
             }
 
@@ -550,7 +550,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed.ComputeDraw
                     _context.Renderer.DeleteBuffer(_sequentialIndexBuffer);
                 }
 
-                _sequentialIndexBuffer = _context.Renderer.CreateBuffer(count * sizeof(uint));
+                _sequentialIndexBuffer = _context.Renderer.CreateBuffer(count * sizeof(uint), BufferAccess.DeviceMemory);
                 _sequentialIndexBufferCount = count;
 
                 Span<int> data = new int[count];
@@ -583,7 +583,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed.ComputeDraw
                     _context.Renderer.DeleteBuffer(buffer.Handle);
                 }
 
-                buffer.Handle = _context.Renderer.CreateBuffer(newSize);
+                buffer.Handle = _context.Renderer.CreateBuffer(newSize, BufferAccess.DeviceMemory);
                 buffer.Size = newSize;
             }
 

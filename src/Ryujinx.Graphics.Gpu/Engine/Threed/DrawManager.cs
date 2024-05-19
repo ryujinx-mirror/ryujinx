@@ -684,8 +684,8 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
 
             if (hasCount)
             {
-                var indirectBuffer = memory.BufferCache.GetBufferRange(indirectBufferRange);
-                var parameterBuffer = memory.BufferCache.GetBufferRange(parameterBufferRange);
+                var indirectBuffer = memory.BufferCache.GetBufferRange(indirectBufferRange, BufferStage.Indirect);
+                var parameterBuffer = memory.BufferCache.GetBufferRange(parameterBufferRange, BufferStage.Indirect);
 
                 if (indexed)
                 {
@@ -698,7 +698,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             }
             else
             {
-                var indirectBuffer = memory.BufferCache.GetBufferRange(indirectBufferRange);
+                var indirectBuffer = memory.BufferCache.GetBufferRange(indirectBufferRange, BufferStage.Indirect);
 
                 if (indexed)
                 {

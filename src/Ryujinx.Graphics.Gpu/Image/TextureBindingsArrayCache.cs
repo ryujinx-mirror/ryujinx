@@ -708,11 +708,11 @@ namespace Ryujinx.Graphics.Gpu.Image
                             format = texture.Format;
                         }
 
-                        _channel.BufferManager.SetBufferTextureStorage(entry.ImageArray, hostTexture, texture.Range, bindingInfo, index, format);
+                        _channel.BufferManager.SetBufferTextureStorage(stage, entry.ImageArray, hostTexture, texture.Range, bindingInfo, index, format);
                     }
                     else
                     {
-                        _channel.BufferManager.SetBufferTextureStorage(entry.TextureArray, hostTexture, texture.Range, bindingInfo, index, format);
+                        _channel.BufferManager.SetBufferTextureStorage(stage, entry.TextureArray, hostTexture, texture.Range, bindingInfo, index, format);
                     }
                 }
                 else if (isImage)
@@ -921,11 +921,11 @@ namespace Ryujinx.Graphics.Gpu.Image
                             format = texture.Format;
                         }
 
-                        _channel.BufferManager.SetBufferTextureStorage(entry.ImageArray, hostTexture, texture.Range, bindingInfo, index, format);
+                        _channel.BufferManager.SetBufferTextureStorage(stage, entry.ImageArray, hostTexture, texture.Range, bindingInfo, index, format);
                     }
                     else
                     {
-                        _channel.BufferManager.SetBufferTextureStorage(entry.TextureArray, hostTexture, texture.Range, bindingInfo, index, format);
+                        _channel.BufferManager.SetBufferTextureStorage(stage, entry.TextureArray, hostTexture, texture.Range, bindingInfo, index, format);
                     }
                 }
                 else if (isImage)

@@ -424,9 +424,19 @@ namespace Ryujinx.Graphics.Vulkan
 
         public static BufferAllocationType Convert(this BufferAccess access)
         {
-            if (access.HasFlag(BufferAccess.FlushPersistent) || access.HasFlag(BufferAccess.Stream))
+            BufferAccess memType = access & BufferAccess.MemoryTypeMask;
+
+            if (memType == BufferAccess.HostMemory || access.HasFlag(BufferAccess.Stream))
             {
                 return BufferAllocationType.HostMapped;
+            }
+            else if (memType == BufferAccess.DeviceMemory)
+            {
+                return BufferAllocationType.DeviceLocal;
+            }
+            else if (memType == BufferAccess.DeviceMemoryMapped)
+            {
+                return BufferAllocationType.DeviceLocalMapped;
             }
 
             return BufferAllocationType.Auto;

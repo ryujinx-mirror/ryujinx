@@ -107,8 +107,9 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// <param name="memoryManager">GPU memory manager where the buffer is mapped</param>
         /// <param name="gpuVa">Start GPU virtual address of the buffer</param>
         /// <param name="size">Size in bytes of the buffer</param>
+        /// <param name="stage">The type of usage that created the buffer</param>
         /// <returns>Contiguous physical range of the buffer, after address translation</returns>
-        public MultiRange TranslateAndCreateBuffer(MemoryManager memoryManager, ulong gpuVa, ulong size)
+        public MultiRange TranslateAndCreateBuffer(MemoryManager memoryManager, ulong gpuVa, ulong size, BufferStage stage)
         {
             if (gpuVa == 0)
             {
@@ -119,7 +120,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
             if (address != MemoryManager.PteUnmapped)
             {
-                CreateBuffer(address, size);
+                CreateBuffer(address, size, stage);
             }
 
             return new MultiRange(address, size);
@@ -132,8 +133,9 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// <param name="memoryManager">GPU memory manager where the buffer is mapped</param>
         /// <param name="gpuVa">Start GPU virtual address of the buffer</param>
         /// <param name="size">Size in bytes of the buffer</param>
+        /// <param name="stage">The type of usage that created the buffer</param>
         /// <returns>Physical ranges of the buffer, after address translation</returns>
-        public MultiRange TranslateAndCreateMultiBuffers(MemoryManager memoryManager, ulong gpuVa, ulong size)
+        public MultiRange TranslateAndCreateMultiBuffers(MemoryManager memoryManager, ulong gpuVa, ulong size, BufferStage stage)
         {
             if (gpuVa == 0)
             {
@@ -149,7 +151,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
                 return range;
             }
 
-            CreateBuffer(range);
+            CreateBuffer(range, stage);
 
             return range;
         }
@@ -161,8 +163,9 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// <param name="memoryManager">GPU memory manager where the buffer is mapped</param>
         /// <param name="gpuVa">Start GPU virtual address of the buffer</param>
         /// <param name="size">Size in bytes of the buffer</param>
+        /// <param name="stage">The type of usage that created the buffer</param>
         /// <returns>Physical ranges of the buffer, after address translation</returns>
-        public MultiRange TranslateAndCreateMultiBuffersPhysicalOnly(MemoryManager memoryManager, ulong gpuVa, ulong size)
+        public MultiRange TranslateAndCreateMultiBuffersPhysicalOnly(MemoryManager memoryManager, ulong gpuVa, ulong size, BufferStage stage)
         {
             if (gpuVa == 0)
             {
@@ -186,11 +189,11 @@ namespace Ryujinx.Graphics.Gpu.Memory
                 {
                     if (range.Count > 1)
                     {
-                        CreateBuffer(subRange.Address, subRange.Size, SparseBufferAlignmentSize);
+                        CreateBuffer(subRange.Address, subRange.Size, stage, SparseBufferAlignmentSize);
                     }
                     else
                     {
-                        CreateBuffer(subRange.Address, subRange.Size);
+                        CreateBuffer(subRange.Address, subRange.Size, stage);
                     }
                 }
             }
@@ -203,11 +206,12 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// This can be used to ensure the existance of a buffer.
         /// </summary>
         /// <param name="range">Physical ranges of memory where the buffer data is located</param>
-        public void CreateBuffer(MultiRange range)
+        /// <param name="stage">The type of usage that created the buffer</param>
+        public void CreateBuffer(MultiRange range, BufferStage stage)
         {
             if (range.Count > 1)
             {
-                CreateMultiRangeBuffer(range);
+                CreateMultiRangeBuffer(range, stage);
             }
             else
             {
@@ -215,7 +219,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
                 if (subRange.Address != MemoryManager.PteUnmapped)
                 {
-                    CreateBuffer(subRange.Address, subRange.Size);
+                    CreateBuffer(subRange.Address, subRange.Size, stage);
                 }
             }
         }
@@ -226,7 +230,8 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// </summary>
         /// <param name="address">Address of the buffer in memory</param>
         /// <param name="size">Size of the buffer in bytes</param>
-        public void CreateBuffer(ulong address, ulong size)
+        /// <param name="stage">The type of usage that created the buffer</param>
+        public void CreateBuffer(ulong address, ulong size, BufferStage stage)
         {
             ulong endAddress = address + size;
 
@@ -239,7 +244,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
                 alignedEndAddress += BufferAlignmentSize;
             }
 
-            CreateBufferAligned(alignedAddress, alignedEndAddress - alignedAddress);
+            CreateBufferAligned(alignedAddress, alignedEndAddress - alignedAddress, stage);
         }
 
         /// <summary>
@@ -248,8 +253,9 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// </summary>
         /// <param name="address">Address of the buffer in memory</param>
         /// <param name="size">Size of the buffer in bytes</param>
+        /// <param name="stage">The type of usage that created the buffer</param>
         /// <param name="alignment">Alignment of the start address of the buffer in bytes</param>
-        public void CreateBuffer(ulong address, ulong size, ulong alignment)
+        public void CreateBuffer(ulong address, ulong size, BufferStage stage, ulong alignment)
         {
             ulong alignmentMask = alignment - 1;
             ulong pageAlignmentMask = BufferAlignmentMask;
@@ -264,7 +270,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
                 alignedEndAddress += pageAlignmentMask;
             }
 
-            CreateBufferAligned(alignedAddress, alignedEndAddress - alignedAddress, alignment);
+            CreateBufferAligned(alignedAddress, alignedEndAddress - alignedAddress, stage, alignment);
         }
 
         /// <summary>
@@ -272,7 +278,8 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// if it does not exist yet.
         /// </summary>
         /// <param name="range">Physical ranges of memory</param>
-        private void CreateMultiRangeBuffer(MultiRange range)
+        /// <param name="stage">The type of usage that created the buffer</param>
+        private void CreateMultiRangeBuffer(MultiRange range, BufferStage stage)
         {
             // Ensure all non-contiguous buffer we might use are sparse aligned.
             for (int i = 0; i < range.Count; i++)
@@ -281,7 +288,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
                 if (subRange.Address != MemoryManager.PteUnmapped)
                 {
-                    CreateBuffer(subRange.Address, subRange.Size, SparseBufferAlignmentSize);
+                    CreateBuffer(subRange.Address, subRange.Size, stage, SparseBufferAlignmentSize);
                 }
             }
 
@@ -431,9 +438,9 @@ namespace Ryujinx.Graphics.Gpu.Memory
                 result.EndGpuAddress < gpuVa + size ||
                 result.UnmappedSequence != result.Buffer.UnmappedSequence)
             {
-                MultiRange range = TranslateAndCreateBuffer(memoryManager, gpuVa, size);
+                MultiRange range = TranslateAndCreateBuffer(memoryManager, gpuVa, size, BufferStage.Internal);
                 ulong address = range.GetSubRange(0).Address;
-                result = new BufferCacheEntry(address, gpuVa, GetBuffer(address, size));
+                result = new BufferCacheEntry(address, gpuVa, GetBuffer(address, size, BufferStage.Internal));
 
                 _dirtyCache[gpuVa] = result;
             }
@@ -466,9 +473,9 @@ namespace Ryujinx.Graphics.Gpu.Memory
                 result.EndGpuAddress < alignedEndGpuVa ||
                 result.UnmappedSequence != result.Buffer.UnmappedSequence)
             {
-                MultiRange range = TranslateAndCreateBuffer(memoryManager, alignedGpuVa, size);
+                MultiRange range = TranslateAndCreateBuffer(memoryManager, alignedGpuVa, size, BufferStage.None);
                 ulong address = range.GetSubRange(0).Address;
-                result = new BufferCacheEntry(address, alignedGpuVa, GetBuffer(address, size));
+                result = new BufferCacheEntry(address, alignedGpuVa, GetBuffer(address, size, BufferStage.None));
 
                 _modifiedCache[alignedGpuVa] = result;
             }
@@ -485,7 +492,8 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// </summary>
         /// <param name="address">Address of the buffer in guest memory</param>
         /// <param name="size">Size in bytes of the buffer</param>
-        private void CreateBufferAligned(ulong address, ulong size)
+        /// <param name="stage">The type of usage that created the buffer</param>
+        private void CreateBufferAligned(ulong address, ulong size, BufferStage stage)
         {
             Buffer[] overlaps = _bufferOverlaps;
             int overlapsCount = _buffers.FindOverlapsNonOverlapping(address, size, ref overlaps);
@@ -546,13 +554,13 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
                     ulong newSize = endAddress - address;
 
-                    CreateBufferAligned(address, newSize, anySparseCompatible, overlaps, overlapsCount);
+                    CreateBufferAligned(address, newSize, stage, anySparseCompatible, overlaps, overlapsCount);
                 }
             }
             else
             {
                 // No overlap, just create a new buffer.
-                Buffer buffer = new(_context, _physicalMemory, address, size, sparseCompatible: false);
+                Buffer buffer = new(_context, _physicalMemory, address, size, stage, sparseCompatible: false);
 
                 lock (_buffers)
                 {
@@ -570,8 +578,9 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// </summary>
         /// <param name="address">Address of the buffer in guest memory</param>
         /// <param name="size">Size in bytes of the buffer</param>
+        /// <param name="stage">The type of usage that created the buffer</param>
         /// <param name="alignment">Alignment of the start address of the buffer</param>
-        private void CreateBufferAligned(ulong address, ulong size, ulong alignment)
+        private void CreateBufferAligned(ulong address, ulong size, BufferStage stage, ulong alignment)
         {
             Buffer[] overlaps = _bufferOverlaps;
             int overlapsCount = _buffers.FindOverlapsNonOverlapping(address, size, ref overlaps);
@@ -624,13 +633,13 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
                     ulong newSize = endAddress - address;
 
-                    CreateBufferAligned(address, newSize, sparseAligned, overlaps, overlapsCount);
+                    CreateBufferAligned(address, newSize, stage, sparseAligned, overlaps, overlapsCount);
                 }
             }
             else
             {
                 // No overlap, just create a new buffer.
-                Buffer buffer = new(_context, _physicalMemory, address, size, sparseAligned);
+                Buffer buffer = new(_context, _physicalMemory, address, size, stage, sparseAligned);
 
                 lock (_buffers)
                 {
@@ -648,12 +657,13 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// </summary>
         /// <param name="address">Address of the buffer in guest memory</param>
         /// <param name="size">Size in bytes of the buffer</param>
+        /// <param name="stage">The type of usage that created the buffer</param>
         /// <param name="sparseCompatible">Indicates if the buffer can be used in a sparse buffer mapping</param>
         /// <param name="overlaps">Buffers overlapping the range</param>
         /// <param name="overlapsCount">Total of overlaps</param>
-        private void CreateBufferAligned(ulong address, ulong size, bool sparseCompatible, Buffer[] overlaps, int overlapsCount)
+        private void CreateBufferAligned(ulong address, ulong size, BufferStage stage, bool sparseCompatible, Buffer[] overlaps, int overlapsCount)
         {
-            Buffer newBuffer = new Buffer(_context, _physicalMemory, address, size, sparseCompatible, overlaps.Take(overlapsCount));
+            Buffer newBuffer = new Buffer(_context, _physicalMemory, address, size, stage, sparseCompatible, overlaps.Take(overlapsCount));
 
             lock (_buffers)
             {
@@ -704,7 +714,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
             for (int index = 0; index < overlapCount; index++)
             {
-                CreateMultiRangeBuffer(overlaps[index].Range);
+                CreateMultiRangeBuffer(overlaps[index].Range, BufferStage.None);
             }
         }
 
@@ -731,8 +741,8 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// <param name="size">Size in bytes of the copy</param>
         public void CopyBuffer(MemoryManager memoryManager, ulong srcVa, ulong dstVa, ulong size)
         {
-            MultiRange srcRange = TranslateAndCreateMultiBuffersPhysicalOnly(memoryManager, srcVa, size);
-            MultiRange dstRange = TranslateAndCreateMultiBuffersPhysicalOnly(memoryManager, dstVa, size);
+            MultiRange srcRange = TranslateAndCreateMultiBuffersPhysicalOnly(memoryManager, srcVa, size, BufferStage.Copy);
+            MultiRange dstRange = TranslateAndCreateMultiBuffersPhysicalOnly(memoryManager, dstVa, size, BufferStage.Copy);
 
             if (srcRange.Count == 1 && dstRange.Count == 1)
             {
@@ -788,8 +798,8 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// <param name="size">Size in bytes of the copy</param>
         private void CopyBufferSingleRange(MemoryManager memoryManager, ulong srcAddress, ulong dstAddress, ulong size)
         {
-            Buffer srcBuffer = GetBuffer(srcAddress, size);
-            Buffer dstBuffer = GetBuffer(dstAddress, size);
+            Buffer srcBuffer = GetBuffer(srcAddress, size, BufferStage.Copy);
+            Buffer dstBuffer = GetBuffer(dstAddress, size, BufferStage.Copy);
 
             int srcOffset = (int)(srcAddress - srcBuffer.Address);
             int dstOffset = (int)(dstAddress - dstBuffer.Address);
@@ -803,7 +813,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
             if (srcBuffer.IsModified(srcAddress, size))
             {
-                dstBuffer.SignalModified(dstAddress, size);
+                dstBuffer.SignalModified(dstAddress, size, BufferStage.Copy);
             }
             else
             {
@@ -828,12 +838,12 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// <param name="value">Value to be written into the buffer</param>
         public void ClearBuffer(MemoryManager memoryManager, ulong gpuVa, ulong size, uint value)
         {
-            MultiRange range = TranslateAndCreateMultiBuffersPhysicalOnly(memoryManager, gpuVa, size);
+            MultiRange range = TranslateAndCreateMultiBuffersPhysicalOnly(memoryManager, gpuVa, size, BufferStage.Copy);
 
             for (int index = 0; index < range.Count; index++)
             {
                 MemoryRange subRange = range.GetSubRange(index);
-                Buffer buffer = GetBuffer(subRange.Address, subRange.Size);
+                Buffer buffer = GetBuffer(subRange.Address, subRange.Size, BufferStage.Copy);
 
                 int offset = (int)(subRange.Address - buffer.Address);
 
@@ -849,18 +859,19 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// Gets a buffer sub-range starting at a given memory address, aligned to the next page boundary.
         /// </summary>
         /// <param name="range">Physical regions of memory where the buffer is mapped</param>
+        /// <param name="stage">Buffer stage that triggered the access</param>
         /// <param name="write">Whether the buffer will be written to by this use</param>
         /// <returns>The buffer sub-range starting at the given memory address</returns>
-        public BufferRange GetBufferRangeAligned(MultiRange range, bool write = false)
+        public BufferRange GetBufferRangeAligned(MultiRange range, BufferStage stage, bool write = false)
         {
             if (range.Count > 1)
             {
-                return GetBuffer(range, write).GetRange(range);
+                return GetBuffer(range, stage, write).GetRange(range);
             }
             else
             {
                 MemoryRange subRange = range.GetSubRange(0);
-                return GetBuffer(subRange.Address, subRange.Size, write).GetRangeAligned(subRange.Address, subRange.Size, write);
+                return GetBuffer(subRange.Address, subRange.Size, stage, write).GetRangeAligned(subRange.Address, subRange.Size, write);
             }
         }
 
@@ -868,18 +879,19 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// Gets a buffer sub-range for a given memory range.
         /// </summary>
         /// <param name="range">Physical regions of memory where the buffer is mapped</param>
+        /// <param name="stage">Buffer stage that triggered the access</param>
         /// <param name="write">Whether the buffer will be written to by this use</param>
         /// <returns>The buffer sub-range for the given range</returns>
-        public BufferRange GetBufferRange(MultiRange range, bool write = false)
+        public BufferRange GetBufferRange(MultiRange range, BufferStage stage, bool write = false)
         {
             if (range.Count > 1)
             {
-                return GetBuffer(range, write).GetRange(range);
+                return GetBuffer(range, stage, write).GetRange(range);
             }
             else
             {
                 MemoryRange subRange = range.GetSubRange(0);
-                return GetBuffer(subRange.Address, subRange.Size, write).GetRange(subRange.Address, subRange.Size, write);
+                return GetBuffer(subRange.Address, subRange.Size, stage, write).GetRange(subRange.Address, subRange.Size, write);
             }
         }
 
@@ -888,9 +900,10 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// A buffer overlapping with the specified range is assumed to already exist on the cache.
         /// </summary>
         /// <param name="range">Physical regions of memory where the buffer is mapped</param>
+        /// <param name="stage">Buffer stage that triggered the access</param>
         /// <param name="write">Whether the buffer will be written to by this use</param>
         /// <returns>The buffer where the range is fully contained</returns>
-        private MultiRangeBuffer GetBuffer(MultiRange range, bool write = false)
+        private MultiRangeBuffer GetBuffer(MultiRange range, BufferStage stage, bool write = false)
         {
             for (int i = 0; i < range.Count; i++)
             {
@@ -902,7 +915,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
                 if (write)
                 {
-                    subBuffer.SignalModified(subRange.Address, subRange.Size);
+                    subBuffer.SignalModified(subRange.Address, subRange.Size, stage);
                 }
             }
 
@@ -935,9 +948,10 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// </summary>
         /// <param name="address">Start address of the memory range</param>
         /// <param name="size">Size in bytes of the memory range</param>
+        /// <param name="stage">Buffer stage that triggered the access</param>
         /// <param name="write">Whether the buffer will be written to by this use</param>
         /// <returns>The buffer where the range is fully contained</returns>
-        private Buffer GetBuffer(ulong address, ulong size, bool write = false)
+        private Buffer GetBuffer(ulong address, ulong size, BufferStage stage, bool write = false)
         {
             Buffer buffer;
 
@@ -950,7 +964,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
                 if (write)
                 {
-                    buffer.SignalModified(address, size);
+                    buffer.SignalModified(address, size, stage);
                 }
             }
             else
@@ -1002,6 +1016,18 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
                 buffer.SynchronizeMemory(address, size);
             }
+        }
+
+        /// <summary>
+        /// Signal that the given buffer's handle has changed,
+        /// forcing rebind and any overlapping multi-range buffers to be recreated.
+        /// </summary>
+        /// <param name="buffer">The buffer that has changed handle</param>
+        public void BufferBackingChanged(Buffer buffer)
+        {
+            NotifyBuffersModified?.Invoke();
+
+            RecreateMultiRangeBuffers(buffer.Address, buffer.Size);
         }
 
         /// <summary>

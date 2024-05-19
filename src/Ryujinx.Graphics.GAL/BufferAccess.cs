@@ -6,8 +6,13 @@ namespace Ryujinx.Graphics.GAL
     public enum BufferAccess
     {
         Default = 0,
-        FlushPersistent = 1 << 0,
-        Stream = 1 << 1,
-        SparseCompatible = 1 << 2,
+        HostMemory = 1,
+        DeviceMemory = 2,
+        DeviceMemoryMapped = 3,
+
+        MemoryTypeMask = 0xf,
+
+        Stream = 1 << 4,
+        SparseCompatible = 1 << 5,
     }
 }

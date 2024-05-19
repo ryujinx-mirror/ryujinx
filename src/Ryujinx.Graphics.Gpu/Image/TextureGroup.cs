@@ -645,7 +645,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                 }
                 else
                 {
-                    _flushBuffer = _context.Renderer.CreateBuffer((int)Storage.Size, BufferAccess.FlushPersistent);
+                    _flushBuffer = _context.Renderer.CreateBuffer((int)Storage.Size, BufferAccess.HostMemory);
                     _flushBufferImported = false;
                 }
 

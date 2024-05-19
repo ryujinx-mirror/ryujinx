@@ -1,7 +1,6 @@
 using Ryujinx.Common.Pools;
 using Ryujinx.Memory.Range;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 
 namespace Ryujinx.Graphics.Gpu.Memory
@@ -72,10 +71,10 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
         private readonly GpuContext _context;
         private readonly Buffer _parent;
-        private readonly Action<ulong, ulong> _flushAction;
+        private readonly BufferFlushAction _flushAction;
 
-        private List<BufferMigration> _sources;
-        private BufferMigration _migrationTarget;
+        private BufferMigration _source;
+        private BufferModifiedRangeList _migrationTarget;
 
         private readonly object _lock = new();
 
@@ -99,7 +98,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// <param name="context">GPU context that the buffer range list belongs to</param>
         /// <param name="parent">The parent buffer that owns this range list</param>
         /// <param name="flushAction">The flush action for the parent buffer</param>
-        public BufferModifiedRangeList(GpuContext context, Buffer parent, Action<ulong, ulong> flushAction) : base(BackingInitialSize)
+        public BufferModifiedRangeList(GpuContext context, Buffer parent, BufferFlushAction flushAction) : base(BackingInitialSize)
         {
             _context = context;
             _parent = parent;
@@ -204,6 +203,36 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// </summary>
         /// <param name="address">Start address to query</param>
         /// <param name="size">Size to query</param>
+        /// <param name="syncNumber">Sync number required for a range to be signalled</param>
+        /// <param name="rangeAction">The action to call for each modified range</param>
+        public void GetRangesAtSync(ulong address, ulong size, ulong syncNumber, Action<ulong, ulong> rangeAction)
+        {
+            int count = 0;
+
+            ref var overlaps = ref ThreadStaticArray<BufferModifiedRange>.Get();
+
+            // Range list must be consistent for this operation.
+            lock (_lock)
+            {
+                count = FindOverlapsNonOverlapping(address, size, ref overlaps);
+            }
+
+            for (int i = 0; i < count; i++)
+            {
+                BufferModifiedRange overlap = overlaps[i];
+
+                if (overlap.SyncNumber == syncNumber)
+                {
+                    rangeAction(overlap.Address, overlap.Size);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets modified ranges within the specified region, and then fires the given action for each range individually.
+        /// </summary>
+        /// <param name="address">Start address to query</param>
+        /// <param name="size">Size to query</param>
         /// <param name="rangeAction">The action to call for each modified range</param>
         public void GetRanges(ulong address, ulong size, Action<ulong, ulong> rangeAction)
         {
@@ -245,41 +274,16 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// <param name="offset">The offset to pass to the action</param>
         /// <param name="size">The size to pass to the action</param>
         /// <param name="syncNumber">The sync number that has been reached</param>
-        /// <param name="parent">The modified range list that originally owned this range</param>
         /// <param name="rangeAction">The action to perform</param>
-        public void RangeActionWithMigration(ulong offset, ulong size, ulong syncNumber, BufferModifiedRangeList parent, Action<ulong, ulong> rangeAction)
+        public void RangeActionWithMigration(ulong offset, ulong size, ulong syncNumber, BufferFlushAction rangeAction)
         {
-            bool firstSource = true;
-
-            if (parent != this)
+            if (_source != null)
             {
-                lock (_lock)
-                {
-                    if (_sources != null)
-                    {
-                        foreach (BufferMigration source in _sources)
-                        {
-                            if (source.Overlaps(offset, size, syncNumber))
-                            {
-                                if (firstSource && !source.FullyMatches(offset, size))
-                                {
-                                    // Perform this buffer's action first. The migrations will run after.
-                                    rangeAction(offset, size);
-                                }
-
-                                source.RangeActionWithMigration(offset, size, syncNumber, parent);
-
-                                firstSource = false;
-                            }
-                        }
-                    }
-                }
+                _source.RangeActionWithMigration(offset, size, syncNumber, rangeAction);
             }
-
-            if (firstSource)
+            else
             {
-                // No overlapping migrations, or they are not meant for this range, flush the data using the given action.
-                rangeAction(offset, size);
+                rangeAction(offset, size, syncNumber);
             }
         }
 
@@ -319,7 +323,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
                             ClearPart(overlap, clampAddress, clampEnd);
 
-                            RangeActionWithMigration(clampAddress, clampEnd - clampAddress, waitSync, overlap.Parent, _flushAction);
+                            RangeActionWithMigration(clampAddress, clampEnd - clampAddress, waitSync, _flushAction);
                         }
                     }
 
@@ -329,7 +333,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
             // There is a migration target to call instead. This can't be changed after set so accessing it outside the lock is fine.
 
-            _migrationTarget.Destination.RemoveRangesAndFlush(overlaps, rangeCount, highestDiff, currentSync, address, endAddress);
+            _migrationTarget.RemoveRangesAndFlush(overlaps, rangeCount, highestDiff, currentSync, address, endAddress);
         }
 
         /// <summary>
@@ -367,7 +371,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
             if (rangeCount == -1)
             {
-                _migrationTarget.Destination.WaitForAndFlushRanges(address, size);
+                _migrationTarget.WaitForAndFlushRanges(address, size);
 
                 return;
             }
@@ -407,6 +411,9 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// <summary>
         /// Inherit ranges from another modified range list.
         /// </summary>
+        /// <remarks>
+        /// Assumes that ranges will be inherited in address ascending order.
+        /// </remarks>
         /// <param name="ranges">The range list to inherit from</param>
         /// <param name="registerRangeAction">The action to call for each modified range</param>
         public void InheritRanges(BufferModifiedRangeList ranges, Action<ulong, ulong> registerRangeAction)
@@ -415,18 +422,31 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
             lock (ranges._lock)
             {
-                BufferMigration migration = new(ranges._parent, ranges._flushAction, ranges, this, _context.SyncNumber);
-
-                ranges._parent.IncrementReferenceCount();
-                ranges._migrationTarget = migration;
-
-                _context.RegisterBufferMigration(migration);
-
                 inheritRanges = ranges.ToArray();
 
                 lock (_lock)
                 {
-                    (_sources ??= new List<BufferMigration>()).Add(migration);
+                    // Copy over the migration from the previous range list
+
+                    BufferMigration oldMigration = ranges._source;
+
+                    BufferMigrationSpan span = new BufferMigrationSpan(ranges._parent, ranges._flushAction, oldMigration);
+                    ranges._parent.IncrementReferenceCount();
+
+                    if (_source == null)
+                    {
+                        // Create a new migration. 
+                        _source = new BufferMigration(new BufferMigrationSpan[] { span }, this, _context.SyncNumber);
+
+                        _context.RegisterBufferMigration(_source);
+                    }
+                    else
+                    {
+                        // Extend the migration
+                        _source.AddSpanToEnd(span);
+                    }
+
+                    ranges._migrationTarget = this;
 
                     foreach (BufferModifiedRange range in inheritRanges)
                     {
@@ -446,6 +466,27 @@ namespace Ryujinx.Graphics.Gpu.Memory
         }
 
         /// <summary>
+        /// Register a migration from previous buffer storage. This migration is from a snapshot of the buffer's
+        /// current handle to its handle in the future, and is assumed to be complete when the sync action completes.
+        /// When the migration completes, the handle is disposed.
+        /// </summary>
+        public void SelfMigration()
+        {
+            lock (_lock)
+            {
+                BufferMigrationSpan span = new(_parent, _parent.GetSnapshotDisposeAction(), _parent.GetSnapshotFlushAction(), _source);
+                BufferMigration migration = new(new BufferMigrationSpan[] { span }, this, _context.SyncNumber);
+
+                // Migration target is used to redirect flush actions to the latest range list,
+                // so we don't need to set it here. (this range list is still the latest)
+
+                _context.RegisterBufferMigration(migration);
+
+                _source = migration;
+            }
+        }
+
+        /// <summary>
         /// Removes a source buffer migration, indicating its copy has completed.
         /// </summary>
         /// <param name="migration">The migration to remove</param>
@@ -453,7 +494,10 @@ namespace Ryujinx.Graphics.Gpu.Memory
         {
             lock (_lock)
             {
-                _sources.Remove(migration);
+                if (_source == migration)
+                {
+                    _source = null;
+                }
             }
         }
 
