@@ -14,6 +14,11 @@ namespace Ryujinx.Horizon.Sdk.Codec.Detail
 {
     partial class HardwareOpusDecoder : IHardwareOpusDecoder, IDisposable
     {
+        static HardwareOpusDecoder()
+        {
+            OpusCodecFactory.AttemptToUseNativeLibrary = false;
+        }
+
         [StructLayout(LayoutKind.Sequential)]
         private struct OpusPacketHeader
         {
@@ -30,59 +35,86 @@ namespace Ryujinx.Horizon.Sdk.Codec.Detail
             }
         }
 
-        private interface IDecoder
+        private interface IDecoder : IDisposable
         {
             int SampleRate { get; }
             int ChannelsCount { get; }
 
-            int Decode(byte[] inData, int inDataOffset, int len, short[] outPcm, int outPcmOffset, int frameSize);
+            int Decode(ReadOnlySpan<byte> inData, Span<short> outPcm, int frameSize);
             void ResetState();
         }
 
         private class Decoder : IDecoder
         {
-            private readonly OpusDecoder _decoder;
+            private readonly IOpusDecoder _decoder;
 
             public int SampleRate => _decoder.SampleRate;
             public int ChannelsCount => _decoder.NumChannels;
 
             public Decoder(int sampleRate, int channelsCount)
             {
-                _decoder = new OpusDecoder(sampleRate, channelsCount);
+                _decoder = OpusCodecFactory.CreateDecoder(sampleRate, channelsCount);
             }
 
-            public int Decode(byte[] inData, int inDataOffset, int len, short[] outPcm, int outPcmOffset, int frameSize)
+            public int Decode(ReadOnlySpan<byte> inData, Span<short> outPcm, int frameSize)
             {
-                return _decoder.Decode(inData, inDataOffset, len, outPcm, outPcmOffset, frameSize);
+                return _decoder.Decode(inData, outPcm, frameSize);
             }
 
             public void ResetState()
             {
                 _decoder.ResetState();
+            }
+
+            public void Dispose()
+            {
+                Dispose(disposing: true);
+                GC.SuppressFinalize(this);
+            }
+
+            protected virtual void Dispose(bool disposing)
+            {
+                if (disposing)
+                {
+                    _decoder?.Dispose();
+                }
             }
         }
 
         private class MultiSampleDecoder : IDecoder
         {
-            private readonly OpusMSDecoder _decoder;
+            private readonly IOpusMultiStreamDecoder _decoder;
 
             public int SampleRate => _decoder.SampleRate;
-            public int ChannelsCount { get; }
+            public int ChannelsCount => _decoder.NumChannels;
 
             public MultiSampleDecoder(int sampleRate, int channelsCount, int streams, int coupledStreams, byte[] mapping)
             {
-                ChannelsCount = channelsCount;
-                _decoder = new OpusMSDecoder(sampleRate, channelsCount, streams, coupledStreams, mapping);
+                _decoder = OpusCodecFactory.CreateMultiStreamDecoder(sampleRate, channelsCount, streams, coupledStreams, mapping);
             }
 
-            public int Decode(byte[] inData, int inDataOffset, int len, short[] outPcm, int outPcmOffset, int frameSize)
+            public int Decode(ReadOnlySpan<byte> inData, Span<short> outPcm, int frameSize)
             {
-                return _decoder.DecodeMultistream(inData, inDataOffset, len, outPcm, outPcmOffset, frameSize, 0);
+                return _decoder.DecodeMultistream(inData, outPcm, frameSize, false);
             }
 
             public void ResetState()
             {
                 _decoder.ResetState();
+            }
+
+            public void Dispose()
+            {
+                Dispose(disposing: true);
+                GC.SuppressFinalize(this);
+            }
+
+            protected virtual void Dispose(bool disposing)
+            {
+                if (disposing)
+                {
+                    _decoder?.Dispose();
+                }
             }
         }
 
@@ -221,7 +253,8 @@ namespace Ryujinx.Horizon.Sdk.Codec.Detail
         {
             timeTaken = 0;
 
-            Result result = DecodeInterleaved(_decoder, reset, input, out short[] outPcmData, output.Length, out outConsumed, out outSamples);
+            Span<short> outPcmSpace = MemoryMarshal.Cast<byte, short>(output);
+            Result result = DecodeInterleaved(_decoder, reset, input, outPcmSpace, output.Length, out outConsumed, out outSamples);
 
             if (withPerf)
             {
@@ -229,14 +262,12 @@ namespace Ryujinx.Horizon.Sdk.Codec.Detail
                 timeTaken = 0;
             }
 
-            MemoryMarshal.Cast<short, byte>(outPcmData).CopyTo(output[..(outPcmData.Length * sizeof(short))]);
-
             return result;
         }
 
-        private static Result GetPacketNumSamples(IDecoder decoder, out int numSamples, byte[] packet)
+        private static Result GetPacketNumSamples(IDecoder decoder, out int numSamples, ReadOnlySpan<byte> packet)
         {
-            int result = OpusPacketInfo.GetNumSamples(packet, 0, packet.Length, decoder.SampleRate);
+            int result = OpusPacketInfo.GetNumSamples(packet, decoder.SampleRate);
 
             numSamples = result;
 
@@ -256,12 +287,11 @@ namespace Ryujinx.Horizon.Sdk.Codec.Detail
             IDecoder decoder,
             bool reset,
             ReadOnlySpan<byte> input,
-            out short[] outPcmData,
+            Span<short> outPcmData,
             int outputSize,
             out int outConsumed,
             out int outSamples)
         {
-            outPcmData = null;
             outConsumed = 0;
             outSamples = 0;
 
@@ -281,7 +311,7 @@ namespace Ryujinx.Horizon.Sdk.Codec.Detail
                 return CodecResult.InvalidLength;
             }
 
-            byte[] opusData = input.Slice(headerSize, (int)header.Length).ToArray();
+            ReadOnlySpan<byte> opusData = input.Slice(headerSize, (int)header.Length);
 
             Result result = GetPacketNumSamples(decoder, out int numSamples, opusData);
 
@@ -292,8 +322,6 @@ namespace Ryujinx.Horizon.Sdk.Codec.Detail
                     return CodecResult.InvalidLength;
                 }
 
-                outPcmData = new short[numSamples * decoder.ChannelsCount];
-
                 if (reset)
                 {
                     decoder.ResetState();
@@ -301,13 +329,22 @@ namespace Ryujinx.Horizon.Sdk.Codec.Detail
 
                 try
                 {
-                    outSamples = decoder.Decode(opusData, 0, opusData.Length, outPcmData, 0, outPcmData.Length / decoder.ChannelsCount);
+                    outSamples = decoder.Decode(opusData, outPcmData, numSamples);
                     outConsumed = (int)totalSize;
                 }
-                catch (OpusException)
+                catch (OpusException e)
                 {
-                    // TODO: As OpusException doesn't return the exact error code, this is inaccurate in some cases...
-                    return CodecResult.InvalidLength;
+                    switch (e.OpusErrorCode)
+                    {
+                        case OpusError.OPUS_BUFFER_TOO_SMALL:
+                            return CodecResult.InvalidLength;
+                        case OpusError.OPUS_BAD_ARG:
+                            return CodecResult.OpusBadArg;
+                        case OpusError.OPUS_INVALID_PACKET:
+                            return CodecResult.OpusInvalidPacket;
+                        default:
+                            return CodecResult.InvalidLength;
+                    }
                 }
             }
 
@@ -324,6 +361,8 @@ namespace Ryujinx.Horizon.Sdk.Codec.Detail
 
                     _workBufferHandle = 0;
                 }
+
+                _decoder?.Dispose();
             }
         }
 

@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -16,10 +16,4 @@
     <PackageReference Include="Concentus" />
     <PackageReference Include="LibHac" />
   </ItemGroup>
-
-  <!-- Due to Concentus. -->
-  <PropertyGroup>
-    <NoWarn>NU1605</NoWarn>
-  </PropertyGroup>
-
 </Project>
