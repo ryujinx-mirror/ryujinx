@@ -143,9 +143,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
             PreferredCore = cpuCore;
             AffinityMask |= 1UL << cpuCore;
 
-            SchedFlags = type == ThreadType.Dummy
-                ? ThreadSchedState.Running
-                : ThreadSchedState.None;
+            SchedFlags = ThreadSchedState.None;
 
             ActiveCore = cpuCore;
             ObjSyncResult = KernelResult.ThreadNotStarted;
@@ -1055,6 +1053,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
                     // If the thread is not schedulable, we want to just run or pause
                     // it directly as we don't care about priority or the core it is
                     // running on in this case.
+
                     if (SchedFlags == ThreadSchedState.Running)
                     {
                         _schedulerWaitEvent.Set();
