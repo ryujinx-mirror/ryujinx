@@ -34,6 +34,7 @@ namespace Ryujinx.Graphics.Vulkan
         public Array8<PipelineColorBlendAttachmentState> ColorBlendAttachmentState;
         public Array9<Format> AttachmentFormats;
         public uint AttachmentIntegerFormatMask;
+        public bool LogicOpsAllowed;
 
         public readonly override bool Equals(object obj)
         {
