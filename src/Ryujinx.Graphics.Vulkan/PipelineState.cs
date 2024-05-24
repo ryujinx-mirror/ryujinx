@@ -560,9 +560,9 @@ namespace Ryujinx.Graphics.Vulkan
                     }
                 }
 
-                // AMD has a bug where it enables logical operations even for float formats,
+                // Vendors other than NVIDIA have a bug where it enables logical operations even for float formats,
                 // so we need to force disable them here.
-                bool logicOpEnable = LogicOpEnable && (gd.Vendor != Vendor.Amd || Internal.LogicOpsAllowed);
+                bool logicOpEnable = LogicOpEnable && (gd.Vendor == Vendor.Nvidia || Internal.LogicOpsAllowed);
 
                 var colorBlendState = new PipelineColorBlendStateCreateInfo
                 {
