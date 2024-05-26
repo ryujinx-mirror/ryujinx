@@ -38,6 +38,12 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
                     // If we can't do bindless elimination, remove the texture operation.
                     // Set any destination variables to zero.
 
+                    string typeName = texOp.Inst.IsImage()
+                        ? texOp.Type.ToGlslImageType(texOp.Format.GetComponentType())
+                        : texOp.Type.ToGlslTextureType();
+
+                    gpuAccessor.Log($"Failed to find handle source for bindless access of type \"{typeName}\".");
+
                     for (int destIndex = 0; destIndex < texOp.DestsCount; destIndex++)
                     {
                         block.Operations.AddBefore(node, new Operation(Instruction.Copy, texOp.GetDest(destIndex), OperandHelper.Const(0)));
@@ -62,17 +68,22 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
                 return false;
             }
 
-            Operand nvHandle = texOp.GetSource(0);
+            Operand bindlessHandle = texOp.GetSource(0);
 
-            if (nvHandle.AsgOp is not Operation handleOp ||
-                handleOp.Inst != Instruction.Load ||
-                (handleOp.StorageKind != StorageKind.Input && handleOp.StorageKind != StorageKind.StorageBuffer))
+            if (bindlessHandle.AsgOp is PhiNode phi)
             {
-                // Right now, we only allow bindless access when the handle comes from a shader input or storage buffer.
-                // This is an artificial limitation to prevent it from being used in cases where it
-                // would have a large performance impact of loading all textures in the pool.
-                // It might be removed in the future, if we can mitigate the performance impact.
+                for (int srcIndex = 0; srcIndex < phi.SourcesCount; srcIndex++)
+                {
+                    Operand phiSource = phi.GetSource(srcIndex);
 
+                    if (phiSource.AsgOp is not PhiNode && !IsBindlessAccessAllowed(phiSource))
+                    {
+                        return false;
+                    }
+                }
+            }
+            else if (!IsBindlessAccessAllowed(bindlessHandle))
+            {
                 return false;
             }
 
@@ -80,8 +91,8 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
             Operand samplerHandle = OperandHelper.Local();
             Operand textureIndex = OperandHelper.Local();
 
-            block.Operations.AddBefore(node, new Operation(Instruction.BitwiseAnd, textureHandle, nvHandle, OperandHelper.Const(0xfffff)));
-            block.Operations.AddBefore(node, new Operation(Instruction.ShiftRightU32, samplerHandle, nvHandle, OperandHelper.Const(20)));
+            block.Operations.AddBefore(node, new Operation(Instruction.BitwiseAnd, textureHandle, bindlessHandle, OperandHelper.Const(0xfffff)));
+            block.Operations.AddBefore(node, new Operation(Instruction.ShiftRightU32, samplerHandle, bindlessHandle, OperandHelper.Const(20)));
 
             int texturePoolLength = Math.Max(BindlessToArray.MinimumArrayLength, gpuAccessor.QueryTextureArrayLengthFromPool());
 
@@ -125,6 +136,30 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
             else
             {
                 texOp.TurnIntoArray(textureSetAndBinding);
+            }
+
+            return true;
+        }
+
+        private static bool IsBindlessAccessAllowed(Operand nvHandle)
+        {
+            if (nvHandle.Type == OperandType.ConstantBuffer)
+            {
+                // Bindless access with handles from constant buffer is allowed.
+
+                return true;
+            }
+
+            if (nvHandle.AsgOp is not Operation handleOp ||
+                handleOp.Inst != Instruction.Load ||
+                (handleOp.StorageKind != StorageKind.Input && handleOp.StorageKind != StorageKind.StorageBuffer))
+            {
+                // Right now, we only allow bindless access when the handle comes from a shader input or storage buffer.
+                // This is an artificial limitation to prevent it from being used in cases where it
+                // would have a large performance impact of loading all textures in the pool.
+                // It might be removed in the future, if we can mitigate the performance impact.
+
+                return false;
             }
 
             return true;
