@@ -51,7 +51,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
         /// <returns>Compression algorithm</returns>
         public static CompressionAlgorithm GetCompressionAlgorithm()
         {
-            return CompressionAlgorithm.Deflate;
+            return CompressionAlgorithm.Brotli;
         }
     }
 }

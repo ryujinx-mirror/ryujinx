@@ -14,5 +14,10 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
         /// Deflate compression (RFC 1951).
         /// </summary>
         Deflate,
+
+        /// <summary>
+        /// Brotli compression (RFC 7932).
+        /// </summary>
+        Brotli,
     }
 }
