@@ -62,6 +62,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
 
                     var result = new TextureBindingInfo(
                         target,
+                        descriptor.Set,
                         descriptor.Binding,
                         descriptor.ArrayLength,
                         descriptor.CbufSlot,
@@ -90,6 +91,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
                     var result = new TextureBindingInfo(
                         target,
                         format,
+                        descriptor.Set,
                         descriptor.Binding,
                         descriptor.ArrayLength,
                         descriptor.CbufSlot,

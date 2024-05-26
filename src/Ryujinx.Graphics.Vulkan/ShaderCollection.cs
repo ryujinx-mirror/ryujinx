@@ -604,6 +604,16 @@ namespace Ryujinx.Graphics.Vulkan
             return _plce.GetNewDescriptorSetCollection(setIndex, out isNew);
         }
 
+        public Auto<DescriptorSetCollection> GetNewManualDescriptorSetCollection(int commandBufferIndex, int setIndex, out int cacheIndex)
+        {
+            return _plce.GetNewManualDescriptorSetCollection(commandBufferIndex, setIndex, out cacheIndex);
+        }
+
+        public void ReleaseManualDescriptorSetCollection(int setIndex, int cacheIndex)
+        {
+            _plce.ReleaseManualDescriptorSetCollection(setIndex, cacheIndex);
+        }
+
         public bool HasSameLayout(ShaderCollection other)
         {
             return other != null && _plce == other._plce;

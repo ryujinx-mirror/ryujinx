@@ -462,7 +462,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             }
             else
             {
-                context.Properties.Textures.TryGetValue(texOp.Binding, out TextureDefinition definition);
+                context.Properties.Textures.TryGetValue(texOp.GetTextureSetAndBinding(), out TextureDefinition definition);
                 bool hasLod = !definition.Type.HasFlag(SamplerType.Multisample) && (definition.Type & SamplerType.Mask) != SamplerType.TextureBuffer;
                 string texCall;
 
@@ -639,7 +639,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 
         private static string GetSamplerName(CodeGenContext context, AstTextureOperation texOp, ref int srcIndex)
         {
-            TextureDefinition textureDefinition = context.Properties.Textures[texOp.Binding];
+            TextureDefinition textureDefinition = context.Properties.Textures[texOp.GetTextureSetAndBinding()];
             string name = textureDefinition.Name;
 
             if (textureDefinition.ArrayLength != 1)
@@ -649,7 +649,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 
             if (texOp.IsSeparate)
             {
-                TextureDefinition samplerDefinition = context.Properties.Textures[texOp.SamplerBinding];
+                TextureDefinition samplerDefinition = context.Properties.Textures[texOp.GetSamplerSetAndBinding()];
                 string samplerName = samplerDefinition.Name;
 
                 if (samplerDefinition.ArrayLength != 1)
@@ -665,7 +665,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 
         private static string GetImageName(CodeGenContext context, AstTextureOperation texOp, ref int srcIndex)
         {
-            TextureDefinition definition = context.Properties.Images[texOp.Binding];
+            TextureDefinition definition = context.Properties.Images[texOp.GetTextureSetAndBinding()];
             string name = definition.Name;
 
             if (definition.ArrayLength != 1)

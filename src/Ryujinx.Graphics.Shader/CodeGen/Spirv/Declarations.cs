@@ -208,13 +208,13 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
 
                 var sampledImageVariable = context.Variable(sampledImageArrayPointerType, StorageClass.UniformConstant);
 
-                context.Samplers.Add(sampler.Binding, new SamplerDeclaration(
+                context.Samplers.Add(new(sampler.Set, sampler.Binding), new SamplerDeclaration(
                     imageType,
                     sampledImageType,
                     sampledImagePointerType,
                     sampledImageVariable,
                     sampler.ArrayLength != 1));
-                context.SamplersTypes.Add(sampler.Binding, sampler.Type);
+                context.SamplersTypes.Add(new(sampler.Set, sampler.Binding), sampler.Type);
 
                 context.Name(sampledImageVariable, sampler.Name);
                 context.Decorate(sampledImageVariable, Decoration.DescriptorSet, (LiteralInteger)setIndex);
@@ -256,7 +256,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
 
                 var imageVariable = context.Variable(imageArrayPointerType, StorageClass.UniformConstant);
 
-                context.Images.Add(image.Binding, new ImageDeclaration(imageType, imagePointerType, imageVariable, image.ArrayLength != 1));
+                context.Images.Add(new(image.Set, image.Binding), new ImageDeclaration(imageType, imagePointerType, imageVariable, image.ArrayLength != 1));
 
                 context.Name(imageVariable, image.Name);
                 context.Decorate(imageVariable, Decoration.DescriptorSet, (LiteralInteger)setIndex);

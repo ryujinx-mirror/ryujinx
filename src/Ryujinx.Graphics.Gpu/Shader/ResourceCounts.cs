@@ -24,5 +24,10 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// Total of images used by the shaders.
         /// </summary>
         public int ImagesCount;
+
+        /// <summary>
+        /// Total of extra sets used by the shaders.
+        /// </summary>
+        public int SetsCount;
     }
 }

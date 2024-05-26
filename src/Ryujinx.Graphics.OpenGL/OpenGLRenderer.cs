@@ -187,6 +187,12 @@ namespace Ryujinx.Graphics.OpenGL
                 supportsViewportSwizzle: HwCapabilities.SupportsViewportSwizzle,
                 supportsIndirectParameters: HwCapabilities.SupportsIndirectParameters,
                 supportsDepthClipControl: true,
+                uniformBufferSetIndex: 0,
+                storageBufferSetIndex: 1,
+                textureSetIndex: 2,
+                imageSetIndex: 3,
+                extraSetBaseIndex: 0,
+                maximumExtraSets: 0,
                 maximumUniformBuffersPerStage: 13, // TODO: Avoid hardcoding those limits here and get from driver?
                 maximumStorageBuffersPerStage: 16,
                 maximumTexturesPerStage: 32,

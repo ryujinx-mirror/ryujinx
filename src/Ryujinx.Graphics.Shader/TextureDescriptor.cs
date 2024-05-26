@@ -4,6 +4,7 @@ namespace Ryujinx.Graphics.Shader
     {
         // New fields should be added to the end of the struct to keep disk shader cache compatibility.
 
+        public readonly int Set;
         public readonly int Binding;
 
         public readonly SamplerType Type;
@@ -18,6 +19,7 @@ namespace Ryujinx.Graphics.Shader
         public readonly TextureUsageFlags Flags;
 
         public TextureDescriptor(
+            int set,
             int binding,
             SamplerType type,
             TextureFormat format,
@@ -27,6 +29,7 @@ namespace Ryujinx.Graphics.Shader
             bool separate,
             TextureUsageFlags flags)
         {
+            Set = set;
             Binding = binding;
             Type = type;
             Format = format;

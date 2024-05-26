@@ -27,34 +27,43 @@ namespace Ryujinx.Graphics.Shader
         ReadOnlySpan<ulong> GetCode(ulong address, int minimumSize);
 
         /// <summary>
-        /// Queries the binding number of a constant buffer.
+        /// Gets the binding number of a constant buffer.
         /// </summary>
         /// <param name="index">Constant buffer index</param>
         /// <returns>Binding number</returns>
-        int CreateConstantBufferBinding(int index);
+        SetBindingPair CreateConstantBufferBinding(int index);
 
         /// <summary>
-        /// Queries the binding number of an image.
+        /// Gets the binding number of an image.
         /// </summary>
         /// <param name="count">For array of images, the number of elements of the array, otherwise it should be 1</param>
         /// <param name="isBuffer">Indicates if the image is a buffer image</param>
         /// <returns>Binding number</returns>
-        int CreateImageBinding(int count, bool isBuffer);
+        SetBindingPair CreateImageBinding(int count, bool isBuffer);
 
         /// <summary>
-        /// Queries the binding number of a storage buffer.
+        /// Gets the binding number of a storage buffer.
         /// </summary>
         /// <param name="index">Storage buffer index</param>
         /// <returns>Binding number</returns>
-        int CreateStorageBufferBinding(int index);
+        SetBindingPair CreateStorageBufferBinding(int index);
 
         /// <summary>
-        /// Queries the binding number of a texture.
+        /// Gets the binding number of a texture.
         /// </summary>
         /// <param name="count">For array of textures, the number of elements of the array, otherwise it should be 1</param>
         /// <param name="isBuffer">Indicates if the texture is a buffer texture</param>
         /// <returns>Binding number</returns>
-        int CreateTextureBinding(int count, bool isBuffer);
+        SetBindingPair CreateTextureBinding(int count, bool isBuffer);
+
+        /// <summary>
+        /// Gets the set index for an additional set, or -1 if there's no extra set available.
+        /// </summary>
+        /// <returns>Extra set index, or -1 if not available</returns>
+        int CreateExtraSet()
+        {
+            return -1;
+        }
 
         /// <summary>
         /// Queries Local Size X for compute shaders.

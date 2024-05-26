@@ -8,7 +8,9 @@ namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
         public TextureFormat Format { get; set; }
         public TextureFlags Flags { get; private set; }
 
+        public int Set { get; private set; }
         public int Binding { get; private set; }
+        public int SamplerSet { get; private set; }
         public int SamplerBinding { get; private set; }
 
         public TextureOperation(
@@ -16,6 +18,7 @@ namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
             SamplerType type,
             TextureFormat format,
             TextureFlags flags,
+            int set,
             int binding,
             int compIndex,
             Operand[] dests,
@@ -24,24 +27,28 @@ namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
             Type = type;
             Format = format;
             Flags = flags;
+            Set = set;
             Binding = binding;
+            SamplerSet = -1;
             SamplerBinding = -1;
         }
 
-        public void TurnIntoArray(int binding)
+        public void TurnIntoArray(SetBindingPair setAndBinding)
         {
             Flags &= ~TextureFlags.Bindless;
-            Binding = binding;
+            Set = setAndBinding.SetIndex;
+            Binding = setAndBinding.Binding;
         }
 
-        public void TurnIntoArray(int textureBinding, int samplerBinding)
+        public void TurnIntoArray(SetBindingPair textureSetAndBinding, SetBindingPair samplerSetAndBinding)
         {
-            TurnIntoArray(textureBinding);
+            TurnIntoArray(textureSetAndBinding);
 
-            SamplerBinding = samplerBinding;
+            SamplerSet = samplerSetAndBinding.SetIndex;
+            SamplerBinding = samplerSetAndBinding.Binding;
         }
 
-        public void SetBinding(int binding)
+        public void SetBinding(SetBindingPair setAndBinding)
         {
             if ((Flags & TextureFlags.Bindless) != 0)
             {
@@ -50,7 +57,8 @@ namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
                 RemoveSource(0);
             }
 
-            Binding = binding;
+            Set = setAndBinding.SetIndex;
+            Binding = setAndBinding.Binding;
         }
 
         public void SetLodLevelFlag()

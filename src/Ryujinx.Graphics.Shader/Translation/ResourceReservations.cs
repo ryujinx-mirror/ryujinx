@@ -11,6 +11,8 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         public const int MaxVertexBufferTextures = 32;
 
+        private const int TextureSetIndex = 2; // TODO: Get from GPU accessor.
+
         public int VertexInfoConstantBufferBinding { get; }
         public int VertexOutputStorageBufferBinding { get; }
         public int GeometryVertexOutputStorageBufferBinding { get; }
@@ -161,6 +163,21 @@ namespace Ryujinx.Graphics.Shader.Translation
         public int GetVertexBufferTextureBinding(int vaLocation)
         {
             return _vertexBufferTextureBaseBinding + vaLocation;
+        }
+
+        public SetBindingPair GetVertexBufferTextureSetAndBinding(int vaLocation)
+        {
+            return new SetBindingPair(TextureSetIndex, GetVertexBufferTextureBinding(vaLocation));
+        }
+
+        public SetBindingPair GetIndexBufferTextureSetAndBinding()
+        {
+            return new SetBindingPair(TextureSetIndex, IndexBufferTextureBinding);
+        }
+
+        public SetBindingPair GetTopologyRemapBufferTextureSetAndBinding()
+        {
+            return new SetBindingPair(TextureSetIndex, TopologyRemapBufferTextureBinding);
         }
 
         internal bool TryGetOffset(StorageKind storageKind, int location, int component, out int offset)

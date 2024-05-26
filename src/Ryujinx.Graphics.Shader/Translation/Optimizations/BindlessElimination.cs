@@ -91,7 +91,7 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
 
             bool hasSampler = !texOp.Inst.IsImage();
 
-            int textureBinding = resourceManager.GetTextureOrImageBinding(
+            SetBindingPair textureSetAndBinding = resourceManager.GetTextureOrImageBinding(
                 texOp.Inst,
                 texOp.Type,
                 texOp.Format,
@@ -111,7 +111,7 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
 
                 texOp.InsertSource(1, samplerIndex);
 
-                int samplerBinding = resourceManager.GetTextureOrImageBinding(
+                SetBindingPair samplerSetAndBinding = resourceManager.GetTextureOrImageBinding(
                     texOp.Inst,
                     SamplerType.None,
                     texOp.Format,
@@ -120,11 +120,11 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
                     TextureHandle.PackOffsets(0, 0, TextureHandleType.Direct),
                     samplerPoolLength);
 
-                texOp.TurnIntoArray(textureBinding, samplerBinding);
+                texOp.TurnIntoArray(textureSetAndBinding, samplerSetAndBinding);
             }
             else
             {
-                texOp.TurnIntoArray(textureBinding);
+                texOp.TurnIntoArray(textureSetAndBinding);
             }
 
             return true;
@@ -445,7 +445,7 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
                 }
             }
 
-            int binding = resourceManager.GetTextureOrImageBinding(
+            SetBindingPair setAndBinding = resourceManager.GetTextureOrImageBinding(
                 texOp.Inst,
                 texOp.Type,
                 texOp.Format,
@@ -453,7 +453,7 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
                 cbufSlot,
                 cbufOffset);
 
-            texOp.SetBinding(binding);
+            texOp.SetBinding(setAndBinding);
         }
     }
 }

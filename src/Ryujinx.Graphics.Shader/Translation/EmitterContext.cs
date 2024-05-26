@@ -124,7 +124,7 @@ namespace Ryujinx.Graphics.Shader.Translation
                     this.TextureSample(
                         SamplerType.TextureBuffer,
                         TextureFlags.IntCoords,
-                        ResourceManager.Reservations.IndexBufferTextureBinding,
+                        ResourceManager.Reservations.GetIndexBufferTextureSetAndBinding(),
                         1,
                         new[] { vertexIndexVr },
                         new[] { this.IAdd(ibBaseOffset, outputVertexOffset) });
@@ -145,7 +145,7 @@ namespace Ryujinx.Graphics.Shader.Translation
                         this.TextureSample(
                             SamplerType.TextureBuffer,
                             TextureFlags.IntCoords,
-                            ResourceManager.Reservations.TopologyRemapBufferTextureBinding,
+                            ResourceManager.Reservations.GetTopologyRemapBufferTextureSetAndBinding(),
                             1,
                             new[] { vertexIndex },
                             new[] { this.IAdd(baseVertex, Const(index)) });

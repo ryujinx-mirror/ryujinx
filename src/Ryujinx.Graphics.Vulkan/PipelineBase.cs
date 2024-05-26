@@ -751,14 +751,12 @@ namespace Ryujinx.Graphics.Vulkan
             _vertexBufferUpdater.Commit(Cbs);
         }
 
-#pragma warning disable CA1822 // Mark member as static
         public void SetAlphaTest(bool enable, float reference, CompareOp op)
         {
             // This is currently handled using shader specialization, as Vulkan does not support alpha test.
             // In the future, we may want to use this to write the reference value into the support buffer,
             // to avoid creating one version of the shader per reference value used.
         }
-#pragma warning restore CA1822
 
         public void SetBlendState(AdvancedBlendDescriptor blend)
         {
@@ -903,6 +901,11 @@ namespace Ryujinx.Graphics.Vulkan
             _descriptorSetUpdater.SetImageArray(Cbs, stage, binding, array);
         }
 
+        public void SetImageArraySeparate(ShaderStage stage, int setIndex, IImageArray array)
+        {
+            _descriptorSetUpdater.SetImageArraySeparate(Cbs, stage, setIndex, array);
+        }
+
         public void SetIndexBuffer(BufferRange buffer, IndexType type)
         {
             if (buffer.Handle != BufferHandle.Null)
@@ -945,7 +948,6 @@ namespace Ryujinx.Graphics.Vulkan
             // TODO: Default levels (likely needs emulation on shaders?)
         }
 
-#pragma warning disable CA1822 // Mark member as static
         public void SetPointParameters(float size, bool isProgramPointSize, bool enablePointSprite, Origin origin)
         {
             // TODO.
@@ -955,7 +957,6 @@ namespace Ryujinx.Graphics.Vulkan
         {
             // TODO.
         }
-#pragma warning restore CA1822
 
         public void SetPrimitiveRestart(bool enable, int index)
         {
@@ -1156,6 +1157,11 @@ namespace Ryujinx.Graphics.Vulkan
             _descriptorSetUpdater.SetTextureArray(Cbs, stage, binding, array);
         }
 
+        public void SetTextureArraySeparate(ShaderStage stage, int setIndex, ITextureArray array)
+        {
+            _descriptorSetUpdater.SetTextureArraySeparate(Cbs, stage, setIndex, array);
+        }
+
         public void SetTransformFeedbackBuffers(ReadOnlySpan<BufferRange> buffers)
         {
             PauseTransformFeedbackInternal();
@@ -1186,12 +1192,10 @@ namespace Ryujinx.Graphics.Vulkan
             _descriptorSetUpdater.SetUniformBuffers(CommandBuffer, buffers);
         }
 
-#pragma warning disable CA1822 // Mark member as static
         public void SetUserClipDistance(int index, bool enableClip)
         {
             // TODO.
         }
-#pragma warning restore CA1822
 
         public void SetVertexAttribs(ReadOnlySpan<VertexAttribDescriptor> vertexAttribs)
         {

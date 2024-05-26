@@ -3,6 +3,7 @@ using Silk.NET.Vulkan;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Runtime.InteropServices;
 
 namespace Ryujinx.Graphics.Vulkan
 {
@@ -27,6 +28,24 @@ namespace Ryujinx.Graphics.Vulkan
         private int _dsLastCbIndex;
         private int _dsLastSubmissionCount;
 
+        private struct ManualDescriptorSetEntry
+        {
+            public Auto<DescriptorSetCollection> DescriptorSet;
+            public int CbIndex;
+            public int CbSubmissionCount;
+            public bool InUse;
+
+            public ManualDescriptorSetEntry(Auto<DescriptorSetCollection> descriptorSet, int cbIndex, int cbSubmissionCount, bool inUse)
+            {
+                DescriptorSet = descriptorSet;
+                CbIndex = cbIndex;
+                CbSubmissionCount = cbSubmissionCount;
+                InUse = inUse;
+            }
+        }
+
+        private readonly List<ManualDescriptorSetEntry>[] _manualDsCache;
+
         private readonly Dictionary<long, DescriptorSetTemplate> _pdTemplates;
         private readonly ResourceDescriptorCollection _pdDescriptors;
         private long _lastPdUsage;
@@ -50,6 +69,7 @@ namespace Ryujinx.Graphics.Vulkan
             }
 
             _dsCacheCursor = new int[setsCount];
+            _manualDsCache = new List<ManualDescriptorSetEntry>[setsCount];
         }
 
         public PipelineLayoutCacheEntry(
@@ -122,6 +142,51 @@ namespace Ryujinx.Graphics.Vulkan
 
             isNew = false;
             return list[index];
+        }
+
+        public Auto<DescriptorSetCollection> GetNewManualDescriptorSetCollection(int commandBufferIndex, int setIndex, out int cacheIndex)
+        {
+            int submissionCount = _gd.CommandBufferPool.GetSubmissionCount(commandBufferIndex);
+
+            var list = _manualDsCache[setIndex] ??= new();
+            var span = CollectionsMarshal.AsSpan(list);
+
+            for (int index = 0; index < span.Length; index++)
+            {
+                ref ManualDescriptorSetEntry entry = ref span[index];
+
+                if (!entry.InUse && (entry.CbIndex != commandBufferIndex || entry.CbSubmissionCount != submissionCount))
+                {
+                    entry.InUse = true;
+                    entry.CbIndex = commandBufferIndex;
+                    entry.CbSubmissionCount = submissionCount;
+
+                    cacheIndex = index;
+
+                    return entry.DescriptorSet;
+                }
+            }
+
+            var dsc = _descriptorSetManager.AllocateDescriptorSet(
+                _gd.Api,
+                DescriptorSetLayouts[setIndex],
+                _poolSizes[setIndex],
+                setIndex,
+                _consumedDescriptorsPerSet[setIndex],
+                false);
+
+            cacheIndex = list.Count;
+            list.Add(new ManualDescriptorSetEntry(dsc, commandBufferIndex, submissionCount, inUse: true));
+
+            return dsc;
+        }
+
+        public void ReleaseManualDescriptorSetCollection(int setIndex, int cacheIndex)
+        {
+            var list = _manualDsCache[setIndex];
+            var span = CollectionsMarshal.AsSpan(list);
+
+            span[cacheIndex].InUse = false;
         }
 
         private static Span<DescriptorPoolSize> GetDescriptorPoolSizes(Span<DescriptorPoolSize> output, ResourceDescriptorCollection setDescriptor, uint multiplier)
@@ -202,6 +267,21 @@ namespace Ryujinx.Graphics.Vulkan
 
                         _dsCache[i][j].Clear();
                     }
+                }
+
+                for (int i = 0; i < _manualDsCache.Length; i++)
+                {
+                    if (_manualDsCache[i] == null)
+                    {
+                        continue;
+                    }
+
+                    for (int j = 0; j < _manualDsCache[i].Count; j++)
+                    {
+                        _manualDsCache[i][j].DescriptorSet.Dispose();
+                    }
+
+                    _manualDsCache[i].Clear();
                 }
 
                 _gd.Api.DestroyPipelineLayout(_device, PipelineLayout, null);

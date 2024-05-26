@@ -51,7 +51,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
             _reservedImages = rrc.ReservedImages;
         }
 
-        public int CreateConstantBufferBinding(int index)
+        public SetBindingPair CreateConstantBufferBinding(int index)
         {
             int binding;
 
@@ -64,10 +64,10 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 binding = _resourceCounts.UniformBuffersCount++;
             }
 
-            return binding + _reservedConstantBuffers;
+            return new SetBindingPair(_context.Capabilities.UniformBufferSetIndex, binding + _reservedConstantBuffers);
         }
 
-        public int CreateImageBinding(int count, bool isBuffer)
+        public SetBindingPair CreateImageBinding(int count, bool isBuffer)
         {
             int binding;
 
@@ -96,10 +96,10 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 _resourceCounts.ImagesCount += count;
             }
 
-            return binding + _reservedImages;
+            return new SetBindingPair(_context.Capabilities.ImageSetIndex, binding + _reservedImages);
         }
 
-        public int CreateStorageBufferBinding(int index)
+        public SetBindingPair CreateStorageBufferBinding(int index)
         {
             int binding;
 
@@ -112,10 +112,10 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 binding = _resourceCounts.StorageBuffersCount++;
             }
 
-            return binding + _reservedStorageBuffers;
+            return new SetBindingPair(_context.Capabilities.StorageBufferSetIndex, binding + _reservedStorageBuffers);
         }
 
-        public int CreateTextureBinding(int count, bool isBuffer)
+        public SetBindingPair CreateTextureBinding(int count, bool isBuffer)
         {
             int binding;
 
@@ -144,7 +144,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 _resourceCounts.TexturesCount += count;
             }
 
-            return binding + _reservedTextures;
+            return new SetBindingPair(_context.Capabilities.TextureSetIndex, binding + _reservedTextures);
         }
 
         private int GetBindingFromIndex(int index, uint maxPerStage, string resourceName)
@@ -181,6 +181,16 @@ namespace Ryujinx.Graphics.Gpu.Shader
         private static uint GetDynamicBaseIndex(uint maxPerStage)
         {
             return maxPerStage * Constants.ShaderStages;
+        }
+
+        public int CreateExtraSet()
+        {
+            if (_resourceCounts.SetsCount >= _context.Capabilities.MaximumExtraSets)
+            {
+                return -1;
+            }
+
+            return _context.Capabilities.ExtraSetBaseIndex + _resourceCounts.SetsCount++;
         }
 
         public int QueryHostGatherBiasPrecision() => _context.Capabilities.GatherBiasPrecision;

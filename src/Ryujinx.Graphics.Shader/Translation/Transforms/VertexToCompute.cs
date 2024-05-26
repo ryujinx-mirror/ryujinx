@@ -54,6 +54,7 @@ namespace Ryujinx.Graphics.Shader.Translation.Transforms
                         {
                             bool needsSextNorm = context.Definitions.IsAttributePackedRgb10A2Signed(location);
 
+                            SetBindingPair setAndBinding = context.ResourceManager.Reservations.GetVertexBufferTextureSetAndBinding(location);
                             Operand temp = needsSextNorm ? Local() : dest;
                             Operand vertexElemOffset = GenerateVertexOffset(context.ResourceManager, node, location, 0);
 
@@ -62,7 +63,8 @@ namespace Ryujinx.Graphics.Shader.Translation.Transforms
                                 SamplerType.TextureBuffer,
                                 TextureFormat.Unknown,
                                 TextureFlags.IntCoords,
-                                context.ResourceManager.Reservations.GetVertexBufferTextureBinding(location),
+                                setAndBinding.SetIndex,
+                                setAndBinding.Binding,
                                 1 << component,
                                 new[] { temp },
                                 new[] { vertexElemOffset }));
@@ -75,6 +77,7 @@ namespace Ryujinx.Graphics.Shader.Translation.Transforms
                         }
                         else
                         {
+                            SetBindingPair setAndBinding = context.ResourceManager.Reservations.GetVertexBufferTextureSetAndBinding(location);
                             Operand temp = component > 0 ? Local() : dest;
                             Operand vertexElemOffset = GenerateVertexOffset(context.ResourceManager, node, location, component);
 
@@ -83,7 +86,8 @@ namespace Ryujinx.Graphics.Shader.Translation.Transforms
                                 SamplerType.TextureBuffer,
                                 TextureFormat.Unknown,
                                 TextureFlags.IntCoords,
-                                context.ResourceManager.Reservations.GetVertexBufferTextureBinding(location),
+                                setAndBinding.SetIndex,
+                                setAndBinding.Binding,
                                 1,
                                 new[] { temp },
                                 new[] { vertexElemOffset }));

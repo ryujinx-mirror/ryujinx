@@ -602,7 +602,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                 return context.Get(type, texOp.GetSource(srcIndex++));
             }
 
-            ImageDeclaration declaration = context.Images[texOp.Binding];
+            ImageDeclaration declaration = context.Images[texOp.GetTextureSetAndBinding()];
             SpvInstruction image = declaration.Image;
 
             SpvInstruction resultType = context.GetType(componentType);
@@ -681,7 +681,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                 return context.Get(type, texOp.GetSource(srcIndex++));
             }
 
-            ImageDeclaration declaration = context.Images[texOp.Binding];
+            ImageDeclaration declaration = context.Images[texOp.GetTextureSetAndBinding()];
             SpvInstruction image = declaration.Image;
 
             if (declaration.IsIndexed)
@@ -738,7 +738,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                 return context.Get(type, texOp.GetSource(srcIndex++));
             }
 
-            ImageDeclaration declaration = context.Images[texOp.Binding];
+            ImageDeclaration declaration = context.Images[texOp.GetTextureSetAndBinding()];
             SpvInstruction image = declaration.Image;
 
             if (declaration.IsIndexed)
@@ -837,7 +837,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                 return context.Get(type, texOp.GetSource(srcIndex++));
             }
 
-            SamplerDeclaration declaration = context.Samplers[texOp.Binding];
+            SamplerDeclaration declaration = context.Samplers[texOp.GetTextureSetAndBinding()];
             SpvInstruction image = GenerateSampledImageLoad(context, texOp, declaration, ref srcIndex);
 
             int pCount = texOp.Type.GetDimensions();
@@ -1161,7 +1161,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
                 return context.Get(type, texOp.GetSource(srcIndex++));
             }
 
-            SamplerDeclaration declaration = context.Samplers[texOp.Binding];
+            SamplerDeclaration declaration = context.Samplers[texOp.GetTextureSetAndBinding()];
             SpvInstruction image = GenerateSampledImageLoad(context, texOp, declaration, ref srcIndex);
 
             int coordsCount = texOp.Type.GetDimensions();
@@ -1433,7 +1433,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
 
             int srcIndex = 0;
 
-            SamplerDeclaration declaration = context.Samplers[texOp.Binding];
+            SamplerDeclaration declaration = context.Samplers[texOp.GetTextureSetAndBinding()];
             SpvInstruction image = GenerateSampledImageLoad(context, texOp, declaration, ref srcIndex);
 
             image = context.Image(declaration.ImageType, image);
@@ -1449,7 +1449,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
 
             int srcIndex = 0;
 
-            SamplerDeclaration declaration = context.Samplers[texOp.Binding];
+            SamplerDeclaration declaration = context.Samplers[texOp.GetTextureSetAndBinding()];
             SpvInstruction image = GenerateSampledImageLoad(context, texOp, declaration, ref srcIndex);
 
             image = context.Image(declaration.ImageType, image);
@@ -1460,7 +1460,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             }
             else
             {
-                var type = context.SamplersTypes[texOp.Binding];
+                var type = context.SamplersTypes[texOp.GetTextureSetAndBinding()];
                 bool hasLod = !type.HasFlag(SamplerType.Multisample) && type != SamplerType.TextureBuffer;
 
                 int dimensions = (type & SamplerType.Mask) == SamplerType.TextureCube ? 2 : type.GetDimensions();
@@ -1889,7 +1889,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             {
                 image = context.Load(declaration.ImageType, image);
 
-                SamplerDeclaration samplerDeclaration = context.Samplers[texOp.SamplerBinding];
+                SamplerDeclaration samplerDeclaration = context.Samplers[texOp.GetSamplerSetAndBinding()];
 
                 SpvInstruction sampler = samplerDeclaration.Image;
 

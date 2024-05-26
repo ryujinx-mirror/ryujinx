@@ -618,12 +618,21 @@ namespace Ryujinx.Graphics.Shader.Translation
             SamplerType type,
             TextureFormat format,
             TextureFlags flags,
-            int binding,
+            SetBindingPair setAndBinding,
             Operand[] sources)
         {
             Operand dest = Local();
 
-            context.Add(new TextureOperation(Instruction.ImageAtomic, type, format, flags, binding, 0, new[] { dest }, sources));
+            context.Add(new TextureOperation(
+                Instruction.ImageAtomic,
+                type,
+                format,
+                flags,
+                setAndBinding.SetIndex,
+                setAndBinding.Binding,
+                0,
+                new[] { dest },
+                sources));
 
             return dest;
         }
@@ -633,12 +642,21 @@ namespace Ryujinx.Graphics.Shader.Translation
             SamplerType type,
             TextureFormat format,
             TextureFlags flags,
-            int binding,
+            SetBindingPair setAndBinding,
             int compMask,
             Operand[] dests,
             Operand[] sources)
         {
-            context.Add(new TextureOperation(Instruction.ImageLoad, type, format, flags, binding, compMask, dests, sources));
+            context.Add(new TextureOperation(
+                Instruction.ImageLoad,
+                type,
+                format,
+                flags,
+                setAndBinding.SetIndex,
+                setAndBinding.Binding,
+                compMask,
+                dests,
+                sources));
         }
 
         public static void ImageStore(
@@ -646,10 +664,19 @@ namespace Ryujinx.Graphics.Shader.Translation
             SamplerType type,
             TextureFormat format,
             TextureFlags flags,
-            int binding,
+            SetBindingPair setAndBinding,
             Operand[] sources)
         {
-            context.Add(new TextureOperation(Instruction.ImageStore, type, format, flags, binding, 0, null, sources));
+            context.Add(new TextureOperation(
+                Instruction.ImageStore,
+                type,
+                format,
+                flags,
+                setAndBinding.SetIndex,
+                setAndBinding.Binding,
+                0,
+                null,
+                sources));
         }
 
         public static Operand IsNan(this EmitterContext context, Operand a, Instruction fpType = Instruction.FP32)
@@ -718,13 +745,22 @@ namespace Ryujinx.Graphics.Shader.Translation
             this EmitterContext context,
             SamplerType type,
             TextureFlags flags,
-            int binding,
+            SetBindingPair setAndBinding,
             int compIndex,
             Operand[] sources)
         {
             Operand dest = Local();
 
-            context.Add(new TextureOperation(Instruction.Lod, type, TextureFormat.Unknown, flags, binding, compIndex, new[] { dest }, sources));
+            context.Add(new TextureOperation(
+                Instruction.Lod,
+                type,
+                TextureFormat.Unknown,
+                flags,
+                setAndBinding.SetIndex,
+                setAndBinding.Binding,
+                compIndex,
+                new[] { dest },
+                sources));
 
             return dest;
         }
@@ -889,24 +925,42 @@ namespace Ryujinx.Graphics.Shader.Translation
             this EmitterContext context,
             SamplerType type,
             TextureFlags flags,
-            int binding,
+            SetBindingPair setAndBinding,
             int compMask,
             Operand[] dests,
             Operand[] sources)
         {
-            context.Add(new TextureOperation(Instruction.TextureSample, type, TextureFormat.Unknown, flags, binding, compMask, dests, sources));
+            context.Add(new TextureOperation(
+                Instruction.TextureSample,
+                type,
+                TextureFormat.Unknown,
+                flags,
+                setAndBinding.SetIndex,
+                setAndBinding.Binding,
+                compMask,
+                dests,
+                sources));
         }
 
         public static Operand TextureQuerySamples(
             this EmitterContext context,
             SamplerType type,
             TextureFlags flags,
-            int binding,
+            SetBindingPair setAndBinding,
             Operand[] sources)
         {
             Operand dest = Local();
 
-            context.Add(new TextureOperation(Instruction.TextureQuerySamples, type, TextureFormat.Unknown, flags, binding, 0, new[] { dest }, sources));
+            context.Add(new TextureOperation(
+                Instruction.TextureQuerySamples,
+                type,
+                TextureFormat.Unknown,
+                flags,
+                setAndBinding.SetIndex,
+                setAndBinding.Binding,
+                0,
+                new[] { dest },
+                sources));
 
             return dest;
         }
@@ -915,13 +969,22 @@ namespace Ryujinx.Graphics.Shader.Translation
             this EmitterContext context,
             SamplerType type,
             TextureFlags flags,
-            int binding,
+            SetBindingPair setAndBinding,
             int compIndex,
             Operand[] sources)
         {
             Operand dest = Local();
 
-            context.Add(new TextureOperation(Instruction.TextureQuerySize, type, TextureFormat.Unknown, flags, binding, compIndex, new[] { dest }, sources));
+            context.Add(new TextureOperation(
+                Instruction.TextureQuerySize,
+                type,
+                TextureFormat.Unknown,
+                flags,
+                setAndBinding.SetIndex,
+                setAndBinding.Binding,
+                compIndex,
+                new[] { dest },
+                sources));
 
             return dest;
         }

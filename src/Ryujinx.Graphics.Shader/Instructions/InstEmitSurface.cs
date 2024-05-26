@@ -278,7 +278,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 flags |= TextureFlags.Bindless;
             }
 
-            int binding = isBindless ? 0 : context.ResourceManager.GetTextureOrImageBinding(
+            SetBindingPair setAndBinding = isBindless ? default : context.ResourceManager.GetTextureOrImageBinding(
                 Instruction.ImageAtomic,
                 type,
                 format,
@@ -286,7 +286,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 TextureOperation.DefaultCbufSlot,
                 imm);
 
-            Operand res = context.ImageAtomic(type, format, flags, binding, sources);
+            Operand res = context.ImageAtomic(type, format, flags, setAndBinding, sources);
 
             context.Copy(d, res);
         }
@@ -389,7 +389,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
                 TextureFormat format = isBindless ? TextureFormat.Unknown : ShaderProperties.GetTextureFormat(context.TranslatorContext.GpuAccessor, handle);
 
-                int binding = isBindless ? 0 : context.ResourceManager.GetTextureOrImageBinding(
+                SetBindingPair setAndBinding = isBindless ? default : context.ResourceManager.GetTextureOrImageBinding(
                     Instruction.ImageLoad,
                     type,
                     format,
@@ -397,7 +397,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                     TextureOperation.DefaultCbufSlot,
                     handle);
 
-                context.ImageLoad(type, format, flags, binding, (int)componentMask, dests, sources);
+                context.ImageLoad(type, format, flags, setAndBinding, (int)componentMask, dests, sources);
             }
             else
             {
@@ -432,7 +432,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
                 TextureFormat format = GetTextureFormat(size);
 
-                int binding = isBindless ? 0 : context.ResourceManager.GetTextureOrImageBinding(
+                SetBindingPair setAndBinding = isBindless ? default : context.ResourceManager.GetTextureOrImageBinding(
                     Instruction.ImageLoad,
                     type,
                     format,
@@ -440,7 +440,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                     TextureOperation.DefaultCbufSlot,
                     handle);
 
-                context.ImageLoad(type, format, flags, binding, compMask, dests, sources);
+                context.ImageLoad(type, format, flags, setAndBinding, compMask, dests, sources);
 
                 switch (size)
                 {
@@ -552,7 +552,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 flags |= TextureFlags.Bindless;
             }
 
-            int binding = isBindless ? 0 : context.ResourceManager.GetTextureOrImageBinding(
+            SetBindingPair setAndBinding = isBindless ? default : context.ResourceManager.GetTextureOrImageBinding(
                 Instruction.ImageAtomic,
                 type,
                 format,
@@ -560,7 +560,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 TextureOperation.DefaultCbufSlot,
                 imm);
 
-            context.ImageAtomic(type, format, flags, binding, sources);
+            context.ImageAtomic(type, format, flags, setAndBinding, sources);
         }
 
         private static void EmitSust(
@@ -679,7 +679,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 flags |= TextureFlags.Coherent;
             }
 
-            int binding = isBindless ? 0 : context.ResourceManager.GetTextureOrImageBinding(
+            SetBindingPair setAndBinding = isBindless ? default : context.ResourceManager.GetTextureOrImageBinding(
                 Instruction.ImageStore,
                 type,
                 format,
@@ -687,7 +687,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 TextureOperation.DefaultCbufSlot,
                 handle);
 
-            context.ImageStore(type, format, flags, binding, sources);
+            context.ImageStore(type, format, flags, setAndBinding, sources);
         }
 
         private static int GetComponentSizeInBytesLog2(SuatomSize size)

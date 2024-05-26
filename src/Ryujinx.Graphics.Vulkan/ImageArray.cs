@@ -2,6 +2,7 @@ using Ryujinx.Graphics.GAL;
 using Silk.NET.Vulkan;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Ryujinx.Graphics.Vulkan
 {
@@ -24,12 +25,18 @@ namespace Ryujinx.Graphics.Vulkan
 
         private HashSet<TextureStorage> _storages;
 
+        private DescriptorSet[] _cachedDescriptorSets;
+
         private int _cachedCommandBufferIndex;
         private int _cachedSubmissionCount;
 
+        private ShaderCollection _cachedDscProgram;
+        private int _cachedDscSetIndex;
+        private int _cachedDscIndex;
+
         private readonly bool _isBuffer;
 
-        public bool Bound;
+        private int _bindCount;
 
         public ImageArray(VulkanRenderer gd, int size, bool isBuffer)
         {
@@ -97,8 +104,12 @@ namespace Ryujinx.Graphics.Vulkan
         {
             _cachedCommandBufferIndex = -1;
             _storages = null;
+            _cachedDescriptorSets = null;
 
-            _gd.PipelineInternal.ForceImageDirty();
+            if (_bindCount != 0)
+            {
+                _gd.PipelineInternal.ForceImageDirty();
+            }
         }
 
         public void QueueWriteToReadBarriers(CommandBufferScoped cbs, PipelineStageFlags stageFlags)
@@ -174,6 +185,66 @@ namespace Ryujinx.Graphics.Vulkan
             }
 
             return bufferTextures;
+        }
+
+        public DescriptorSet[] GetDescriptorSets(
+            Device device,
+            CommandBufferScoped cbs,
+            DescriptorSetTemplateUpdater templateUpdater,
+            ShaderCollection program,
+            int setIndex,
+            TextureView dummyTexture)
+        {
+            if (_cachedDescriptorSets != null)
+            {
+                // We still need to ensure the current command buffer holds a reference to all used textures.
+
+                if (!_isBuffer)
+                {
+                    GetImageInfos(_gd, cbs, dummyTexture);
+                }
+                else
+                {
+                    GetBufferViews(cbs);
+                }
+
+                return _cachedDescriptorSets;
+            }
+
+            _cachedDscProgram?.ReleaseManualDescriptorSetCollection(_cachedDscSetIndex, _cachedDscIndex);
+            var dsc = program.GetNewManualDescriptorSetCollection(cbs.CommandBufferIndex, setIndex, out _cachedDscIndex).Get(cbs);
+
+            DescriptorSetTemplate template = program.Templates[setIndex];
+
+            DescriptorSetTemplateWriter tu = templateUpdater.Begin(template);
+
+            if (!_isBuffer)
+            {
+                tu.Push(GetImageInfos(_gd, cbs, dummyTexture));
+            }
+            else
+            {
+                tu.Push(GetBufferViews(cbs));
+            }
+
+            var sets = dsc.GetSets();
+            templateUpdater.Commit(_gd, device, sets[0]);
+            _cachedDescriptorSets = sets;
+            _cachedDscProgram = program;
+            _cachedDscSetIndex = setIndex;
+
+            return sets;
+        }
+
+        public void IncrementBindCount()
+        {
+            _bindCount++;
+        }
+
+        public void DecrementBindCount()
+        {
+            int newBindCount = --_bindCount;
+            Debug.Assert(newBindCount >= 0);
         }
     }
 }
