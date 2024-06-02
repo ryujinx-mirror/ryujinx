@@ -151,7 +151,7 @@ namespace Ryujinx.Ava.UI.ViewModels
             reader.ReadInt64(); // Padding
 
             byte[] input = new byte[stream.Length - stream.Position];
-            stream.Read(input, 0, input.Length);
+            stream.ReadExactly(input, 0, input.Length);
 
             uint inputOffset = 0;
 

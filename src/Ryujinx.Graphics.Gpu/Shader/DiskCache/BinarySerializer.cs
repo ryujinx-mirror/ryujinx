@@ -195,7 +195,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
             switch (algorithm)
             {
                 case CompressionAlgorithm.None:
-                    stream.Read(data);
+                    stream.ReadExactly(data);
                     break;
                 case CompressionAlgorithm.Deflate:
                     stream = new DeflateStream(stream, CompressionMode.Decompress, true);

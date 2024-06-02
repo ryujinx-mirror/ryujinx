@@ -65,7 +65,7 @@ namespace Ryujinx.UI.App.Common
             Stream resourceStream = Assembly.GetCallingAssembly().GetManifestResourceStream(resourceName);
             byte[] resourceByteArray = new byte[resourceStream.Length];
 
-            resourceStream.Read(resourceByteArray);
+            resourceStream.ReadExactly(resourceByteArray);
 
             return resourceByteArray;
         }

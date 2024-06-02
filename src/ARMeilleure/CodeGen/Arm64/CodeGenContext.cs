@@ -237,7 +237,7 @@ namespace ARMeilleure.CodeGen.Arm64
             long originalPosition = _stream.Position;
 
             _stream.Seek(0, SeekOrigin.Begin);
-            _stream.Read(code, 0, code.Length);
+            _stream.ReadExactly(code, 0, code.Length);
             _stream.Seek(originalPosition, SeekOrigin.Begin);
 
             RelocInfo relocInfo;

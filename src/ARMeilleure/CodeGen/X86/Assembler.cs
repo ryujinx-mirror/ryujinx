@@ -1444,7 +1444,7 @@ namespace ARMeilleure.CodeGen.X86
 
                 Span<byte> buffer = new byte[jump.JumpPosition - _stream.Position];
 
-                _stream.Read(buffer);
+                _stream.ReadExactly(buffer);
                 _stream.Seek(ReservedBytesForJump, SeekOrigin.Current);
 
                 codeStream.Write(buffer);

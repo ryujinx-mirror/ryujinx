@@ -220,7 +220,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
                 }
 
                 dataFileStream.Seek((long)entry.Offset, SeekOrigin.Begin);
-                dataFileStream.Read(cb1Data);
+                dataFileStream.ReadExactly(cb1Data);
                 BinarySerializer.ReadCompressed(dataFileStream, guestCode);
 
                 _cache[index] = (guestCode, cb1Data);
@@ -279,7 +279,7 @@ namespace Ryujinx.Graphics.Gpu.Shader.DiskCache
                     dataFileStream.Seek((long)entry.Offset, SeekOrigin.Begin);
                     byte[] cachedCode = new byte[entry.CodeSize];
                     byte[] cachedCb1Data = new byte[entry.Cb1DataSize];
-                    dataFileStream.Read(cachedCb1Data);
+                    dataFileStream.ReadExactly(cachedCb1Data);
                     BinarySerializer.ReadCompressed(dataFileStream, cachedCode);
 
                     if (data.SequenceEqual(cachedCode) && cb1Data.SequenceEqual(cachedCb1Data))
