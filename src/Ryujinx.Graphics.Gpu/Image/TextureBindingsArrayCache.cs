@@ -1113,6 +1113,15 @@ namespace Ryujinx.Graphics.Gpu.Image
                 nextNode = nextNode.Next;
                 _cacheFromBuffer.Remove(toRemove.Value.Key);
                 _lruCache.Remove(toRemove);
+
+                if (toRemove.Value.Key.IsImage)
+                {
+                    toRemove.Value.ImageArray.Dispose();
+                }
+                else
+                {
+                    toRemove.Value.TextureArray.Dispose();
+                }
             }
         }
 
@@ -1124,11 +1133,20 @@ namespace Ryujinx.Graphics.Gpu.Image
         {
             List<CacheEntryFromPoolKey> keysToRemove = null;
 
-            foreach (CacheEntryFromPoolKey key in _cacheFromPool.Keys)
+            foreach ((CacheEntryFromPoolKey key, CacheEntry entry) in _cacheFromPool)
             {
                 if (key.MatchesPool(pool))
                 {
                     (keysToRemove ??= new()).Add(key);
+
+                    if (key.IsImage)
+                    {
+                        entry.ImageArray.Dispose();
+                    }
+                    else
+                    {
+                        entry.TextureArray.Dispose();
+                    }
                 }
             }
 

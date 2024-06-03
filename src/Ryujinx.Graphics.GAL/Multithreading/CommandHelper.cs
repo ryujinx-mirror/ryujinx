@@ -66,6 +66,7 @@ namespace Ryujinx.Graphics.GAL.Multithreading
             Register<CounterEventDisposeCommand>(CommandType.CounterEventDispose);
             Register<CounterEventFlushCommand>(CommandType.CounterEventFlush);
 
+            Register<ImageArrayDisposeCommand>(CommandType.ImageArrayDispose);
             Register<ImageArraySetFormatsCommand>(CommandType.ImageArraySetFormats);
             Register<ImageArraySetImagesCommand>(CommandType.ImageArraySetImages);
 
@@ -88,6 +89,7 @@ namespace Ryujinx.Graphics.GAL.Multithreading
             Register<TextureSetDataSliceRegionCommand>(CommandType.TextureSetDataSliceRegion);
             Register<TextureSetStorageCommand>(CommandType.TextureSetStorage);
 
+            Register<TextureArrayDisposeCommand>(CommandType.TextureArrayDispose);
             Register<TextureArraySetSamplersCommand>(CommandType.TextureArraySetSamplers);
             Register<TextureArraySetTexturesCommand>(CommandType.TextureArraySetTextures);
 

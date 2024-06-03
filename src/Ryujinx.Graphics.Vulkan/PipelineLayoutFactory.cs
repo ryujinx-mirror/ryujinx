@@ -1,18 +1,23 @@
+using Ryujinx.Common.Memory;
 using Ryujinx.Graphics.GAL;
 using Silk.NET.Vulkan;
+using System;
 using System.Collections.ObjectModel;
 
 namespace Ryujinx.Graphics.Vulkan
 {
+    record struct ResourceLayouts(DescriptorSetLayout[] DescriptorSetLayouts, bool[] DescriptorSetLayoutsUpdateAfterBind, PipelineLayout PipelineLayout);
+
     static class PipelineLayoutFactory
     {
-        public static unsafe (DescriptorSetLayout[], PipelineLayout) Create(
+        public static unsafe ResourceLayouts Create(
             VulkanRenderer gd,
             Device device,
             ReadOnlyCollection<ResourceDescriptorCollection> setDescriptors,
             bool usePushDescriptors)
         {
             DescriptorSetLayout[] layouts = new DescriptorSetLayout[setDescriptors.Count];
+            bool[] updateAfterBindFlags = new bool[setDescriptors.Count];
 
             bool isMoltenVk = gd.IsMoltenVk;
 
@@ -32,10 +37,11 @@ namespace Ryujinx.Graphics.Vulkan
 
                 DescriptorSetLayoutBinding[] layoutBindings = new DescriptorSetLayoutBinding[rdc.Descriptors.Count];
 
+                bool hasArray = false;
+
                 for (int descIndex = 0; descIndex < rdc.Descriptors.Count; descIndex++)
                 {
                     ResourceDescriptor descriptor = rdc.Descriptors[descIndex];
-
                     ResourceStages stages = descriptor.Stages;
 
                     if (descriptor.Type == ResourceType.StorageBuffer && isMoltenVk)
@@ -52,16 +58,37 @@ namespace Ryujinx.Graphics.Vulkan
                         DescriptorCount = (uint)descriptor.Count,
                         StageFlags = stages.Convert(),
                     };
+
+                    if (descriptor.Count > 1)
+                    {
+                        hasArray = true;
+                    }
                 }
 
                 fixed (DescriptorSetLayoutBinding* pLayoutBindings = layoutBindings)
                 {
+                    DescriptorSetLayoutCreateFlags flags = DescriptorSetLayoutCreateFlags.None;
+
+                    if (usePushDescriptors && setIndex == 0)
+                    {
+                        flags = DescriptorSetLayoutCreateFlags.PushDescriptorBitKhr;
+                    }
+
+                    if (gd.Vendor == Vendor.Intel && hasArray)
+                    {
+                        // Some vendors (like Intel) have low per-stage limits.
+                        // We must set the flag if we exceed those limits.
+                        flags |= DescriptorSetLayoutCreateFlags.UpdateAfterBindPoolBit;
+
+                        updateAfterBindFlags[setIndex] = true;
+                    }
+
                     var descriptorSetLayoutCreateInfo = new DescriptorSetLayoutCreateInfo
                     {
                         SType = StructureType.DescriptorSetLayoutCreateInfo,
                         PBindings = pLayoutBindings,
                         BindingCount = (uint)layoutBindings.Length,
-                        Flags = usePushDescriptors && setIndex == 0 ? DescriptorSetLayoutCreateFlags.PushDescriptorBitKhr : DescriptorSetLayoutCreateFlags.None,
+                        Flags = flags,
                     };
 
                     gd.Api.CreateDescriptorSetLayout(device, descriptorSetLayoutCreateInfo, null, out layouts[setIndex]).ThrowOnError();
@@ -82,7 +109,7 @@ namespace Ryujinx.Graphics.Vulkan
                 gd.Api.CreatePipelineLayout(device, &pipelineLayoutCreateInfo, null, out layout).ThrowOnError();
             }
 
-            return (layouts, layout);
+            return new ResourceLayouts(layouts, updateAfterBindFlags, layout);
         }
     }
 }

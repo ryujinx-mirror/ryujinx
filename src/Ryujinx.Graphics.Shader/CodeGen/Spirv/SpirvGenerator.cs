@@ -43,6 +43,10 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
 
             CodeGenContext context = new(info, parameters, instPool, integerPool);
 
+            context.AddCapability(Capability.Shader);
+
+            context.SetMemoryModel(AddressingModel.Logical, MemoryModel.GLSL450);
+
             context.AddCapability(Capability.GroupNonUniformBallot);
             context.AddCapability(Capability.GroupNonUniformShuffle);
             context.AddCapability(Capability.GroupNonUniformVote);
@@ -51,6 +55,11 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             context.AddCapability(Capability.ImageQuery);
             context.AddCapability(Capability.SampledBuffer);
 
+            if (parameters.HostCapabilities.SupportsShaderFloat64)
+            {
+                context.AddCapability(Capability.Float64);
+            }
+
             if (parameters.Definitions.TransformFeedbackEnabled && parameters.Definitions.LastInVertexPipeline)
             {
                 context.AddCapability(Capability.TransformFeedback);
@@ -58,7 +67,8 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
 
             if (parameters.Definitions.Stage == ShaderStage.Fragment)
             {
-                if (context.Info.IoDefinitions.Contains(new IoDefinition(StorageKind.Input, IoVariable.Layer)))
+                if (context.Info.IoDefinitions.Contains(new IoDefinition(StorageKind.Input, IoVariable.Layer)) ||
+                    context.Info.IoDefinitions.Contains(new IoDefinition(StorageKind.Input, IoVariable.PrimitiveId)))
                 {
                     context.AddCapability(Capability.Geometry);
                 }

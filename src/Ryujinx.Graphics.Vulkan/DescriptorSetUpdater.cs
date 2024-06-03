@@ -291,8 +291,9 @@ namespace Ryujinx.Graphics.Vulkan
                     }
                     else
                     {
-                        PipelineStageFlags stageFlags = _textureArrayRefs[segment.Binding].Stage.ConvertToPipelineStageFlags();
-                        _textureArrayRefs[segment.Binding].Array?.QueueWriteToReadBarriers(cbs, stageFlags);
+                        ref var arrayRef = ref _textureArrayRefs[segment.Binding];
+                        PipelineStageFlags stageFlags = arrayRef.Stage.ConvertToPipelineStageFlags();
+                        arrayRef.Array?.QueueWriteToReadBarriers(cbs, stageFlags);
                     }
                 }
             }
@@ -311,8 +312,40 @@ namespace Ryujinx.Graphics.Vulkan
                     }
                     else
                     {
-                        PipelineStageFlags stageFlags = _imageArrayRefs[segment.Binding].Stage.ConvertToPipelineStageFlags();
-                        _imageArrayRefs[segment.Binding].Array?.QueueWriteToReadBarriers(cbs, stageFlags);
+                        ref var arrayRef = ref _imageArrayRefs[segment.Binding];
+                        PipelineStageFlags stageFlags = arrayRef.Stage.ConvertToPipelineStageFlags();
+                        arrayRef.Array?.QueueWriteToReadBarriers(cbs, stageFlags);
+                    }
+                }
+            }
+
+            for (int setIndex = PipelineBase.DescriptorSetLayouts; setIndex < _program.BindingSegments.Length; setIndex++)
+            {
+                var bindingSegments = _program.BindingSegments[setIndex];
+
+                if (bindingSegments.Length == 0)
+                {
+                    continue;
+                }
+
+                ResourceBindingSegment segment = bindingSegments[0];
+
+                if (segment.IsArray)
+                {
+                    if (segment.Type == ResourceType.Texture ||
+                        segment.Type == ResourceType.Sampler ||
+                        segment.Type == ResourceType.TextureAndSampler ||
+                        segment.Type == ResourceType.BufferTexture)
+                    {
+                        ref var arrayRef = ref _textureArrayExtraRefs[setIndex - PipelineBase.DescriptorSetLayouts];
+                        PipelineStageFlags stageFlags = arrayRef.Stage.ConvertToPipelineStageFlags();
+                        arrayRef.Array?.QueueWriteToReadBarriers(cbs, stageFlags);
+                    }
+                    else if (segment.Type == ResourceType.Image || segment.Type == ResourceType.BufferImage)
+                    {
+                        ref var arrayRef = ref _imageArrayExtraRefs[setIndex - PipelineBase.DescriptorSetLayouts];
+                        PipelineStageFlags stageFlags = arrayRef.Stage.ConvertToPipelineStageFlags();
+                        arrayRef.Array?.QueueWriteToReadBarriers(cbs, stageFlags);
                     }
                 }
             }

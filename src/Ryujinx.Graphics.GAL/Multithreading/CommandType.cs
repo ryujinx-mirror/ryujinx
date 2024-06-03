@@ -26,6 +26,7 @@ namespace Ryujinx.Graphics.GAL.Multithreading
         CounterEventDispose,
         CounterEventFlush,
 
+        ImageArrayDispose,
         ImageArraySetFormats,
         ImageArraySetImages,
 
@@ -48,6 +49,7 @@ namespace Ryujinx.Graphics.GAL.Multithreading
         TextureSetDataSliceRegion,
         TextureSetStorage,
 
+        TextureArrayDispose,
         TextureArraySetSamplers,
         TextureArraySetTextures,
 

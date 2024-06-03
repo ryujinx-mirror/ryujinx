@@ -48,5 +48,9 @@ namespace Ryujinx.Graphics.OpenGL.Image
                 }
             }
         }
+
+        public void Dispose()
+        {
+        }
     }
 }

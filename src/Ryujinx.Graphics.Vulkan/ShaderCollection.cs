@@ -604,9 +604,14 @@ namespace Ryujinx.Graphics.Vulkan
             return _plce.GetNewDescriptorSetCollection(setIndex, out isNew);
         }
 
-        public Auto<DescriptorSetCollection> GetNewManualDescriptorSetCollection(int commandBufferIndex, int setIndex, out int cacheIndex)
+        public Auto<DescriptorSetCollection> GetNewManualDescriptorSetCollection(CommandBufferScoped cbs, int setIndex, out int cacheIndex)
         {
-            return _plce.GetNewManualDescriptorSetCollection(commandBufferIndex, setIndex, out cacheIndex);
+            return _plce.GetNewManualDescriptorSetCollection(cbs, setIndex, out cacheIndex);
+        }
+
+        public void UpdateManualDescriptorSetCollectionOwnership(CommandBufferScoped cbs, int setIndex, int cacheIndex)
+        {
+            _plce.UpdateManualDescriptorSetCollectionOwnership(cbs, setIndex, cacheIndex);
         }
 
         public void ReleaseManualDescriptorSetCollection(int setIndex, int cacheIndex)

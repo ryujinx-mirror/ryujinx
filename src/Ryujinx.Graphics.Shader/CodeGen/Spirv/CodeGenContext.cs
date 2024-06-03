@@ -98,11 +98,6 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Spirv
             Logger = parameters.Logger;
             TargetApi = parameters.TargetApi;
 
-            AddCapability(Capability.Shader);
-            AddCapability(Capability.Float64);
-
-            SetMemoryModel(AddressingModel.Logical, MemoryModel.GLSL450);
-
             Delegates = new SpirvDelegates(this);
         }
 

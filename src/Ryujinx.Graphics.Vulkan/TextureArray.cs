@@ -2,11 +2,10 @@ using Ryujinx.Graphics.GAL;
 using Silk.NET.Vulkan;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 
 namespace Ryujinx.Graphics.Vulkan
 {
-    class TextureArray : ITextureArray
+    class TextureArray : ResourceArray, ITextureArray
     {
         private readonly VulkanRenderer _gd;
 
@@ -25,18 +24,10 @@ namespace Ryujinx.Graphics.Vulkan
 
         private HashSet<TextureStorage> _storages;
 
-        private DescriptorSet[] _cachedDescriptorSets;
-
         private int _cachedCommandBufferIndex;
         private int _cachedSubmissionCount;
 
-        private ShaderCollection _cachedDscProgram;
-        private int _cachedDscSetIndex;
-        private int _cachedDscIndex;
-
         private readonly bool _isBuffer;
-
-        private int _bindCount;
 
         public TextureArray(VulkanRenderer gd, int size, bool isBuffer)
         {
@@ -113,12 +104,7 @@ namespace Ryujinx.Graphics.Vulkan
         {
             _cachedCommandBufferIndex = -1;
             _storages = null;
-            _cachedDescriptorSets = null;
-
-            if (_bindCount != 0)
-            {
-                _gd.PipelineInternal.ForceTextureDirty();
-            }
+            SetDirty(_gd);
         }
 
         public void QueueWriteToReadBarriers(CommandBufferScoped cbs, PipelineStageFlags stageFlags)
@@ -211,7 +197,7 @@ namespace Ryujinx.Graphics.Vulkan
             TextureView dummyTexture,
             SamplerHolder dummySampler)
         {
-            if (_cachedDescriptorSets != null)
+            if (TryGetCachedDescriptorSets(cbs, program, setIndex, out DescriptorSet[] sets))
             {
                 // We still need to ensure the current command buffer holds a reference to all used textures.
 
@@ -224,11 +210,8 @@ namespace Ryujinx.Graphics.Vulkan
                     GetBufferViews(cbs);
                 }
 
-                return _cachedDescriptorSets;
+                return sets;
             }
-
-            _cachedDscProgram?.ReleaseManualDescriptorSetCollection(_cachedDscSetIndex, _cachedDscIndex);
-            var dsc = program.GetNewManualDescriptorSetCollection(cbs.CommandBufferIndex, setIndex, out _cachedDscIndex).Get(cbs);
 
             DescriptorSetTemplate template = program.Templates[setIndex];
 
@@ -243,24 +226,9 @@ namespace Ryujinx.Graphics.Vulkan
                 tu.Push(GetBufferViews(cbs));
             }
 
-            var sets = dsc.GetSets();
             templateUpdater.Commit(_gd, device, sets[0]);
-            _cachedDescriptorSets = sets;
-            _cachedDscProgram = program;
-            _cachedDscSetIndex = setIndex;
 
             return sets;
-        }
-
-        public void IncrementBindCount()
-        {
-            _bindCount++;
-        }
-
-        public void DecrementBindCount()
-        {
-            int newBindCount = --_bindCount;
-            Debug.Assert(newBindCount >= 0);
         }
     }
 }
