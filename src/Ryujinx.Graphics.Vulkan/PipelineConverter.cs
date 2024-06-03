@@ -180,9 +180,6 @@ namespace Ryujinx.Graphics.Vulkan
             pipeline.LogicOpEnable = state.LogicOpEnable;
             pipeline.LogicOp = state.LogicOp.Convert();
 
-            pipeline.MinDepthBounds = 0f; // Not implemented.
-            pipeline.MaxDepthBounds = 0f; // Not implemented.
-
             pipeline.PatchControlPoints = state.PatchControlPoints;
             pipeline.PolygonMode = PolygonMode.Fill; // Not implemented.
             pipeline.PrimitiveRestartEnable = state.PrimitiveRestartEnable;
@@ -208,17 +205,11 @@ namespace Ryujinx.Graphics.Vulkan
             pipeline.StencilFrontPassOp = state.StencilTest.FrontDpPass.Convert();
             pipeline.StencilFrontDepthFailOp = state.StencilTest.FrontDpFail.Convert();
             pipeline.StencilFrontCompareOp = state.StencilTest.FrontFunc.Convert();
-            pipeline.StencilFrontCompareMask = 0;
-            pipeline.StencilFrontWriteMask = 0;
-            pipeline.StencilFrontReference = 0;
 
             pipeline.StencilBackFailOp = state.StencilTest.BackSFail.Convert();
             pipeline.StencilBackPassOp = state.StencilTest.BackDpPass.Convert();
             pipeline.StencilBackDepthFailOp = state.StencilTest.BackDpFail.Convert();
             pipeline.StencilBackCompareOp = state.StencilTest.BackFunc.Convert();
-            pipeline.StencilBackCompareMask = 0;
-            pipeline.StencilBackWriteMask = 0;
-            pipeline.StencilBackReference = 0;
 
             pipeline.StencilTestEnable = state.StencilTest.TestEnable;
 
