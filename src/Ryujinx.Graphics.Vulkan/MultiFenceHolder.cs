@@ -1,3 +1,4 @@
+using Ryujinx.Common.Memory;
 using Silk.NET.Vulkan;
 using System;
 
@@ -165,14 +166,15 @@ namespace Ryujinx.Graphics.Vulkan
         /// <returns>True if all fences were signaled before the timeout expired, false otherwise</returns>
         private bool WaitForFencesImpl(Vk api, Device device, int offset, int size, bool hasTimeout, ulong timeout)
         {
-            Span<FenceHolder> fenceHolders = new FenceHolder[CommandBufferPool.MaxCommandBuffers];
+            using SpanOwner<FenceHolder> fenceHoldersOwner = SpanOwner<FenceHolder>.Rent(CommandBufferPool.MaxCommandBuffers);
+            Span<FenceHolder> fenceHolders = fenceHoldersOwner.Span;
 
             int count = size != 0 ? GetOverlappingFences(fenceHolders, offset, size) : GetFences(fenceHolders);
             Span<Fence> fences = stackalloc Fence[count];
 
             int fenceCount = 0;
 
-            for (int i = 0; i < count; i++)
+            for (int i = 0; i < fences.Length; i++)
             {
                 if (fenceHolders[i].TryGet(out Fence fence))
                 {
