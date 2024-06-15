@@ -89,9 +89,9 @@ namespace Ryujinx.Audio.Backends.SDL2
                 return;
             }
 
-            using IMemoryOwner<byte> samplesOwner = ByteMemoryPool.Rent(frameCount * _bytesPerFrame);
+            using SpanOwner<byte> samplesOwner = SpanOwner<byte>.Rent(frameCount * _bytesPerFrame);
 
-            Span<byte> samples = samplesOwner.Memory.Span;
+            Span<byte> samples = samplesOwner.Span;
 
             _ringBuffer.Read(samples, 0, samples.Length);
 

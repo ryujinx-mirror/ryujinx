@@ -14,7 +14,7 @@ namespace Ryujinx.Audio.Backends.Common
 
         private readonly object _lock = new();
 
-        private IMemoryOwner<byte> _bufferOwner;
+        private MemoryOwner<byte> _bufferOwner;
         private Memory<byte> _buffer;
         private int _size;
         private int _headOffset;
@@ -24,7 +24,7 @@ namespace Ryujinx.Audio.Backends.Common
 
         public DynamicRingBuffer(int initialCapacity = RingBufferAlignment)
         {
-            _bufferOwner = ByteMemoryPool.RentCleared(initialCapacity);
+            _bufferOwner = MemoryOwner<byte>.RentCleared(initialCapacity);
             _buffer = _bufferOwner.Memory;
         }
 
@@ -62,7 +62,7 @@ namespace Ryujinx.Audio.Backends.Common
 
         private void SetCapacityLocked(int capacity)
         {
-            IMemoryOwner<byte> newBufferOwner = ByteMemoryPool.RentCleared(capacity);
+            MemoryOwner<byte> newBufferOwner = MemoryOwner<byte>.RentCleared(capacity);
             Memory<byte> newBuffer = newBufferOwner.Memory;
 
             if (_size > 0)

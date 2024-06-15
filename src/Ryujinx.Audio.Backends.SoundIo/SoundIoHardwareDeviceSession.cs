@@ -122,9 +122,9 @@ namespace Ryujinx.Audio.Backends.SoundIo
 
             int channelCount = areas.Length;
 
-            using IMemoryOwner<byte> samplesOwner = ByteMemoryPool.Rent(frameCount * bytesPerFrame);
+            using SpanOwner<byte> samplesOwner = SpanOwner<byte>.Rent(frameCount * bytesPerFrame);
 
-            Span<byte> samples = samplesOwner.Memory.Span;
+            Span<byte> samples = samplesOwner.Span;
 
             _ringBuffer.Read(samples, 0, samples.Length);
 
