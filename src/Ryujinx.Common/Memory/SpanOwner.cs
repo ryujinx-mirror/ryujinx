@@ -108,7 +108,7 @@ namespace Ryujinx.Common.Memory
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Dispose()
         {
-            ArrayPool<T>.Shared.Return(_array);
+            ArrayPool<T>.Shared.Return(_array, RuntimeHelpers.IsReferenceOrContainsReferences<T>());
         }
     }
 }

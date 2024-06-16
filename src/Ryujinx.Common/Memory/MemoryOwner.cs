@@ -124,7 +124,7 @@ namespace Ryujinx.Common.Memory
 
             if (array is not null)
             {
-                ArrayPool<T>.Shared.Return(array);
+                ArrayPool<T>.Shared.Return(array, RuntimeHelpers.IsReferenceOrContainsReferences<T>());
             }
         }
 

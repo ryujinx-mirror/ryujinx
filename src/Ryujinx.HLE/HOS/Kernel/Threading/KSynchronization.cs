@@ -104,7 +104,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
                     }
                 }
 
-                ArrayPool<LinkedListNode<KThread>>.Shared.Return(syncNodesArray);
+                ArrayPool<LinkedListNode<KThread>>.Shared.Return(syncNodesArray, true);
             }
 
             _context.CriticalSection.Leave();

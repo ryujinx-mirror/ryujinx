@@ -616,7 +616,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
                 }
             }
 
-            ArrayPool<KSynchronizationObject>.Shared.Return(syncObjsArray);
+            ArrayPool<KSynchronizationObject>.Shared.Return(syncObjsArray, true);
 
             return result;
         }
