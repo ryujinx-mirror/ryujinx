@@ -141,16 +141,16 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
             return true;
         }
 
-        private static bool IsBindlessAccessAllowed(Operand nvHandle)
+        private static bool IsBindlessAccessAllowed(Operand bindlessHandle)
         {
-            if (nvHandle.Type == OperandType.ConstantBuffer)
+            if (bindlessHandle.Type == OperandType.ConstantBuffer)
             {
                 // Bindless access with handles from constant buffer is allowed.
 
                 return true;
             }
 
-            if (nvHandle.AsgOp is not Operation handleOp ||
+            if (bindlessHandle.AsgOp is not Operation handleOp ||
                 handleOp.Inst != Instruction.Load ||
                 (handleOp.StorageKind != StorageKind.Input && handleOp.StorageKind != StorageKind.StorageBuffer))
             {
@@ -300,7 +300,7 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
                         resourceManager,
                         gpuAccessor,
                         texOp,
-                        TextureHandle.PackOffsets(src0.GetCbufOffset(), ((src1.Value >> 20) & 0xfff), handleType),
+                        TextureHandle.PackOffsets(src0.GetCbufOffset(), (src1.Value >> 20) & 0xfff, handleType),
                         TextureHandle.PackSlots(src0.GetCbufSlot(), 0),
                         rewriteSamplerType,
                         isImage: false);

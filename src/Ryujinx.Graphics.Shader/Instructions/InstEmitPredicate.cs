@@ -24,7 +24,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             if (op.BVal)
             {
-                context.Copy(dest, context.ConditionalSelect(res, ConstF(1), Const(0)));
+                context.Copy(dest, context.ConditionalSelect(res, ConstF(1), ConstF(0)));
             }
             else
             {

@@ -31,6 +31,10 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
                     TryEliminateBitwiseOr(operation);
                     break;
 
+                case Instruction.CompareNotEqual:
+                    TryEliminateCompareNotEqual(operation);
+                    break;
+
                 case Instruction.ConditionalSelect:
                     TryEliminateConditionalSelect(operation);
                     break;
@@ -172,6 +176,32 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
             {
                 operation.TurnIntoCopy(x);
             }
+        }
+
+        private static void TryEliminateCompareNotEqual(Operation operation)
+        {
+            // Comparison instruction returns 0 if the result is false, and -1 if true.
+            // Doing a not equal zero comparison on the result is redundant, so we can just copy the first result in this case.
+
+            Operand lhs = operation.GetSource(0);
+            Operand rhs = operation.GetSource(1);
+
+            if (lhs.Type == OperandType.Constant)
+            {
+                (lhs, rhs) = (rhs, lhs);
+            }
+
+            if (rhs.Type != OperandType.Constant || rhs.Value != 0)
+            {
+                return;
+            }
+
+            if (lhs.AsgOp is not Operation compareOp || !compareOp.Inst.IsComparison())
+            {
+                return;
+            }
+
+            operation.TurnIntoCopy(lhs);
         }
 
         private static void TryEliminateConditionalSelect(Operation operation)

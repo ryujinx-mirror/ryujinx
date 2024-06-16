@@ -152,18 +152,14 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
         {
             // If all phi sources are the same, we can propagate it and remove the phi.
 
-            Operand firstSrc = phi.GetSource(0);
-
-            for (int index = 1; index < phi.SourcesCount; index++)
+            if (!Utils.AreAllSourcesTheSameOperand(phi))
             {
-                if (!IsSameOperand(firstSrc, phi.GetSource(index)))
-                {
-                    return false;
-                }
+                return false;
             }
 
             // All sources are equal, we can propagate the value.
 
+            Operand firstSrc = phi.GetSource(0);
             Operand dest = phi.Dest;
 
             INode[] uses = dest.UseOps.ToArray();
@@ -180,17 +176,6 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
             }
 
             return true;
-        }
-
-        private static bool IsSameOperand(Operand x, Operand y)
-        {
-            if (x.Type != y.Type || x.Value != y.Value)
-            {
-                return false;
-            }
-
-            // TODO: Handle Load operations with the same storage and the same constant parameters.
-            return x.Type == OperandType.Constant || x.Type == OperandType.ConstantBuffer;
         }
 
         private static bool PropagatePack(Operation packOp)
