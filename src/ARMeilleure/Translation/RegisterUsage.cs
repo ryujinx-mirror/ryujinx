@@ -89,6 +89,17 @@ namespace ARMeilleure.Translation
 
         public static void RunPass(ControlFlowGraph cfg, ExecutionMode mode)
         {
+            if (cfg.Entry.Predecessors.Count != 0)
+            {
+                // We expect the entry block to have no predecessors.
+                // This is required because we have a implicit context load at the start of the function,
+                // but if there is a jump to the start of the function, the context load would trash the modified values.
+                // Here we insert a new entry block that will jump to the existing entry block.
+                BasicBlock newEntry = new BasicBlock(cfg.Blocks.Count);
+
+                cfg.UpdateEntry(newEntry);
+            }
+
             // Compute local register inputs and outputs used inside blocks.
             RegisterMask[] localInputs = new RegisterMask[cfg.Blocks.Count];
             RegisterMask[] localOutputs = new RegisterMask[cfg.Blocks.Count];
@@ -201,7 +212,7 @@ namespace ARMeilleure.Translation
 
                 // The only block without any predecessor should be the entry block.
                 // It always needs a context load as it is the first block to run.
-                if (block.Predecessors.Count == 0 || hasContextLoad)
+                if (block == cfg.Entry || hasContextLoad)
                 {
                     long vecMask = globalInputs[block.Index].VecMask;
                     long intMask = globalInputs[block.Index].IntMask;
