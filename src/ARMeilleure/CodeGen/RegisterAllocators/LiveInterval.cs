@@ -19,6 +19,7 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
             public LiveRange CurrRange;
 
             public LiveInterval Parent;
+            public LiveInterval CopySource;
 
             public UseList Uses;
             public LiveIntervalList Children;
@@ -37,6 +38,7 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
         private ref LiveRange CurrRange => ref _data->CurrRange;
         private ref LiveRange PrevRange => ref _data->PrevRange;
         private ref LiveInterval Parent => ref _data->Parent;
+        private ref LiveInterval CopySource => ref _data->CopySource;
         private ref UseList Uses => ref _data->Uses;
         private ref LiveIntervalList Children => ref _data->Children;
 
@@ -76,6 +78,25 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
             _data->IsFixed = true;
 
             Register = register;
+        }
+
+        public void SetCopySource(LiveInterval copySource)
+        {
+            CopySource = copySource;
+        }
+
+        public bool TryGetCopySourceRegister(out int copySourceRegIndex)
+        {
+            if (CopySource._data != null)
+            {
+                copySourceRegIndex = CopySource.Register.Index;
+
+                return true;
+            }
+
+            copySourceRegIndex = 0;
+
+            return false;
         }
 
         public void Reset()

@@ -251,7 +251,20 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
                 }
             }
 
-            int selectedReg = GetHighestValueIndex(freePositions);
+            // If this is a copy destination variable, we prefer the register used for the copy source.
+            // If the register is available, then the copy can be eliminated later as both source
+            // and destination will use the same register.
+            int selectedReg;
+
+            if (current.TryGetCopySourceRegister(out int preferredReg) && freePositions[preferredReg] >= current.GetEnd())
+            {
+                selectedReg = preferredReg;
+            }
+            else
+            {
+                selectedReg = GetHighestValueIndex(freePositions);
+            }
+
             int selectedNextUse = freePositions[selectedReg];
 
             // Intervals starts and ends at odd positions, unless they span an entire
@@ -431,7 +444,7 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
             }
         }
 
-        private static int GetHighestValueIndex(Span<int> span)
+        private static int GetHighestValueIndex(ReadOnlySpan<int> span)
         {
             int highest = int.MinValue;
 
@@ -798,12 +811,12 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
             // The "visited" state is stored in the MSB of the local's value.
             const ulong VisitedMask = 1ul << 63;
 
-            bool IsVisited(Operand local)
+            static bool IsVisited(Operand local)
             {
                 return (local.GetValueUnsafe() & VisitedMask) != 0;
             }
 
-            void SetVisited(Operand local)
+            static void SetVisited(Operand local)
             {
                 local.GetValueUnsafe() |= VisitedMask;
             }
@@ -826,9 +839,25 @@ namespace ARMeilleure.CodeGen.RegisterAllocators
                         {
                             dest.NumberLocal(_intervals.Count);
 
-                            _intervals.Add(new LiveInterval(dest));
+                            LiveInterval interval = new LiveInterval(dest);
+                            _intervals.Add(interval);
 
                             SetVisited(dest);
+
+                            // If this is a copy (or copy-like operation), set the copy source interval as well.
+                            // This is used for register preferencing later on, which allows the copy to be eliminated
+                            // in some cases.
+                            if (node.Instruction == Instruction.Copy || node.Instruction == Instruction.ZeroExtend32)
+                            {
+                                Operand source = node.GetSource(0);
+
+                                if (source.Kind == OperandKind.LocalVariable &&
+                                    source.GetLocalNumber() > 0 &&
+                                    (node.Instruction == Instruction.Copy || source.Type == OperandType.I32))
+                                {
+                                    interval.SetCopySource(_intervals[source.GetLocalNumber()]);
+                                }
+                            }
                         }
                     }
                 }
