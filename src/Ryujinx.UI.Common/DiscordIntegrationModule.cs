@@ -104,8 +104,13 @@ namespace Ryujinx.UI.Common
             // Find the length to trim the string to guarantee we have space for the trailing ellipsis.
             int trimLimit = byteLimit - Encoding.UTF8.GetByteCount(Ellipsis);
 
-            // Basic trim to best case scenario of 1 byte characters.
-            input = input[..trimLimit];
+            // Make sure the string is long enough to perform the basic trim.
+            // Amount of bytes != Length of the string
+            if (input.Length > trimLimit)
+            {
+                // Basic trim to best case scenario of 1 byte characters.
+                input = input[..trimLimit];
+            }
 
             while (Encoding.UTF8.GetByteCount(input) > trimLimit)
             {
