@@ -103,12 +103,19 @@ namespace Ryujinx.Graphics.Vulkan
                 usage |= BufferUsageFlags.IndirectBufferBit;
             }
 
+            var externalMemoryBuffer = new ExternalMemoryBufferCreateInfo
+            {
+                SType = StructureType.ExternalMemoryBufferCreateInfo,
+                HandleTypes = ExternalMemoryHandleTypeFlags.HostAllocationBitExt,
+            };
+
             var bufferCreateInfo = new BufferCreateInfo
             {
                 SType = StructureType.BufferCreateInfo,
                 Size = (ulong)size,
                 Usage = usage,
                 SharingMode = SharingMode.Exclusive,
+                PNext = &externalMemoryBuffer,
             };
 
             gd.Api.CreateBuffer(_device, in bufferCreateInfo, null, out var buffer).ThrowOnError();

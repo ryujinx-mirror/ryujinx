@@ -80,7 +80,7 @@ namespace Ryujinx.Graphics.Vulkan
 
             var usage = GetImageUsage(info.Format, info.Target, gd.Capabilities.SupportsShaderStorageImageMultisample);
 
-            var flags = ImageCreateFlags.CreateMutableFormatBit;
+            var flags = ImageCreateFlags.CreateMutableFormatBit | ImageCreateFlags.CreateExtendedUsageBit;
 
             // This flag causes mipmapped texture arrays to break on AMD GCN, so for that copy dependencies are forced for aliasing as cube.
             bool isCube = info.Target == Target.Cubemap || info.Target == Target.CubemapArray;
