@@ -90,6 +90,8 @@ namespace Ryujinx.Graphics.Vulkan
         internal bool IsMoltenVk { get; private set; }
         internal bool IsTBDR { get; private set; }
         internal bool IsSharedMemory { get; private set; }
+        internal bool IsConcurrentFenceWaitUnsupported { get; private set; }
+
         public string GpuVendor { get; private set; }
         public string GpuDriver { get; private set; }
         public string GpuRenderer { get; private set; }
@@ -323,6 +325,8 @@ namespace Ryujinx.Graphics.Vulkan
                 Vendor == Vendor.Broadcom ||
                 Vendor == Vendor.ImgTec;
 
+            IsConcurrentFenceWaitUnsupported = Vendor == Vendor.Qualcomm;
+
             GpuVendor = VendorUtils.GetNameFromId(properties.VendorID);
             GpuDriver = hasDriverProperties && !OperatingSystem.IsMacOS() ?
                 VendorUtils.GetFriendlyDriverName(driverProperties.DriverID) : GpuVendor; // Fallback to vendor name if driver is unavailable or on MacOS where vendor is preferred.
@@ -411,7 +415,7 @@ namespace Ryujinx.Graphics.Vulkan
             Api.TryGetDeviceExtension(_instance.Instance, _device, out ExtExternalMemoryHost hostMemoryApi);
             HostMemoryAllocator = new HostMemoryAllocator(MemoryAllocator, Api, hostMemoryApi, _device);
 
-            CommandBufferPool = new CommandBufferPool(Api, _device, Queue, QueueLock, queueFamilyIndex);
+            CommandBufferPool = new CommandBufferPool(Api, _device, Queue, QueueLock, queueFamilyIndex, IsConcurrentFenceWaitUnsupported);
 
             PipelineLayoutCache = new PipelineLayoutCache();
 

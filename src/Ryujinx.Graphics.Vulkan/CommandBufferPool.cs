@@ -18,6 +18,7 @@ namespace Ryujinx.Graphics.Vulkan
         private readonly Device _device;
         private readonly Queue _queue;
         private readonly object _queueLock;
+        private readonly bool _concurrentFenceWaitUnsupported;
         private readonly CommandPool _pool;
         private readonly Thread _owner;
 
@@ -61,12 +62,20 @@ namespace Ryujinx.Graphics.Vulkan
         private int _queuedCount;
         private int _inUseCount;
 
-        public unsafe CommandBufferPool(Vk api, Device device, Queue queue, object queueLock, uint queueFamilyIndex, bool isLight = false)
+        public unsafe CommandBufferPool(
+            Vk api,
+            Device device,
+            Queue queue,
+            object queueLock,
+            uint queueFamilyIndex,
+            bool concurrentFenceWaitUnsupported,
+            bool isLight = false)
         {
             _api = api;
             _device = device;
             _queue = queue;
             _queueLock = queueLock;
+            _concurrentFenceWaitUnsupported = concurrentFenceWaitUnsupported;
             _owner = Thread.CurrentThread;
 
             var commandPoolCreateInfo = new CommandPoolCreateInfo
@@ -357,7 +366,7 @@ namespace Ryujinx.Graphics.Vulkan
 
             if (refreshFence)
             {
-                entry.Fence = new FenceHolder(_api, _device);
+                entry.Fence = new FenceHolder(_api, _device, _concurrentFenceWaitUnsupported);
             }
             else
             {

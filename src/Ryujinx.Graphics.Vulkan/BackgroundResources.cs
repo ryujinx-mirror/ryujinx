@@ -29,7 +29,14 @@ namespace Ryujinx.Graphics.Vulkan
 
                 lock (queueLock)
                 {
-                    _pool = new CommandBufferPool(_gd.Api, _device, queue, queueLock, _gd.QueueFamilyIndex, isLight: true);
+                    _pool = new CommandBufferPool(
+                        _gd.Api,
+                        _device,
+                        queue,
+                        queueLock,
+                        _gd.QueueFamilyIndex,
+                        _gd.IsConcurrentFenceWaitUnsupported,
+                        isLight: true);
                 }
             }
 

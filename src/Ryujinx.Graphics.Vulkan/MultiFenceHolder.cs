@@ -196,18 +196,23 @@ namespace Ryujinx.Graphics.Vulkan
 
             bool signaled = true;
 
-            if (hasTimeout)
+            try
             {
-                signaled = FenceHelper.AllSignaled(api, device, fences[..fenceCount], timeout);
+                if (hasTimeout)
+                {
+                    signaled = FenceHelper.AllSignaled(api, device, fences[..fenceCount], timeout);
+                }
+                else
+                {
+                    FenceHelper.WaitAllIndefinitely(api, device, fences[..fenceCount]);
+                }
             }
-            else
+            finally
             {
-                FenceHelper.WaitAllIndefinitely(api, device, fences[..fenceCount]);
-            }
-
-            for (int i = 0; i < fenceCount; i++)
-            {
-                fenceHolders[i].Put();
+                for (int i = 0; i < fenceCount; i++)
+                {
+                    fenceHolders[i].PutLock();
+                }
             }
 
             return signaled;
