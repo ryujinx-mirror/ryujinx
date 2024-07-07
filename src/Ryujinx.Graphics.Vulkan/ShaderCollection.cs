@@ -23,6 +23,8 @@ namespace Ryujinx.Graphics.Vulkan
         public bool IsCompute { get; }
         public bool HasTessellationControlShader => (Stages & (1u << 3)) != 0;
 
+        public bool UpdateTexturesWithoutTemplate { get; }
+
         public uint Stages { get; }
 
         public ResourceBindingSegment[][] ClearSegments { get; }
@@ -127,8 +129,11 @@ namespace Ryujinx.Graphics.Vulkan
             Stages = stages;
 
             ClearSegments = BuildClearSegments(sets);
-            BindingSegments = BuildBindingSegments(resourceLayout.SetUsages);
+            BindingSegments = BuildBindingSegments(resourceLayout.SetUsages, out bool usesBufferTextures);
             Templates = BuildTemplates(usePushDescriptors);
+
+            // Updating buffer texture bindings using template updates crashes the Adreno driver on Windows.
+            UpdateTexturesWithoutTemplate = gd.Vendor == Vendor.Qualcomm && usesBufferTextures;
 
             _compileTask = Task.CompletedTask;
             _firstBackgroundUse = false;
@@ -280,8 +285,10 @@ namespace Ryujinx.Graphics.Vulkan
             return segments;
         }
 
-        private static ResourceBindingSegment[][] BuildBindingSegments(ReadOnlyCollection<ResourceUsageCollection> setUsages)
+        private static ResourceBindingSegment[][] BuildBindingSegments(ReadOnlyCollection<ResourceUsageCollection> setUsages, out bool usesBufferTextures)
         {
+            usesBufferTextures = false;
+
             ResourceBindingSegment[][] segments = new ResourceBindingSegment[setUsages.Count][];
 
             for (int setIndex = 0; setIndex < setUsages.Count; setIndex++)
@@ -294,6 +301,11 @@ namespace Ryujinx.Graphics.Vulkan
                 for (int index = 0; index < setUsages[setIndex].Usages.Count; index++)
                 {
                     ResourceUsage usage = setUsages[setIndex].Usages[index];
+
+                    if (usage.Type == ResourceType.BufferTexture)
+                    {
+                        usesBufferTextures = true;
+                    }
 
                     if (currentUsage.Binding + currentCount != usage.Binding ||
                         currentUsage.Type != usage.Type ||
