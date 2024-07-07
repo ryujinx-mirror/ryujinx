@@ -623,7 +623,8 @@ namespace Ryujinx.Graphics.Vulkan
 
         public override void SetSize(int width, int height)
         {
-            // Not needed as we can get the size from the surface.
+            // We don't need to use width and height as we can get the size from the surface.
+            _swapchainIsDirty = true;
         }
 
         public override void ChangeVSyncMode(bool vsyncEnabled)
