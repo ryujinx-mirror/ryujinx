@@ -1020,6 +1020,13 @@ namespace Ryujinx.Graphics.Vulkan
         {
             _newState.RasterizerDiscardEnable = discard;
             SignalStateChange();
+
+            if (!discard && Gd.Vendor == Vendor.Qualcomm)
+            {
+                // On Adreno, enabling rasterizer discard somehow corrupts the viewport state.
+                // Force it to be updated on next use to work around this bug.
+                DynamicState.ForceAllDirty();
+            }
         }
 
         public void SetRenderTargetColorMasks(ReadOnlySpan<uint> componentMask)
