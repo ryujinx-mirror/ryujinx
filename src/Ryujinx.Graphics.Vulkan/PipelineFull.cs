@@ -47,10 +47,11 @@ namespace Ryujinx.Graphics.Vulkan
                 return;
             }
 
-            if (componentMask != 0xf)
+            if (componentMask != 0xf || Gd.IsQualcommProprietary)
             {
                 // We can't use CmdClearAttachments if not writing all components,
                 // because on Vulkan, the pipeline state does not affect clears.
+                // On proprietary Adreno drivers, CmdClearAttachments appears to execute out of order, so it's better to not use it at all.
                 var dstTexture = FramebufferParams.GetColorView(index);
                 if (dstTexture == null)
                 {
@@ -87,10 +88,11 @@ namespace Ryujinx.Graphics.Vulkan
                 return;
             }
 
-            if (stencilMask != 0 && stencilMask != 0xff)
+            if ((stencilMask != 0 && stencilMask != 0xff) || Gd.IsQualcommProprietary)
             {
                 // We can't use CmdClearAttachments if not clearing all (mask is all ones, 0xFF) or none (mask is 0) of the stencil bits,
                 // because on Vulkan, the pipeline state does not affect clears.
+                // On proprietary Adreno drivers, CmdClearAttachments appears to execute out of order, so it's better to not use it at all.
                 var dstTexture = FramebufferParams.GetDepthStencilView();
                 if (dstTexture == null)
                 {

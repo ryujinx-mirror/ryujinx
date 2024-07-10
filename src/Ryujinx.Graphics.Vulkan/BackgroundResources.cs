@@ -35,7 +35,7 @@ namespace Ryujinx.Graphics.Vulkan
                         queue,
                         queueLock,
                         _gd.QueueFamilyIndex,
-                        _gd.IsConcurrentFenceWaitUnsupported,
+                        _gd.IsQualcommProprietary,
                         isLight: true);
                 }
             }

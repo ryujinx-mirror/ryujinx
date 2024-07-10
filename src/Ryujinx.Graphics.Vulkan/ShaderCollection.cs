@@ -133,7 +133,7 @@ namespace Ryujinx.Graphics.Vulkan
             Templates = BuildTemplates(usePushDescriptors);
 
             // Updating buffer texture bindings using template updates crashes the Adreno driver on Windows.
-            UpdateTexturesWithoutTemplate = gd.Vendor == Vendor.Qualcomm && usesBufferTextures;
+            UpdateTexturesWithoutTemplate = gd.IsQualcommProprietary && usesBufferTextures;
 
             _compileTask = Task.CompletedTask;
             _firstBackgroundUse = false;
