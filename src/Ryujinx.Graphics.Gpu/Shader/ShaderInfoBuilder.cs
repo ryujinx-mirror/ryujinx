@@ -78,9 +78,9 @@ namespace Ryujinx.Graphics.Gpu.Shader
             ResourceStages stages = vertexAsCompute ? ResourceStages.Compute | ResourceStages.Vertex : VtgStages;
 
             PopulateDescriptorAndUsages(stages, ResourceType.UniformBuffer, uniformSetIndex, 1, rrc.ReservedConstantBuffers - 1);
-            PopulateDescriptorAndUsages(stages, ResourceType.StorageBuffer, storageSetIndex, 0, rrc.ReservedStorageBuffers);
+            PopulateDescriptorAndUsages(stages, ResourceType.StorageBuffer, storageSetIndex, 0, rrc.ReservedStorageBuffers, true);
             PopulateDescriptorAndUsages(stages, ResourceType.BufferTexture, textureSetIndex, 0, rrc.ReservedTextures);
-            PopulateDescriptorAndUsages(stages, ResourceType.BufferImage, imageSetIndex, 0, rrc.ReservedImages);
+            PopulateDescriptorAndUsages(stages, ResourceType.BufferImage, imageSetIndex, 0, rrc.ReservedImages, true);
         }
 
         /// <summary>
@@ -91,10 +91,11 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// <param name="setIndex">Resource set index where the resources are used</param>
         /// <param name="start">First binding number</param>
         /// <param name="count">Amount of bindings</param>
-        private void PopulateDescriptorAndUsages(ResourceStages stages, ResourceType type, int setIndex, int start, int count)
+        /// <param name="write">True if the binding is written from the shader, false otherwise</param>
+        private void PopulateDescriptorAndUsages(ResourceStages stages, ResourceType type, int setIndex, int start, int count, bool write = false)
         {
             AddDescriptor(stages, type, setIndex, start, count);
-            AddUsage(stages, type, setIndex, start, count);
+            AddUsage(stages, type, setIndex, start, count, write);
         }
 
         /// <summary>
@@ -216,11 +217,12 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// <param name="setIndex">Descriptor set number where the resource will be bound</param>
         /// <param name="binding">Binding number where the resource will be bound</param>
         /// <param name="count">Number of resources bound at the binding location</param>
-        private void AddUsage(ResourceStages stages, ResourceType type, int setIndex, int binding, int count)
+        /// <param name="write">True if the binding is written from the shader, false otherwise</param>
+        private void AddUsage(ResourceStages stages, ResourceType type, int setIndex, int binding, int count, bool write = false)
         {
             for (int index = 0; index < count; index++)
             {
-                _resourceUsages[setIndex].Add(new ResourceUsage(binding + index, 1, type, stages));
+                _resourceUsages[setIndex].Add(new ResourceUsage(binding + index, 1, type, stages, write));
             }
         }
 
@@ -238,7 +240,8 @@ namespace Ryujinx.Graphics.Gpu.Shader
                     buffer.Binding,
                     1,
                     isStorage ? ResourceType.StorageBuffer : ResourceType.UniformBuffer,
-                    stages));
+                    stages,
+                    buffer.Flags.HasFlag(BufferUsageFlags.Write)));
             }
         }
 
@@ -254,7 +257,12 @@ namespace Ryujinx.Graphics.Gpu.Shader
             {
                 ResourceType type = GetTextureResourceType(texture, isImage);
 
-                GetUsages(texture.Set).Add(new ResourceUsage(texture.Binding, texture.ArrayLength, type, stages));
+                GetUsages(texture.Set).Add(new ResourceUsage(
+                    texture.Binding,
+                    texture.ArrayLength,
+                    type,
+                    stages,
+                    texture.Flags.HasFlag(TextureUsageFlags.ImageStore)));
             }
         }
 

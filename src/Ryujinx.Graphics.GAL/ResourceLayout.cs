@@ -74,13 +74,15 @@ namespace Ryujinx.Graphics.GAL
         public int ArrayLength { get; }
         public ResourceType Type { get; }
         public ResourceStages Stages { get; }
+        public bool Write { get; }
 
-        public ResourceUsage(int binding, int arrayLength, ResourceType type, ResourceStages stages)
+        public ResourceUsage(int binding, int arrayLength, ResourceType type, ResourceStages stages, bool write)
         {
             Binding = binding;
             ArrayLength = arrayLength;
             Type = type;
             Stages = stages;
+            Write = write;
         }
 
         public override int GetHashCode()

@@ -407,7 +407,7 @@ namespace Ryujinx.Graphics.Vulkan
                 ImageLayout.General,
                 ImageLayout.General);
 
-            var subpassDependency = PipelineConverter.CreateSubpassDependency2();
+            var subpassDependency = PipelineConverter.CreateSubpassDependency2(gd);
 
             fixed (AttachmentDescription2* pAttachmentDescs = attachmentDescs)
             {

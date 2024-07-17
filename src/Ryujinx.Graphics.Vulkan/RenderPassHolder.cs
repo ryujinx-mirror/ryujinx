@@ -1,5 +1,7 @@
 using Silk.NET.Vulkan;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Ryujinx.Graphics.Vulkan
 {
@@ -29,10 +31,13 @@ namespace Ryujinx.Graphics.Vulkan
             }
         }
 
+        private readonly record struct ForcedFence(TextureStorage Texture, PipelineStageFlags StageFlags);
+
         private readonly TextureView[] _textures;
         private readonly Auto<DisposableRenderPass> _renderPass;
         private readonly HashTableSlim<FramebufferCacheKey, Auto<DisposableFramebuffer>> _framebuffers;
         private readonly RenderPassCacheKey _key;
+        private readonly List<ForcedFence> _forcedFences;
 
         public unsafe RenderPassHolder(VulkanRenderer gd, Device device, RenderPassCacheKey key, FramebufferParams fb)
         {
@@ -105,7 +110,7 @@ namespace Ryujinx.Graphics.Vulkan
                 }
             }
 
-            var subpassDependency = PipelineConverter.CreateSubpassDependency();
+            var subpassDependency = PipelineConverter.CreateSubpassDependency(gd);
 
             fixed (AttachmentDescription* pAttachmentDescs = attachmentDescs)
             {
@@ -138,6 +143,8 @@ namespace Ryujinx.Graphics.Vulkan
 
             _textures = textures;
             _key = key;
+
+            _forcedFences = new List<ForcedFence>();
         }
 
         public Auto<DisposableFramebuffer> GetFramebuffer(VulkanRenderer gd, CommandBufferScoped cbs, FramebufferParams fb)
@@ -157,6 +164,37 @@ namespace Ryujinx.Graphics.Vulkan
         public Auto<DisposableRenderPass> GetRenderPass()
         {
             return _renderPass;
+        }
+
+        public void AddForcedFence(TextureStorage storage, PipelineStageFlags stageFlags)
+        {
+            if (!_forcedFences.Any(fence => fence.Texture == storage))
+            {
+                _forcedFences.Add(new ForcedFence(storage, stageFlags));
+            }
+        }
+
+        public void InsertForcedFences(CommandBufferScoped cbs)
+        {
+            if (_forcedFences.Count > 0)
+            {
+                _forcedFences.RemoveAll((entry) =>
+                {
+                    if (entry.Texture.Disposed)
+                    {
+                        return true;
+                    }
+
+                    entry.Texture.QueueWriteToReadBarrier(cbs, AccessFlags.ShaderReadBit, entry.StageFlags);
+
+                    return false;
+                });
+            }
+        }
+
+        public bool ContainsAttachment(TextureStorage storage)
+        {
+            return _textures.Any(view => view.Storage == storage);
         }
 
         public void Dispose()

@@ -81,20 +81,20 @@ namespace Ryujinx.Graphics.Vulkan.Effects
             var edgeResourceLayout = new ResourceLayoutBuilder()
                 .Add(ResourceStages.Compute, ResourceType.UniformBuffer, 2)
                 .Add(ResourceStages.Compute, ResourceType.TextureAndSampler, 1)
-                .Add(ResourceStages.Compute, ResourceType.Image, 0).Build();
+                .Add(ResourceStages.Compute, ResourceType.Image, 0, true).Build();
 
             var blendResourceLayout = new ResourceLayoutBuilder()
                 .Add(ResourceStages.Compute, ResourceType.UniformBuffer, 2)
                 .Add(ResourceStages.Compute, ResourceType.TextureAndSampler, 1)
                 .Add(ResourceStages.Compute, ResourceType.TextureAndSampler, 3)
                 .Add(ResourceStages.Compute, ResourceType.TextureAndSampler, 4)
-                .Add(ResourceStages.Compute, ResourceType.Image, 0).Build();
+                .Add(ResourceStages.Compute, ResourceType.Image, 0, true).Build();
 
             var neighbourResourceLayout = new ResourceLayoutBuilder()
                 .Add(ResourceStages.Compute, ResourceType.UniformBuffer, 2)
                 .Add(ResourceStages.Compute, ResourceType.TextureAndSampler, 1)
                 .Add(ResourceStages.Compute, ResourceType.TextureAndSampler, 3)
-                .Add(ResourceStages.Compute, ResourceType.Image, 0).Build();
+                .Add(ResourceStages.Compute, ResourceType.Image, 0, true).Build();
 
             _samplerLinear = _renderer.CreateSampler(SamplerCreateInfo.Create(MinFilter.Linear, MagFilter.Linear));
 

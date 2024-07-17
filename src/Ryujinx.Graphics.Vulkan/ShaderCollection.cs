@@ -27,6 +27,9 @@ namespace Ryujinx.Graphics.Vulkan
 
         public uint Stages { get; }
 
+        public PipelineStageFlags IncoherentBufferWriteStages { get; }
+        public PipelineStageFlags IncoherentTextureWriteStages { get; }
+
         public ResourceBindingSegment[][] ClearSegments { get; }
         public ResourceBindingSegment[][] BindingSegments { get; }
         public DescriptorSetTemplate[] Templates { get; }
@@ -131,6 +134,7 @@ namespace Ryujinx.Graphics.Vulkan
             ClearSegments = BuildClearSegments(sets);
             BindingSegments = BuildBindingSegments(resourceLayout.SetUsages, out bool usesBufferTextures);
             Templates = BuildTemplates(usePushDescriptors);
+            (IncoherentBufferWriteStages, IncoherentTextureWriteStages) = BuildIncoherentStages(resourceLayout.SetUsages);
 
             // Updating buffer texture bindings using template updates crashes the Adreno driver on Windows.
             UpdateTexturesWithoutTemplate = gd.IsQualcommProprietary && usesBufferTextures;
@@ -375,6 +379,73 @@ namespace Ryujinx.Graphics.Vulkan
             }
 
             return templates;
+        }
+
+        private PipelineStageFlags GetPipelineStages(ResourceStages stages)
+        {
+            PipelineStageFlags result = 0;
+
+            if ((stages & ResourceStages.Compute) != 0)
+            {
+                result |= PipelineStageFlags.ComputeShaderBit;
+            }
+
+            if ((stages & ResourceStages.Vertex) != 0)
+            {
+                result |= PipelineStageFlags.VertexShaderBit;
+            }
+
+            if ((stages & ResourceStages.Fragment) != 0)
+            {
+                result |= PipelineStageFlags.FragmentShaderBit;
+            }
+
+            if ((stages & ResourceStages.Geometry) != 0)
+            {
+                result |= PipelineStageFlags.GeometryShaderBit;
+            }
+
+            if ((stages & ResourceStages.TessellationControl) != 0)
+            {
+                result |= PipelineStageFlags.TessellationControlShaderBit;
+            }
+
+            if ((stages & ResourceStages.TessellationEvaluation) != 0)
+            {
+                result |= PipelineStageFlags.TessellationEvaluationShaderBit;
+            }
+
+            return result;
+        }
+
+        private (PipelineStageFlags Buffer, PipelineStageFlags Texture) BuildIncoherentStages(ReadOnlyCollection<ResourceUsageCollection> setUsages)
+        {
+            PipelineStageFlags buffer = PipelineStageFlags.None;
+            PipelineStageFlags texture = PipelineStageFlags.None;
+
+            foreach (var set in setUsages)
+            {
+                foreach (var range in set.Usages)
+                {
+                    if (range.Write)
+                    {
+                        PipelineStageFlags stages = GetPipelineStages(range.Stages);
+
+                        switch (range.Type)
+                        {
+                            case ResourceType.Image:
+                                texture |= stages;
+                                break;
+                            case ResourceType.StorageBuffer:
+                            case ResourceType.BufferImage:
+                                buffer |= stages;
+                                break;
+                        }
+                    }
+                }
+            }
+
+            return (buffer, texture);
         }
 
         private async Task BackgroundCompilation()

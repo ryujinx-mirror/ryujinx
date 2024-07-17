@@ -939,6 +939,11 @@ namespace Ryujinx.Graphics.Vulkan
             ScreenCaptured?.Invoke(this, bitmap);
         }
 
+        public bool SupportsRenderPassBarrier(PipelineStageFlags flags)
+        {
+            return !(IsMoltenVk || IsQualcommProprietary);
+        }
+
         public unsafe void Dispose()
         {
             if (!_initialized)

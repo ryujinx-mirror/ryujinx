@@ -59,14 +59,14 @@ namespace Ryujinx.Graphics.Vulkan.Effects
             var scalingResourceLayout = new ResourceLayoutBuilder()
                 .Add(ResourceStages.Compute, ResourceType.UniformBuffer, 2)
                 .Add(ResourceStages.Compute, ResourceType.TextureAndSampler, 1)
-                .Add(ResourceStages.Compute, ResourceType.Image, 0).Build();
+                .Add(ResourceStages.Compute, ResourceType.Image, 0, true).Build();
 
             var sharpeningResourceLayout = new ResourceLayoutBuilder()
                 .Add(ResourceStages.Compute, ResourceType.UniformBuffer, 2)
                 .Add(ResourceStages.Compute, ResourceType.UniformBuffer, 3)
                 .Add(ResourceStages.Compute, ResourceType.UniformBuffer, 4)
                 .Add(ResourceStages.Compute, ResourceType.TextureAndSampler, 1)
-                .Add(ResourceStages.Compute, ResourceType.Image, 0).Build();
+                .Add(ResourceStages.Compute, ResourceType.Image, 0, true).Build();
 
             _sampler = _renderer.CreateSampler(SamplerCreateInfo.Create(MinFilter.Linear, MagFilter.Linear));
 

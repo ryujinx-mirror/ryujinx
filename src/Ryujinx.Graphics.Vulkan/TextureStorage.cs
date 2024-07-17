@@ -38,6 +38,8 @@ namespace Ryujinx.Graphics.Vulkan
 
         public TextureCreateInfo Info => _info;
 
+        public bool Disposed { get; private set; }
+
         private readonly Image _image;
         private readonly Auto<DisposableImage> _imageAuto;
         private readonly Auto<MemoryAllocation> _allocationAuto;
@@ -433,6 +435,17 @@ namespace Ryujinx.Graphics.Vulkan
             return FormatCapabilities.IsD24S8(Info.Format) && VkFormat == VkFormat.D32SfloatS8Uint;
         }
 
+        public void AddStoreOpUsage(bool depthStencil)
+        {
+            _lastModificationStage = depthStencil ?
+                PipelineStageFlags.LateFragmentTestsBit :
+                PipelineStageFlags.ColorAttachmentOutputBit;
+
+            _lastModificationAccess = depthStencil ?
+                AccessFlags.DepthStencilAttachmentWriteBit :
+                AccessFlags.ColorAttachmentWriteBit;
+        }
+
         public void QueueLoadOpBarrier(CommandBufferScoped cbs, bool depthStencil)
         {
             PipelineStageFlags srcStageFlags = _lastReadStage | _lastModificationStage;
@@ -458,7 +471,7 @@ namespace Ryujinx.Graphics.Vulkan
                     _info.GetLayers(),
                     _info.Levels);
 
-                _gd.Barriers.QueueBarrier(barrier, srcStageFlags, dstStageFlags);
+                _gd.Barriers.QueueBarrier(barrier, this, srcStageFlags, dstStageFlags);
 
                 _lastReadStage = PipelineStageFlags.None;
                 _lastReadAccess = AccessFlags.None;
@@ -491,7 +504,7 @@ namespace Ryujinx.Graphics.Vulkan
                     _info.GetLayers(),
                     _info.Levels);
 
-                _gd.Barriers.QueueBarrier(barrier, _lastModificationStage, dstStageFlags);
+                _gd.Barriers.QueueBarrier(barrier, this, _lastModificationStage, dstStageFlags);
 
                 _lastModificationAccess = AccessFlags.None;
             }
@@ -514,6 +527,8 @@ namespace Ryujinx.Graphics.Vulkan
 
         public void Dispose()
         {
+            Disposed = true;
+
             if (_aliasedStorages != null)
             {
                 foreach (var storage in _aliasedStorages.Values)

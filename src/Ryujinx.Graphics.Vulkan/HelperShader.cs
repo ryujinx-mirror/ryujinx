@@ -115,7 +115,7 @@ namespace Ryujinx.Graphics.Vulkan
             var strideChangeResourceLayout = new ResourceLayoutBuilder()
                 .Add(ResourceStages.Compute, ResourceType.UniformBuffer, 0)
                 .Add(ResourceStages.Compute, ResourceType.StorageBuffer, 1)
-                .Add(ResourceStages.Compute, ResourceType.StorageBuffer, 2).Build();
+                .Add(ResourceStages.Compute, ResourceType.StorageBuffer, 2, true).Build();
 
             _programStrideChange = gd.CreateProgramWithMinimalLayout(new[]
             {
@@ -125,7 +125,7 @@ namespace Ryujinx.Graphics.Vulkan
             var colorCopyResourceLayout = new ResourceLayoutBuilder()
                 .Add(ResourceStages.Compute, ResourceType.UniformBuffer, 0)
                 .Add(ResourceStages.Compute, ResourceType.TextureAndSampler, 0)
-                .Add(ResourceStages.Compute, ResourceType.Image, 0).Build();
+                .Add(ResourceStages.Compute, ResourceType.Image, 0, true).Build();
 
             _programColorCopyShortening = gd.CreateProgramWithMinimalLayout(new[]
             {
@@ -155,7 +155,7 @@ namespace Ryujinx.Graphics.Vulkan
             var convertD32S8ToD24S8ResourceLayout = new ResourceLayoutBuilder()
                 .Add(ResourceStages.Compute, ResourceType.UniformBuffer, 0)
                 .Add(ResourceStages.Compute, ResourceType.StorageBuffer, 1)
-                .Add(ResourceStages.Compute, ResourceType.StorageBuffer, 2).Build();
+                .Add(ResourceStages.Compute, ResourceType.StorageBuffer, 2, true).Build();
 
             _programConvertD32S8ToD24S8 = gd.CreateProgramWithMinimalLayout(new[]
             {
@@ -165,7 +165,7 @@ namespace Ryujinx.Graphics.Vulkan
             var convertIndexBufferResourceLayout = new ResourceLayoutBuilder()
                 .Add(ResourceStages.Compute, ResourceType.UniformBuffer, 0)
                 .Add(ResourceStages.Compute, ResourceType.StorageBuffer, 1)
-                .Add(ResourceStages.Compute, ResourceType.StorageBuffer, 2).Build();
+                .Add(ResourceStages.Compute, ResourceType.StorageBuffer, 2, true).Build();
 
             _programConvertIndexBuffer = gd.CreateProgramWithMinimalLayout(new[]
             {
@@ -175,7 +175,7 @@ namespace Ryujinx.Graphics.Vulkan
             var convertIndirectDataResourceLayout = new ResourceLayoutBuilder()
                 .Add(ResourceStages.Compute, ResourceType.UniformBuffer, 0)
                 .Add(ResourceStages.Compute, ResourceType.StorageBuffer, 1)
-                .Add(ResourceStages.Compute, ResourceType.StorageBuffer, 2)
+                .Add(ResourceStages.Compute, ResourceType.StorageBuffer, 2, true)
                 .Add(ResourceStages.Compute, ResourceType.StorageBuffer, 3).Build();
 
             _programConvertIndirectData = gd.CreateProgramWithMinimalLayout(new[]

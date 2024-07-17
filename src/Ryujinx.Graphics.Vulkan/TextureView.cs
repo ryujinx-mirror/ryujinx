@@ -993,7 +993,7 @@ namespace Ryujinx.Graphics.Vulkan
             throw new NotImplementedException();
         }
 
-        public (Auto<DisposableRenderPass> renderPass, Auto<DisposableFramebuffer> framebuffer) GetPassAndFramebuffer(
+        public (RenderPassHolder rpHolder, Auto<DisposableFramebuffer> framebuffer) GetPassAndFramebuffer(
             VulkanRenderer gd,
             Device device,
             CommandBufferScoped cbs,
@@ -1006,7 +1006,7 @@ namespace Ryujinx.Graphics.Vulkan
                 rpHolder = new RenderPassHolder(gd, device, key, fb);
             }
 
-            return (rpHolder.GetRenderPass(), rpHolder.GetFramebuffer(gd, cbs, fb));
+            return (rpHolder, rpHolder.GetFramebuffer(gd, cbs, fb));
         }
 
         public void AddRenderPass(RenderPassCacheKey key, RenderPassHolder renderPass)
