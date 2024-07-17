@@ -175,28 +175,33 @@ namespace Ryujinx.UI.App.Common
             var applications = new List<ApplicationData>();
             string extension = Path.GetExtension(filePath).ToLower();
 
-            foreach ((ulong titleId, ContentMetaData content) in pfs.GetContentData(ContentMetaType.Application, _virtualFileSystem, _checkLevel))
+            try
             {
-                ApplicationData applicationData = new()
+                foreach ((ulong titleId, ContentMetaData content) in pfs.GetContentData(ContentMetaType.Application, _virtualFileSystem, _checkLevel))
                 {
-                    Id = titleId,
-                    Path = filePath,
-                };
+                    ApplicationData applicationData = new()
+                    {
+                        Id = titleId,
+                        Path = filePath,
+                    };
 
-                try
-                {
                     Nca mainNca = content.GetNcaByType(_virtualFileSystem.KeySet, ContentType.Program);
                     Nca controlNca = content.GetNcaByType(_virtualFileSystem.KeySet, ContentType.Control);
 
                     BlitStruct<ApplicationControlProperty> controlHolder = new(1);
 
-                    IFileSystem controlFs = controlNca?.OpenFileSystem(NcaSectionType.Data, IntegrityCheckLevel.None);
+                    IFileSystem controlFs = controlNca?.OpenFileSystem(NcaSectionType.Data, _checkLevel);
 
                     // Check if there is an update available.
                     if (IsUpdateApplied(mainNca, out IFileSystem updatedControlFs))
                     {
                         // Replace the original ControlFs by the updated one.
                         controlFs = updatedControlFs;
+                    }
+
+                    if (controlFs == null)
+                    {
+                        continue;
                     }
 
                     ReadControlData(controlFs, controlHolder.ByteSpan);
@@ -246,22 +251,18 @@ namespace Ryujinx.UI.App.Common
 
                     applications.Add(applicationData);
                 }
-                catch (MissingKeyException exception)
-                {
-                    applicationData.Icon = extension == ".xci" ? _xciIcon : _nspIcon;
-
-                    Logger.Warning?.Print(LogClass.Application, $"Your key set is missing a key with the name: {exception.Name}");
-                }
-                catch (InvalidDataException)
-                {
-                    applicationData.Icon = extension == ".xci" ? _xciIcon : _nspIcon;
-
-                    Logger.Warning?.Print(LogClass.Application, $"The header key is incorrect or missing and therefore the NCA header content type check has failed. Errored File: {filePath}");
-                }
-                catch (Exception exception)
-                {
-                    Logger.Warning?.Print(LogClass.Application, $"The file encountered was not of a valid type. File: '{filePath}' Error: {exception}");
-                }
+            }
+            catch (MissingKeyException exception)
+            {
+                Logger.Warning?.Print(LogClass.Application, $"Your key set is missing a key with the name: {exception.Name}");
+            }
+            catch (InvalidDataException)
+            {
+                Logger.Warning?.Print(LogClass.Application, $"The header key is incorrect or missing and therefore the NCA header content type check has failed. Errored File: {filePath}");
+            }
+            catch (Exception exception)
+            {
+                Logger.Warning?.Print(LogClass.Application, $"The file encountered was not of a valid type. File: '{filePath}' Error: {exception}");
             }
 
             return applications;
