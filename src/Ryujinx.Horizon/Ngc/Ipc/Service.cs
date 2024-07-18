@@ -26,7 +26,11 @@ namespace Ryujinx.Horizon.Ngc.Ipc
         }
 
         [CmifCommand(1)]
-        public Result Check(out uint checkMask, ReadOnlySpan<byte> text, uint regionMask, ProfanityFilterOption option)
+        public Result Check(
+            out uint checkMask,
+            [Buffer(HipcBufferFlags.In | HipcBufferFlags.MapAlias)] ReadOnlySpan<byte> text,
+            uint regionMask,
+            ProfanityFilterOption option)
         {
             lock (_profanityFilter)
             {
