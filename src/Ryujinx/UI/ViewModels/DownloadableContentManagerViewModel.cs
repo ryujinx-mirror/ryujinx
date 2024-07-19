@@ -263,7 +263,7 @@ namespace Ryujinx.Ava.UI.ViewModels
 
                     var content = new DownloadableContentModel(nca.Header.TitleId.ToString("X16"), path, fileEntry.FullPath, true);
                     DownloadableContents.Add(content);
-                    SelectedDownloadableContents.Add(content);
+                    Dispatcher.UIThread.InvokeAsync(() => SelectedDownloadableContents.Add(content));
 
                     success = true;
                 }

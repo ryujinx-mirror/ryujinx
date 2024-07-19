@@ -169,7 +169,7 @@ namespace Ryujinx.Ava.UI.ViewModels
             }
         }
 
-        private void AddUpdate(string path, bool ignoreNotFound = false)
+        private void AddUpdate(string path, bool ignoreNotFound = false, bool selected = false)
         {
             if (!File.Exists(path) || TitleUpdates.Any(x => x.Path == path))
             {
@@ -204,7 +204,13 @@ namespace Ryujinx.Ava.UI.ViewModels
                     controlNca.OpenFileSystem(NcaSectionType.Data, IntegrityCheckLevel.None).OpenFile(ref nacpFile.Ref, "/control.nacp".ToU8Span(), OpenMode.Read).ThrowIfFailure();
                     nacpFile.Get.Read(out _, 0, SpanHelpers.AsByteSpan(ref controlData), ReadOption.None).ThrowIfFailure();
 
-                    TitleUpdates.Add(new TitleUpdateModel(controlData, path));
+                    var update = new TitleUpdateModel(controlData, path);
+                    TitleUpdates.Add(update);
+
+                    if (selected)
+                    {
+                        Dispatcher.UIThread.InvokeAsync(() => SelectedUpdate = update);
+                    }
                 }
                 else
                 {
@@ -245,7 +251,7 @@ namespace Ryujinx.Ava.UI.ViewModels
 
             foreach (var file in result)
             {
-                AddUpdate(file.Path.LocalPath);
+                AddUpdate(file.Path.LocalPath, selected: true);
             }
 
             SortUpdates();
