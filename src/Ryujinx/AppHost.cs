@@ -367,32 +367,24 @@ namespace Ryujinx.Ava
                         }
 
                         var colorType = e.IsBgra ? SKColorType.Bgra8888 : SKColorType.Rgba8888;
-                        using var bitmap = new SKBitmap(new SKImageInfo(e.Width, e.Height, colorType, SKAlphaType.Premul));
+                        using SKBitmap bitmap = new SKBitmap(new SKImageInfo(e.Width, e.Height, colorType, SKAlphaType.Premul));
 
                         Marshal.Copy(e.Data, 0, bitmap.GetPixels(), e.Data.Length);
 
-                        SKBitmap bitmapToSave = null;
+                        using SKBitmap bitmapToSave = new SKBitmap(bitmap.Width, bitmap.Height);
+                        using SKCanvas canvas = new SKCanvas(bitmapToSave);
 
-                        if (e.FlipX || e.FlipY)
-                        {
-                            bitmapToSave = new SKBitmap(bitmap.Width, bitmap.Height);
+                        canvas.Clear(SKColors.Black);
 
-                            using var canvas = new SKCanvas(bitmapToSave);
+                        float scaleX = e.FlipX ? -1 : 1;
+                        float scaleY = e.FlipY ? -1 : 1;
 
-                            canvas.Clear(SKColors.Transparent);
+                        var matrix = SKMatrix.CreateScale(scaleX, scaleY, bitmap.Width / 2f, bitmap.Height / 2f);
 
-                            float scaleX = e.FlipX ? -1 : 1;
-                            float scaleY = e.FlipY ? -1 : 1;
+                        canvas.SetMatrix(matrix);
+                        canvas.DrawBitmap(bitmap, SKPoint.Empty);
 
-                            var matrix = SKMatrix.CreateScale(scaleX, scaleY, bitmap.Width / 2f, bitmap.Height / 2f);
-
-                            canvas.SetMatrix(matrix);
-
-                            canvas.DrawBitmap(bitmap, new SKPoint(e.FlipX ? -bitmap.Width : 0, e.FlipY ? -bitmap.Height : 0));
-                        }
-
-                        SaveBitmapAsPng(bitmapToSave ?? bitmap, path);
-                        bitmapToSave?.Dispose();
+                        SaveBitmapAsPng(bitmapToSave, path);
 
                         Logger.Notice.Print(LogClass.Application, $"Screenshot saved to {path}", "Screenshot");
                     }
