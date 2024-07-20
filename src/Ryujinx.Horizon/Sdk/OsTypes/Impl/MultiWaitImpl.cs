@@ -21,6 +21,8 @@ namespace Ryujinx.Horizon.Sdk.OsTypes.Impl
 
         public long CurrentTime { get; private set; }
 
+        public IEnumerable<MultiWaitHolderBase> MultiWaits => _multiWaits;
+
         public MultiWaitImpl()
         {
             _multiWaits = new List<MultiWaitHolderBase>();

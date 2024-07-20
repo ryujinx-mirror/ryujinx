@@ -3,6 +3,7 @@ using Ryujinx.Horizon.Sdk.OsTypes;
 using Ryujinx.Horizon.Sdk.Sf.Cmif;
 using Ryujinx.Horizon.Sdk.Sm;
 using System;
+using System.Linq;
 
 namespace Ryujinx.Horizon.Sdk.Sf.Hipc
 {
@@ -115,6 +116,18 @@ namespace Ryujinx.Horizon.Sdk.Sf.Hipc
         {
             while (WaitAndProcessRequestsImpl())
             {
+            }
+
+            // Unlink pending sessions, dispose expects them to be already unlinked.
+
+            ServerSession[] serverSessions = Enumerable.OfType<ServerSession>(_multiWait.MultiWaits).ToArray();
+
+            foreach (ServerSession serverSession in serverSessions)
+            {
+                if (serverSession.IsLinked)
+                {
+                    serverSession.UnlinkFromMultiWaitHolder();
+                }
             }
         }
 

@@ -1,10 +1,13 @@
 using Ryujinx.Horizon.Sdk.OsTypes.Impl;
+using System.Collections.Generic;
 
 namespace Ryujinx.Horizon.Sdk.OsTypes
 {
     class MultiWait
     {
         private readonly MultiWaitImpl _impl;
+
+        public IEnumerable<MultiWaitHolderBase> MultiWaits => _impl.MultiWaits;
 
         public MultiWait()
         {
