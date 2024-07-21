@@ -103,7 +103,7 @@ namespace Ryujinx.Ava.UI.ViewModels
                 _storageProvider = desktop.MainWindow.StorageProvider;
             }
 
-            _downloadableContentJsonPath = Path.Combine(AppDataManager.GamesDirPath, applicationData.IdString, "dlc.json");
+            _downloadableContentJsonPath = Path.Combine(AppDataManager.GamesDirPath, applicationData.IdBaseString, "dlc.json");
 
             if (!File.Exists(_downloadableContentJsonPath))
             {

@@ -42,6 +42,8 @@ namespace Ryujinx.UI.App.Common
 
         [JsonIgnore] public ulong IdBase => Id & ~0x1FFFUL;
 
+        [JsonIgnore] public string IdBaseString => IdBase.ToString("x16");
+
         public static string GetBuildId(VirtualFileSystem virtualFileSystem, IntegrityCheckLevel checkLevel, string titleFilePath)
         {
             using FileStream file = new(titleFilePath, FileMode.Open, FileAccess.Read);

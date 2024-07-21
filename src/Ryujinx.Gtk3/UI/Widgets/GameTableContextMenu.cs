@@ -473,7 +473,7 @@ namespace Ryujinx.UI.Widgets
 
         private void ManageDlc_Clicked(object sender, EventArgs args)
         {
-            new DlcWindow(_virtualFileSystem, _applicationData.IdString, _applicationData).Show();
+            new DlcWindow(_virtualFileSystem, _applicationData.IdBaseString, _applicationData).Show();
         }
 
         private void ManageCheats_Clicked(object sender, EventArgs args)

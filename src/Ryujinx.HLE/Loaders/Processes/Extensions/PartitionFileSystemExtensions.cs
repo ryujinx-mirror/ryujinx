@@ -118,7 +118,7 @@ namespace Ryujinx.HLE.Loaders.Processes.Extensions
                 device.Configuration.ContentManager.ClearAocData();
 
                 // Load DownloadableContents.
-                string addOnContentMetadataPath = System.IO.Path.Combine(AppDataManager.GamesDirPath, mainNca.Header.TitleId.ToString("x16"), "dlc.json");
+                string addOnContentMetadataPath = System.IO.Path.Combine(AppDataManager.GamesDirPath, mainNca.GetProgramIdBase().ToString("x16"), "dlc.json");
                 if (File.Exists(addOnContentMetadataPath))
                 {
                     List<DownloadableContentContainer> dlcContainerList = JsonHelper.DeserializeFromFile(addOnContentMetadataPath, _contentSerializerContext.ListDownloadableContentContainer);

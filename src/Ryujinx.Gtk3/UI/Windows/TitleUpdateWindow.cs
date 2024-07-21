@@ -51,7 +51,7 @@ namespace Ryujinx.UI.Windows
 
             _applicationData = applicationData;
             _virtualFileSystem = virtualFileSystem;
-            _updateJsonPath = System.IO.Path.Combine(AppDataManager.GamesDirPath, applicationData.IdString, "updates.json");
+            _updateJsonPath = System.IO.Path.Combine(AppDataManager.GamesDirPath, applicationData.IdBaseString, "updates.json");
             _radioButtonToPathDictionary = new Dictionary<RadioButton, string>();
 
             try
@@ -67,7 +67,7 @@ namespace Ryujinx.UI.Windows
                 };
             }
 
-            _baseTitleInfoLabel.Text = $"Updates Available for {applicationData.Name} [{applicationData.IdString}]";
+            _baseTitleInfoLabel.Text = $"Updates Available for {applicationData.Name} [{applicationData.IdBaseString}]";
 
             // Try to get updates from PFS first
             AddUpdate(_applicationData.Path, true);

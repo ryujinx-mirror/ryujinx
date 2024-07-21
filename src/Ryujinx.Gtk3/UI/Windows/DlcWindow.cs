@@ -24,7 +24,7 @@ namespace Ryujinx.UI.Windows
     public class DlcWindow : Window
     {
         private readonly VirtualFileSystem _virtualFileSystem;
-        private readonly string _applicationId;
+        private readonly string _applicationIdBase;
         private readonly string _dlcJsonPath;
         private readonly List<DownloadableContentContainer> _dlcContainerList;
 
@@ -36,16 +36,16 @@ namespace Ryujinx.UI.Windows
         [GUI] TreeSelection _dlcTreeSelection;
 #pragma warning restore CS0649, IDE0044
 
-        public DlcWindow(VirtualFileSystem virtualFileSystem, string titleId, ApplicationData applicationData) : this(new Builder("Ryujinx.Gtk3.UI.Windows.DlcWindow.glade"), virtualFileSystem, titleId, applicationData) { }
+        public DlcWindow(VirtualFileSystem virtualFileSystem, string applicationIdBase, ApplicationData applicationData) : this(new Builder("Ryujinx.Gtk3.UI.Windows.DlcWindow.glade"), virtualFileSystem, applicationIdBase, applicationData) { }
 
-        private DlcWindow(Builder builder, VirtualFileSystem virtualFileSystem, string applicationId, ApplicationData applicationData) : base(builder.GetRawOwnedObject("_dlcWindow"))
+        private DlcWindow(Builder builder, VirtualFileSystem virtualFileSystem, string applicationIdBase, ApplicationData applicationData) : base(builder.GetRawOwnedObject("_dlcWindow"))
         {
             builder.Autoconnect(this);
 
-            _applicationId = applicationId;
+            _applicationIdBase = applicationIdBase;
             _virtualFileSystem = virtualFileSystem;
-            _dlcJsonPath = System.IO.Path.Combine(AppDataManager.GamesDirPath, _applicationId, "dlc.json");
-            _baseTitleInfoLabel.Text = $"DLC Available for {applicationData.Name} [{applicationId.ToUpper()}]";
+            _dlcJsonPath = System.IO.Path.Combine(AppDataManager.GamesDirPath, _applicationIdBase, "dlc.json");
+            _baseTitleInfoLabel.Text = $"DLC Available for {applicationData.Name} [{applicationIdBase.ToUpper()}]";
 
             try
             {
@@ -163,7 +163,7 @@ namespace Ryujinx.UI.Windows
 
                 if (nca.Header.ContentType == NcaContentType.PublicData)
                 {
-                    if (nca.GetProgramIdBase() != (ulong.Parse(_applicationId, NumberStyles.HexNumber) & ~0x1FFFUL))
+                    if (nca.GetProgramIdBase() != ulong.Parse(_applicationIdBase, NumberStyles.HexNumber))
                     {
                         continue;
                     }
