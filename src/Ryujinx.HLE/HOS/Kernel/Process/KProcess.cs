@@ -126,8 +126,6 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
             _contextFactory = contextFactory ?? new ProcessContextFactory();
             _customThreadStart = customThreadStart;
 
-            AddressSpaceType addrSpaceType = (AddressSpaceType)((int)(creationInfo.Flags & ProcessCreationFlags.AddressSpaceMask) >> (int)ProcessCreationFlags.AddressSpaceShift);
-
             Pid = KernelContext.NewKipId();
 
             if (Pid == 0 || Pid >= KernelConstants.InitialProcessId)
@@ -136,8 +134,6 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
             }
 
             InitializeMemoryManager(creationInfo.Flags);
-
-            bool aslrEnabled = creationInfo.Flags.HasFlag(ProcessCreationFlags.EnableAslr);
 
             ulong codeAddress = creationInfo.CodeAddress;
 
@@ -148,9 +144,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
                 : KernelContext.SmallMemoryBlockSlabManager;
 
             Result result = MemoryManager.InitializeForProcess(
-                addrSpaceType,
-                aslrEnabled,
-                !aslrEnabled,
+                creationInfo.Flags,
+                !creationInfo.Flags.HasFlag(ProcessCreationFlags.EnableAslr),
                 memRegion,
                 codeAddress,
                 codeSize,
@@ -234,8 +229,6 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
                     : KernelContext.SmallMemoryBlockSlabManager;
             }
 
-            AddressSpaceType addrSpaceType = (AddressSpaceType)((int)(creationInfo.Flags & ProcessCreationFlags.AddressSpaceMask) >> (int)ProcessCreationFlags.AddressSpaceShift);
-
             Pid = KernelContext.NewProcessId();
 
             if (Pid == ulong.MaxValue || Pid < KernelConstants.InitialProcessId)
@@ -245,16 +238,13 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
             InitializeMemoryManager(creationInfo.Flags);
 
-            bool aslrEnabled = creationInfo.Flags.HasFlag(ProcessCreationFlags.EnableAslr);
-
             ulong codeAddress = creationInfo.CodeAddress;
 
             ulong codeSize = codePagesCount * KPageTableBase.PageSize;
 
             Result result = MemoryManager.InitializeForProcess(
-                addrSpaceType,
-                aslrEnabled,
-                !aslrEnabled,
+                creationInfo.Flags,
+                !creationInfo.Flags.HasFlag(ProcessCreationFlags.EnableAslr),
                 memRegion,
                 codeAddress,
                 codeSize,
@@ -309,8 +299,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
         private Result ParseProcessInfo(ProcessCreationInfo creationInfo)
         {
             // Ensure that the current kernel version is equal or above to the minimum required.
-            uint requiredKernelVersionMajor = (uint)Capabilities.KernelReleaseVersion >> 19;
-            uint requiredKernelVersionMinor = ((uint)Capabilities.KernelReleaseVersion >> 15) & 0xf;
+            uint requiredKernelVersionMajor = Capabilities.KernelReleaseVersion >> 19;
+            uint requiredKernelVersionMinor = (Capabilities.KernelReleaseVersion >> 15) & 0xf;
 
             if (KernelContext.EnableVersionChecks)
             {
@@ -519,12 +509,10 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
             return result;
         }
 
-#pragma warning disable CA1822 // Mark member as static
         private void GenerateRandomEntropy()
         {
             // TODO.
         }
-#pragma warning restore CA1822
 
         public Result Start(int mainThreadPriority, ulong stackSize)
         {
@@ -1181,6 +1169,11 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
         {
             // TODO
             return false;
+        }
+
+        public bool IsSvcPermitted(int svcId)
+        {
+            return Capabilities.IsSvcPermitted(svcId);
         }
     }
 }

@@ -58,11 +58,10 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
         public ulong AslrRegionStart { get; private set; }
         public ulong AslrRegionEnd { get; private set; }
 
-#pragma warning disable IDE0052 // Remove unread private member
         private ulong _heapCapacity;
-#pragma warning restore IDE0052
 
         public ulong PhysicalMemoryUsage { get; private set; }
+        public ulong AliasRegionExtraSize { get; private set; }
 
         private readonly KMemoryBlockManager _blockManager;
 
@@ -98,30 +97,21 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             _reservedAddressSpaceSize = reservedAddressSpaceSize;
         }
 
-        private static readonly int[] _addrSpaceSizes = { 32, 36, 32, 39 };
-
         public Result InitializeForProcess(
-            AddressSpaceType addrSpaceType,
-            bool aslrEnabled,
+            ProcessCreationFlags flags,
             bool fromBack,
             MemoryRegion memRegion,
             ulong address,
             ulong size,
             KMemoryBlockSlabManager slabManager)
         {
-            if ((uint)addrSpaceType > (uint)AddressSpaceType.Addr39Bits)
-            {
-                throw new ArgumentException($"AddressSpaceType bigger than {(uint)AddressSpaceType.Addr39Bits}: {(uint)addrSpaceType}", nameof(addrSpaceType));
-            }
-
             _contextId = Context.ContextIdManager.GetId();
 
             ulong addrSpaceBase = 0;
-            ulong addrSpaceSize = 1UL << _addrSpaceSizes[(int)addrSpaceType];
+            ulong addrSpaceSize = 1UL << GetAddressSpaceWidth(flags);
 
             Result result = CreateUserAddressSpace(
-                addrSpaceType,
-                aslrEnabled,
+                flags,
                 fromBack,
                 addrSpaceBase,
                 addrSpaceSize,
@@ -138,6 +128,22 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             return result;
         }
 
+        private static int GetAddressSpaceWidth(ProcessCreationFlags flags)
+        {
+            switch (flags & ProcessCreationFlags.AddressSpaceMask)
+            {
+                case ProcessCreationFlags.AddressSpace32Bit:
+                case ProcessCreationFlags.AddressSpace32BitWithoutAlias:
+                    return 32;
+                case ProcessCreationFlags.AddressSpace64BitDeprecated:
+                    return 36;
+                case ProcessCreationFlags.AddressSpace64Bit:
+                    return 39;
+            }
+
+            throw new ArgumentException($"Invalid process flags {flags}", nameof(flags));
+        }
+
         private struct Region
         {
             public ulong Start;
@@ -147,8 +153,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
         }
 
         private Result CreateUserAddressSpace(
-            AddressSpaceType addrSpaceType,
-            bool aslrEnabled,
+            ProcessCreationFlags flags,
             bool fromBack,
             ulong addrSpaceStart,
             ulong addrSpaceEnd,
@@ -168,9 +173,11 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             ulong stackAndTlsIoStart;
             ulong stackAndTlsIoEnd;
 
-            switch (addrSpaceType)
+            AliasRegionExtraSize = 0;
+
+            switch (flags & ProcessCreationFlags.AddressSpaceMask)
             {
-                case AddressSpaceType.Addr32Bits:
+                case ProcessCreationFlags.AddressSpace32Bit:
                     aliasRegion.Size = 0x40000000;
                     heapRegion.Size = 0x40000000;
                     stackRegion.Size = 0;
@@ -183,7 +190,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                     stackAndTlsIoEnd = 0x40000000;
                     break;
 
-                case AddressSpaceType.Addr36Bits:
+                case ProcessCreationFlags.AddressSpace64BitDeprecated:
                     aliasRegion.Size = 0x180000000;
                     heapRegion.Size = 0x180000000;
                     stackRegion.Size = 0;
@@ -196,7 +203,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                     stackAndTlsIoEnd = 0x80000000;
                     break;
 
-                case AddressSpaceType.Addr32BitsNoMap:
+                case ProcessCreationFlags.AddressSpace32BitWithoutAlias:
                     aliasRegion.Size = 0;
                     heapRegion.Size = 0x80000000;
                     stackRegion.Size = 0;
@@ -209,7 +216,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                     stackAndTlsIoEnd = 0x40000000;
                     break;
 
-                case AddressSpaceType.Addr39Bits:
+                case ProcessCreationFlags.AddressSpace64Bit:
                     if (_reservedAddressSpaceSize < addrSpaceEnd)
                     {
                         int addressSpaceWidth = (int)ulong.Log2(_reservedAddressSpaceSize);
@@ -218,8 +225,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                         heapRegion.Size = 0x180000000;
                         stackRegion.Size = 1UL << (addressSpaceWidth - 8);
                         tlsIoRegion.Size = 1UL << (addressSpaceWidth - 3);
-                        CodeRegionStart = BitUtils.AlignDown<ulong>(address, RegionAlignment);
-                        codeRegionSize = BitUtils.AlignUp<ulong>(endAddr, RegionAlignment) - CodeRegionStart;
+                        CodeRegionStart = BitUtils.AlignDown(address, RegionAlignment);
+                        codeRegionSize = BitUtils.AlignUp(endAddr, RegionAlignment) - CodeRegionStart;
                         stackAndTlsIoStart = 0;
                         stackAndTlsIoEnd = 0;
                         AslrRegionStart = 0x8000000;
@@ -239,9 +246,16 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                         stackAndTlsIoStart = 0;
                         stackAndTlsIoEnd = 0;
                     }
+
+                    if (flags.HasFlag(ProcessCreationFlags.EnableAliasRegionExtraSize))
+                    {
+                        AliasRegionExtraSize = addrSpaceEnd / 8;
+                        aliasRegion.Size += AliasRegionExtraSize;
+                    }
                     break;
+
                 default:
-                    throw new ArgumentException($"AddressSpaceType bigger than {(uint)AddressSpaceType.Addr39Bits}: {(uint)addrSpaceType}", nameof(addrSpaceType));
+                    throw new ArgumentException($"Invalid process flags {flags}", nameof(flags));
             }
 
             CodeRegionEnd = CodeRegionStart + codeRegionSize;
@@ -265,6 +279,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             ulong mapTotalSize = aliasRegion.Size + heapRegion.Size + stackRegion.Size + tlsIoRegion.Size;
 
             ulong aslrMaxOffset = mapAvailableSize - mapTotalSize;
+
+            bool aslrEnabled = flags.HasFlag(ProcessCreationFlags.EnableAslr);
 
             _aslrEnabled = aslrEnabled;
 
@@ -725,7 +741,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
         {
             address = 0;
 
-            if (size > HeapRegionEnd - HeapRegionStart)
+            if (size > HeapRegionEnd - HeapRegionStart || size > _heapCapacity)
             {
                 return KernelResult.OutOfMemory;
             }

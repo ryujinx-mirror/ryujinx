@@ -29,6 +29,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
         PoolPartitionMask = 0xf << PoolPartitionShift,
 
         OptimizeMemoryAllocation = 1 << 11,
+        DisableDeviceAddressSpaceMerge = 1 << 12,
+        EnableAliasRegionExtraSize = 1 << 13,
 
         All =
             Is64Bit |
@@ -38,6 +40,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
             IsApplication |
             DeprecatedUseSecureMemory |
             PoolPartitionMask |
-            OptimizeMemoryAllocation,
+            OptimizeMemoryAllocation |
+            DisableDeviceAddressSpaceMerge |
+            EnableAliasRegionExtraSize,
     }
 }

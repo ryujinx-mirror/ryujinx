@@ -8,6 +8,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 {
     class KProcessCapabilities
     {
+        private const int SvcMaskElementBits = 8;
+
         public byte[] SvcAccessMask { get; }
         public byte[] IrqAccessMask { get; }
 
@@ -22,7 +24,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
         public KProcessCapabilities()
         {
             // length / number of bits of the underlying type
-            SvcAccessMask = new byte[KernelConstants.SupervisorCallCount / 8];
+            SvcAccessMask = new byte[KernelConstants.SupervisorCallCount / SvcMaskElementBits];
             IrqAccessMask = new byte[0x80];
         }
 
@@ -208,7 +210,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
                                 return KernelResult.MaximumExceeded;
                             }
 
-                            SvcAccessMask[svcId / 8] |= (byte)(1 << (svcId & 7));
+                            SvcAccessMask[svcId / SvcMaskElementBits] |= (byte)(1 << (svcId % SvcMaskElementBits));
                         }
 
                         break;
@@ -323,6 +325,14 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
             ulong mask = (1UL << (int)range) - 1;
 
             return mask << (int)min;
+        }
+
+        public bool IsSvcPermitted(int svcId)
+        {
+            int index = svcId / SvcMaskElementBits;
+            int mask = 1 << (svcId % SvcMaskElementBits);
+
+            return (uint)svcId < KernelConstants.SupervisorCallCount && (SvcAccessMask[index] & mask) != 0;
         }
     }
 }
