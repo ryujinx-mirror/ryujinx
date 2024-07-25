@@ -1,21 +1,20 @@
-using LibHac.Ns;
 using Ryujinx.Ava.Common.Locale;
 
 namespace Ryujinx.Ava.UI.Models
 {
     public class TitleUpdateModel
     {
-        public ApplicationControlProperty Control { get; }
+        public uint Version { get; }
         public string Path { get; }
+        public string Label { get; }
 
-        public string Label => LocaleManager.Instance.UpdateAndGetDynamicValue(
-            System.IO.Path.GetExtension(Path)?.ToLower() == ".xci" ? LocaleKeys.TitleBundledUpdateVersionLabel : LocaleKeys.TitleUpdateVersionLabel,
-            Control.DisplayVersionString.ToString()
-        );
-
-        public TitleUpdateModel(ApplicationControlProperty control, string path)
+        public TitleUpdateModel(uint version, string displayVersion, string path)
         {
-            Control = control;
+            Version = version;
+            Label = LocaleManager.Instance.UpdateAndGetDynamicValue(
+                System.IO.Path.GetExtension(path)?.ToLower() == ".xci" ? LocaleKeys.TitleBundledUpdateVersionLabel : LocaleKeys.TitleUpdateVersionLabel,
+                displayVersion
+            );
             Path = path;
         }
     }

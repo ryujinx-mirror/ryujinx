@@ -131,26 +131,11 @@ namespace Ryujinx.Ava.UI.ViewModels
 
         public void SortUpdates()
         {
-            var list = TitleUpdates.ToList();
-
-            list.Sort((first, second) =>
-            {
-                if (string.IsNullOrEmpty(first.Control.DisplayVersionString.ToString()))
-                {
-                    return -1;
-                }
-
-                if (string.IsNullOrEmpty(second.Control.DisplayVersionString.ToString()))
-                {
-                    return 1;
-                }
-
-                return Version.Parse(first.Control.DisplayVersionString.ToString()).CompareTo(Version.Parse(second.Control.DisplayVersionString.ToString())) * -1;
-            });
+            var sortedUpdates = TitleUpdates.OrderByDescending(update => update.Version);
 
             Views.Clear();
             Views.Add(new BaseModel());
-            Views.AddRange(list);
+            Views.AddRange(sortedUpdates);
 
             if (SelectedUpdate == null)
             {
@@ -204,7 +189,9 @@ namespace Ryujinx.Ava.UI.ViewModels
                     controlNca.OpenFileSystem(NcaSectionType.Data, IntegrityCheckLevel.None).OpenFile(ref nacpFile.Ref, "/control.nacp".ToU8Span(), OpenMode.Read).ThrowIfFailure();
                     nacpFile.Get.Read(out _, 0, SpanHelpers.AsByteSpan(ref controlData), ReadOption.None).ThrowIfFailure();
 
-                    var update = new TitleUpdateModel(controlData, path);
+                    var displayVersion = controlData.DisplayVersionString.ToString();
+                    var update = new TitleUpdateModel(content.Version.Version, displayVersion, path);
+
                     TitleUpdates.Add(update);
 
                     if (selected)
