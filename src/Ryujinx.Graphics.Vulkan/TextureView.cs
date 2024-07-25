@@ -667,8 +667,36 @@ namespace Ryujinx.Graphics.Vulkan
 
             if (PrepareOutputBuffer(cbs, hostSize, buffer, out VkBuffer copyToBuffer, out BufferHolder tempCopyHolder))
             {
+                // No barrier necessary, as this is a temporary copy buffer.
                 offset = 0;
             }
+            else
+            {
+                BufferHolder.InsertBufferBarrier(
+                    _gd,
+                    cbs.CommandBuffer,
+                    copyToBuffer,
+                    BufferHolder.DefaultAccessFlags,
+                    AccessFlags.TransferWriteBit,
+                    PipelineStageFlags.AllCommandsBit,
+                    PipelineStageFlags.TransferBit,
+                    offset,
+                    outSize);
+            }
+
+            InsertImageBarrier(
+                _gd.Api,
+                cbs.CommandBuffer,
+                image,
+                TextureStorage.DefaultAccessMask,
+                AccessFlags.TransferReadBit,
+                PipelineStageFlags.AllCommandsBit,
+                PipelineStageFlags.TransferBit,
+                Info.Format.ConvertAspectFlags(),
+                FirstLayer + layer,
+                FirstLevel + level,
+                1,
+                1);
 
             CopyFromOrToBuffer(cbs.CommandBuffer, copyToBuffer, image, hostSize, true, layer, level, 1, 1, singleSlice: true, offset, stride);
 
@@ -676,6 +704,19 @@ namespace Ryujinx.Graphics.Vulkan
             {
                 CopyDataToOutputBuffer(cbs, tempCopyHolder, autoBuffer, hostSize, range.Offset);
                 tempCopyHolder.Dispose();
+            }
+            else
+            {
+                BufferHolder.InsertBufferBarrier(
+                    _gd,
+                    cbs.CommandBuffer,
+                    copyToBuffer,
+                    AccessFlags.TransferWriteBit,
+                    BufferHolder.DefaultAccessFlags,
+                    PipelineStageFlags.TransferBit,
+                    PipelineStageFlags.AllCommandsBit,
+                    offset,
+                    outSize);
             }
         }
 
