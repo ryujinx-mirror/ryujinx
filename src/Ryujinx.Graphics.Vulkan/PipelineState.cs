@@ -439,7 +439,7 @@ namespace Ryujinx.Graphics.Vulkan
                 {
                     SType = StructureType.PipelineInputAssemblyStateCreateInfo,
                     PrimitiveRestartEnable = primitiveRestartEnable,
-                    Topology = Topology,
+                    Topology = HasTessellationControlShader ? PrimitiveTopology.PatchList : Topology,
                 };
 
                 var tessellationState = new PipelineTessellationStateCreateInfo
