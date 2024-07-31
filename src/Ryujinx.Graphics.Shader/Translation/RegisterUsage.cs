@@ -155,9 +155,14 @@ namespace Ryujinx.Graphics.Shader.Translation
                         localInputs[block.Index] |= GetMask(register) & ~localOutputs[block.Index];
                     }
 
-                    if (operation.Dest != null && operation.Dest.Type == OperandType.Register)
+                    for (int dstIndex = 0; dstIndex < operation.DestsCount; dstIndex++)
                     {
-                        localOutputs[block.Index] |= GetMask(operation.Dest.GetRegister());
+                        Operand dest = operation.GetDest(dstIndex);
+
+                        if (dest != null && dest.Type == OperandType.Register)
+                        {
+                            localOutputs[block.Index] |= GetMask(dest.GetRegister());
+                        }
                     }
                 }
             }
