@@ -234,7 +234,7 @@ namespace Ryujinx.Audio.Renderer.Server.Performance
         {
             performanceEntry = null;
 
-            if (_entryDetailIndex > MaxFrameDetailCount)
+            if (_entryDetailIndex >= MaxFrameDetailCount)
             {
                 return false;
             }
@@ -245,7 +245,7 @@ namespace Ryujinx.Audio.Renderer.Server.Performance
                 EntryCountOffset = (uint)CurrentHeader.GetEntryCountOffset(),
             };
 
-            uint baseEntryOffset = (uint)(Unsafe.SizeOf<THeader>() + GetEntriesSize() + Unsafe.SizeOf<IPerformanceDetailEntry>() * _entryDetailIndex);
+            uint baseEntryOffset = (uint)(Unsafe.SizeOf<THeader>() + GetEntriesSize() + Unsafe.SizeOf<TEntryDetail>() * _entryDetailIndex);
 
             ref TEntryDetail entryDetail = ref EntriesDetail[_entryDetailIndex];
 

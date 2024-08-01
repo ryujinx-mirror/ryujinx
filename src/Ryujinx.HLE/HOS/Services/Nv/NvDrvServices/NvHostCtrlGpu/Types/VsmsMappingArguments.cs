@@ -9,5 +9,6 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostCtrlGpu.Types
         public byte Sm0TpcIndex;
         public byte Sm1GpcIndex;
         public byte Sm1TpcIndex;
+        public uint Reserved;
     }
 }
