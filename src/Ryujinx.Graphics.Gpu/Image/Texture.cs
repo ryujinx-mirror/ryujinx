@@ -1,4 +1,5 @@
 using Ryujinx.Common.Logging;
+using Ryujinx.Common.Memory;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.Gpu.Memory;
 using Ryujinx.Graphics.Texture;
@@ -805,7 +806,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                         sliceDepth,
                         levels,
                         layers,
-                        out IMemoryOwner<byte> decoded))
+                        out MemoryOwner<byte> decoded))
                     {
                         string texInfo = $"{Info.Target} {Info.FormatInfo.Format} {Info.Width}x{Info.Height}x{Info.DepthOrLayers} levels {Info.Levels}";
 

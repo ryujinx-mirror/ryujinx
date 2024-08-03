@@ -192,9 +192,9 @@ namespace Ryujinx.Graphics.Gpu.Memory
             }
             else
             {
-                IMemoryOwner<byte> memoryOwner = ByteMemoryPool.Rent(range.GetSize());
+                MemoryOwner<byte> memoryOwner = MemoryOwner<byte>.Rent(checked((int)range.GetSize()));
 
-                Memory<byte> memory = memoryOwner.Memory;
+                Span<byte> memorySpan = memoryOwner.Span;
 
                 int offset = 0;
                 for (int i = 0; i < range.Count; i++)
@@ -203,7 +203,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
                     int size = (int)currentRange.Size;
                     if (currentRange.Address != MemoryManager.PteUnmapped)
                     {
-                        GetSpan(currentRange.Address, size).CopyTo(memory.Span.Slice(offset, size));
+                        GetSpan(currentRange.Address, size).CopyTo(memorySpan.Slice(offset, size));
                     }
                     offset += size;
                 }

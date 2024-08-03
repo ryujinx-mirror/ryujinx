@@ -211,7 +211,7 @@ namespace Ryujinx.Graphics.Vulkan
 
         public void Initialize()
         {
-            IMemoryOwner<byte> dummyTextureData = ByteMemoryPool.RentCleared(4);
+            MemoryOwner<byte> dummyTextureData = MemoryOwner<byte>.RentCleared(4);
             _dummyTexture.SetData(dummyTextureData);
         }
 
