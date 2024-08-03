@@ -266,8 +266,18 @@ namespace Ryujinx.UI.App.Common
         public bool TryGetApplicationsFromFile(string applicationPath, out List<ApplicationData> applications)
         {
             applications = [];
+            long fileSize;
 
-            long fileSize = new FileInfo(applicationPath).Length;
+            try
+            {
+                fileSize = new FileInfo(applicationPath).Length;
+            }
+            catch (FileNotFoundException)
+            {
+                Logger.Warning?.Print(LogClass.Application, $"The file was not found: '{applicationPath}'");
+
+                return false;
+            }
 
             BlitStruct<ApplicationControlProperty> controlHolder = new(1);
 
@@ -502,7 +512,13 @@ namespace Ryujinx.UI.App.Common
 
                     try
                     {
-                        IEnumerable<string> files = Directory.EnumerateFiles(appDir, "*", SearchOption.AllDirectories).Where(file =>
+                        EnumerationOptions options = new()
+                        {
+                            RecurseSubdirectories = true,
+                            IgnoreInaccessible = false,
+                        };
+
+                        IEnumerable<string> files = Directory.EnumerateFiles(appDir, "*", options).Where(file =>
                         {
                             return
                             (Path.GetExtension(file).ToLower() is ".nsp" && ConfigurationState.Instance.UI.ShownFileTypes.NSP.Value) ||
@@ -521,13 +537,17 @@ namespace Ryujinx.UI.App.Common
                             }
 
                             var fileInfo = new FileInfo(app);
-                            string extension = fileInfo.Extension.ToLower();
 
-                            if (!fileInfo.Attributes.HasFlag(FileAttributes.Hidden) && extension is ".nsp" or ".pfs0" or ".xci" or ".nca" or ".nro" or ".nso")
+                            try
                             {
                                 var fullPath = fileInfo.ResolveLinkTarget(true)?.FullName ?? fileInfo.FullName;
+
                                 applicationPaths.Add(fullPath);
                                 numApplicationsFound++;
+                            }
+                            catch (IOException exception)
+                            {
+                                Logger.Warning?.Print(LogClass.Application, $"Failed to resolve the full path to file: \"{app}\" Error: {exception}");
                             }
                         }
                     }
