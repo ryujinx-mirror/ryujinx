@@ -37,6 +37,7 @@ namespace Ryujinx.Ava.UI.Windows
         internal static MainWindowViewModel MainWindowViewModel { get; private set; }
 
         private bool _isLoading;
+        private bool _applicationsLoadedOnce;
 
         private UserChannelPersistence _userChannelPersistence;
         private static bool _deferLoad;
@@ -224,7 +225,10 @@ namespace Ryujinx.Ava.UI.Windows
                 ? IntegrityCheckLevel.ErrorOnInvalid
                 : IntegrityCheckLevel.None;
 
-            ApplicationLibrary = new ApplicationLibrary(VirtualFileSystem, checkLevel);
+            ApplicationLibrary = new ApplicationLibrary(VirtualFileSystem, checkLevel)
+            {
+                DesiredLanguage = ConfigurationState.Instance.System.Language,
+            };
 
             // Save data created before we supported extra data in directory save data will not work properly if
             // given empty extra data. Luckily some of that extra data can be created using the data from the
@@ -472,7 +476,11 @@ namespace Ryujinx.Ava.UI.Windows
 
             ViewModel.RefreshFirmwareStatus();
 
-            LoadApplications();
+            // Load applications if no application was requested by the command line
+            if (!_deferLoad)
+            {
+                LoadApplications();
+            }
 
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
             CheckLaunchState();
@@ -485,6 +493,12 @@ namespace Ryujinx.Ava.UI.Windows
 
             if (MainContent.Content != content)
             {
+                // Load applications while switching to the GameLibrary if we haven't done that yet
+                if (!_applicationsLoadedOnce && content == GameLibrary)
+                {
+                    LoadApplications();
+                }
+
                 MainContent.Content = content;
             }
         }
@@ -581,6 +595,7 @@ namespace Ryujinx.Ava.UI.Windows
 
         public void LoadApplications()
         {
+            _applicationsLoadedOnce = true;
             ViewModel.Applications.Clear();
 
             StatusBarView.LoadProgressBar.IsVisible = true;
@@ -622,7 +637,8 @@ namespace Ryujinx.Ava.UI.Windows
 
             Thread applicationLibraryThread = new(() =>
             {
-                ApplicationLibrary.LoadApplications(ConfigurationState.Instance.UI.GameDirs, ConfigurationState.Instance.System.Language);
+                ApplicationLibrary.DesiredLanguage = ConfigurationState.Instance.System.Language;
+                ApplicationLibrary.LoadApplications(ConfigurationState.Instance.UI.GameDirs);
 
                 _isLoading = false;
             })

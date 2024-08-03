@@ -256,6 +256,12 @@ namespace Ryujinx
             MainWindow mainWindow = new();
             mainWindow.Show();
 
+            // Load the game table if no application was requested by the command line
+            if (CommandLineState.LaunchPathArg == null)
+            {
+                mainWindow.UpdateGameTable();
+            }
+
             if (OperatingSystem.IsLinux())
             {
                 int currentVmMaxMapCount = LinuxHelper.VmMaxMapCount;
