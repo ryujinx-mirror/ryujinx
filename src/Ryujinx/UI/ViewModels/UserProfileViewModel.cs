@@ -1,7 +1,7 @@
-using Microsoft.IdentityModel.Tokens;
 using Ryujinx.Ava.UI.Models;
 using System;
 using System.Collections.ObjectModel;
+using System.Linq;
 
 namespace Ryujinx.Ava.UI.ViewModels
 {
@@ -11,7 +11,7 @@ namespace Ryujinx.Ava.UI.ViewModels
         {
             Profiles = new ObservableCollection<BaseModel>();
             LostProfiles = new ObservableCollection<UserProfile>();
-            IsEmpty = LostProfiles.IsNullOrEmpty();
+            IsEmpty = !LostProfiles.Any();
         }
 
         public ObservableCollection<BaseModel> Profiles { get; set; }
