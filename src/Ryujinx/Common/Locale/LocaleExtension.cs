@@ -21,7 +21,7 @@ namespace Ryujinx.Ava.Common.Locale
 
             var builder = new CompiledBindingPathBuilder();
 
-            builder.SetRawSource(LocaleManager.Instance)
+            builder
                 .Property(new ClrPropertyInfo("Item",
                 obj => (LocaleManager.Instance[keyToUse]),
                 null,
@@ -32,7 +32,10 @@ namespace Ryujinx.Ava.Common.Locale
 
             var path = builder.Build();
 
-            var binding = new CompiledBindingExtension(path);
+            var binding = new CompiledBindingExtension(path)
+            {
+                Source = LocaleManager.Instance
+            };
 
             return binding.ProvideValue(serviceProvider);
         }

@@ -139,8 +139,10 @@ namespace Ryujinx.Ava.Common.Locale
 
             foreach (var item in locale)
             {
-                this[item.Key] = item.Value;
+                _localeStrings[item.Key] = item.Value;
             }
+
+            OnPropertyChanged("Item");
 
             LocaleChanged?.Invoke();
         }
