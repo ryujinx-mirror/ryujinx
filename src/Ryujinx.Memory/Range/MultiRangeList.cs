@@ -30,7 +30,7 @@ namespace Ryujinx.Memory.Range
             {
                 var subrange = range.GetSubRange(i);
 
-                if (IsInvalid(ref subrange))
+                if (MemoryRange.IsInvalid(ref subrange))
                 {
                     continue;
                 }
@@ -56,7 +56,7 @@ namespace Ryujinx.Memory.Range
             {
                 var subrange = range.GetSubRange(i);
 
-                if (IsInvalid(ref subrange))
+                if (MemoryRange.IsInvalid(ref subrange))
                 {
                     continue;
                 }
@@ -99,7 +99,7 @@ namespace Ryujinx.Memory.Range
             {
                 var subrange = range.GetSubRange(i);
 
-                if (IsInvalid(ref subrange))
+                if (MemoryRange.IsInvalid(ref subrange))
                 {
                     continue;
                 }
@@ -140,17 +140,6 @@ namespace Ryujinx.Memory.Range
             }
 
             return overlapCount;
-        }
-
-        /// <summary>
-        /// Checks if a given sub-range of memory is invalid.
-        /// Those are used to represent unmapped memory regions (holes in the region mapping).
-        /// </summary>
-        /// <param name="subRange">Memory range to checl</param>
-        /// <returns>True if the memory range is considered invalid, false otherwise</returns>
-        private static bool IsInvalid(ref MemoryRange subRange)
-        {
-            return subRange.Address == ulong.MaxValue;
         }
 
         /// <summary>

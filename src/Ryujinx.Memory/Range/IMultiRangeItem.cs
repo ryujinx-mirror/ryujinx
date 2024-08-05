@@ -4,6 +4,22 @@ namespace Ryujinx.Memory.Range
     {
         MultiRange Range { get; }
 
-        ulong BaseAddress => Range.GetSubRange(0).Address;
+        ulong BaseAddress
+        {
+            get
+            {
+                for (int index = 0; index < Range.Count; index++)
+                {
+                    MemoryRange subRange = Range.GetSubRange(index);
+
+                    if (!MemoryRange.IsInvalid(ref subRange))
+                    {
+                        return subRange.Address;
+                    }
+                }
+
+                return MemoryRange.InvalidAddress;
+            }
+        }
     }
 }

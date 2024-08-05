@@ -6,6 +6,11 @@ namespace Ryujinx.Memory.Range
     public readonly record struct MemoryRange
     {
         /// <summary>
+        /// Special address value used to indicate than an address is invalid.
+        /// </summary>
+        internal const ulong InvalidAddress = ulong.MaxValue;
+
+        /// <summary>
         /// An empty memory range, with a null address and zero size.
         /// </summary>
         public static MemoryRange Empty => new(0UL, 0);
@@ -59,12 +64,23 @@ namespace Ryujinx.Memory.Range
         }
 
         /// <summary>
+        /// Checks if a given sub-range of memory is invalid.
+        /// Those are used to represent unmapped memory regions (holes in the region mapping).
+        /// </summary>
+        /// <param name="subRange">Memory range to check</param>
+        /// <returns>True if the memory range is considered invalid, false otherwise</returns>
+        internal static bool IsInvalid(ref MemoryRange subRange)
+        {
+            return subRange.Address == InvalidAddress;
+        }
+
+        /// <summary>
         /// Returns a string summary of the memory range.
         /// </summary>
         /// <returns>A string summary of the memory range</returns>
         public override string ToString()
         {
-            if (Address == ulong.MaxValue)
+            if (Address == InvalidAddress)
             {
                 return $"[Unmapped 0x{Size:X}]";
             }
