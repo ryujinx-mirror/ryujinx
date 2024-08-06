@@ -1,6 +1,5 @@
 using Microsoft.IO;
 using Ryujinx.Common.Memory;
-using System.Buffers;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,7 +15,7 @@ namespace Ryujinx.Common.Utilities
             return output.ToArray();
         }
 
-        public static IMemoryOwner<byte> StreamToRentedMemory(Stream input)
+        public static MemoryOwner<byte> StreamToRentedMemory(Stream input)
         {
             if (input is MemoryStream inputMemoryStream)
             {
@@ -26,9 +25,9 @@ namespace Ryujinx.Common.Utilities
             {
                 long bytesExpected = input.Length;
 
-                IMemoryOwner<byte> ownedMemory = ByteMemoryPool.Rent(bytesExpected);
+                MemoryOwner<byte> ownedMemory = MemoryOwner<byte>.Rent(checked((int)bytesExpected));
 
-                var destSpan = ownedMemory.Memory.Span;
+                var destSpan = ownedMemory.Span;
 
                 int totalBytesRead = 0;
 
@@ -66,14 +65,14 @@ namespace Ryujinx.Common.Utilities
             return stream.ToArray();
         }
 
-        private static IMemoryOwner<byte> MemoryStreamToRentedMemory(MemoryStream input)
+        private static MemoryOwner<byte> MemoryStreamToRentedMemory(MemoryStream input)
         {
             input.Position = 0;
 
-            IMemoryOwner<byte> ownedMemory = ByteMemoryPool.Rent(input.Length);
+            MemoryOwner<byte> ownedMemory = MemoryOwner<byte>.Rent(checked((int)input.Length));
 
             // Discard the return value because we assume reading a MemoryStream always succeeds completely.
-            _ = input.Read(ownedMemory.Memory.Span);
+            _ = input.Read(ownedMemory.Span);
 
             return ownedMemory;
         }
