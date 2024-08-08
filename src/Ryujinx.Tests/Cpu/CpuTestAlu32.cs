@@ -25,6 +25,24 @@ namespace Ryujinx.Tests.Cpu
             };
         }
 
+        private static uint[] UQAddSub16()
+        {
+            return new[]
+            {
+                0xe6600f10u, // UQADD16 R0, R0, R0
+                0xe6600f70u, // UQSUB16 R0, R0, R0
+            };
+        }
+
+        private static uint[] UQAddSub8()
+        {
+            return new[]
+            {
+                0xe6600f90u, // UQADD8 R0, R0, R0
+                0xe6600ff0u, // UQSUB8 R0, R0, R0
+            };
+        }
+
         private static uint[] SsatUsat()
         {
             return new[]
@@ -166,6 +184,42 @@ namespace Ryujinx.Tests.Cpu
 
         [Test, Pairwise]
         public void SU_H_AddSub_8([ValueSource(nameof(SuHAddSub8))] uint opcode,
+                                  [Values(0u, 0xdu)] uint rd,
+                                  [Values(1u)] uint rm,
+                                  [Values(2u)] uint rn,
+                                  [Random(RndCnt)] uint w0,
+                                  [Random(RndCnt)] uint w1,
+                                  [Random(RndCnt)] uint w2)
+        {
+            opcode |= ((rm & 15) << 0) | ((rd & 15) << 12) | ((rn & 15) << 16);
+
+            uint sp = TestContext.CurrentContext.Random.NextUInt();
+
+            SingleOpcode(opcode, r0: w0, r1: w1, r2: w2, sp: sp);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise]
+        public void U_Q_AddSub_16([ValueSource(nameof(UQAddSub16))] uint opcode,
+                                  [Values(0u, 0xdu)] uint rd,
+                                  [Values(1u)] uint rm,
+                                  [Values(2u)] uint rn,
+                                  [Random(RndCnt)] uint w0,
+                                  [Random(RndCnt)] uint w1,
+                                  [Random(RndCnt)] uint w2)
+        {
+            opcode |= ((rm & 15) << 0) | ((rd & 15) << 12) | ((rn & 15) << 16);
+
+            uint sp = TestContext.CurrentContext.Random.NextUInt();
+
+            SingleOpcode(opcode, r0: w0, r1: w1, r2: w2, sp: sp);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise]
+        public void U_Q_AddSub_8([ValueSource(nameof(UQAddSub8))] uint opcode,
                                   [Values(0u, 0xdu)] uint rd,
                                   [Values(1u)] uint rm,
                                   [Values(2u)] uint rn,

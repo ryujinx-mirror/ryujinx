@@ -327,6 +327,32 @@ namespace Ryujinx.Tests.Cpu
 
             CompareAgainstUnicorn();
         }
+
+        [Test, Pairwise, Description("VSWP D0, D0")]
+        public void Vswp([Values(0u, 1u)] uint rd,
+                         [Values(0u, 1u)] uint rm,
+                         [Values] bool q)
+        {
+            uint opcode = 0xf3b20000u; // VSWP D0, D0
+
+            if (q)
+            {
+                opcode |= 1u << 6;
+
+                rd &= ~1u;
+                rm &= ~1u;
+            }
+
+            opcode |= ((rd & 0xf) << 12) | ((rd & 0x10) << 18);
+            opcode |= ((rm & 0xf) << 0) | ((rm & 0x10) << 1);
+
+            V128 v0 = new(TestContext.CurrentContext.Random.NextULong(), TestContext.CurrentContext.Random.NextULong());
+            V128 v1 = new(TestContext.CurrentContext.Random.NextULong(), TestContext.CurrentContext.Random.NextULong());
+
+            SingleOpcode(opcode, v0: v0, v1: v1);
+
+            CompareAgainstUnicorn();
+        }
 #endif
     }
 }

@@ -1246,6 +1246,33 @@ namespace ARMeilleure.Instructions
             EmitVectorUnaryNarrowOp32(context, (op1) => EmitSatQ(context, op1, 8 << op.Size, signedSrc: true, signedDst: false), signed: true);
         }
 
+        public static void Vqrdmulh(ArmEmitterContext context)
+        {
+            OpCode32SimdReg op = (OpCode32SimdReg)context.CurrOp;
+            int eSize = 8 << op.Size;
+
+            EmitVectorBinaryOpI32(context, (op1, op2) =>
+            {
+                if (op.Size == 2)
+                {
+                    op1 = context.SignExtend32(OperandType.I64, op1);
+                    op2 = context.SignExtend32(OperandType.I64, op2);
+                }
+
+                Operand res = context.Multiply(op1, op2);
+                res = context.Add(res, Const(res.Type, 1L << (eSize - 2)));
+                res = context.ShiftRightSI(res, Const(eSize - 1));
+                res = EmitSatQ(context, res, eSize, signedSrc: true, signedDst: true);
+
+                if (op.Size == 2)
+                {
+                    res = context.ConvertI64ToI32(res);
+                }
+
+                return res;
+            }, signed: true);
+        }
+
         public static void Vqsub(ArmEmitterContext context)
         {
             OpCode32SimdReg op = (OpCode32SimdReg)context.CurrOp;

@@ -2,6 +2,8 @@ using ARMeilleure.Decoders;
 using ARMeilleure.IntermediateRepresentation;
 using ARMeilleure.State;
 using ARMeilleure.Translation;
+using System;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using static ARMeilleure.Instructions.InstEmitAluHelper;
 using static ARMeilleure.Instructions.InstEmitHelper;
@@ -558,6 +560,46 @@ namespace ARMeilleure.Instructions
             EmitHsub8(context, unsigned: true);
         }
 
+        public static void Uqadd16(ArmEmitterContext context)
+        {
+            OpCode32AluReg op = (OpCode32AluReg)context.CurrOp;
+
+            SetIntA32(context, op.Rd, EmitUnsigned16BitPair(context, GetIntA32(context, op.Rn), GetIntA32(context, op.Rm), (d, n, m) =>
+            {
+                EmitSaturateUqadd(context, d, context.Add(n, m), 16);
+            }));
+        }
+
+        public static void Uqadd8(ArmEmitterContext context)
+        {
+            OpCode32AluReg op = (OpCode32AluReg)context.CurrOp;
+
+            SetIntA32(context, op.Rd, EmitUnsigned8BitPair(context, GetIntA32(context, op.Rn), GetIntA32(context, op.Rm), (d, n, m) =>
+            {
+                EmitSaturateUqadd(context, d, context.Add(n, m), 8);
+            }));
+        }
+
+        public static void Uqsub16(ArmEmitterContext context)
+        {
+            OpCode32AluReg op = (OpCode32AluReg)context.CurrOp;
+
+            SetIntA32(context, op.Rd, EmitUnsigned16BitPair(context, GetIntA32(context, op.Rn), GetIntA32(context, op.Rm), (d, n, m) =>
+            {
+                EmitSaturateUqsub(context, d, context.Subtract(n, m), 16);
+            }));
+        }
+
+        public static void Uqsub8(ArmEmitterContext context)
+        {
+            OpCode32AluReg op = (OpCode32AluReg)context.CurrOp;
+
+            SetIntA32(context, op.Rd, EmitUnsigned8BitPair(context, GetIntA32(context, op.Rn), GetIntA32(context, op.Rm), (d, n, m) =>
+            {
+                EmitSaturateUqsub(context, d, context.Subtract(n, m), 8);
+            }));
+        }
+
         public static void Usat(ArmEmitterContext context)
         {
             OpCode32Sat op = (OpCode32Sat)context.CurrOp;
@@ -932,6 +974,148 @@ namespace ARMeilleure.Instructions
 
                 context.MarkLabel(lblEnd);
             }
+        }
+
+        private static void EmitSaturateUqadd(ArmEmitterContext context, Operand result, Operand value, uint saturateTo)
+        {
+            Debug.Assert(saturateTo <= 32);
+
+            if (saturateTo == 32)
+            {
+                // No saturation possible for this case.
+
+                context.Copy(result, value);
+
+                return;
+            }
+            else if (saturateTo == 0)
+            {
+                // Result is always zero if we saturate 0 bits.
+
+                context.Copy(result, Const(0));
+
+                return;
+            }
+
+            // If the result is 0, the values are equal and we don't need saturation.
+            Operand lblNoSat = Label();
+            context.BranchIfFalse(lblNoSat, context.ShiftRightUI(value, Const((int)saturateTo)));
+
+            // Saturate.
+            context.Copy(result, Const(uint.MaxValue >> (32 - (int)saturateTo)));
+
+            Operand lblExit = Label();
+            context.Branch(lblExit);
+
+            context.MarkLabel(lblNoSat);
+
+            context.Copy(result, value);
+
+            context.MarkLabel(lblExit);
+        }
+
+        private static void EmitSaturateUqsub(ArmEmitterContext context, Operand result, Operand value, uint saturateTo)
+        {
+            Debug.Assert(saturateTo <= 32);
+
+            if (saturateTo == 32)
+            {
+                // No saturation possible for this case.
+
+                context.Copy(result, value);
+
+                return;
+            }
+            else if (saturateTo == 0)
+            {
+                // Result is always zero if we saturate 0 bits.
+
+                context.Copy(result, Const(0));
+
+                return;
+            }
+
+            // If the result is 0, the values are equal and we don't need saturation.
+            Operand lblNoSat = Label();
+            context.BranchIf(lblNoSat, value, Const(0), Comparison.GreaterOrEqual);
+
+            // Saturate.
+            // Assumes that the value can only underflow, since this is only used for unsigned subtraction.
+            context.Copy(result, Const(0));
+
+            Operand lblExit = Label();
+            context.Branch(lblExit);
+
+            context.MarkLabel(lblNoSat);
+
+            context.Copy(result, value);
+
+            context.MarkLabel(lblExit);
+        }
+
+        private static Operand EmitUnsigned16BitPair(ArmEmitterContext context, Operand rn, Operand rm, Action<Operand, Operand, Operand> elementAction)
+        {
+            Operand tempD = context.AllocateLocal(OperandType.I32);
+
+            Operand tempN = context.ZeroExtend16(OperandType.I32, rn);
+            Operand tempM = context.ZeroExtend16(OperandType.I32, rm);
+            elementAction(tempD, tempN, tempM);
+            Operand tempD2 = context.ZeroExtend16(OperandType.I32, tempD);
+
+            tempN = context.ShiftRightUI(rn, Const(16));
+            tempM = context.ShiftRightUI(rm, Const(16));
+            elementAction(tempD, tempN, tempM);
+            return context.BitwiseOr(tempD2, context.ShiftLeft(tempD, Const(16)));
+        }
+
+        private static Operand EmitSigned8BitPair(ArmEmitterContext context, Operand rn, Operand rm, Action<Operand, Operand, Operand> elementAction)
+        {
+            return Emit8BitPair(context, rn, rm, elementAction, unsigned: false);
+        }
+
+        private static Operand EmitUnsigned8BitPair(ArmEmitterContext context, Operand rn, Operand rm, Action<Operand, Operand, Operand> elementAction)
+        {
+            return Emit8BitPair(context, rn, rm, elementAction, unsigned: true);
+        }
+
+        private static Operand Emit8BitPair(ArmEmitterContext context, Operand rn, Operand rm, Action<Operand, Operand, Operand> elementAction, bool unsigned)
+        {
+            Operand tempD = context.AllocateLocal(OperandType.I32);
+            Operand result = default;
+
+            for (int b = 0; b < 4; b++)
+            {
+                Operand nByte = b != 0 ? context.ShiftRightUI(rn, Const(b * 8)) : rn;
+                Operand mByte = b != 0 ? context.ShiftRightUI(rm, Const(b * 8)) : rm;
+
+                if (unsigned)
+                {
+                    nByte = context.ZeroExtend8(OperandType.I32, nByte);
+                    mByte = context.ZeroExtend8(OperandType.I32, mByte);
+                }
+                else
+                {
+                    nByte = context.SignExtend8(OperandType.I32, nByte);
+                    mByte = context.SignExtend8(OperandType.I32, mByte);
+                }
+
+                elementAction(tempD, nByte, mByte);
+
+                if (b == 0)
+                {
+                    result = context.ZeroExtend8(OperandType.I32, tempD);
+                }
+                else if (b < 3)
+                {
+                    result = context.BitwiseOr(result, context.ShiftLeft(context.ZeroExtend8(OperandType.I32, tempD), Const(b * 8)));
+                }
+                else
+                {
+                    result = context.BitwiseOr(result, context.ShiftLeft(tempD, Const(24)));
+                }
+            }
+
+            return result;
         }
 
         private static void EmitAluStore(ArmEmitterContext context, Operand value)

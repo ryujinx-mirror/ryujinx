@@ -1,6 +1,5 @@
 using Ryujinx.Cpu.LightningJit.CodeGen;
 using Ryujinx.Cpu.LightningJit.CodeGen.Arm64;
-using System.Diagnostics;
 
 namespace Ryujinx.Cpu.LightningJit.Arm32.Target.Arm64
 {

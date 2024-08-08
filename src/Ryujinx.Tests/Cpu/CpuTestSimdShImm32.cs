@@ -202,7 +202,7 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Pairwise, Description("VSHL.<size> {<Vd>}, <Vm>, #<imm>")]
-        public void Vshl_Imm([Values(0u)] uint rd,
+        public void Vshl_Imm([Values(0u, 1u)] uint rd,
                              [Values(2u, 0u)] uint rm,
                              [Values(0u, 1u, 2u, 3u)] uint size,
                              [Random(RndCntShiftImm)] uint shiftImm,
@@ -252,6 +252,40 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((rm & 0xf) << 0) | ((rm & 0x10) << 1);
             opcode |= ((rd & 0xf) << 12) | ((rd & 0x10) << 18);
             opcode |= ((imm & 0x3f) << 16);
+
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, z);
+            V128 v2 = MakeVectorE0E1(b, z);
+
+            SingleOpcode(opcode, v0: v0, v1: v1, v2: v2);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise, Description("VSLI.<size> {<Vd>}, <Vm>, #<imm>")]
+        public void Vsli([Values(0u, 1u)] uint rd,
+                         [Values(2u, 0u)] uint rm,
+                         [Values(0u, 1u, 2u, 3u)] uint size,
+                         [Random(RndCntShiftImm)] uint shiftImm,
+                         [Random(RndCnt)] ulong z,
+                         [Random(RndCnt)] ulong a,
+                         [Random(RndCnt)] ulong b,
+                         [Values] bool q)
+        {
+            uint opcode = 0xf3800510u; // VORR.I32 D0, #0x800000 (immediate value changes it into SLI)
+            if (q)
+            {
+                opcode |= 1 << 6;
+                rm <<= 1;
+                rd <<= 1;
+            }
+
+            uint imm = 1u << ((int)size + 3);
+            imm |= shiftImm & (imm - 1);
+
+            opcode |= ((rm & 0xf) << 0) | ((rm & 0x10) << 1);
+            opcode |= ((rd & 0xf) << 12) | ((rd & 0x10) << 18);
+            opcode |= ((imm & 0x3f) << 16) | ((imm & 0x40) << 1);
 
             V128 v0 = MakeVectorE0E1(z, z);
             V128 v1 = MakeVectorE0E1(a, z);

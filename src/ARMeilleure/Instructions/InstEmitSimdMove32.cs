@@ -191,6 +191,26 @@ namespace ARMeilleure.Instructions
             context.Copy(GetVecA32(op.Qd), res);
         }
 
+        public static void Vswp(ArmEmitterContext context)
+        {
+            OpCode32Simd op = (OpCode32Simd)context.CurrOp;
+
+            if (op.Q)
+            {
+                Operand temp = context.Copy(GetVecA32(op.Qd));
+
+                context.Copy(GetVecA32(op.Qd), GetVecA32(op.Qm));
+                context.Copy(GetVecA32(op.Qm), temp);
+            }
+            else
+            {
+                Operand temp = ExtractScalar(context, OperandType.I64, op.Vd);
+
+                InsertScalar(context, op.Vd, ExtractScalar(context, OperandType.I64, op.Vm));
+                InsertScalar(context, op.Vm, temp);
+            }
+        }
+
         public static void Vtbl(ArmEmitterContext context)
         {
             OpCode32SimdTbl op = (OpCode32SimdTbl)context.CurrOp;

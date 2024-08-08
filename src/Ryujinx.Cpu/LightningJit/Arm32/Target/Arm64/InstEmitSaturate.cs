@@ -114,7 +114,7 @@ namespace Ryujinx.Cpu.LightningJit.Arm32.Target.Arm64
             InstEmitCommon.EmitUnsigned16BitPair(context, rd, rn, rm, (d, n, m) =>
             {
                 context.Arm64Assembler.Add(d, n, m);
-                EmitSaturateUnsignedRange(context, d, 16);
+                EmitSaturateUqadd(context, d, 16);
             });
         }
 
@@ -123,7 +123,7 @@ namespace Ryujinx.Cpu.LightningJit.Arm32.Target.Arm64
             InstEmitCommon.EmitUnsigned8BitPair(context, rd, rn, rm, (d, n, m) =>
             {
                 context.Arm64Assembler.Add(d, n, m);
-                EmitSaturateUnsignedRange(context, d, 8);
+                EmitSaturateUqadd(context, d, 8);
             });
         }
 
@@ -140,7 +140,7 @@ namespace Ryujinx.Cpu.LightningJit.Arm32.Target.Arm64
                     context.Arm64Assembler.Add(d, n, m);
                 }
 
-                EmitSaturateUnsignedRange(context, d, 16);
+                EmitSaturateUq(context, d, 16, e == 0);
             });
         }
 
@@ -157,25 +157,25 @@ namespace Ryujinx.Cpu.LightningJit.Arm32.Target.Arm64
                     context.Arm64Assembler.Sub(d, n, m);
                 }
 
-                EmitSaturateUnsignedRange(context, d, 16);
+                EmitSaturateUq(context, d, 16, e != 0);
             });
         }
 
         public static void Uqsub16(CodeGenContext context, uint rd, uint rn, uint rm)
         {
-            InstEmitCommon.EmitSigned16BitPair(context, rd, rn, rm, (d, n, m) =>
+            InstEmitCommon.EmitUnsigned16BitPair(context, rd, rn, rm, (d, n, m) =>
             {
                 context.Arm64Assembler.Sub(d, n, m);
-                EmitSaturateUnsignedRange(context, d, 16);
+                EmitSaturateUqsub(context, d, 16);
             });
         }
 
         public static void Uqsub8(CodeGenContext context, uint rd, uint rn, uint rm)
         {
-            InstEmitCommon.EmitSigned8BitPair(context, rd, rn, rm, (d, n, m) =>
+            InstEmitCommon.EmitUnsigned8BitPair(context, rd, rn, rm, (d, n, m) =>
             {
                 context.Arm64Assembler.Sub(d, n, m);
-                EmitSaturateUnsignedRange(context, d, 8);
+                EmitSaturateUqsub(context, d, 8);
             });
         }
 
@@ -358,7 +358,17 @@ namespace Ryujinx.Cpu.LightningJit.Arm32.Target.Arm64
             }
         }
 
-        private static void EmitSaturateUnsignedRange(CodeGenContext context, Operand value, uint saturateTo)
+        private static void EmitSaturateUqadd(CodeGenContext context, Operand value, uint saturateTo)
+        {
+            EmitSaturateUq(context, value, saturateTo, isSub: false);
+        }
+
+        private static void EmitSaturateUqsub(CodeGenContext context, Operand value, uint saturateTo)
+        {
+            EmitSaturateUq(context, value, saturateTo, isSub: true);
+        }
+
+        private static void EmitSaturateUq(CodeGenContext context, Operand value, uint saturateTo, bool isSub)
         {
             Debug.Assert(saturateTo <= 32);
 
@@ -379,7 +389,7 @@ namespace Ryujinx.Cpu.LightningJit.Arm32.Target.Arm64
                 return;
             }
 
-            context.Arm64Assembler.Lsr(tempRegister.Operand, value, InstEmitCommon.Const(32 - (int)saturateTo));
+            context.Arm64Assembler.Lsr(tempRegister.Operand, value, InstEmitCommon.Const((int)saturateTo));
 
             int branchIndex = context.CodeWriter.InstructionPointer;
 
@@ -387,7 +397,7 @@ namespace Ryujinx.Cpu.LightningJit.Arm32.Target.Arm64
             context.Arm64Assembler.Cbz(tempRegister.Operand, 0);
 
             // Saturate.
-            context.Arm64Assembler.Mov(value, uint.MaxValue >> (32 - (int)saturateTo));
+            context.Arm64Assembler.Mov(value, isSub ? 0u : uint.MaxValue >> (32 - (int)saturateTo));
 
             int delta = context.CodeWriter.InstructionPointer - branchIndex;
             context.CodeWriter.WriteInstructionAt(branchIndex, context.CodeWriter.ReadInstructionAt(branchIndex) | (uint)((delta & 0x7ffff) << 5));

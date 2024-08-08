@@ -130,6 +130,36 @@ namespace ARMeilleure.Instructions
             EmitVectorUnaryNarrowOp32(context, (op1) => context.ShiftRightUI(op1, Const(shift)));
         }
 
+        public static void Vsli_I(ArmEmitterContext context)
+        {
+            OpCode32SimdShImm op = (OpCode32SimdShImm)context.CurrOp;
+            int shift = op.Shift;
+            int eSize = 8 << op.Size;
+
+            ulong mask = shift != 0 ? ulong.MaxValue >> (64 - shift) : 0UL;
+
+            Operand res = GetVec(op.Qd);
+
+            int elems = op.GetBytesCount() >> op.Size;
+
+            for (int index = 0; index < elems; index++)
+            {
+                Operand me = EmitVectorExtractZx(context, op.Qm, op.Im + index, op.Size);
+
+                Operand neShifted = context.ShiftLeft(me, Const(shift));
+
+                Operand de = EmitVectorExtractZx(context, op.Qd, op.Id + index, op.Size);
+
+                Operand deMasked = context.BitwiseAnd(de, Const(mask));
+
+                Operand e = context.BitwiseOr(neShifted, deMasked);
+
+                res = EmitVectorInsert(context, res, e, op.Id + index, op.Size);
+            }
+
+            context.Copy(GetVec(op.Qd), res);
+        }
+
         public static void Vsra(ArmEmitterContext context)
         {
             OpCode32SimdShImm op = (OpCode32SimdShImm)context.CurrOp;
