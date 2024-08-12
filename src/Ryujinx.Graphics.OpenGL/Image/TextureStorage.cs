@@ -48,7 +48,7 @@ namespace Ryujinx.Graphics.OpenGL.Image
                 internalFormat = (SizedInternalFormat)format.PixelInternalFormat;
             }
 
-            int levels = Info.GetLevelsClamped();
+            int levels = Info.Levels;
 
             switch (Info.Target)
             {

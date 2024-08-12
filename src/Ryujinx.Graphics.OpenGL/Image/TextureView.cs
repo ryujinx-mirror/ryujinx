@@ -51,7 +51,7 @@ namespace Ryujinx.Graphics.OpenGL.Image
                 pixelInternalFormat = format.PixelInternalFormat;
             }
 
-            int levels = Info.GetLevelsClamped();
+            int levels = Info.Levels;
 
             GL.TextureView(
                 Handle,
@@ -267,7 +267,7 @@ namespace Ryujinx.Graphics.OpenGL.Image
         public unsafe PinnedSpan<byte> GetData()
         {
             int size = 0;
-            int levels = Info.GetLevelsClamped();
+            int levels = Info.Levels;
 
             for (int level = 0; level < levels; level++)
             {
@@ -426,7 +426,7 @@ namespace Ryujinx.Graphics.OpenGL.Image
                 faces = 6;
             }
 
-            int levels = Info.GetLevelsClamped();
+            int levels = Info.Levels;
 
             for (int level = 0; level < levels; level++)
             {
@@ -716,7 +716,7 @@ namespace Ryujinx.Graphics.OpenGL.Image
             int width = Info.Width;
             int height = Info.Height;
             int depth = Info.Depth;
-            int levels = Info.GetLevelsClamped();
+            int levels = Info.Levels;
 
             int offset = 0;
 
