@@ -80,7 +80,10 @@ namespace ARMeilleure.Translation
                         return true;
                     }
 
-                    Monitor.Wait(Sync);
+                    if (!_disposed)
+                    {
+                        Monitor.Wait(Sync);
+                    }
                 }
             }
 
