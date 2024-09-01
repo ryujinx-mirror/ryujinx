@@ -64,7 +64,7 @@ namespace Ryujinx.Graphics.Vulkan
                         PCode = (uint*)pCode,
                     };
 
-                    api.CreateShaderModule(device, shaderModuleCreateInfo, null, out _module).ThrowOnError();
+                    api.CreateShaderModule(device, in shaderModuleCreateInfo, null, out _module).ThrowOnError();
                 }
 
                 CompileStatus = ProgramLinkStatus.Success;

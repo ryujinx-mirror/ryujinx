@@ -45,7 +45,7 @@ namespace Ryujinx.Graphics.Vulkan
                     Level = CommandBufferLevel.Primary,
                 };
 
-                api.AllocateCommandBuffers(device, allocateInfo, out CommandBuffer);
+                api.AllocateCommandBuffers(device, in allocateInfo, out CommandBuffer);
 
                 Dependants = new List<IAuto>();
                 Waitables = new List<MultiFenceHolder>();
@@ -83,7 +83,7 @@ namespace Ryujinx.Graphics.Vulkan
                         CommandPoolCreateFlags.ResetCommandBufferBit,
             };
 
-            api.CreateCommandPool(device, commandPoolCreateInfo, null, out _pool).ThrowOnError();
+            api.CreateCommandPool(device, in commandPoolCreateInfo, null, out _pool).ThrowOnError();
 
             // We need at least 2 command buffers to get texture data in some cases.
             _totalCommandBuffers = isLight ? 2 : MaxCommandBuffers;
@@ -253,7 +253,7 @@ namespace Ryujinx.Graphics.Vulkan
                             SType = StructureType.CommandBufferBeginInfo,
                         };
 
-                        _api.BeginCommandBuffer(entry.CommandBuffer, commandBufferBeginInfo).ThrowOnError();
+                        _api.BeginCommandBuffer(entry.CommandBuffer, in commandBufferBeginInfo).ThrowOnError();
 
                         return new CommandBufferScoped(this, entry.CommandBuffer, cursor);
                     }
@@ -311,7 +311,7 @@ namespace Ryujinx.Graphics.Vulkan
 
                         lock (_queueLock)
                         {
-                            _api.QueueSubmit(_queue, 1, sInfo, entry.Fence.GetUnsafe()).ThrowOnError();
+                            _api.QueueSubmit(_queue, 1, in sInfo, entry.Fence.GetUnsafe()).ThrowOnError();
                         }
                     }
                 }

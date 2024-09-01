@@ -160,7 +160,7 @@ namespace Ryujinx.Graphics.Vulkan
                 SwizzleComponent.Blue,
                 SwizzleComponent.Alpha);
 
-            _gd.SwapchainApi.CreateSwapchain(_device, swapchainCreateInfo, null, out _swapchain).ThrowOnError();
+            _gd.SwapchainApi.CreateSwapchain(_device, in swapchainCreateInfo, null, out _swapchain).ThrowOnError();
 
             _gd.SwapchainApi.GetSwapchainImages(_device, _swapchain, &imageCount, null);
 
@@ -187,14 +187,14 @@ namespace Ryujinx.Graphics.Vulkan
 
             for (int i = 0; i < _imageAvailableSemaphores.Length; i++)
             {
-                _gd.Api.CreateSemaphore(_device, semaphoreCreateInfo, null, out _imageAvailableSemaphores[i]).ThrowOnError();
+                _gd.Api.CreateSemaphore(_device, in semaphoreCreateInfo, null, out _imageAvailableSemaphores[i]).ThrowOnError();
             }
 
             _renderFinishedSemaphores = new Semaphore[imageCount];
 
             for (int i = 0; i < _renderFinishedSemaphores.Length; i++)
             {
-                _gd.Api.CreateSemaphore(_device, semaphoreCreateInfo, null, out _renderFinishedSemaphores[i]).ThrowOnError();
+                _gd.Api.CreateSemaphore(_device, in semaphoreCreateInfo, null, out _renderFinishedSemaphores[i]).ThrowOnError();
             }
         }
 
@@ -220,7 +220,7 @@ namespace Ryujinx.Graphics.Vulkan
                 SubresourceRange = subresourceRange,
             };
 
-            _gd.Api.CreateImageView(_device, imageCreateInfo, null, out var imageView).ThrowOnError();
+            _gd.Api.CreateImageView(_device, in imageCreateInfo, null, out var imageView).ThrowOnError();
 
             return new TextureView(_gd, _device, new DisposableImageView(_gd.Api, _device, imageView), info, format);
         }
@@ -479,7 +479,7 @@ namespace Ryujinx.Graphics.Vulkan
 
             lock (_gd.QueueLock)
             {
-                _gd.SwapchainApi.QueuePresent(_gd.Queue, presentInfo);
+                _gd.SwapchainApi.QueuePresent(_gd.Queue, in presentInfo);
             }
         }
 
@@ -611,7 +611,7 @@ namespace Ryujinx.Graphics.Vulkan
                 0,
                 null,
                 1,
-                barrier);
+                in barrier);
         }
 
         private void CaptureFrame(TextureView texture, int x, int y, int width, int height, bool isBgra, bool flipX, bool flipY)

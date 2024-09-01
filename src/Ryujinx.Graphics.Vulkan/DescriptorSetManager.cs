@@ -40,7 +40,7 @@ namespace Ryujinx.Graphics.Vulkan
                         PPoolSizes = pPoolsSize,
                     };
 
-                    Api.CreateDescriptorPool(device, descriptorPoolCreateInfo, null, out _pool).ThrowOnError();
+                    Api.CreateDescriptorPool(device, in descriptorPoolCreateInfo, null, out _pool).ThrowOnError();
                 }
             }
 

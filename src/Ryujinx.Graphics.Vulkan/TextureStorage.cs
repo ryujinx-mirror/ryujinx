@@ -114,7 +114,7 @@ namespace Ryujinx.Graphics.Vulkan
                 Flags = flags,
             };
 
-            gd.Api.CreateImage(device, imageCreateInfo, null, out _image).ThrowOnError();
+            gd.Api.CreateImage(device, in imageCreateInfo, null, out _image).ThrowOnError();
 
             if (foreignAllocation == null)
             {
@@ -284,7 +284,7 @@ namespace Ryujinx.Graphics.Vulkan
                 0,
                 null,
                 1,
-                barrier);
+                in barrier);
 
             if (useTempCbs)
             {
@@ -401,11 +401,11 @@ namespace Ryujinx.Graphics.Vulkan
 
                 if (to)
                 {
-                    _gd.Api.CmdCopyImageToBuffer(commandBuffer, image, ImageLayout.General, buffer, 1, region);
+                    _gd.Api.CmdCopyImageToBuffer(commandBuffer, image, ImageLayout.General, buffer, 1, in region);
                 }
                 else
                 {
-                    _gd.Api.CmdCopyBufferToImage(commandBuffer, buffer, image, ImageLayout.General, 1, region);
+                    _gd.Api.CmdCopyBufferToImage(commandBuffer, buffer, image, ImageLayout.General, 1, in region);
                 }
 
                 offset += mipSize;

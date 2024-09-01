@@ -91,7 +91,7 @@ namespace Ryujinx.Graphics.Vulkan
                         Flags = flags,
                     };
 
-                    gd.Api.CreateDescriptorSetLayout(device, descriptorSetLayoutCreateInfo, null, out layouts[setIndex]).ThrowOnError();
+                    gd.Api.CreateDescriptorSetLayout(device, in descriptorSetLayoutCreateInfo, null, out layouts[setIndex]).ThrowOnError();
                 }
             }
 

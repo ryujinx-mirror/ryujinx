@@ -250,7 +250,7 @@ namespace Ryujinx.Graphics.Vulkan
                 Layers = Layers,
             };
 
-            api.CreateFramebuffer(_device, framebufferCreateInfo, null, out var framebuffer).ThrowOnError();
+            api.CreateFramebuffer(_device, in framebufferCreateInfo, null, out var framebuffer).ThrowOnError();
             return new Auto<DisposableFramebuffer>(new DisposableFramebuffer(api, _device, framebuffer), null, _attachments);
         }
 

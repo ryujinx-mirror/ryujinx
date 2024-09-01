@@ -88,7 +88,7 @@ namespace Ryujinx.Graphics.Vulkan
                     DstOffsets = dstOffsets,
                 };
 
-                api.CmdBlitImage(commandBuffer, srcImage, ImageLayout.General, dstImage, ImageLayout.General, 1, region, filter);
+                api.CmdBlitImage(commandBuffer, srcImage, ImageLayout.General, dstImage, ImageLayout.General, 1, in region, filter);
 
                 copySrcLevel++;
                 copyDstLevel++;
@@ -320,13 +320,13 @@ namespace Ryujinx.Graphics.Vulkan
                 {
                     var region = new ImageResolve(srcSl, new Offset3D(0, 0, srcZ), dstSl, new Offset3D(0, 0, dstZ), extent);
 
-                    api.CmdResolveImage(commandBuffer, srcImage, ImageLayout.General, dstImage, ImageLayout.General, 1, region);
+                    api.CmdResolveImage(commandBuffer, srcImage, ImageLayout.General, dstImage, ImageLayout.General, 1, in region);
                 }
                 else
                 {
                     var region = new ImageCopy(srcSl, new Offset3D(0, 0, srcZ), dstSl, new Offset3D(0, 0, dstZ), extent);
 
-                    api.CmdCopyImage(commandBuffer, srcImage, ImageLayout.General, dstImage, ImageLayout.General, 1, region);
+                    api.CmdCopyImage(commandBuffer, srcImage, ImageLayout.General, dstImage, ImageLayout.General, 1, in region);
                 }
 
                 width = Math.Max(1, width >> 1);
@@ -422,7 +422,7 @@ namespace Ryujinx.Graphics.Vulkan
                     DependencyCount = 1,
                 };
 
-                gd.Api.CreateRenderPass2(device, renderPassCreateInfo, null, out var renderPass).ThrowOnError();
+                gd.Api.CreateRenderPass2(device, in renderPassCreateInfo, null, out var renderPass).ThrowOnError();
 
                 using var rp = new Auto<DisposableRenderPass>(new DisposableRenderPass(gd.Api, device, renderPass));
 
@@ -445,7 +445,7 @@ namespace Ryujinx.Graphics.Vulkan
                     Layers = (uint)src.Layers,
                 };
 
-                gd.Api.CreateFramebuffer(device, framebufferCreateInfo, null, out var framebuffer).ThrowOnError();
+                gd.Api.CreateFramebuffer(device, in framebufferCreateInfo, null, out var framebuffer).ThrowOnError();
                 using var fb = new Auto<DisposableFramebuffer>(new DisposableFramebuffer(gd.Api, device, framebuffer), null, srcView, dstView);
 
                 var renderArea = new Rect2D(null, new Extent2D((uint)src.Info.Width, (uint)src.Info.Height));
@@ -465,7 +465,7 @@ namespace Ryujinx.Graphics.Vulkan
                 // to resolve the depth-stencil texture.
                 // TODO: Do speculative resolve and part of the same render pass as the draw to avoid
                 // ending the current render pass?
-                gd.Api.CmdBeginRenderPass(cbs.CommandBuffer, renderPassBeginInfo, SubpassContents.Inline);
+                gd.Api.CmdBeginRenderPass(cbs.CommandBuffer, in renderPassBeginInfo, SubpassContents.Inline);
                 gd.Api.CmdEndRenderPass(cbs.CommandBuffer);
             }
         }

@@ -90,11 +90,9 @@ namespace Ryujinx.Graphics.Vulkan
                 DriverId.SamsungProprietary => "Samsung",
                 DriverId.MesaVenus => "Venus",
                 DriverId.MesaDozen => "Dozen",
-
-                // TODO: Use real enum when we have an up to date Silk.NET.
-                (DriverId)24 => "NVK",
-                (DriverId)25 => "Imagination (Open)",
-                (DriverId)26 => "Honeykrisp",
+                DriverId.MesaNvk => "NVK",
+                DriverId.ImaginationOpenSourceMesa => "Imagination (Open)",
+                DriverId.MesaAgxv => "Honeykrisp",
                 _ => id.ToString(),
             };
         }

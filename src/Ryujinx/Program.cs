@@ -7,6 +7,7 @@ using Ryujinx.Common.Configuration;
 using Ryujinx.Common.GraphicsDriver;
 using Ryujinx.Common.Logging;
 using Ryujinx.Common.SystemInterop;
+using Ryujinx.Graphics.Vulkan.MoltenVK;
 using Ryujinx.Modules;
 using Ryujinx.SDL2.Common;
 using Ryujinx.UI.Common;
@@ -79,6 +80,11 @@ namespace Ryujinx.Ava
         {
             // Parse arguments
             CommandLineState.ParseArguments(args);
+
+            if (OperatingSystem.IsMacOS())
+            {
+                MVKInitialization.InitializeResolver();
+            }
 
             // Delete backup files after updating.
             Task.Run(Updater.CleanupUpdate);

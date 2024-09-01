@@ -117,7 +117,7 @@ namespace Ryujinx.Graphics.Vulkan
                     PNext = &imageViewUsage,
                 };
 
-                gd.Api.CreateImageView(device, imageCreateInfo, null, out var imageView).ThrowOnError();
+                gd.Api.CreateImageView(device, in imageCreateInfo, null, out var imageView).ThrowOnError();
                 return new Auto<DisposableImageView>(new DisposableImageView(gd.Api, device, imageView), null, storage.GetImage());
             }
 
@@ -492,7 +492,7 @@ namespace Ryujinx.Graphics.Vulkan
                 dstStageMask,
                 DependencyFlags.None,
                 1,
-                memoryBarrier,
+                in memoryBarrier,
                 0,
                 null,
                 0,
@@ -557,7 +557,7 @@ namespace Ryujinx.Graphics.Vulkan
                 0,
                 null,
                 1,
-                memoryBarrier);
+                in memoryBarrier);
         }
 
         public TextureView GetView(Format format)
@@ -949,11 +949,11 @@ namespace Ryujinx.Graphics.Vulkan
 
                 if (to)
                 {
-                    _gd.Api.CmdCopyImageToBuffer(commandBuffer, image, ImageLayout.General, buffer, 1, region);
+                    _gd.Api.CmdCopyImageToBuffer(commandBuffer, image, ImageLayout.General, buffer, 1, in region);
                 }
                 else
                 {
-                    _gd.Api.CmdCopyBufferToImage(commandBuffer, buffer, image, ImageLayout.General, 1, region);
+                    _gd.Api.CmdCopyBufferToImage(commandBuffer, buffer, image, ImageLayout.General, 1, in region);
                 }
 
                 offset += mipSize;
@@ -1010,11 +1010,11 @@ namespace Ryujinx.Graphics.Vulkan
 
             if (to)
             {
-                _gd.Api.CmdCopyImageToBuffer(commandBuffer, image, ImageLayout.General, buffer, 1, region);
+                _gd.Api.CmdCopyImageToBuffer(commandBuffer, image, ImageLayout.General, buffer, 1, in region);
             }
             else
             {
-                _gd.Api.CmdCopyBufferToImage(commandBuffer, buffer, image, ImageLayout.General, 1, region);
+                _gd.Api.CmdCopyBufferToImage(commandBuffer, buffer, image, ImageLayout.General, 1, in region);
             }
         }
 

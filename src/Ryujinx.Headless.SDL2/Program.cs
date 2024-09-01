@@ -18,6 +18,7 @@ using Ryujinx.Graphics.Gpu;
 using Ryujinx.Graphics.Gpu.Shader;
 using Ryujinx.Graphics.OpenGL;
 using Ryujinx.Graphics.Vulkan;
+using Ryujinx.Graphics.Vulkan.MoltenVK;
 using Ryujinx.Headless.SDL2.OpenGL;
 using Ryujinx.Headless.SDL2.Vulkan;
 using Ryujinx.HLE;
@@ -86,6 +87,11 @@ namespace Ryujinx.Headless.SDL2
 
                     invoked.WaitOne();
                 };
+            }
+
+            if (OperatingSystem.IsMacOS())
+            {
+                MVKInitialization.InitializeResolver();
             }
 
             Parser.Default.ParseArguments<Options>(args)

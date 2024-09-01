@@ -4,6 +4,7 @@ using Ryujinx.Common.Configuration;
 using Ryujinx.Common.GraphicsDriver;
 using Ryujinx.Common.Logging;
 using Ryujinx.Common.SystemInterop;
+using Ryujinx.Graphics.Vulkan.MoltenVK;
 using Ryujinx.Modules;
 using Ryujinx.SDL2.Common;
 using Ryujinx.UI;
@@ -110,6 +111,8 @@ namespace Ryujinx
 
             if (OperatingSystem.IsMacOS())
             {
+                MVKInitialization.InitializeResolver();
+
                 string baseDirectory = Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory);
                 string resourcesDataDir;
 

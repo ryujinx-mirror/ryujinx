@@ -115,7 +115,7 @@ namespace Ryujinx.Graphics.Vulkan
                     PNext = &importInfo,
                 };
 
-                Result result = _api.AllocateMemory(_device, memoryAllocateInfo, null, out var deviceMemory);
+                Result result = _api.AllocateMemory(_device, in memoryAllocateInfo, null, out var deviceMemory);
 
                 if (result < Result.Success)
                 {

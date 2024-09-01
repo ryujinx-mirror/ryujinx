@@ -220,7 +220,7 @@ namespace Ryujinx.Graphics.Vulkan
                 MemoryTypeIndex = (uint)MemoryTypeIndex,
             };
 
-            _api.AllocateMemory(_device, memoryAllocateInfo, null, out var deviceMemory).ThrowOnError();
+            _api.AllocateMemory(_device, in memoryAllocateInfo, null, out var deviceMemory).ThrowOnError();
 
             IntPtr hostPointer = IntPtr.Zero;
 

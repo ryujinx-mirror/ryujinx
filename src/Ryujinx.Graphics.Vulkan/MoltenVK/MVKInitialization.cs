@@ -1,3 +1,4 @@
+using Silk.NET.Core.Loader;
 using Silk.NET.Vulkan;
 using System;
 using System.Runtime.InteropServices;
@@ -8,6 +9,8 @@ namespace Ryujinx.Graphics.Vulkan.MoltenVK
     [SupportedOSPlatform("macos")]
     public static partial class MVKInitialization
     {
+        private const string VulkanLib = "libvulkan.dylib";
+
         [LibraryImport("libMoltenVK.dylib")]
         private static partial Result vkGetMoltenVKConfigurationMVK(IntPtr unusedInstance, out MVKConfiguration config, in IntPtr configSize);
 
@@ -28,6 +31,21 @@ namespace Ryujinx.Graphics.Vulkan.MoltenVK
             config.ResumeLostDevice = true;
 
             vkSetMoltenVKConfigurationMVK(IntPtr.Zero, config, configSize);
+        }
+
+        private static string[] Resolver(string path)
+        {
+            if (path.EndsWith(VulkanLib))
+            {
+                path = path[..^VulkanLib.Length] + "libMoltenVK.dylib";
+                return [path];
+            }
+            return Array.Empty<string>();
+        }
+
+        public static void InitializeResolver()
+        {
+            ((DefaultPathResolver)PathResolver.Default).Resolvers.Insert(0, Resolver);
         }
     }
 }

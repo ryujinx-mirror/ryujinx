@@ -43,7 +43,7 @@ namespace Ryujinx.Graphics.Vulkan
                     PBufferInfo = &bufferInfo,
                 };
 
-                _holder.Api.UpdateDescriptorSets(_holder.Device, 1, writeDescriptorSet, 0, null);
+                _holder.Api.UpdateDescriptorSets(_holder.Device, 1, in writeDescriptorSet, 0, null);
             }
         }
 
@@ -66,7 +66,7 @@ namespace Ryujinx.Graphics.Vulkan
                     PBufferInfo = pBufferInfo,
                 };
 
-                _holder.Api.UpdateDescriptorSets(_holder.Device, 1, writeDescriptorSet, 0, null);
+                _holder.Api.UpdateDescriptorSets(_holder.Device, 1, in writeDescriptorSet, 0, null);
             }
         }
 
@@ -84,7 +84,7 @@ namespace Ryujinx.Graphics.Vulkan
                     PImageInfo = &imageInfo,
                 };
 
-                _holder.Api.UpdateDescriptorSets(_holder.Device, 1, writeDescriptorSet, 0, null);
+                _holder.Api.UpdateDescriptorSets(_holder.Device, 1, in writeDescriptorSet, 0, null);
             }
         }
 
@@ -107,7 +107,7 @@ namespace Ryujinx.Graphics.Vulkan
                     PImageInfo = pImageInfo,
                 };
 
-                _holder.Api.UpdateDescriptorSets(_holder.Device, 1, writeDescriptorSet, 0, null);
+                _holder.Api.UpdateDescriptorSets(_holder.Device, 1, in writeDescriptorSet, 0, null);
             }
         }
 
@@ -144,7 +144,7 @@ namespace Ryujinx.Graphics.Vulkan
                             PImageInfo = pImageInfo,
                         };
 
-                        _holder.Api.UpdateDescriptorSets(_holder.Device, 1, writeDescriptorSet, 0, null);
+                        _holder.Api.UpdateDescriptorSets(_holder.Device, 1, in writeDescriptorSet, 0, null);
 
                         i += count - 1;
                     }
@@ -166,7 +166,7 @@ namespace Ryujinx.Graphics.Vulkan
                     PTexelBufferView = &texelBufferView,
                 };
 
-                _holder.Api.UpdateDescriptorSets(_holder.Device, 1, writeDescriptorSet, 0, null);
+                _holder.Api.UpdateDescriptorSets(_holder.Device, 1, in writeDescriptorSet, 0, null);
             }
         }
 
@@ -200,7 +200,7 @@ namespace Ryujinx.Graphics.Vulkan
                             PTexelBufferView = pTexelBufferView + i,
                         };
 
-                        _holder.Api.UpdateDescriptorSets(_holder.Device, 1, writeDescriptorSet, 0, null);
+                        _holder.Api.UpdateDescriptorSets(_holder.Device, 1, in writeDescriptorSet, 0, null);
                     }
 
                     i += count;

@@ -52,7 +52,7 @@ namespace Ryujinx.Graphics.Vulkan.Queries
                     PipelineStatistics = flags,
                 };
 
-                gd.Api.CreateQueryPool(device, queryPoolCreateInfo, null, out _queryPool).ThrowOnError();
+                gd.Api.CreateQueryPool(device, in queryPoolCreateInfo, null, out _queryPool).ThrowOnError();
             }
 
             var buffer = gd.BufferManager.Create(gd, sizeof(long), forConditionalRendering: true);

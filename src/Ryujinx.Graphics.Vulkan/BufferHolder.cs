@@ -122,7 +122,7 @@ namespace Ryujinx.Graphics.Vulkan
                 Range = (uint)size,
             };
 
-            _gd.Api.CreateBufferView(_device, bufferViewCreateInfo, null, out var bufferView).ThrowOnError();
+            _gd.Api.CreateBufferView(_device, in bufferViewCreateInfo, null, out var bufferView).ThrowOnError();
 
             return new Auto<DisposableBufferView>(new DisposableBufferView(_gd.Api, _device, bufferView), this, _waitable, _buffer);
         }
@@ -153,7 +153,7 @@ namespace Ryujinx.Graphics.Vulkan
                     PipelineStageFlags.AllCommandsBit,
                     DependencyFlags.DeviceGroupBit,
                     1,
-                    memoryBarrier,
+                    in memoryBarrier,
                     0,
                     null,
                     0,
@@ -770,7 +770,7 @@ namespace Ryujinx.Graphics.Vulkan
                 0,
                 null,
                 1,
-                memoryBarrier,
+                in memoryBarrier,
                 0,
                 null);
         }

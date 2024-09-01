@@ -221,7 +221,7 @@ namespace Ryujinx.Graphics.Vulkan
                     PBufferBinds = &bufferBind
                 };
 
-                gd.Api.QueueBindSparse(gd.Queue, 1, bindSparseInfo, default).ThrowOnError();
+                gd.Api.QueueBindSparse(gd.Queue, 1, in bindSparseInfo, default).ThrowOnError();
             }
 
             var holder = new BufferHolder(gd, _device, buffer, (int)size, storageAllocations);
