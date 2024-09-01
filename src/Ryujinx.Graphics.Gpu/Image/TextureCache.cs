@@ -468,13 +468,11 @@ namespace Ryujinx.Graphics.Gpu.Image
             int gobBlocksInY = dsState.MemoryLayout.UnpackGobBlocksInY();
             int gobBlocksInZ = dsState.MemoryLayout.UnpackGobBlocksInZ();
 
+            layered &= size.UnpackIsLayered();
+
             Target target;
 
-            if (dsState.MemoryLayout.UnpackIsTarget3D())
-            {
-                target = Target.Texture3D;
-            }
-            else if ((samplesInX | samplesInY) != 1)
+            if ((samplesInX | samplesInY) != 1)
             {
                 target = size.Depth > 1 && layered
                     ? Target.Texture2DMultisampleArray

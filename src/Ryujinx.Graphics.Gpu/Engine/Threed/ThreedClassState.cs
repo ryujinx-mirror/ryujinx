@@ -415,7 +415,13 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
 #pragma warning disable CS0649 // Field is never assigned to
         public int Width;
         public int Height;
-        public int Depth;
+        public ushort Depth;
+        public ushort Flags;
+
+        public readonly bool UnpackIsLayered()
+        {
+            return (Flags & 1) == 0;
+        }
 #pragma warning restore CS0649
     }
 
