@@ -4,6 +4,7 @@ using Ryujinx.Common.Configuration;
 using Ryujinx.Common.GraphicsDriver;
 using Ryujinx.Common.Logging;
 using Ryujinx.Common.SystemInterop;
+using Ryujinx.Common.Utilities;
 using Ryujinx.Graphics.Vulkan.MoltenVK;
 using Ryujinx.Modules;
 using Ryujinx.SDL2.Common;
@@ -40,9 +41,6 @@ namespace Ryujinx
 
         [LibraryImport("user32.dll", SetLastError = true)]
         public static partial int MessageBoxA(IntPtr hWnd, [MarshalAs(UnmanagedType.LPStr)] string text, [MarshalAs(UnmanagedType.LPStr)] string caption, uint type);
-
-        [LibraryImport("libc", SetLastError = true)]
-        private static partial int setenv([MarshalAs(UnmanagedType.LPStr)] string name, [MarshalAs(UnmanagedType.LPStr)] string value, int overwrite);
 
         private const uint MbIconWarning = 0x30;
 
@@ -105,8 +103,7 @@ namespace Ryujinx
                     throw new NotSupportedException("Failed to initialize multi-threading support.");
                 }
 
-                Environment.SetEnvironmentVariable("GDK_BACKEND", "x11");
-                setenv("GDK_BACKEND", "x11", 1);
+                OsUtils.SetEnvironmentVariableNoCaching("GDK_BACKEND", "x11");
             }
 
             if (OperatingSystem.IsMacOS())
@@ -125,19 +122,13 @@ namespace Ryujinx
                     resourcesDataDir = baseDirectory;
                 }
 
-                static void SetEnvironmentVariableNoCaching(string key, string value)
-                {
-                    int res = setenv(key, value, 1);
-                    Debug.Assert(res != -1);
-                }
-
                 // On macOS, GTK3 needs XDG_DATA_DIRS to be set, otherwise it will try searching for "gschemas.compiled" in system directories.
-                SetEnvironmentVariableNoCaching("XDG_DATA_DIRS", Path.Combine(resourcesDataDir, "share"));
+                OsUtils.SetEnvironmentVariableNoCaching("XDG_DATA_DIRS", Path.Combine(resourcesDataDir, "share"));
 
                 // On macOS, GTK3 needs GDK_PIXBUF_MODULE_FILE to be set, otherwise it will try searching for "loaders.cache" in system directories.
-                SetEnvironmentVariableNoCaching("GDK_PIXBUF_MODULE_FILE", Path.Combine(resourcesDataDir, "lib", "gdk-pixbuf-2.0", "2.10.0", "loaders.cache"));
+                OsUtils.SetEnvironmentVariableNoCaching("GDK_PIXBUF_MODULE_FILE", Path.Combine(resourcesDataDir, "lib", "gdk-pixbuf-2.0", "2.10.0", "loaders.cache"));
 
-                SetEnvironmentVariableNoCaching("GTK_IM_MODULE_FILE", Path.Combine(resourcesDataDir, "lib", "gtk-3.0", "3.0.0", "immodules.cache"));
+                OsUtils.SetEnvironmentVariableNoCaching("GTK_IM_MODULE_FILE", Path.Combine(resourcesDataDir, "lib", "gtk-3.0", "3.0.0", "immodules.cache"));
             }
 
             string systemPath = Environment.GetEnvironmentVariable("Path", EnvironmentVariableTarget.Machine);
@@ -233,9 +224,9 @@ namespace Ryujinx
             // Logging system information.
             PrintSystemInfo();
 
-            // Enable OGL multithreading on the driver, when available.
+            // Enable OGL multithreading on the driver, and some other flags.
             BackendThreading threadingMode = ConfigurationState.Instance.Graphics.BackendThreading;
-            DriverUtilities.ToggleOGLThreading(threadingMode == BackendThreading.Off);
+            DriverUtilities.InitDriverConfig(threadingMode == BackendThreading.Off);
 
             // Initialize Gtk.
             Application.Init();

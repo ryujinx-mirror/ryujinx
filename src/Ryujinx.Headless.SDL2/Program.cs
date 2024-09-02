@@ -7,6 +7,7 @@ using Ryujinx.Common.Configuration.Hid;
 using Ryujinx.Common.Configuration.Hid.Controller;
 using Ryujinx.Common.Configuration.Hid.Controller.Motion;
 using Ryujinx.Common.Configuration.Hid.Keyboard;
+using Ryujinx.Common.GraphicsDriver;
 using Ryujinx.Common.Logging;
 using Ryujinx.Common.Logging.Targets;
 using Ryujinx.Common.SystemInterop;
@@ -462,6 +463,8 @@ namespace Ryujinx.Headless.SDL2
             GraphicsConfig.MaxAnisotropy = option.MaxAnisotropy;
             GraphicsConfig.ShadersDumpPath = option.GraphicsShadersDumpPath;
             GraphicsConfig.EnableMacroHLE = !option.DisableMacroHLE;
+
+            DriverUtilities.InitDriverConfig(option.BackendThreading == BackendThreading.Off);
 
             while (true)
             {
