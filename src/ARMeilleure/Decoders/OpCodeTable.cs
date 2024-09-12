@@ -746,6 +746,7 @@ namespace ARMeilleure.Decoders
             SetA32("<<<<01101000xxxxxxxxxxxxxx01xxxx", InstName.Pkh,     InstEmit32.Pkh,     OpCode32AluRsImm.Create);
             SetA32("11110101xx01xxxx1111xxxxxxxxxxxx", InstName.Pld,     InstEmit32.Nop,     OpCode32.Create);
             SetA32("11110111xx01xxxx1111xxxxxxx0xxxx", InstName.Pld,     InstEmit32.Nop,     OpCode32.Create);
+            SetA32("<<<<01100010xxxxxxxx11110001xxxx", InstName.Qadd16,  InstEmit32.Qadd16,  OpCode32AluReg.Create);
             SetA32("<<<<011011111111xxxx11110011xxxx", InstName.Rbit,    InstEmit32.Rbit,    OpCode32AluReg.Create);
             SetA32("<<<<011010111111xxxx11110011xxxx", InstName.Rev,     InstEmit32.Rev,     OpCode32AluReg.Create);
             SetA32("<<<<011010111111xxxx11111011xxxx", InstName.Rev16,   InstEmit32.Rev16,   OpCode32AluReg.Create);
@@ -1034,6 +1035,7 @@ namespace ARMeilleure.Decoders
             SetAsimd("111100101x>>>xxxxxxx0101>xx1xxxx", InstName.Vshl,        InstEmit32.Vshl,         OpCode32SimdShImm.Create,       OpCode32SimdShImm.CreateT32);
             SetAsimd("1111001x0xxxxxxxxxxx0100xxx0xxxx", InstName.Vshl,        InstEmit32.Vshl_I,       OpCode32SimdReg.Create,         OpCode32SimdReg.CreateT32);
             SetAsimd("1111001x1x>>>xxxxxxx101000x1xxxx", InstName.Vshll,       InstEmit32.Vshll,        OpCode32SimdShImmLong.Create,   OpCode32SimdShImmLong.CreateT32); // A1 encoding.
+            SetAsimd("111100111x11<<10xxxx001100x0xxxx", InstName.Vshll,       InstEmit32.Vshll2,       OpCode32SimdMovn.Create,        OpCode32SimdMovn.CreateT32); // A2 encoding.
             SetAsimd("1111001x1x>>>xxxxxxx0000>xx1xxxx", InstName.Vshr,        InstEmit32.Vshr,         OpCode32SimdShImm.Create,       OpCode32SimdShImm.CreateT32);
             SetAsimd("111100101x>>>xxxxxxx100000x1xxx0", InstName.Vshrn,       InstEmit32.Vshrn,        OpCode32SimdShImmNarrow.Create, OpCode32SimdShImmNarrow.CreateT32);
             SetAsimd("111100111x>>>xxxxxxx0101>xx1xxxx", InstName.Vsli,        InstEmit32.Vsli_I,       OpCode32SimdShImm.Create,       OpCode32SimdShImm.CreateT32);

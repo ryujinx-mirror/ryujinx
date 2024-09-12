@@ -29,6 +29,7 @@ namespace Ryujinx.Tests.Cpu
         {
             return new[]
             {
+                0xe6200f10u, // QADD16  R0, R0, R0
                 0xe6600f10u, // UQADD16 R0, R0, R0
                 0xe6600f70u, // UQSUB16 R0, R0, R0
             };

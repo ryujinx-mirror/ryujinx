@@ -292,6 +292,16 @@ namespace ARMeilleure.Instructions
             EmitAluStore(context, res);
         }
 
+        public static void Qadd16(ArmEmitterContext context)
+        {
+            OpCode32AluReg op = (OpCode32AluReg)context.CurrOp;
+
+            SetIntA32(context, op.Rd, EmitSigned16BitPair(context, GetIntA32(context, op.Rn), GetIntA32(context, op.Rm), (d, n, m) =>
+            {
+                EmitSaturateRange(context, d, context.Add(n, m), 16, unsigned: false, setQ: false);
+            }));
+        }
+
         public static void Rbit(ArmEmitterContext context)
         {
             Operand m = GetAluM(context);
@@ -976,6 +986,94 @@ namespace ARMeilleure.Instructions
             }
         }
 
+        private static void EmitSaturateRange(ArmEmitterContext context, Operand result, Operand value, uint saturateTo, bool unsigned, bool setQ = true)
+        {
+            Debug.Assert(saturateTo <= 32);
+            Debug.Assert(!unsigned || saturateTo < 32);
+
+            if (!unsigned && saturateTo == 32)
+            {
+                // No saturation possible for this case.
+
+                context.Copy(result, value);
+
+                return;
+            }
+            else if (saturateTo == 0)
+            {
+                // Result is always zero if we saturate 0 bits.
+
+                context.Copy(result, Const(0));
+
+                return;
+            }
+
+            Operand satValue;
+
+            if (unsigned)
+            {
+                // Negative values always saturate (to zero).
+                // So we must always ignore the sign bit when masking, so that the truncated value will differ from the original one.
+
+                satValue = context.BitwiseAnd(value, Const((int)(uint.MaxValue >> (32 - (int)saturateTo))));
+            }
+            else
+            {
+                satValue = context.ShiftLeft(value, Const(32 - (int)saturateTo));
+                satValue = context.ShiftRightSI(satValue, Const(32 - (int)saturateTo));
+            }
+
+            // If the result is 0, the values are equal and we don't need saturation.
+            Operand lblNoSat = Label();
+            context.BranchIfFalse(lblNoSat, context.Subtract(value, satValue));
+
+            // Saturate and set Q flag.
+            if (unsigned)
+            {
+                if (saturateTo == 31)
+                {
+                    // Only saturation case possible when going from 32 bits signed to 32 or 31 bits unsigned
+                    // is when the signed input is negative, as all positive values are representable on a 31 bits range.
+
+                    satValue = Const(0);
+                }
+                else
+                {
+                    satValue = context.ShiftRightSI(value, Const(31));
+                    satValue = context.BitwiseNot(satValue);
+                    satValue = context.ShiftRightUI(satValue, Const(32 - (int)saturateTo));
+                }
+            }
+            else
+            {
+                if (saturateTo == 1)
+                {
+                    satValue = context.ShiftRightSI(value, Const(31));
+                }
+                else
+                {
+                    satValue = Const(uint.MaxValue >> (33 - (int)saturateTo));
+                    satValue = context.BitwiseExclusiveOr(satValue, context.ShiftRightSI(value, Const(31)));
+                }
+            }
+
+            if (setQ)
+            {
+                SetFlag(context, PState.QFlag, Const(1));
+            }
+
+            context.Copy(result, satValue);
+
+            Operand lblExit = Label();
+            context.Branch(lblExit);
+
+            context.MarkLabel(lblNoSat);
+
+            context.Copy(result, value);
+
+            context.MarkLabel(lblExit);
+        }
+
         private static void EmitSaturateUqadd(ArmEmitterContext context, Operand result, Operand value, uint saturateTo)
         {
             Debug.Assert(saturateTo <= 32);
@@ -1051,6 +1149,21 @@ namespace ARMeilleure.Instructions
             context.Copy(result, value);
 
             context.MarkLabel(lblExit);
+        }
+
+        private static Operand EmitSigned16BitPair(ArmEmitterContext context, Operand rn, Operand rm, Action<Operand, Operand, Operand> elementAction)
+        {
+            Operand tempD = context.AllocateLocal(OperandType.I32);
+
+            Operand tempN = context.SignExtend16(OperandType.I32, rn);
+            Operand tempM = context.SignExtend16(OperandType.I32, rm);
+            elementAction(tempD, tempN, tempM);
+            Operand tempD2 = context.ZeroExtend16(OperandType.I32, tempD);
+
+            tempN = context.ShiftRightSI(rn, Const(16));
+            tempM = context.ShiftRightSI(rm, Const(16));
+            elementAction(tempD, tempN, tempM);
+            return context.BitwiseOr(tempD2, context.ShiftLeft(tempD, Const(16)));
         }
 
         private static Operand EmitUnsigned16BitPair(ArmEmitterContext context, Operand rn, Operand rm, Action<Operand, Operand, Operand> elementAction)

@@ -527,6 +527,7 @@ namespace ARMeilleure.Instructions
         Pld,
         Pop,
         Push,
+        Qadd16,
         Rev,
         Revsh,
         Rsb,

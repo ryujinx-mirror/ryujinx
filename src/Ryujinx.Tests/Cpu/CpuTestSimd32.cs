@@ -328,6 +328,29 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
+        [Test, Pairwise, Description("VSHLL.<size> {<Vd>}, <Vm>, #<imm>")]
+        public void Vshll([Values(0u, 2u)] uint rd,
+                          [Values(1u, 0u)] uint rm,
+                          [Values(0u, 1u, 2u)] uint size,
+                          [Random(RndCnt)] ulong z,
+                          [Random(RndCnt)] ulong a,
+                          [Random(RndCnt)] ulong b)
+        {
+            uint opcode = 0xf3b20300u; // VSHLL.I8 Q0, D0, #8
+
+            opcode |= ((rm & 0xf) << 0) | ((rm & 0x10) << 1);
+            opcode |= ((rd & 0xf) << 12) | ((rd & 0x10) << 18);
+            opcode |= size << 18;
+
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, z);
+            V128 v2 = MakeVectorE0E1(b, z);
+
+            SingleOpcode(opcode, v0: v0, v1: v1, v2: v2);
+
+            CompareAgainstUnicorn();
+        }
+
         [Test, Pairwise, Description("VSWP D0, D0")]
         public void Vswp([Values(0u, 1u)] uint rd,
                          [Values(0u, 1u)] uint rm,
