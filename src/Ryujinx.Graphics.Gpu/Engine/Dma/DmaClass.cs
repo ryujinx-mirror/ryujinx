@@ -276,8 +276,6 @@ namespace Ryujinx.Graphics.Gpu.Engine.Dma
                     dstBaseOffset += dstStride * (yCount - 1);
                 }
 
-                ReadOnlySpan<byte> srcSpan = memoryManager.GetSpan(srcGpuVa + (ulong)srcBaseOffset, srcSize, true);
-
                 // If remapping is disabled, we always copy the components directly, in order.
                 // If it's enabled, but the mapping is just XYZW, we also copy them in order.
                 bool isIdentityRemap = !remap ||
@@ -288,6 +286,52 @@ namespace Ryujinx.Graphics.Gpu.Engine.Dma
 
                 bool completeSource = IsTextureCopyComplete(src, srcLinear, srcBpp, srcStride, xCount, yCount);
                 bool completeDest = IsTextureCopyComplete(dst, dstLinear, dstBpp, dstStride, xCount, yCount);
+
+                // Check if the source texture exists on the GPU, if it does, do a GPU side copy.
+                // Otherwise, we would need to flush the source texture which is costly.
+                // We don't expect the source to be linear in such cases, as linear source usually indicates buffer or CPU written data.
+
+                if (completeSource && completeDest && !srcLinear && isIdentityRemap)
+                {
+                    var source = memoryManager.Physical.TextureCache.FindTexture(
+                        memoryManager,
+                        srcGpuVa,
+                        srcBpp,
+                        srcStride,
+                        src.Height,
+                        xCount,
+                        yCount,
+                        srcLinear,
+                        src.MemoryLayout.UnpackGobBlocksInY(),
+                        src.MemoryLayout.UnpackGobBlocksInZ());
+
+                    if (source != null && source.Height == yCount)
+                    {
+                        source.SynchronizeMemory();
+
+                        var target = memoryManager.Physical.TextureCache.FindOrCreateTexture(
+                            memoryManager,
+                            source.Info.FormatInfo,
+                            dstGpuVa,
+                            xCount,
+                            yCount,
+                            dstStride,
+                            dstLinear,
+                            dst.MemoryLayout.UnpackGobBlocksInY(),
+                            dst.MemoryLayout.UnpackGobBlocksInZ());
+
+                        if (source.ScaleFactor != target.ScaleFactor)
+                        {
+                            target.PropagateScale(source);
+                        }
+
+                        source.HostTexture.CopyTo(target.HostTexture, 0, 0);
+                        target.SignalModified();
+                        return;
+                    }
+                }
+
+                ReadOnlySpan<byte> srcSpan = memoryManager.GetSpan(srcGpuVa + (ulong)srcBaseOffset, srcSize, true);
 
                 // Try to set the texture data directly,
                 // but only if we are doing a complete copy,
