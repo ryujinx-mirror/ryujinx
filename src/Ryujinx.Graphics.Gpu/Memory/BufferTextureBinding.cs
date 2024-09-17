@@ -31,11 +31,6 @@ namespace Ryujinx.Graphics.Gpu.Memory
         public TextureBindingInfo BindingInfo { get; }
 
         /// <summary>
-        /// The image format for the binding.
-        /// </summary>
-        public Format Format { get; }
-
-        /// <summary>
         /// Whether the binding is for an image or a sampler.
         /// </summary>
         public bool IsImage { get; }
@@ -47,21 +42,18 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// <param name="texture">Buffer texture</param>
         /// <param name="range">Physical ranges of memory where the buffer texture data is located</param>
         /// <param name="bindingInfo">Binding info</param>
-        /// <param name="format">Binding format</param>
         /// <param name="isImage">Whether the binding is for an image or a sampler</param>
         public BufferTextureBinding(
             ShaderStage stage,
             ITexture texture,
             MultiRange range,
             TextureBindingInfo bindingInfo,
-            Format format,
             bool isImage)
         {
             Stage = stage;
             Texture = texture;
             Range = range;
             BindingInfo = bindingInfo;
-            Format = format;
             IsImage = isImage;
         }
     }

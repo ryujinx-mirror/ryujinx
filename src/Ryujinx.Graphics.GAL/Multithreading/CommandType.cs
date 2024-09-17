@@ -27,7 +27,6 @@ namespace Ryujinx.Graphics.GAL.Multithreading
         CounterEventFlush,
 
         ImageArrayDispose,
-        ImageArraySetFormats,
         ImageArraySetImages,
 
         ProgramDispose,

@@ -17,7 +17,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <summary>
         /// For images, indicates the format specified on the shader.
         /// </summary>
-        public Format Format { get; }
+        public FormatInfo FormatInfo { get; }
 
         /// <summary>
         /// Shader texture host set index.
@@ -58,17 +58,17 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// Constructs the texture binding information structure.
         /// </summary>
         /// <param name="target">The shader sampler target type</param>
-        /// <param name="format">Format of the image as declared on the shader</param>
+        /// <param name="formatInfo">Format of the image as declared on the shader</param>
         /// <param name="set">Shader texture host set index</param>
         /// <param name="binding">The shader texture binding point</param>
         /// <param name="arrayLength">For array of textures, this indicates the length of the array. A value of one indicates it is not an array</param>
         /// <param name="cbufSlot">Constant buffer slot where the texture handle is located</param>
         /// <param name="handle">The shader texture handle (read index into the texture constant buffer)</param>
         /// <param name="flags">The texture's usage flags, indicating how it is used in the shader</param>
-        public TextureBindingInfo(Target target, Format format, int set, int binding, int arrayLength, int cbufSlot, int handle, TextureUsageFlags flags)
+        public TextureBindingInfo(Target target, FormatInfo formatInfo, int set, int binding, int arrayLength, int cbufSlot, int handle, TextureUsageFlags flags)
         {
             Target = target;
-            Format = format;
+            FormatInfo = formatInfo;
             Set = set;
             Binding = binding;
             ArrayLength = arrayLength;
@@ -96,7 +96,7 @@ namespace Ryujinx.Graphics.Gpu.Image
             int cbufSlot,
             int handle,
             TextureUsageFlags flags,
-            bool isSamplerOnly) : this(target, 0, set, binding, arrayLength, cbufSlot, handle, flags)
+            bool isSamplerOnly) : this(target, FormatInfo.Invalid, set, binding, arrayLength, cbufSlot, handle, flags)
         {
             IsSamplerOnly = isSamplerOnly;
         }

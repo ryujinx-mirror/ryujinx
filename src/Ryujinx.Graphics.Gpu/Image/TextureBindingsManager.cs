@@ -522,7 +522,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                     // Ensure that the buffer texture is using the correct buffer as storage.
                     // Buffers are frequently re-created to accommodate larger data, so we need to re-bind
                     // to ensure we're not using a old buffer that was already deleted.
-                    _channel.BufferManager.SetBufferTextureStorage(stage, hostTexture, texture.Range, bindingInfo, bindingInfo.Format, false);
+                    _channel.BufferManager.SetBufferTextureStorage(stage, hostTexture, texture.Range, bindingInfo, false);
 
                     // Cache is not used for buffer texture, it must always rebind.
                     state.CachedTexture = null;
@@ -616,6 +616,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                 if (!poolModified &&
                     state.TextureHandle == textureId &&
+                    state.ImageFormat == bindingInfo.FormatInfo.Format &&
                     state.CachedTexture != null &&
                     state.CachedTexture.InvalidatedSequence == state.InvalidatedSequence)
                 {
@@ -629,26 +630,22 @@ namespace Ryujinx.Graphics.Gpu.Image
                         cachedTexture.SignalModified();
                     }
 
-                    Format format = bindingInfo.Format == 0 ? cachedTexture.Format : bindingInfo.Format;
-
-                    if (state.ImageFormat != format ||
-                        ((usageFlags & TextureUsageFlags.NeedsScaleValue) != 0 &&
-                        UpdateScale(state.CachedTexture, usageFlags, scaleIndex, stage)))
+                    if ((usageFlags & TextureUsageFlags.NeedsScaleValue) != 0 && UpdateScale(state.CachedTexture, usageFlags, scaleIndex, stage))
                     {
                         ITexture hostTextureRebind = state.CachedTexture.GetTargetTexture(bindingInfo.Target);
 
                         state.Texture = hostTextureRebind;
-                        state.ImageFormat = format;
 
-                        _context.Renderer.Pipeline.SetImage(stage, bindingInfo.Binding, hostTextureRebind, format);
+                        _context.Renderer.Pipeline.SetImage(stage, bindingInfo.Binding, hostTextureRebind);
                     }
 
                     continue;
                 }
 
                 state.TextureHandle = textureId;
+                state.ImageFormat = bindingInfo.FormatInfo.Format;
 
-                ref readonly TextureDescriptor descriptor = ref pool.GetForBinding(textureId, out Texture texture);
+                ref readonly TextureDescriptor descriptor = ref pool.GetForBinding(textureId, bindingInfo.FormatInfo, out Texture texture);
 
                 specStateMatches &= specState.MatchesImage(stage, index, descriptor);
 
@@ -660,14 +657,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                     // Buffers are frequently re-created to accommodate larger data, so we need to re-bind
                     // to ensure we're not using a old buffer that was already deleted.
 
-                    Format format = bindingInfo.Format;
-
-                    if (format == 0 && texture != null)
-                    {
-                        format = texture.Format;
-                    }
-
-                    _channel.BufferManager.SetBufferTextureStorage(stage, hostTexture, texture.Range, bindingInfo, format, true);
+                    _channel.BufferManager.SetBufferTextureStorage(stage, hostTexture, texture.Range, bindingInfo, true);
 
                     // Cache is not used for buffer texture, it must always rebind.
                     state.CachedTexture = null;
@@ -689,16 +679,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                     {
                         state.Texture = hostTexture;
 
-                        Format format = bindingInfo.Format;
-
-                        if (format == 0 && texture != null)
-                        {
-                            format = texture.Format;
-                        }
-
-                        state.ImageFormat = format;
-
-                        _context.Renderer.Pipeline.SetImage(stage, bindingInfo.Binding, hostTexture, format);
+                        _context.Renderer.Pipeline.SetImage(stage, bindingInfo.Binding, hostTexture);
                     }
 
                     state.CachedTexture = texture;

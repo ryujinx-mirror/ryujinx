@@ -45,7 +45,7 @@ namespace Ryujinx.Graphics.OpenGL
 
         private readonly Vector4<int>[] _fpIsBgra = new Vector4<int>[SupportBuffer.FragmentIsBgraCount];
 
-        private readonly (TextureBase, Format)[] _images;
+        private readonly TextureBase[] _images;
         private TextureBase _unit0Texture;
         private Sampler _unit0Sampler;
 
@@ -78,7 +78,7 @@ namespace Ryujinx.Graphics.OpenGL
             _fragmentOutputMap = uint.MaxValue;
             _componentMasks = uint.MaxValue;
 
-            _images = new (TextureBase, Format)[SavedImages];
+            _images = new TextureBase[SavedImages];
 
             _tfbs = new BufferHandle[Constants.MaxTransformFeedbackBuffers];
             _tfbTargets = new BufferRange[Constants.MaxTransformFeedbackBuffers];
@@ -935,11 +935,11 @@ namespace Ryujinx.Graphics.OpenGL
             SetFrontFace(_frontFace = frontFace.Convert());
         }
 
-        public void SetImage(ShaderStage stage, int binding, ITexture texture, Format imageFormat)
+        public void SetImage(ShaderStage stage, int binding, ITexture texture)
         {
             if ((uint)binding < SavedImages)
             {
-                _images[binding] = (texture as TextureBase, imageFormat);
+                _images[binding] = texture as TextureBase;
             }
 
             if (texture == null)
@@ -950,7 +950,7 @@ namespace Ryujinx.Graphics.OpenGL
 
             TextureBase texBase = (TextureBase)texture;
 
-            SizedInternalFormat format = FormatTable.GetImageFormat(imageFormat);
+            SizedInternalFormat format = FormatTable.GetImageFormat(texBase.Format);
 
             if (format != 0)
             {
@@ -1622,11 +1622,11 @@ namespace Ryujinx.Graphics.OpenGL
         {
             for (int i = 0; i < SavedImages; i++)
             {
-                (TextureBase texBase, Format imageFormat) = _images[i];
+                TextureBase texBase = _images[i];
 
                 if (texBase != null)
                 {
-                    SizedInternalFormat format = FormatTable.GetImageFormat(imageFormat);
+                    SizedInternalFormat format = FormatTable.GetImageFormat(texBase.Format);
 
                     if (format != 0)
                     {

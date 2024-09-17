@@ -177,9 +177,9 @@ namespace Ryujinx.Graphics.GAL.Multithreading
             _renderer.QueueCommand();
         }
 
-        public void SetImage(ShaderStage stage, int binding, ITexture texture, Format imageFormat)
+        public void SetImage(ShaderStage stage, int binding, ITexture texture)
         {
-            _renderer.New<SetImageCommand>().Set(stage, binding, Ref(texture), imageFormat);
+            _renderer.New<SetImageCommand>().Set(stage, binding, Ref(texture));
             _renderer.QueueCommand();
         }
 

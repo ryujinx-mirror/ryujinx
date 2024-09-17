@@ -8,6 +8,11 @@ namespace Ryujinx.Graphics.Gpu.Image
     readonly struct FormatInfo
     {
         /// <summary>
+        /// An invalid texture format.
+        /// </summary>
+        public static FormatInfo Invalid { get; } = new(0, 0, 0, 0, 0);
+
+        /// <summary>
         /// A default, generic RGBA8 texture format.
         /// </summary>
         public static FormatInfo Default { get; } = new(Format.R8G8B8A8Unorm, 1, 1, 4, 4);
@@ -23,7 +28,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <remarks>
         /// Must be 1 for non-compressed formats.
         /// </remarks>
-        public int BlockWidth { get; }
+        public byte BlockWidth { get; }
 
         /// <summary>
         /// The block height for compressed formats.
@@ -31,17 +36,17 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <remarks>
         /// Must be 1 for non-compressed formats.
         /// </remarks>
-        public int BlockHeight { get; }
+        public byte BlockHeight { get; }
 
         /// <summary>
         /// The number of bytes occupied by a single pixel in memory of the texture data.
         /// </summary>
-        public int BytesPerPixel { get; }
+        public byte BytesPerPixel { get; }
 
         /// <summary>
         /// The maximum number of components this format has defined (in RGBA order).
         /// </summary>
-        public int Components { get; }
+        public byte Components { get; }
 
         /// <summary>
         /// Whenever or not the texture format is a compressed format. Determined from block size.
@@ -57,10 +62,10 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <param name="bytesPerPixel">The number of bytes occupied by a single pixel in memory of the texture data</param>
         public FormatInfo(
             Format format,
-            int blockWidth,
-            int blockHeight,
-            int bytesPerPixel,
-            int components)
+            byte blockWidth,
+            byte blockHeight,
+            byte bytesPerPixel,
+            byte components)
         {
             Format = format;
             BlockWidth = blockWidth;

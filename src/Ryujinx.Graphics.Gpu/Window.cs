@@ -131,7 +131,7 @@ namespace Ryujinx.Graphics.Gpu
             bool isLinear,
             int gobBlocksInY,
             Format format,
-            int bytesPerPixel,
+            byte bytesPerPixel,
             ImageCrop crop,
             Action<GpuContext, object> acquireCallback,
             Action<object> releaseCallback,

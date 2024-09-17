@@ -1,6 +1,5 @@
 using OpenTK.Graphics.OpenGL;
 using Ryujinx.Graphics.GAL;
-using System;
 
 namespace Ryujinx.Graphics.OpenGL.Image
 {
@@ -19,14 +18,6 @@ namespace Ryujinx.Graphics.OpenGL.Image
             _images = new TextureRef[size];
         }
 
-        public void SetFormats(int index, GAL.Format[] imageFormats)
-        {
-            for (int i = 0; i < imageFormats.Length; i++)
-            {
-                _images[index + i].Format = imageFormats[i];
-            }
-        }
-
         public void SetImages(int index, ITexture[] images)
         {
             for (int i = 0; i < images.Length; i++)
@@ -36,6 +27,7 @@ namespace Ryujinx.Graphics.OpenGL.Image
                 if (image is TextureBase imageBase)
                 {
                     _images[index + i].Handle = imageBase.Handle;
+                    _images[index + i].Format = imageBase.Format;
                 }
                 else
                 {
