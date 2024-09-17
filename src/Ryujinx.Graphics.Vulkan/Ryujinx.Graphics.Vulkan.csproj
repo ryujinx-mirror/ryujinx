@@ -15,6 +15,7 @@
   <ItemGroup>
     <EmbeddedResource Include="Effects\Textures\SmaaAreaTexture.bin" />
     <EmbeddedResource Include="Effects\Textures\SmaaSearchTexture.bin" />
+    <EmbeddedResource Include="Effects\Shaders\AreaScaling.spv" />
     <EmbeddedResource Include="Effects\Shaders\FsrScaling.spv" />
     <EmbeddedResource Include="Effects\Shaders\FsrSharpening.spv" />
     <EmbeddedResource Include="Effects\Shaders\Fxaa.spv" />

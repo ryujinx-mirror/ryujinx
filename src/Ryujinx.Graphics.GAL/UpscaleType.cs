@@ -5,5 +5,6 @@ namespace Ryujinx.Graphics.GAL
         Bilinear,
         Nearest,
         Fsr,
+        Area,
     }
 }

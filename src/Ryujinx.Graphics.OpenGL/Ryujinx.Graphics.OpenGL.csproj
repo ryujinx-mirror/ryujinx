@@ -21,6 +21,7 @@
     <EmbeddedResource Include="Effects\Shaders\ffx_fsr1.h" />
     <EmbeddedResource Include="Effects\Shaders\ffx_a.h" />
     <EmbeddedResource Include="Effects\Shaders\fsr_scaling.glsl" />
+    <EmbeddedResource Include="Effects\Shaders\area_scaling.glsl" />
   </ItemGroup>
 
   <ItemGroup>
