@@ -238,7 +238,7 @@ namespace Ryujinx.UI.Common.Configuration
         public MemoryManagerMode MemoryManagerMode { get; set; }
 
         /// <summary>
-        /// Expands the RAM amount on the emulated system from 4GiB to 6GiB
+        /// Expands the RAM amount on the emulated system from 4GiB to 8GiB
         /// </summary>
         public bool ExpandRam { get; set; }
 

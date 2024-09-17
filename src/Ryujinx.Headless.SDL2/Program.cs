@@ -562,7 +562,7 @@ namespace Ryujinx.Headless.SDL2
                 _userChannelPersistence,
                 renderer,
                 new SDL2HardwareDeviceDriver(),
-                options.ExpandRAM ? MemoryConfiguration.MemoryConfiguration6GiB : MemoryConfiguration.MemoryConfiguration4GiB,
+                options.ExpandRAM ? MemoryConfiguration.MemoryConfiguration8GiB : MemoryConfiguration.MemoryConfiguration4GiB,
                 window,
                 options.SystemLanguage,
                 options.SystemRegion,
