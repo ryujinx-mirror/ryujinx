@@ -222,30 +222,14 @@ namespace Ryujinx.Graphics.Shader.Instructions
                         context.TranslatorContext.GpuAccessor.Log($"Invalid reduction type: {type}.");
                     }
                     break;
-                case AtomOp.And:
-                    if (type == AtomSize.S32 || type == AtomSize.U32)
+                case AtomOp.Min:
+                    if (type == AtomSize.S32)
                     {
-                        res = context.AtomicAnd(storageKind, e0, e1, value);
+                        res = context.AtomicMinS32(storageKind, e0, e1, value);
                     }
-                    else
+                    else if (type == AtomSize.U32)
                     {
-                        context.TranslatorContext.GpuAccessor.Log($"Invalid reduction type: {type}.");
-                    }
-                    break;
-                case AtomOp.Xor:
-                    if (type == AtomSize.S32 || type == AtomSize.U32)
-                    {
-                        res = context.AtomicXor(storageKind, e0, e1, value);
-                    }
-                    else
-                    {
-                        context.TranslatorContext.GpuAccessor.Log($"Invalid reduction type: {type}.");
-                    }
-                    break;
-                case AtomOp.Or:
-                    if (type == AtomSize.S32 || type == AtomSize.U32)
-                    {
-                        res = context.AtomicOr(storageKind, e0, e1, value);
+                        res = context.AtomicMinU32(storageKind, e0, e1, value);
                     }
                     else
                     {
@@ -266,19 +250,48 @@ namespace Ryujinx.Graphics.Shader.Instructions
                         context.TranslatorContext.GpuAccessor.Log($"Invalid reduction type: {type}.");
                     }
                     break;
-                case AtomOp.Min:
-                    if (type == AtomSize.S32)
+                case AtomOp.And:
+                    if (type == AtomSize.S32 || type == AtomSize.U32)
                     {
-                        res = context.AtomicMinS32(storageKind, e0, e1, value);
-                    }
-                    else if (type == AtomSize.U32)
-                    {
-                        res = context.AtomicMinU32(storageKind, e0, e1, value);
+                        res = context.AtomicAnd(storageKind, e0, e1, value);
                     }
                     else
                     {
                         context.TranslatorContext.GpuAccessor.Log($"Invalid reduction type: {type}.");
                     }
+                    break;
+                case AtomOp.Or:
+                    if (type == AtomSize.S32 || type == AtomSize.U32)
+                    {
+                        res = context.AtomicOr(storageKind, e0, e1, value);
+                    }
+                    else
+                    {
+                        context.TranslatorContext.GpuAccessor.Log($"Invalid reduction type: {type}.");
+                    }
+                    break;
+                case AtomOp.Xor:
+                    if (type == AtomSize.S32 || type == AtomSize.U32)
+                    {
+                        res = context.AtomicXor(storageKind, e0, e1, value);
+                    }
+                    else
+                    {
+                        context.TranslatorContext.GpuAccessor.Log($"Invalid reduction type: {type}.");
+                    }
+                    break;
+                case AtomOp.Exch:
+                    if (type == AtomSize.S32 || type == AtomSize.U32)
+                    {
+                        res = context.AtomicSwap(storageKind, e0, e1, value);
+                    }
+                    else
+                    {
+                        context.TranslatorContext.GpuAccessor.Log($"Invalid reduction type: {type}.");
+                    }
+                    break;
+                default:
+                    context.TranslatorContext.GpuAccessor.Log($"Invalid atomic operation: {op}.");
                     break;
             }
 
