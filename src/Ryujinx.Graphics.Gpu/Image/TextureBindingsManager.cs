@@ -187,7 +187,9 @@ namespace Ryujinx.Graphics.Gpu.Image
         {
             (TexturePool texturePool, SamplerPool samplerPool) = GetPools();
 
-            return (texturePool.Get(textureId), samplerPool.Get(samplerId));
+            Sampler sampler = samplerPool?.Get(samplerId);
+
+            return (texturePool.Get(textureId, sampler?.IsSrgb ?? true), sampler);
         }
 
         /// <summary>
@@ -508,11 +510,11 @@ namespace Ryujinx.Graphics.Gpu.Image
                 state.TextureHandle = textureId;
                 state.SamplerHandle = samplerId;
 
-                ref readonly TextureDescriptor descriptor = ref texturePool.GetForBinding(textureId, out Texture texture);
+                Sampler sampler = samplerPool?.Get(samplerId);
+
+                ref readonly TextureDescriptor descriptor = ref texturePool.GetForBinding(textureId, sampler?.IsSrgb ?? true, out Texture texture);
 
                 specStateMatches &= specState.MatchesTexture(stage, index, descriptor);
-
-                Sampler sampler = samplerPool?.Get(samplerId);
 
                 ITexture hostTexture = texture?.GetTargetTexture(bindingInfo.Target);
                 ISampler hostSampler = sampler?.GetHostSampler(texture);

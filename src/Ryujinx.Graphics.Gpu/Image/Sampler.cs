@@ -14,6 +14,11 @@ namespace Ryujinx.Graphics.Gpu.Image
         public bool IsDisposed { get; private set; }
 
         /// <summary>
+        /// True if the sampler has sRGB conversion enabled, false otherwise.
+        /// </summary>
+        public bool IsSrgb { get; }
+
+        /// <summary>
         /// Host sampler object.
         /// </summary>
         private readonly ISampler _hostSampler;
@@ -30,6 +35,8 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <param name="descriptor">The Maxwell sampler descriptor</param>
         public Sampler(GpuContext context, SamplerDescriptor descriptor)
         {
+            IsSrgb = descriptor.UnpackSrgb();
+
             MinFilter minFilter = descriptor.UnpackMinFilter();
             MagFilter magFilter = descriptor.UnpackMagFilter();
 

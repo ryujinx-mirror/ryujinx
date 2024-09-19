@@ -114,6 +114,15 @@ namespace Ryujinx.Graphics.Gpu.Image
         }
 
         /// <summary>
+        /// Unpacks the sampler sRGB format flag.
+        /// </summary>
+        /// <returns>True if the has sampler is sRGB conversion enabled, false otherwise</returns>
+        public readonly bool UnpackSrgb()
+        {
+            return (Word0 & (1 << 13)) != 0;
+        }
+
+        /// <summary>
         /// Unpacks and converts the maximum anisotropy value used for texture anisotropic filtering.
         /// </summary>
         /// <returns>The maximum anisotropy</returns>

@@ -228,6 +228,17 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <returns>The texture with the given ID</returns>
         public override Texture Get(int id)
         {
+            return Get(id, srgbSampler: true);
+        }
+
+        /// <summary>
+        /// Gets the texture with the given ID.
+        /// </summary>
+        /// <param name="id">ID of the texture. This is effectively a zero-based index</param>
+        /// <param name="srgbSampler">Whether the texture is being accessed with a sampler that has sRGB conversion enabled</param>
+        /// <returns>The texture with the given ID</returns>
+        public Texture Get(int id, bool srgbSampler)
+        {
             if ((uint)id >= Items.Length)
             {
                 return null;
@@ -240,7 +251,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                 SynchronizeMemory();
             }
 
-            GetInternal(id, out Texture texture);
+            GetForBinding(id, srgbSampler, out Texture texture);
 
             return texture;
         }
@@ -252,9 +263,10 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// This method assumes that the pool has been manually synchronized before doing binding.
         /// </remarks>
         /// <param name="id">ID of the texture. This is effectively a zero-based index</param>
+        /// <param name="srgbSampler">Whether the texture is being accessed with a sampler that has sRGB conversion enabled</param>
         /// <param name="texture">The texture with the given ID</param>
         /// <returns>The texture descriptor with the given ID</returns>
-        public ref readonly TextureDescriptor GetForBinding(int id, out Texture texture)
+        public ref readonly TextureDescriptor GetForBinding(int id, bool srgbSampler, out Texture texture)
         {
             if ((uint)id >= Items.Length)
             {
@@ -263,6 +275,18 @@ namespace Ryujinx.Graphics.Gpu.Image
             }
 
             // When getting for binding, assume the pool has already been synchronized.
+
+            if (!srgbSampler)
+            {
+                // If the sampler does not have the sRGB bit enabled, then the texture can't use a sRGB format.
+                ref readonly TextureDescriptor tempDescriptor = ref GetDescriptorRef(id);
+
+                if (tempDescriptor.UnpackSrgb() && FormatTable.TryGetTextureFormat(tempDescriptor.UnpackFormat(), isSrgb: false, out FormatInfo formatInfo))
+                {
+                    // Get a view of the texture with the right format.
+                    return ref GetForBinding(id, formatInfo, out texture);
+                }
+            }
 
             return ref GetInternal(id, out texture);
         }
