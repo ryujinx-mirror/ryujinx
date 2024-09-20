@@ -138,6 +138,8 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
                 // Ensure that conditions met for that branch are also met for the current one.
                 // Prefer the latest sources for the phi node.
 
+                int undefCount = 0;
+
                 for (int i = phiNode.SourcesCount - 1; i >= 0; i--)
                 {
                     BasicBlock phiBlock = phiNode.GetBlock(i);
@@ -157,6 +159,26 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
                         if (match != phiSource)
                         {
                             return match;
+                        }
+                    }
+                    else if (phiSource.Type == OperandType.Undefined)
+                    {
+                        undefCount++;
+                    }
+                }
+
+                // If all sources but one are undefined, we can assume that the one
+                // that is not undefined is the right one.
+
+                if (undefCount == phiNode.SourcesCount - 1)
+                {
+                    for (int i = phiNode.SourcesCount - 1; i >= 0; i--)
+                    {
+                        Operand phiSource = phiNode.GetSource(i);
+
+                        if (phiSource.Type != OperandType.Undefined)
+                        {
+                            return phiSource;
                         }
                     }
                 }
