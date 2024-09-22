@@ -636,9 +636,9 @@ namespace Ryujinx.Graphics.Vulkan
                 var oldStencilTestEnable = _newState.StencilTestEnable;
                 var oldDepthTestEnable = _newState.DepthTestEnable;
                 var oldDepthWriteEnable = _newState.DepthWriteEnable;
-                var oldTopology = _newState.Topology;
                 var oldViewports = DynamicState.Viewports;
                 var oldViewportsCount = _newState.ViewportsCount;
+                var oldTopology = _topology;
 
                 _newState.CullMode = CullModeFlags.None;
                 _newState.StencilTestEnable = false;
@@ -658,7 +658,7 @@ namespace Ryujinx.Graphics.Vulkan
                 _newState.StencilTestEnable = oldStencilTestEnable;
                 _newState.DepthTestEnable = oldDepthTestEnable;
                 _newState.DepthWriteEnable = oldDepthWriteEnable;
-                _newState.Topology = oldTopology;
+                SetPrimitiveTopology(oldTopology);
 
                 DynamicState.SetViewports(ref oldViewports, oldViewportsCount);
 
