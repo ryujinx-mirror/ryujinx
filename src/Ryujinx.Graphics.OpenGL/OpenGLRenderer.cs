@@ -202,7 +202,8 @@ namespace Ryujinx.Graphics.OpenGL
                 shaderSubgroupSize: Constants.MaxSubgroupSize,
                 storageBufferOffsetAlignment: HwCapabilities.StorageBufferOffsetAlignment,
                 textureBufferOffsetAlignment: HwCapabilities.TextureBufferOffsetAlignment,
-                gatherBiasPrecision: intelWindows || amdWindows ? 8 : 0); // Precision is 8 for these vendors on Vulkan.
+                gatherBiasPrecision: intelWindows || amdWindows ? 8 : 0, // Precision is 8 for these vendors on Vulkan.
+                maximumGpuMemory: 0);
         }
 
         public void SetBufferData(BufferHandle buffer, int offset, ReadOnlySpan<byte> data)

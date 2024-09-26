@@ -69,6 +69,14 @@ namespace Ryujinx.Graphics.Gpu.Image
         }
 
         /// <summary>
+        /// Initializes the cache, setting the maximum texture capacity for the specified GPU context.
+        /// </summary>
+        public void Initialize()
+        {
+            _cache.Initialize(_context);
+        }
+
+        /// <summary>
         /// Handles marking of textures written to a memory region being (partially) remapped.
         /// </summary>
         /// <param name="sender">Sender object</param>
