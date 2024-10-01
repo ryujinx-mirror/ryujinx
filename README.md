@@ -1,6 +1,14 @@
+## Ryujinx Mirror
+
+As of now, this repository simply serves as a downstream fork of the original Ryujinx project, and won't be accepting any new changes until further information arises.
+
+**If we can acquire the `Ryujinx` name on GitHub, ownership of this organization can also be transferred to someone else from the original Ryujinx team.**
+
+___
+
 <h1 align="center">
   <br>
-  <a href="https://ryujinx.org/"><img src="https://raw.githubusercontent.com/Ryujinx/Ryujinx/master/distribution/misc/Logo.svg" alt="Ryujinx" width="150"></a>
+  <a href="https://ryujinx.org/"><img src="distribution/misc/Logo.svg" alt="Ryujinx" width="150"></a>
   <br>
   <b>Ryujinx</b>
   <br>
@@ -12,7 +20,7 @@
   Ryujinx is an open-source Nintendo Switch emulator, created by gdkchan, written in C#.
   This emulator aims at providing excellent accuracy and performance, a user-friendly interface and consistent builds.
   It was written from scratch and development on the project began in September 2017.
-  Ryujinx is available on Github under the <a href="https://github.com/Ryujinx/Ryujinx/blob/master/LICENSE.txt" target="_blank">MIT license</a>.
+  Ryujinx is available on Github under the <a href="LICENSE.txt" target="_blank">MIT license</a>.
   <br />
 </p>
 
