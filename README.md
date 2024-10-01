@@ -148,6 +148,7 @@ This folder is located in the user folder, which can be accessed by clicking `Op
 If you have contributions, suggestions, need emulator support or just want to get in touch with the team, join our [Discord server](https://discord.com/invite/Ryujinx).
 You may also review our [FAQ](https://github.com/Ryujinx/Ryujinx/wiki/Frequently-Asked-Questions).
 
+<!--
 ## Donations
 
 If you'd like to support the project financially, Ryujinx has an active Patreon campaign.
@@ -163,6 +164,7 @@ All developers working on the project do so in their free time, but the project 
 * Web hosting and infrastructure maintenance (e.g. LDN servers)
 
 All funds received through Patreon are considered a donation to support the project. Patrons receive early access to progress reports and exclusive access to developer interviews.
+-->
 
 ## License
 
