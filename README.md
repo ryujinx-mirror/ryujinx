@@ -1,8 +1,6 @@
 ## Notice
 
-As of now, this repository simply serves as a downstream fork of the original Ryujinx project, and won't be accepting any new changes until further information arises.
-
-**If we can acquire the `Ryujinx` name on GitHub, ownership of this organization can also be transferred to someone else from the original Ryujinx team.**
+As of now, this repository serves simply as a downstream fork of the original Ryujinx project, and won't be accepting any new changes until further information arises.
 
 ___
 
