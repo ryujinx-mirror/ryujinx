@@ -1,6 +1,6 @@
 ## Notice
 
-As of now, this repository serves simply as a downstream fork of the original Ryujinx project, and won't be accepting any new changes until further information arises.
+As of now, the [ryujinx-mirror/ryujinx](https://github.com/ryujinx-mirror/ryujinx) repository serves simply as a downstream fork of the original Ryujinx project, and won't be accepting any new changes until further information arises.
 
 ___
 
