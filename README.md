@@ -1,6 +1,6 @@
 <h1 align="center">
   <br>
-  <a href="https://ryujinx.org/"><img src="distribution/misc/Logo.svg" alt="Ryujinx" width="150"></a>
+  <a href="#"><img src="distribution/misc/Logo.svg" alt="Ryujinx" width="150"></a>
   <br>
   <b>Ryujinx</b>
   <br>
@@ -12,10 +12,11 @@
   Ryujinx is an open-source Nintendo Switch emulator, created by gdkchan, written in C#.
   This emulator aims at providing excellent accuracy and performance, a user-friendly interface and consistent builds.
   It was written from scratch and development on the project began in September 2017.
-  Ryujinx is available on Github under the <a href="https://github.com/Ryujinx/Ryujinx/blob/master/LICENSE.txt" target="_blank">MIT license</a>.
+  Ryujinx is available on Github under the <a href="LICENSE.txt" target="_blank">MIT license</a>.
   <br />
 </p>
 
+<!--
 <p align="center">
     <a href="https://github.com/Ryujinx/Ryujinx/actions/workflows/release.yml">
         <img src="https://github.com/Ryujinx/Ryujinx/actions/workflows/release.yml/badge.svg"
@@ -33,6 +34,7 @@
     <br>
     <img src="https://raw.githubusercontent.com/Ryujinx/Ryujinx-Website/master/public/assets/images/shell.png">
 </p>
+-->
 
 ## Compatibility
 
@@ -55,7 +57,7 @@ See our [Setup & Configuration Guide](https://github.com/Ryujinx/Ryujinx/wiki/Ry
 For our Local Wireless (LDN) builds, see our [Multiplayer: Local Play/Local Wireless Guide
 ](https://github.com/Ryujinx/Ryujinx/wiki/Multiplayer-(LDN-Local-Wireless)-Guide).
 
-Avalonia UI comes with translations for various languages. See [Crowdin](https://crwd.in/ryujinx) for more information.
+Avalonia UI comes with translations for various languages. See [Crowdin](#) for more information. <!--https://crwd.in/ryujinx-->
 
 ## Latest build
 
@@ -64,7 +66,7 @@ While we strive to ensure optimal stability and performance prior to pushing an 
 
 If you want to see details on updates to the emulator, you can visit our [Changelog](https://github.com/Ryujinx/Ryujinx/wiki/Changelog).
 
-The latest automatic build for Windows, macOS, and Linux can be found on the [Official Website](https://ryujinx.org/download).
+The latest automatic build for Windows, macOS, and Linux can be found on the [Official Website](#). <!--https://ryujinx.org/download-->
 
 ## Documentation
 
@@ -140,6 +142,7 @@ This folder is located in the user folder, which can be accessed by clicking `Op
 If you have contributions, suggestions, need emulator support or just want to get in touch with the team, join our [Discord server](https://discord.com/invite/Ryujinx).
 You may also review our [FAQ](https://github.com/Ryujinx/Ryujinx/wiki/Frequently-Asked-Questions).
 
+<!--
 ## Donations
 
 If you'd like to support the project financially, Ryujinx has an active Patreon campaign.
@@ -155,6 +158,7 @@ All developers working on the project do so in their free time, but the project 
 * Web hosting and infrastructure maintenance (e.g. LDN servers)
 
 All funds received through Patreon are considered a donation to support the project. Patrons receive early access to progress reports and exclusive access to developer interviews.
+-->
 
 ## License
 
