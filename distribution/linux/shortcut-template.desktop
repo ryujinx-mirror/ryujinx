@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Name={0}
+Type=Application
+Icon={1}
+Exec={2} %f
+Comment=Nintendo Switch application
+GenericName=Nintendo Switch Emulator
+Terminal=false
+Categories=Game;Emulator;
+Keywords=Switch;Nintendo;Emulator;
+StartupWMClass=Ryujinx
+PrefersNonDefaultGPU=true

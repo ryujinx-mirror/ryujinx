@@ -1,0 +1,75 @@
+<window:StyleableWindow
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:window="clr-namespace:Ryujinx.Ava.UI.Windows"
+    xmlns:viewModels="clr-namespace:Ryujinx.Ava.UI.ViewModels"
+    xmlns:locale="clr-namespace:Ryujinx.Ava.Common.Locale"
+    mc:Ignorable="d"
+    d:DesignWidth="400"
+    d:DesignHeight="350"
+    x:Class="Ryujinx.Ava.UI.Windows.AmiiboWindow"
+    x:DataType="viewModels:AmiiboWindowViewModel"
+    CanResize="False"
+    WindowStartupLocation="CenterOwner"
+    Width="800"
+    MinHeight="650"
+    Height="650"
+    SizeToContent="Manual"
+    MinWidth="600"
+    Focusable="True">
+    <Design.DataContext>
+        <viewModels:AmiiboWindowViewModel />
+    </Design.DataContext>
+    <Grid Margin="15" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <Grid Grid.Row="1" HorizontalAlignment="Stretch">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+            <StackPanel Spacing="10" Orientation="Horizontal" HorizontalAlignment="Left">
+                <TextBlock VerticalAlignment="Center" Text="{locale:Locale AmiiboSeriesLabel}" />
+                <ComboBox SelectedIndex="{Binding SeriesSelectedIndex}" ItemsSource="{Binding AmiiboSeries}" MinWidth="100" />
+            </StackPanel>
+            <StackPanel Spacing="10" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                <TextBlock VerticalAlignment="Center" Text="{locale:Locale AmiiboCharacterLabel}" />
+                <ComboBox SelectedIndex="{Binding AmiiboSelectedIndex}" MinWidth="100" ItemsSource="{Binding AmiiboList}" />
+            </StackPanel>
+        </Grid>
+        <StackPanel Margin="20" Grid.Row="2">
+            <Image Source="{Binding AmiiboImage}" Height="350" Width="350" HorizontalAlignment="Center" />
+            <ScrollViewer MaxHeight="120" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto"
+                          Margin="20" VerticalAlignment="Top" HorizontalAlignment="Stretch">
+                <TextBlock TextWrapping="Wrap" Text="{Binding Usage}" HorizontalAlignment="Center"
+                           TextAlignment="Center" />
+            </ScrollViewer>
+        </StackPanel>
+        <Grid Grid.Row="3">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <CheckBox Margin="10" Grid.Column="0" VerticalContentAlignment="Center" IsChecked="{Binding ShowAllAmiibo}"
+                      Content="{locale:Locale AmiiboOptionsShowAllLabel}" />
+            <CheckBox Margin="10" VerticalContentAlignment="Center" Grid.Column="1" IsChecked="{Binding UseRandomUuid}"
+                      Content="{locale:Locale AmiiboOptionsUsRandomTagLabel}" />
+
+            <Button Grid.Column="3" IsEnabled="{Binding EnableScanning}" Width="80"
+                    Content="{locale:Locale AmiiboScanButtonLabel}" Name="ScanButton"
+                    Click="ScanButton_Click" />
+            <Button Grid.Column="4" Margin="10,0" Width="80" Content="{locale:Locale InputDialogCancel}"
+                    Name="CancelButton"
+                    Click="CancelButton_Click" />
+        </Grid>
+    </Grid>
+</window:StyleableWindow>

@@ -1,0 +1,82 @@
+<UserControl
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    d:DesignWidth="550"
+    d:DesignHeight="450"
+    Width="500"
+    Height="400"
+    xmlns:locale="clr-namespace:Ryujinx.Ava.Common.Locale"
+    xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+    xmlns:viewModels="clr-namespace:Ryujinx.Ava.UI.ViewModels"
+    x:Class="Ryujinx.Ava.UI.Views.User.UserRecovererView"
+    x:DataType="viewModels:UserProfileViewModel"
+    Focusable="True">
+    <Design.DataContext>
+        <viewModels:UserProfileViewModel />
+    </Design.DataContext>
+    <Grid HorizontalAlignment="Stretch"
+          VerticalAlignment="Stretch">
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Border
+            CornerRadius="5"
+            BorderBrush="{DynamicResource AppListHoverBackgroundColor}"
+            BorderThickness="1"
+            Grid.Row="0">
+            <Panel>
+                <ListBox
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch"
+                    ItemsSource="{Binding LostProfiles}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Border
+                                Margin="2"
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Stretch"
+                                ClipToBounds="True"
+                                CornerRadius="5">
+                                <Grid Margin="0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock
+                                        HorizontalAlignment="Stretch"
+                                        Text="{Binding UserId}"
+                                        TextAlignment="Start"
+                                        TextWrapping="Wrap" />
+                                    <Button Grid.Column="1"
+                                            HorizontalAlignment="Right"
+                                            Click="Recover"
+                                            CommandParameter="{Binding}"
+                                            Content="{locale:Locale Recover}"/>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+                <TextBlock
+                    IsVisible="{Binding IsEmpty}"
+                    TextAlignment="Center"
+                    Text="{locale:Locale UserProfilesRecoverEmptyList}"/>
+            </Panel>
+        </Border>
+        <StackPanel
+            Grid.Row="1"
+            Margin="0 24 0 0"
+            Orientation="Horizontal">
+            <Button
+                Width="50"
+                MinWidth="50"
+                Click="GoBack">
+                <ui:SymbolIcon Symbol="Back"/>
+            </Button>
+        </StackPanel>
+    </Grid>
+</UserControl>

@@ -1,0 +1,103 @@
+#version 450 core
+
+#extension GL_EXT_scalar_block_layout : require
+
+layout (local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+
+layout (std430, set = 0, binding = 0) uniform draw_count_uniform
+{
+    uint[64] draw_count_buffer;
+};
+
+layout (std430, set = 1, binding = 1) buffer indirect_in
+{
+    int[] indirect_data_in;
+};
+
+layout (std430, set = 1, binding = 2) buffer indirect_out
+{
+    int[] indirect_data_out;
+};
+
+layout (std430, set = 1, binding = 3) buffer index_buffer_pattern
+{
+    int ibp_pattern[8];
+    int ibp_primitive_vertices;
+    int ibp_primitive_vertices_out;
+    int ibp_index_size;
+    int ibp_index_size_out;
+    int ibp_base_index;
+    int ibp_index_stride;
+    int src_offset;
+    int total_primitives;
+    int dispatch_x;
+    int dispatch_y;
+    int dispatch_z;
+    int has_draw_count;
+    uint max_draw_count;
+    int draw_count_offset;
+    int indirect_data_stride;
+    int indirect_data_offset;
+};
+
+int GetPrimitiveCount(int vertexCount)
+{
+    return max(0, (vertexCount - ibp_base_index) / ibp_index_stride);
+}
+
+int GetConvertedCount(int indexCount)
+{
+    int primitiveCount = GetPrimitiveCount(indexCount);
+    return primitiveCount * ibp_primitive_vertices_out;
+}
+
+void main()
+{
+    uint drawCount = has_draw_count != 0 ? min(draw_count_buffer[draw_count_offset], max_draw_count) : max_draw_count;
+    uint i = 0;
+
+    if (drawCount != 0)
+    {
+        int firstIndex = indirect_data_in[indirect_data_offset + 2];
+        int endIndex = firstIndex + indirect_data_in[indirect_data_offset];
+
+        for (i = 1; i < drawCount; i++)
+        {
+            int offset = int(i) * indirect_data_stride;
+            int inOffset = indirect_data_offset + offset;
+
+            int currentFirstIndex = indirect_data_in[inOffset + 2];
+            firstIndex = min(firstIndex, currentFirstIndex);
+            endIndex = max(endIndex, currentFirstIndex + indirect_data_in[inOffset]);
+        }
+
+        int indexCount = endIndex - firstIndex;
+
+        dispatch_x = (indexCount + 15) / 16;
+        src_offset += firstIndex * ibp_index_size;
+        total_primitives = GetPrimitiveCount(indexCount);
+
+        for (i = 0; i < drawCount; i++)
+        {
+            int offset = int(i) * indirect_data_stride;
+            int inOffset = indirect_data_offset + offset;
+
+            indirect_data_out[offset] = GetConvertedCount(indirect_data_in[inOffset]); // Index count
+            indirect_data_out[offset + 1] = indirect_data_in[inOffset + 1]; // Instance count
+            indirect_data_out[offset + 2] = GetConvertedCount(indirect_data_in[inOffset + 2] - firstIndex); // First index
+            indirect_data_out[offset + 3] = indirect_data_in[inOffset + 3]; // Vertex offset
+            indirect_data_out[offset + 4] = indirect_data_in[inOffset + 4]; // First instance
+        }
+    }
+
+    for (; i < max_draw_count; i++)
+    {
+        int offset = int(i) * indirect_data_stride;
+
+        indirect_data_out[offset] = 0;
+        indirect_data_out[offset + 1] = 0;
+        indirect_data_out[offset + 2] = 0;
+        indirect_data_out[offset + 3] = 0;
+        indirect_data_out[offset + 4] = 0;
+    }
+}

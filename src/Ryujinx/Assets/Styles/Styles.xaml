@@ -1,0 +1,395 @@
+﻿<Styles
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia">
+    <Design.PreviewWith>
+        <Border Height="2000"
+                Padding="20">
+            <StackPanel Spacing="5">
+                <TextBlock Text="Code Font Family" />
+                <Grid RowDefinitions="*,Auto">
+                    <Menu Grid.Row="1"
+                          Width="100">
+                        <MenuItem Header="File">
+                            <MenuItem Header="Test 1" />
+                            <MenuItem Header="Test 2" />
+                            <MenuItem Header="Test 3">
+                                <MenuItem.Icon>
+                                    <CheckBox Margin="0" />
+                                </MenuItem.Icon>
+                            </MenuItem>
+                        </MenuItem>
+                    </Menu>
+                    <StackPanel Orientation="Horizontal">
+                        <ToggleButton
+                            Name="btnAdd"
+                            Height="28"
+                            HorizontalAlignment="Right"
+                            Content="Addy" />
+                        <Button
+                            Name="btnRem"
+                            HorizontalAlignment="Right"
+                            Content="Add" />
+                        <TextBox
+                            Width="100"
+                            VerticalAlignment="Center"
+                            Text="Rrrrr"
+                            UseFloatingWatermark="True"
+                            Watermark="Hello" />
+                        <CheckBox>Test Check</CheckBox>
+                    </StackPanel>
+                </Grid>
+                <ui:NumberBox Value="1" />
+            </StackPanel>
+        </Border>
+    </Design.PreviewWith>
+    <Style Selector="Border.small">
+        <Setter Property="Width"
+                Value="100" />
+    </Style>
+    <Style Selector="Border.normal">
+        <Setter Property="Width"
+                Value="130" />
+    </Style>
+    <Style Selector="Border.large">
+        <Setter Property="Width"
+                Value="160" />
+    </Style>
+    <Style Selector="Border.huge">
+        <Setter Property="Width"
+                Value="200" />
+    </Style>
+    <Style Selector="Border.settings">
+        <Setter Property="Background"
+                Value="{DynamicResource ThemeDarkColor}" />
+        <Setter Property="BorderBrush"
+                Value="{DynamicResource MenuFlyoutPresenterBorderColor}" />
+        <Setter Property="BorderThickness"
+                Value="1" />
+        <Setter Property="CornerRadius"
+                Value="5" />
+    </Style>
+    <Style Selector="Image.small">
+        <Setter Property="Width"
+                Value="50" />
+    </Style>
+    <Style Selector="Image.normal">
+        <Setter Property="Width"
+                Value="80" />
+    </Style>
+    <Style Selector="Image.large">
+        <Setter Property="Width"
+                Value="100" />
+    </Style>
+    <Style Selector="Image.huge">
+        <Setter Property="Width"
+                Value="120" />
+    </Style>
+    <Style Selector="#TitleBarHost &gt; Image">
+        <Setter Property="Margin"
+                Value="10" />
+    </Style>
+    <Style Selector="#TitleBarHost &gt; Label">
+        <Setter Property="Margin"
+                Value="5" />
+        <Setter Property="FontSize"
+                Value="14" />
+    </Style>
+    <Style Selector="Button.SystemCaption">
+        <Setter Property="MinWidth"
+                Value="10" />
+    </Style>
+    <Style Selector="DataGridColumnHeader">
+        <Setter Property="Foreground"
+                Value="{DynamicResource ThemeForegroundBrush}" />
+        <Setter Property="HorizontalContentAlignment"
+                Value="Center" />
+        <Setter Property="BorderThickness"
+                Value="1" />
+        <Setter Property="VerticalContentAlignment"
+                Value="Center" />
+        <Setter Property="SeparatorBrush"
+                Value="{DynamicResource ThemeControlBorderColor}" />
+        <Setter Property="Padding"
+                Value="5" />
+        <Setter Property="Background"
+                Value="{DynamicResource ThemeContentBackgroundColor}" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Grid Background="{TemplateBinding Background}"
+                      ColumnDefinitions="*,Auto">
+                    <Grid
+                        Margin="{TemplateBinding Padding}"
+                        HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                        VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                        ColumnDefinitions="*,Auto">
+                        <ContentPresenter Content="{TemplateBinding Content}" />
+                        <Path
+                            Name="SortIcon"
+                            Grid.Column="1"
+                            Width="8"
+                            Margin="4,0,0,0"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Center"
+                            Data="F1 M -5.215,6.099L 5.215,6.099L 0,0L -5.215,6.099 Z "
+                            Fill="{TemplateBinding Foreground}"
+                            Stretch="Uniform" />
+                    </Grid>
+                    <Rectangle
+                        Name="VerticalSeparator"
+                        Grid.Column="1"
+                        Width="1"
+                        VerticalAlignment="Stretch"
+                        Fill="{TemplateBinding SeparatorBrush}"
+                        IsVisible="{TemplateBinding AreSeparatorsVisible}" />
+                </Grid>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+    <Style Selector="DataGrid">
+        <Setter Property="RowBackground"
+                Value="{DynamicResource ThemeAccentBrush4}" />
+        <Setter Property="Background"
+                Value="{DynamicResource ThemeBackgroundBrush}" />
+        <Setter Property="BorderBrush"
+                Value="{DynamicResource ThemeBorderLowColor}" />
+        <Setter Property="BorderThickness"
+                Value="{DynamicResource ThemeBorderThickness}" />
+    </Style>
+    <Style Selector="DataGridRow:selected:focus /template/ Rectangle#BackgroundRectangle">
+        <Setter Property="Fill"
+                Value="{DynamicResource SystemAccentColor}" />
+        <Setter Property="Opacity"
+                Value="{DynamicResource DataGridRowSelectedBackgroundOpacity}" />
+    </Style>
+    <Style Selector="DataGridRow:pointerover /template/ Rectangle#BackgroundRectangle">
+        <Setter Property="Fill"
+                Value="{DynamicResource SystemListLowColor}" />
+    </Style>
+    <Style Selector="DataGridRow:selected /template/ Rectangle#BackgroundRectangle">
+        <Setter Property="Fill"
+                Value="{DynamicResource SystemAccentColor}" />
+        <Setter Property="Opacity"
+                Value="{DynamicResource DataGridRowSelectedUnfocusedBackgroundOpacity}" />
+    </Style>
+    <Style Selector="DataGridRow:selected:pointerover /template/ Rectangle#BackgroundRectangle">
+        <Setter Property="Fill"
+                Value="{DynamicResource SystemAccentColor}" />
+        <Setter Property="Opacity"
+                Value="{DynamicResource DataGridRowSelectedHoveredUnfocusedBackgroundOpacity}" />
+    </Style>
+    <Style Selector="DataGridRow:selected:pointerover:focus /template/ Rectangle#BackgroundRectangle">
+        <Setter Property="Fill"
+                Value="{DynamicResource SystemAccentColor}" />
+        <Setter Property="Opacity"
+                Value="{DynamicResource DataGridRowSelectedHoveredBackgroundOpacity}" />
+    </Style>
+    <Style Selector="DataGridCell">
+        <Setter Property="HorizontalAlignment"
+                Value="Center" />
+        <Setter Property="HorizontalContentAlignment"
+                Value="Center" />
+    </Style>
+    <Style Selector="DataGridCell.Left">
+        <Setter Property="HorizontalAlignment"
+                Value="Left" />
+    </Style>
+    <Style Selector="CheckBox">
+        <Setter Property="BorderThickness"
+                Value="1" />
+    </Style>
+
+    <Style Selector="MenuItem">
+        <Setter Property="Height"
+                Value="{DynamicResource MenuItemHeight}" />
+        <Setter Property="Padding"
+                Value="{DynamicResource MenuItemPadding}" />
+        <Setter Property="FontSize"
+                Value="12" />
+    </Style>
+    <Style Selector="MenuItem:selected /template/ Border#root">
+        <Setter Property="Background"
+                Value="{DynamicResource ThemeControlBorderColor}" />
+        <Setter Property="BorderBrush"
+                Value="{DynamicResource ThemeControlBorderColor}" />
+    </Style>
+    <Style Selector="TabItem > ScrollViewer">
+        <Setter Property="Background"
+                Value="{DynamicResource ThemeBackgroundColor}" />
+        <Setter Property="Margin"
+                Value="0,-5,0,0" />
+    </Style>
+    <Style Selector="TabItem > ScrollViewer > Border">
+        <Setter Property="BorderThickness"
+                Value="0,1,0,0" />
+        <Setter Property="Background"
+                Value="{DynamicResource ThemeBackgroundColor}" />
+        <Setter Property="BorderBrush"
+                Value="{DynamicResource HighlightBrush}" />
+    </Style>
+    <Style Selector="Button">
+        <Setter Property="MinWidth"
+                Value="80" />
+    </Style>
+    <Style Selector="ProgressBar /template/ Border#ProgressBarTrack">
+        <Setter Property="IsVisible"
+                Value="False" />
+    </Style>
+    <Style Selector="ToggleButton">
+        <Setter Property="Padding"
+                Value="0,-5,0,0" />
+    </Style>
+    <Style Selector="TabItem">
+        <Setter Property="FontSize"
+                Value="14" />
+        <Setter Property="BorderThickness"
+                Value="0,0,1,0" />
+        <Setter Property="BorderBrush"
+                Value="{DynamicResource ThemeButtonForegroundColor}" />
+        <Setter Property="Background"
+                Value="{DynamicResource SystemAccentColorLight2}" />
+    </Style>
+    <Style Selector="TabItem:pointerover">
+        <Setter Property="Foreground"
+                Value="{DynamicResource ThemeButtonForegroundColor}" />
+    </Style>
+    <Style Selector="TabItem:selected">
+        <Setter Property="Background"
+                Value="{DynamicResource SystemAccentColorLight2}" />
+        <Setter Property="Foreground"
+                Value="{DynamicResource ThemeBackgroundColor}" />
+    </Style>
+    <Style Selector="TextBlock">
+        <Setter Property="Margin"
+                Value="{DynamicResource TextMargin}" />
+        <Setter Property="FontSize"
+                Value="{DynamicResource FontSize}" />
+        <Setter Property="VerticalAlignment"
+                Value="Center" />
+        <Setter Property="TextWrapping"
+                Value="WrapWithOverflow" />
+    </Style>
+    <Style Selector="TextBlock.h1">
+        <Setter Property="Margin"
+                Value="{DynamicResource TextMargin}" />
+        <Setter Property="VerticalAlignment"
+                Value="Center" />
+        <Setter Property="FontWeight"
+                Value="Bold" />
+        <Setter Property="FontSize"
+                Value="16" />
+        <Setter Property="TextWrapping"
+                Value="WrapWithOverflow" />
+    </Style>
+    <Style Selector="Separator">
+        <Setter Property="Background"
+                Value="{DynamicResource ThemeControlBorderColor}" />
+        <Setter Property="Foreground"
+                Value="{DynamicResource ThemeControlBorderColor}" />
+        <Setter Property="MinHeight"
+                Value="1" />
+    </Style>
+    <Style Selector=":is(Button).DateTimeFlyoutButtonStyle">
+        <Setter Property="Background"
+                Value="{DynamicResource SystemAccentColorLight2}" />
+        <Setter Property="Foreground"
+                Value="{DynamicResource ThemeBackgroundColor}" />
+    </Style>
+    <Style Selector="DatePickerPresenter">
+        <Setter Property="BorderThickness"
+                Value="1" />
+        <Setter Property="BorderBrush"
+                Value="{DynamicResource ThemeButtonForegroundColor}" />
+    </Style>
+    <Style Selector="DataGridCell">
+        <Setter Property="FontSize"
+                Value="14" />
+    </Style>
+    <Style Selector="CheckBox TextBlock">
+        <Setter Property="Margin"
+                Value="0,5,0,0" />
+    </Style>
+    <Style Selector="ContextMenu">
+        <Setter Property="BorderBrush"
+                Value="{DynamicResource MenuFlyoutPresenterBorderBrush}" />
+        <Setter Property="BorderThickness"
+                Value="{DynamicResource MenuFlyoutPresenterBorderThemeThickness}" />
+    </Style>
+    <Style Selector="TextBox">
+        <Setter Property="VerticalContentAlignment"
+                Value="Center" />
+    </Style>
+    <Style Selector="TextBox.NumberBoxTextBoxStyle">
+        <Setter Property="Foreground"
+                Value="{DynamicResource ThemeForegroundColor}" />
+    </Style>
+    <Style Selector="ListBox ListBoxItem">
+        <Setter Property="Padding"
+                Value="0" />
+        <Setter Property="Margin"
+                Value="0" />
+        <Setter Property="CornerRadius"
+                Value="5" />
+        <Setter Property="Background"
+                Value="{DynamicResource AppListBackgroundColor}" />
+        <Setter Property="BorderThickness"
+                Value="2"/>
+    </Style>
+    <Style Selector="ListBox ListBoxItem:selected /template/ ContentPresenter">
+        <Setter Property="Background"
+                Value="{DynamicResource AppListBackgroundColor}" />
+    </Style>
+    <Style Selector="ListBox">
+        <Setter Property="Background"
+                Value="{DynamicResource ThemeContentBackgroundColor}" />
+    </Style>
+    <Style Selector="FlyoutPresenter, ContextMenu, MenuFlyoutPresenter">
+        <Setter Property="BorderBrush"
+                Value="{DynamicResource MenuFlyoutPresenterBorderColor}" />
+    </Style>
+    <Style Selector="ListBox ListBoxItem:pointerover /template/ ContentPresenter">
+        <Setter Property="Background"
+                Value="{DynamicResource AppListHoverBackgroundColor}" />
+    </Style>
+    <Styles.Resources>
+        <SolidColorBrush x:Key="ThemeAccentColorBrush"
+                         Color="{DynamicResource SystemAccentColor}" />
+        <StaticResource x:Key="ListViewItemBackgroundSelected"
+                        ResourceKey="ThemeAccentColorBrush" />
+        <StaticResource x:Key="ListViewItemBackgroundPressed"
+                        ResourceKey="SystemAccentColorDark1" />
+        <StaticResource x:Key="ListViewItemBackgroundPointerOver"
+                        ResourceKey="SystemAccentColorDark2" />
+        <StaticResource x:Key="ListViewItemBackgroundSelectedPressed"
+                        ResourceKey="ThemeAccentColorBrush" />
+        <StaticResource x:Key="ListViewItemBackgroundSelectedPointerOver"
+                        ResourceKey="SystemAccentColorDark2" />
+        <SolidColorBrush
+            x:Key="DataGridGridLinesBrush"
+            Opacity="0.4"
+            Color="{DynamicResource SystemBaseMediumLowColor}" />
+        <SolidColorBrush x:Key="DataGridSelectionBackgroundBrush"
+                         Color="{DynamicResource DataGridSelectionColor}" />
+        <SolidColorBrush x:Key="SplitButtonBackgroundChecked"
+                         Color="#00E81123" />
+        <SolidColorBrush x:Key="SplitButtonBackgroundCheckedPointerOver"
+                         Color="#00E81123" />
+        <SolidColorBrush x:Key="SplitButtonBackgroundCheckedPressed"
+                         Color="#00E81123" />
+        <SolidColorBrush x:Key="SplitButtonBackgroundCheckedDisabled"
+                         Color="#00E81123" />
+        <Thickness x:Key="PageMargin">40 0 40 0</Thickness>
+        <Thickness x:Key="Margin">0 5 0 5</Thickness>
+        <Thickness x:Key="MenuItemPadding">5 0 5 0</Thickness>
+        <x:Double x:Key="ScrollBarThickness">15</x:Double>
+        <x:Double x:Key="FontSizeSmall">8</x:Double>
+        <x:Double x:Key="FontSizeNormal">10</x:Double>
+        <x:Double x:Key="FontSize">12</x:Double>
+        <x:Double x:Key="FontSizeLarge">15</x:Double>
+        <x:Double x:Key="ControlContentThemeFontSize">13</x:Double>
+        <x:Double x:Key="MenuItemHeight">26</x:Double>
+        <x:Double x:Key="TabItemMinHeight">28</x:Double>
+        <x:Double x:Key="ContentDialogMaxWidth">600</x:Double>
+        <x:Double x:Key="ContentDialogMaxHeight">756</x:Double>
+    </Styles.Resources>
+</Styles>

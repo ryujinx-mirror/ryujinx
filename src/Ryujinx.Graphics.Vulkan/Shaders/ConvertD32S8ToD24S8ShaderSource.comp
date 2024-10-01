@@ -1,0 +1,58 @@
+#version 450 core
+
+#extension GL_EXT_scalar_block_layout : require
+
+layout (local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
+
+layout (std430, set = 0, binding = 0) uniform stride_arguments
+{
+    int pixelCount;
+    int dstStartOffset;
+};
+
+layout (std430, set = 1, binding = 1) buffer in_s
+{
+    uint[] in_data;
+};
+
+layout (std430, set = 1, binding = 2) buffer out_s
+{
+    uint[] out_data;
+};
+
+void main()
+{
+    // Determine what slice of the stride copies this invocation will perform.
+    int invocations = int(gl_WorkGroupSize.x * gl_NumWorkGroups.x);
+
+    int copiesRequired = pixelCount;
+
+    // Find the copies that this invocation should perform.
+    
+    // - Copies that all invocations perform.
+    int allInvocationCopies = copiesRequired / invocations;
+
+    // - Extra remainder copy that this invocation performs.
+    int index = int(gl_GlobalInvocationID.x);
+    int extra = (index < (copiesRequired % invocations)) ? 1 : 0;
+
+    int copyCount = allInvocationCopies + extra;
+
+    // Finally, get the starting offset. Make sure to count extra copies.
+
+    int startCopy = allInvocationCopies * index + min(copiesRequired % invocations, index);
+
+    int srcOffset = startCopy * 2;
+    int dstOffset = dstStartOffset + startCopy;
+
+    // Perform the conversion for this region.
+    for (int i = 0; i < copyCount; i++)
+    {
+        float depth = uintBitsToFloat(in_data[srcOffset++]);
+        uint stencil = in_data[srcOffset++];
+
+        uint rescaledDepth = uint(clamp(depth, 0.0, 1.0) * 16777215.0);
+
+        out_data[dstOffset++] = (rescaledDepth << 8) | (stencil & 0xff);
+    }
+}

@@ -1,0 +1,26 @@
+name: Missing CPU Instruction
+description: CPU Instruction is missing in Ryujinx.
+title: "[CPU]"
+labels: [cpu, not-implemented]
+body:
+  - type: textarea
+    id: instruction
+    attributes:
+      label: CPU instruction
+      description: What CPU instruction is missing?
+    validations:
+      required: true
+  - type: textarea
+    id: name
+    attributes:
+      label: Instruction name
+      description: Include the name from [armconverter.com](https://armconverter.com/?disasm) or [shell-storm.org](http://shell-storm.org/online/Online-Assembler-and-Disassembler/?arch=arm64&endianness=big&dis_with_raw=True&dis_with_ins=True) in the above code block
+    validations:
+      required: true
+  - type: textarea
+    id: required
+    attributes:
+      label: Required by
+      description: Add links to the [compatibility list page(s)](https://github.com/Ryujinx/Ryujinx-Games-List/issues) of the game(s) that require this instruction.
+    validations:
+      required: true

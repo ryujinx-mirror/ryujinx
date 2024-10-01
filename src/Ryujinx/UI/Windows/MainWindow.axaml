@@ -1,0 +1,203 @@
+<window:StyleableWindow
+    x:Class="Ryujinx.Ava.UI.Windows.MainWindow"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:window="clr-namespace:Ryujinx.Ava.UI.Windows"
+    xmlns:viewModels="clr-namespace:Ryujinx.Ava.UI.ViewModels"
+    xmlns:helpers="clr-namespace:Ryujinx.Ava.UI.Helpers"
+    xmlns:controls="clr-namespace:Ryujinx.Ava.UI.Controls"
+    xmlns:main="clr-namespace:Ryujinx.Ava.UI.Views.Main"
+    Cursor="{Binding Cursor}"
+    Title="{Binding Title}"
+    WindowState="{Binding WindowState}"
+    Width="{Binding WindowWidth}"
+    Height="{Binding WindowHeight}"
+    MinWidth="800"
+    MinHeight="500"
+    d:DesignHeight="720"
+    d:DesignWidth="1280"
+    x:DataType="viewModels:MainWindowViewModel"
+    mc:Ignorable="d"
+    WindowStartupLocation="Manual"
+    Focusable="True">
+    <Window.Styles>
+        <Style Selector="TitleBar:fullscreen">
+            <Setter Property="Background" Value="#000000" />
+        </Style>
+    </Window.Styles>
+    <Design.DataContext>
+        <viewModels:MainWindowViewModel />
+    </Design.DataContext>
+    <Window.Resources>
+        <helpers:BitmapArrayValueConverter x:Key="ByteImage" />
+    </Window.Resources>
+    <Window.KeyBindings>
+        <KeyBinding Gesture="Alt+Return" Command="{Binding ToggleFullscreen}" />
+        <KeyBinding Gesture="F11" Command="{Binding ToggleFullscreen}" />
+        <KeyBinding Gesture="Ctrl+Cmd+F" Command="{Binding ToggleFullscreen}" />
+        <KeyBinding Gesture="F9" Command="{Binding ToggleDockMode}" />
+        <KeyBinding Gesture="Escape" Command="{Binding ExitCurrentState}" />
+    </Window.KeyBindings>
+    <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <helpers:OffscreenTextBox IsEnabled="False" Opacity="0" Name="HiddenTextBox" IsHitTestVisible="False" IsTabStop="False" />
+        <Grid
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Stretch">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <StackPanel
+                Name="MenuBar"
+                MinHeight="35"
+                Grid.Row="0"
+                Margin="0"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch"
+                IsVisible="{Binding ShowMenuAndStatusBar}"
+                Orientation="Vertical">
+                <main:MainMenuBarView
+                    Name="MenuBarView" />
+            </StackPanel>
+            <ContentControl
+                Name="MainContent"
+                Grid.Row="1"
+                Padding="0"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch"
+                BorderBrush="{DynamicResource ThemeControlBorderColor}"
+                BorderThickness="0,0,0,0"
+                DockPanel.Dock="Top"
+                IsVisible="{Binding ShowContent}">
+                <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Name="GameLibrary">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <main:MainViewControls
+                        Name="ViewControls"
+                        Grid.Row="0"/>
+                    <controls:ApplicationListView
+                        x:Name="ApplicationList"
+                        Grid.Row="1"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Stretch"
+                        HorizontalContentAlignment="Stretch"
+                        VerticalContentAlignment="Stretch"
+                        IsVisible="{Binding IsList}" />
+                    <controls:ApplicationGridView
+                        x:Name="ApplicationGrid"
+                        Grid.Row="1"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Stretch"
+                        HorizontalContentAlignment="Stretch"
+                        VerticalContentAlignment="Stretch"
+                        IsVisible="{Binding IsGrid}" />
+                </Grid>
+            </ContentControl>
+            <Grid
+                Grid.Row="1"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch"
+                Background="{DynamicResource ThemeContentBackgroundColor}"
+                IsVisible="{Binding ShowLoadProgress}"
+                Name="LoadingView"
+                ZIndex="1000">
+                <Grid
+                    Margin="40"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    IsVisible="{Binding ShowLoadProgress}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Border
+                        Grid.RowSpan="2"
+                        Grid.Column="0"
+                        Width="256"
+                        Height="256"
+                        Margin="10"
+                        Padding="4"
+                        BorderBrush="Black"
+                        BorderThickness="2"
+                        BoxShadow="4 4 32 8 #40000000"
+                        CornerRadius="3"
+                        IsVisible="{Binding ShowLoadProgress}">
+                        <Image
+                            Width="256"
+                            Height="256"
+                            IsVisible="{Binding ShowLoadProgress}"
+                            Source="{Binding SelectedIcon, Converter={StaticResource ByteImage}}" />
+                    </Border>
+                    <Grid
+                        Grid.Column="1"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Center"
+                        IsVisible="{Binding ShowLoadProgress}">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <TextBlock
+                            Grid.Row="0"
+                            Margin="10"
+                            FontSize="30"
+                            FontWeight="Bold"
+                            IsVisible="{Binding ShowLoadProgress}"
+                            Text="{Binding LoadHeading}"
+                            TextAlignment="Start"
+                            TextWrapping="Wrap"
+                            MaxWidth="500" />
+                        <Border
+                            Grid.Row="1"
+                            Margin="10"
+                            Padding="0"
+                            HorizontalAlignment="Stretch"
+                            BorderBrush="{Binding ProgressBarBackgroundColor}"
+                            BorderThickness="1"
+                            ClipToBounds="True"
+                            CornerRadius="5"
+                            IsVisible="{Binding ShowLoadProgress}">
+                            <ProgressBar
+                                Height="10"
+                                MinWidth="500"
+                                Margin="0"
+                                Padding="0"
+                                HorizontalAlignment="Stretch"
+                                ClipToBounds="True"
+                                CornerRadius="5"
+                                Foreground="{Binding ProgressBarForegroundColor}"
+                                IsIndeterminate="{Binding IsLoadingIndeterminate}"
+                                IsVisible="{Binding ShowLoadProgress}"
+                                Maximum="{Binding ProgressMaximum}"
+                                Minimum="0"
+                                Value="{Binding ProgressValue}" />
+                        </Border>
+                        <TextBlock
+                            Grid.Row="2"
+                            Margin="10"
+                            FontSize="18"
+                            IsVisible="{Binding ShowLoadProgress}"
+                            Text="{Binding CacheLoadStatus}"
+                            TextAlignment="Start"
+                            MaxWidth="500" />
+                    </Grid>
+                </Grid>
+            </Grid>
+            <main:MainStatusBarView
+                Name="StatusBarView"
+                Grid.Row="2" />
+        </Grid>
+    </Grid>
+</window:StyleableWindow>

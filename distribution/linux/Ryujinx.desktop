@@ -1,0 +1,14 @@
+[Desktop Entry]
+Version=1.0
+Name=Ryujinx
+Type=Application
+Icon=Ryujinx
+Exec=Ryujinx.sh %f
+Comment=A Nintendo Switch Emulator
+GenericName=Nintendo Switch Emulator
+Terminal=false
+Categories=Game;Emulator;
+MimeType=application/x-nx-nca;application/x-nx-nro;application/x-nx-nso;application/x-nx-nsp;application/x-nx-xci;
+Keywords=Switch;Nintendo;Emulator;
+StartupWMClass=Ryujinx
+PrefersNonDefaultGPU=true

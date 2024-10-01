@@ -1,0 +1,37 @@
+#version 450 core
+
+layout (std140, binding = 0) uniform sample_counts_log2_in
+{
+    ivec4 sample_counts_log2;
+};
+
+layout (set = 2, binding = 0) uniform usampler2DMS srcMS;
+layout (set = 3, binding = 0) writeonly uniform uimage2D dst;
+
+layout (local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
+
+void main()
+{
+    uvec2 coords = gl_GlobalInvocationID.xy;
+    ivec2 imageSz = imageSize(dst);
+
+    if (int(coords.x) >= imageSz.x || int(coords.y) >= imageSz.y)
+    {
+        return;
+    }
+
+    int deltaX = sample_counts_log2.x - sample_counts_log2.z;
+    int deltaY = sample_counts_log2.y - sample_counts_log2.w;
+    int samplesInXLog2 = sample_counts_log2.z;
+    int samplesInYLog2 = sample_counts_log2.w;
+    int samplesInX = 1 << samplesInXLog2;
+    int samplesInY = 1 << samplesInYLog2;
+    int sampleIdx = ((int(coords.x) >> deltaX) & (samplesInX - 1)) | (((int(coords.y) >> deltaY) & (samplesInY - 1)) << samplesInXLog2);
+
+    samplesInXLog2 = sample_counts_log2.x;
+    samplesInYLog2 = sample_counts_log2.y;
+
+    ivec2 shiftedCoords = ivec2(int(coords.x) >> samplesInXLog2, int(coords.y) >> samplesInYLog2);
+
+    imageStore(dst, ivec2(coords), texelFetch(srcMS, shiftedCoords, sampleIdx));
+}

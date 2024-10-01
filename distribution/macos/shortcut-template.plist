@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>English</string>
+	<key>CFBundleExecutable</key>
+	<string>{0}</string>
+	<key>CFBundleGetInfoString</key>
+	<string>{1}</string>
+	<key>CFBundleIconFile</key>
+	<string>{2}</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleVersion</key>
+	<string>1.0</string>
+	<key>NSHighResolutionCapable</key>
+	<true/>
+	<key>CSResourcesFileMapped</key>
+	<true/>
+	<key>NSHumanReadableCopyright</key>
+	<string>Copyright © 2018 - 2023 Ryujinx Team and Contributors.</string>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.games</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>11.0</string>
+	<key>UIPrerenderedIcon</key>
+	<true/>
+	<key>LSEnvironment</key>
+	<dict>
+		<key>DOTNET_DefaultStackSize</key>
+		<string>200000</string>
+	</dict>
+</dict>
+</plist>

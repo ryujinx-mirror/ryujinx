@@ -1,0 +1,301 @@
+﻿<UserControl
+    x:Class="Ryujinx.Ava.UI.Views.Settings.SettingsGraphicsView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controls="clr-namespace:Ryujinx.Ava.UI.Controls"
+    xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+    xmlns:locale="clr-namespace:Ryujinx.Ava.Common.Locale"
+    xmlns:viewModels="clr-namespace:Ryujinx.Ava.UI.ViewModels"
+    Design.Width="1000"
+    mc:Ignorable="d"
+    x:DataType="viewModels:SettingsViewModel">
+    <Design.DataContext>
+        <viewModels:SettingsViewModel />
+    </Design.DataContext>
+    <ScrollViewer
+        Name="GraphicsPage"
+        HorizontalAlignment="Stretch"
+        VerticalAlignment="Stretch"
+        HorizontalScrollBarVisibility="Disabled"
+        VerticalScrollBarVisibility="Auto">
+        <Border Classes="settings">
+            <StackPanel
+                Margin="10"
+                HorizontalAlignment="Stretch"
+                Orientation="Vertical"
+                Spacing="10">
+                <TextBlock Classes="h1" Text="{locale:Locale SettingsTabGraphicsAPI}" />
+                <StackPanel Margin="10,0,0,0" Orientation="Vertical" Spacing="10">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock VerticalAlignment="Center"
+                                ToolTip.Tip="{locale:Locale SettingsTabGraphicsBackendTooltip}"
+                                Text="{locale:Locale SettingsTabGraphicsBackend}"
+                                Width="250" />
+                        <ComboBox Width="350"
+                                HorizontalContentAlignment="Left"
+                                ToolTip.Tip="{locale:Locale SettingsTabGraphicsBackendTooltip}"
+                                SelectedIndex="{Binding GraphicsBackendIndex}">
+                            <ComboBoxItem IsVisible="{Binding IsVulkanAvailable}">
+                                <TextBlock Text="Vulkan" />
+                            </ComboBoxItem>
+                            <ComboBoxItem IsEnabled="{Binding IsOpenGLAvailable}">
+                                <TextBlock Text="OpenGL" />
+                            </ComboBoxItem>
+                        </ComboBox>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" IsVisible="{Binding IsVulkanSelected}">
+                        <TextBlock VerticalAlignment="Center"
+                                ToolTip.Tip="{locale:Locale SettingsTabGraphicsPreferredGpuTooltip}"
+                                Text="{locale:Locale SettingsTabGraphicsPreferredGpu}"
+                                Width="250" />
+                        <ComboBox Width="350"
+                                HorizontalContentAlignment="Left"
+                                ToolTip.Tip="{locale:Locale SettingsTabGraphicsPreferredGpuTooltip}"
+                                SelectedIndex="{Binding PreferredGpuIndex}"
+                                ItemsSource="{Binding AvailableGpus}"/>
+                    </StackPanel>
+                </StackPanel>
+                <Separator Height="1" />
+                <TextBlock Classes="h1" Text="{locale:Locale SettingsTabGraphicsFeatures}" />
+                <StackPanel Margin="10,0,0,0" Orientation="Vertical" Spacing="10">
+                    <StackPanel Orientation="Vertical">
+                        <CheckBox IsChecked="{Binding EnableShaderCache}"
+                            ToolTip.Tip="{locale:Locale ShaderCacheToggleTooltip}">
+                            <TextBlock Text="{locale:Locale SettingsTabGraphicsEnableShaderCache}" />
+                        </CheckBox>
+                        <CheckBox IsChecked="{Binding EnableTextureRecompression}"
+                            ToolTip.Tip="{locale:Locale SettingsEnableTextureRecompressionTooltip}">
+                            <TextBlock Text="{locale:Locale SettingsEnableTextureRecompression}" />
+                        </CheckBox>
+                        <CheckBox IsChecked="{Binding EnableMacroHLE}"
+                            ToolTip.Tip="{locale:Locale SettingsEnableMacroHLETooltip}">
+                            <TextBlock Text="{locale:Locale SettingsEnableMacroHLE}" />
+                        </CheckBox>
+                        <CheckBox IsChecked="{Binding EnableColorSpacePassthrough}"
+                                  IsVisible="{Binding ColorSpacePassthroughAvailable}"
+                            ToolTip.Tip="{locale:Locale SettingsEnableColorSpacePassthroughTooltip}">
+                            <TextBlock Text="{locale:Locale SettingsEnableColorSpacePassthrough}" />
+                        </CheckBox>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock VerticalAlignment="Center"
+                                   ToolTip.Tip="{locale:Locale ResolutionScaleTooltip}"
+                                   Text="{locale:Locale SettingsTabGraphicsResolutionScale}"
+                                   Width="250" />
+                        <ComboBox SelectedIndex="{Binding ResolutionScale}"
+                                  Width="350"
+                                  HorizontalContentAlignment="Left"
+                                  ToolTip.Tip="{locale:Locale ResolutionScaleTooltip}">
+                            <ComboBoxItem>
+                                <TextBlock Text="{locale:Locale SettingsTabGraphicsResolutionScaleNative}" />
+                            </ComboBoxItem>
+                            <ComboBoxItem>
+                                <TextBlock Text="{locale:Locale SettingsTabGraphicsResolutionScale2x}" />
+                            </ComboBoxItem>
+                            <ComboBoxItem>
+                                <TextBlock Text="{locale:Locale SettingsTabGraphicsResolutionScale3x}" />
+                            </ComboBoxItem>
+                            <ComboBoxItem>
+                                <TextBlock Text="{locale:Locale SettingsTabGraphicsResolutionScale4x}" />
+                            </ComboBoxItem>
+                            <ComboBoxItem>
+                                <TextBlock Text="{locale:Locale SettingsTabGraphicsResolutionScaleCustom}" />
+                            </ComboBoxItem>
+                        </ComboBox>
+                        <ui:NumberBox
+                            Margin="10,0,0,0"
+                            ToolTip.Tip="{locale:Locale ResolutionScaleEntryTooltip}"
+                            MinWidth="150"
+                            SmallChange="0.1"
+                            LargeChange="1"
+                            SimpleNumberFormat="F2"
+                            SpinButtonPlacementMode="Inline"
+                            IsVisible="{Binding IsCustomResolutionScaleActive}"
+                            Maximum="100"
+                            Minimum="0.1"
+                            Value="{Binding CustomResolutionScale}" />
+                    </StackPanel>
+                    <StackPanel
+                        HorizontalAlignment="Stretch"
+                        Orientation="Vertical"
+                        Spacing="10">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock VerticalAlignment="Center"
+                                       ToolTip.Tip="{locale:Locale GraphicsAATooltip}"
+                                       Text="{locale:Locale GraphicsAALabel}"
+                                       Width="250" />
+                            <ComboBox Width="350"
+                                      HorizontalContentAlignment="Left"
+                                      ToolTip.Tip="{locale:Locale GraphicsAATooltip}"
+                                      SelectedIndex="{Binding AntiAliasingEffect}">
+                                <ComboBoxItem>
+                                    <TextBlock Text="{locale:Locale SettingsTabLoggingGraphicsBackendLogLevelNone}" />
+                                </ComboBoxItem>
+                                <ComboBoxItem>
+                                    <TextBlock Text="FXAA" />
+                                </ComboBoxItem>
+                                <ComboBoxItem>
+                                    <TextBlock Text="{locale:Locale SmaaLow}" />
+                                </ComboBoxItem>
+                                <ComboBoxItem>
+                                    <TextBlock Text="{locale:Locale SmaaMedium}" />
+                                </ComboBoxItem>
+                                <ComboBoxItem>
+                                    <TextBlock Text="{locale:Locale SmaaHigh}" />
+                                </ComboBoxItem>
+                                <ComboBoxItem>
+                                    <TextBlock Text="{locale:Locale SmaaUltra}" />
+                                </ComboBoxItem>
+                            </ComboBox>
+                        </StackPanel>
+                    </StackPanel>
+                    <StackPanel
+                        HorizontalAlignment="Stretch"
+                        Orientation="Vertical"
+                        Spacing="10">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock VerticalAlignment="Center"
+                                       ToolTip.Tip="{locale:Locale GraphicsScalingFilterTooltip}"
+                                       Text="{locale:Locale GraphicsScalingFilterLabel}"
+                                       Width="250" />
+                            <ComboBox Width="350"
+                                      HorizontalContentAlignment="Left"
+                                      ToolTip.Tip="{locale:Locale GraphicsScalingFilterTooltip}"
+                                      SelectedIndex="{Binding ScalingFilter}">
+                                <ComboBoxItem>
+                                    <TextBlock Text="{locale:Locale GraphicsScalingFilterBilinear}" />
+                                </ComboBoxItem>
+                                <ComboBoxItem>
+                                    <TextBlock Text="{locale:Locale GraphicsScalingFilterNearest}" />
+                                </ComboBoxItem>
+                                <ComboBoxItem>
+                                    <TextBlock Text="{locale:Locale GraphicsScalingFilterFsr}" />
+                                </ComboBoxItem>
+                            </ComboBox>
+                            <controls:SliderScroll Value="{Binding ScalingFilterLevel}"
+                                    ToolTip.Tip="{locale:Locale GraphicsScalingFilterLevelTooltip}"
+                                    MinWidth="150"
+                                    Margin="10,-3,0,0"
+                                    Height="32"
+                                    Padding="0,-5"
+                                    IsVisible="{Binding IsScalingFilterActive}"
+                                    TickFrequency="1"
+                                    IsSnapToTickEnabled="True"
+                                    LargeChange="10"
+                                    SmallChange="1"
+                                    VerticalAlignment="Center"
+                                    Minimum="0"
+                                    Maximum="100" />
+                            <TextBlock Margin="5,0"
+                                       Width="40"
+                                       IsVisible="{Binding IsScalingFilterActive}"
+                                       Text="{Binding ScalingFilterLevelText}"/>
+                        </StackPanel>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock VerticalAlignment="Center"
+                                   ToolTip.Tip="{locale:Locale AnisotropyTooltip}"
+                                   Text="{locale:Locale SettingsTabGraphicsAnisotropicFiltering}"
+                                   Width="250" />
+                        <ComboBox SelectedIndex="{Binding MaxAnisotropy}"
+                                  Width="350"
+                                  HorizontalContentAlignment="Left"
+                                  ToolTip.Tip="{locale:Locale AnisotropyTooltip}">
+                            <ComboBoxItem>
+                                <TextBlock
+                                    Text="{locale:Locale SettingsTabGraphicsAnisotropicFilteringAuto}" />
+                            </ComboBoxItem>
+                            <ComboBoxItem>
+                                <TextBlock Text="{locale:Locale SettingsTabGraphicsAnisotropicFiltering2x}" />
+                            </ComboBoxItem>
+                            <ComboBoxItem>
+                                <TextBlock Text="{locale:Locale SettingsTabGraphicsAnisotropicFiltering4x}" />
+                            </ComboBoxItem>
+                            <ComboBoxItem>
+                                <TextBlock Text="{locale:Locale SettingsTabGraphicsAnisotropicFiltering8x}" />
+                            </ComboBoxItem>
+                            <ComboBoxItem>
+                                <TextBlock
+                                    Text="{locale:Locale SettingsTabGraphicsAnisotropicFiltering16x}" />
+                            </ComboBoxItem>
+                        </ComboBox>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock VerticalAlignment="Center"
+                                   ToolTip.Tip="{locale:Locale AspectRatioTooltip}"
+                                   Text="{locale:Locale SettingsTabGraphicsAspectRatio}"
+                                   Width="250" />
+                        <ComboBox SelectedIndex="{Binding AspectRatio}"
+                                  Width="350"
+                                  HorizontalContentAlignment="Left"
+                                  ToolTip.Tip="{locale:Locale AspectRatioTooltip}">
+                            <ComboBoxItem>
+                                <TextBlock Text="{locale:Locale SettingsTabGraphicsAspectRatio4x3}" />
+                            </ComboBoxItem>
+                            <ComboBoxItem>
+                                <TextBlock Text="{locale:Locale SettingsTabGraphicsAspectRatio16x9}" />
+                            </ComboBoxItem>
+                            <ComboBoxItem>
+                                <TextBlock Text="{locale:Locale SettingsTabGraphicsAspectRatio16x10}" />
+                            </ComboBoxItem>
+                            <ComboBoxItem>
+                                <TextBlock Text="{locale:Locale SettingsTabGraphicsAspectRatio21x9}" />
+                            </ComboBoxItem>
+                            <ComboBoxItem>
+                                <TextBlock Text="{locale:Locale SettingsTabGraphicsAspectRatio32x9}" />
+                            </ComboBoxItem>
+                            <ComboBoxItem>
+                                <TextBlock Text="{locale:Locale SettingsTabGraphicsAspectRatioStretch}" />
+                            </ComboBoxItem>
+                        </ComboBox>
+                    </StackPanel>
+                </StackPanel>
+                <StackPanel
+                    Margin="10,0,0,0"
+                    HorizontalAlignment="Stretch"
+                    Orientation="Vertical"
+                    Spacing="10">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock VerticalAlignment="Center"
+                                   ToolTip.Tip="{locale:Locale GraphicsBackendThreadingTooltip}"
+                                   Text="{locale:Locale SettingsTabGraphicsBackendMultithreading}"
+                                   Width="250" />
+                        <ComboBox Width="350"
+                                  HorizontalContentAlignment="Left"
+                                  ToolTip.Tip="{locale:Locale GalThreadingTooltip}"
+                                  SelectedIndex="{Binding GraphicsBackendMultithreadingIndex}">
+                            <ComboBoxItem>
+                                <TextBlock Text="{locale:Locale CommonAuto}" />
+                            </ComboBoxItem>
+                            <ComboBoxItem>
+                                <TextBlock Text="{locale:Locale CommonOff}" />
+                            </ComboBoxItem>
+                            <ComboBoxItem>
+                                <TextBlock Text="{locale:Locale CommonOn}" />
+                            </ComboBoxItem>
+                        </ComboBox>
+                    </StackPanel>
+                </StackPanel>
+                <Separator Height="1" />
+                <TextBlock Classes="h1" Text="{locale:Locale SettingsTabGraphicsDeveloperOptions}" />
+                <StackPanel
+                    Margin="10,0,0,0"
+                    HorizontalAlignment="Stretch"
+                    Orientation="Vertical"
+                    Spacing="10">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock VerticalAlignment="Center"
+                                   ToolTip.Tip="{locale:Locale ShaderDumpPathTooltip}"
+                                   Text="{locale:Locale SettingsTabGraphicsShaderDumpPath}"
+                                   Width="250" />
+                        <TextBox Text="{Binding ShaderDumpPath}"
+                                 Width="350"
+                                 ToolTip.Tip="{locale:Locale ShaderDumpPathTooltip}" />
+                    </StackPanel>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+    </ScrollViewer>
+</UserControl>

@@ -1,0 +1,35 @@
+namespace Ryujinx.HLE.HOS.Services.Spl.Types
+{
+    enum DramId
+    {
+        IcosaSamsung4GiB,
+        IcosaHynix4GiB,
+        IcosaMicron4GiB,
+        IowaHynix1y4GiB,
+        IcosaSamsung6GiB,
+        HoagHynix1y4GiB,
+        AulaHynix1y4GiB,
+        IowaX1X2Samsung4GiB,
+        IowaSansung4GiB,
+        IowaSamsung8GiB,
+        IowaHynix4GiB,
+        IowaMicron4GiB,
+        HoagSamsung4GiB,
+        HoagSamsung8GiB,
+        HoagHynix4GiB,
+        HoagMicron4GiB,
+        IowaSamsung4GiBY,
+        IowaSamsung1y4GiBX,
+        IowaSamsung1y8GiBX,
+        HoagSamsung1y4GiBX,
+        IowaSamsung1y4GiBY,
+        IowaSamsung1y8GiBY,
+        AulaSamsung1y4GiB,
+        HoagSamsung1y8GiBX,
+        AulaSamsung1y4GiBX,
+        IowaMicron1y4GiB,
+        HoagMicron1y4GiB,
+        AulaMicron1y4GiB,
+        AulaSamsung1y8GiBX,
+    }
+}

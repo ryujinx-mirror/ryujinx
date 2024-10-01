@@ -1,0 +1,134 @@
+﻿<UserControl
+    x:Class="Ryujinx.Ava.UI.Views.Settings.SettingsUiView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:locale="clr-namespace:Ryujinx.Ava.Common.Locale"
+    xmlns:viewModels="clr-namespace:Ryujinx.Ava.UI.ViewModels"
+    mc:Ignorable="d"
+    x:DataType="viewModels:SettingsViewModel">
+    <Design.DataContext>
+        <viewModels:SettingsViewModel />
+    </Design.DataContext>
+    <ScrollViewer
+        Name="UiPage"
+        HorizontalAlignment="Stretch"
+        VerticalAlignment="Stretch"
+        HorizontalScrollBarVisibility="Disabled"
+        VerticalScrollBarVisibility="Auto">
+        <Border Classes="settings">
+            <StackPanel
+                Margin="10"
+                HorizontalAlignment="Stretch"
+                Orientation="Vertical"
+                Spacing="10">
+                <TextBlock Classes="h1" Text="{locale:Locale SettingsTabGeneralGeneral}" />
+                <StackPanel Margin="10,0,0,0" Orientation="Vertical">
+                    <CheckBox IsChecked="{Binding EnableDiscordIntegration}">
+                        <TextBlock VerticalAlignment="Center"
+                                   ToolTip.Tip="{locale:Locale ToggleDiscordTooltip}"
+                                   Text="{locale:Locale SettingsTabGeneralEnableDiscordRichPresence}" />
+                    </CheckBox>
+                    <CheckBox IsChecked="{Binding CheckUpdatesOnStart}">
+                        <TextBlock Text="{locale:Locale SettingsTabGeneralCheckUpdatesOnLaunch}" />
+                    </CheckBox>
+                    <CheckBox IsChecked="{Binding ShowConfirmExit}">
+                        <TextBlock Text="{locale:Locale SettingsTabGeneralShowConfirmExitDialog}" />
+                    </CheckBox>
+                    <CheckBox IsChecked="{Binding RememberWindowState}">
+                        <TextBlock Text="{locale:Locale SettingsTabGeneralRememberWindowState}" />
+                    </CheckBox>
+                    <StackPanel Margin="0, 15, 0, 0" Orientation="Horizontal">
+                        <TextBlock VerticalAlignment="Center"
+                                   Text="{locale:Locale SettingsTabGeneralHideCursor}"
+                                   Width="150" />
+                        <ComboBox SelectedIndex="{Binding HideCursor}"
+                                  HorizontalContentAlignment="Left"
+                                  MinWidth="100">
+                            <ComboBoxItem>
+                                <TextBlock Text="{locale:Locale SettingsTabGeneralHideCursorNever}" />
+                            </ComboBoxItem>
+                            <ComboBoxItem>
+                                <TextBlock Text="{locale:Locale SettingsTabGeneralHideCursorOnIdle}" />
+                            </ComboBoxItem>
+                            <ComboBoxItem>
+                                <TextBlock Text="{locale:Locale SettingsTabGeneralHideCursorAlways}" />
+                            </ComboBoxItem>
+                        </ComboBox>
+                    </StackPanel>
+                    <StackPanel Margin="0, 15, 0, 10" Orientation="Horizontal">
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            Text="{locale:Locale SettingsTabGeneralTheme}"
+                            Width="150" />
+                        <ComboBox SelectedIndex="{Binding BaseStyleIndex}"
+                                  HorizontalContentAlignment="Left"
+                                  MinWidth="100">
+                            <ComboBoxItem>
+                                <TextBlock Text="{locale:Locale SettingsTabGeneralThemeAuto}" />
+                            </ComboBoxItem>
+                            <ComboBoxItem>
+                                <TextBlock Text="{locale:Locale SettingsTabGeneralThemeLight}" />
+                            </ComboBoxItem>
+                            <ComboBoxItem>
+                                <TextBlock Text="{locale:Locale SettingsTabGeneralThemeDark}" />
+                            </ComboBoxItem>
+                        </ComboBox>
+                    </StackPanel>
+                </StackPanel>
+                <Separator Height="1" />
+                <TextBlock Classes="h1" Text="{locale:Locale SettingsTabGeneralGameDirectories}" />
+                <StackPanel
+                    Margin="10,0,0,0"
+                    HorizontalAlignment="Stretch"
+                    Orientation="Vertical"
+                    Spacing="10">
+                    <ListBox
+                        Name="GameList"
+                        MinHeight="230"
+                        ItemsSource="{Binding GameDirectories}">
+                        <ListBox.Styles>
+                            <Style Selector="ListBoxItem">
+                                <Setter Property="Padding" Value="10" />
+                                <Setter Property="Background" Value="{DynamicResource ListBoxBackground}" />
+                            </Style>
+                        </ListBox.Styles>
+                    </ListBox>
+                    <Grid HorizontalAlignment="Stretch">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBox
+                            Name="PathBox"
+                            Margin="0"
+                            ToolTip.Tip="{locale:Locale AddGameDirBoxTooltip}"
+                            VerticalAlignment="Stretch" />
+                        <Button
+                            Name="AddButton"
+                            Grid.Column="1"
+                            MinWidth="90"
+                            Margin="10,0,0,0"
+                            ToolTip.Tip="{locale:Locale AddGameDirTooltip}"
+                            Click="AddButton_OnClick">
+                            <TextBlock HorizontalAlignment="Center"
+                                       Text="{locale:Locale SettingsTabGeneralAdd}" />
+                        </Button>
+                        <Button
+                            Name="RemoveButton"
+                            Grid.Column="2"
+                            MinWidth="90"
+                            Margin="10,0,0,0"
+                            ToolTip.Tip="{locale:Locale RemoveGameDirTooltip}"
+                            Click="RemoveButton_OnClick">
+                            <TextBlock HorizontalAlignment="Center"
+                                       Text="{locale:Locale SettingsTabGeneralRemove}" />
+                        </Button>
+                    </Grid>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+    </ScrollViewer>
+</UserControl>

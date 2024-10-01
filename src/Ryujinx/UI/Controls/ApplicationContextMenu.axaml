@@ -1,0 +1,95 @@
+<MenuFlyout
+    x:Class="Ryujinx.Ava.UI.Controls.ApplicationContextMenu"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:locale="clr-namespace:Ryujinx.Ava.Common.Locale"
+    xmlns:viewModels="clr-namespace:Ryujinx.Ava.UI.ViewModels"
+    x:DataType="viewModels:MainWindowViewModel">
+	<MenuItem
+        Click="RunApplication_Click"
+        Header="{locale:Locale GameListContextMenuRunApplication}" />
+    <MenuItem
+        Click="ToggleFavorite_Click"
+        Header="{locale:Locale GameListContextMenuToggleFavorite}"
+        ToolTip.Tip="{locale:Locale GameListContextMenuToggleFavoriteToolTip}" />
+	<MenuItem
+		Click="CreateApplicationShortcut_Click"
+		Header="{locale:Locale GameListContextMenuCreateShortcut}"
+        IsEnabled="{Binding CreateShortcutEnabled}"
+		ToolTip.Tip="{OnPlatform Default={locale:Locale GameListContextMenuCreateShortcutToolTip}, macOS={locale:Locale GameListContextMenuCreateShortcutToolTipMacOS}}" />
+    <Separator />
+    <MenuItem
+        Click="OpenUserSaveDirectory_Click"
+        Header="{locale:Locale GameListContextMenuOpenUserSaveDirectory}"
+        IsEnabled="{Binding OpenUserSaveDirectoryEnabled}"
+        ToolTip.Tip="{locale:Locale GameListContextMenuOpenUserSaveDirectoryToolTip}" />
+    <MenuItem
+        Click="OpenDeviceSaveDirectory_Click"
+        Header="{locale:Locale GameListContextMenuOpenDeviceSaveDirectory}"
+        IsEnabled="{Binding OpenDeviceSaveDirectoryEnabled}"
+        ToolTip.Tip="{locale:Locale GameListContextMenuOpenDeviceSaveDirectoryToolTip}" />
+    <MenuItem
+        Click="OpenBcatSaveDirectory_Click"
+        Header="{locale:Locale GameListContextMenuOpenBcatSaveDirectory}"
+        IsEnabled="{Binding OpenBcatSaveDirectoryEnabled}"
+        ToolTip.Tip="{locale:Locale GameListContextMenuOpenBcatSaveDirectoryToolTip}" />
+    <Separator />
+    <MenuItem
+        Click="OpenTitleUpdateManager_Click"
+        Header="{locale:Locale GameListContextMenuManageTitleUpdates}"
+        ToolTip.Tip="{locale:Locale GameListContextMenuManageTitleUpdatesToolTip}" />
+    <MenuItem
+        Click="OpenDownloadableContentManager_Click"
+        Header="{locale:Locale GameListContextMenuManageDlc}"
+        ToolTip.Tip="{locale:Locale GameListContextMenuManageDlcToolTip}" />
+    <MenuItem
+        Click="OpenCheatManager_Click"
+        Header="{locale:Locale GameListContextMenuManageCheat}"
+        ToolTip.Tip="{locale:Locale GameListContextMenuManageCheatToolTip}" />
+    <MenuItem
+        Click="OpenModManager_Click"
+        Header="{locale:Locale GameListContextMenuManageMod}"
+        ToolTip.Tip="{locale:Locale GameListContextMenuManageModToolTip}" />
+    <Separator />
+    <MenuItem
+        Click="OpenModsDirectory_Click"
+        Header="{locale:Locale GameListContextMenuOpenModsDirectory}"
+        ToolTip.Tip="{locale:Locale GameListContextMenuOpenModsDirectoryToolTip}" />
+    <MenuItem
+        Click="OpenSdModsDirectory_Click"
+        Header="{locale:Locale GameListContextMenuOpenSdModsDirectory}"
+        ToolTip.Tip="{locale:Locale GameListContextMenuOpenSdModsDirectoryToolTip}" />
+    <Separator />
+    <MenuItem Header="{locale:Locale GameListContextMenuCacheManagement}">
+        <MenuItem
+            Click="PurgePtcCache_Click"
+            Header="{locale:Locale GameListContextMenuCacheManagementPurgePptc}"
+            ToolTip.Tip="{locale:Locale GameListContextMenuCacheManagementPurgePptcToolTip}" />
+        <MenuItem
+            Click="PurgeShaderCache_Click"
+            Header="{locale:Locale GameListContextMenuCacheManagementPurgeShaderCache}"
+            ToolTip.Tip="{locale:Locale GameListContextMenuCacheManagementPurgeShaderCacheToolTip}" />
+        <MenuItem
+            Click="OpenPtcDirectory_Click"
+            Header="{locale:Locale GameListContextMenuCacheManagementOpenPptcDirectory}"
+            ToolTip.Tip="{locale:Locale GameListContextMenuCacheManagementOpenPptcDirectoryToolTip}" />
+        <MenuItem
+            Click="OpenShaderCacheDirectory_Click"
+            Header="{locale:Locale GameListContextMenuCacheManagementOpenShaderCacheDirectory}"
+            ToolTip.Tip="{locale:Locale GameListContextMenuCacheManagementOpenShaderCacheDirectoryToolTip}" />
+    </MenuItem>
+    <MenuItem Header="{locale:Locale GameListContextMenuExtractData}">
+        <MenuItem
+            Click="ExtractApplicationExeFs_Click"
+            Header="{locale:Locale GameListContextMenuExtractDataExeFS}"
+            ToolTip.Tip="{locale:Locale GameListContextMenuExtractDataExeFSToolTip}" />
+        <MenuItem
+            Click="ExtractApplicationRomFs_Click"
+            Header="{locale:Locale GameListContextMenuExtractDataRomFS}"
+            ToolTip.Tip="{locale:Locale GameListContextMenuExtractDataRomFSToolTip}" />
+        <MenuItem
+            Click="ExtractApplicationLogo_Click"
+            Header="{locale:Locale GameListContextMenuExtractDataLogo}"
+            ToolTip.Tip="{locale:Locale GameListContextMenuExtractDataLogoToolTip}" />
+    </MenuItem>
+</MenuFlyout>

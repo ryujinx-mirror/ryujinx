@@ -1,0 +1,62 @@
+<UserControl
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+    xmlns:locale="clr-namespace:Ryujinx.Ava.Common.Locale"
+    xmlns:viewModles="clr-namespace:Ryujinx.Ava.UI.ViewModels"
+    Focusable="True"
+    mc:Ignorable="d"
+    x:Class="Ryujinx.Ava.UI.Views.User.UserProfileImageSelectorView"
+    x:DataType="viewModles:UserProfileImageSelectorViewModel"
+    Width="500"
+    d:DesignWidth="500">
+    <Design.DataContext>
+        <viewModles:UserProfileImageSelectorViewModel />
+    </Design.DataContext>
+    <Grid
+        HorizontalAlignment="Stretch"
+        VerticalAlignment="Center">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="70" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <TextBlock
+            Grid.Row="0"
+            TextWrapping="Wrap"
+            HorizontalAlignment="Left"
+            TextAlignment="Start"
+            Text="{locale:Locale ProfileImageSelectionNote}" />
+        <StackPanel
+            Grid.Row="2"
+            Spacing="10"
+            HorizontalAlignment="Left"
+            Orientation="Horizontal">
+            <Button
+                Width="50"
+                MinWidth="50"
+                Click="GoBack">
+                <ui:SymbolIcon Symbol="Back" />
+            </Button>
+        </StackPanel>
+        <StackPanel
+            Grid.Row="2"
+            Spacing="10"
+            HorizontalAlignment="Right"
+            Orientation="Horizontal">
+            <Button
+                Name="Import"
+                Click="Import_OnClick">
+                <TextBlock Text="{locale:Locale ProfileImageSelectionImportImage}" />
+            </Button>
+            <Button
+                Name="SelectFirmwareImage"
+                IsEnabled="{Binding FirmwareFound}"
+                Click="SelectFirmwareImage_OnClick">
+                <TextBlock Text="{locale:Locale ProfileImageSelectionSelectAvatar}" />
+            </Button>
+        </StackPanel>
+    </Grid>
+</UserControl>

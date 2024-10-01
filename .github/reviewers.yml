@@ -1,0 +1,25 @@
+
+cpu:
+  - gdkchan
+  - riperiperi
+  - LDj3SNuD
+
+gpu:
+  - gdkchan
+  - riperiperi
+
+gui:
+  - Ack77
+  - emmauss
+  - TSRBerry
+
+horizon:
+  - gdkchan
+  - Ack77
+  - TSRBerry
+
+infra:
+  - TSRBerry
+
+default:
+  - '@developers'

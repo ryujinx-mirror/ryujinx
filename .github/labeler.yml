@@ -1,0 +1,35 @@
+audio:
+- changed-files:
+  - any-glob-to-any-file: 'src/Ryujinx.Audio*/**'
+
+cpu:
+- changed-files:
+  - any-glob-to-any-file: ['src/ARMeilleure/**', 'src/Ryujinx.Cpu/**', 'src/Ryujinx.Memory/**']
+
+gpu:
+- changed-files:
+  - any-glob-to-any-file: ['src/Ryujinx.Graphics.*/**', 'src/Spv.Generator/**', 'src/Ryujinx.ShaderTools/**']
+
+'graphics-backend:opengl':
+- changed-files:
+  - any-glob-to-any-file: 'src/Ryujinx.Graphics.OpenGL/**'
+
+'graphics-backend:vulkan':
+- changed-files:
+  - any-glob-to-any-file: ['src/Ryujinx.Graphics.Vulkan/**', 'src/Spv.Generator/**']
+
+gui:
+- changed-files:
+  - any-glob-to-any-file: ['src/Ryujinx/**', 'src/Ryujinx.UI.Common/**', 'src/Ryujinx.UI.LocaleGenerator/**', 'src/Ryujinx.Gtk3/**']
+
+horizon:
+- changed-files:
+  - any-glob-to-any-file: ['src/Ryujinx.HLE/**', 'src/Ryujinx.Horizon/**']
+
+kernel:
+- changed-files:
+  - any-glob-to-any-file: 'src/Ryujinx.HLE/HOS/Kernel/**'
+
+infra:
+- changed-files:
+  - any-glob-to-any-file: ['.github/**', 'distribution/**', 'Directory.Packages.props']

@@ -1,0 +1,36 @@
+#version 450 core
+
+layout (std140, binding = 0) uniform ratio_in
+{
+    int ratio;
+};
+
+layout (set = 2, binding = 0) uniform usampler2D src;
+layout (set = 3, binding = 0) writeonly uniform uimage2D dst;
+
+layout (local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
+
+void main()
+{
+    uvec2 coords = gl_GlobalInvocationID.xy;
+    ivec2 textureSz = textureSize(src, 0);
+
+    if (int(coords.x) >= textureSz.x || int(coords.y) >= textureSz.y)
+    {
+        return;
+    }
+
+    uint coordsShifted = coords.x << ratio;
+
+    uvec2 dstCoords0 = uvec2(coordsShifted, coords.y);
+    uvec2 dstCoords1 = uvec2(coordsShifted + 1, coords.y);
+    uvec2 dstCoords2 = uvec2(coordsShifted + 2, coords.y);
+    uvec2 dstCoords3 = uvec2(coordsShifted + 3, coords.y);
+
+    uvec4 rgba = texelFetch(src, ivec2(coords), 0);
+
+    imageStore(dst, ivec2(dstCoords0), rgba.rrrr);
+    imageStore(dst, ivec2(dstCoords1), rgba.gggg);
+    imageStore(dst, ivec2(dstCoords2), rgba.bbbb);
+    imageStore(dst, ivec2(dstCoords3), rgba.aaaa);
+}

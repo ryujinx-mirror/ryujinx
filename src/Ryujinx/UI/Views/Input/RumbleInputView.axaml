@@ -1,0 +1,62 @@
+<UserControl
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:Ryujinx.Ava.UI.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:locale="clr-namespace:Ryujinx.Ava.Common.Locale"
+    xmlns:viewModels="clr-namespace:Ryujinx.Ava.UI.ViewModels.Input"
+    mc:Ignorable="d"
+    x:Class="Ryujinx.Ava.UI.Views.Input.RumbleInputView"
+    x:DataType="viewModels:RumbleInputViewModel"
+    Focusable="True">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition />
+        </Grid.RowDefinitions>
+        <StackPanel Orientation="Vertical">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock
+                    Width="100"
+                    TextWrapping="WrapWithOverflow"
+                    HorizontalAlignment="Center"
+                    Text="{locale:Locale ControllerSettingsRumbleStrongMultiplier}" />
+                <controls:SliderScroll
+                    Margin="0,-5,0,-5"
+                    Width="200"
+                    TickFrequency="0.01"
+                    IsSnapToTickEnabled="True"
+                    SmallChange="0.01"
+                    Maximum="10"
+                    Minimum="0"
+                    Value="{Binding StrongRumble, Mode=TwoWay}" />
+                <TextBlock
+                    VerticalAlignment="Center"
+                    Margin="5,0"
+                    Text="{Binding StrongRumble, StringFormat=\{0:0.00\}}" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock
+                    Width="100"
+                    TextWrapping="WrapWithOverflow"
+                    HorizontalAlignment="Center"
+                    Text="{locale:Locale ControllerSettingsRumbleWeakMultiplier}" />
+                <controls:SliderScroll
+                    Margin="0,-5,0,-5"
+                    Width="200"
+                    MaxWidth="200"
+                    Maximum="10"
+                    TickFrequency="0.01"
+                    IsSnapToTickEnabled="True"
+                    SmallChange="0.01"
+                    Minimum="0"
+                    Value="{Binding WeakRumble, Mode=TwoWay}" />
+                <TextBlock
+                    VerticalAlignment="Center"
+                    Margin="5,0"
+                    Text="{Binding WeakRumble, StringFormat=\{0:0.00\}}" />
+            </StackPanel>
+        </StackPanel>
+    </Grid>
+</UserControl>

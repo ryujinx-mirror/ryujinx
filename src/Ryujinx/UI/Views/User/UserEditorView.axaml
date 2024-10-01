@@ -1,0 +1,122 @@
+<UserControl
+    x:Class="Ryujinx.Ava.UI.Views.User.UserEditorView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:locale="clr-namespace:Ryujinx.Ava.Common.Locale"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:helpers="clr-namespace:Ryujinx.Ava.UI.Helpers"
+    xmlns:models="clr-namespace:Ryujinx.Ava.UI.Models"
+    Margin="0"
+    MinWidth="500"
+    Padding="0"
+    mc:Ignorable="d"
+    Focusable="True"
+    x:DataType="models:TempProfile">
+    <UserControl.Resources>
+        <helpers:BitmapArrayValueConverter x:Key="ByteImage" />
+    </UserControl.Resources>
+    <Grid Margin="0">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <StackPanel
+            Grid.Row="0"
+            Grid.Column="0"
+            HorizontalAlignment="Stretch"
+            Orientation="Vertical"
+            Spacing="10">
+            <TextBlock Text="{locale:Locale UserProfilesName}" />
+            <TextBox
+                Name="NameBox"
+                Width="300"
+                HorizontalAlignment="Stretch"
+                MaxLength="{Binding MaxProfileNameLength}"
+                Watermark="{locale:Locale ProfileNameSelectionWatermark}"
+                Text="{Binding Name}" />
+            <TextBlock Name="IdText" Text="{locale:Locale UserProfilesUserId}" />
+            <TextBox
+                Name="IdLabel"
+                Width="300"
+                HorizontalAlignment="Stretch"
+                IsReadOnly="True"
+                Text="{Binding UserIdString}" />
+        </StackPanel>
+        <StackPanel
+            Grid.Row="0"
+            Grid.Column="1"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Stretch"
+            Orientation="Vertical">
+            <Border
+                BorderBrush="{DynamicResource AppListHoverBackgroundColor}"
+                BorderThickness="1">
+                <Panel>
+                    <ui:SymbolIcon
+                        FontSize="60"
+                        Width="96"
+                        Height="96"
+                        Margin="0"
+                        Foreground="{DynamicResource AppListHoverBackgroundColor}"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Top"
+                        Symbol="Camera" />
+                    <Image
+                        Name="ProfileImage"
+                        Width="96"
+                        Height="96"
+                        Margin="0"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Top"
+                        Source="{Binding Image, Converter={StaticResource ByteImage}}" />
+                </Panel>
+            </Border>
+        </StackPanel>
+        <StackPanel
+            Grid.Row="1"
+            Grid.Column="0"
+            Grid.ColumnSpan="2"
+            HorizontalAlignment="Left"
+            Orientation="Horizontal"
+            Margin="0 24 0 0"
+            Spacing="10">
+            <Button
+                Width="50"
+                MinWidth="50"
+                Click="BackButton_Click">
+                <ui:SymbolIcon Symbol="Back" />
+            </Button>
+        </StackPanel>
+        <StackPanel
+            Grid.Row="1"
+            Grid.Column="0"
+            Grid.ColumnSpan="2"
+            HorizontalAlignment="Right"
+            Orientation="Horizontal"
+            Margin="0 24 0 0"
+            Spacing="10">
+            <Button
+                Name="DeleteButton"
+                Click="DeleteButton_Click"
+                Content="{locale:Locale UserProfilesDelete}" />
+            <Button
+                Name="ChangePictureButton"
+                Click="ChangePictureButton_Click"
+                Content="{locale:Locale UserProfilesChangeProfileImage}" />
+            <Button
+                Name="AddPictureButton"
+                Click="ChangePictureButton_Click"
+                Content="{locale:Locale UserProfilesSetProfileImage}" />
+            <Button
+                Name="SaveButton"
+                Click="SaveButton_Click"
+                Content="{locale:Locale Save}" />
+        </StackPanel>
+    </Grid>
+</UserControl>

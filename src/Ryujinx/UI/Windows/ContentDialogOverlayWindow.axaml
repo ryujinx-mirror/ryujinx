@@ -1,0 +1,25 @@
+<window:StyleableWindow
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+    xmlns:window="clr-namespace:Ryujinx.Ava.UI.Windows"
+    mc:Ignorable="d"
+    d:DesignWidth="800"
+    d:DesignHeight="450"
+    x:Class="Ryujinx.Ava.UI.Windows.ContentDialogOverlayWindow"
+    Title="ContentDialogOverlayWindow"
+    Focusable="False">
+    <window:StyleableWindow.Styles>
+        <Style Selector="ui|ContentDialog /template/ Panel#LayoutRoot">
+            <Setter Property="Background"
+                    Value="Transparent" />
+        </Style>
+    </window:StyleableWindow.Styles>
+    <ui:ContentDialog Name="ContentDialog"
+                      IsPrimaryButtonEnabled="True"
+                      IsSecondaryButtonEnabled="True"
+                      IsVisible="False"
+                      Focusable="True"/>
+</window:StyleableWindow>

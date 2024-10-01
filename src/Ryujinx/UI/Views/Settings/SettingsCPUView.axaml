@@ -1,0 +1,77 @@
+﻿<UserControl
+    x:Class="Ryujinx.Ava.UI.Views.Settings.SettingsCPUView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:locale="clr-namespace:Ryujinx.Ava.Common.Locale"
+    xmlns:viewModels="clr-namespace:Ryujinx.Ava.UI.ViewModels"
+    mc:Ignorable="d"
+    x:DataType="viewModels:SettingsViewModel">
+    <Design.DataContext>
+        <viewModels:SettingsViewModel />
+    </Design.DataContext>
+    <ScrollViewer
+        Name="CpuPage"
+        HorizontalAlignment="Stretch"
+        VerticalAlignment="Stretch"
+        HorizontalScrollBarVisibility="Disabled"
+        VerticalScrollBarVisibility="Auto">
+        <Border Classes="settings">
+            <StackPanel
+                Margin="10"
+                HorizontalAlignment="Stretch"
+                Orientation="Vertical"
+                Spacing="10">
+                <TextBlock Classes="h1" Text="{locale:Locale SettingsTabCpuCache}" />
+                <StackPanel
+                    Margin="10,0,0,0"
+                    HorizontalAlignment="Stretch"
+                    Orientation="Vertical">
+                    <CheckBox IsChecked="{Binding EnablePptc}">
+                        <TextBlock Text="{locale:Locale SettingsTabSystemEnablePptc}"
+                                   ToolTip.Tip="{locale:Locale PptcToggleTooltip}" />
+                    </CheckBox>
+                </StackPanel>
+                <Separator Height="1" />
+                <TextBlock Classes="h1" Text="{locale:Locale SettingsTabCpuMemory}" />
+                <StackPanel
+                    Margin="10,0,0,0"
+                    HorizontalAlignment="Stretch"
+                    Orientation="Vertical">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock VerticalAlignment="Center"
+                                   Text="{locale:Locale SettingsTabSystemMemoryManagerMode}"
+                                   ToolTip.Tip="{locale:Locale MemoryManagerTooltip}"
+                                   Width="250" />
+                        <ComboBox SelectedIndex="{Binding MemoryMode}"
+                                  ToolTip.Tip="{locale:Locale MemoryManagerTooltip}"
+                                  HorizontalContentAlignment="Left"
+                                  Width="350">
+                            <ComboBoxItem
+                                ToolTip.Tip="{locale:Locale MemoryManagerSoftwareTooltip}">
+                                <TextBlock
+                                    Text="{locale:Locale SettingsTabSystemMemoryManagerModeSoftware}" />
+                            </ComboBoxItem>
+                            <ComboBoxItem
+                                ToolTip.Tip="{locale:Locale MemoryManagerHostTooltip}">
+                                <TextBlock Text="{locale:Locale SettingsTabSystemMemoryManagerModeHost}" />
+                            </ComboBoxItem>
+                            <ComboBoxItem
+                                ToolTip.Tip="{locale:Locale MemoryManagerUnsafeTooltip}">
+                                <TextBlock
+                                    Text="{locale:Locale SettingsTabSystemMemoryManagerModeHostUnchecked}" />
+                            </ComboBoxItem>
+                        </ComboBox>
+                    </StackPanel>
+                    <CheckBox IsChecked="{Binding UseHypervisor}"
+                              IsVisible="{Binding IsHypervisorAvailable}"
+                              ToolTip.Tip="{locale:Locale UseHypervisorTooltip}">
+                        <TextBlock Text="{locale:Locale SettingsTabSystemUseHypervisor}"
+                                   ToolTip.Tip="{locale:Locale UseHypervisorTooltip}" />
+                    </CheckBox>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+    </ScrollViewer>
+</UserControl>

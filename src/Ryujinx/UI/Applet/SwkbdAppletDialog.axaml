@@ -1,0 +1,67 @@
+<UserControl
+    x:Class="Ryujinx.Ava.UI.Controls.SwkbdAppletDialog"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:views="using:Ryujinx.Ava.UI.Controls"
+    Width="400"
+    x:DataType="views:SwkbdAppletDialog"
+    mc:Ignorable="d"
+    Focusable="True">
+    <Grid
+        Margin="20"
+        HorizontalAlignment="Stretch"
+        VerticalAlignment="Stretch">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition />
+        </Grid.ColumnDefinitions>
+        <Image
+            Grid.Row="1"
+            Grid.RowSpan="5"
+            Height="80"
+            MinWidth="50"
+            Margin="5,10,20,10"
+            VerticalAlignment="Center"
+            Source="resm:Ryujinx.UI.Common.Resources.Logo_Ryujinx.png?assembly=Ryujinx.UI.Common" />
+        <TextBlock
+            Grid.Row="1"
+            Grid.Column="1"
+            Margin="5"
+            Text="{Binding MainText}"
+            TextWrapping="Wrap" />
+        <TextBlock
+            Grid.Row="2"
+            Grid.Column="1"
+            Margin="5"
+            Text="{Binding SecondaryText}"
+            TextWrapping="Wrap" />
+        <TextBox
+            Name="Input"
+            Grid.Row="3"
+            Grid.Column="1"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Center"
+            Focusable="True"
+            KeyUp="Message_KeyUp"
+            Text="{Binding Message}"
+            TextInput="Message_TextInput"
+            TextWrapping="Wrap"
+            UseFloatingWatermark="True" />
+        <TextBlock
+            Name="Error"
+            Grid.Row="4"
+            Grid.Column="1"
+            Margin="5"
+            HorizontalAlignment="Stretch"
+            TextWrapping="Wrap" />
+    </Grid>
+</UserControl>

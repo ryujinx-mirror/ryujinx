@@ -1,0 +1,289 @@
+﻿<UserControl
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controls="clr-namespace:Ryujinx.Ava.UI.Controls"
+    xmlns:locale="clr-namespace:Ryujinx.Ava.Common.Locale"
+    xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+    xmlns:viewModels="clr-namespace:Ryujinx.Ava.UI.ViewModels"
+    xmlns:config="clr-namespace:Ryujinx.Common.Configuration;assembly=Ryujinx.Common"
+    mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+    x:Class="Ryujinx.Ava.UI.Views.Main.MainStatusBarView"
+    x:DataType="viewModels:MainWindowViewModel">
+    <Design.DataContext>
+        <viewModels:MainWindowViewModel />
+    </Design.DataContext>
+    <Grid
+        Name="StatusBar"
+        Margin="0"
+        MinHeight="22"
+        HorizontalAlignment="Stretch"
+        VerticalAlignment="Bottom"
+        Background="{DynamicResource ThemeContentBackgroundColor}"
+        DockPanel.Dock="Bottom"
+        IsVisible="{Binding ShowMenuAndStatusBar}">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <StackPanel
+            Grid.Column="0"
+            Margin="5"
+            VerticalAlignment="Center"
+            IsVisible="{Binding EnableNonGameRunningControls}">
+            <Grid Margin="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition />
+                </Grid.ColumnDefinitions>
+                <Button
+                    Width="25"
+                    Height="25"
+                    MinWidth="0"
+                    Margin="0,0,5,0"
+                    VerticalAlignment="Center"
+                    Background="Transparent"
+                    Click="Refresh_OnClick">
+                    <ui:SymbolIcon
+                        Width="50"
+                        Height="100"
+                        Symbol="Refresh" />
+                </Button>
+                <TextBlock
+                    Name="LoadStatus"
+                    Grid.Column="1"
+                    Margin="0,0,5,0"
+                    VerticalAlignment="Center"
+                    IsVisible="{Binding EnableNonGameRunningControls}"
+                    Text="{locale:Locale StatusBarGamesLoaded}" />
+                <ProgressBar
+                    Name="LoadProgressBar"
+                    Grid.Column="2"
+                    Height="6"
+                    VerticalAlignment="Center"
+                    Foreground="{DynamicResource SystemAccentColorLight2}"
+                    IsVisible="{Binding StatusBarVisible}"
+                    Maximum="{Binding StatusBarProgressMaximum}"
+                    Value="{Binding StatusBarProgressValue}" />
+            </Grid>
+        </StackPanel>
+        <StackPanel
+            Grid.Column="1"
+            Margin="0,2"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Center"
+            IsVisible="{Binding IsGameRunning}"
+            MaxHeight="18"
+            Orientation="Horizontal">
+            <TextBlock
+                Name="VsyncStatus"
+                Margin="5,0,5,0"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Center"
+                Foreground="{Binding VsyncColor}"
+                IsVisible="{Binding !ShowLoadProgress}"
+                PointerReleased="VsyncStatus_PointerReleased"
+                Text="VSync"
+                TextAlignment="Start" />
+            <Border
+                Width="2"
+                Height="12"
+                Margin="0"
+                BorderBrush="Gray"
+                Background="Gray"
+                BorderThickness="1"
+                IsVisible="{Binding !ShowLoadProgress}" />
+            <TextBlock
+                Name="DockedStatus"
+                Margin="5,0,5,0"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Center"
+                IsVisible="{Binding !ShowLoadProgress}"
+                PointerReleased="DockedStatus_PointerReleased"
+                Text="{Binding DockedStatusText}"
+                TextAlignment="Start" />
+            <Border
+                Width="2"
+                Height="12"
+                Margin="0"
+                BorderBrush="Gray"
+                Background="Gray"
+                BorderThickness="1"
+                IsVisible="{Binding !ShowLoadProgress}" />
+            <SplitButton
+                Name="AspectRatioStatus"
+                Padding="5,0,5,0"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Center"
+                Background="Transparent"
+                BorderThickness="0"
+                CornerRadius="0"
+                IsVisible="{Binding !ShowLoadProgress}"
+                Content="{Binding AspectRatioStatusText}"
+                Click="AspectRatioStatus_OnClick"
+                ToolTip.Tip="{locale:Locale AspectRatioTooltip}">
+                <SplitButton.Styles>
+                    <Style Selector="Border#SeparatorBorder">
+                        <Setter Property="Opacity" Value="0" />
+                    </Style>
+                </SplitButton.Styles>
+                <SplitButton.Flyout>
+                    <MenuFlyout Placement="Bottom" ShowMode="TransientWithDismissOnPointerMoveAway">
+                        <MenuItem
+                            Header="{locale:Locale SettingsTabGraphicsAspectRatio4x3}"
+                            Command="{Binding SetAspectRatio}"
+                            CommandParameter="{x:Static config:AspectRatio.Fixed4x3}"/>
+                        <MenuItem
+                            Header="{locale:Locale SettingsTabGraphicsAspectRatio16x9}"
+                            Command="{Binding SetAspectRatio}"
+                            CommandParameter="{x:Static config:AspectRatio.Fixed16x9}"/>
+                        <MenuItem
+                            Header="{locale:Locale SettingsTabGraphicsAspectRatio16x10}"
+                            Command="{Binding SetAspectRatio}"
+                            CommandParameter="{x:Static config:AspectRatio.Fixed16x10}"/>
+                        <MenuItem
+                            Header="{locale:Locale SettingsTabGraphicsAspectRatio21x9}"
+                            Command="{Binding SetAspectRatio}"
+                            CommandParameter="{x:Static config:AspectRatio.Fixed21x9}"/>
+                        <MenuItem
+                            Header="{locale:Locale SettingsTabGraphicsAspectRatio32x9}"
+                            Command="{Binding SetAspectRatio}"
+                            CommandParameter="{x:Static config:AspectRatio.Fixed32x9}"/>
+                        <MenuItem
+                            Header="{locale:Locale SettingsTabGraphicsAspectRatioStretch}"
+                            Command="{Binding SetAspectRatio}"
+                            CommandParameter="{x:Static config:AspectRatio.Stretched}"/>
+                    </MenuFlyout>
+                </SplitButton.Flyout>
+            </SplitButton>
+            <Border
+                Width="2"
+                Height="12"
+                Margin="0"
+                BorderBrush="Gray"
+                Background="Gray"
+                BorderThickness="1"
+                IsVisible="{Binding !ShowLoadProgress}" />
+            <ToggleSplitButton
+                Name="VolumeStatus"
+                Padding="5,0,5,0"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Center"
+                VerticalContentAlignment="Center"
+                Content="{Binding VolumeStatusText}"
+                IsChecked="{Binding VolumeMuted}"
+                IsVisible="{Binding !ShowLoadProgress}"
+                PointerWheelChanged="VolumeStatus_OnPointerWheelChanged"
+                Background="Transparent"
+                BorderThickness="0"
+                CornerRadius="0">
+                <ToggleSplitButton.Styles>
+                    <Style Selector=":checked">
+                        <Style Selector="^:checked ContentPresenter">
+                            <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundColor}" />
+                        </Style>
+                    </Style>
+                    <Style Selector="Border#SeparatorBorder">
+                        <Setter Property="Opacity" Value="0" />
+                    </Style>
+                </ToggleSplitButton.Styles>
+                <ToggleSplitButton.Flyout>
+                    <Flyout Placement="Bottom" ShowMode="TransientWithDismissOnPointerMoveAway">
+                        <Grid Margin="0">
+                            <controls:SliderScroll
+                                MaxHeight="40"
+                                Width="150"
+                                Margin="0"
+                                Padding="0"
+                                IsSnapToTickEnabled="True"
+                                LargeChange="0.05"
+                                Maximum="1"
+                                Minimum="0"
+                                SmallChange="0.01"
+                                TickFrequency="0.05"
+                                ToolTip.Tip="{locale:Locale AudioVolumeTooltip}"
+                                Value="{Binding Volume}" />
+                        </Grid>
+                    </Flyout>
+                </ToggleSplitButton.Flyout>
+            </ToggleSplitButton>
+            <Border
+                Width="2"
+                Height="12"
+                Margin="0"
+                BorderBrush="Gray"
+                Background="Gray"
+                BorderThickness="1"
+                IsVisible="{Binding !ShowLoadProgress}" />
+            <TextBlock
+                Margin="5,0,5,0"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Center"
+                IsVisible="{Binding !ShowLoadProgress}"
+                Text="{Binding GameStatusText}"
+                TextAlignment="Start" />
+            <Border
+                Width="2"
+                Height="12"
+                Margin="0"
+                BorderBrush="Gray"
+                Background="Gray"
+                BorderThickness="1"
+                IsVisible="{Binding !ShowLoadProgress}" />
+            <TextBlock
+                Margin="5,0,5,0"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Center"
+                IsVisible="{Binding !ShowLoadProgress}"
+                Text="{Binding FifoStatusText}"
+                TextAlignment="Start" />
+            <Border
+                Width="2"
+                Height="12"
+                Margin="0"
+                BorderBrush="Gray"
+                Background="Gray"
+                BorderThickness="1"
+                IsVisible="{Binding !ShowLoadProgress}" />
+            <TextBlock
+                Margin="5,0,5,0"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Center"
+                IsVisible="{Binding !ShowLoadProgress}"
+                Text="{Binding BackendText}"
+                TextAlignment="Start" />
+            <Border
+                Width="2"
+                Height="12"
+                Margin="0"
+                BorderBrush="Gray"
+                Background="Gray"
+                BorderThickness="1"
+                IsVisible="{Binding !ShowLoadProgress}" />
+            <TextBlock
+                Margin="5,0,5,0"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Center"
+                IsVisible="{Binding !ShowLoadProgress}"
+                Text="{Binding GpuNameText}"
+                TextAlignment="Start" />
+        </StackPanel>
+        <StackPanel
+            Grid.Column="3"
+            Margin="0,0,5,0"
+            VerticalAlignment="Center"
+            IsVisible="{Binding ShowFirmwareStatus}"
+            Orientation="Horizontal">
+            <TextBlock
+                Name="FirmwareStatus"
+                Margin="0"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Center"
+                Text="{locale:Locale StatusBarSystemVersion}" />
+        </StackPanel>
+    </Grid>
+</UserControl>

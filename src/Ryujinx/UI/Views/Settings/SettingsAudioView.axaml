@@ -1,0 +1,81 @@
+﻿<UserControl
+    x:Class="Ryujinx.Ava.UI.Views.Settings.SettingsAudioView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controls="clr-namespace:Ryujinx.Ava.UI.Controls"
+    xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+    xmlns:locale="clr-namespace:Ryujinx.Ava.Common.Locale"
+    xmlns:viewModels="clr-namespace:Ryujinx.Ava.UI.ViewModels"
+    mc:Ignorable="d"
+    x:DataType="viewModels:SettingsViewModel">
+    <Design.DataContext>
+        <viewModels:SettingsViewModel />
+    </Design.DataContext>
+    <ScrollViewer
+        Name="AudioPage"
+        HorizontalAlignment="Stretch"
+        VerticalAlignment="Stretch"
+        HorizontalScrollBarVisibility="Disabled"
+        VerticalScrollBarVisibility="Auto">
+        <Border Classes="settings">
+            <StackPanel
+                Margin="10"
+                HorizontalAlignment="Stretch"
+                Orientation="Vertical"
+                Spacing="10">
+                <TextBlock Classes="h1" Text="{locale:Locale SettingsTabAudio}" />
+                <StackPanel Margin="10,0,0,0" Orientation="Horizontal">
+                    <TextBlock VerticalAlignment="Center"
+                               Text="{locale:Locale SettingsTabSystemAudioBackend}"
+                               ToolTip.Tip="{locale:Locale AudioBackendTooltip}"
+                               Width="250" />
+                    <ComboBox SelectedIndex="{Binding AudioBackend}"
+                              Width="350"
+                              HorizontalContentAlignment="Left">
+                        <ComboBoxItem>
+                            <TextBlock Text="{locale:Locale SettingsTabSystemAudioBackendDummy}" />
+                        </ComboBoxItem>
+                        <ComboBoxItem IsEnabled="{Binding IsOpenAlEnabled}">
+                            <TextBlock Text="{locale:Locale SettingsTabSystemAudioBackendOpenAL}" />
+                        </ComboBoxItem>
+                        <ComboBoxItem IsEnabled="{Binding IsSoundIoEnabled}">
+                            <TextBlock Text="{locale:Locale SettingsTabSystemAudioBackendSoundIO}" />
+                        </ComboBoxItem>
+                        <ComboBoxItem IsEnabled="{Binding IsSDL2Enabled}">
+                            <TextBlock Text="{locale:Locale SettingsTabSystemAudioBackendSDL2}" />
+                        </ComboBoxItem>
+                    </ComboBox>
+                </StackPanel>
+                <StackPanel Margin="10,0,0,0" Orientation="Horizontal">
+                    <TextBlock VerticalAlignment="Center"
+                               Text="{locale:Locale SettingsTabSystemAudioVolume}"
+                               ToolTip.Tip="{locale:Locale AudioVolumeTooltip}"
+                               Width="250" />
+                    <ui:NumberBox Value="{Binding Volume}"
+                            ToolTip.Tip="{locale:Locale AudioVolumeTooltip}"
+                            Width="350"
+                            SmallChange="1"
+                            LargeChange="10"
+                            SimpleNumberFormat="F0"
+                            SpinButtonPlacementMode="Inline"
+                            Minimum="0"
+                            Maximum="100" />
+                </StackPanel>
+                <StackPanel Margin="10,0,0,0" Orientation="Horizontal">
+                    <controls:SliderScroll Value="{Binding Volume}"
+                            Margin="250,0,0,0"
+                            ToolTip.Tip="{locale:Locale AudioVolumeTooltip}"
+                            Minimum="0"
+                            Maximum="100"
+                            SmallChange="1"
+                            TickFrequency="1"
+                            IsSnapToTickEnabled="True"
+                            LargeChange="10"
+                            Width="350" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+    </ScrollViewer>
+</UserControl>
