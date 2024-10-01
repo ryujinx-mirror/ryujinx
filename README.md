@@ -1,3 +1,11 @@
+## Ryujinx Mirror
+
+As of now, this repository simply serves as a downstream fork of the original Ryujinx project, and won't be accepting any new changes until further information arises.
+
+**If we can acquire the `Ryujinx` name on GitHub, ownership of this organization can also be transferred to someone else from the original Ryujinx team.**
+
+___
+
 <h1 align="center">
   <br>
   <a href="https://ryujinx.org/"><img src="distribution/misc/Logo.svg" alt="Ryujinx" width="150"></a>
