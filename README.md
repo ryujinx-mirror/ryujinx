@@ -1,4 +1,4 @@
-## Ryujinx Mirror
+## Notice
 
 As of now, this repository simply serves as a downstream fork of the original Ryujinx project, and won't be accepting any new changes until further information arises.
 
