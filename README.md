@@ -47,12 +47,14 @@ For our Local Wireless (LDN) builds, see our [Multiplayer: Local Play/Local Wire
 
 <!--Avalonia UI comes with translations for various languages. See [Crowdin](https://crwd.in/ryujinx) for more information.-->
 
-<!--
 ## Latest build
 
 These builds are compiled automatically for each commit on the master branch.
 While we strive to ensure optimal stability and performance prior to pushing an update, our automated builds **may be unstable or completely broken**.
 
+See [the releases page](https://github.com/ryujinx-mirror/ryujinx/releases) for automatic builds for Windows, macOS, and Linux.
+
+<!--
 If you want to see details on updates to the emulator, you can visit our [Changelog](https://github.com/ryujinx-mirror/Ryujinx/wiki/Changelog).
 
 The latest automatic build for Windows, macOS, and Linux can be found on the [Official Website](https://ryujinx.org/download).
