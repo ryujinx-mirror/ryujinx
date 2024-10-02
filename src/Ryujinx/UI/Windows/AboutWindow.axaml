@@ -132,7 +132,7 @@
                         Background="Transparent"
                         Click="Button_OnClick"
                         CornerRadius="15"
-                        Tag="https://www.patreon.com/ryujinx"
+                        Tag="https://example.com/"
                         ToolTip.Tip="{locale:Locale AboutPatreonUrlTooltipMessage}">
                         <Image Source="{Binding PatreonLogo}" />
                     </Button>

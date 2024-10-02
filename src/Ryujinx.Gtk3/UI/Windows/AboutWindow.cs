@@ -29,7 +29,7 @@ namespace Ryujinx.UI.Windows
 
             try
             {
-                string patreonJsonString = await httpClient.GetStringAsync("https://patreon.ryujinx.org/");
+                string patreonJsonString = await httpClient.GetStringAsync("https://example.com/");
 
                 _patreonNamesText.Buffer.Text = string.Join(", ", JsonHelper.Deserialize(patreonJsonString, CommonJsonContext.Default.StringArray));
             }
@@ -54,7 +54,7 @@ namespace Ryujinx.UI.Windows
 
         private void PatreonButton_Pressed(object sender, ButtonPressEventArgs args)
         {
-            OpenHelper.OpenUrl("https://www.patreon.com/ryujinx");
+            OpenHelper.OpenUrl("https://example.com/");
         }
 
         private void GitHubButton_Pressed(object sender, ButtonPressEventArgs args)
