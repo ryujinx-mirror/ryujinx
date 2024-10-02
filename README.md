@@ -41,9 +41,11 @@ Use the search function to see if a game has been tested already!
 To run this emulator, your PC must be equipped with at least 8GiB of RAM;
 failing to meet this requirement may result in a poor gameplay experience or unexpected crashes.
 
+<!--
 See our [Setup & Configuration Guide](https://github.com/ryujinx-mirror/Ryujinx/wiki/Ryujinx-Setup-&-Configuration-Guide) on how to set up the emulator.
 
 For our Local Wireless (LDN) builds, see our [Multiplayer: Local Play/Local Wireless Guide](https://github.com/ryujinx-mirror/Ryujinx/wiki/Multiplayer-(LDN-Local-Wireless)-Guide).
+-->
 
 <!--Avalonia UI comes with translations for various languages. See [Crowdin](https://crwd.in/ryujinx) for more information.-->
 
