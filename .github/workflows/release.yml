@@ -30,7 +30,7 @@ jobs:
       - name: Get version info
         id: version_info
         run: |
-          echo "build_version=r${{ github.sha }}" >> $GITHUB_OUTPUT
+          echo "build_version=r$(git rev-parse --short "${{ github.sha }}")" >> $GITHUB_OUTPUT
         shell: bash
 
       - name: Create tag
@@ -50,7 +50,7 @@ jobs:
           name: ${{ steps.version_info.outputs.build_version }}
           tag: ${{ steps.version_info.outputs.build_version }}
           makeLatest: "true"
-          generateReleaseNotes: true
+          omitBody: true
           omitBodyDuringUpdate: true
           owner: ${{ env.RYUJINX_TARGET_RELEASE_CHANNEL_OWNER }}
           repo: ${{ env.RYUJINX_TARGET_RELEASE_CHANNEL_REPO }}
@@ -79,7 +79,7 @@ jobs:
       - name: Get version info
         id: version_info
         run: |
-          echo "build_version=r${{ github.sha }}" >> $GITHUB_OUTPUT
+          echo "build_version=r$(git rev-parse --short "${{ github.sha }}")" >> $GITHUB_OUTPUT
           echo "git_short_hash=$(git rev-parse --short "${{ github.sha }}")" >> $GITHUB_OUTPUT
         shell: bash
 
@@ -98,8 +98,8 @@ jobs:
 
       - name: Publish
         run: |
-          dotnet publish -c Release -r "${{ matrix.platform.name }}" -o ./publish_ava/publish -p:Version="${{ steps.version_info.outputs.build_version }}" -p:SourceRevisionId="${{ steps.version_info.outputs.git_short_hash }}" -p:DebugType=embedded src/Ryujinx --self-contained true
-          dotnet publish -c Release -r "${{ matrix.platform.name }}" -o ./publish_sdl2_headless/publish -p:Version="${{ steps.version_info.outputs.build_version }}" -p:SourceRevisionId="${{ steps.version_info.outputs.git_short_hash }}" -p:DebugType=embedded src/Ryujinx.Headless.SDL2 --self-contained true
+          dotnet publish -c Release -r "${{ matrix.platform.name }}" -o ./publish_ava/publish -p:SourceRevisionId="${{ steps.version_info.outputs.git_short_hash }}" -p:DebugType=embedded src/Ryujinx --self-contained true
+          dotnet publish -c Release -r "${{ matrix.platform.name }}" -o ./publish_sdl2_headless/publish -p:SourceRevisionId="${{ steps.version_info.outputs.git_short_hash }}" -p:DebugType=embedded src/Ryujinx.Headless.SDL2 --self-contained true
 
       - name: Packing Windows builds
         if: matrix.platform.os == 'windows-latest'
@@ -138,7 +138,7 @@ jobs:
           artifacts: "release_output/*.tar.gz,release_output/*.zip"
           tag: ${{ steps.version_info.outputs.build_version }}
           makeLatest: "true"
-          generateReleaseNotes: true
+          omitBody: true
           omitBodyDuringUpdate: true
           allowUpdates: true
           replacesArtifacts: true
@@ -177,7 +177,7 @@ jobs:
       - name: Get version info
         id: version_info
         run: |
-          echo "build_version=r${{ github.sha }}" >> $GITHUB_OUTPUT
+          echo "build_version=r$(git rev-parse --short "${{ github.sha }}")" >> $GITHUB_OUTPUT
           echo "git_short_hash=$(git rev-parse --short "${{ github.sha }}")" >> $GITHUB_OUTPUT
 
       #- name: Configure for release
@@ -205,7 +205,7 @@ jobs:
           artifacts: "publish_ava/*.tar.gz, publish_headless/*.tar.gz"
           tag: ${{ steps.version_info.outputs.build_version }}
           makeLatest: "true"
-          generateReleaseNotes: true
+          omitBody: true
           omitBodyDuringUpdate: true
           allowUpdates: true
           replacesArtifacts: true
