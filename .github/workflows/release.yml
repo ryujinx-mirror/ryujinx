@@ -30,7 +30,7 @@ jobs:
       - name: Get version info
         id: version_info
         run: |
-          echo "build_version=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          echo "build_version=r${{ github.sha }}" >> $GITHUB_OUTPUT
         shell: bash
 
       - name: Create tag
@@ -79,7 +79,7 @@ jobs:
       - name: Get version info
         id: version_info
         run: |
-          echo "build_version=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          echo "build_version=r${{ github.sha }}" >> $GITHUB_OUTPUT
           echo "git_short_hash=$(git rev-parse --short "${{ github.sha }}")" >> $GITHUB_OUTPUT
         shell: bash
 
@@ -177,7 +177,7 @@ jobs:
       - name: Get version info
         id: version_info
         run: |
-          echo "build_version=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          echo "build_version=r${{ github.sha }}" >> $GITHUB_OUTPUT
           echo "git_short_hash=$(git rev-parse --short "${{ github.sha }}")" >> $GITHUB_OUTPUT
 
       #- name: Configure for release
