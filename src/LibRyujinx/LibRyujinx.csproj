@@ -1,0 +1,76 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <RuntimeIdentifiers>linux-bionic-arm64;ios-arm64</RuntimeIdentifiers>
+    <Nullable>enable</Nullable>
+    <LinkerFlavor Condition="'$(RuntimeIdentifier)'=='linux-bionic-arm64'">lld</LinkerFlavor>
+    <DefineConstants>$(DefineConstants);FORCE_EXTERNAL_BASE_DIR</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PublishAot>true</PublishAot>
+    <PublishAotUsingRuntimePack>true</PublishAotUsingRuntimePack>
+    <!-- Not sure why, but on iOS this results in an error. Result is still a .dylib. -->
+    <NativeLib Condition="'$(RuntimeIdentifier)'=='linux-bionic-arm64'">Shared</NativeLib>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <SuppressTrimAnalysisWarnings>false</SuppressTrimAnalysisWarnings>
+    <IlcInstructionSet>armv8.2-a</IlcInstructionSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <Optimize>true</Optimize>
+    <OptimizationPreference>Speed</OptimizationPreference>
+  </PropertyGroup>
+
+  <!-- iOS Linking Fixes -->
+  <Target Condition="'$(RuntimeIdentifier)'=='ios-arm64'" Name="PrepareBeforeIlcCompile" BeforeTargets="IlcCompile">
+    <Exec Command="xcrun xcode-select -p" ConsoleToMSBuild="true">
+      <Output TaskParameter="ConsoleOutput" PropertyName="XcodeSelect" />
+    </Exec>
+    <PropertyGroup>
+      <XcodePath>$(XcodeSelect)</XcodePath>
+      <XcodePath>$([MSBuild]::EnsureTrailingSlash('$(XCodePath)'))</XcodePath>
+    </PropertyGroup>
+    <Message Importance="normal" Text="Found Xcode at $(XcodeSelect)" />
+    <ItemGroup>
+      <LinkerArg Include="-Wl,-ld_classic" />
+      <LinkerArg Include="-isysroot %22$(XcodePath)Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk%22" Condition=" $(RuntimeIdentifier.Contains('simulator')) " />
+      <LinkerArg Include="-isysroot %22$(XcodePath)Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk%22" Condition=" !$(RuntimeIdentifier.Contains('simulator')) " />
+    </ItemGroup>
+  </Target>
+  <Target Condition="'$(RuntimeIdentifier)'=='ios-arm64'" Name="FixDylib" AfterTargets="Publish">
+    <Exec Command="install_name_tool -id @rpath/$(TargetName).dylib $(NativeBinary)" ConsoleToMSBuild="true" />
+  </Target>
+  <Target Condition="'$(RuntimeIdentifier)'=='ios-arm64'" Name="FixSymbols" AfterTargets="Publish">
+    <RemoveDir Directories="$(PublishDir)$(TargetName).framework.dSYM" />
+    <!-- create-xcframework (called from the export plugin wants the symbol files in a directory
+    with a slightly different name from the one created by dotnet publish, so we copy them over
+    to the correctly-named directory -->
+    <ItemGroup>
+      <SymbolFiles Include="$(NativeBinary).dsym\**\*.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(SymbolFiles)" DestinationFolder="$(PublishDir)$(TargetName).framework.dSYM" />
+  </Target>
+  <!-- End iOS Linking Fixes -->
+  <ItemGroup>
+    <ProjectReference Include="..\Ryujinx.Audio.Backends.OpenAL\Ryujinx.Audio.Backends.OpenAL.csproj" />
+    <ProjectReference Include="..\Ryujinx.Audio.Backends.SDL2\Ryujinx.Audio.Backends.SDL2.csproj" />
+    <ProjectReference Include="..\Ryujinx.Input\Ryujinx.Input.csproj" />
+    <ProjectReference Include="..\Ryujinx.Common\Ryujinx.Common.csproj" />
+    <ProjectReference Include="..\Ryujinx.HLE\Ryujinx.HLE.csproj" />
+    <ProjectReference Include="..\ARMeilleure\ARMeilleure.csproj" />
+    <ProjectReference Include="..\Ryujinx.Graphics.OpenGL\Ryujinx.Graphics.OpenGL.csproj" />
+    <ProjectReference Include="..\Ryujinx.Graphics.Vulkan\Ryujinx.Graphics.Vulkan.csproj" />
+    <ProjectReference Include="..\Ryujinx.Graphics.Gpu\Ryujinx.Graphics.Gpu.csproj" />
+    <ProjectReference Include="..\Ryujinx.UI.Common\Ryujinx.UI.Common.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <RdXmlFile Include="rd.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Rxmxnx.PInvoke.Extensions" />
+    <PackageReference Include="Silk.NET.Vulkan" />
+    <PackageReference Include="Silk.NET.Vulkan.Extensions.KHR" />
+    <LinkerArg Condition="'$(RuntimeIdentifier)'=='linux-bionic-arm64'" Include="-llog" />
+  </ItemGroup>
+</Project>
