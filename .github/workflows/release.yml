@@ -3,14 +3,14 @@ name: Release job
 on:
   workflow_dispatch:
     inputs: {}
-  push:
-    branches: [ mirror/master ]
-    paths-ignore:
-      - '.github/**'
-      - '*.yml'
-      - '*.json'
-      - '*.config'
-      - '*.md'
+  #push:
+  #  branches: [ mirror/release ]
+  #  paths-ignore:
+  #    - '.github/**'
+  #    - '*.yml'
+  #    - '*.json'
+  #    - '*.config'
+  #    - '*.md'
 
 concurrency: release
 
