@@ -49,7 +49,8 @@ jobs:
         with:
           name: ${{ steps.version_info.outputs.build_version }}
           tag: ${{ steps.version_info.outputs.build_version }}
-          body: "For more information about this release please check out the official [Changelog](https://github.com/ryujinx-mirror/Ryujinx/wiki/Changelog)."
+          makeLatest: "true"
+          generateReleaseNotes: true
           omitBodyDuringUpdate: true
           owner: ${{ env.RYUJINX_TARGET_RELEASE_CHANNEL_OWNER }}
           repo: ${{ env.RYUJINX_TARGET_RELEASE_CHANNEL_REPO }}
@@ -136,7 +137,8 @@ jobs:
           name: ${{ steps.version_info.outputs.build_version }}
           artifacts: "release_output/*.tar.gz,release_output/*.zip"
           tag: ${{ steps.version_info.outputs.build_version }}
-          body: "For more information about this release please check out the official [Changelog](https://github.com/ryujinx-mirror/Ryujinx/wiki/Changelog)."
+          makeLatest: "true"
+          generateReleaseNotes: true
           omitBodyDuringUpdate: true
           allowUpdates: true
           replacesArtifacts: true
@@ -202,7 +204,8 @@ jobs:
           name: ${{ steps.version_info.outputs.build_version }}
           artifacts: "publish_ava/*.tar.gz, publish_headless/*.tar.gz"
           tag: ${{ steps.version_info.outputs.build_version }}
-          body: "For more information about this release please check out the official [Changelog](https://github.com/ryujinx-mirror/Ryujinx/wiki/Changelog)."
+          makeLatest: "true"
+          generateReleaseNotes: true
           omitBodyDuringUpdate: true
           allowUpdates: true
           replacesArtifacts: true
