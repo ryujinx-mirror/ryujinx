@@ -1,6 +1,7 @@
 name: Build job
 
 on:
+  workflow_dispatch:
   workflow_call:
 
 env:
