@@ -1,0 +1,117 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+}
+
+android {
+    namespace 'org.ryujinx.android'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "org.ryujinx.android"
+        minSdk 30
+        targetSdk 34
+        versionCode 10044
+        versionName '1.0.44'
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        vectorDrawables {
+            useSupportLibrary true
+        }
+
+        ndk {
+            //noinspection ChromeOsAbiSupport
+            abiFilters 'arm64-v8a'
+        }
+
+        externalNativeBuild {
+            cmake {
+                cppFlags "-std=c++11"
+                arguments "-DANDROID_STL=c++_shared"
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.debug
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+    buildFeatures {
+        compose true
+        prefab true
+        buildConfig true
+    }
+    composeOptions {
+        kotlinCompilerExtensionVersion '1.5.13'
+    }
+    packagingOptions {
+        jniLibs {
+            keepDebugSymbols += '**/libryujinx.so'
+            useLegacyPackaging true
+        }
+        resources {
+            excludes += '/META-INF/{AL2.0,LGPL2.1}'
+        }
+    }
+    externalNativeBuild {
+        cmake {
+            path file('src/main/cpp/CMakeLists.txt')
+            version '3.22.1'
+        }
+    }
+}
+
+tasks.named("preBuild") {
+    dependsOn ':libryujinx:assemble'
+}
+
+dependencies {
+    implementation group: 'net.java.dev.jna', name: 'jna', version: '5.14.0'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.12.0'
+    implementation platform('androidx.compose:compose-bom:2024.05.00')
+    implementation platform('androidx.compose:compose-bom:2024.05.00')
+    androidTestImplementation platform('androidx.compose:compose-bom:2024.05.00')
+    androidTestImplementation platform('androidx.compose:compose-bom:2024.05.00')
+    runtimeOnly project(":libryujinx")
+    implementation 'androidx.core:core-ktx:1.13.1'
+    implementation platform('org.jetbrains.kotlin:kotlin-bom:1.9.24')
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.7.0'
+    implementation "androidx.navigation:navigation-compose:2.7.7"
+    implementation 'androidx.activity:activity-compose:1.9.0'
+    implementation platform('androidx.compose:compose-bom:2024.05.00')
+    implementation 'androidx.compose.ui:ui'
+    implementation 'androidx.compose.ui:ui-graphics'
+    implementation 'androidx.compose.ui:ui-tooling-preview'
+    implementation 'androidx.compose.material3:material3'
+    implementation 'com.github.swordfish90:radialgamepad:2.0.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation "com.anggrayudi:storage:1.5.5"
+    implementation "androidx.preference:preference-ktx:1.2.1"
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.0'
+    implementation 'com.google.code.gson:gson:2.10.1'
+    implementation 'net.lingala.zip4j:zip4j:2.11.5'
+    implementation("br.com.devsrsouza.compose.icons:css-gg:1.1.0")
+    implementation 'io.coil-kt:coil-compose:2.6.0'
+    implementation("com.halilibo.compose-richtext:richtext-ui:0.20.0")
+    implementation("com.halilibo.compose-richtext:richtext-commonmark:0.20.0")
+    implementation("com.halilibo.compose-richtext:richtext-ui-material3:0.20.0")
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+    androidTestImplementation platform('androidx.compose:compose-bom:2024.05.00')
+    androidTestImplementation 'androidx.compose.ui:ui-test-junit4'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.0'
+    debugImplementation 'androidx.compose.ui:ui-tooling'
+    debugImplementation 'androidx.compose.ui:ui-test-manifest'
+}

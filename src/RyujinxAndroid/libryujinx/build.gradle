@@ -1,0 +1,139 @@
+import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
+
+plugins {
+    id 'base'
+}
+
+// Configurable properties
+
+// Path to the LLVM toolchain to use. This should be configured in your global gradle.properties
+// See: https://docs.gradle.org/current/userguide/directory_layout.html#dir:gradle_user_home
+def toolchainPath = providers.gradleProperty("org.ryujinx.llvm.toolchain.path").getOrNull()
+// Path to the dotnet executable This should be configured in your global gradle.properties
+// See: https://docs.gradle.org/current/userguide/directory_layout.html#dir:gradle_user_home
+def dotnetExecutable = providers.gradleProperty("org.ryujinx.dotnet.bin").getOrElse("dotnet")
+// Build configuration
+def configuration = providers.gradleProperty("org.ryujinx.config").getOrElse("debug").toLowerCase()
+// Publish directory
+def publishDirectory = providers.gradleProperty("org.ryujinx.publish.path").getOrNull()
+// Should the symbols be stripped from the published library?
+// Per default the symbols will be stripped for release builds, but not for debug builds.
+// This can be overridden using this property.
+// Valid values are: ["auto", "-1", "true", "1", "false", "0"]
+def stripSymbols = providers.gradleProperty("org.ryujinx.symbols.strip").getOrElse("")
+//noinspection GroovyFallthrough
+switch (stripSymbols) {
+    case "true":
+    case "1":
+        stripSymbols = true
+        break
+    case "false":
+    case "0":
+        stripSymbols = false
+        break
+    default:
+        stripSymbols = configuration == "release"
+        break
+}
+// Additional arguments for the dotnet publish command.
+def additionalArgs = project.hasProperty("org.ryujinx.args") ? project.property("org.ryujinx.args") : ""
+
+configuration = configuration.substring(0, 1).toUpperCase() + configuration.substring(1)
+
+if (publishDirectory != null) {
+    publishDirectory = "${rootProject.projectDir}/${publishDirectory}"
+}
+else {
+    publishDirectory = libsDirectory.get().toString()
+}
+
+// Trees
+
+ext.outputTree = fileTree("${buildDir}/publish") {
+    include "*/${configuration.toLowerCase()}_*/*"
+    builtBy 'compileLibRyujinx'
+}
+
+ext.publishTree = fileTree(publishDirectory) {
+    include ext.outputTree.getFiles().collect { it.getName().toLowerCase() }.findAll { it.endsWith(".so") }
+    builtBy 'compileLibRyujinx'
+}
+
+// Tasks
+
+tasks.register('compileLibRyujinx', Exec) {
+    def projectName = "LibRyujinx"
+
+    workingDir "../../${projectName}"
+
+    def solutionFiles = fileTree("../../") {
+        include '**/*.cs'
+        include '**/*.csproj'
+        exclude '**/bin/**'
+        exclude '**/obj/**'
+        exclude '**/RyujinxAndroid/**'
+    }
+
+    inputs.files(solutionFiles)
+            .withPropertyName('sourceFiles')
+            .withPathSensitivity(PathSensitivity.RELATIVE)
+            .ignoreEmptyDirectories()
+
+    outputs.file("${publishDirectory}/${projectName.toLowerCase()}.so")
+
+    OperatingSystem os = DefaultNativePlatform.currentOperatingSystem
+    if (toolchainPath != null) {
+        if (os.isWindows()) {
+            // NOTE: This is not a typo. dotnet.exe actually uses Path instead of PATH.
+            environment "Path", "${toolchainPath};${providers.environmentVariable("PATH").get()}"
+        }
+        else {
+            environment "PATH", "${toolchainPath}:${providers.environmentVariable("PATH").get()}"
+        }
+    }
+
+    doFirst {
+        println "Building ${projectName} in ${configuration} mode."
+        println "Configuration:"
+        println "\tusing: ${dotnetExecutable}"
+        println "\tStripSymbols: ${stripSymbols}"
+        println "\tadditional args: ${additionalArgs.split(" ")}"
+        println "\tcustom LLVM toolchain path: ${toolchainPath}"
+    }
+
+    executable dotnetExecutable
+    args 'publish',
+            '-r', 'linux-bionic-arm64',
+            '-c', configuration,
+            "-p:DisableUnsupportedError=true",
+            "-p:PublishAotUsingRuntimePack=true",
+            "-p:StripSymbols=${stripSymbols}",
+            "--artifacts-path", buildDir
+
+    args additionalArgs.split(" ")
+
+    doLast {
+        project.sync {
+            from project.ext.outputTree.getFiles()
+            include '*.so'
+            into publishDirectory
+            rename (String originalName) -> originalName.toLowerCase()
+            duplicatesStrategy 'fail'
+            preserve {
+                include '.gitkeep'
+                include '*.so'
+                exclude {
+                    project.ext.publishTree
+                }
+            }
+        }
+    }
+}
+
+tasks.register("cleanLibRyujinx", Delete) {
+    delete project.ext.publishTree.getFiles()
+}
+
+// Register tasks as standard lifecycle tasks
+assemble.dependsOn("compileLibRyujinx")
+clean.dependsOn("cleanLibRyujinx")
