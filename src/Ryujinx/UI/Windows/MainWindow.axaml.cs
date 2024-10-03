@@ -361,6 +361,8 @@ namespace Ryujinx.Ava.UI.Windows
                 await Dispatcher.UIThread.InvokeAsync(async () => await UserErrorDialog.ShowUserErrorDialog(UserError.NoKeys));
             }
 
+            // MIRROR ADJ: We aren't using semver release tags for the time being
+            /*
             if (ConfigurationState.Instance.CheckUpdatesOnStart.Value && Updater.CanUpdate(false))
             {
                 await Updater.BeginParse(this, false).ContinueWith(task =>
@@ -368,6 +370,7 @@ namespace Ryujinx.Ava.UI.Windows
                     Logger.Error?.Print(LogClass.Application, $"Updater Error: {task.Exception}");
                 }, TaskContinuationOptions.OnlyOnFaulted);
             }
+            */
         }
 
         private void Load()
