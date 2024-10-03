@@ -140,6 +140,7 @@ jobs:
           artifacts: "release_output/*.tar.gz,release_output/*.zip"
           tag: ${{ steps.version_info.outputs.build_version }}
           makeLatest: "true"
+          omitDraftDuringUpdate: true
           omitBody: true
           omitBodyDuringUpdate: true
           allowUpdates: true
@@ -207,6 +208,7 @@ jobs:
           artifacts: "publish_ava/*.tar.gz, publish_headless/*.tar.gz"
           tag: ${{ steps.version_info.outputs.build_version }}
           makeLatest: "true"
+          omitDraftDuringUpdate: true
           omitBody: true
           omitBodyDuringUpdate: true
           allowUpdates: true
