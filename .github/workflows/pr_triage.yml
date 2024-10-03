@@ -1,0 +1,27 @@
+name: "Pull Request Triage"
+on:
+  pull_request_target:
+    types: [opened, ready_for_review]
+
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Fetch labeler.yml
+        uses: actions/checkout@v4
+        with:
+           # Ensure we pin the source origin as pull_request_target run under forks.
+           fetch-depth: 0
+           repository: ryujinx-mirror/ryujinx
+           ref: mirror/master
+
+      - name: Update labels based on changes in PR
+        uses: actions/labeler@v5
+        with:
+          sync-labels: true
+          dot: true
