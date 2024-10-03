@@ -59,7 +59,7 @@ namespace Ryujinx.UI.Windows
 
         private void GitHubButton_Pressed(object sender, ButtonPressEventArgs args)
         {
-            OpenHelper.OpenUrl("https://github.com/Ryujinx/Ryujinx");
+            OpenHelper.OpenUrl("https://github.com/ryujinx-mirror/Ryujinx");
         }
 
         private void DiscordButton_Pressed(object sender, ButtonPressEventArgs args)
@@ -74,12 +74,12 @@ namespace Ryujinx.UI.Windows
 
         private void ContributorsButton_Pressed(object sender, ButtonPressEventArgs args)
         {
-            OpenHelper.OpenUrl("https://github.com/Ryujinx/Ryujinx/graphs/contributors?type=a");
+            OpenHelper.OpenUrl("https://github.com/ryujinx-mirror/Ryujinx/graphs/contributors?type=a");
         }
 
         private void ChangelogButton_Pressed(object sender, ButtonPressEventArgs args)
         {
-            OpenHelper.OpenUrl("https://github.com/Ryujinx/Ryujinx/wiki/Changelog#ryujinx-changelog");
+            OpenHelper.OpenUrl("https://github.com/ryujinx-mirror/Ryujinx/wiki/Changelog#ryujinx-changelog");
         }
     }
 }

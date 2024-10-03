@@ -7,7 +7,7 @@ namespace Ryujinx.Ava.UI.Helpers
 {
     internal class UserErrorDialog
     {
-        private const string SetupGuideUrl = "https://github.com/Ryujinx/Ryujinx/wiki/Ryujinx-Setup-&-Configuration-Guide";
+        private const string SetupGuideUrl = "https://github.com/ryujinx-mirror/Ryujinx/wiki/Ryujinx-Setup-&-Configuration-Guide";
 
         private static string GetErrorCode(UserError error)
         {
