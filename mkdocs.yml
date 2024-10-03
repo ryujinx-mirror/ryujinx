@@ -1,0 +1,53 @@
+site_name: Ryujinx
+repo_url: "https://github.com/ryujinx-mirror/ryujinx"
+repo_name: "ryujinx-mirror/ryujinx"
+remote_branch: docs
+theme:
+  name: material
+  logo: assets/icon-border.svg
+  favicon: assets/icon.svg
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: custom
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: custom
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.indexes
+    - navigation.expand
+    - navigation.sections
+    - header.autohide
+    - content.code.copy
+    - content.code.select
+    - content.code.annotate
+extra_css:
+  - stylesheets/extra.css
+plugins:
+  - search
+nav:
+  - Home:
+      - index.md
+      - Setup: 
+        - setup/index.md
+        - Firmware Dumping: setup/firmware-dumping/index.md
+        - Keys: setup/keys.md
+        - Multiplayer: setup/multiplayer-ldn/index.md
+      - Development Guide: 
+        - dev-guide/index.md
+        - Code Style: dev-guide/coding-guidelines/coding-style.md
+        - PR Guidelines: dev-guide/workflow/pr-guide.md
+        - Guides: 
+          - dev-guide/guides/index.md
+          - Mac Metal Frame Capture: dev-guide/guides/metal-frame-capture.md
+      - Support: 
+        - FAQ / Troubleshooting: faq/faq.md
+      - Change Log: changelog.md

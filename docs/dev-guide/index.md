@@ -21,7 +21,7 @@ Contributing (Building, testing, benchmarking, profiling, etc.)
 
 If you want to contribute a code change to this repo, start here.
 
-- [Contributor Guide](../CONTRIBUTING.md)
+- [Contributor Guide](https://github.com/ryujinx-mirror/Ryujinx/CONTRIBUTING.md)
 
 Coding Guidelines
 =================
