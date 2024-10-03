@@ -32,7 +32,7 @@ jobs:
       - name: Get version info
         id: version_info
         run: |
-          echo "build_version=r`echo ${{ github.sha }} | cut -c1-8`" >> $GITHUB_OUTPUT
+          echo "build_version=r`echo ${{ github.sha }} | cut -c1-7`" >> $GITHUB_OUTPUT
         shell: bash
 
       - name: Create tag
@@ -51,7 +51,7 @@ jobs:
         with:
           name: ${{ steps.version_info.outputs.build_version }}
           tag: ${{ steps.version_info.outputs.build_version }}
-          makeLatest: "true"
+          draft: "true"
           omitBody: true
           omitBodyDuringUpdate: true
           #owner: ${{ env.RYUJINX_TARGET_RELEASE_CHANNEL_OWNER }}
@@ -81,18 +81,18 @@ jobs:
       - name: Get version info
         id: version_info
         run: |
-          echo "build_version=r`echo ${{ github.sha }} | cut -c1-8`" >> $GITHUB_OUTPUT
+          echo "build_version=r`echo ${{ github.sha }} | cut -c1-7`" >> $GITHUB_OUTPUT
           echo "git_short_hash=$(git rev-parse --short "${{ github.sha }}")" >> $GITHUB_OUTPUT
         shell: bash
 
       - name: Configure for release
         run: |
-          #sed -r --in-place 's/\%\%RYUJINX_BUILD_VERSION\%\%/${{ steps.version_info.outputs.build_version }}/g;' src/Ryujinx.Common/ReleaseInformation.cs
-          sed -r --in-place 's/\%\%RYUJINX_BUILD_GIT_HASH\%\%/${{ steps.version_info.outputs.git_short_hash }}/g;' src/Ryujinx.Common/ReleaseInformation.cs
-          sed -r --in-place 's/\%\%RYUJINX_TARGET_RELEASE_CHANNEL_OWNER\%\%/${{ github.repository_owner }}/g;' src/Ryujinx.Common/ReleaseInformation.cs
-          sed -r --in-place 's/\%\%RYUJINX_TARGET_RELEASE_CHANNEL_REPO\%\%/${{ github.event.repository.name }}/g;' src/Ryujinx.Common/ReleaseInformation.cs
-          sed -r --in-place 's/\%\%RYUJINX_TARGET_RELEASE_CHANNEL_NAME\%\%/${{ github.ref_name }}/g;' src/Ryujinx.Common/ReleaseInformation.cs
-          sed -r --in-place 's/\%\%RYUJINX_CONFIG_FILE_NAME\%\%/Config\.json/g;' src/Ryujinx.Common/ReleaseInformation.cs
+          sed -r --in-place 's&\%\%RYUJINX_BUILD_VERSION\%\%&${{ steps.version_info.outputs.build_version }}&g;' src/Ryujinx.Common/ReleaseInformation.cs
+          sed -r --in-place 's&\%\%RYUJINX_BUILD_GIT_HASH\%\%&${{ steps.version_info.outputs.git_short_hash }}&g;' src/Ryujinx.Common/ReleaseInformation.cs
+          sed -r --in-place 's&\%\%RYUJINX_TARGET_RELEASE_CHANNEL_OWNER\%\%&${{ github.repository_owner }}&g;' src/Ryujinx.Common/ReleaseInformation.cs
+          sed -r --in-place 's&\%\%RYUJINX_TARGET_RELEASE_CHANNEL_REPO\%\%&${{ github.event.repository.name }}&g;' src/Ryujinx.Common/ReleaseInformation.cs
+          sed -r --in-place 's&\%\%RYUJINX_TARGET_RELEASE_CHANNEL_NAME\%\%&${{ github.ref_name }}&g;' src/Ryujinx.Common/ReleaseInformation.cs
+          sed -r --in-place 's&\%\%RYUJINX_CONFIG_FILE_NAME\%\%&Config\.json&g;' src/Ryujinx.Common/ReleaseInformation.cs
         shell: bash
 
       - name: Create output dir
@@ -179,17 +179,17 @@ jobs:
       - name: Get version info
         id: version_info
         run: |
-          echo "build_version=r`echo ${{ github.sha }} | cut -c1-8`" >> $GITHUB_OUTPUT
+          echo "build_version=r`echo ${{ github.sha }} | cut -c1-7`" >> $GITHUB_OUTPUT
           echo "git_short_hash=$(git rev-parse --short "${{ github.sha }}")" >> $GITHUB_OUTPUT
 
       - name: Configure for release
         run: |
-          #sed -r --in-place 's/\%\%RYUJINX_BUILD_VERSION\%\%/${{ steps.version_info.outputs.build_version }}/g;' src/Ryujinx.Common/ReleaseInformation.cs
-          sed -r --in-place 's/\%\%RYUJINX_BUILD_GIT_HASH\%\%/${{ steps.version_info.outputs.git_short_hash }}/g;' src/Ryujinx.Common/ReleaseInformation.cs
-          sed -r --in-place 's/\%\%RYUJINX_TARGET_RELEASE_CHANNEL_OWNER\%\%/${{ github.repository_owner }}/g;' src/Ryujinx.Common/ReleaseInformation.cs
-          sed -r --in-place 's/\%\%RYUJINX_TARGET_RELEASE_CHANNEL_REPO\%\%/${{ github.event.repository.name }}/g;' src/Ryujinx.Common/ReleaseInformation.cs
-          sed -r --in-place 's/\%\%RYUJINX_TARGET_RELEASE_CHANNEL_NAME\%\%/${{ github.ref_name }}/g;' src/Ryujinx.Common/ReleaseInformation.cs
-          sed -r --in-place 's/\%\%RYUJINX_CONFIG_FILE_NAME\%\%/Config\.json/g;' src/Ryujinx.Common/ReleaseInformation.cs
+          sed -r --in-place 's&\%\%RYUJINX_BUILD_VERSION\%\%&${{ steps.version_info.outputs.build_version }}&g;' src/Ryujinx.Common/ReleaseInformation.cs
+          sed -r --in-place 's&\%\%RYUJINX_BUILD_GIT_HASH\%\%&${{ steps.version_info.outputs.git_short_hash }}&g;' src/Ryujinx.Common/ReleaseInformation.cs
+          sed -r --in-place 's&\%\%RYUJINX_TARGET_RELEASE_CHANNEL_OWNER\%\%&${{ github.repository_owner }}&g;' src/Ryujinx.Common/ReleaseInformation.cs
+          sed -r --in-place 's&\%\%RYUJINX_TARGET_RELEASE_CHANNEL_REPO\%\%&${{ github.event.repository.name }}&g;' src/Ryujinx.Common/ReleaseInformation.cs
+          sed -r --in-place 's&\%\%RYUJINX_TARGET_RELEASE_CHANNEL_NAME\%\%&${{ github.ref_name }}&g;' src/Ryujinx.Common/ReleaseInformation.cs
+          sed -r --in-place 's&\%\%RYUJINX_CONFIG_FILE_NAME\%\%&Config\.json&g;' src/Ryujinx.Common/ReleaseInformation.cs
         shell: bash
 
       - name: Publish macOS Ryujinx
