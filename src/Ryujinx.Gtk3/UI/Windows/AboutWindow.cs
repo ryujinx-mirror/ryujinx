@@ -14,29 +14,6 @@ namespace Ryujinx.UI.Windows
         {
             Icon = new Gdk.Pixbuf(Assembly.GetAssembly(typeof(OpenHelper)), "Ryujinx.UI.Common.Resources.Logo_Ryujinx.png");
             InitializeComponent();
-
-            _ = DownloadPatronsJson();
-        }
-
-        private async Task DownloadPatronsJson()
-        {
-            if (!NetworkInterface.GetIsNetworkAvailable())
-            {
-                _patreonNamesText.Buffer.Text = "Connection Error.";
-            }
-
-            HttpClient httpClient = new();
-
-            try
-            {
-                string patreonJsonString = await httpClient.GetStringAsync("https://example.com/");
-
-                _patreonNamesText.Buffer.Text = string.Join(", ", JsonHelper.Deserialize(patreonJsonString, CommonJsonContext.Default.StringArray));
-            }
-            catch
-            {
-                _patreonNamesText.Buffer.Text = "API Error.";
-            }
         }
 
         //
@@ -44,7 +21,7 @@ namespace Ryujinx.UI.Windows
         //
         private void RyujinxButton_Pressed(object sender, ButtonPressEventArgs args)
         {
-            OpenHelper.OpenUrl("https://ryujinx.org");
+            OpenHelper.OpenUrl("https://example.com/");
         }
 
         private void AmiiboApiButton_Pressed(object sender, ButtonPressEventArgs args)
@@ -59,27 +36,27 @@ namespace Ryujinx.UI.Windows
 
         private void GitHubButton_Pressed(object sender, ButtonPressEventArgs args)
         {
-            OpenHelper.OpenUrl("https://github.com/Ryujinx/Ryujinx");
+            OpenHelper.OpenUrl("https://github.com/ryujinx-mirror/Ryujinx");
         }
 
         private void DiscordButton_Pressed(object sender, ButtonPressEventArgs args)
         {
-            OpenHelper.OpenUrl("https://discordapp.com/invite/N2FmfVc");
+            OpenHelper.OpenUrl("https://example.com/");
         }
 
         private void TwitterButton_Pressed(object sender, ButtonPressEventArgs args)
         {
-            OpenHelper.OpenUrl("https://twitter.com/RyujinxEmu");
+            OpenHelper.OpenUrl("https://example.com/");
         }
 
         private void ContributorsButton_Pressed(object sender, ButtonPressEventArgs args)
         {
-            OpenHelper.OpenUrl("https://github.com/Ryujinx/Ryujinx/graphs/contributors?type=a");
+            OpenHelper.OpenUrl("https://github.com/ryujinx-mirror/Ryujinx/graphs/contributors?type=a");
         }
 
         private void ChangelogButton_Pressed(object sender, ButtonPressEventArgs args)
         {
-            OpenHelper.OpenUrl("https://github.com/Ryujinx/Ryujinx/wiki/Changelog#ryujinx-changelog");
+            OpenHelper.OpenUrl("https://github.com/ryujinx-mirror/Ryujinx/wiki/Changelog#ryujinx-changelog");
         }
     }
 }
