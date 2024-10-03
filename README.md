@@ -5,6 +5,12 @@ As of now, the [ryujinx-mirror/ryujinx](https://github.com/ryujinx-mirror/ryujin
 > [!NOTE]
 > This mirror is not affiliated with the original Ryujinx project, or Nintendo whatsoever.
 
+### Current Goals
+
+* To be as safe as possible, remove all in-app and meta references to Patreon, Discord, `ryujinx.org` etc while keeping full attribution of original authors and contributors in-tact.
+* Keep 'branding' as pure and faithful to the original project as possible. 
+* Reconstruct basic build infrastructure & workflows for this repository, based on revision hashes as opposed to semver releases (for now)
+
 ___
 
 <h1 align="center">
