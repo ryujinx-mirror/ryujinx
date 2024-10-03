@@ -123,6 +123,7 @@
                     HorizontalAlignment="Center"
                     Orientation="Horizontal"
                     Spacing="10">
+                    <!--
                     <Button
                         MinWidth="30"
                         MinHeight="30"
@@ -136,6 +137,7 @@
                         ToolTip.Tip="{locale:Locale AboutPatreonUrlTooltipMessage}">
                         <Image Source="{Binding PatreonLogo}" />
                     </Button>
+                    -->
                     <Button
                         MinWidth="30"
                         MinHeight="30"
@@ -149,6 +151,7 @@
                         ToolTip.Tip="{locale:Locale AboutGithubUrlTooltipMessage}">
                         <Image Source="{Binding GithubLogo}" />
                     </Button>
+                    <!--
                     <Button
                         MinWidth="30"
                         MinHeight="30"
@@ -188,6 +191,7 @@
                         ToolTip.Tip="{locale:Locale AboutUrlTooltipMessage}">
                         <ui:SymbolIcon Foreground="{DynamicResource ThemeForegroundColor}" Symbol="Link" />
                     </Button>
+                    -->
                 </StackPanel>
             </StackPanel>
         </Grid>
@@ -217,7 +221,7 @@
                     Text="{locale:Locale AboutRyujinxAboutTitle}" />
                 <TextBlock
                     FontSize="10"
-                    Text="{locale:Locale AboutRyujinxAboutContent}"
+                    Text="Ryujinx is an emulator for the Nintendo Switch™."
                     TextWrapping="Wrap" />
             </StackPanel>
             <StackPanel
@@ -227,7 +231,7 @@
                 <TextBlock
                     FontSize="15"
                     FontWeight="Bold"
-                    Text="{locale:Locale AboutRyujinxMaintainersTitle}" />
+                    Text="Created By:" />
                 <TextBlock
                     FontSize="10"
                     Text="{Binding Developers}"
@@ -245,6 +249,7 @@
                         ToolTip.Tip="{locale:Locale AboutRyujinxMaintainersContentTooltipMessage}" />
                 </Button>
             </StackPanel>
+            <!--
             <StackPanel
                 Grid.Row="2"
                 Margin="0,10,0,0"
@@ -265,6 +270,7 @@
                         TextWrapping="Wrap" />
                 </ScrollViewer>
             </StackPanel>
+            -->
         </Grid>
     </Grid>
 </UserControl>
