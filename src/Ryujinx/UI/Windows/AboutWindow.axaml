@@ -151,7 +151,6 @@
                         ToolTip.Tip="{locale:Locale AboutGithubUrlTooltipMessage}">
                         <Image Source="{Binding GithubLogo}" />
                     </Button>
-                    <!--
                     <Button
                         MinWidth="30"
                         MinHeight="30"
@@ -161,10 +160,11 @@
                         Background="Transparent"
                         Click="Button_OnClick"
                         CornerRadius="15"
-                        Tag="https://discordapp.com/invite/N2FmfVc"
+                        Tag="https://latte.to/discord"
                         ToolTip.Tip="{locale:Locale AboutDiscordUrlTooltipMessage}">
                         <Image Source="{Binding DiscordLogo}" />
                     </Button>
+                    <!--
                     <Button
                         MinWidth="30"
                         MinHeight="30"
