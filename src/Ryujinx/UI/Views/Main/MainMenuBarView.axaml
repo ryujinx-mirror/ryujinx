@@ -193,6 +193,7 @@
                 </MenuItem>
             </MenuItem>
             <MenuItem VerticalAlignment="Center" Header="{locale:Locale MenuBarHelp}">
+                <!--
                 <MenuItem
                     Name="UpdateMenuItem"
                     IsEnabled="{Binding CanUpdate}"
@@ -200,6 +201,7 @@
                     Header="{locale:Locale MenuBarHelpCheckForUpdates}"
                     ToolTip.Tip="{locale:Locale CheckUpdatesTooltip}" />
                 <Separator />
+                -->
                 <MenuItem
                     Click="OpenAboutWindow"
                     Header="{locale:Locale MenuBarHelpAbout}"
