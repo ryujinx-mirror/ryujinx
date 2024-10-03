@@ -46,16 +46,14 @@ jobs:
       # For some unknown reason this step sometimes fails with exit code 139 (segfault?),
       # so in that case we'll try again (3 tries max).
       - name: Run dotnet format style
-        uses: ryujinx-mirror/unstable-commands@a916a5bb498d149a05857d23989a1874f1fe3120
+        uses: ryujinx-mirror/unstable-commands@releases/v1.0.6
         with:
           commands: dotnet format style --severity info --verify-no-changes --report ./style-report.json -v d
           timeout-minutes: 5
           retry-codes: 139
 
-      # For some unknown reason this step sometimes fails with exit code 139 (segfault?),
-      # so in that case we'll try again (3 tries max).
       - name: Run dotnet format analyzers
-        uses: ryujinx-mirror/unstable-commands@a916a5bb498d149a05857d23989a1874f1fe3120
+        uses: ryujinx-mirror/unstable-commands@releases/v1.0.6
         with:
           commands: dotnet format analyzers --severity info --verify-no-changes --report ./analyzers-report.json -v d
           timeout-minutes: 5
