@@ -28,6 +28,11 @@ jobs:
   build-docs:
     runs-on: ubuntu-latest
     steps:
+      - name: Print inputs
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        run: |
+          echo "Inputs: ${{ toJson(inputs) }}"
+
       - uses: actions/checkout@v4
 
       - name: Configure Git Credentials
@@ -79,5 +84,5 @@ jobs:
           fi
 
       - name: Deploy to GitHub Pages
-        if: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' && github.event.inputs.deploy == true }}
+        if: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' && github.event.inputs.deploy == 'true' }}
         run: mkdocs gh-deploy --force
