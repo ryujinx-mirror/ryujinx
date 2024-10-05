@@ -4,7 +4,7 @@ repo_name: "ryujinx-mirror/ryujinx"
 remote_branch: docs
 theme:
   name: material
-  logo: assets/icon-border.svg
+  logo: assets/icon.svg
   favicon: assets/icon.svg
   palette:
     - media: "(prefers-color-scheme: light)"

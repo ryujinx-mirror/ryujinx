@@ -1,4 +1,40 @@
 :root {
-    --md-primary-fg-color:               #ff5f55;
-    --md-primary-bg-color:               #001e23;
+    --md-primary-fg-color:#ff5f55;
+}
+
+/* Header text color */
+.md-header__title {
+    color: #ffffff;
+}
+
+/* Header repo link color */
+.md-source__repository {
+    color: #ffffff;
+}
+
+/* Change color of the icons in the dark/light mode toggle */
+.md-header .md-icon svg {
+    fill: #ffffff;
+}
+
+/* Override the banner color */
+.md-header {
+    background-color: #001e23;
+    border-bottom: 1px solid #970b0b;
+}
+
+/* Override the tab colors */
+.md-tabs {
+    background-color: #001e23; 
+}
+
+/* Tab links styling */
+.md-tabs__list {
+    color: #ffffff;
+}
+
+/* Hover effect for all links */
+a:hover,
+a:focus {
+    color: #01c4e5 !important;
 }
