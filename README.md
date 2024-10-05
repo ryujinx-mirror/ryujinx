@@ -1,3 +1,6 @@
+[links/discord]: https://discord.gg/xmHPGDfVCa
+[badges/discord]: https://img.shields.io/discord/1291765437100720243?label=ryujinx-mirror&logo=discord&logoColor=FFFFFF&color=5865F3
+
 As of now, the [ryujinx-mirror/ryujinx](https://github.com/ryujinx-mirror/ryujinx) repository serves as a downstream hard-fork of the original Ryujinx project. For the time being, this fork won't be accepting any new *major* changes until further information arises. We have reconstructed the essential build infrastructure, and you can download nightly binaries for Windows, Linux, and MacOS from the [latest release](https://github.com/ryujinx-mirror/ryujinx/releases/latest).
 
 > [!NOTE]
@@ -11,10 +14,10 @@ As of now, the [ryujinx-mirror/ryujinx](https://github.com/ryujinx-mirror/ryujin
 
 ### Join Discussion
 
-Feel free to join the [Latte Softworks Discord community](https://latte.to/discord) to join in on the discussion & development of this fork going forward.<br>
+Feel free to join the [ryujinx-mirror Discord community][links/discord] to join in on the development of this fork going forward.<br>
 See `#ryujinx-info` for more information.
 
-[![Latte Softworks Discord](https://img.shields.io/discord/892211155303538748?label=Latte%20Softworks&logo=discord&logoColor=FFFFFF&color=5865F2)](https://latte.to/discord)
+[![ryujinx-mirror Discord][badges/discord]][links/discord]
 
 ___
 
