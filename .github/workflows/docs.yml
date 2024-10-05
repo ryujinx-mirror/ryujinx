@@ -1,4 +1,5 @@
 name: Build docs
+
 on:
   push:
     branches:
@@ -7,27 +8,76 @@ on:
     paths:
       - 'docs/**'
       - '.github/workflows/docs.yml'
+  pull_request:
+    paths:
+      - 'docs/**'
+      - '.github/workflows/docs.yml'
   workflow_dispatch:
+    inputs:
+      deploy:
+        description: 'Deploy to GitHub Pages'
+        required: false
+        default: false
+        type: boolean
+
 permissions:
   contents: write
+  checks: write
+
 jobs:
-  deploy:
+  build-docs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Configure Git Credentials
         run: |
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+
       - uses: actions/setup-python@v5
         with:
           python-version: 3.x
-      - run: echo "cache_id=$(date --utc '+%V')" >> $GITHUB_ENV 
+
+      - run: echo "cache_id=$(date --utc '+%V')" >> $GITHUB_ENV
+
       - uses: actions/cache@v4
         with:
           key: mkdocs-material-${{ env.cache_id }}
           path: .cache
           restore-keys: |
             mkdocs-material-
-      - run: pip install mkdocs-material 
-      - run: mkdocs gh-deploy --force
+
+      - run: pip install mkdocs-material
+
+      - name: Build Docs and Capture Warnings
+        id: build_docs
+        run: |
+          mkdocs build 2>&1 | tee mkdocs-output.log
+
+      - name: Annotate Warnings and Errors
+        if: always() && ${{ steps.build_docs.outcome != 'skipped' }}
+        run: |
+          warnings=$(grep -i 'WARNING' mkdocs-output.log || true)
+          errors=$(grep -i 'ERROR' mkdocs-output.log || true)
+
+          if [ -n "$warnings" ]; then
+            # Annotate warnings
+            echo "$warnings" | while read -r warning; do
+              echo "::warning::${warning}"
+            done
+          fi
+
+          if [ -n "$errors" ]; then
+            # Annotate errors
+            echo "$errors" | while read -r error; do
+              echo "::error::${error}"
+            done
+
+            # Fail the build if any errors were found
+            exit 1
+          fi
+
+      - name: Deploy to GitHub Pages
+        if: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' && github.event.inputs.deploy == true }}
+        run: mkdocs gh-deploy --force
