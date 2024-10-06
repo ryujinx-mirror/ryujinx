@@ -82,6 +82,8 @@ jobs:
       - name: Build AppImage
         if: github.event_name == 'pull_request' && matrix.platform.os == 'ubuntu-latest'
         run: |
+          PLATFORM_NAME="${{ matrix.platform.name }}"
+
           sudo apt install -y zsync desktop-file-utils
 
           mkdir -p tools
@@ -90,6 +92,15 @@ jobs:
           # Setup appimagetool
           wget -q -O tools/appimagetool "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage"
           chmod +x tools/appimagetool
+
+          if [ "$PLATFORM_NAME" = "linux-x64" ]; then
+            export ARCH=x86_64
+          elif [ "$PLATFORM_NAME" = "linux-arm64" ]; then
+            export ARCH=aarch64
+          else
+            echo "Unexpected PLATFORM_NAME "$PLATFORM_NAME"
+            exit 1
+          fi
 
           BUILDDIR=publish OUTDIR=publish_appimage distribution/linux/appimage/build-appimage.sh
         shell: bash
