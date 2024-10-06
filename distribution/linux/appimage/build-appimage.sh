@@ -10,15 +10,15 @@ OUTDIR=${OUTDIR:-publish_appimage}
 rm -rf AppDir
 mkdir -p AppDir/usr/bin/bin
 
-# Ensure necessary bins are set as executable
-chmod +x "$BUILDDIR"/Ryujinx*
-
 # Add symlinks for the AppImage
 cp distribution/linux/Ryujinx.desktop AppDir/Ryujinx.desktop
 cp distribution/linux/appimage/AppRun AppDir/AppRun
 cp distribution/misc/Logo.svg AppDir/Ryujinx.svg
 
 cp -r "$BUILDDIR"/* AppDir/usr/bin/
+
+# Ensure necessary bins are set as executable
+chmod +x AppDir/AppRun AppDir/usr/bin/Ryujinx*
 
 mkdir -p "$OUTDIR"
 
