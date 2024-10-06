@@ -53,7 +53,7 @@ jobs:
         run: dotnet build -c "${{ matrix.configuration }}" -p:Version="${{ env.RYUJINX_BASE_VERSION }}" -p:SourceRevisionId="${{ steps.git_short_hash.outputs.result }}" -p:ExtraDefineConstants=DISABLE_UPDATER
 
       - name: Run tests
-        uses: TSRBerry/unstable-commands@v1
+        uses: ryujinx-mirror/unstable-commands@releases/v1.0.6
         if: matrix.platform.name != 'linux-arm64'
         with:
           commands: dotnet test --no-build -c "${{ matrix.configuration }}"
