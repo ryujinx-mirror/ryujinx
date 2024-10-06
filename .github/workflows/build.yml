@@ -94,20 +94,6 @@ jobs:
           BUILDDIR=publish OUTDIR=publish_appimage distribution/linux/appimage/build-appimage.sh
         shell: bash
 
-      - name: Upload Ryujinx AppImage
-        uses: actions/upload-artifact@v4
-        if: github.event_name == 'pull_request' && matrix.platform.name == 'linux-x64'
-        with:
-          name: ryujinx-${{ matrix.configuration }}-${{ env.RYUJINX_BASE_VERSION }}+${{ steps.git_short_hash.outputs.result }}.AppImage
-          path: publish_appimage/Ryujinx.AppImage
-
-      - name: Upload Ryujinx AppImage zsync
-        uses: actions/upload-artifact@v4
-        if: github.event_name == 'pull_request' && matrix.platform.name == 'linux-x64'
-        with:
-          name: ryujinx-${{ matrix.configuration }}-${{ env.RYUJINX_BASE_VERSION }}+${{ steps.git_short_hash.outputs.result }}.AppImage.zsync
-          path: publish_appimage/Ryujinx.AppImage.zsync
-
       - name: Upload Ryujinx artifact
         uses: actions/upload-artifact@v4
         if: github.event_name == 'pull_request' && matrix.platform.os != 'macos-13'
@@ -128,6 +114,20 @@ jobs:
         with:
           name: gtk-ryujinx-${{ matrix.configuration }}-${{ env.RYUJINX_BASE_VERSION }}+${{ steps.git_short_hash.outputs.result }}-${{ matrix.platform.zip_os_name }}
           path: publish_gtk
+
+      - name: Upload Ryujinx.AppImage
+        uses: actions/upload-artifact@v4
+        if: github.event_name == 'pull_request' && matrix.platform.name == 'linux-x64'
+        with:
+          name: ryujinx-${{ matrix.configuration }}-${{ env.RYUJINX_BASE_VERSION }}+${{ steps.git_short_hash.outputs.result }}.AppImage
+          path: publish_appimage/Ryujinx.AppImage
+
+      - name: Upload Ryujinx.AppImage.zsync
+        uses: actions/upload-artifact@v4
+        if: github.event_name == 'pull_request' && matrix.platform.name == 'linux-x64'
+        with:
+          name: ryujinx-${{ matrix.configuration }}-${{ env.RYUJINX_BASE_VERSION }}+${{ steps.git_short_hash.outputs.result }}.AppImage.zsync
+          path: publish_appimage/Ryujinx.AppImage.zsync
 
   build_macos:
     name: macOS Universal (${{ matrix.configuration }})
