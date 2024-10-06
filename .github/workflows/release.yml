@@ -106,14 +106,17 @@ jobs:
       - name: Packing Windows builds
         if: matrix.platform.os == 'windows-latest'
         run: |
+          BUILD_VERSION="${{ steps.version_info.outputs.build_version }}"
+          ZIP_OS_NAME="${{ matrix.platform.zip_os_name }}"
+
           pushd publish_ava
           cp Ryujinx.exe Ryujinx.Ava.exe
-          7z a ../release_output/ryujinx-${{ steps.version_info.outputs.build_version }}-${{ matrix.platform.zip_os_name }}.zip *
-          7z a ../release_output/test-ava-ryujinx-${{ steps.version_info.outputs.build_version }}-${{ matrix.platform.zip_os_name }}.zip *
+          7z a ../release_output/ryujinx-$BUILD_VERSION-$ZIP_OS_NAME.zip *
+          7z a ../release_output/test-ava-ryujinx-$BUILD_VERSION-$ZIP_OS_NAME.zip *
           popd
 
           pushd publish_sdl2_headless
-          7z a ../release_output/sdl2-ryujinx-headless-${{ steps.version_info.outputs.build_version }}-${{ matrix.platform.zip_os_name }}.zip *
+          7z a ../release_output/sdl2-ryujinx-headless-$BUILD_VERSION-$ZIP_OS_NAME.zip *
           popd
         shell: bash
 
