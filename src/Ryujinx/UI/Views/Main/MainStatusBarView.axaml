@@ -38,6 +38,7 @@
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
                     <ColumnDefinition />
                 </Grid.ColumnDefinitions>
                 <Button
@@ -60,9 +61,16 @@
                     VerticalAlignment="Center"
                     IsVisible="{Binding EnableNonGameRunningControls}"
                     Text="{locale:Locale StatusBarGamesLoaded}" />
+                <TextBlock
+                    Name="StatusBarProgressStatus"
+                    Grid.Column="2"
+                    Margin="10,0,5,0"
+                    VerticalAlignment="Center"
+                    IsVisible="{Binding StatusBarProgressStatusVisible}"
+                    Text="{Binding StatusBarProgressStatusText}" />
                 <ProgressBar
                     Name="LoadProgressBar"
-                    Grid.Column="2"
+                    Grid.Column="3"
                     Height="6"
                     VerticalAlignment="Center"
                     Foreground="{DynamicResource SystemAccentColorLight2}"
