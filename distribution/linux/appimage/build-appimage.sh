@@ -23,7 +23,7 @@ mkdir -p "$OUTDIR"
 
 appimagetool --comp zstd --mksquashfs-opt -Xcompression-level --mksquashfs-opt 21 \
     -u "gh-releases-zsync|$GITHUB_REPOSITORY_OWNER|Ryujinx|latest|*-$ARCH.AppImage.zsync" \
-    AppDir "$OUTDIR"/Ryujinx-"$ARCH".AppImage
+    AppDir "$OUTDIR"/Ryujinx-"$VERSION"-"$ARCH".AppImage
 
 # move zsync file needed for delta updates
 mv ./*.AppImage.zsync "$OUTDIR"
