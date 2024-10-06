@@ -84,7 +84,7 @@ jobs:
         run: |
           PLATFORM_NAME="${{ matrix.platform.name }}"
 
-          sudo apt install -y zsync desktop-file-utils
+          sudo apt install -y zsync desktop-file-utils appstream
 
           mkdir -p tools
           export PATH="$PATH:$(readlink -f tools)"
