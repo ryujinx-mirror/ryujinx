@@ -36,7 +36,6 @@ namespace Ryujinx.Modules
 
         private static readonly string _homeDir = AppDomain.CurrentDomain.BaseDirectory;
         private static readonly string _updateDir = Path.Combine(Path.GetTempPath(), "Ryujinx", "update");
-        private static readonly string _updatePublishDir = Path.Combine(_updateDir, "publish");
         private const int ConnectionCount = 4;
 
         private static string _buildVer;
@@ -632,7 +631,7 @@ namespace Ryujinx.Modules
                     taskDialog.SetProgressBarState(0, TaskDialogProgressState.Normal);
                 });
 
-                MoveAllFilesOver(_updatePublishDir, _homeDir, taskDialog);
+                MoveAllFilesOver(_updateDir, _homeDir, taskDialog);
 
                 Directory.Delete(_updateDir, true);
             }
@@ -709,7 +708,7 @@ namespace Ryujinx.Modules
             {
                 // Compare the loose files in base directory against the loose files from the incoming update, and store foreign ones in a user list.
                 var oldFiles = Directory.EnumerateFiles(_homeDir, "*", SearchOption.TopDirectoryOnly).Select(Path.GetFileName);
-                var newFiles = Directory.EnumerateFiles(_updatePublishDir, "*", SearchOption.TopDirectoryOnly).Select(Path.GetFileName);
+                var newFiles = Directory.EnumerateFiles(_updateDir, "*", SearchOption.TopDirectoryOnly).Select(Path.GetFileName);
                 var userFiles = oldFiles.Except(newFiles).Select(filename => Path.Combine(_homeDir, filename));
 
                 // Remove user files from the paths in files.
