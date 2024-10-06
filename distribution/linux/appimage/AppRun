@@ -1,3 +1,4 @@
 #!/bin/sh
+set -x
 CURRENTDIR="$(readlink -f "$(dirname "$0")")"
 exec "$CURRENTDIR"/usr/bin/Ryujinx.sh "$@"

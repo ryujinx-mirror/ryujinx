@@ -1,5 +1,6 @@
 #!/bin/sh
 set -e
+set -x
 
 ROOTDIR="$(readlink -f "$(dirname "$0")")"/../../../
 cd "$ROOTDIR"
