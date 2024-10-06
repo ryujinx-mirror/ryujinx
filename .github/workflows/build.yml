@@ -82,7 +82,7 @@ jobs:
       - name: Build AppImage
         if: github.event_name == 'pull_request' && matrix.platform.os == 'ubuntu-latest'
         run: |
-          PLATFORM_NAME="${{ matrix.platform.name }}"
+          ARCH_NAME="${RUNNER_ARCH,,}"
 
           sudo apt install -y zsync desktop-file-utils appstream
 
@@ -93,15 +93,17 @@ jobs:
           wget -q -O tools/appimagetool "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage"
           chmod +x tools/appimagetool
 
-          if [ "$PLATFORM_NAME" = "linux-x64" ]; then
+          # Explicitly set $ARCH for appimagetool
+          if [ "$ARCH_NAME" = "x64" ]; then
             export ARCH=x86_64
-          elif [ "$PLATFORM_NAME" = "linux-arm64" ]; then
+          elif [ "$ARCH_NAME" = "arm64" ]; then
             export ARCH=aarch64
           else
-            echo "Unexpected PLATFORM_NAME "$PLATFORM_NAME""
+            echo "Unexpected ARCH_NAME "$ARCH_NAME""
             exit 1
           fi
 
+          export UFLAG="gh-releases-zsync|${{ github.repository_owner }}|${{ github.event.repository.name }}|latest|*-$ARCH_NAME.AppImage.zsync"
           BUILDDIR=publish OUTDIR=publish_appimage distribution/linux/appimage/build-appimage.sh
         shell: bash
 
