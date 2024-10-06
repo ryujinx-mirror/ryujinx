@@ -1,6 +1,5 @@
 #!/bin/sh
 set -e
-set -x
 
 ROOTDIR="$(readlink -f "$(dirname "$0")")"/../../../
 cd "$ROOTDIR"
@@ -15,9 +14,9 @@ mkdir -p AppDir/usr/bin/bin
 chmod +x "$BUILDDIR"/Ryujinx*
 
 # Add symlinks for the AppImage
-ln -s "$ROOTDIR"/distribution/linux/Ryujinx.desktop AppDir/Ryujinx.desktop
-ln -s "$ROOTDIR"/distribution/linux/appimage/AppRun AppDir/AppRun
-ln -s "$ROOTDIR"/distribution/misc/Logo.svg AppDir/Ryujinx.svg
+cp distribution/linux/Ryujinx.desktop AppDir/Ryujinx.desktop
+cp distribution/linux/appimage/AppRun AppDir/AppRun
+cp distribution/misc/Logo.svg AppDir/Ryujinx.svg
 
 cp -r "$BUILDDIR"/* AppDir/usr/bin/
 

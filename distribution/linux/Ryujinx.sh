@@ -1,5 +1,4 @@
 #!/bin/sh
-set -x
 
 SCRIPT_DIR=$(dirname "$(realpath "$0")")
 
