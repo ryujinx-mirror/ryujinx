@@ -98,7 +98,7 @@ jobs:
           elif [ "$PLATFORM_NAME" = "linux-arm64" ]; then
             export ARCH=aarch64
           else
-            echo "Unexpected PLATFORM_NAME "$PLATFORM_NAME"
+            echo "Unexpected PLATFORM_NAME "$PLATFORM_NAME""
             exit 1
           fi
 
