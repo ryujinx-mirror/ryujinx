@@ -139,6 +139,7 @@ jobs:
             echo "Unexpected PLATFORM_NAME "$PLATFORM_NAME""
             exit 1
           fi
+          export VERSION=${{ steps.version_info.outputs.build_version }}          
 
           BUILDDIR=publish_ava OUTDIR=publish_ava_appimage distribution/linux/appimage/build-appimage.sh
         shell: bash
