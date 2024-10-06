@@ -79,37 +79,34 @@ jobs:
           chmod +x ./publish_sdl2_headless/Ryujinx.Headless.SDL2 ./publish_sdl2_headless/Ryujinx.sh
           chmod +x ./publish_gtk/Ryujinx.Gtk3 ./publish_gtk/Ryujinx.sh
 
-      - name: Make AppImage
-        if: github.event_name == 'pull_request' && matrix.platform.os == 'ubuntu-latest' && matrix.platform.name != 'linux-arm64'
+      - name: Build AppImage
+        if: github.event_name == 'pull_request' && matrix.platform.name == 'linux-x64'
         run: |
-          sudo apt install zsync desktop-file-utils
-          APPIMAGETOOL="https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage"
-          DESKTOP="https://raw.githubusercontent.com/ryujinx-mirror/Ryujinx/master/distribution/linux/Ryujinx.desktop"
-          ICON="https://raw.githubusercontent.com/ryujinx-mirror/Ryujinx/master/src/Ryujinx/Ryujinx.ico"
-          mkdir -p ./AppDir/usr/bin && cp -r ./publish/* ./AppDir/usr/bin
-          wget -q "$APPIMAGETOOL" -O ./appimagetool
-          wget $DESKTOP -O ./AppDir/Ryujinx.desktop 
-          wget $ICON -O ./AppDir/Ryujinx.png && ln -s Ryujinx.png ./AppDir/.DirIcon
-          printf '%s\n%s\n%s\n' '#!/bin/sh' 'CURRENTDIR="$(readlink -f "$(dirname "$0")")"' \
-            'exec "$CURRENTDIR"/usr/bin/Ryujinx.sh "$@"' > ./AppDir/AppRun
-          chmod +x ./AppDir/AppRun ./appimagetool ./AppDir/usr/bin/Ryujinx*
-          ./appimagetool --comp zstd --mksquashfs-opt -Xcompression-level --mksquashfs-opt 21 \
-            -u "gh-releases-zsync|$GITHUB_REPOSITORY_OWNER|Ryujinx|latest|*.AppImage.zsync" \
-            ./AppDir Ryujinx.AppImage
+          sudo apt install -y zsync desktop-file-utils
+
+          mkdir -p tools
+          export PATH="$PATH:$(readlink -f tools)"
+
+          # Setup appimagetool
+          wget -q -O tools/appimagetool "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage"
+          chmod +x tools/appimagetool
+
+          BUILDDIR=publish OUTDIR=publish_appimage distribution/linux/appimage/build-appimage.sh
+        shell: bash
 
       - name: Upload Ryujinx AppImage
         uses: actions/upload-artifact@v4
-        if: github.event_name == 'pull_request' && matrix.platform.name != 'linux-arm64' && matrix.platform.os != 'macos-13'
+        if: github.event_name == 'pull_request' && matrix.platform.name == 'linux-x64'
         with:
           name: ryujinx-${{ matrix.configuration }}-${{ env.RYUJINX_BASE_VERSION }}+${{ steps.git_short_hash.outputs.result }}.AppImage
-          path: Ryujinx.AppImage
+          path: publish_appimage/Ryujinx.AppImage
 
       - name: Upload Ryujinx AppImage zsync
         uses: actions/upload-artifact@v4
-        if: github.event_name == 'pull_request' && matrix.platform.name != 'linux-arm64' && matrix.platform.os != 'macos-13'
+        if: github.event_name == 'pull_request' && matrix.platform.name == 'linux-x64'
         with:
           name: ryujinx-${{ matrix.configuration }}-${{ env.RYUJINX_BASE_VERSION }}+${{ steps.git_short_hash.outputs.result }}.AppImage.zsync
-          path: Ryujinx.AppImage.zsync
+          path: publish_appimage/Ryujinx.AppImage.zsync
 
       - name: Upload Ryujinx artifact
         uses: actions/upload-artifact@v4
