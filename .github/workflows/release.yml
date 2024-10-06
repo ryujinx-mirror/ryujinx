@@ -160,7 +160,7 @@ jobs:
 
           # AppImage archive
           pushd publish_ava_appimage
-          tar -czvf ../release_output/ryujinx-${{ steps.version_info.outputs.build_version }}-${{ matrix.platform.zip_os_name }}-AppImage.tar.gz *
+          mv ./*AppImage* ../release_output
           popd
         shell: bash
 
@@ -169,7 +169,7 @@ jobs:
         with:
           name: ${{ steps.version_info.outputs.build_version }}
           tag: ${{ steps.version_info.outputs.build_version }}
-          artifacts: "release_output/*.tar.gz,release_output/*.zip"
+          artifacts: "release_output/*.tar.gz,release_output/*.zip,release_output/*AppImage*"
           draft: "true"
           omitBody: true
           #omitBodyDuringUpdate: true
