@@ -41,7 +41,7 @@ namespace Ryujinx.UI.Windows
 
         private void DiscordButton_Pressed(object sender, ButtonPressEventArgs args)
         {
-            OpenHelper.OpenUrl("https://latte.to/discord");
+
         }
 
         private void TwitterButton_Pressed(object sender, ButtonPressEventArgs args)

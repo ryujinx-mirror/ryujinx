@@ -160,7 +160,7 @@
                         Background="Transparent"
                         Click="Button_OnClick"
                         CornerRadius="15"
-                        Tag="https://latte.to/discord"
+
                         ToolTip.Tip="{locale:Locale AboutDiscordUrlTooltipMessage}">
                         <Image Source="{Binding DiscordLogo}" />
                     </Button>
