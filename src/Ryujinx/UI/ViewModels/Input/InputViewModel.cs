@@ -45,7 +45,6 @@ namespace Ryujinx.Ava.UI.ViewModels.Input
 
         private PlayerIndex _playerId;
         private int _controller;
-        private int _controllerNumber;
         private string _controllerImage;
         private int _device;
         private object _configViewModel;
@@ -439,6 +438,24 @@ namespace Ryujinx.Ava.UI.ViewModels.Input
 
         public void LoadDevices()
         {
+            string GetGamepadName(IGamepad gamepad, int controllerNumber)
+            {
+                return $"{GetShortGamepadName(gamepad.Name)} ({controllerNumber})";
+            }
+
+            string GetUniqueGamepadName(IGamepad gamepad, ref int controllerNumber)
+            {
+                string name = GetGamepadName(gamepad, controllerNumber);
+
+                if (Devices.Any(controller => controller.Name == name))
+                {
+                    controllerNumber++;
+                    name = GetGamepadName(gamepad, controllerNumber);
+                }
+
+                return name;
+            }
+
             lock (Devices)
             {
                 Devices.Clear();
@@ -455,22 +472,17 @@ namespace Ryujinx.Ava.UI.ViewModels.Input
                     }
                 }
 
+                int controllerNumber = 0;
                 foreach (string id in _mainWindow.InputManager.GamepadDriver.GamepadsIds)
                 {
                     using IGamepad gamepad = _mainWindow.InputManager.GamepadDriver.GetGamepad(id);
 
                     if (gamepad != null)
                     {
-                        if (Devices.Any(controller => GetShortGamepadId(controller.Id) == GetShortGamepadId(gamepad.Id)))
-                        {
-                            _controllerNumber++;
-                        }
-
-                        Devices.Add((DeviceType.Controller, id, $"{GetShortGamepadName(gamepad.Name)} ({_controllerNumber})"));
+                        string name = GetUniqueGamepadName(gamepad, ref controllerNumber);
+                        Devices.Add((DeviceType.Controller, id, name));
                     }
                 }
-
-                _controllerNumber = 0;
 
                 DeviceList.AddRange(Devices.Select(x => x.Name));
                 Device = Math.Min(Device, DeviceList.Count);
@@ -685,7 +697,7 @@ namespace Ryujinx.Ava.UI.ViewModels.Input
 
                 if (!File.Exists(path))
                 {
-                    var index = ProfilesList.IndexOf(ProfileName);
+                    int index = ProfilesList.IndexOf(ProfileName);
                     if (index != -1)
                     {
                         ProfilesList.RemoveAt(index);
