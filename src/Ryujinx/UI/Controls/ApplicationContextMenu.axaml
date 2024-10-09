@@ -60,6 +60,12 @@
         Header="{locale:Locale GameListContextMenuOpenSdModsDirectory}"
         ToolTip.Tip="{locale:Locale GameListContextMenuOpenSdModsDirectoryToolTip}" />
     <Separator />
+	<MenuItem
+		Click="TrimXCI_Click"
+		Header="{locale:Locale GameListContextMenuTrimXCI}"
+        IsEnabled="{Binding TrimXCIEnabled}"
+		ToolTip.Tip="{locale:Locale GameListContextMenuTrimXCIToolTip}" />
+    <Separator />
     <MenuItem Header="{locale:Locale GameListContextMenuCacheManagement}">
         <MenuItem
             Click="PurgePtcCache_Click"
