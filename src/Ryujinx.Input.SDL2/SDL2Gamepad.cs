@@ -313,12 +313,12 @@ namespace Ryujinx.Input.SDL2
             return value * ConvertRate;
         }
 
-        private JoyconConfigControllerStick<GamepadInputId, Common.Configuration.Hid.Controller.StickInputId> GetLogicalJoyStickConfig(StickInputId inputId)
+        private JoyconConfigControllerStick<GamepadInputId, Controller.StickInputId> GetLogicalJoyStickConfig(StickInputId inputId)
         {
             switch (inputId)
             {
                 case StickInputId.Left:
-                    if (_configuration.RightJoyconStick.Joystick == Common.Configuration.Hid.Controller.StickInputId.Left)
+                    if (_configuration.RightJoyconStick.Joystick == Controller.StickInputId.Left)
                     {
                         return _configuration.RightJoyconStick;
                     }
@@ -327,7 +327,7 @@ namespace Ryujinx.Input.SDL2
                         return _configuration.LeftJoyconStick;
                     }
                 case StickInputId.Right:
-                    if (_configuration.LeftJoyconStick.Joystick == Common.Configuration.Hid.Controller.StickInputId.Right)
+                    if (_configuration.LeftJoyconStick.Joystick == Controller.StickInputId.Right)
                     {
                         return _configuration.LeftJoyconStick;
                     }
