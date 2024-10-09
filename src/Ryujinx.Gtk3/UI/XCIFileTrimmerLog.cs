@@ -3,7 +3,7 @@ using System;
 
 namespace Ryujinx.UI
 {
-    public class XCIFileTrimmerLog : Ryujinx.Common.Logging.XCIFileTrimmerLog
+    internal class XCIFileTrimmerLog : Ryujinx.Common.Logging.XCIFileTrimmerLog
     {
         private readonly MainWindow _mainWindow;
 
