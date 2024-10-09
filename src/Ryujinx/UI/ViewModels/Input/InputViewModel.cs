@@ -445,7 +445,7 @@ namespace Ryujinx.Ava.UI.ViewModels.Input
 
             string GetUniqueGamepadName(IGamepad gamepad, ref int controllerNumber)
             {
-                var name = GetGamepadName(gamepad, controllerNumber);
+                string name = GetGamepadName(gamepad, controllerNumber);
 
                 if (Devices.Any(controller => controller.Name == name))
                 {
@@ -479,7 +479,7 @@ namespace Ryujinx.Ava.UI.ViewModels.Input
 
                     if (gamepad != null)
                     {
-                        var name = GetUniqueGamepadName(gamepad, ref controllerNumber);
+                        string name = GetUniqueGamepadName(gamepad, ref controllerNumber);
                         Devices.Add((DeviceType.Controller, id, name));
                     }
                 }
@@ -697,7 +697,7 @@ namespace Ryujinx.Ava.UI.ViewModels.Input
 
                 if (!File.Exists(path))
                 {
-                    var index = ProfilesList.IndexOf(ProfileName);
+                    int index = ProfilesList.IndexOf(ProfileName);
                     if (index != -1)
                     {
                         ProfilesList.RemoveAt(index);
