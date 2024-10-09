@@ -27,7 +27,7 @@ namespace Ryujinx.Common.Utilities
         }
     }
 
-    public class XCIFileTrimmer
+    public sealed class XCIFileTrimmer
     {
         private const long BytesInAMegabyte = 1024 * 1024;
         private const int BufferSize = 8 * (int)BytesInAMegabyte;
@@ -40,7 +40,10 @@ namespace Ryujinx.Common.Utilities
         private const int DataSizeFilePos = 0x118;
         private const string HeaderMagicValue = "HEAD";
 
-        private static readonly Dictionary<byte, long> _cartSizesGB = new()
+        /// <summary>
+        /// Cartridge Sizes (ByteIdentifier, SizeInGB)
+        /// </summary>
+        private static readonly Dictionary<byte, long> s_cartSizesGB = new()
         {
             { 0xFA, 1 },
             { 0xF8, 2 },
@@ -135,45 +138,45 @@ namespace Ryujinx.Common.Utilities
 
         public String Filename
         {
-            get => this._filename;
+            get => _filename;
             set
             {
-                this._filename = value;
+                _filename = value;
                 Reset();
             }
         }
 
         public long Pos
         {
-            get => this._fileStream.Position;
-            set => this._fileStream.Position = value;
+            get => _fileStream.Position;
+            set => _fileStream.Position = value;
         }
 
         public XCIFileTrimmer(string path, ILog log = null)
         {
-            this.Log = log;
-            this.Filename = path;
+            Log = log;
+            Filename = path;
             ReadHeader();
         }
 
         public void CheckFreeSpace()
         {
-            if (this.FreeSpaceChecked)
+            if (FreeSpaceChecked)
                 return;
 
             try
             {
-                if (this.CanBeTrimmed)
+                if (CanBeTrimmed)
                 {
-                    this._freeSpaceValid = false;
+                    _freeSpaceValid = false;
 
                     OpenReaders();
 
                     try
                     {
-                        this.Pos = this.TrimmedFileSizeB;
+                        Pos = TrimmedFileSizeB;
                         bool freeSpaceValid = true;
-                        long readSizeB = this.FileSizeB - this.TrimmedFileSizeB;
+                        long readSizeB = FileSizeB - TrimmedFileSizeB;
 
                         TimeSpan time = Performance.Measure(() =>
                         {
@@ -188,7 +191,7 @@ namespace Ryujinx.Common.Utilities
                         if (freeSpaceValid)
                             Log?.Write(LogType.Info, "Free space is valid");
 
-                        this._freeSpaceValid = freeSpaceValid;
+                        _freeSpaceValid = freeSpaceValid;
                     }
                     finally
                     {
@@ -199,12 +202,12 @@ namespace Ryujinx.Common.Utilities
                 else
                 {
                     Log?.Write(LogType.Warn, "There is no free space to check.");
-                    this._freeSpaceValid = false;
+                    _freeSpaceValid = false;
                 }
             }
             finally
             {
-                this._freeSpaceChecked = true;
+                _freeSpaceChecked = true;
             }
         }
 
@@ -233,31 +236,31 @@ namespace Ryujinx.Common.Utilities
             return true;
         }
 
-        protected void Reset()
+        private void Reset()
         {
-            this._freeSpaceChecked = false;
-            this._freeSpaceValid = false;
+            _freeSpaceChecked = false;
+            _freeSpaceValid = false;
             ReadHeader();
         }
 
         public OperationOutcome Trim()
         {
-            if (!this.FileOK)
+            if (!FileOK)
             {
                 return OperationOutcome.InvalidXCIFile;
             }
 
-            if (!this.CanBeTrimmed)
+            if (!CanBeTrimmed)
             {
                 return OperationOutcome.NoTrimNecessary;
             }
 
-            if (!this.FreeSpaceChecked)
+            if (!FreeSpaceChecked)
             {
                 CheckFreeSpace();
             }
 
-            if (!this.FreeSpaceValid)
+            if (!FreeSpaceValid)
             {
                 return OperationOutcome.FreeSpaceCheckFailed;
             }
@@ -266,13 +269,13 @@ namespace Ryujinx.Common.Utilities
 
             try
             {
-                FileInfo info = new FileInfo(this.Filename);
+                FileInfo info = new FileInfo(Filename);
                 if ((info.Attributes & FileAttributes.ReadOnly) == FileAttributes.ReadOnly)
                 {
                     try
                     {
                         Log?.Write(LogType.Info, "Attempting to remove ReadOnly attribute");
-                        File.SetAttributes(this.Filename, info.Attributes & ~FileAttributes.ReadOnly);
+                        File.SetAttributes(Filename, info.Attributes & ~FileAttributes.ReadOnly);
                     }
                     catch (Exception e)
                     {
@@ -281,7 +284,7 @@ namespace Ryujinx.Common.Utilities
                     }
                 }
 
-                if (info.Length != this.FileSizeB)
+                if (info.Length != FileSizeB)
                 {
                     Log?.Write(LogType.Error, "File size has changed, cannot safely trim.");
                     return OperationOutcome.FileSizeChanged;
@@ -291,7 +294,7 @@ namespace Ryujinx.Common.Utilities
 
                 try
                 {
-                    outfileStream.SetLength(this.TrimmedFileSizeB);
+                    outfileStream.SetLength(TrimmedFileSizeB);
                     return OperationOutcome.Successful;
                 }
                 finally
@@ -309,12 +312,12 @@ namespace Ryujinx.Common.Utilities
 
         public OperationOutcome Untrim()
         {
-            if (!this.FileOK)
+            if (!FileOK)
             {
                 return OperationOutcome.InvalidXCIFile;
             }
 
-            if (!this.CanBeUntrimmed)
+            if (!CanBeUntrimmed)
             {
                 return OperationOutcome.NoUntrimPossible;
             }
@@ -323,13 +326,13 @@ namespace Ryujinx.Common.Utilities
             {
                 Log?.Write(LogType.Info, "Untrimming...");
 
-                FileInfo info = new FileInfo(this.Filename);
+                FileInfo info = new FileInfo(Filename);
                 if ((info.Attributes & FileAttributes.ReadOnly) == FileAttributes.ReadOnly)
                 {
                     try
                     {
                         Log?.Write(LogType.Info, "Attempting to remove ReadOnly attribute");
-                        File.SetAttributes(this.Filename, info.Attributes & ~FileAttributes.ReadOnly);
+                        File.SetAttributes(Filename, info.Attributes & ~FileAttributes.ReadOnly);
                     }
                     catch (Exception e)
                     {
@@ -338,14 +341,14 @@ namespace Ryujinx.Common.Utilities
                     }
                 }
 
-                if (info.Length != this.FileSizeB)
+                if (info.Length != FileSizeB)
                 {
                     Log?.Write(LogType.Error, "File size has changed, cannot safely untrim.");
                     return OperationOutcome.FileSizeChanged;
                 }
 
-                FileStream outfileStream = new FileStream(this._filename, FileMode.Append, FileAccess.Write, FileShare.Write);
-                long bytesToWriteB = this.UntrimmedFileSizeB - this.FileSizeB;
+                FileStream outfileStream = new FileStream(_filename, FileMode.Append, FileAccess.Write, FileShare.Write);
+                long bytesToWriteB = UntrimmedFileSizeB - FileSizeB;
 
                 try
                 {
@@ -400,21 +403,21 @@ namespace Ryujinx.Common.Utilities
             }
         }
 
-        protected void OpenReaders()
+        private void OpenReaders()
         {
             if (_binaryReader == null)
             {
-                this._fileStream = new FileStream(this._filename, FileMode.Open, FileAccess.Read, FileShare.Read);
-                this._binaryReader = new BinaryReader(this._fileStream);
+                _fileStream = new FileStream(_filename, FileMode.Open, FileAccess.Read, FileShare.Read);
+                _binaryReader = new BinaryReader(_fileStream);
             }
         }
 
-        protected void CloseReaders()
+        private void CloseReaders()
         {
-            if (this._binaryReader != null && this._binaryReader.BaseStream != null)
-                this._binaryReader.Close();
-            this._binaryReader = null;
-            this._fileStream = null;
+            if (_binaryReader != null && _binaryReader.BaseStream != null)
+                _binaryReader.Close();
+            _binaryReader = null;
+            _fileStream = null;
             GC.Collect();
         }
 
@@ -435,7 +438,7 @@ namespace Ryujinx.Common.Utilities
                         success = CheckAndReadHeader(true);
                     }
 
-                    this._fileOK = success;
+                    _fileOK = success;
                 }
                 finally
                 {
@@ -445,18 +448,18 @@ namespace Ryujinx.Common.Utilities
             catch (Exception ex)
             {
                 Log?.Write(LogType.Error, ex.Message);
-                this._fileOK = false;
-                this._dataSizeB = 0;
-                this._cartSizeB = 0;
-                this._fileSizeB = 0;
-                this._offsetB = 0;
+                _fileOK = false;
+                _dataSizeB = 0;
+                _cartSizeB = 0;
+                _fileSizeB = 0;
+                _offsetB = 0;
             }
         }
 
         private bool CheckAndReadHeader(bool assumeKeyArea)
         {
             // Read file size
-            this._fileSizeB = _fileStream.Length;
+            _fileSizeB = _fileStream.Length;
             if (_fileSizeB < 32 * 1024)
             {
                 Log?.Write(LogType.Error, "The source file doesn't look like an XCI file as the data size is too small");
@@ -464,10 +467,10 @@ namespace Ryujinx.Common.Utilities
             }
 
             // Setup offset
-            this._offsetB = (long)(assumeKeyArea ? XCIFileTrimmer.CartKeyAreaSize : 0);
+            _offsetB = (long)(assumeKeyArea ? XCIFileTrimmer.CartKeyAreaSize : 0);
 
             // Check header
-            this.Pos = _offsetB + XCIFileTrimmer.HeaderFilePos;
+            Pos = _offsetB + XCIFileTrimmer.HeaderFilePos;
             string head = System.Text.Encoding.ASCII.GetString(_binaryReader.ReadBytes(4));
             if (head != XCIFileTrimmer.HeaderMagicValue)
             {
@@ -484,19 +487,19 @@ namespace Ryujinx.Common.Utilities
             }
 
             // Read Cart Size
-            this.Pos = _offsetB + XCIFileTrimmer.CartSizeFilePos;
+            Pos = _offsetB + XCIFileTrimmer.CartSizeFilePos;
             byte cartSizeId = _binaryReader.ReadByte();
-            if (!_cartSizesGB.TryGetValue(cartSizeId, out long cartSizeNGB))
+            if (!s_cartSizesGB.TryGetValue(cartSizeId, out long cartSizeNGB))
             {
                 Log?.Write(LogType.Error, $"The source file doesn't look like an XCI file as the Cartridge Size is incorrect (0x{cartSizeId:X2})");
                 return false;
             }
-            this._cartSizeB = cartSizeNGB * XCIFileTrimmer.CartSizeMBinFormattedGB * XCIFileTrimmer.BytesInAMegabyte;
+            _cartSizeB = cartSizeNGB * XCIFileTrimmer.CartSizeMBinFormattedGB * XCIFileTrimmer.BytesInAMegabyte;
 
             // Read data size
-            this.Pos = _offsetB + XCIFileTrimmer.DataSizeFilePos;
+            Pos = _offsetB + XCIFileTrimmer.DataSizeFilePos;
             long records = (long)BitConverter.ToUInt32(_binaryReader.ReadBytes(4), 0);
-            this._dataSizeB = RecordsToByte(records);
+            _dataSizeB = RecordsToByte(records);
 
             return true;
         }

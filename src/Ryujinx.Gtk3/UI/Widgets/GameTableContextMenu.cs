@@ -13,6 +13,7 @@ using LibHac.Tools.FsSystem.NcaUtils;
 using Ryujinx.Common;
 using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Logging;
+using Ryujinx.Common.Utilities;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.HOS;
 using Ryujinx.HLE.HOS.Services.Account.Acc;
@@ -674,7 +675,7 @@ namespace Ryujinx.UI.Widgets
                 return;
             }
 
-            var trimmer = new Ryujinx.Common.Utilities.XCIFileTrimmer(_applicationData.Path, new XCIFileTrimmerLog(_parent));
+            var trimmer = new XCIFileTrimmer(_applicationData.Path, new XCIFileTrimmerLog(_parent));
 
             if (trimmer.CanBeTrimmed)
             {
@@ -697,7 +698,7 @@ namespace Ryujinx.UI.Widgets
 
                         try
                         {
-                            var operationOutcome = trimmer.Trim();
+                            XCIFileTrimmer.OperationOutcome operationOutcome = trimmer.Trim();
 
                             Gtk.Application.Invoke(delegate
                             {

@@ -20,6 +20,7 @@ using Ryujinx.Ava.UI.Windows;
 using Ryujinx.Common;
 using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Logging;
+using Ryujinx.Common.Utilities;
 using Ryujinx.Cpu;
 using Ryujinx.HLE;
 using Ryujinx.HLE.FileSystem;
@@ -506,6 +507,7 @@ namespace Ryujinx.Ava.UI.ViewModels
                 OnPropertyChanged();
             }
         }
+
         public string FifoStatusText
         {
             get => _fifoStatusText;
@@ -1823,14 +1825,14 @@ namespace Ryujinx.Ava.UI.ViewModels
                 return;
             }
 
-            var trimmer = new Ryujinx.Common.Utilities.XCIFileTrimmer(filename, new Common.XCIFileTrimmerLog(this));
+            var trimmer = new XCIFileTrimmer(filename, new Common.XCIFileTrimmerLog(this));
 
             if (trimmer.CanBeTrimmed)
             {
                 var savings = (double)trimmer.DiskSpaceSavingsB / 1024.0 / 1024.0;
                 var currentFileSize = (double)trimmer.FileSizeB / 1024.0 / 1024.0;
                 var cartDataSize = (double)trimmer.DataSizeB / 1024.0 / 1024.0;
-                var secondaryText = LocaleManager.Instance.UpdateAndGetDynamicValue(LocaleKeys.TrimXCIFileDialogSecondaryText, currentFileSize, cartDataSize, savings);
+                string secondaryText = LocaleManager.Instance.UpdateAndGetDynamicValue(LocaleKeys.TrimXCIFileDialogSecondaryText, currentFileSize, cartDataSize, savings);
 
                 var result = await ContentDialogHelper.CreateConfirmationDialog(
                     LocaleManager.Instance[LocaleKeys.TrimXCIFileDialogPrimaryText],
@@ -1855,7 +1857,7 @@ namespace Ryujinx.Ava.UI.ViewModels
 
                         try
                         {
-                            var operationOutcome = trimmer.Trim();
+                            XCIFileTrimmer.OperationOutcome operationOutcome = trimmer.Trim();
 
                             Dispatcher.UIThread.Post(() =>
                             {

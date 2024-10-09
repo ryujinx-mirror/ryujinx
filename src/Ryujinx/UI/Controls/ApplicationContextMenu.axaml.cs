@@ -362,7 +362,6 @@ namespace Ryujinx.Ava.UI.Controls
         public async void TrimXCI_Click(object sender, RoutedEventArgs args)
         {
             var viewModel = (sender as MenuItem)?.DataContext as MainWindowViewModel;
-            var item = (sender as MenuItem);
 
             if (viewModel?.SelectedApplication != null)
             {
