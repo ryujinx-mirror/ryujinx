@@ -472,7 +472,7 @@ namespace Ryujinx.Ava.UI.ViewModels.Input
                     }
                 }
 
-                var controllerNumber = 0;
+                int controllerNumber = 0;
                 foreach (string id in _mainWindow.InputManager.GamepadDriver.GamepadsIds)
                 {
                     using IGamepad gamepad = _mainWindow.InputManager.GamepadDriver.GetGamepad(id);
