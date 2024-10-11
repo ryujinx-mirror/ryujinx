@@ -23,6 +23,11 @@
     border-bottom: 1px solid #970b0b;
 }
 
+/* Override the banner color in drawer (mobile) */
+.md-nav--primary .md-nav__title[for="__drawer"] {
+	background-color: #001e23;
+}
+
 /* Override the tab colors */
 .md-tabs {
     background-color: #001e23; 
