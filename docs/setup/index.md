@@ -1,107 +1,57 @@
-This article assumes you have already **[hacked your Nintendo Switch](https://nh-server.github.io/switch-guide/)** and **[dumped your Nintendo Switch keys](../keys.md)** (prod.keys) and firmware file(s).
+This article assumes you have already **[hacked your Nintendo Switch](https://nh-server.github.io/switch-guide/)** and **[dumped your Nintendo Switch keys](../keys)** (prod.keys) and firmware file(s).
 
-This guide also illustrates how to use an untrimmed game cartridge dump (XCI file) to install firmware directly to Ryujinx.
-If you would prefer to dump the firmware standlone, you may follow this **[firmware dumping guide](firmware-dumping/firmware-dumping.md))**.  
+This guide also illustrates how to use an untrimmed game cartridge dump (XCI file) to install firmware directly to Ryujinx. If you would prefer to dump the firmware standalone, you may follow this **[firmware dumping guide](firmware-dumping)**.
 
-If you haven't already downloaded Ryujinx, get the latest version
-from: <https://ryujinx.org/download>.  
-Ryujinx checks for updates automatically at startup. You can disable this feature if you wish in Options > Settings . You may also check for updates manually by navigating to Help > Check for Updates.
+If you haven't already downloaded Ryujinx, get the latest version from the releases page.  
+<!-- Ryujinx checks for updates automatically at startup. You can disable this feature in `Options > Settings`. You can also check for updates manually by navigating to `Help > Check for Updates`. -->
 
-## Table of Contents
+## Preface
+Ryujinx comes pre-optimized by default. If a particular menu option is not mentioned in this guide, it should be ignored and not changed unless directly instructed by Ryujinx staff.
 
-[Preface](#preface)
+***When requesting support on the Ryujinx official Discord server, you will usually be asked for your log file. With this in mind, Logging should be left at default settings (enabled) for everything except debug logs. Do not enable debug logs unless specifically instructed by Ryujinx staff.***
 
-[System Requirements](#system-requirements)
-
-[Dependencies](#dependencies)
-
-[Initial Setup - Placement of prod.keys](#initial-setup---placement-of-prodkeys)
-
-[Initial Setup Continued - Installation of Firmware](#initial-setup-continued---installation-of-firmware)
-
-[Adding Your Games to Ryujinx](#adding-your-games-to-ryujinx)
-
-[Managing Game Updates](#managing-game-updates)
-
-[Managing DLC](#managing-dlc)
-
-[Managing Mods](#managing-mods)
-
-[Managing Cheats](#managing-cheats)
-
-[Managing User Profiles](#managing-user-profiles)
-
-[Input Configuration](#input-configuration)
-
-[Motion Controls](#motion-controls)
-
-[Amiibo Emulation](#amiibo-emulation)
-
-[Profiled Persistent Translation Cache](#profiled-persistent-translation-cache)
-
-[Graphics Enhancements](#graphics-enhancements)
-
-[Portable Mode](#portable-mode)
-
-[Launch in Fullscreen](#launch-in-fullscreen)
-
-Preface
-=======
-
-Ryujinx comes pre-optimized by default. If a particular menu option is
-not mentioned in this guide, it should be ignored and should not be
-changed unless directly instructed by Ryujinx staff.
-
-***When requesting support on the Ryujinx official Discord server, you
-will usually be asked for your log file. With this in mind, Logging
-should be left at default settings (enabled) for everything except debug
-logs. Do not enable debug logs unless specifically instructed by Ryujinx
-staff.***
-
-System Requirements
-===================
-
+## System Requirements
 In order to use *Ryujinx* your computer will need:
 
--   At least 8GB RAM
+- At least 8GB RAM
+- A GPU supporting OpenGL 4.5/Vulkan 1.2 or higher
+- Your **prod.keys** and either your **[dumped firmware](firmware-dumping)** or game cartridge untrimmed XCI
+- Your dumped Nintendo Switch games or homebrew
+- OS: Windows 10.0.17134 or higher / macOS 12 / Any modern linux distribution (see dependencies)
 
--   A video card/GPU that supports OpenGL 4.5/Vulkan 1.2 or higher
-
--   Your **prod.keys** and either your **[dumped firmware](firmware-dumping/firmware-dumping.md)** or game
-    cartridge untrimmed XCI
-
--   Your dumped Nintendo Switch games or homebrew
-
--   Windows 10.0.17134 or higher / macOS 12 / Any modern linux distribution (see dependencies)
-
-A recommended **baseline** system (native resolution and framerate) would look something like:
+Recommended **Baseline** (Native Resolution and Framerate):
 
 - CPU: Ryzen 5 3600
 - RAM: 16GB DDR4
 - GPU: NVIDIA GTX 1060 6GB
 
-Dependencies
-============
-**Windows**
--   **Windows 10 RS4 (Redstone 4, version 1803) or newer** is required.
--   Graphics drivers must be up to date. On laptops with 2 different graphics cards, both iGPU and dGPU drivers must be updated.
+## Dependencies
+### Windows
+- **Windows 10 RS4 (Redstone 4, version 1803) or newer** is required.
+- Graphics drivers must be up to date.
 
-**Linux**<br>
-copy the command into your terminal emulator of choice and execute it
--   *Archlinux based distros:*<br>
-`sudo pacman -S sdl2 openal`
+### Linux
+Run these commands in your terminal:
 
--   *Ubuntu based distros:*<br>
-`sudo apt-get install libsdl2-2.0 libsdl2-dev libalut-dev`
+- Archlinux-based distros:  
+    ```bash
+    sudo pacman -S sdl2 openal
+    ```
+- Ubuntu-based distros:  
+    ```bash
+    sudo apt-get install libsdl2-2.0 libsdl2-dev libalut-dev
+    ```
+- Fedora:  
+    ```bash
+    sudo dnf install SDL2-devel openal-soft
+    ```
 
--   *Fedora:*<br>
-`sudo dnf install SDL2-devel openal-soft`
+### macOS
+- macOS 12 Monterey or later is recommended.
 
-**MacOS**
-- macOS 12 Monterey or latest (recommended) installed.
+## Initial Setup
 
-Initial Setup - Placement of prod.keys
-======================================
+### Placement of prod.keys
 
 By default Ryujinx will use `%appdata%/Ryujinx` (or the equivalent application data folder on Linux/macOS) to store all of it's permanent files. This includes firmware, save files, shader caches and other configuration. If you wish Ryujinx to be fully self-contained you may use [portable mode!](#portable-mode)
 
@@ -111,101 +61,91 @@ By default Ryujinx will use `%appdata%/Ryujinx` (or the equivalent application d
     the location of your choice. We recommend against using your desktop 
     or the root of any drive as these can sometimes be protected.
 
-
 2.  Navigate to where you extracted the *Ryujinx* files, and
-    double-click on *Ryujinx.exe*. This will launch the emulator and you
+    double-click on `Ryujinx.exe`. This will launch the emulator and you
     will be met with the following message (don't worry; this is
-    normal!)
-    ![image](https://github.com/ryujinx-mirror/ryujinx/assets/44103205/8581e188-2ac7-479f-ab49-f72034d4071e)
+    normal!)  
+    *[Image missing]*  
+    <!-- ![image](https://github.com/ryujinx-mirror/ryujinx/assets/44103205/8581e188-2ac7-479f-ab49-f72034d4071e) -->
 
-3.  Click *OK* on the warning box.\
+3.  Click *OK* on the warning box.
     Now that *Ryujinx* has been launched, the proper folders have been
     created for you in your %appdata% folder.
 
 4.  Click *File* at the top left of the *Ryujinx* window, and then click
-    *Open Ryujinx* *Folder*.\
-    ![image](https://github.com/ryujinx-mirror/ryujinx/assets/44103205/955c55d0-4084-4239-ad23-d8b1fc5414f8)
+    *Open Ryujinx* *Folder*.  
+    <!-- ![image](https://github.com/ryujinx-mirror/ryujinx/assets/44103205/955c55d0-4084-4239-ad23-d8b1fc5414f8) -->
 
 
 5.  Navigate down into the system subfolder and paste your prod.keys file
     here. The file/folder structure should look like this (JohnDoe
-    substituted for your username):\
+    substituted for your username):  
     ![image](assets/86277827-9d7d2600-bb94-11ea-9900-b5351364fd14.png)
 
-6.  Close and reopen *Ryujinx* so that the prod.keys file is validated.\
-    You're done installing keys!
+6.  Close and reopen *Ryujinx* so that the prod.keys file is validated. You're done installing keys!
 
-Initial Setup Continued - Installation of Firmware
-==================================================
+### Installation of Firmware
 
 Now that your keys are installed, it's time to install a firmware. Make
 sure you have an untrimmed XCI file of a recent game cartridge you
-dumped, or have compiled your [dumped firmware](https://github.com/ryujinx-mirror/ryujinx/wiki/Firmware-Dumping-Guide) into a ZIP file.
+dumped, or have compiled your [dumped firmware](firmware-dumping) into a ZIP file.
 
 1.  Open *Ryujinx*. There should be no warning about KEYS.md anymore; if
     you still get the warning, go back through the prod.keys steps and
     ensure you have placed the file correctly.
 
-2.  Now that *Ryujinx* is open, click *Tools \> Firmware \> Install from
-    XCI/ZIP*\
-    ![image](https://github.com/ryujinx-mirror/ryujinx/assets/44103205/405afd16-9e0a-4911-a82f-575dc8939e36)\
-    This brings up the "Choose the firmware file to open" window.\
-    \
-    ![image](https://github.com/ryujinx-mirror/ryujinx/assets/44103205/fc03f9eb-1210-41be-ab7b-b9ee4f1fce98)
+2.  Now that *Ryujinx* is open, click *Tools > Firmware > Install from XCI/ZIP*.  
+    <!-- ![image](https://github.com/ryujinx-mirror/ryujinx/assets/44103205/405afd16-9e0a-4911-a82f-575dc8939e36) -->
+    This brings up the "Choose the firmware file to open" window.  
+    <!-- ![image](https://github.com/ryujinx-mirror/ryujinx/assets/44103205/fc03f9eb-1210-41be-ab7b-b9ee4f1fce98) -->
 
 
 3.  Using the *Ryujinx* window, navigate to the location of your dumped
     XCI file and click *Open*. You will be asked to confirm whether you
     want to install the firmware. Make sure your prod.keys are at least
-    as new as the firmware you are installing!\
-    (Your firmware version number may vary)\
-    \
-    ![image](https://github.com/ryujinx-mirror/ryujinx/assets/44103205/804c398c-3b2b-446f-aabd-8e7129bec19e)
+    as new as the firmware you are installing!  
+    <!-- *(Your firmware version number may vary)*
+    ![image](https://github.com/ryujinx-mirror/ryujinx/assets/44103205/804c398c-3b2b-446f-aabd-8e7129bec19e) -->
 
 
 4.  Click *Yes*. You will see a message that the firmware is
-    installing and was successfully installed:\
-    ![image](https://github.com/ryujinx-mirror/ryujinx/assets/44103205/155c02c5-dd0d-4888-a94b-23eabff84821)
+    installing and was successfully installed.  
+    <!-- ![image](https://github.com/ryujinx-mirror/ryujinx/assets/44103205/155c02c5-dd0d-4888-a94b-23eabff84821) -->
 
 
 5.  Click *OK*. If all went well, you will now see your firmware version
     listed as the "System Version" in the bottom right hand corner of
-    the main *Ryujinx* window.\
-![image](assets/86278217-4035a480-bb95-11ea-9803-fabc39dbec5b.png)
+    the main *Ryujinx* window.  
+    ![image](assets/86278217-4035a480-bb95-11ea-9803-fabc39dbec5b.png)
 
-Adding Your Games to Ryujinx
-============================
+## Adding Your Games to Ryujinx
 
 You have keys and firmware ready to go. Time to add your games!
 
-With *Ryujinx* open, click on *Options \> Settings*. This takes you
-straight to the *General* tab.\
+With *Ryujinx* open, click on *Options > Settings*. This takes you
+straight to the *General* tab.  
 ![image](assets/86278362-7c690500-bb95-11ea-9667-cb61e7d45b8e.png)
 
-There are two different methods in which you can add a Game Directory in this window.\
-\
-**1st Method:**\
-Type the absolute path of the folder containing your games into the path
-field and click *Add*.\
-![image](assets/86278453-a6bac280-bb95-11ea-8bb0-005e89dbb295.png)\
-\
-**2nd Method:**\
-Without typing anything into the path field, click *Add*.\
-![image](assets/86278489-b76b3880-bb95-11ea-929c-da8b53052406.png)\
+There are two different methods in which you can add a Game Directory in this window.
 
-\
-This brings up the navigation window. Navigate to the folder containing
-your games (e.g. D:\\Switch Games) and click *Add*.\
+### 1st Method
+Type the absolute path of the folder containing your games into the path
+field and click *Add*.  
+![image](assets/86278453-a6bac280-bb95-11ea-8bb0-005e89dbb295.png)
+
+### 2nd Method
+Without typing anything into the path field, click *Add*.  
+![image](assets/86278489-b76b3880-bb95-11ea-929c-da8b53052406.png)
+
+This brings up the navigation window. Navigate to the folder containing your games (e.g. `D:\Switch Games`) and click *Add*.  
 ![image](assets/86278572-d5d13400-bb95-11ea-98e6-91a58667a538.png)
 
-1.  Whichever method you chose, **click *Save*** to save the game
-    directory setting.
+1. Whichever method you chose, **click *Save*** to save the game directory setting.
 
-2.  Your games will now show up in the main *Ryujinx* window.\
-    ![image](assets/86278608-e7b2d700-bb95-11ea-8b2c-f12b1b7f0fcc.png)
+2. Your games will now show up in the main *Ryujinx* window.  
+   ![image](assets/86278608-e7b2d700-bb95-11ea-8b2c-f12b1b7f0fcc.png)
 
-Managing Game Updates
-=====================
+## Managing Game Updates
 
 Manage game update versions from within Ryujinx
 
@@ -214,36 +154,35 @@ various reasons e.g. bugfixes, new content, etc. *Ryujinx* has built-in
 functionality to manage which version of the game you want to play.
 
 1.  In the main *Ryujinx* game list right-click the game you want to
-    apply an update to. Then click *Manage Title Updates*.\
-    ![image](assets/86278648-fef1c480-bb95-11ea-8a28-6099f5e0c8bf.png)\
-    \
+    apply an update to. Then click *Manage Title Updates*.
+    ![image](assets/86278648-fef1c480-bb95-11ea-8a28-6099f5e0c8bf.png)
+    
     After clicking *Manage Title Updates*, you will see the *Ryujinx --
     Title Update Manager* menu.
 
-2.  In the *Ryujinx -- Title Update Manager* menu, click *Add*.\
+2.  In the *Ryujinx -- Title Update Manager* menu, click *Add*.
     ![image](assets/86278688-0d3fe080-bb96-11ea-8aae-f353f2dc952d.png)
 
 3.  Clicking *Add* will bring up the navigation menu. Navigate to the
     location of your game's update files and select update you want to
-    add to *Ryujinx*, and click *Add*.\
-   ![image](assets/86278723-16c94880-bb96-11ea-972f-bb1c8683ed6d.png)\
+    add to *Ryujinx*, and click *Add*.
+   ![image](assets/86278723-16c94880-bb96-11ea-972f-bb1c8683ed6d.png)
     This will bring you back to the *Ryujinx -- Title Update Manager*
     window. You may repeat this for any other game version update files
     you wish to add to *Ryujinx*.
 
 4.  In the *Ryujinx -- Title Update Manager* window, select the version
-    of the update you wish to be applied to the game and click *Save*.\
+    of the update you wish to be applied to the game and click *Save*.
     ![image](assets/86278755-22b50a80-bb96-11ea-9c1c-c4fc13a0e4cb.png)
 
 5.  Verify that the proper version number is shown in the main *Ryujinx*
-    games list window.\
-    ![image](assets/86278789-2e083600-bb96-11ea-9b55-816a81b53601.png)\
-    \
+    games list window.
+    ![image](assets/86278789-2e083600-bb96-11ea-9b55-816a81b53601.png)
+    
     Your game update has now been applied, and you may repeat the
     process for any other games you wish to apply updates to.
 
-Managing DLC
-============
+## Managing DLC
 
 Manage Downloadable Content for your games
 
@@ -253,29 +192,28 @@ DLC.
 
 1.  With *Ryujinx* open, right-click on the game you want to add or
     manage DLC for and click *Manage DLC* to bring up the *Ryujinx - DLC
-    Manager* window.\
+    Manager* window.
     ![image](assets/86278819-37919e00-bb96-11ea-93cb-0a266c0c1b24.png)
 
 2.  Within the *Ryujinx -- DLC Manager* window, click *Add* to open the
-    DLC navigation screen.\
+    DLC navigation screen.
     ![image](assets/86278847-40826f80-bb96-11ea-99bf-05c22af2c680.png)
 
 3.  Navigate to the location of the DLC file(s) you wish to apply, then
     double-click the file to automatically add it. Or you may select the
-    file or files, and click *Add*.\
-    **Note: you may add more than one DLC file at a time!**\
+    file or files, and click *Add*.
+    **Note: you may add more than one DLC file at a time!**
     ![image](assets/86278879-5001b880-bb96-11ea-9fb3-859efbd631f9.png)
 
 4.  You will now see your DLC in the *Ryujinx - DLC Manager* window.
-    **Click *Save*** to save your configuration.\
-    ![image](assets/86286616-08822900-bba4-11ea-838e-eaf95c98d6dc.png)\
-    \
+    **Click *Save*** to save your configuration.
+    ![image](assets/86286616-08822900-bba4-11ea-838e-eaf95c98d6dc.png)
+    
     **Note: always drill down to see the proper status of the DLC .nca file you are managing. Checking and unchecking the .nca file is the way to enable and disable the DLC. The parent container (.nsp file) shows unchecked by default, even if the DLC is enabled.**  
 
 Repeat this process, if you wish, for any other games you would like to manage DLC for.
 
-Managing Mods 
-============
+## Managing Mods 
 Quick Start Guide for managing mods
 
 Various game mods are available from enthusiasts & content creators online. _Ryujinx_ supports the following types of mods:
@@ -308,8 +246,7 @@ Mods can also be placed in the `AppData\Roaming\Ryujinx\sdcard` folder if the mo
 ![image](assets/156943587-5242ccda-d74d-4d2f-8446-a1941beb4c2c.png)
 ![image](assets/156943543-ea49ec82-57b7-46eb-a12e-5daf64b1cad5.png)
 
-Managing Cheats
-===============
+## Managing Cheats
 
 Ryujinx now has native cheats/runtime mods support!  
 It implements full support Atmosphere style cheats (except game pausing/resume): 
@@ -378,12 +315,11 @@ To disable the time cheat, just remove its section and the code:
 61000000 00000000 00000005
 ```
 
-Managing User Profiles
-=====================
+## Managing User Profiles
 
 Ryujinx offers the ability to use multiple, customizable user profiles. **WARNING:** Save data is specific to each user profile so if you delete a profile, the save data under that profile is also deleted.
 
-### To edit a user profile:  
+### Edit a user profile 
 1. With Ryujinx open, but no game running, click on Options > Manage User Profiles  
 ![image](assets/115936775-62b1ea80-a453-11eb-9df8-5d39cf414057.png)
 
@@ -408,7 +344,7 @@ In the Manage Accounts - Avatar window, select the avatar you want, and choose a
 
 ![image](assets/115937710-b7566500-a455-11eb-905c-c748e8baeae8.png)
 
-### To add a new profile:
+### Add a new profile
 
 1. With Ryujinx open, but no game running, click on Options > Manage User Profiles  
 ![image](assets/115936775-62b1ea80-a453-11eb-9df8-5d39cf414057.png)
@@ -427,19 +363,18 @@ In the Manage Accounts - Avatar window, select the avatar you want, and choose a
 
 That's it!
 
-Input Configuration
-===================
+## Input Configuration
 
 Setting up your controls: this part requires close attention, so read
 carefully!
 
 1.  Plug in the controller(s) that you will be using.
 
-2.  Open *Ryujinx* and navigate to *Options \> Settings*\
+2.  Open *Ryujinx* and navigate to *Options \> Settings*
     !![image](assets/86278975-7aec0c80-bb96-11ea-897f-9a4ed393f3b0.png)
 
 3.  You will now see the *Ryujinx - Settings* window. Click on the
-    *Input* tab.\
+    *Input* tab.
     ![image](assets/86278991-82abb100-bb96-11ea-9a00-adacae14b34c.png)
 
 Before proceeding to configure anything, the options on the Input page
@@ -451,16 +386,16 @@ not check this box unless you have a specific reason***
 
 *Enable Docked Mode*: checking this box emulates the Nintendo Switch
 being docked. Docked Mode enables higher resolution, higher FPS, and
-better graphical fidelity on games that support these features.\
+better graphical fidelity on games that support these features.
 **If you check this box, you will need to click configure under Player**
-**1 (top left menu item)**\
+**1 (top left menu item)**
 **If you leave this box unchecked, you will need to click configure under**
-**Handheld (bottom right menu item)**\
+**Handheld (bottom right menu item)**
 
 
 4.  Click *Configure* under *Player 1* if you have enabled *Docked
     Mode*, or click configure *Handheld* if you have not enabled *Docked
-    Mode*.\
+    Mode*.
     ![image](assets/86279008-8d664600-bb96-11ea-9ed3-32034ad9f53a.png)
 
 5.  You should now be in the *Ryujinx -- Controller Settings* screen.
@@ -469,7 +404,7 @@ better graphical fidelity on games that support these features.\
     one you want to be configured to be P1 in game. **If you do not see**
     **any Xinput controllers in the list, you will need to use an Xinput**
     **wrapper/translator such as**
-    [x360ce](https://www.x360ce.com/).\
+    [x360ce](https://www.x360ce.com/).
     ![image](assets/86279068-a969e780-bb96-11ea-913c-6da064e6d7a6.png)
     
 
@@ -484,9 +419,9 @@ better graphical fidelity on games that support these features.\
     want for the Nintendo Switch controller button you've
     chosen.
 ![image](assets/86279165-d1f1e180-bb96-11ea-9d77-b9c029ce5b3a.png)
-    \
+    
     You may continue tweaking the settings to your liking, or binding
-    each button from scratch if you want a fully custom button layout.\
+    each button from scratch if you want a fully custom button layout.
     **NOTE: while the default *Deadzones* are 0.10, we recommend
     increasing your *Deadzones* to at least 0.20 in order to avoid
     unwanted joystick drift.**
@@ -497,10 +432,9 @@ configure, configure them now under Player 2, Player 3, and so on.
 7.  ***Click Save to save your configuration.***
 
 Alternately, you may skip the input UI and edit your config.json file
-found in %appdata%\\ryujinx\\
+found in %appdata%\\ryujinx\
 
-Motion Controls
-===============
+## Motion Controls
 ### Motion Controls
 
 Ryujinx offers the ability to use motion controls with motion-enabled controllers such as a Switch Pro Controller, Joycons, Playstation DS4, smartphones with motion support, Steam controller, and others.
@@ -546,8 +480,7 @@ If you set your controller type to Joycon Pair, an option called "Mirror Input" 
 
 Repeat steps 2 through 5 for any other motion controllers you wish to configure. If you have more than one, make sure to choose the respective slot # for each controller!
 
-Amiibo Emulation
-================
+## Amiibo Emulation
 
 All Amiibo are able to be virtually scanned within the emulator, as long as you are actively connected to the internet. No files or dumps are required!
 
@@ -559,8 +492,7 @@ All Amiibo are able to be virtually scanned within the emulator, as long as you 
   ![unknown2](assets/111011810-e8de0a00-839a-11eb-8a5c-d03b0e094ec4.png)  
 **Addendum:** In The Legend of Zelda: Breath of the Wild, you may continually scan Amiibo as many times as you wish by checking the box labeled "Hack: Use Random Tag Uuid" box.
 
-Profiled Persistent Translation Cache
-=====================================
+## Profiled Persistent Translation Cache
 
 Speed up game loading times with PPTC
 
@@ -577,12 +509,12 @@ game.
 
 PPTC (Profiled Persistent Translation Cache) is now enabled by default. To disable it:
 
-1.  With *Ryujinx* open, click on *Options \> Settings*\
+1.  With *Ryujinx* open, click on *Options \> Settings*
     ![image](assets/86279303-082f6100-bb97-11ea-92bc-68f24612d7e2.png)
     
 
 2.  Then navigate to the *System* tab and **uncheck the box** marked
-    *Enable Profiled Persistent Translation Cache*\
+    *Enable Profiled Persistent Translation Cache*
     ![image](assets/86279433-3b71f000-bb97-11ea-8bd2-0435ba8ece33.png)
 
 From time to time you may wish to examine or purge your PPTC cache files if you are experiencing PPTC-related issues.
@@ -601,15 +533,14 @@ To purge the PPTC cache files:
 
     ![image](assets/86625047-ac434e80-bf81-11ea-9dd7-7f3465f8c0d2.png)
 
-Graphics Enhancements
-=====================
+## Graphics Enhancements
 
 *Ryujinx* offers a few graphics enhancement options.
 
 1. _Resolution Scaling_, which offers a much sharper image with little to no impact to performance. Resolution scaling can increase image quality much more noticeably than Anisotropic Filtering. Ryujinx's resolution scaling implementation allows native, 2x, 3x, 4x, or even custom ratios for upscaling.
 
 2. _Anisotropic Filtering_, which can visibly improve graphic quality.
-[Wikipedia says](https://en.wikipedia.org/wiki/Anisotropic_filtering):\
+[Wikipedia says](https://en.wikipedia.org/wiki/Anisotropic_filtering):
 _In layman\'s terms, anisotropic filtering retains the \"sharpness\" of_
 _a texture normally lost by MIP map texture\'s attempts to avoid_
 _aliasing. Anisotropic filtering can therefore be said to maintain crisp_
@@ -620,15 +551,15 @@ _anti-aliased texture filtering._
 
 4. _Aspect Ratio Options_, which allow you to adjust the width-to-height ratio to your liking. **Note: these options may give your game a stretched or squeezed appearance unless you are using mods that change the expected aspect ratio of the game.**
 
-**To enable _Resolution Scaling_:**\
-**Note: Enabling this feature may cause graphical glitches on some games.**\
+**To enable _Resolution Scaling_:**
+**Note: Enabling this feature may cause graphical glitches on some games.**
 **These settings may be changed in-game on the fly! On a standard 1080p display, 2x resolution scaling is recommended.**
 
-1. With *Ryujinx* open, click *Options \> Settings*\
+1. With *Ryujinx* open, click *Options \> Settings*
    ![image](assets/86672580-078e3480-bfb4-11ea-8c01-86b05066a4dc.png)
-2. Navigate to the *Graphics* tab and click the dropdown next to Resolution Scale. Select your desired level of resolution scaling.\
+2. Navigate to the *Graphics* tab and click the dropdown next to Resolution Scale. Select your desired level of resolution scaling.
    ![image](assets/86673437-e7ab4080-bfb4-11ea-86de-876d7563f6a2.png)
-   \
+   
    **Click *Save*** to save the enhancement setting.
 
 **To enable _Anisotropic Filtering_:**
@@ -636,14 +567,14 @@ _anti-aliased texture filtering._
 **Note: enabling this feature may cause graphical glitches on some**
 **games.**
 
-1.  With *Ryujinx* open, click on *Options \> Settings*\
+1.  With *Ryujinx* open, click on *Options \> Settings*
     ![image](assets/86279490-547aa100-bb97-11ea-97ad-549534e9d635.png)
     
 
 2.  Navigate to the *Graphics* tab and click the dropdown next to
-    *Anisotropic Filtering*. Set it to your desired level.\
+    *Anisotropic Filtering*. Set it to your desired level.
     ![image](assets/86279552-6ceabb80-bb97-11ea-8b88-1e19983ed890.png)
-    \
+    
     **Click *Save*** to save the enhancement setting.
 
 **To Manage _Shader Cache_:**  
@@ -681,8 +612,7 @@ To adjust your aspect ratio:
 
 2. Simply click and drag your window borders to the size you want!
 
-Portable Mode
-=============
+## Portable Mode
 
 If you wish, you may use a custom folder location for all Ryujinx data (as opposed to keeping it in its default location: %appdata%). This is done via the command-line or, more conveniently, a custom shortcut. In the future, the ability to configure custom data folders may be added to the GUI.
 
@@ -721,8 +651,7 @@ Note: On MacOS, the command would be as follows, without the quotes:
 
 You can now use this shortcut any time you want to launch Ryujinx in portable mode!
 
-Launch in Fullscreen
-====================
+## Launch in Fullscreen
 
 Ryujinx can automatically launch games in fullscreen mode. You can enable this functionality in one of two ways:
 
