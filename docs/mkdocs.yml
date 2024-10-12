@@ -1,5 +1,8 @@
 site_name: Ryujinx
 repo_url: "https://github.com/ryujinx-mirror/ryujinx"
+
+docs_dir: src
+
 repo_name: "ryujinx-mirror/ryujinx"
 remote_branch: docs
 theme:
