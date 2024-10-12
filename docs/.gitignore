@@ -1,0 +1,6 @@
+# MkDocs build output
+/site/
+
+# Python virtual env
+venv/
+.venv/
