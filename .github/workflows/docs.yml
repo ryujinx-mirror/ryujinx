@@ -3,8 +3,7 @@ name: Build docs
 on:
   push:
     branches:
-      - 'master'
-      - 'mirror/master'
+      - 'mirror/docs'
     paths:
       - 'docs/**'
       - '.github/workflows/docs.yml'
