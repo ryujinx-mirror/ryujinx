@@ -43,3 +43,10 @@ a:hover,
 a:focus {
     color: #01c4e5 !important;
 }
+
+/* Add margin to images so they aren't too close to the text */
+.md-content__inner img
+{
+   margin-top: 1em;
+   margin-bottom: 1em;
+}
