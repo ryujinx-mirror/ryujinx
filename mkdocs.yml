@@ -29,6 +29,14 @@ theme:
     - content.code.copy
     - content.code.select
     - content.code.annotate
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      pygments_lang_class: true
+      line_spans: __span
+  - pymdownx.inlinehilite
+  - pymdownx.superfences
+  - pymdownx.smartsymbols
 extra_css:
   - stylesheets/extra.css
 plugins:
