@@ -33,7 +33,7 @@ jobs:
 
     steps:
       - name: Print inputs
-        if: ${{ github.event_name == 'workflow_dispatch' }}
+        if: github.event_name == 'workflow_dispatch'
         run: |
           echo "Inputs: ${{ toJson(inputs) }}"
 
@@ -65,7 +65,7 @@ jobs:
           mkdocs build 2>&1 | tee mkdocs-output.log
 
       - name: Annotate Warnings and Errors
-        if: always() && ${{ steps.build_docs.outcome != 'skipped' }}
+        if: always() && steps.build_docs.outcome != 'skipped'
         run: |
           warnings=$(grep -i 'WARNING' mkdocs-output.log || true)
           errors=$(grep -i 'ERROR' mkdocs-output.log || true)
@@ -88,5 +88,5 @@ jobs:
           fi
 
       - name: Deploy to GitHub Pages
-        if: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' && github.event.inputs.deploy == 'true' }}
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch' && github.event.inputs.deploy == 'true'
         run: mkdocs gh-deploy --force
