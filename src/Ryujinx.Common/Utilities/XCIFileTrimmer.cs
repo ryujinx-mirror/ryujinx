@@ -43,7 +43,7 @@ namespace Ryujinx.Common.Utilities
         /// <summary>
         /// Cartridge Sizes (ByteIdentifier, SizeInGB)
         /// </summary>
-        private static readonly Dictionary<byte, long> s_cartSizesGB = new()
+        private static readonly Dictionary<byte, long> _cartSizesGB = new()
         {
             { 0xFA, 1 },
             { 0xF8, 2 },
@@ -489,7 +489,7 @@ namespace Ryujinx.Common.Utilities
             // Read Cart Size
             Pos = _offsetB + XCIFileTrimmer.CartSizeFilePos;
             byte cartSizeId = _binaryReader.ReadByte();
-            if (!s_cartSizesGB.TryGetValue(cartSizeId, out long cartSizeNGB))
+            if (!_cartSizesGB.TryGetValue(cartSizeId, out long cartSizeNGB))
             {
                 Log?.Write(LogType.Error, $"The source file doesn't look like an XCI file as the Cartridge Size is incorrect (0x{cartSizeId:X2})");
                 return false;
