@@ -26,6 +26,11 @@ permissions:
 jobs:
   build-docs:
     runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: docs
+
     steps:
       - name: Print inputs
         if: ${{ github.event_name == 'workflow_dispatch' }}
@@ -33,8 +38,6 @@ jobs:
           echo "Inputs: ${{ toJson(inputs) }}"
 
       - uses: actions/checkout@v4
-
-      - run: cd docs
 
       - name: Configure Git Credentials
         run: |
