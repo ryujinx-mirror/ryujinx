@@ -205,6 +205,8 @@ namespace Ryujinx.Ava
             ConfigurationState.Instance.System.EnableInternetAccess.Event += UpdateEnableInternetAccessState;
             ConfigurationState.Instance.Multiplayer.LanInterfaceId.Event += UpdateLanInterfaceIdState;
             ConfigurationState.Instance.Multiplayer.Mode.Event += UpdateMultiplayerModeState;
+            ConfigurationState.Instance.Multiplayer.LdnPassphrase.Event += UpdateLdnPassphraseState;
+            ConfigurationState.Instance.Multiplayer.DisableP2p.Event += UpdateDisableP2pState;
 
             _gpuCancellationTokenSource = new CancellationTokenSource();
             _gpuDoneEvent = new ManualResetEvent(false);
@@ -487,6 +489,16 @@ namespace Ryujinx.Ava
         private void UpdateMultiplayerModeState(object sender, ReactiveEventArgs<MultiplayerMode> e)
         {
             Device.Configuration.MultiplayerMode = e.NewValue;
+        }
+
+        private void UpdateLdnPassphraseState(object sender, ReactiveEventArgs<string> e)
+        {
+            Device.Configuration.MultiplayerLdnPassphrase = e.NewValue;
+        }
+
+        private void UpdateDisableP2pState(object sender, ReactiveEventArgs<bool> e)
+        {
+            Device.Configuration.MultiplayerDisableP2p = e.NewValue;
         }
 
         public void ToggleVSync()
@@ -872,7 +884,9 @@ namespace Ryujinx.Ava
                                                  ConfigurationState.Instance.System.AudioVolume,
                                                  ConfigurationState.Instance.System.UseHypervisor,
                                                  ConfigurationState.Instance.Multiplayer.LanInterfaceId.Value,
-                                                 ConfigurationState.Instance.Multiplayer.Mode);
+                                                 ConfigurationState.Instance.Multiplayer.Mode,
+                                                 ConfigurationState.Instance.Multiplayer.DisableP2p,
+                                                 ConfigurationState.Instance.Multiplayer.LdnPassphrase);
 
             Device = new Switch(configuration);
         }
