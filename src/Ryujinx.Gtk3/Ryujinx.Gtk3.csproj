@@ -9,6 +9,7 @@
     <DefineConstants Condition=" '$(ExtraDefineConstants)' != '' ">$(DefineConstants);$(ExtraDefineConstants)</DefineConstants>
     <!-- As we already provide GTK3 on Windows via GtkSharp.Dependencies this is redundant. -->
     <SkipGtkInstall>true</SkipGtkInstall>
+    <ApplicationIcon>Ryujinx.ico</ApplicationIcon>
     <TieredPGO>true</TieredPGO>
   </PropertyGroup>
 
