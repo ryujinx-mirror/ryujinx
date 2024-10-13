@@ -95,10 +95,8 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
                 }
             }
 
-            ISocket newBsdSocket = new ManagedSocket(netDomain, (SocketType)type, protocol)
-            {
-                Blocking = !creationFlags.HasFlag(BsdSocketCreationFlags.NonBlocking),
-            };
+            ISocket newBsdSocket = new ManagedSocket(netDomain, (SocketType)type, protocol, context.Device.Configuration.MultiplayerLanInterfaceId);
+            newBsdSocket.Blocking = !creationFlags.HasFlag(BsdSocketCreationFlags.NonBlocking);
 
             LinuxError errno = LinuxError.SUCCESS;
 

@@ -10,22 +10,26 @@ using LibHac.Tools.Fs;
 using LibHac.Tools.FsSystem;
 using LibHac.Tools.FsSystem.NcaUtils;
 using Ryujinx.Common.Configuration;
+using Ryujinx.Common.Configuration.Multiplayer;
 using Ryujinx.Common.Logging;
 using Ryujinx.Common.Utilities;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.HOS.SystemState;
 using Ryujinx.HLE.Loaders.Npdm;
 using Ryujinx.HLE.Loaders.Processes.Extensions;
+using Ryujinx.Ui.Common.App;
 using Ryujinx.UI.Common.Configuration;
 using Ryujinx.UI.Common.Configuration.System;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
+using System.Threading.Tasks;
 using ContentType = LibHac.Ncm.ContentType;
 using Path = System.IO.Path;
 using TimeSpan = System.TimeSpan;
@@ -49,6 +53,7 @@ namespace Ryujinx.UI.App.Common
         private CancellationTokenSource _cancellationToken;
 
         private static readonly ApplicationJsonSerializerContext _serializerContext = new(JsonHelper.GetDefaultSerializerOptions());
+        private static readonly LdnGameDataSerializerContext LdnDataSerializerContext = new(JsonHelper.GetDefaultSerializerOptions());
 
         public ApplicationLibrary(VirtualFileSystem virtualFileSystem, IntegrityCheckLevel checkLevel)
         {
@@ -487,7 +492,7 @@ namespace Ryujinx.UI.App.Common
             controlFile.Get.Read(out _, 0, outProperty, ReadOption.None).ThrowIfFailure();
         }
 
-        public void LoadApplications(List<string> appDirs)
+        public async Task LoadApplications(List<string> appDirs)
         {
             int numApplicationsFound = 0;
             int numApplicationsLoaded = 0;
@@ -560,6 +565,24 @@ namespace Ryujinx.UI.App.Common
                     }
                 }
 
+                IEnumerable<LdnGameData> ldnGameDataArray = Array.Empty<LdnGameData>();
+
+                if (ConfigurationState.Instance.Multiplayer.Mode == MultiplayerMode.LdnRyu)
+                {
+                    try
+                    {
+                        using HttpClient httpClient = new HttpClient();
+
+                        string ldnGameDataArrayString = await httpClient.GetStringAsync("https://ldn.ryujinx.org/api/public_games");
+
+                        ldnGameDataArray = JsonHelper.Deserialize(ldnGameDataArrayString, LdnDataSerializerContext.IEnumerableLdnGameData);
+                    }
+                    catch
+                    {
+                        Logger.Warning?.Print(LogClass.Application, "Failed to fetch the public games JSON from the API. Player and game count in the game list will be unavailable.");
+                    }
+                }
+
                 // Loops through applications list, creating a struct and then firing an event containing the struct for each application
                 foreach (string applicationPath in applicationPaths)
                 {
@@ -572,6 +595,14 @@ namespace Ryujinx.UI.App.Common
                     {
                         foreach (var application in applications)
                         {
+                            if (application.ControlHolder.ByteSpan.Length > 0)
+                            {
+                                IEnumerable<LdnGameData> ldnGameData = ldnGameDataArray.Where(game => application.ControlHolder.Value.LocalCommunicationId.Items.Contains(Convert.ToUInt64(game.TitleId, 16)));
+
+                                application.PlayerCount = ldnGameData.Sum(game => game.PlayerCount);
+                                application.GameCount = ldnGameData.Count();
+                            }
+
                             OnApplicationAdded(new ApplicationAddedEventArgs
                             {
                                 AppData = application,
