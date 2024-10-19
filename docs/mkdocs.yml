@@ -40,6 +40,7 @@ markdown_extensions:
   - pymdownx.inlinehilite
   - pymdownx.superfences
   - pymdownx.smartsymbols
+  - sane_lists
 extra_css:
   - stylesheets/extra.css
 plugins:
