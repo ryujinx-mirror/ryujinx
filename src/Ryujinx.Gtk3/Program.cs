@@ -165,6 +165,11 @@ namespace Ryujinx
                     ? appDataConfigurationPath
                     : null;
 
+            if (!string.IsNullOrEmpty(CommandLineState.OverrideConfigFile) && File.Exists(CommandLineState.OverrideConfigFile))
+            {
+                ConfigurationPath = CommandLineState.OverrideConfigFile;
+            }
+
             if (ConfigurationPath == null)
             {
                 // No configuration, we load the default values and save it to disk
