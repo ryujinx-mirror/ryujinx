@@ -110,10 +110,10 @@ gzip -9 < "$RELEASE_TAR_FILE_NAME" > "$RELEASE_TAR_FILE_NAME.gz"
 rm "$RELEASE_TAR_FILE_NAME"
 
 # Create legacy update package for Avalonia to not left behind old testers.
-if [ "$VERSION" != "1.1.0" ];
-then
-    cp $RELEASE_TAR_FILE_NAME.gz test-ava-ryujinx-$VERSION-macos_universal.app.tar.gz
-fi
+#if [ "$VERSION" != "1.1.0" ];
+#then
+#    cp $RELEASE_TAR_FILE_NAME.gz test-ava-ryujinx-$VERSION-macos_universal.app.tar.gz
+#fi
 
 popd
 
