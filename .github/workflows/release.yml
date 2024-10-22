@@ -112,7 +112,6 @@ jobs:
           pushd publish_ava
           cp Ryujinx.exe Ryujinx.Ava.exe
           7z a ../release_output/ryujinx-$BUILD_VERSION-$ZIP_OS_NAME.zip *
-          7z a ../release_output/test-ava-ryujinx-$BUILD_VERSION-$ZIP_OS_NAME.zip *
           popd
 
           pushd publish_sdl2_headless
@@ -167,7 +166,6 @@ jobs:
           cp Ryujinx Ryujinx.Ava
           chmod +x Ryujinx.sh Ryujinx Ryujinx.Ava
           tar -czvf ../release_output/ryujinx-$BUILD_VERSION-$ZIP_OS_NAME.tar.gz *
-          tar -czvf ../release_output/test-ava-ryujinx-$BUILD_VERSION-$ZIP_OS_NAME.tar.gz *
           popd
 
           pushd publish_sdl2_headless
