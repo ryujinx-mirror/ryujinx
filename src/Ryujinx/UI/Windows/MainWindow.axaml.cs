@@ -647,10 +647,10 @@ namespace Ryujinx.Ava.UI.Windows
                 var autoloadDirs = ConfigurationState.Instance.UI.AutoloadDirs.Value;
                 if (autoloadDirs.Count > 0)
                 {
-                    var updatesLoaded = ApplicationLibrary.AutoLoadTitleUpdates(autoloadDirs);
-                    var dlcLoaded = ApplicationLibrary.AutoLoadDownloadableContents(autoloadDirs);
+                    var updatesLoaded = ApplicationLibrary.AutoLoadTitleUpdates(autoloadDirs, out int updatesRemoved);
+                    var dlcLoaded = ApplicationLibrary.AutoLoadDownloadableContents(autoloadDirs, out int dlcRemoved);
 
-                    ShowNewContentAddedDialog(dlcLoaded, updatesLoaded);
+                    ShowNewContentAddedDialog(dlcLoaded, dlcRemoved, updatesLoaded, updatesRemoved);
                 }
 
                 _isLoading = false;
@@ -662,28 +662,21 @@ namespace Ryujinx.Ava.UI.Windows
             applicationLibraryThread.Start();
         }
 
-        private Task ShowNewContentAddedDialog(int numDlcAdded, int numUpdatesAdded)
+        private void ShowNewContentAddedDialog(int numDlcAdded, int numDlcRemoved, int numUpdatesAdded, int numUpdatesRemoved)
         {
-            var msg = "";
+            string[] messages = {
+                numDlcRemoved > 0 ? string.Format(LocaleManager.Instance[LocaleKeys.AutoloadDlcRemovedMessage], numDlcRemoved): null,
+                numDlcAdded > 0 ? string.Format(LocaleManager.Instance[LocaleKeys.AutoloadDlcAddedMessage], numDlcAdded): null,
+                numUpdatesRemoved > 0 ? string.Format(LocaleManager.Instance[LocaleKeys.AutoloadUpdateRemovedMessage], numUpdatesRemoved): null,
+                numUpdatesAdded > 0 ? string.Format(LocaleManager.Instance[LocaleKeys.AutoloadUpdateAddedMessage], numUpdatesAdded) : null
+            };
 
-            if (numDlcAdded > 0 && numUpdatesAdded > 0)
-            {
-                msg = string.Format(LocaleManager.Instance[LocaleKeys.AutoloadDlcAndUpdateAddedMessage], numDlcAdded, numUpdatesAdded);
-            }
-            else if (numDlcAdded > 0)
-            {
-                msg = string.Format(LocaleManager.Instance[LocaleKeys.AutoloadDlcAddedMessage], numDlcAdded);
-            }
-            else if (numUpdatesAdded > 0)
-            {
-                msg = string.Format(LocaleManager.Instance[LocaleKeys.AutoloadUpdateAddedMessage], numUpdatesAdded);
-            }
-            else
-            {
-                return Task.CompletedTask;
-            }
+            string msg = String.Join("\r\n", messages);
 
-            return Dispatcher.UIThread.InvokeAsync(async () =>
+            if (String.IsNullOrWhiteSpace(msg))
+                return;
+
+            Dispatcher.UIThread.InvokeAsync(async () =>
             {
                 await ContentDialogHelper.ShowTextDialog(LocaleManager.Instance[LocaleKeys.DialogConfirmationTitle],
                     msg, "", "", "", LocaleManager.Instance[LocaleKeys.InputDialogOk], (int)Symbol.Checkmark);
