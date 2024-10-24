@@ -20,12 +20,14 @@ using Ryujinx.HLE.HOS.Services.Account.Acc;
 using Ryujinx.Input.HLE;
 using Ryujinx.Input.SDL2;
 using Ryujinx.Modules;
+using Ryujinx.Ui.Common.App;
 using Ryujinx.UI.App.Common;
 using Ryujinx.UI.Common;
 using Ryujinx.UI.Common.Configuration;
 using Ryujinx.UI.Common.Helper;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.Versioning;
 using System.Threading;
 using System.Threading.Tasks;
@@ -140,6 +142,7 @@ namespace Ryujinx.Ava.UI.Windows
         {
             Dispatcher.UIThread.Post(() =>
             {
+                UpdateApplicationWithLdnData(e.AppData);
                 ViewModel.Applications.Add(e.AppData);
             });
         }
@@ -163,6 +166,36 @@ namespace Ryujinx.Ava.UI.Windows
                     StatusBarView.LoadProgressBar.IsVisible = false;
                 }
             });
+        }
+
+        private void ApplicationLibrary_LdnGameDataReceived(object sender, LdnGameDataReceivedEventArgs e)
+        {
+            Dispatcher.UIThread.Post(() =>
+            {
+                var ldnGameDataArray = e.LdnData;
+                ViewModel.LastLdnGameData = ldnGameDataArray;
+                foreach (var application in ViewModel.Applications)
+                {
+                    UpdateApplicationWithLdnData(application);
+                }
+                ViewModel.RefreshView();
+            });
+        }
+
+        private void UpdateApplicationWithLdnData(ApplicationData application)
+        {
+            if (application.ControlHolder.ByteSpan.Length > 0 && ViewModel.LastLdnGameData != null)
+            {
+                IEnumerable<LdnGameData> ldnGameData = ViewModel.LastLdnGameData.Where(game => application.ControlHolder.Value.LocalCommunicationId.Items.Contains(Convert.ToUInt64(game.TitleId, 16)));
+
+                application.PlayerCount = ldnGameData.Sum(game => game.PlayerCount);
+                application.GameCount = ldnGameData.Count();
+            }
+            else
+            {
+                application.PlayerCount = 0;
+                application.GameCount = 0;
+            }
         }
 
         public void Application_Opened(object sender, ApplicationOpenedEventArgs args)
@@ -476,6 +509,13 @@ namespace Ryujinx.Ava.UI.Windows
 
             ApplicationLibrary.ApplicationCountUpdated += ApplicationLibrary_ApplicationCountUpdated;
             ApplicationLibrary.ApplicationAdded += ApplicationLibrary_ApplicationAdded;
+            ApplicationLibrary.LdnGameDataReceived += ApplicationLibrary_LdnGameDataReceived;
+
+            ConfigurationState.Instance.Multiplayer.Mode.Event += (sender, evt) =>
+            {
+                _ = Task.Run(ViewModel.ApplicationLibrary.RefreshLdn);
+            };
+            _ = Task.Run(ViewModel.ApplicationLibrary.RefreshLdn);
 
             ViewModel.RefreshFirmwareStatus();
 

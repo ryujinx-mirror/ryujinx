@@ -29,6 +29,7 @@ using Ryujinx.HLE.HOS.Services.Account.Acc;
 using Ryujinx.HLE.UI;
 using Ryujinx.Input.HLE;
 using Ryujinx.Modules;
+using Ryujinx.Ui.Common.App;
 using Ryujinx.UI.App.Common;
 using Ryujinx.UI.Common;
 using Ryujinx.UI.Common.Configuration;
@@ -111,6 +112,8 @@ namespace Ryujinx.Ava.UI.ViewModels
 
         public ApplicationData ListSelectedApplication;
         public ApplicationData GridSelectedApplication;
+
+        public IEnumerable<LdnGameData> LastLdnGameData;
 
         internal AppHost AppHost { get; set; }
 
