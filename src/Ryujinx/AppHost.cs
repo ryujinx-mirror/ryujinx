@@ -89,6 +89,7 @@ namespace Ryujinx.Ava
         private float _newVolume;
         private KeyboardHotkeyState _prevHotkeyState;
 
+        private Point? _lastCursorPoint;
         private long _lastCursorMoveTime;
         private bool _isCursorInRenderer = true;
         private bool _ignoreCursorState = false;
@@ -221,12 +222,13 @@ namespace Ryujinx.Ava
 
             if (sender is MainWindow window)
             {
-                if (ConfigurationState.Instance.HideCursor.Value == HideCursorMode.OnIdle)
+                var point = e.GetCurrentPoint(window).Position;
+
+                if (ConfigurationState.Instance.HideCursor.Value == HideCursorMode.OnIdle && (_lastCursorPoint == null || _lastCursorPoint != point))
                 {
                     _lastCursorMoveTime = Stopwatch.GetTimestamp();
                 }
 
-                var point = e.GetCurrentPoint(window).Position;
                 var bounds = RendererHost.EmbeddedWindow.Bounds;
                 var windowYOffset = bounds.Y + window.MenuBarHeight;
                 var windowYLimit = (int)window.Bounds.Height - window.StatusBarHeight - 1;
@@ -244,6 +246,7 @@ namespace Ryujinx.Ava
                     !_viewModel.IsSubMenuOpen;
 
                 _ignoreCursorState = false;
+                _lastCursorPoint = point;
             }
         }
 
